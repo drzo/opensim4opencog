@@ -39,13 +39,9 @@ namespace Cogbot.Actions.Agent
         public void On_Teleport(object sender,TeleportEventArgs e)
         {
             BotClient Client = TheBotClient;
-            Client.describeNext = false;
             WriteLine(e + " " + e.Status);
             if (e.Status == TeleportStatus.Finished)
-                {
-                    Client.describePeople(false, WriteLine);
-                    Client.describeObjects(false, WriteLine);
-                    Client.describeBuildings(false, WriteLine);                    
+                {                  
                 Client.Self.TeleportProgress -= On_Teleport;
                 TeleportFinished.Set();
             }
@@ -149,7 +145,6 @@ namespace Cogbot.Actions.Agent
                 }
             }
 
-            TheBotClient.describeNext = false;
         }
     }
 #pragma warning restore 0168

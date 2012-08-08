@@ -67,23 +67,10 @@ namespace Cogbot
     public class ClientManager : IDisposable,ScriptExecutorGetter
     {
 
-        static ClientManager()
-        {
-           // SingleInstance = SingleInstance ?? new ClientManager();
-        }
-
         public static readonly TaskQueueHandler OneAtATimeQueue = new TaskQueueHandler("ClientManager.OneAtATime", new TimeSpan(0, 0, 0, 0, 10), true, false);
         public static readonly TaskQueueHandler PostAutoExec = new TaskQueueHandler("ClientManager.PostAutoExec", new TimeSpan(0, 0, 0, 0, 10), false, false);
         public static object SingleInstanceLock = new object();
         public static event Action<BotClient> BotClientCreated;
-        private bool InvokeJoin(string s)
-        {
-            return OneAtATimeQueue.InvokeJoin(s, -1);
-        }
-        private bool InvokeJoin(string s, int millisecondsTimeout)
-        {
-            return OneAtATimeQueue.InvokeJoin(s, millisecondsTimeout);
-        }
 
         static public void PostAutoExecEnqueue( ThreadStart e)
         {
@@ -146,7 +133,6 @@ namespace Cogbot
             }
         }
 
-        public static bool DownloadTextures = false;
         public static int nextTcpPort = 5555;
         static ClientManager _si;
         static public ClientManager SingleInstance
@@ -165,8 +151,6 @@ namespace Cogbot
             set { _si = value; }
         }
 
-        public static int debugLevel = 2;
-
         public BotClient OnlyOneCurrentBotClient
         {
             get
@@ -182,24 +166,11 @@ namespace Cogbot
         public List<Type> registrationTypes;
         public List<Type> registeredSystemApplicationCommandTypes = new List<Type>();
         public SortedDictionary<string, CommandInfo> groupActions;
-        public Dictionary<string, Tutorials.Tutorial> tutorials;
 
-        public bool describeNext;
-        private int describePos;
-        private string currTutorial;
+        public static readonly SysVarsDict config = MushDLR223.ScriptEngines.ScriptManager.SysVarsAsDict();
 
-        public int BoringNamesCount = 0;
-        public int GoodNamesCount = 0;
-        public int RunningMode = (int)Modes.normal;
-        public UUID AnimationFolder = UUID.Zero;
-
-        readonly public static SysVarsDict config = MushDLR223.ScriptEngines.ScriptManager.SysVarsAsDict();
-        //Utilities.BotTcpServer UtilitiesTcpServer;
         [ConfigSetting(Description="Allows user to specify lisp interpreter to use with botconfig subsystem and sim object recognition and various other things. Choices are DotLispInterpreter (use this if unsure),CycInterpreter or ABCLInterpreter")]
         public String taskInterpreterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
-        //static List<LoginDetails> accounts = new List<LoginDetails>();
-        ///public static ClientManager this = new ClientManager(accounts, false);
-        // public static Simian.Simian simulator = new Simian.Simian();
 
         public ClientManager()
         {
@@ -241,8 +212,6 @@ namespace Cogbot
             groupActions = new SortedDictionary<string, Cogbot.Actions.CommandInfo>();
             registrationTypes = new List<Type>();
 
-            tutorials = new Dictionary<string, Cogbot.Tutorials.Tutorial>();
-            describeNext = true;
             RegisterAssembly(Assembly.GetExecutingAssembly());
             RegisterAssembly(GetType().Assembly);
             RegisterAssembly(typeof(DLRConsole).Assembly);

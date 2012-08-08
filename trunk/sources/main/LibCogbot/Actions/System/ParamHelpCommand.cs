@@ -62,17 +62,8 @@ paramhelp move
                 found++;
                 WriteLine(s);
             }
-            foreach (string tutorial in TheBotClient.tutorials.Keys)
-            {
-                string s = tutorial + ": " + TheBotClient.tutorials[tutorial].makeHelpString();
-                {
-                    continue;
-                }
-                found++;
-                WriteLine(s);
-            }
             if (found == 0) WriteLine("I don't know about the verb " + args.objectPhrase + ".");
-            Client.describeNext = false;
+
             return Success("Help complete");
         }
     }

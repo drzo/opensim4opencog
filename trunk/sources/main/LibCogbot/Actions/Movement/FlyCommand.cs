@@ -26,7 +26,6 @@ namespace Cogbot.Actions.Movement
         {
             //  base.acceptInput(verb, args);
 
-            Client.describeNext = true;
             if (args.str == "stop")
             {
                 Client.Self.Fly(false);

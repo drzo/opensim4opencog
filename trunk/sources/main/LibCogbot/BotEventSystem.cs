@@ -102,7 +102,8 @@ namespace Cogbot
             remove { lock (m_EachSimEventLock) { m_EachSimEvent -= value; } }
         }
 
-        private bool useLispEventProducer = false;
+        [ConfigSetting(Description = "Convert events raised to lisp EVALs")]
+        public bool UseLispEventProducer = false;
         private LispEventProducer lispEventProducer;
         //List<BotMessageSubscriber> lBotMsgSubscribers = new List<BotMessageSubscriber>();
         public interface BotMessageSubscriber
@@ -172,8 +173,6 @@ namespace Cogbot
             }
         }
 
-        #endregion
-
         void SimEventSubscriber.OnEvent(CogbotEvent evt)
         {
             if (evt.Verb == "On-Execute-Command")
@@ -182,5 +181,11 @@ namespace Cogbot
             }
         }
 
+        void SimEventSubscriber.Dispose()
+        {
+          //  ((BotClient)this).Dispose();
+        }
+
+        #endregion
     }
 }

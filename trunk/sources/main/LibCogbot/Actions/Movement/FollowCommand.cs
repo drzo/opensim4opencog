@@ -33,7 +33,6 @@ namespace Cogbot.Actions.Movement
 
         public override CmdResult acceptInput(string verb, Parser pargs, OutputDelegate WriteLine)
         {
-            TheBotClient.describeNext = true;
             // base.acceptInput(verb, args);
             string[] args = pargs.tokens;
             UUID primID = UUID.Zero;

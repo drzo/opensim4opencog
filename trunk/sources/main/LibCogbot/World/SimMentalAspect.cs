@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Cogbot.Actions;
 using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 
@@ -10,6 +11,7 @@ namespace Cogbot.World
     public interface BotMentalAspect
     {
         FirstOrderTerm GetTerm();
+        [FilterSpec]
         UUID ID { get; }
         //public BotMentalAspect(string s)
         //{

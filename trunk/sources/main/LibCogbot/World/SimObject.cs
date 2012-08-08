@@ -12,6 +12,7 @@ using PathSystem3D.Mesher;
 using PathSystem3D.Navigation;
 using System.Reflection;
 using MushDLR223.ScriptEngines;
+using Cogbot.Actions;
 #if USE_SAFETHREADS
 using Thread = MushDLR223.Utilities.SafeThread;
 #endif
@@ -19,8 +20,8 @@ using Thread = MushDLR223.Utilities.SafeThread;
 namespace Cogbot.World
 {
     //TheSims-like object
-    public class SimObjectImpl : SimPosition, BotMentalAspect,  SimObject, MeshableObject, IEquatable<SimObjectImpl>,
-        NotContextualSingleton
+    public class SimObjectImpl : SimPosition, BotMentalAspect, SimObject, MeshableObject, IEquatable<SimObjectImpl>,
+                                 NotContextualSingleton, MixinSubObjects
     {
         public override bool Equals(object obj)
         {
@@ -33,7 +34,9 @@ namespace Cogbot.World
             }
             return false;
         }
+
         private bool _confirmedObject;
+
         public bool ConfirmedObject
         {
             get { return _confirmedObject || _propertiesCache != null; }
@@ -41,6 +44,7 @@ namespace Cogbot.World
         }
 
         public ObjectMovementUpdate ObjectMovementUpdateValue;
+
         public SimPosition UsePosition
         {
             get
@@ -48,24 +52,24 @@ namespace Cogbot.World
                 var pos = this;
                 var finalDistance = pos.GetSizeDistance();
 
-                if  (finalDistance > 6) finalDistance = 6;
-                else
-                    if (finalDistance < 1)
-                    {
-                        return this;
-                    }
+                if (finalDistance > 6) finalDistance = 6;
+                else if (finalDistance < 1)
+                {
+                    return this;
+                }
 
 
-                Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(pos.SimRotation)) *
-                             (float)finalDistance;
+                Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(pos.SimRotation))*
+                             (float) finalDistance;
                 //var vFinalLocation = pos.GlobalPosition;
                 //vFinalLocation.X += v3.X;
                 //vFinalLocation.Y += v3.Y;
                 return new SimOffsetPosition(this, v3);
             }
         }
+
         public static implicit operator Primitive(SimObjectImpl m)
-        {            
+        {
             Primitive p = m.Prim;
             p.GetType();
             return p;
@@ -78,12 +82,10 @@ namespace Cogbot.World
 
         public float ZHeading
         {
-            get
-            {
-                return (float) (double) WorldObjects.GetZHeading(SimRotation);
-            }
+            get { return (float) (double) WorldObjects.GetZHeading(SimRotation); }
         }
 
+        [ConvertTo(ToType = typeof(SimHeading))]
         public SimHeading GetHeading()
         {
             lock (HasPrimLock)
@@ -128,6 +130,7 @@ namespace Cogbot.World
         public ulong RegionHandle { get; set; }
         public UUID ID { get; set; }
 
+        [ConvertTo]
         public Primitive.ObjectProperties Properties
         {
             get
@@ -174,7 +177,7 @@ namespace Cogbot.World
         public float GetCubicMeters()
         {
             Vector3 v3 = GetSimScale();
-            return v3.X * v3.Y * v3.Z;
+            return v3.X*v3.Y*v3.Z;
         }
 
         public SimObject GetGroupLeader()
@@ -211,18 +214,22 @@ namespace Cogbot.World
         {
             throw new NotImplementedException("not really a mover!");
         }
+
         public virtual void StopMoving()
         {
             StopMoving(false);
         }
+
         public virtual void StopMoving(bool fullStop)
         {
             throw new NotImplementedException("not really a mover!");
         }
+
         public virtual void StopMovingIsProblem()
         {
             throw new NotImplementedException("not really a mover!");
         }
+
         /// <summary>
         /// 
         /// </summary>
@@ -236,7 +243,7 @@ namespace Cogbot.World
             if (currentDist < maxDistance) return true;
             {
                 SimWaypoint P = SimWaypointImpl.CreateGlobal(finalTarget);
-                SetMoveTarget(P, (float)maxDistance);
+                SetMoveTarget(P, (float) maxDistance);
             }
             for (int i = 0; i < maxSeconds; i++)
             {
@@ -258,6 +265,7 @@ namespace Cogbot.World
         }
 
         protected BotClient Client0;
+
         public virtual BotClient Client
         {
             get
@@ -273,6 +281,7 @@ namespace Cogbot.World
                 return WorldSystem.client;
             }
         }
+
         public virtual void Touch(SimObject simObject)
         {
             Client.Self.Touch(simObject.Prim.LocalID);
@@ -289,7 +298,7 @@ namespace Cogbot.World
                 var ps = R.GetPathStore(SimPosition);
                 if (IsAvatar && (this is SimMover) && IsControllable)
                 {
-                    ps.LastSimMover = (SimMover)this;
+                    ps.LastSimMover = (SimMover) this;
                 }
                 return ps;
             }
@@ -317,7 +326,7 @@ namespace Cogbot.World
             Vector3d start = GlobalPosition;
             Vector3d offset = finalPos - start;
             double points = offset.Length();
-            Vector3d offsetEach = offset / points;
+            Vector3d offsetEach = offset/points;
             while (points > 1)
             {
                 points -= 1;
@@ -332,6 +341,7 @@ namespace Cogbot.World
         {
             return GotoTargetAStar(pos);
         }
+
         /// <summary>
         /// Used to be 9 now its 4 times
         /// </summary>
@@ -376,8 +386,8 @@ namespace Cogbot.World
                 if (obj != null)
                 {
                     Client.ExecuteCommand("pointat " + obj.ID, this, Debug);
-                } 
-                else 
+                }
+                else
                 {
                     var vFinalLocation = pos.UsePosition.GlobalPosition;
                     Client.ExecuteCommand("pointat " + vFinalLocation.ToRawString(), this, Debug);
@@ -385,6 +395,7 @@ namespace Cogbot.World
             }
             else Client.ExecuteCommand("pointat", this, Debug);
         }
+
         public virtual bool IsControllable
         {
             get
@@ -400,7 +411,7 @@ namespace Cogbot.World
             {
                 throw Error("FollowPathTo !IsControllable");
             }
-            SimAbstractMover move = SimAbstractMover.CreateSimPathMover((SimActor)this, globalEnd, distance);
+            SimAbstractMover move = SimAbstractMover.CreateSimPathMover((SimActor) this, globalEnd, distance);
             try
             {
                 move.OnMoverStateChange += OnMoverStateChange;
@@ -425,6 +436,7 @@ namespace Cogbot.World
             }
             return TeleportTo(SimRegion.GetRegion(SimRegion.GetRegionHandle(local.PathStore)), local.SimPosition);
         }
+
         public virtual bool TeleportTo(Vector3d finalTarget)
         {
             if (!IsControllable)
@@ -445,9 +457,9 @@ namespace Cogbot.World
             Vector3d start = GlobalPosition;
             Vector3d offset = globalPos - start;
             Vector3 lPos = SimPosition;
-            lPos.X += (float)offset.X;
-            lPos.Y += (float)offset.Y;
-            lPos.Z += (float)offset.Z;
+            lPos.X += (float) offset.X;
+            lPos.Y += (float) offset.Y;
+            lPos.Z += (float) offset.Z;
             return SetObjectPosition(lPos);
         }
 
@@ -487,7 +499,7 @@ namespace Cogbot.World
                 diff.Y *= 0.75f;
                 diff.Z *= 0.75f;
             }
-            return SimPosition + new Vector3((float)diff.X, (float)diff.Y, (float)diff.Z);
+            return SimPosition + new Vector3((float) diff.X, (float) diff.Y, (float) diff.Z);
         }
 
         #endregion
@@ -497,7 +509,7 @@ namespace Cogbot.World
             if (!IsControllable)
             {
                 throw Error("GotoTarget !Client.Self.AgentID == Prim.ID");
-            } 
+            }
             Quaternion parentRot = Quaternion.Identity;
 
             if (!IsRoot)
@@ -506,7 +518,7 @@ namespace Cogbot.World
             }
 
             Quaternion between = Vector3.RotationBetween(Vector3.UnitX, Vector3.Normalize(target - SimPosition));
-            Quaternion rot = between * (Quaternion.Identity / parentRot);
+            Quaternion rot = between*(Quaternion.Identity/parentRot);
 
             SetObjectRotation(rot);
             return true;
@@ -517,9 +529,9 @@ namespace Cogbot.World
             if (!IsRoot)
             {
                 Quaternion start = SimRotation;
-                Quaternion offset = localPos / start;
+                Quaternion offset = localPos/start;
                 SimObject p = Parent;
-                return p.SetObjectRotation(p.SimRotation * offset);
+                return p.SetObjectRotation(p.SimRotation*offset);
             }
             WorldSystem.SetObjectRotation(Prim, localPos);
             return true;
@@ -554,7 +566,7 @@ namespace Cogbot.World
             get
             {
                 var Prim = this.Prim;
-                if (Prim == null) return 0; 
+                if (Prim == null) return 0;
                 return Prim.ParentID;
             }
         }
@@ -576,13 +588,14 @@ namespace Cogbot.World
             }
         }
 
-        private Dictionary<object, NamedParam> _infoMap = null;//new Dictionary<object, NamedParam>(); 
+        private Dictionary<object, NamedParam> _infoMap = null; //new Dictionary<object, NamedParam>(); 
+
         public ICollection<NamedParam> GetInfoMap()
         {
             lock (FILock)
             {
                 if (!WorldObjects.MaintainSimObjectInfoMap) return null;
-                if (_infoMap==null) _infoMap = new Dictionary<object, NamedParam>();
+                if (_infoMap == null) _infoMap = new Dictionary<object, NamedParam>();
                 return new List<NamedParam>(_infoMap.Values);
             }
         }
@@ -591,14 +604,14 @@ namespace Cogbot.World
         {
             if (!WorldObjects.MaintainSimObjectInfoMap) return;
             if (value == null) value = new NullType(this, type);
-            AddInfoMapItem(new NamedParam(target, type, key, null , value));
+            AddInfoMapItem(new NamedParam(target, type, key, null, value));
         }
 
         public void AddInfoMapItem(NamedParam ad)
         {
             lock (FILock)
             {
-                    _infoMap = _infoMap ?? new Dictionary<object, NamedParam>();
+                _infoMap = _infoMap ?? new Dictionary<object, NamedParam>();
             }
             lock (_infoMap)
                 _infoMap[ad.Key] = ad;
@@ -614,10 +627,11 @@ namespace Cogbot.World
             if (A != null) this.SetFirstPrim(A);
         }
 
-        readonly private List<Primitive> _primRefs = new List<Primitive>();
+        private readonly List<Primitive> _primRefs = new List<Primitive>();
+
         public virtual void ResetPrim(Primitive prim, BotClient bc, Simulator sim)
         {
-            if (prim==null) return;
+            if (prim == null) return;
             lock (HasPrimLock)
                 if (_Prim0 == null)
                 {
@@ -663,7 +677,8 @@ namespace Cogbot.World
         public virtual void ResetRegion(ulong regionHandle)
         {
             RegionHandle = regionHandle;
-            lock (HasPrimLock) if (!HasPrim || _Prim0.RegionHandle != regionHandle)
+            lock (HasPrimLock)
+                if (!HasPrim || _Prim0.RegionHandle != regionHandle)
                 {
                     lock (_primRefs)
                     {
@@ -717,7 +732,7 @@ namespace Cogbot.World
         private bool _Passable;
         private bool _PassableKnown = false;
 
-        virtual public bool IsPassable
+        public virtual bool IsPassable
         {
             get
             {
@@ -758,13 +773,14 @@ namespace Cogbot.World
             }
         }
 
-        virtual public bool IsTemporary
+        public virtual bool IsTemporary
         {
             get
             {
                 Primitive p = _Prim0;
                 return (p != null && ((p.Flags & PrimFlags.Temporary) != 0 || (p.Flags & PrimFlags.TemporaryOnRez) != 0));
-            } set
+            }
+            set
             {
                 if (IsTemporary == value) return;
                 Primitive Prim = this.Prim;
@@ -775,18 +791,18 @@ namespace Cogbot.World
                 }
                 if (value)
                 {
-                    WorldSystem.SetPrimFlags(Prim, (PrimFlags)(Prim.Flags | PrimFlags.Temporary));
+                    WorldSystem.SetPrimFlags(Prim, (PrimFlags) (Prim.Flags | PrimFlags.Temporary));
                     PathFinding.MadeNonTemp = false;
                 }
                 else
                 {
-                    WorldSystem.SetPrimFlags(Prim, (PrimFlags)(Prim.Flags - PrimFlags.Temporary));
+                    WorldSystem.SetPrimFlags(Prim, (PrimFlags) (Prim.Flags - PrimFlags.Temporary));
                     PathFinding.MadeNonTemp = true;
                 }
             }
         }
 
-        virtual public bool IsPhantom
+        public virtual bool IsPhantom
         {
             get
             {
@@ -795,7 +811,7 @@ namespace Cogbot.World
                 if (Prim == null) return true;
 
                 if (IsRoot || WorldObjects.IsOpenSim)
-                {                 
+                {
                     return (Prim.Flags & PrimFlags.Phantom) == PrimFlags.Phantom;
                 }
                 if (!IsRoot && IsRegionAttached && Parent != this)
@@ -813,19 +829,19 @@ namespace Cogbot.World
                     return;
                 }
                 Primitive Prim = this.Prim;
-                if (Prim==null)
+                if (Prim == null)
                 {
                     Debug("Wont set IsPhantom because Prim==null");
                     return;
                 }
                 if (value)
                 {
-                    WorldSystem.SetPrimFlags(Prim, (PrimFlags)(Prim.Flags | PrimFlags.Phantom));
+                    WorldSystem.SetPrimFlags(Prim, (PrimFlags) (Prim.Flags | PrimFlags.Phantom));
                     PathFinding.MadePhantom = true;
                 }
                 else
                 {
-                    WorldSystem.SetPrimFlags(Prim, (PrimFlags)(Prim.Flags - PrimFlags.Phantom));
+                    WorldSystem.SetPrimFlags(Prim, (PrimFlags) (Prim.Flags - PrimFlags.Phantom));
                     PathFinding.MadePhantom = false;
                 }
             }
@@ -843,12 +859,12 @@ namespace Cogbot.World
                 if (IsPhysical == value) return;
                 if (value)
                 {
-                    WorldSystem.SetPrimFlags(Prim, (PrimFlags)(Prim.Flags | PrimFlags.Physics));
+                    WorldSystem.SetPrimFlags(Prim, (PrimFlags) (Prim.Flags | PrimFlags.Physics));
                     PathFinding.MadeNonPhysical = false;
                 }
                 else
                 {
-                    WorldSystem.SetPrimFlags(Prim, (PrimFlags)(Prim.Flags - PrimFlags.Physics));
+                    WorldSystem.SetPrimFlags(Prim, (PrimFlags) (Prim.Flags - PrimFlags.Physics));
                     PathFinding.MadeNonPhysical = true;
                 }
             }
@@ -856,11 +872,9 @@ namespace Cogbot.World
 
         public bool InventoryEmpty
         {
-            get
-            {
-                lock (HasPrimLock) return (HasPrim && (Prim.Flags & PrimFlags.InventoryEmpty) != 0);
-            }
+            get { lock (HasPrimLock) return (HasPrim && (Prim.Flags & PrimFlags.InventoryEmpty) != 0); }
         }
+
         public bool TaskInventoryLikely
         {
             get
@@ -895,33 +909,26 @@ namespace Cogbot.World
                 return mightHaveTaskInv;
             }
         }
+
         public bool Sandbox
         {
-            get
-            {
-                lock (HasPrimLock) return HasPrim && (Prim.Flags & PrimFlags.Sandbox) != 0;
-            }
+            get { lock (HasPrimLock) return HasPrim && (Prim.Flags & PrimFlags.Sandbox) != 0; }
         }
 
         public bool Temporary
         {
-            get
-            {
-                lock (HasPrimLock) return HasPrim && (Prim.Flags & PrimFlags.Temporary) != 0;
-            }
+            get { lock (HasPrimLock) return HasPrim && (Prim.Flags & PrimFlags.Temporary) != 0; }
         }
 
         public virtual bool Flying
         {
-            get
-            {
-                lock (HasPrimLock) return HasPrim && (Prim.Flags & PrimFlags.Flying) != 0;
-            }
+            get { lock (HasPrimLock) return HasPrim && (Prim.Flags & PrimFlags.Flying) != 0; }
             set
             {
                 if (Flying != value)
                 {
-                    lock (HasPrimLock) if (IsControllable)
+                    lock (HasPrimLock)
+                        if (IsControllable)
                         {
                             Prim.Flags = (Prim.Flags | PrimFlags.Flying);
                             //WorldSystem.client.Objects.SetFlags();
@@ -932,27 +939,19 @@ namespace Cogbot.World
 
         public bool AnimSource
         {
-            get
-            {
-                lock (HasPrimLock) return HasPrim && (Prim.Flags & PrimFlags.AnimSource) != 0;
-            }
+            get { lock (HasPrimLock) return HasPrim && (Prim.Flags & PrimFlags.AnimSource) != 0; }
         }
 
         public bool AllowInventoryDrop
         {
-            get
-            {
-                lock (HasPrimLock) return HasPrim && (Prim.Flags & PrimFlags.AllowInventoryDrop) != 0;
-            }
+            get { lock (HasPrimLock) return HasPrim && (Prim.Flags & PrimFlags.AllowInventoryDrop) != 0; }
         }
 
         public bool IsAvatar
         {
-            get
-            {
-                return this is SimAvatar || _Prim0 is Avatar;
-            }
+            get { return this is SimAvatar || _Prim0 is Avatar; }
         }
+
         //Vector3d lastPos;
         //SimWaypoint swp;
         //public virtual SimWaypoint GetWaypoint()
@@ -990,6 +989,11 @@ namespace Cogbot.World
         //}
 
 
+        public double ZDist(SimPosition self)
+        {
+            throw new NotImplementedException();
+        }
+
         public double Distance(SimPosition prim)
         {
             if (prim == null || !prim.IsRegionAttached) return 1300;
@@ -1005,19 +1009,23 @@ namespace Cogbot.World
             }
             return 1200;
         }
+
         public static double DistanceNoZ(Vector3d a, Vector3d b)
         {
             return SimPathStore.DistanceNoZ(a, b);
         }
 
+        public static double ZDistance(Vector3d a, Vector3d b)
+        {
+            return Math.Abs(a.Z - b.Z);
+        }
+
         // the prim in Secondlife
         public Primitive _Prim0;
+
         public Primitive Prim0
         {
-            get
-            {
-                return _Prim0;
-            }
+            get { return _Prim0; }
         }
 
         public Primitive Prim
@@ -1028,7 +1036,7 @@ namespace Cogbot.World
                 {
                     if (_Prim0 == null)
                     {
-                        if (RegionHandle !=0)
+                        if (RegionHandle != 0)
                         {
                             Simulator S = WorldSystem.GetSimulator(RegionHandle);
                             if (S != null)
@@ -1066,11 +1074,9 @@ namespace Cogbot.World
 
         public bool NeedsUpdate
         {
-            get
-            {
-                return needUpdate;
-            }
+            get { return needUpdate; }
         }
+
         public bool EnsureProperties(TimeSpan block)
         {
             if (needUpdate)
@@ -1080,16 +1086,18 @@ namespace Cogbot.World
                     UpdateProperties(_propertiesCache);
                     return true;
                 }
-                else                {
+                else
+                {
                     if (RegionHandle != 0 && _Prim0 != null)
                     {
                         Simulator simulator = GetSimulator();
                         if (!WorldObjects.NeverSelect(LocalID, simulator)) return true;
-                        return WaitForUpdate(() => WorldObjects.ReallyEnsureSelected(GetSimulator(), LocalID), block);  
+                        return WaitForUpdate(() => WorldObjects.ReallyEnsureSelected(GetSimulator(), LocalID), block);
                     }
                     return false;
                 }
-            } else
+            }
+            else
             {
                 return ForceUpdateIfOld(block);
             }
@@ -1128,9 +1136,9 @@ namespace Cogbot.World
             }
         }
 
-        [ConfigSetting(Description = "how long properties last before being considered needing re-select")]
-        public static TimeSpan PropertiesStaleTime = TimeSpan.FromSeconds(30);
+        [ConfigSetting(Description = "how long properties last before being considered needing re-select")] public static TimeSpan PropertiesStaleTime = TimeSpan.FromSeconds(30);
         private DateTime LastUpdateTime = DateTime.MinValue;
+
         public bool ForceUpdateIfOld(TimeSpan block)
         {
             if (DateTime.Now.Subtract(LastUpdateTime) < PropertiesStaleTime) return true;
@@ -1144,7 +1152,7 @@ namespace Cogbot.World
             {
                 needUpdate = true;
                 _propertiesCache = null;
-                return WaitForUpdate(() => WorldObjects.ReallyEnsureSelected(GetSimulator(), LocalID), block);                
+                return WaitForUpdate(() => WorldObjects.ReallyEnsureSelected(GetSimulator(), LocalID), block);
             }
             return false;
         }
@@ -1169,11 +1177,9 @@ namespace Cogbot.World
                     if (WasKilled) PathFinding.RemoveCollisions();
                 }
             }
-            get
-            {
-                return WasKilled;
-            }
+            get { return WasKilled; }
         }
+
         public SimObjectPathFindingImpl PathFinding { get; set; }
 
 
@@ -1190,12 +1196,12 @@ namespace Cogbot.World
         }
 
         public SimObjectImpl(UUID id, WorldObjects objectSystem, Simulator sim)
-        //: base(prim.ID.ToString())
-        // : base(prim, SimRegion.SceneProviderFromSimulator(sim))
+            //: base(prim.ID.ToString())
+            // : base(prim, SimRegion.SceneProviderFromSimulator(sim))
         {
             //ActionEventQueue = new Queue<SimObjectEvent>(MaxEventSize);
             ID = id;
-            PathFinding = new SimObjectPathFindingImpl { thiz = this };
+            PathFinding = new SimObjectPathFindingImpl {thiz = this};
             if (sim != null) RegionHandle = sim.Handle;
             WorldSystem = objectSystem;
             var ot = SimTypeSystem.CreateInstanceType(id.ToString());
@@ -1206,13 +1212,13 @@ namespace Cogbot.World
                                   ObjectType = ot
                               };
             ot.IsObjectTop = true;
-                
+
             //_CurrentRegion = SimRegion.GetRegion(sim);
             // PathStore = GetSimRegion();
             //WorldSystem.EnsureSelected(prim.ParentID,sim);
             // Parent; // at least request it
         }
-        
+
         public virtual void SetFirstPrim(Primitive prim)
         {
             lock (HasPrimLock)
@@ -1231,9 +1237,10 @@ namespace Cogbot.World
                             _primRefs.Add(prim);
                             int tries = 3;
                             WorldSystem.DelayedEval(() => (prim.Type != PrimType.Unknown), () =>
-                                                                                   {
-                                                                                       AddInfoMap(prim, "Primitive");
-                                                                                   }, tries);
+                                                                                               {
+                                                                                                   AddInfoMap(prim,
+                                                                                                              "Primitive");
+                                                                                               }, tries);
                         }
                     }
                     if (prim.Properties != null)
@@ -1250,11 +1257,12 @@ namespace Cogbot.World
                         WorldObjects.SimChildObjects.AddTo(this);
                     }
 
-                    if (WorldPathSystem.MaintainSimCollisions(prim.RegionHandle) && prim.Sculpt != null && WorldPathSystem.SculptCollisions)
+                    if (WorldPathSystem.MaintainSimCollisions(prim.RegionHandle) && prim.Sculpt != null &&
+                        WorldPathSystem.SculptCollisions)
                     {
                         WorldSystem.StartTextureDownload(prim.Sculpt.SculptTexture);
                     }
-                   // TaskInvGrabber.Enqueue(StartGetTaskInventory);
+                    // TaskInvGrabber.Enqueue(StartGetTaskInventory);
                 }
         }
 
@@ -1308,7 +1316,7 @@ namespace Cogbot.World
                     if (value.Children.AddTo(this))
                     {
                         needUpdate = true;
-                        SimObjectImpl simObject = (SimObjectImpl)value;
+                        SimObjectImpl simObject = (SimObjectImpl) value;
                         simObject.needUpdate = true;
                     }
                 }
@@ -1319,7 +1327,7 @@ namespace Cogbot.World
 
         public bool AddChild(SimObject simO)
         {
-            SimObjectImpl simObject = (SimObjectImpl)simO;
+            SimObjectImpl simObject = (SimObjectImpl) simO;
             needUpdate = true;
             simObject._Parent = this;
             simObject.needUpdate = true;
@@ -1384,7 +1392,8 @@ namespace Cogbot.World
 
         // This field is supposed to be the most recent property udate 
         private Primitive.ObjectProperties MostRecentPropertyUpdate;
-        readonly object MostRecentPropertyUpdateLock = new object();
+        private readonly object MostRecentPropertyUpdateLock = new object();
+
         private void UpdateProperties(Primitive.ObjectProperties objectProperties)
         {
             if (objectProperties == null)
@@ -1400,7 +1409,7 @@ namespace Cogbot.World
             lock (toStringLock)
             {
                 toStringNeedsUpdate = true;
-                _TOSRTING = null;                
+                _TOSRTING = null;
             }
             lock (MostRecentPropertyUpdateLock)
             {
@@ -1409,7 +1418,8 @@ namespace Cogbot.World
                     if (MostRecentPropertyUpdate == null)
                     {
                         MostRecentPropertyUpdate = new Primitive.ObjectProperties();
-                    } MostRecentPropertyUpdate.SetFamilyProperties(objectProperties);
+                    }
+                    MostRecentPropertyUpdate.SetFamilyProperties(objectProperties);
                 }
                 else
                 {
@@ -1491,13 +1501,15 @@ namespace Cogbot.World
 
         private string _TOSRTING;
         private readonly object toStringLock = new object();
+
         public override string ToString()
         {
             lock (toStringLock) return ToStringReal();
         }
+
         public string ToStringReal()
         {
-          //  string _TOSRTING = this._TOSRTING;
+            //  string _TOSRTING = this._TOSRTING;
 
             if (needUpdate || _TOSRTING == null || toStringNeedsUpdate)
             {
@@ -1592,10 +1604,10 @@ namespace Cogbot.World
                     _TOSRTING += "(ch0)";
                 }
 
-                const PrimFlags AllPrimFlags = (PrimFlags)0xffffffff;
+                const PrimFlags AllPrimFlags = (PrimFlags) 0xffffffff;
                 const PrimFlags FlagsToPrintFalse =
                     PrimFlags.ObjectAnyOwner | PrimFlags.InventoryEmpty | PrimFlags.ObjectOwnerModify;
-                const PrimFlags FlagsToPrintTrue = (PrimFlags)(AllPrimFlags - FlagsToPrintFalse);
+                const PrimFlags FlagsToPrintTrue = (PrimFlags) (AllPrimFlags - FlagsToPrintFalse);
 
                 PrimFlags showTrue = (Prim.Flags & FlagsToPrintTrue);
                 if (showTrue != PrimFlags.None) _TOSRTING += "(PrimFlagsTrue " + showTrue + ")";
@@ -1684,7 +1696,7 @@ namespace Cogbot.World
                     {
                         return false;
                     }
-                } 
+                }
             }
         }
 
@@ -1736,7 +1748,7 @@ namespace Cogbot.World
                         Error("GetSimRotation !IsRegionAttached: " + this);
                         return transValue;
                     }
-                    transValue = outerPrim.Rotation * transValue;
+                    transValue = outerPrim.Rotation*transValue;
                     thisPrim = outerPrim;
                     //  transValue.Normalize();
                 }
@@ -1745,6 +1757,7 @@ namespace Cogbot.World
         }
 
         public Vector3 LastKnownSimPos;
+
         public virtual bool TryGetGlobalPosition(out Vector3d pos)
         {
             return TryGetGlobalPosition(out pos, null);
@@ -1888,10 +1901,12 @@ namespace Cogbot.World
                 LastKnownSimPos = value;
             }
         }
+
         protected Primitive GetParentPrim(Primitive thisPrim, OutputDelegate Debug)
         {
             lock (HasPrimLock) return GetParentPrim0(thisPrim, Debug);
         }
+
         protected Primitive GetParentPrim0(Primitive thisPrim, OutputDelegate Debug)
         {
             if (RequestedParent && thisPrim == _Prim0 && _Parent != null)
@@ -1987,6 +2002,7 @@ namespace Cogbot.World
         {
             get { return WorldObjects.TaskInvGrabber; }
         }
+
         protected TaskQueueHandler ParentGrabber
         {
             get { return WorldObjects.ParentGrabber; }
@@ -2004,6 +2020,7 @@ namespace Cogbot.World
         }
 
         private float cachedSize = 0f;
+
         /// <summary>
         ///  Gets the distance a ISimAvatar may be from ISimObject to use
         /// </summary>
@@ -2012,7 +2029,7 @@ namespace Cogbot.World
         {
             if (IsAvatar) return 2f;
             if (cachedSize > 0) return cachedSize;
-            double size = Math.Sqrt(BottemArea()) / 2;
+            double size = Math.Sqrt(BottemArea())/2;
 
             //            if (IsPhantom) return size;
 
@@ -2032,7 +2049,7 @@ namespace Cogbot.World
                 double childSize = obj.GetSizeDistance();
                 if (childSize > size) size = childSize;
             }
-            return cachedSize = (float)size;
+            return cachedSize = (float) size;
         }
 
         public virtual List<SimObject> GetNearByObjects(double maxDistance, bool rootOnly)
@@ -2047,17 +2064,14 @@ namespace Cogbot.World
                 }
                 return objs;
             }
-            List<SimObject> objs2 = WorldSystem.GetNearByObjects(GlobalPosition, this, (float)maxDistance, rootOnly);
+            List<SimObject> objs2 = WorldSystem.GetNearByObjects(GlobalPosition, this, (float) maxDistance, rootOnly);
             SortByDistance(objs2);
             return objs2;
         }
 
         public virtual Vector3d GlobalPosition
         {
-            get
-            {
-                return ToGlobal(RegionHandle, SimPosition);
-            }
+            get { return ToGlobal(RegionHandle, SimPosition); }
         }
 
         protected Vector3d ToGlobal(ulong regionHandle, Vector3 objectLoc)
@@ -2086,10 +2100,30 @@ namespace Cogbot.World
             return SimTypeSystem.MatchString(toString1, name);
         }
 
+        public bool Named(string name)
+        {
+            return GetName() == name;
+        }
+
+        public bool NamedCI(string name)
+        {
+            return GetName().ToLower() == name;
+        }
+
+        public bool MaxDist(float dist, SimPosition from)
+        {
+            return Distance(from) < dist;
+        }
+
+        public bool MinDist(float dist, SimPosition from)
+        {
+            return Distance(from) > dist;
+        }
+
         public virtual bool HasFlag(object name)
         {
             if (name == null) return PrimFlags.None == Prim.Flags;
-            if (name is PrimFlags) return (Prim.Flags & (PrimFlags)name) != 0;
+            if (name is PrimFlags) return (Prim.Flags & (PrimFlags) name) != 0;
             return (" " + Prim.Flags.ToString().ToLower() + " ").Contains(" " + name.ToString().ToLower() + " ");
         }
 
@@ -2114,18 +2148,18 @@ namespace Cogbot.World
         public int CompareDistance(SimObject p1, SimObject p2)
         {
             if (p1 == p2) return 0;
-            return (int)(Distance(p1) - Distance(p2));
+            return (int) (Distance(p1) - Distance(p2));
         }
 
-        static int CompareSize(SimObject p1, SimObject p2)
+        private static int CompareSize(SimObject p1, SimObject p2)
         {
-            return (int)(p1.GetSizeDistance() * p1.GetCubicMeters() - p2.GetSizeDistance() * p2.GetCubicMeters());
+            return (int) (p1.GetSizeDistance()*p1.GetCubicMeters() - p2.GetSizeDistance()*p2.GetCubicMeters());
         }
 
         public int CompareDistance(Vector3d v1, Vector3d v2)
         {
             Vector3d rp = GlobalPosition;
-            return (int)(Vector3d.Distance(rp, v1) - Vector3d.Distance(rp, v2));
+            return (int) (Vector3d.Distance(rp, v1) - Vector3d.Distance(rp, v2));
         }
 
         public string DistanceVectorString(SimPosition obj)
@@ -2185,7 +2219,7 @@ namespace Cogbot.World
             if (b1.MaxZ < b2.MaxZ) return -1;
             if (b2.MaxZ < b1.MaxZ) return 1;
             // they are the same hieght (basically) so compare bottems
-            return (int)(b1.MinZ - b2.MinZ);
+            return (int) (b1.MinZ - b2.MinZ);
         }
 
         public float BottemArea()
@@ -2196,12 +2230,12 @@ namespace Cogbot.World
                 {
                     float bottemX = OuterBox.MaxX - OuterBox.MinX;
                     float bottemY = OuterBox.MaxY - OuterBox.MinY;
-                    return bottemX * bottemY;
+                    return bottemX*bottemY;
                 }
 
             }
             if (!HasPrim) return 1;
-            return Prim.Scale.X * Prim.Scale.Y;
+            return Prim.Scale.X*Prim.Scale.Y;
         }
 
         //public SimRegion _CurrentRegion;
@@ -2353,7 +2387,7 @@ namespace Cogbot.World
                 object o = args0_N[argN];
                 if (o is SimObject)
                 {
-                    SimObject newSit = (SimObject)o;
+                    SimObject newSit = (SimObject) o;
                     newSit.AddCanBeTargetOf(argN, SE);
                 }
             }
@@ -2368,9 +2402,9 @@ namespace Cogbot.World
             int newLen = len - p;
             if (newLen <= 0)
             {
-                return (object[])Array.CreateInstance(t, 0);
+                return (object[]) Array.CreateInstance(t, 0);
             }
-            object[] o = (object[])Array.CreateInstance(t, newLen);
+            object[] o = (object[]) Array.CreateInstance(t, newLen);
             Array.Copy(args, p, o, 0, newLen);
             return o;
         }
@@ -2381,7 +2415,7 @@ namespace Cogbot.World
             int len = args.Length;
             Type t = args.GetType().GetElementType();
             int newLen = len + 1;
-            object[] o = (object[])Array.CreateInstance(t, newLen);
+            object[] o = (object[]) Array.CreateInstance(t, newLen);
             Array.Copy(args, 0, o, 1, len);
             o[0] = p;
             return o;
@@ -2456,10 +2490,7 @@ namespace Cogbot.World
 
         public bool IsAttachable
         {
-            get
-            {
-                return AttachPoint != AttachmentPoint.Default;
-            }
+            get { return AttachPoint != AttachmentPoint.Default; }
         }
 
         public bool IsChild
@@ -2501,7 +2532,7 @@ namespace Cogbot.World
         public static readonly List<InventoryBase> EMPTY_TASK_INV = new List<InventoryBase>();
         public static readonly List<InventoryBase> ERROR_TASK_INV = new List<InventoryBase>();
 
-		/// <summary>
+        /// <summary>
         /// Retrieve a listing of the items contained in a task (Primitive)
         /// </summary>
         /// <param name="objectID">The tasks <seealso cref="UUID"/></param>
@@ -2518,16 +2549,17 @@ namespace Cogbot.World
             InventoryManager man = Client.Inventory;
             man.TaskInventoryReply += ti_callback;
             man.RequestTaskInventory(LocalID);
-		    //Client.Objects.RequestObjectMedia(ID, GetSimulator(), med_entry);
+            //Client.Objects.RequestObjectMedia(ID, GetSimulator(), med_entry);
         }
 
         private void med_entry(bool success, string version, MediaEntry[] facemedia)
-        {         
+        {
             //prim is now updated   
         }
 
         private bool _StartedGetTaskInventory;
         private ulong _xferID;
+
         private void ti_callback(object sender, TaskInventoryReplyEventArgs e)
         {
             if (e.ItemID == ID)
@@ -2549,7 +2581,8 @@ namespace Cogbot.World
                     if (TaskInventoryLikely)
                     {
                         objectinventory = ERROR_TASK_INV;
-                    } else
+                    }
+                    else
                     {
                         objectinventory = EMPTY_TASK_INV;
                     }
@@ -2586,7 +2619,8 @@ namespace Cogbot.World
                     if (_StartedGetTaskInventory && !InventoryEmpty)
                     {
                         missing += " TaskInv";
-                    } else
+                    }
+                    else
                     {
                         StartGetTaskInventory();
                         missing += " WTaskInv";
@@ -2603,12 +2637,12 @@ namespace Cogbot.World
                         missing += " PrimTextures";
                         requestMedia = true;
                     }
-                    if (Object.Equals(_Prim0.ParticleSys , default(Primitive.ParticleSystem)))
+                    if (Object.Equals(_Prim0.ParticleSys, default(Primitive.ParticleSystem)))
                     {
                         missing += " PrimParticleSys";
                         requestMedia = true;
                     }
-                    if (_Prim0.Type==PrimType.Sculpt && _Prim0.Sculpt == null)
+                    if (_Prim0.Type == PrimType.Sculpt && _Prim0.Sculpt == null)
                     {
                         missing += " PrimSculpt";
                         requestMedia = true;
@@ -2616,7 +2650,7 @@ namespace Cogbot.World
                 }
                 if (_Parent == null)
                 {
-                    if (_Prim0!=null)
+                    if (_Prim0 != null)
                     {
                         if (_Prim0.ParentID != 0)
                         {
@@ -2659,10 +2693,16 @@ namespace Cogbot.World
                 }
                 if (selectObject) Client.Objects.SelectObject(GetSimulator(), LocalID, true);
                 if (requestObject) Client.Objects.RequestObject(GetSimulator(), LocalID);
-               // if (requestMedia) Client.Objects.RequestObjectMedia(ID, GetSimulator(), med_entry);
+                // if (requestMedia) Client.Objects.RequestObjectMedia(ID, GetSimulator(), med_entry);
                 return missing.TrimStart();
             }
         }
+
+        public bool IsComplete
+        {
+            get { return string.IsNullOrEmpty(MissingData); }
+        }
+
         private List<InventoryBase> objectinventory;
         // might take 10 secoinds the first time
         public virtual List<InventoryBase> TaskInventory
@@ -2681,15 +2721,17 @@ namespace Cogbot.World
                 return objectinventory;
             }
         }
+
         public virtual bool OnEffect(object evSender, string effectType, object t, object p, float duration, UUID id)
         {
-            CogbotEvent newSimObjectEvent = ACogbotEvent.CreateEvent(evSender, SimEventType.Once ,effectType,
-                SimEventType.EFFECT | SimEventType.REGIONAL,
-                                                                    WorldObjects.ToParameter("doneBy", this),
-                                                                    WorldObjects.ToParameter("objectActedOn", t),
-                                                                    WorldObjects.ToParameter("eventPartiallyOccursAt", p),
-                                                                    WorldObjects.ToParameter("simDuration", duration),
-                                                                    WorldObjects.AsEffectID(id));
+            CogbotEvent newSimObjectEvent = ACogbotEvent.CreateEvent(evSender, SimEventType.Once, effectType,
+                                                                     SimEventType.EFFECT | SimEventType.REGIONAL,
+                                                                     WorldObjects.ToParameter("doneBy", this),
+                                                                     WorldObjects.ToParameter("objectActedOn", t),
+                                                                     WorldObjects.ToParameter("eventPartiallyOccursAt",
+                                                                                              p),
+                                                                     WorldObjects.ToParameter("simDuration", duration),
+                                                                     WorldObjects.AsEffectID(id));
             bool noteable = LogEvent(newSimObjectEvent);
             if (!noteable)
             {
@@ -2751,14 +2793,15 @@ namespace Cogbot.World
                     return ObjectType.IsComplete;
                 }
             }
+
             /// <summary>
             /// the bonus or handicap the object has compared to the defination 
             /// (more expensive chair might have more effect)
             /// </summary>
             public float scaleOnNeeds = 1.11F;
 
-            [ConfigSetting(Description = "how long affordance system will wait for object properties")]
-            public static TimeSpan AffordanceWaitProps = TimeSpan.FromSeconds(5);
+            [ConfigSetting(Description = "how long affordance system will wait for object properties")] public static
+                TimeSpan AffordanceWaitProps = TimeSpan.FromSeconds(5);
 
             public SimObjectType IsTypeOf(SimObjectType superType)
             {
@@ -2767,7 +2810,7 @@ namespace Cogbot.World
 
             public double RateIt(BotNeeds needs)
             {
-                return ObjectType.RateIt(needs, GetBestUse(needs)) * scaleOnNeeds;
+                return ObjectType.RateIt(needs, GetBestUse(needs))*scaleOnNeeds;
             }
 
             public IList<SimTypeUsage> GetTypeUsages()
@@ -2797,8 +2840,10 @@ namespace Cogbot.World
             public void UpdateFromProperties(Primitive.ObjectProperties objectProperties)
             {
                 if (!string.IsNullOrEmpty(objectProperties.SitName)) ObjectType.SitName = objectProperties.SitName;
-                if (!string.IsNullOrEmpty(objectProperties.TouchName)) ObjectType.TouchName = objectProperties.TouchName;
-                if (SimObjectImpl.AffordinancesGuessSimObjectTypes) SimTypeSystem.GuessSimObjectTypes(objectProperties, thiz);
+                if (!string.IsNullOrEmpty(objectProperties.TouchName))
+                    ObjectType.TouchName = objectProperties.TouchName;
+                if (SimObjectImpl.AffordinancesGuessSimObjectTypes)
+                    SimTypeSystem.GuessSimObjectTypes(objectProperties, thiz);
             }
 
             public BotNeeds GetActualUpdate(string pUse)
@@ -2843,7 +2888,7 @@ namespace Cogbot.World
 
         private bool IsSolidCachedKnown, IsSolidCachedTrue;
 
-        virtual public bool IsSolid
+        public virtual bool IsSolid
         {
             get
             {
@@ -2878,6 +2923,7 @@ namespace Cogbot.World
                     return WorldPathSystem.SkipPassableMeshes && (thiz.IsPassable || thiz.IsPhantom);
                 }
             }
+
             public SimMesh Mesh
             {
                 get
@@ -2940,6 +2986,7 @@ namespace Cogbot.World
             }
 
             private bool? requestedMeshed;
+
             public bool IsWorthMeshing
             {
                 get
@@ -2958,6 +3005,7 @@ namespace Cogbot.World
 
 
             private bool IsMeshing;
+
             public virtual bool AddCollisions()
             {
                 try
@@ -2973,6 +3021,7 @@ namespace Cogbot.World
             }
 
             private bool IsMeshingQueued = false;
+
             public virtual bool QueueMeshing()
             {
                 if (!thiz.IsRegionAttached)
@@ -3081,7 +3130,7 @@ namespace Cogbot.World
                 PrimFlags tempFlags = Prim.Flags;
                 if (MadePhantom)
                 {
-                    ((SimObjectPathMover)actor).Touch(thiz);
+                    ((SimObjectPathMover) actor).Touch(thiz);
                     changed = true;
                     thiz.IsPhantom = false;
                 }
@@ -3100,7 +3149,7 @@ namespace Cogbot.World
                 {
                     if (!thiz.IsPhantom)
                     {
-                        ((SimObjectPathMover)actor).Touch(thiz);
+                        ((SimObjectPathMover) actor).Touch(thiz);
                         return true;
                     }
                     return false;
@@ -3117,17 +3166,18 @@ namespace Cogbot.World
                 if (!thiz.IsPhantom)
                 {
                     thiz.IsPhantom = true;
-                    ((SimObjectPathMover)actor).Touch(thiz);
+                    ((SimObjectPathMover) actor).Touch(thiz);
                     changed = true;
                     // reset automatically after 30 seconds
                     new Thread(new ThreadStart(delegate()
-                    {
-                        Thread.Sleep(30000);
-                        thiz.IsPhantom = false;
-                    })).Start();
+                                                   {
+                                                       Thread.Sleep(30000);
+                                                       thiz.IsPhantom = false;
+                                                   })).Start();
                 }
                 return changed;
             }
+
             public bool CanShoot(SimPosition position)
             {
                 if (!thiz.IsRegionAttached || !position.IsRegionAttached) return false;
@@ -3139,10 +3189,12 @@ namespace Cogbot.World
                 return (first == end);
             }
         }
-        virtual public bool HasPrim
+
+        public virtual bool HasPrim
         {
             get { return !ReferenceEquals(_Prim0, null); }
         }
+
         public readonly object HasPrimLock = new object();
 
         internal Color DebugColor()
@@ -3154,7 +3206,7 @@ namespace Cogbot.World
         #region SimObject Members
 
         private Dictionary<string, object> _infoMapDictBackup;
-        readonly object FILock = new object();
+        private readonly object FILock = new object();
         protected bool toStringNeedsUpdate = true;
         public bool IsDebugging { get; set; }
 
@@ -3171,7 +3223,7 @@ namespace Cogbot.World
                         if (val is NullType) return null;
                         return val;
                     }
-                    if (_infoMapDictBackup==null || !_infoMapDictBackup.ContainsKey(s))
+                    if (_infoMapDictBackup == null || !_infoMapDictBackup.ContainsKey(s))
                     {
                         return null;
                     }
@@ -3187,7 +3239,7 @@ namespace Cogbot.World
                     {
                         _infoMap[s].SetValue(value);
                     }
-                    if (_infoMapDictBackup == null) _infoMapDictBackup = new Dictionary<string, object>(); 
+                    if (_infoMapDictBackup == null) _infoMapDictBackup = new Dictionary<string, object>();
                     _infoMapDictBackup[s] = value;
                 }
             }
@@ -3204,13 +3256,13 @@ namespace Cogbot.World
                 {
                     return default(T);
                 }
-                Type tt = typeof(T);
+                Type tt = typeof (T);
                 object obj;
                 if (!_AsObjectType.TryGetValue(tt, out obj))
                 {
                     obj = _AsObjectType[tt] = default(T);
                 }
-                return (T)obj;
+                return (T) obj;
             }
         }
 
@@ -3242,6 +3294,7 @@ namespace Cogbot.World
                 return true;
             }
         }
+
         public bool CanPush
         {
             get
@@ -3261,6 +3314,7 @@ namespace Cogbot.World
                 return true;
             }
         }
+
         public bool CanUseVehical
         {
             get
@@ -3318,6 +3372,58 @@ namespace Cogbot.World
         {
             return !Equals(left, right);
         }
+
+        #region Implementation of MixinSubObjects
+
+        private static Type[] MixedTypes = new Type[]
+                                               {
+                                                   typeof(SimObjectImpl), 
+                                                   typeof(Primitive),
+                                                   typeof(Primitive.PhysicsProperties),
+                                                   typeof(Primitive.ParticleSystem),
+                                                   typeof(Primitive.ObjectProperties),
+                                                   typeof(SimObjectAffordanceImpl),
+                                                   typeof(SimObjectPathFindingImpl),
+                                                   typeof(SimMesh)
+                                               };
+        public Type[] GetMixedTypes()
+        {
+            return MixedTypes;
+        }
+        public Func<object>[] GetInstances()
+        {
+            return new Func<object>[]
+                       {
+                           () => this,
+                           () => Prim,
+                           () => Prim.PhysicsProps,
+                           () => Prim.ParticleSys,
+                           () => Properties, 
+                           () => Affordances, 
+                           () => PathFinding, 
+                           () => PathFinding.Mesh,
+                       };
+        }
+        public object GetInstance(Type subtype)
+        {
+            for (int i = 0; i < MixedTypes.Length; i++)
+            {
+                var s = MixedTypes[i];
+                if (subtype.IsAssignableFrom(s))
+                {
+                    var insts = GetInstances();
+                    return insts[i]();
+                }
+            }
+            return null;
+        }
+
+        public T GetInstance<T>()
+        {
+            return (T) GetInstance(typeof (T));
+        }
+
+        #endregion
     }
 
     public interface SimObjectAffordance : NotContextualSingleton
@@ -3361,6 +3467,7 @@ namespace Cogbot.World
         bool MakeEnterable(SimMover actor);
         bool RestoreEnterable(SimMover actor);
         //inherited from Object string ToString();
+        [ConvertTo]
         SimMesh Mesh { get; }
         bool AddCollisions();
         void UpdateCollisions();
@@ -3370,17 +3477,21 @@ namespace Cogbot.World
     }
 
 
-    public interface SimObject : SimPosition, BotMentalAspect, SimDistCalc 
+    public interface SimObject : SimPosition, BotMentalAspect, SimDistCalc, MixinSubObjects
     {
+        [ConvertTo]
         SimObjectImpl.SimObjectAffordanceImpl Affordances { get; }
         List<string> GetMenu(SimAvatar avatar);
 
+        [ConvertTo]
         SimObjectImpl.SimObjectPathFindingImpl PathFinding { get; }
 
         object this[String s] { get; set; }
         bool AddChild(SimObject simObject);
+        [FilterSpec]
         SimObject Parent { get; set; }
         bool BadLocation(Vector3 transValue);
+        [FilterSpec]
         ListAsSet<SimObject> Children { get; }
         int CompareDistance(SimObject p1, SimObject p2);
         int CompareDistance(Vector3d v1, Vector3d v2);
@@ -3403,6 +3514,7 @@ namespace Cogbot.World
         bool IsPhysical { get; set; }
         bool IsAttachment { get; }
         bool IsAttachable { get; }
+        [FilterSpec]
         AttachmentPoint AttachPoint { get; }
         bool IsChild { get; set; }
         bool IsRoot { get; }
@@ -3410,7 +3522,19 @@ namespace Cogbot.World
         bool IsSitDefined { get; }
         bool IsTouchDefined { get; }
         Primitive Prim { get; }
+        [FilterSpec]
         bool Matches(string name);
+        [FilterSpec]
+        bool Named(string name);
+        [FilterSpec(LastArgIsSelf = true)]
+        bool MaxDist(float dist, SimPosition self);
+        [FilterSpec(LastArgIsSelf = true)]
+        bool MinDist(float dist, SimPosition self);
+        [FilterSpec(LastArgIsSelf = true)]
+        double ZDist(SimPosition self);
+
+        [FilterSpec(LastArgIsSelf = true)]
+        double Distance(SimPosition other);
 
         Vector3d GetGlobalLeftPos(int angle, double Dist);        
         Box3Fill OuterBox { get; }
@@ -3424,7 +3548,9 @@ namespace Cogbot.World
         bool SetObjectPosition(Vector3d globalPos);
         bool SetObjectRotation(Quaternion localPos);
 
+        [FilterSpec]
         string SitName { get; }
+        [FilterSpec]
         ulong RegionHandle { get; }
         void SortByDistance(List<SimObject> sortme);
 
@@ -3450,11 +3576,13 @@ namespace Cogbot.World
 
 
         void SetFirstPrim(Primitive primitive);
-        //UUID ID { get; }
+        [ConvertTo]
         Primitive.ObjectProperties Properties { get; set; }
         bool HasPrim { get; }
+        [FilterSpec]
         uint LocalID { get; }
-        uint ParentID { get;}
+        [FilterSpec]
+        uint ParentID { get; }
         bool IsDebugging { get; set; }
         bool ConfirmedObject { get; set; }
         bool ShouldEventSource { get; }
@@ -3469,6 +3597,7 @@ namespace Cogbot.World
         Queue<CogbotEvent> ActionEventQueue { get; set; }
         List<InventoryBase> TaskInventory { get;  }
         string MissingData { get; }
+        bool IsComplete { get; }
         bool TaskInventoryLikely { get; }
         Primitive Prim0 { get; }
         bool IsTemporary { get; set; }

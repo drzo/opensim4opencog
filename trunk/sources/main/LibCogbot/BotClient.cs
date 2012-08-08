@@ -267,38 +267,15 @@ namespace Cogbot
         // Shell-like inventory commands need to be aware of the 'current' inventory folder.
         public InventoryFolder CurrentDirectory = null;
 
-        private Quaternion bodyRotation = Quaternion.Identity;
-        private Vector3 forward = new Vector3(0, 0.9999f, 0);
-        private Vector3 left = new Vector3(0.9999f, 0, 0);
-        private Vector3 up = new Vector3(0, 0, 0.9999f);
-        readonly private System.Timers.Timer updateTimer;
-
         public Cogbot.WorldObjects WorldSystem;
         static public BotClient SingleInstance
         {
             get { return ClientManager.SingleInstance.LastBotClient; }
         }
-        public static int debugLevel = 2;
-        public bool GetTextures = ClientManager.DownloadTextures;
-        //  public Cogbot.ClientManager ClientManager;
-        //  public VoiceManager VoiceManager;
-        // Shell-like inventory commands need to be aware of the 'current' inventory folder.
-
-        //  public GridClient this = null;
-        //  public OutputDelegate outputDelegate;
-        ///public DotCYC.CycConnectionForm cycConnection;
-        public Dictionary<string, DescribeDelegate> describers;
 
         readonly public Dictionary<string, Cogbot.Listener> Plugins;
         public SortedDictionary<string, CommandInfo> Commands;
-        public Dictionary<string, Tutorials.Tutorial> tutorials;
-        //public Utilities.BotTcpServer UtilitiesTcpServer;
 
-        public bool describeNext;
-        private int describePos;
-        private string currTutorial;
-
-        public int RunningMode = (int)Modes.normal;
         public UUID AnimationFolder = UUID.Zero;
 
         public BotInventoryEval BotInventory = null; // new InventoryEval(this);
@@ -327,11 +304,6 @@ namespace Cogbot
             manager.AddBotClient(this);
             NeedRunOnLogin = true;
             //manager.LastRefBotClient = this;
-            updateTimer = new System.Timers.Timer(500);
-            updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(updateTimer_Elapsed);
-
-            //            manager.AddTextFormCommands(this);
-            //          RegisterAllCommands(Assembly.GetExecutingAssembly());
 
             Settings.USE_INTERPOLATION_TIMER = false;
             Settings.LOG_LEVEL = Helpers.LogLevel.None;
@@ -404,16 +376,6 @@ namespace Cogbot
 
             //muteList = new List<string>();
 
-            // outputDelegate = new OutputDelegate(doOutput);
-
-            describers = new Dictionary<string, DescribeDelegate>();
-            describers["location"] = new DescribeDelegate(describeLocation);
-            describers["people"] = new DescribeDelegate(describePeople);
-            describers["objects"] = new DescribeDelegate(describeObjects);
-            describers["buildings"] = new DescribeDelegate(describeBuildings);
-
-            describePos = 0;
-
             Plugins = new Dictionary<string, Cogbot.Listener>();
             //registrationTypes["avatars"] = new Cogbot.Avatars(this);
             //registrationTypes["chat"] = new Cogbot.Chat(this);
@@ -456,9 +418,6 @@ namespace Cogbot
             Commands["stop following"] = follow;
             Commands["stop-following"] = follow;
 
-            tutorials = new Dictionary<string, Cogbot.Tutorials.Tutorial>();
-            tutorials["tutorial1"] = new Tutorials.Tutorial1(manager, this);
-
             // ensure all commands are registered when this constructor completes
             foreach (Type type in GetType().Assembly.GetTypes())
             {
@@ -466,7 +425,6 @@ namespace Cogbot
             }
             
             _gridClient = gc;
-            describeNext = true;
 
             XmlInterp = new XmlScriptInterpreter(this);
             XmlInterp.BotClient = this;
@@ -513,41 +471,16 @@ namespace Cogbot
             var callback = new EventHandler<CurrentGroupsEventArgs>(Groups_OnCurrentGroups);
             Groups.CurrentGroups += callback;
 
-            ClientManager.PostAutoExecEnqueue(() => { updateTimer.Start(); });
             BotInventory = new BotInventoryEval(this);
             ClientManager.PostAutoExecEnqueue(() =>
             {
-                if (useLispEventProducer)
+                if (UseLispEventProducer)
                 {
                     lispEventProducer = new LispEventProducer(this, LispTaskInterperter);
                 }
             });
-            ClientManager.PostAutoExecEnqueue(() =>
-            {
-                ClientManager.EnsureREPLNotPaused();
-            });
+            ClientManager.PostAutoExecEnqueue(ClientManager.EnsureREPLNotPaused);
 
-        }
-
-        //breaks up large responses to deal with the max IM size
-
-
-        private void updateTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            List<Command> actions = new List<Command>();
-            lock (Commands)
-            {
-                foreach (var cmd in Commands.Values)
-                {
-                    if (cmd.IsStateFul)
-                    {
-                        actions.Add(cmd.WithBotClient);
-                    }
-                }
-            }
-            foreach (var c in actions)
-                if (c.Active)
-                    c.Think();
         }
 
         private void AgentDataUpdateHandler(object sender, PacketReceivedEventArgs e)
@@ -705,14 +638,6 @@ namespace Cogbot
             }
         }
 
-        public void ListObjectsFolder()
-        {
-            // should be just the objects folder 
-            InventoryFolder rootFolder = Inventory.Store.RootFolder;
-            //InventoryEval searcher = new InventoryEval(this);
-            BotInventory.evalOnFolders(rootFolder, "print", "");
-        }
-
         public void wearFolder(string folderName)
         {
             // what we simply want
@@ -755,14 +680,6 @@ namespace Cogbot
                 Self.Chat("Can't find folder \"" + folderName + "\" to wear", 0, ChatType.Normal);
                 WriteLine("Can't find folder \"" + folderName + "\" to wear");
             }
-
-        }
-
-        public void PrintInventoryAll()
-        {
-            InventoryFolder rootFolder = Inventory.Store.RootFolder;
-            //InventoryEval searcher = new InventoryEval(this);
-            BotInventory.evalOnFolders(rootFolder, "print", "");
 
         }
 
@@ -866,80 +783,6 @@ namespace Cogbot
             WriteLine(txt);
         }
 
-        public void describeAll(bool detailed, OutputDelegate outputDel)
-        {
-            foreach (string dname in describers.Keys)
-                describers[dname].Invoke(detailed, outputDel);
-        }
-
-        public void describeSituation(OutputDelegate outputDel)
-        {
-            int i = 0;
-            string name = "";
-            foreach (string dname in describers.Keys)
-                if (i++ == describePos)
-                    name = dname;
-            describePos = (describePos + 1) % describers.Count;
-            describers[name].Invoke(false, outputDel);
-        }
-
-        public void describeLocation(bool detailed, OutputDelegate WriteLine)
-        {
-            WriteLine("$bot is in " + (Network.CurrentSim != null ? Network.CurrentSim.Name : "<Unknown>") + ".");
-        }
-
-        public void describePeople(bool detailed, OutputDelegate WriteLine)
-        {
-            //if (detailed) {
-            //    List<Avatar> avatarList = WorldSystem.getAvatarsNear(Self.RelativePosition, 8);
-            //    if (avatarList.Count > 1) {
-            //        string str = "$bot sees the people ";
-            //        for (int i = 0; i < avatarList.Count - 1; ++i)
-            //            str += WorldSystem.getAvatarName(avatarList[i]) + ", ";
-            //        str += "and " + WorldSystem.getAvatarName(avatarList[avatarList.Count - 1]) + ".";
-            //        WriteLine(str);
-            //    } else if (avatarList.Count == 1) {
-            //        WriteLine("$bot sees one person: " + WorldSystem.getAvatarName(avatarList[0]) + ".");
-            //    } else
-            //        WriteLine("doesn't see anyone around.");
-            //} else {
-            //    WriteLine("$bot sees " + WorldSystem.numAvatars() + " people.");
-            //}
-        }
-
-        public void describeObjects(bool detailed, OutputDelegate WriteLine)
-        {
-            List<Primitive> prims = WorldSystem.getPrimitives(16);
-            if (prims.Count > 1)
-            {
-                WriteLine("$bot sees the objects:");
-                for (int i = 0; i < prims.Count; ++i)
-                    WriteLine(WorldSystem.describePrim(prims[i], detailed));
-                //str += "and " + WorldSystem.GetSimObject(prims[prims.Count - 1]) + ".";
-                
-            }
-            else if (prims.Count == 1)
-            {
-                WriteLine("$bot sees one object: " + WorldSystem.describePrim(prims[0], detailed));
-            }
-            else
-            {
-                WriteLine("$bot doesn't see any objects around.");
-            }
-        }
-
-        public void describeBuildings(bool detailed, OutputDelegate WriteLine)
-        {
-            List<Vector3> buildings = WorldSystem.getBuildings(8);
-            WriteLine("$bot sees " + buildings.Count + " buildings.");
-        }
-
-
-        //internal void LogOut(GridClient Client)
-        //{
-        //Client.Network.Logout();
-        //}
-
         internal OpenMetaverse.Utilities.VoiceManager GetVoiceManager()
         {
             return VoiceManager;
@@ -954,12 +797,6 @@ namespace Cogbot
                 if (!Running) return;
                 Running = false;
                 logout();
-                if (updateTimer!=null)
-                {
-                    updateTimer.Enabled = false;
-                    updateTimer.Close();
-                }
-                //botPipeline.Shut
                 if (botPipeline != null) botPipeline.Dispose();
                 if (lispEventProducer != null) lispEventProducer.Dispose();
                 WorldSystem.Dispose();
@@ -975,13 +812,6 @@ namespace Cogbot
                 ClientManager.Remove(this);
             }
         }
-
-
-        void SimEventSubscriber.Dispose()
-        {
-            ((BotClient)this).Dispose();
-        }
-
 
         public void TalkExact(string str, int channel, ChatType type)
         {

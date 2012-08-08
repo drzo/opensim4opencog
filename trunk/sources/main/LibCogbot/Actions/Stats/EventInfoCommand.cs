@@ -40,7 +40,7 @@ namespace Cogbot.Actions.Inventory
             {
                 return Success(DebugInfo(TheSimAvatar, wtoList));
             }
-            Client.describeNext = false;
+
             float range;
             int blanks = 0;
             int nonblanks = 0;

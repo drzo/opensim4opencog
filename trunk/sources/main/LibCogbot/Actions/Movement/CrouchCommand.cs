@@ -29,7 +29,7 @@ namespace Cogbot.Actions.Movement
 
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
-            Client.describeNext = true;
+
             string[] tokens = args.tokens;
             //base.acceptInput(verb, args);
             if (tokens.Length == 0)
