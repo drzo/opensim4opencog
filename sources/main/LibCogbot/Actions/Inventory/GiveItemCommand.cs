@@ -17,31 +17,37 @@ namespace Cogbot.Actions.Inventory.Shell
         {
             Name = "give";
             Description = "Gives items from the current working directory to an avatar or object.";
+            usageString = "give <item1> [item2] [item3] [...] to <agent/primSpec1> [agent/primSpec2] [...] ";
             Category = CommandCategory.Inventory;
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-            string[] toks = (string[]) args.tokens.Clone();
-            if (args.Length < 2)
-            {
-                return ShowUsage(); // "give <agent/primSpec> <item1> [item2] [item3] [...]";
-            }
-
-            string[] objects;
-            if (!args.GetAfter("to", out objects) || objects.Length == 0)
+            string[] toks;
+            bool moveInsteadOfCopy = args.GetWithout("--move", out toks);
+            toks = (string[])toks.Clone();
+            int prepLocatedAt = args.IndexOf("to");
+            if (prepLocatedAt < 1 || prepLocatedAt + 1 > args.Length)
             {
                 return ShowUsage();
             }
-            ListAsSet<SimObject> allTargets = GetPrimitiveFromList(objects);
+            string[] objects = args.GetAfterIndex(prepLocatedAt);
 
-            int prepLocatedAt = args.IndexOf("to");
+            ListAsSet<SimObject> allTargets = GetPrimitiveFromList(objects);
+            int tc = allTargets.Count;
+            if (tc == 0)
+            {
+                return Failure("Cannot give to " + objects[0] + " avatar/objects");
+            }
+
+            Success("Going to give to " + tc + " avatar/objects");
+
             Array.Resize(ref toks, prepLocatedAt);
 
             int given = 0;
             foreach (var dest in allTargets)
             {
-                given += GiveTo(dest, toks, dest.IsAvatar);
+                given += GiveTo(dest, toks, moveInsteadOfCopy);
             }
             return SuccessOrFailure();
         }
@@ -60,8 +66,8 @@ namespace Cogbot.Actions.Inventory.Shell
                 // WARNING: Uses local copy of inventory contents, need to download them first.
                 String found = GiveMatches(Manager, inventoryName,
                                            FolderContents(Manager, Client.CurrentDirectory.UUID), dest, moveInsteadOfCopy);
-                if (!string.IsNullOrEmpty(found))
-                    ret += "No inventory item named " + inventoryName + " found." + nl;
+                if (string.IsNullOrEmpty(found))
+                    Failure("No inventory item named " + inventoryName + " found.");
             }
             return args.Length;
         }
@@ -96,6 +102,9 @@ namespace Cogbot.Actions.Inventory.Shell
             if (b is InventoryItem)
             {
                 InventoryItem item = b as InventoryItem;
+                
+                bool canCopy = (item.Permissions.OwnerMask & PermissionMask.Copy) == PermissionMask.Copy;
+
                 ret += item.Name + nl;
                 if (dest.IsAvatar)
                 {
