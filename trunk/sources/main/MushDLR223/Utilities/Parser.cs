@@ -650,7 +650,7 @@ namespace MushDLR223.ScriptEngines
 
         }
 
-        private string[] GetAfterIndex(int i)
+        public string[] GetAfterIndex(int i)
         {
             var p = new List<string>();
             for (int j = i + 1; j < tokens.Length; j++)

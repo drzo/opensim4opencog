@@ -606,22 +606,7 @@ namespace Cogbot
                 objs.Sort(((SimObject)relativeTo).CompareDistance);
                 prims = objs;
             }
-            else if (arg0Lower == "not")
-            {
-                var notprims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims, removeMatches, relativeTo);
-                argsUsed++;
-                foreach (SimObject o in LockInfo.CopyOf(prims))
-                {
-                    if (notprims.Contains(o))
-                    {
-                        prims.Remove(o);
-                    }                    
-                }
-                List<SimObject> objs = new List<SimObject>();
-                AsPrimitives(objs, prims);
-                prims = objs;
-            }
-            else
+            else 
             {
                 if (arg0Lower.StartsWith("$"))
                 {
@@ -635,18 +620,14 @@ namespace Cogbot
                         return prims;
                     }
                 }
-                SimObject prim;
-                if (tryGetPrim(args, out prim, out argsUsed))
+                if (prims.Count < 1)
                 {
-                    return new List<SimObject> { prim };
+                    argsUsed = args.Length;
+                    return prims;
                 }
-                else
-                {
-                    //return new List<SimObject>();
-                    prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims, removeMatches, relativeTo);
-                    argsUsed += 1;
-                    prims.RemoveAll(p => !SMatches(p, arg0Lower));
-                }
+                int argsUsedSpec;
+                prims = FilterSpecAttribute.ApplyFilter<SimObject>(args, out argsUsedSpec, prims, relativeTo, Debug);
+                argsUsed = argsUsedSpec;
             }
             return prims;
         }
