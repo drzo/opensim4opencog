@@ -85,7 +85,6 @@ namespace Cogbot.World
             get { return (float) (double) WorldObjects.GetZHeading(SimRotation); }
         }
 
-        [ConvertTo]
         public SimHeading GetHeading()
         {
             lock (HasPrimLock)
@@ -991,7 +990,7 @@ namespace Cogbot.World
 
         public double ZDist(SimPosition self)
         {
-            throw new NotImplementedException();
+            return ZDistance(GlobalPosition, self.GlobalPosition);
         }
 
         public double Distance(SimPosition prim)
