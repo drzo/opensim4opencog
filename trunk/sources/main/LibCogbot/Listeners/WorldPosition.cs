@@ -218,6 +218,7 @@ namespace Cogbot
             Avatar self = TheSimAvatar.theAvatar;
             foreach (SimAvatar simavatar in SimAvatars)
             {
+                if (!simavatar.IsLocal) continue;
                 Avatar avatar = simavatar.theAvatar;
                 if (avatar == self) continue;
                 avatarList.Add(avatar);

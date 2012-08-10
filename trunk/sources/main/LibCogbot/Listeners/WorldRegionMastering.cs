@@ -886,7 +886,7 @@ namespace Cogbot
                                 }
                                 if (key.Value == sourceID)
                                 {
-                                    var list = SimAvatars.CopyOf();
+                                    var list = SimAccounts.CopyOf();
                                     foreach (SimAvatar set in list)
                                     {
                                         if (set.ID == sourceID)

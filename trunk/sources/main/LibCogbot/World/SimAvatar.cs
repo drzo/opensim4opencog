@@ -715,6 +715,7 @@ namespace Cogbot.World
                 {
                     AspectName = av.Name;
                 }
+                WorldSystem.AddAvatar(this, ID);
             }
             base.SetFirstPrim(prim);
             //  Debug("AVATAR SetFirstPrim " + prim);

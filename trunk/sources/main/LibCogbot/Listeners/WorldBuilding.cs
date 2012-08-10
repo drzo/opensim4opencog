@@ -495,6 +495,8 @@ namespace Cogbot
                 SimObjects.Remove(O);
                 SimRootObjects.Remove(O);
                 SimChildObjects.Remove(O);
+                SimAttachmentObjects.Remove(O);
+                SimAvatars.Remove(O);
                 SendOnRemoveSimObject(O);
             }
             uint objectLocalID = thePrim.LocalID;

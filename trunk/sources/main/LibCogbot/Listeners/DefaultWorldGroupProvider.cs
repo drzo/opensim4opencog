@@ -23,8 +23,14 @@ namespace Cogbot
                 if (avatar == null) return null;
                 return avatar.GetSelectedObjects();
             });
+            AddObjectGroup("objects", () => WorldObjects.SimRootObjects.CopyOf());
+            AddObjectGroup("prims", () => WorldObjects.SimObjects.CopyOf());
+            AddObjectGroup("childprims", () => WorldObjects.SimChildObjects.CopyOf());
+            AddObjectGroup("attachments", () => WorldObjects.SimAttachmentObjects.CopyOf());
             // all known accounts
-            AddObjectGroup("accounts", () => WorldObjects.SimAvatars.CopyOf());
+            AddObjectGroup("accounts", () => WorldObjects.SimAccounts.CopyOf());
+            // all known avatars
+            AddObjectGroup("avatars", () => WorldObjects.SimAvatars.CopyOf());
             // this bot's master(s)
             AddObjectGroup("master", () =>
                                          {
@@ -131,13 +137,23 @@ namespace Cogbot
             get { return world.client.GetName(); }
         }
 
-        public ICollection GetGroup(ICollectionRequester requester, string arg0Lower)
+        public ICollection GetGroup(ICollectionRequester requester, string name)
         {
             IKeyValuePair<string, object> func;
-            if (ObjectGroups.TryGetValue(arg0Lower, out func))
+            if (ObjectGroups.TryGetValue(name.TrimStart(new[] {'$', ' '}), out func))
             {
                 if (func == null) return null;
                 return SingleNameValue.AsCollection(func.Value);
+            }
+            SimObject prim;
+            var splitted = Parser.ParseArguments(name);
+            int argsUsed;
+            if (world.tryGetSingleObjectByName(splitted, out prim, out argsUsed))
+            {
+                if (argsUsed > 0)
+                {
+                    return SingleNameValue.AsCollection(prim);
+                }
             }
             return null;
         }

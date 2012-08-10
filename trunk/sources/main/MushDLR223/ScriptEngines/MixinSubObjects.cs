@@ -5,12 +5,13 @@ using System.Reflection;
 
 namespace MushDLR223.ScriptEngines
 {
+    public delegate object StringArgParser(string[] args, out int argsUsed, Type convertTo);
 
     public class FilterSpecAttribute : Attribute
     {
         public bool LastArgIsSelf = false;
 
-        public static List<T> ApplyFilter<T>(string[] args, out int argsUsed, List<T> current, object relativeTo, OutputDelegate warn)
+        public static List<T> ApplyFilter<T>(string[] args, out int argsUsed, StringArgParser changeType,  List<T> current, object relativeTo, bool removeMatches, OutputDelegate warn)
         {
             if (current.Count == 0)
             {
@@ -24,7 +25,7 @@ namespace MushDLR223.ScriptEngines
             bool isCollectionGetter;
             Type castArgTo;
             string arg0Lower = args[0];
-            bool negative = false;
+            bool negative = removeMatches;
             if (arg0Lower.StartsWith("!"))
             {
                 negative = true;
@@ -35,8 +36,12 @@ namespace MushDLR223.ScriptEngines
             object arg1 = null;
             if (castArgTo != null)
             {
-                argsUsed = 2;
-                arg1 = Convert.ChangeType(args[1], castArgTo);                
+                int len1 = args.Length - 1;
+                string[] destargs = new string[len1];
+                Array.Copy(args, 1, destargs, 0, len1);
+                int argsUsedLocal;
+                arg1 = changeType(destargs, out argsUsedLocal, castArgTo);
+                argsUsed = 1 + argsUsedLocal;
             }
             else
             {
@@ -73,7 +78,7 @@ namespace MushDLR223.ScriptEngines
                 }
                 else
                 {
-                    if ((bool) posresult) WhenTrue(i);
+                    if ((bool)posresult) WhenTrue(i);
                 }
             }
             return putInto;
@@ -89,7 +94,7 @@ namespace MushDLR223.ScriptEngines
                 Type[] types = mso.GetMixedTypes();
                 foreach (Type type in types)
                 {
-                    possible = IsTrue1(arg0Lower,exampleType, type, relativeTo, warn, out castArgTo,
+                    possible = IsTrue1(arg0Lower, exampleType, type, relativeTo, warn, out castArgTo,
                                        out isCollectionGetter, out functional);
                     if (functional)
                     {
@@ -102,7 +107,7 @@ namespace MushDLR223.ScriptEngines
             return possible;
         }
 
-        public static Func<object, object, object> IsTrue1(string arg0Lower,  Type exampleType, Type t, object relativeTo, OutputDelegate warn, out Type castArgTo, out bool isCollectionGetter, out bool functional)
+        public static Func<object, object, object> IsTrue1(string arg0Lower, Type exampleType, Type t, object relativeTo, OutputDelegate warn, out Type castArgTo, out bool isNonPredicate, out bool functional)
         {
             int predAt = arg0Lower.IndexOfAny("<>=*".ToCharArray());
             char compareChar = '=';
@@ -119,7 +124,9 @@ namespace MushDLR223.ScriptEngines
             }
 
             MemberInfo[] membs = t.GetMember(arg0Lower,
-                                             BindingFlags.Instance | BindingFlags.FlattenHierarchy | BindingFlags.Public);
+                                             BindingFlags.Instance |
+                                             BindingFlags.IgnoreCase | 
+                                             BindingFlags.Public);
             functional = true;
             foreach (MemberInfo memb in membs)
             {
@@ -129,7 +136,7 @@ namespace MushDLR223.ScriptEngines
                 {
                     if (fi.FieldType == typeof(bool))
                     {
-                        isCollectionGetter = false;
+                        isNonPredicate = false;
                         castArgTo = null;
                         return delegate(object o, object arg1)
                                    {
@@ -142,16 +149,17 @@ namespace MushDLR223.ScriptEngines
                 PropertyInfo pi = memb as PropertyInfo;
                 if (pi != null) mi = pi.GetGetMethod();
                 if (mi == null) continue;
-                Type returnType  = mi.ReturnType;
+                Type returnType = mi.ReturnType;
                 var ps = mi.GetParameters();
-                bool isBoolReturn = returnType != typeof(bool);
+                bool isBoolReturn = returnType == typeof(bool);
                 int psl = ps.Length;
                 if (psl > 2) continue;
-                bool useRelative = psl > 0 && ps[ps.Length].ParameterType.IsInstanceOfType(relativeTo);
-                isCollectionGetter = exampleType.IsAssignableFrom(returnType) ||
+                bool useRelative = psl > 0 && ps[psl - 1].ParameterType.IsInstanceOfType(relativeTo);
+                isNonPredicate = exampleType.IsAssignableFrom(returnType) ||
+                    returnType.IsAssignableFrom(exampleType) || 
                                      (!typeof(IConvertible).IsAssignableFrom(returnType)
                                       && typeof(IEnumerable).IsAssignableFrom(returnType));
-                if (isCollectionGetter)
+                if (isNonPredicate)
                 {
                     if (useRelative)
                     {
@@ -195,9 +203,9 @@ namespace MushDLR223.ScriptEngines
                 if (!isBoolReturn)
                 {
 
-                    castArgTo = returnType;
                     if (useRelative)
                     {
+                        castArgTo = returnType;
                         if (psl != 1) continue;
                         return delegate(object o, object arg1)
                                    {
@@ -206,6 +214,7 @@ namespace MushDLR223.ScriptEngines
                                    };
                     }
                     if (psl != 0) continue;
+                    castArgTo = returnType;
                     return delegate(object o, object arg1)
                                {
                                    object tf = mi.Invoke(o, null);
@@ -251,7 +260,7 @@ namespace MushDLR223.ScriptEngines
                 }
                 continue;
             }
-            isCollectionGetter = false;
+            isNonPredicate = false;
             functional = false;
             castArgTo = null;
             warn("dont know how to handle: " + arg0Lower + " " + membH);
