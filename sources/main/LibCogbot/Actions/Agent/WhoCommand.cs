@@ -61,7 +61,7 @@ namespace Cogbot.Actions.Agent
             {
                 foreach (Simulator sim in LockInfo.CopyOf(Client.Network.Simulators))
                 {
-                    if (sim.ObjectsAvatars.Count==0) continue;
+                    if (sim.ObjectsAvatars.Count == 0) continue;
                     result.AppendLine();
                     result.Append("Region: " + sim);
                     sim.ObjectsAvatars.ForEach(

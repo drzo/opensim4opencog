@@ -218,10 +218,12 @@ namespace Cogbot
 
         private static int CountnumAvatars;
 
-        public static readonly ListAsSet<SimAvatar> SimAvatars = new ListAsSet<SimAvatar>();
+        public static readonly ListAsSet<SimObject> SimAvatars = new ListAsSet<SimObject>();
+        public static readonly ListAsSet<SimObject> SimAccounts = new ListAsSet<SimObject>();
         public static readonly ListAsSet<SimObject> SimObjects = new ListAsSet<SimObject>();
         public static readonly ListAsSet<SimObject> SimRootObjects = new ListAsSet<SimObject>();
         public static readonly ListAsSet<SimObject> SimChildObjects = new ListAsSet<SimObject>();
+        public static readonly ListAsSet<SimObject> SimAttachmentObjects = new ListAsSet<SimObject>();
 
         public static float buildingSize = 5;
         public static TimeSpan burstInterval;
@@ -634,14 +636,6 @@ namespace Cogbot
                         return null;
                     }
                     obj0 = CreateSimObject(prim.ID, this, simulator);
-                    if (prim.ParentID == 0)
-                    {
-                        SimRootObjects.AddTo(obj0);
-                    }
-                    else
-                    {
-                        SimChildObjects.AddTo(obj0);
-                    }
                     obj0.ConfirmedObject = true;
                 }
             }
@@ -798,6 +792,8 @@ namespace Cogbot
                                                     // lock (SimObjects) SimObjects.Remove(O);   
                                                     SimRootObjects.Remove(O);
                                                     SimChildObjects.Remove(O);
+                                                    SimAttachmentObjects.Remove(O);
+                                                    SimAvatars.Remove(O);
                                                 }
 
                                             }
@@ -988,10 +984,18 @@ namespace Cogbot
 
         public SimObject GetSimObject(uint sittingOn, Simulator simulator)
         {
+            Simulator sim1 = null;
+            if (m_TheSimAvatar != null)
+            {
+                sim1 = m_TheSimAvatar.GetSimulator();
+                var o = GetSimObject(sittingOn, sim1);
+                if (o != null) return o;
+            }
             if (simulator == null)
             {
                 foreach (var sim in AllSimulators)
                 {
+                    if (sim == sim1) continue;
                     var ro = GetSimObject(sittingOn, sim);
                     if (ro != null) return ro;
                 }
@@ -1776,7 +1780,7 @@ namespace Cogbot
 
         internal void AddAvatar(SimAvatar neu, UUID uuid)
         {
-            var from = WorldObjects.SimAvatars;
+            var from = WorldObjects.SimAccounts;
             SimAvatar old = null;
             bool sameAvatar = false;
             bool downGrade = false;
@@ -1817,12 +1821,14 @@ namespace Cogbot
                     throw new NotSupportedException("theAvatar for upgrade is schizoid!");   
                 }
                 SimObjects.Remove(old);
+                SimAccounts.Remove(old);
                 SimAvatars.Remove(old);
             }
             if (!sameAvatar)
             {
-                SimAvatars.Add((SimAvatar)neu);
                 SimObjects.AddTo(neu);
+                SimAccounts.Add((SimAvatar)neu);
+                if (neu.HasPrim) SimAvatars.Add((SimAvatar)neu);
                 RegisterUUID(uuid, neu);
                 RequestAvatarMetadata(uuid);
             }

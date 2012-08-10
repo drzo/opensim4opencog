@@ -1247,14 +1247,8 @@ namespace Cogbot.World
                         // Properties = prim.Properties;
                         Properties = prim.Properties;
                     }
-                    if (prim.ParentID == 0)
-                    {
-                        WorldObjects.SimRootObjects.AddTo(this);
-                    }
-                    else
-                    {
-                        WorldObjects.SimChildObjects.AddTo(this);
-                    }
+
+                    ToSubCollection(prim).AddTo(this);
 
                     if (WorldPathSystem.MaintainSimCollisions(prim.RegionHandle) && prim.Sculpt != null &&
                         WorldPathSystem.SculptCollisions)
@@ -1265,20 +1259,45 @@ namespace Cogbot.World
                 }
         }
 
-        protected SimObject _Parent = null; // null means unknown if we IsRoot then Parent == this;
+        private ListAsSet<SimObject> ToSubCollection(Primitive prim)
+        {
+            if ((prim is Avatar))
+            {
+                return WorldObjects.SimAvatars;
+            }            
+            if (this is SimAvatar) return WorldObjects.SimAvatars;
+            if (IsAttachmentRoot || IsChildOfAttachment)
+            {
+                return WorldObjects.SimAttachmentObjects;
+            }
+            if (prim.ParentID != 0)
+            {
+                return WorldObjects.SimChildObjects;
+            }
+            return WorldObjects.SimRootObjects;
+        }
+
+        protected SimObject __Parent;
+        protected SimObject _Parent
+        {
+            get { return __Parent; }
+            set { __Parent = value; }
+        } // null means unknown if we IsRoot then Parent == this;
+        protected bool IsParentKnown { get; set; } // null means unknown if we IsRoot then Parent == this;
 
         public virtual SimObject Parent
         {
             get
             {
+                if (IsParentKnown) return _Parent;
                 var Prim = this.Prim;
                 if (_Parent == null)
                 {
-                    if (Prim == null) return _Parent;
+                    if (Prim == null) return null;
                     uint parentID = Prim.ParentID;
                     if (parentID == 0)
                     {
-                        _Parent = this;
+                        IsParentKnown = true;
                     }
                     else
                     {
@@ -1292,21 +1311,24 @@ namespace Cogbot.World
                             EnsureParentRequested(simu);
                             return _Parent;
                         }
+                        IsParentKnown = true;
                         Parent = WorldSystem.GetSimObject(prim, simu);
                     }
                 }
                 if (Prim != null && Prim.ParentID == 0)
                 {
-                    _Parent = this;
+                    IsParentKnown = true;
                 }
                 return _Parent;
             }
             set
             {
+                IsParentKnown = true;
                 if (value == _Parent) return;
                 SetInfoMap(this, "Parent", GetType().GetProperty("Parent"), value);
                 if (value == null)
                 {
+                    _isChild = false;
                     _Parent.Children.Remove(this);
                 }
                 else if (value != this)
@@ -1318,8 +1340,11 @@ namespace Cogbot.World
                         SimObjectImpl simObject = (SimObjectImpl) value;
                         simObject.needUpdate = true;
                     }
+                    _Parent = value;
+                } else
+                {
+                    throw new InvalidOperationException("Cant be its onwn parent " + this);
                 }
-                _Parent = value;
                 if (_Parent != null && _Parent.Prim != null) RequestedParent = true;
             }
         }
@@ -1329,6 +1354,7 @@ namespace Cogbot.World
             SimObjectImpl simObject = (SimObjectImpl) simO;
             needUpdate = true;
             simObject._Parent = this;
+            simObject.IsParentKnown = true;
             simObject.needUpdate = true;
             bool b = Children.AddTo(simObject);
             return b;
@@ -2101,11 +2127,21 @@ namespace Cogbot.World
 
         public bool Named(string name)
         {
+            if (_propertiesCache != null)
+            {
+                String s = _propertiesCache.Name;
+                return s == name;
+            }
             return GetName() == name;
         }
 
         public bool NamedCI(string name)
         {
+            if (_propertiesCache != null)
+            {
+                String s = _propertiesCache.Name;
+                if (s != null) return s.ToLower() == name;
+            }
             return GetName().ToLower() == name;
         }
 
@@ -2196,9 +2232,9 @@ namespace Cogbot.World
             if (_propertiesCache != null)
             {
                 String s = _propertiesCache.Name;
-                if (s.Length > 8) return s;
+                //if (s.Length > 8) return s;
                 s += " | " + _propertiesCache.Description;
-                if (s.Length > 12) return s;
+                if (s.Length > 3) return s;
             }
             lock (HasPrimLock)
                 if (!HasPrim) return ToString() + " " + RegionHandle;
@@ -2473,6 +2509,15 @@ namespace Cogbot.World
         private bool _isChild;
 
         public bool IsAttachment
+        {
+            get { return IsAttachmentRoot || IsChildOfAttachment; }
+        }
+        public bool IsChildOfAttachment
+        {
+            get { return IsChild && Parent.IsAttachment; }
+        }        
+        // if Parent is an Avatar
+        public bool IsAttachmentRoot
         {
             get { return _Parent is SimAvatar; }
         }
@@ -3189,6 +3234,14 @@ namespace Cogbot.World
             }
         }
 
+        public virtual bool IsLocal
+        {
+            get
+            {
+                return HasPrim;
+            }
+        }
+
         public virtual bool HasPrim
         {
             get { return !ReferenceEquals(_Prim0, null); }
@@ -3577,6 +3630,7 @@ namespace Cogbot.World
         void SetFirstPrim(Primitive primitive);
         [ConvertTo]
         Primitive.ObjectProperties Properties { get; set; }
+        bool IsLocal { get; }
         bool HasPrim { get; }
         [FilterSpec]
         uint LocalID { get; }

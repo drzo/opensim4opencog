@@ -82,33 +82,21 @@ namespace Cogbot.Actions
                         List<SimObject> PS = WorldSystem.GetPrimitives(args.tokens, out argsUsed);
                         bool detailed = true;
                         if (PS.Count > 1) detailed = false;
-                        if (!IsEmpty(PS)) 
-                        foreach (var prim in PS)
-                        {
-                            found++;
-                            if (!prim.HasPrim)
-                            {
-                                WriteLine("" + prim);
-                                continue;
-                            }
-                            if (prim is SimAvatar)
-                                WriteLine(WorldSystem.describeAvatar((Avatar) prim.Prim));
-                            else
-                                WriteLine(WorldSystem.describePrim(prim.Prim, detailed));
-                            //if (found > 30) break;
-                        }
-                        else
-                        {
-                            foreach (var o in WorldSystem.GetAllSimObjects(args.str))
+                        if (!IsEmpty(PS))
+                            foreach (var prim in PS)
                             {
                                 found++;
-                                if (o is SimAvatar)
-                                    WriteLine(WorldSystem.describeAvatar((Avatar)o.Prim));
+                                if (!prim.HasPrim)
+                                {
+                                    WriteLine("" + prim);
+                                    continue;
+                                }
+                                if (prim is SimAvatar)
+                                    WriteLine(WorldSystem.describeAvatar((Avatar) prim.Prim));
                                 else
-                                    WriteLine(WorldSystem.describePrim(o.Prim, false));
-                                if (found > 30) break;
+                                    WriteLine(WorldSystem.describePrim(prim.Prim, detailed));
+                                //if (found > 30) break;
                             }
-                        }
                         if (found == 0) WriteLine("I don't know about " + subject + ".");
                         WriteLine("PS.Count==" + PS.Count);
                     }
