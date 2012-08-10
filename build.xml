@@ -123,6 +123,31 @@
 </jar>
 </target>
 
+<target name="cogbot-examples" description="Generate the Example files" >
+<!-- Create the distribution directory -->
+<jar destfile="cogbot-examples.zip">
+<fileset dir="." casesensitive="false">
+    <include name="bin/examples/**"/> 
+    <exclude name="**/CVS/*"/> 
+    <exclude name="**/.svn/*"/> 
+    <exclude name="**/.git/*"/> 
+</fileset>
+</jar>
+</target>
+
+<target name="cogbot-objects" description="Generate the Cog BObjects files" >
+<!-- Create the distribution directory -->
+<jar destfile="cogbot-objects.zip">
+<fileset dir="sources/main" casesensitive="false">
+    <include name="objects/**"/> 
+    <exclude name="**/CVS/*"/> 
+    <exclude name="**/.svn/*"/> 
+    <exclude name="**/.git/*"/> 
+</fileset>
+</jar>
+</target>
+
+
 <target name="cogbot-documents" description="Generate the distribution document files" >
 <!-- Create the distribution directory -->
 <jar destfile="cogbot-documents.zip">
@@ -174,7 +199,7 @@
 </jar>
 </target>
 
-<target name="all" description="Generate ALL files" depends="cogbot-prolog,cogbot-aiml,cogbot-documents,cogbot-core-patches,cogbot-wordnet,cogbot-installer" >
+<target name="all" description="Generate ALL files" depends="cogbot-prolog,cogbot-aiml,cogbot-documents,cogbot-core-patches,cogbot-wordnet,cogbot-installer,cogbot-examples,cogbot-objects" >
 </target>
 
 </project>
