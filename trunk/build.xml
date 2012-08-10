@@ -46,6 +46,7 @@
     <include name="bin/*.config"/>
     <include name="bin/*.ini"/> 
     <include  name="bin/config/**"/> 
+    <include  name="bin/QPIDServer/**"/> 
     <include  name="bin/aiml/default_bot/**"/> 
     <include  name="bin/aiml/shared_aiml/**"/> 
     <exclude name="bin/Swi*"/> 
@@ -82,12 +83,24 @@
  <include  name="bin/bgm/**"/> 
  <include  name="bin/lucenedb/**"/> 
  <include  name="bin/config/**"/> 
- <include name="bin/wordnet30/**"/> 
  <include name="bin/webroot/**"/> 
  <include name="bin/wikilink/**"/> 
  <include name="bin/trn/**"/> 
  <include  name="bin/aiml/**"/> 
  <exclude name="bin/aiml/users/**"/>
+ <exclude name="**/CVS/*"/> 
+ <exclude name="**/.svn/*"/> 
+ <exclude name="**/.git/*"/> 
+</fileset>
+</jar>
+</target>
+
+
+<target name="cogbot-wordnet" description="Generate the Wordnet files" >
+<!-- Create the distribution directory -->
+<jar destfile="cogbot-wordnet.zip">
+<fileset dir="." casesensitive="false">
+ <include name="bin/wordnet30/**"/> 
  <exclude name="**/CVS/*"/> 
  <exclude name="**/.svn/*"/> 
  <exclude name="**/.git/*"/> 
@@ -161,7 +174,7 @@
 </jar>
 </target>
 
-<target name="all" description="Generate ALL files" depends="cogbot-prolog,cogbot-aiml,cogbot-documents,cogbot-core-patches,cogbot-installer" >
+<target name="all" description="Generate ALL files" depends="cogbot-prolog,cogbot-aiml,cogbot-documents,cogbot-core-patches,cogbot-wordnet,cogbot-installer" >
 </target>
 
 </project>
