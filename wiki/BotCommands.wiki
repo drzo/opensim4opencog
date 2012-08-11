@@ -172,9 +172,9 @@ $,[,(,!, integer, are special prefixs that change how command arguments are pars
  * $self
  * $selected (items selected by current bot)
 
-
-
+{{{
 [ $objects mindist 1 maxdist 3 [ not match "red" ] bydist nth 1 ]
+}}}
 
  * distfrom `<loc`>  - sort group by distance to `<loc`>
  * bydist - sort group by distance to avatar (same as "distfrom $self")
@@ -183,17 +183,20 @@ $,[,(,!, integer, are special prefixs that change how command arguments are pars
  * keep `<number`>  - retain so many elements (negative numbers retain from end)
  * !keep `<number`> - discard so many elements (negative numbers discard from end)
  * reverse - reverses list order
- * not `<body`> - switches from normally filtering things for retention to removal
+ * +SingleObject - adds the SingleObject to the group
  * and `<body>` - all preceding elements will be retained `<body`> restarts the group
+ * not `<body`> - switches from normally filtering things for retention to removal
 
-+SingleObject - adds the SingleObject to the group
+Example
+{{{
+[ not match "red" ]
+}}}
+is the same as
+{{{
+!match "red"
+}}}
 
-btw: [ not match "red" ]
 
-is the same as:  !match "red"
-
-max is maximum prims in filterset
-dist is maximum dist to avatar
 {{{
 /priminfo [ $selected maxdist 2 ]
 }}}
