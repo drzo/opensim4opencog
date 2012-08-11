@@ -3,17 +3,3 @@
 = Introduction =
 
 this could become a kitchen drawer affair, but the intent is for it to be a holding place for items so far out on the roadmap they don't deserve their own page yet
-
-
-== SWIPL-SAPI
-
-http://www.ai.uga.edu/mc/ProNTo/
-
-has 
-
-SWI-Speech: An Interface Between SWI-Prolog and Microsoft SAPI. Interfacing SWI-Prolog to the Microsoft Speech API (the built-in speech synthesizer and recognizer in Windows XP).
-
-
-(and much other goodness)
-
-
