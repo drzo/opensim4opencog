@@ -16,9 +16,24 @@ The term 'virtual world' depends a bit on context.  We'll concentrate on 'SL Pro
 
 SL Protocol is the protocol for the free virtual world Second Life http:www.secondlife.com offered by Linden Labs. This protocol is the de facto standard for communicating with a virtual world server.
 
+== How Can I experience a virtual world? ==
+
+You'll need 3 things: viewer software, a grid, and an account on that grid. 
+You can get a free account on the world's largest grid, Second Life, at http://www.secondlife.com You can download and use their viewer.
+
+The Imprudence viewer http://blog.kokuaviewer.org/ has a nice tool for setting a grid name. This is very useful when working with multiple grids.
+
+If you would like to experience the opensim server, several companies operate commercial opensim based grids. https://www.avination.com/ gives free accounts.
+
+If you're an early adopter of Cogbot, Annie may give you an account on the Pathways grid used to develop Cogbot.
+
+It's easiest to learn on someone elses grid before trying to set up your own. That said, setting up opensim to operate a standalone grid is not complex for the average Cogbot user.
+
 == The Big Pieces ==
 
 === The Objects Of The World ===
+
+ * Grid - The entire world. Could be as small as one _region_, or as large as a county (Second Life has 38,000 regions, a land area about as big as the suburban county I live in).
 
  * Land - The ground surface. The land is divided into a grid of _regions_ (sometimes called _sims_ ) 256 meters on a side. The land appears continuous - you can walk across the boundary. A collection of regions operating as a single 'world' is a _grid_.
 
@@ -203,8 +218,6 @@ Obviously this page barely scratches the surface. Like any other computing envir
 Until we outgrow the ability to support this, contact Annie for an account on the Pathways server, which is our Cogbot testbed server.
 
 Have fun!
-
-
 
 
 
