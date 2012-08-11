@@ -131,37 +131,60 @@ the bot will sit on the ground instead.
 
 You can specify what the bot should sit on.  Name the prim *bot chair*, stand the bot up, and try
 
+Specify Named prim (Notice that you need quotes if there are space)
 {{{
-sit bot chair
+sit "bot chair"
 }}}
 
-Notice that you don't need quotes
+Specify nth closest (the chair 2nd closet to you)
+{{{
+sit 2 "bot chair"
+}}}
 
-UUID
-localid
-a unique substring of it's name
-position (double quoted)
-[4:42:33 PM] Douglas R. Miles: mindist 1 maxdist 3 nth 1
+You can use UUIDs
+{{{
+sit ff45-f45-f55-454-f-f45f-fff
+}}}
 
-!match CanModify
+You can use simulator local IDs
+{{{
+sit localid345345345345
+}}}
+
+specify groups with commands like priminfo
+
+Single groups are:
+
+ * $master
+ * $master
+ * $master
+ * $master
+ * $master
+
+mindist 1 maxdist 3 nth 1
+
+!match 
 
 ! and $ in commands
 $master
 $selected   (group of selected prims)
-primid is local id
+
 @ coerces prim position to 3d location @primid 15
 
 @: Restrict the following commands to one or all avatars.
 
 max is maximum prims in filterset
 dist is maximum dist to avatar
-/priminfo $selected maxdist 2  
+{{{
+/priminfo [ $selected maxdist 2 ]
+}}}
 the selected prims (that is, the prims in my 'selected' grasper) tha are within 2 meters of my AV 
 
 See all this stuff starting at line 445 of WorldCommandParsing
 
-/priminfo $selected maxdist 2.1 mindist 1.9 max 4 nth2 matches Window !matches -like ownedby $master
-
+{{{
+/priminfo [ $selected maxdist 2.1 mindist 1.9 max 4 nth2 matches Window !matches -like ownedby $master ]
+}}}
 
 
 bang commands are deprecated -
