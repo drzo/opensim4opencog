@@ -15,6 +15,7 @@ bundle_for(core, coregroup).
 
 bundle(coregroup, group, 'Core Component', []).
 deps(coregroup, cogbot_license).
+deps(coregroup, ikvm_license).
 deps(coregroup, dotnet32, 32).
 deps(coregroup, dotnet64, 64).
 deps(coregroup, core).
@@ -33,6 +34,11 @@ bundle(cogbot_license,
        license,
        'Cogbot New BSD License',
        [url('/f/cogbotlicense.html')]).
+
+bundle(ikvm_license,
+       license,
+       'IKVM License',
+       [url('/f/ikvmlicense.html')]).
 
 bundle(core, files,
        'Cogbot Core',

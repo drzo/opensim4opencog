@@ -156,14 +156,4 @@ autostart :-
        format(string(S), 'http://127.0.0.1:~w/' , [Port]),
        www_open_url(S).
 
-% TODO when it's no longer annoying, call autostart as directive
-
-stop_server :-
-	catch(thread_exit(plan_runner_thread), _,
-	      format(user_error, 'Cannot halt plan_runner_thread~n', [])),
-	server_port(Port),
-	http_stop_server(Port, []),
-	format(user_error, 'Server halted on port ~n', [Port]),
-	reset_installer.
-
 :- autostart.

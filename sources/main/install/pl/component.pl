@@ -149,10 +149,10 @@ component(prolog).
 component_name(prolog, 'SWI-Prolog For Cogbot').
 component_icon_pos(prolog, '404px 44px').
 component_description(prolog,
-[p([], ['Support for ', a([href='http:swi-prolog.org'], 'swi-prolog'),
-	'. This is the connection between swi-Prolog and Cogbot. Install swi-Prolog first if needed.']),
- p([], ['Supports programming the bot in Prolog.']),
+[p([], ['Connect ', a([href='http:swi-prolog.org'], 'SWI-Prolog'),
+' and Cogbot. Supports programming the bot in Prolog.']),
  p([], ['Most users will want this component, as Prolog is the primary language for programming Cogbot.']),
+ p('In this release swi-prolog is required, so selecting this bundle only causes the swipl top level to run instead of the console'),
  \select_status_html(prolog)]).
 component_depends_on(prolog, core).
 
@@ -166,18 +166,22 @@ component_description(radegast,
 [p([], 'This special version is integrated with Cogbot.'),
  p([], ['Most bots require some amount of manual control for setup and debugging.']),
  p([], 'Radegast is a text based viewer for manually controlling the bot. Almost all desktop installs should include Radegast.'),
+ p([], 'Radegast is currently always installed. Checking this item makes Radegast appear by default when Cogbot is started.'),
  \select_status_html(radegast)]).
 component_depends_on(radegast, core).
 
 %
 %  aiml
 %
+%   No bundle for this at the moment, as Doug picks up the behavior by
+%   examining the list of installed components on his side
+%
 component(aiml).
 component_name(aiml, 'AIMLbot AIML Interpreter').
 component_icon_pos(aiml, '400px 0px').
 component_description(aiml,
 [p([], ['An environmentally aware interpreter for ',
-	a([href='http://www.alicebot.org/TR/2005/WD-aiml/'], 'AIML.')]),
+	a([href='http://www.alicebot.org/TR/2005/WD-aiml/', target='_blank'], 'AIML.')]),
  p([], ['Patterns can match against conditions in the world, and AIML templates are able to issue botcmd commands.']),
  p([], ['AIMLbot can query Cyc to infer facts. So, for example, people named Sue are usually women, so the bot may respond differently to Sue and George. A separate component makes Cyc world aware.']),
  p([], ['AIMLbot can use WordNet (a separate component) to match patterns against synonyms.']),
@@ -187,6 +191,7 @@ component_description(aiml,
      li([], '...(later)...'),
      li([], 'User: "What does Joe like?"'),
      li([], 'Bot: "sports movies"')]),
+ p([], 'AIML support is always installed. Checking this component merely causes the default AIML config files to be loaded at startup. You can configure this yourself later.'),
  p([], 'Users who want their bots to listen and speak will want this component.'),
  \select_status_html(aiml)
 ]).
@@ -194,6 +199,21 @@ component_description(aiml,
 component_depends_on(aiml, core).
 % oh though .. aimlbot need a cyc config url even when cyc client not
 % selected  - aimlbot can query ext. server
+
+component(cyc_query).
+component_name(cyc_query, 'Cyc Database Query Support').
+component_icon(cyc_query, '/f/opencyc.png').
+component_description(cyc_query,
+[p(['Support for the Cycorp Cyc and Opencyc general knowledge base and',
+   ' commonsense reasoning engines.']),
+ p(['Selecting this component allows AIML to query the Cyc KB and ' ,
+   'reason about it\'s world']),
+ p(['The Cyc client is installed with core. ',
+ 'Checking this component lets',
+ 'users configure the connection.']),
+ p(['Users installing this component will need a',
+   ' running Cyc or OpenCyc server.'])]).
+component_depends_on(cyc_query, aiml).
 
 %
 %  aiml_personality
@@ -214,21 +234,24 @@ component_depends_on(aiml_personality, aiml).
 component(wordnet).
 component_name(wordnet, 'WordNet Lexical Database Support').
 component_description(wordnet,
-[p(['Improves AIML pattern matching by matching synonyms. So an AIML pattern that contains the word ',
+[p(['Improves AIML pattern matching by matching synonyms.',
+    'So an AIML pattern that contains the word ',
    em([], 'sofa'), ' would match ', em([], 'divan'),
    ' in an utterance.']),
  p('AIMLbot users will find this component nifty.'),
  \select_status_html(wordnet)]).
 component_depends_on(wordnet, aiml).
-% TODO include the wordnet license
 
 %
 %   opencyc
 %
 component(opencyc).
-component_name(opencyc, 'OpenCyc Client').
+component_name(opencyc, 'OpenCyc World').
 component_description(opencyc,
-[p([], 'Integrated Cyc client which automatically pushes information about the virtual world to the external Cyc database.'),
+[p([], ['Integrated Cyc client which automatically pushes information about',
+   ' the virtual world to' ,
+   ' the external Cyc database.']),
+ p([], 'This is a fairly CPU intensive component. Install only if needed.'),
  p([], 'Users who wish to use an external Cyc server should install this component.'),
  \select_status_html(opencyc)]).
 component_depends_on(opencyc, core).
@@ -239,8 +262,14 @@ component_depends_on(opencyc, core).
 component(irc).
 component_name(irc, 'Internet Relay Chat Relay').
 component_description(irc,
-[p([], 'Relays chat between an IRC channel and the bot. Relay allows control of the bot via irc.'),
- p([], 'This is useful for long term monitoring and control of production bots. Users who will be operating an unattended bot should consider using this tool.'),
+[p([], ['Relays chat between an IRC channel and the bot. ',
+'Relay allows control of the bot via irc.',
+' The code is always installed. This component simply ',
+'allows you to configure the bot to relay to IRC.']),
+ p([], ['IRC relay is useful for long term monitoring and control of ',
+   'production bots.',
+ ' Users who will be operating an unattended bot ',
+   'should consider using this tool to avoid rampaging robots.']),
  \select_status_html(irc)]).
 component_depends_on(irc, core).
 
@@ -251,21 +280,41 @@ component(lisp).
 component_name(lisp, 'Common Lisp Interface').
 component_icon_pos(lisp, '250px 35px').
 component_description(lisp,
-[p('Version of ABCL Common Lisp adapted to control the bot and know about the bot\'s environment.'),
+[p(['Version of ABCL Common Lisp adapted to control the bot and ',
+   ' know about the bot\'s environment.']),
  p('Lisp users will want to install this component.'),
+ p(['At the moment ABCL is always installed. Selecting this component',
+   ' just ensures you will get a REPL in an additional window']),
  \select_status_html(lisp)
  ]).
 component_depends_on(lisp, core).
 
 %
+%   avro
+%
+component(avro).
+component_name(avro, 'Avro Data Serialization').
+component_icon_pos(avro, '180px 35px').
+component_description(avro,
+[p(['Support for Qpid messaging system and Avro data serialization.',
+    'Allows high and low level events about simulation']),
+  p('Qpid users will want to install this component.'),
+ \select_status_html(avro)
+ ]).
+component_depends_on(avro, core).
+
+
+%
 %    sims
 %
-component(sims).
+% TODO Sims not ready uncomment to include
+% component(sims).
 component_name(sims, 'The Sims').
 component_icon_pos(sims, '120px 35px').
 component_description(sims,
 [p([
-     'The Sims module loops through objects looking for affordances offered by the type system',
+     'The Sims module loops through objects looking',
+     ' for affordances offered by the type system',
      'and ',
      &(quot),
      'uses',
@@ -273,7 +322,8 @@ component_description(sims,
      'the one that best meets it',
      &(apos),
      's needs.']),
- p('Users who want to use affordances and types based AI should install this component.'),
+ p('Users who want to use affordances and types based ',
+   'AI should install this component.'),
  p('So should those who just want to see a really cool demo of Cogbot.'),
  \select_status_html(sims)]).
 component_depends_on(sims, core).
@@ -284,18 +334,21 @@ component_depends_on(sims, core).
 component(examples).
 component_name(examples, 'Examples').
 component_description(examples,
-[p('Example files. Examples require various support services depending on the specific example.'),
+[p('Example files. Examples require various support',
+   ' services depending on the specific example.'),
  p('Users new to Cogbot will appreciate the examples.'),
  \select_status_html(examples)]).
+component_depends_on(examples, core).
 
 %
 %   docs
 %
-component(docs).
+% component(docs).
 component_name(docs, 'Documentation').
 component_description(docs,
 [p('User Documentation Bundle.'),
- p('Some day this will be a robot lead series of courses on Cogbot and AI generally,'),
+ p('Some day this will be a robot lead series of courses',
+   ' on Cogbot and AI generally,'),
  p(['but for the moment it',
     &(apos),
     's just as likely to be a badly formatted Word doc.']),
@@ -312,7 +365,7 @@ component_description(objects,
      li('Tools Cogbot uses for the sim iterator'),
      li('the test suite tools'),
      li('and a cool Cogbot avatar.')]),
- \select_status_html(docs)]).
+ \select_status_html(objects)]).
 
 %
 %  all
@@ -320,11 +373,29 @@ component_description(objects,
 component(all).
 component_name(all, 'Everything').
 component_description(all,
-[p('Get every Cogbot component with one click.'),
+[p('Get every Cogbot component above with one click.'),
  p('This will be a large download, and may require extensive configuration.'),
+ p('Sources not included, they\'re below'),
  \select_status_html(all)]).
 component_depends_on(all, X) :-
-	X \= all.
+	X \= all,
+	X \= sources.
+
+
+%
+%    sources
+%
+component(sources).
+component_name(sources, 'Cogbot Sources').
+component_icon_pos(sources, '20px 35px').
+component_description(sources,
+[p(['The Sources.']),
+ p('Users who want to compile Cogbot or develop plugins will want the sources.'),
+ p('This component assumes you have a valid svn client installed.'),
+ p('Alternatively you can do your own svn checkout at'),
+ p(b(['svn checkout http://opensim4opencog.googlecode.com/svn/trunk/ ',
+      'opensim4opencog-read-only'])),
+ \select_status_html(sources)]).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%  Defaults
