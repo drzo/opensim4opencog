@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using MushDLR223.Utilities;
 
 namespace MushDLR223.ScriptEngines
 {
@@ -11,7 +12,7 @@ namespace MushDLR223.ScriptEngines
     {
         public bool LastArgIsSelf = false;
 
-        public static List<T> ApplyFilter<T>(string[] args, out int argsUsed, StringArgParser changeType,  List<T> current, object relativeTo, bool removeMatches, OutputDelegate warn)
+        public static List<T> ApplyFilter<T>(string[] args, out int argsUsed, StringArgParser changeType, List<T> current, object relativeTo, bool removeMatches, OutputDelegate warn, CompareTestChar compareTestChar)
         {
             if (current.Count == 0)
             {
@@ -20,10 +21,6 @@ namespace MushDLR223.ScriptEngines
             }
             var example = current[0];
             Type exampleType = example.GetType();
-            Func<object, object, object> possible = null;
-            bool functional;
-            bool isCollectionGetter;
-            Type castArgTo;
             string arg0Lower = args[0];
             bool negative = removeMatches;
             if (arg0Lower.StartsWith("!"))
@@ -31,16 +28,35 @@ namespace MushDLR223.ScriptEngines
                 negative = true;
                 arg0Lower = arg0Lower.Substring(1);
             }
-            possible = IsTrue(arg0Lower, example, relativeTo, warn, out castArgTo,
-                                  out isCollectionGetter, out functional);
+            int predAt = arg0Lower.IndexOfAny("<>=*".ToCharArray());
+            char compareChar = '=';
+            if (predAt > 1)
+            {
+                compareChar = arg0Lower[predAt];
+                arg0Lower = arg0Lower.Substring(predAt);
+            }
+            var possible = FindFiltersForTarget(arg0Lower, example, relativeTo, warn);
+            if (possible == null || possible.Count == 0)
+            {
+                throw new NotSupportedException(arg0Lower);
+            }
+            foreach (FilterMember member in possible)
+            {
+                return ApplyFilterMember(args, out argsUsed, changeType, current, relativeTo,
+                                         removeMatches, warn, negative, compareChar, compareTestChar, member);
+            }
+            throw new NotSupportedException(arg0Lower);
+        }
+
+        public static List<T> ApplyFilterMember<T>(string[] args, out int argsUsed, StringArgParser changeType,  List<T> current, object relativeTo, bool removeMatches, OutputDelegate warn, bool negative, char compareChar, CompareTestChar compareObjects, FilterMember fmemb) {
             object arg1 = null;
-            if (castArgTo != null)
+            if (fmemb.CastArgTo != null)
             {
                 int len1 = args.Length - 1;
                 string[] destargs = new string[len1];
                 Array.Copy(args, 1, destargs, 0, len1);
                 int argsUsedLocal;
-                arg1 = changeType(destargs, out argsUsedLocal, castArgTo);
+                arg1 = changeType(destargs, out argsUsedLocal, fmemb.CastArgTo);
                 argsUsed = 1 + argsUsedLocal;
             }
             else
@@ -61,8 +77,12 @@ namespace MushDLR223.ScriptEngines
             }
             foreach (T i in current)
             {
-                object posresult = possible(i, arg1);
-                if (isCollectionGetter)
+                object posresult = fmemb.Function(i, arg1, relativeTo);
+                if (fmemb.PreCompare)
+                {
+                    posresult = compareObjects(compareChar, posresult, arg1);
+                }
+                if (fmemb.IsCollectionType)
                 {
                     if (typeof(T).IsInstanceOfType(posresult))
                     {
@@ -84,65 +104,100 @@ namespace MushDLR223.ScriptEngines
             return putInto;
         }
 
-        public static Func<object, object, object> IsTrue(string arg0Lower, object example, object relativeTo, OutputDelegate warn, out Type castArgTo, out bool isCollectionGetter, out bool functional)
+        public static List<FilterMember> FindFiltersForTarget(string arg0Lower, object example, object relativeTo, OutputDelegate warn)
         {
+
             Type exampleType = example.GetType();
-            Func<object, object, object> possible = null;
+            Type relativeToType = relativeTo == null ? typeof(object) : relativeTo.GetType();
             if ((example is MixinSubObjects))
             {
+                List<FilterMember> newPossible = new List<FilterMember>();
                 MixinSubObjects mso = (MixinSubObjects)example;
                 Type[] types = mso.GetMixedTypes();
                 foreach (Type type in types)
                 {
-                    possible = IsTrue1(arg0Lower, exampleType, type, relativeTo, warn, out castArgTo,
-                                       out isCollectionGetter, out functional);
-                    if (functional)
+                    var possible = FindFiltersForExampleSubType(arg0Lower, exampleType, type, relativeToType, warn);
+                    if (possible.Count > 0)
                     {
-                        return (o, arg1) => possible(((MixinSubObjects)o).GetInstance(type), arg1);
+                        foreach (var p in possible)
+                        {
+                            FilterMember fm = p;
+                            FilterMember member = p;
+                            Type subtype = type;
+                            fm.Function = (o, arg1, relTo) =>
+                                          member.Function(((MixinSubObjects)o).GetInstance(subtype), arg1, relTo);
+                            newPossible.Add(fm);
+                        }
                     }
                 }
+                return newPossible;
+
             }
-            possible = IsTrue1(arg0Lower, exampleType, exampleType, relativeTo, warn, out castArgTo,
-                                  out isCollectionGetter, out functional);
+            return FindFiltersForExampleSubType(arg0Lower, exampleType, exampleType, relativeToType, warn);
+        }
+        public static List<FilterMember> FindFiltersForExampleSubType(string arg0Lower, Type exampleType, Type t, Type relativeToType, OutputDelegate warn)
+        {
+            var possible = FindFiltersForExampleSubType(arg0Lower, exampleType, t, relativeToType, warn);
+            if (arg0Lower == null || possible.Count > 0 || !arg0Lower.EndsWith("of"))
+            {
+                return possible;
+            }
+            arg0Lower = arg0Lower.Substring(0, arg0Lower.Length - 2);
+            possible = FindFiltersForExampleSubType(arg0Lower, exampleType, t, relativeToType, warn);
+            List<FilterMember> newPossible = new List<FilterMember>();
+            foreach (var p in possible)
+            {
+                FilterMember fm = p;
+                fm.IsOf = true;
+                newPossible.Add(fm);
+            }
             return possible;
         }
-
-        public static Func<object, object, object> IsTrue1(string arg0Lower, Type exampleType, Type t, object relativeTo, OutputDelegate warn, out Type castArgTo, out bool isNonPredicate, out bool functional)
+        public static List<FilterMember> FindAllFilters(string arg0Lower, Type exampleType, Type t, Type relativeToType, OutputDelegate warn)
         {
-            int predAt = arg0Lower.IndexOfAny("<>=*".ToCharArray());
-            char compareChar = '=';
-            if (predAt > 1)
-            {
-                compareChar = arg0Lower[predAt];
-                arg0Lower = arg0Lower.Substring(predAt);
-            }
             MemberInfo membH = null;
 
-            if (arg0Lower.EndsWith("of"))
+            MemberInfo[] membs = null;
+            bool findAll = arg0Lower == null;
+            const BindingFlags seachFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public;
+            if (findAll)
             {
-                arg0Lower = arg0Lower.Substring(0, arg0Lower.Length - 2);
+                membs = t.GetMembers(seachFlags);
+            }
+            else
+            {
+                membs = t.GetMember(arg0Lower, seachFlags | BindingFlags.IgnoreCase);
             }
 
-            MemberInfo[] membs = t.GetMember(arg0Lower,
-                                             BindingFlags.Instance |
-                                             BindingFlags.IgnoreCase | 
-                                             BindingFlags.Public);
-            functional = true;
+            List<FilterMember> found = new List<FilterMember>();
             foreach (MemberInfo memb in membs)
             {
+                FilterMember fmemb = new FilterMember {ReflectionMember = memb};
                 membH = memb;
                 FieldInfo fi = memb as FieldInfo;
                 if (fi != null)
                 {
-                    if (fi.FieldType == typeof(bool))
+                    bool fisStatic = fi.IsStatic;                    
+                    bool fisBoolReturn = fi.FieldType == typeof (bool);
+                    fmemb.ReturnType = fi.FieldType;
+                    if (fisBoolReturn)
                     {
-                        isNonPredicate = false;
-                        castArgTo = null;
-                        return delegate(object o, object arg1)
-                                   {
-                                       return fi.GetValue(o);
-                                   };
+                        fmemb.IsCollectionType = false;
+                        fmemb.CastArgTo = null;
+                        fmemb.Function = delegate(object o, object arg1, object relativeTo)
+                                             {
+                                                 return fi.GetValue(fisStatic ? null : o);
+                                             };
+                        found.Add(fmemb);
+                        continue;
                     }
+                    fmemb.CastArgTo = fi.FieldType;
+                    fmemb.PreCompare = true;
+                    fmemb.Function = delegate(object o, object arg1, object relativeTo)
+                                         {
+                                             return fi.GetValue(fisStatic ? null : o);
+                                         };
+                    found.Add(fmemb);
                     continue;
                 }
                 MethodInfo mi = memb as MethodInfo;
@@ -151,51 +206,79 @@ namespace MushDLR223.ScriptEngines
                 if (mi == null) continue;
                 Type returnType = mi.ReturnType;
                 var ps = mi.GetParameters();
-                bool isBoolReturn = returnType == typeof(bool);
+                bool isBoolReturn = returnType == typeof (bool);
+                fmemb.ReturnType = returnType;
+                bool isStatic = mi.IsStatic;
+                Func<int, int> effectiveParamCount = i => isStatic ? i + 1 : i;
                 int psl = ps.Length;
-                if (psl > 2) continue;
-                bool useRelative = psl > 0 && ps[psl - 1].ParameterType.IsInstanceOfType(relativeTo);
-                isNonPredicate = exampleType.IsAssignableFrom(returnType) ||
-                    returnType.IsAssignableFrom(exampleType) || 
-                                     (!typeof(IConvertible).IsAssignableFrom(returnType)
-                                      && typeof(IEnumerable).IsAssignableFrom(returnType));
+                if (psl > effectiveParamCount(2)) continue;
+                bool useRelative = psl > effectiveParamCount(0) &&
+                                   IsAssignableFrom(ps[psl - 1].ParameterType, relativeToType);
+                    
+                
+                fmemb.RequiresRelativeContextObject = useRelative;
+                bool isNonPredicate = IsAssignableFrom(exampleType, returnType) ||
+                                      (!typeof (IConvertible).IsAssignableFrom(returnType)
+                                       && typeof (IEnumerable).IsAssignableFrom(returnType));
+                fmemb.IsCollectionType = isNonPredicate;
+                if (isStatic)
+                {
+                    // static methods need at least on arg
+                    if (psl < 1) continue;
+                    if (!IsAssignableFrom(ps[0].ParameterType, t))
+                    {
+                        continue;
+                    }
+                }
                 if (isNonPredicate)
                 {
                     if (useRelative)
                     {
-                        if (psl == 1)
+                        if (psl == effectiveParamCount(1))
                         {
-                            castArgTo = null;
-                            return delegate(object o, object arg1)
-                            {
-                                return mi.Invoke(o, new[] { relativeTo });
-                            };
+                            fmemb.CastArgTo = null;
+                            fmemb.Function = delegate(object o, object arg1, object relativeTo)
+                                                 {
+                                                     if (isStatic) return mi.Invoke(null, new[] {o, relativeTo});
+                                                     return mi.Invoke(o, new[] {relativeTo});
+                                                 };
+                            found.Add(fmemb);
+                            continue;
                         }
-                        if (psl == 2)
+                        if (psl == effectiveParamCount(2))
                         {
-                            castArgTo = ps[0].ParameterType;
-                            return delegate(object o, object arg1)
-                            {
-                                return mi.Invoke(o, new[] { arg1, relativeTo });
-                            };
+                            fmemb.CastArgTo = ps[0].ParameterType;
+                            fmemb.Function = delegate(object o, object arg1, object relativeTo)
+                                                 {
+                                                     if (isStatic) return mi.Invoke(null, new[] {o, arg1, relativeTo});
+                                                     return mi.Invoke(o, new[] {arg1, relativeTo});
+                                                 };
+                            found.Add(fmemb);
+                            continue;
                         }
                         continue;
                     }
-                    if (psl == 1)
+                    if (psl == effectiveParamCount(1))
                     {
-                        castArgTo = ps[0].ParameterType;
-                        return delegate(object o, object arg1)
-                                   {
-                                       return mi.Invoke(o, new[] { arg1 });
-                                   };
+                        fmemb.CastArgTo = ps[0].ParameterType;
+                        fmemb.Function = delegate(object o, object arg1, object relativeTo)
+                                             {
+                                                 if (isStatic) return mi.Invoke(null, new[] {o, arg1});
+                                                 return mi.Invoke(o, new[] {arg1});
+                                             };
+                        found.Add(fmemb);
+                        continue;
                     }
-                    if (psl == 0)
+                    if (psl == effectiveParamCount(0))
                     {
-                        castArgTo = null;
-                        return delegate(object o, object arg1)
-                        {
-                            return mi.Invoke(o, null);
-                        };
+                        fmemb.CastArgTo = null;
+                        fmemb.Function = delegate(object o, object arg1, object relativeTo)
+                                             {
+                                                 if (isStatic) return mi.Invoke(null, new[] {o});
+                                                 return mi.Invoke(o, null);
+                                             };
+                        found.Add(fmemb);
+                        continue;
                     }
                     continue;
                 }
@@ -205,77 +288,123 @@ namespace MushDLR223.ScriptEngines
 
                     if (useRelative)
                     {
-                        castArgTo = returnType;
-                        if (psl != 1) continue;
-                        return delegate(object o, object arg1)
-                                   {
-                                       object tf = mi.Invoke(o, new[] { relativeTo });
-                                       return CompareObjects(compareChar, tf, arg1);
-                                   };
+                        fmemb.CastArgTo = returnType;
+                        if (psl != effectiveParamCount(1)) continue;
+                        fmemb.PreCompare = true;
+                        fmemb.Function =
+                            delegate(object o, object arg1, object relativeTo)
+                                {
+                                    return isStatic
+                                                    ? mi.Invoke(null, new[] {o, relativeTo})
+                                                    : mi.Invoke(o, new[] {relativeTo});
+                                };
+                        found.Add(fmemb);
+                        continue;
                     }
-                    if (psl != 0) continue;
-                    castArgTo = returnType;
-                    return delegate(object o, object arg1)
-                               {
-                                   object tf = mi.Invoke(o, null);
-                                   return CompareObjects(compareChar, tf, arg1);
-                               };
+                    if (psl != effectiveParamCount(0)) continue;
+                    fmemb.CastArgTo = returnType;
+                    fmemb.Function = delegate(object o, object arg1, object relativeTo)
+                                         {
+                                             return isStatic ? mi.Invoke(null, new[] {o}) : mi.Invoke(o, null);
+                                         };
+                    fmemb.PreCompare = true;
+                    found.Add(fmemb);
+                    continue;
                 }
                 if (useRelative)
                 {
-                    if (psl == 1)
+                    if (psl == effectiveParamCount(1))
                     {
-                        castArgTo = null;
-                        return delegate(object o, object arg1)
-                                   {
-                                       return mi.Invoke(o, new[] { relativeTo });
-                                   };
+                        fmemb.CastArgTo = null;
+                        fmemb.Function = delegate(object o, object arg1, object relativeTo)
+                                             {
+                                                 if (isStatic) return mi.Invoke(null, new[] {o, relativeTo});
+                                                 return mi.Invoke(o, new[] {relativeTo});
+                                             };
+                        found.Add(fmemb);
+                        continue;
                     }
-                    if (psl == 2)
+                    if (psl == effectiveParamCount(2))
                     {
-                        castArgTo = ps[0].ParameterType;
-                        return delegate(object o, object arg1)
-                                   {
-                                       return mi.Invoke(o, new[] { arg1, relativeTo });
-                                   };
+                        fmemb.CastArgTo = ps[0].ParameterType;
+                        fmemb.Function = delegate(object o, object arg1, object relativeTo)
+                                             {
+                                                 if (isStatic) return mi.Invoke(null, new[] {o, arg1, relativeTo});
+                                                 return mi.Invoke(o, new[] {arg1, relativeTo});
+                                             };
+                        found.Add(fmemb);
+                        continue;
                     }
                     continue;
                 }
-                if (psl == 0)
+                if (psl == effectiveParamCount(0))
                 {
-                    castArgTo = null;
-                    return delegate(object o, object arg1)
-                               {
-                                   return mi.Invoke(o, null);
-                               };
+                    fmemb.CastArgTo = null;
+                    fmemb.Function = delegate(object o, object arg1, object relativeTo)
+                                         {
+                                             if (isStatic) return mi.Invoke(null, new[] {o});
+                                             return mi.Invoke(o, null);
+                                         };
+                    found.Add(fmemb);
+                    continue;
                 }
-                if (psl == 1)
+                if (psl == effectiveParamCount(1))
                 {
-                    castArgTo = ps[0].ParameterType;
-                    return delegate(object o, object arg1)
-                               {
-                                   return mi.Invoke(o, new[] { arg1 });
+                    fmemb.CastArgTo = ps[0].ParameterType;
+                    fmemb.Function = delegate(object o, object arg1, object relativeTo)
+                                         {
+                                             if (isStatic) return mi.Invoke(null, new[] {o, arg1});
+                                             return mi.Invoke(o, new[] {arg1});
 
-                               };
+                                         };
+                    found.Add(fmemb);
+                    continue;
                 }
                 continue;
             }
-            isNonPredicate = false;
-            functional = false;
-            castArgTo = null;
-            warn("dont know how to handle: " + arg0Lower + " " + membH);
-            return delegate(object o, object arg1)
-                       {
-                           warn("dont know how to handle: " + arg0Lower + " " + membH);
-                           return true;
-                       };
+            if (found.Count == 0)
+            {
+                warn("dont know how to handle: " + arg0Lower + " " + membH);
+            }
+            return found;
         }
 
-        private static bool CompareObjects(char comparteChar, object tf, object o)
+        private static bool IsAssignableFrom(Type lastParam, Type relativeToType)
         {
-            throw new NotImplementedException();
+            if (lastParam.IsAssignableFrom(relativeToType)) return true;
+            if (relativeToType == typeof(object))
+            {
+                return false;
+            }
+            return relativeToType.IsAssignableFrom(lastParam);
+        }
+
+        public static List<FilterMember> GetFilters(Type type)
+        {
+            if (typeof (MixinSubObjects).IsAssignableFrom(type))
+            {
+
+            }
+            return FindAllFilters(null, type, type, type, DLRConsole.DebugWriteLine);
         }
     }
+
+    public delegate bool CompareTestChar(char compareChar, object posresult , object compareTo);
+
+    public struct FilterMember
+    {
+        public FilterFunc Function;
+        public Type CastArgTo;
+        public MemberInfo ReflectionMember;
+        public bool RequiresRelativeContextObject;
+        public bool IsCollectionType;
+        public Type ReturnType;
+        public bool IsTargeted;
+        public bool IsOf;
+        public bool PreCompare;
+    }
+
+    public delegate object FilterFunc(object target, object arg, object compareTo);
 
     public interface DenotingAnotherType
     {

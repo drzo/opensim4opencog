@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using Cogbot.World;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -36,12 +37,11 @@ namespace Cogbot
             return tryGetPrim(args.tokens, out prim, out argsUsed);
         }
 
-        public bool tryGetSingleObjectByName(string[] splitted,  out SimObject prim, out int argsUsed)
+        public bool tryGetSingleObjectByName(string[] splitted, out SimObject prim, out int argsUsed)
         {
-            uint pickNum = 0;
             UUID uuid = UUID.Zero;
             string name = splitted[0].Trim().Replace("  ", " ");
-            if (name.Contains("-") && UUID.TryParse(name, out uuid))
+            if (name.IndexOf("-") > 2 && UUID.TryParse(name, out uuid))
             {
                 prim = GetSimObjectFromUUID(uuid);
                 argsUsed = 1;
@@ -61,22 +61,25 @@ namespace Cogbot
                 return prim != null;
             }
              */
-            if (resolve.StartsWith("primid"))
-            {
-                if (name.Length > 6)
+            foreach (string primid in new[] {"primid", "lid"})
+                if (resolve.StartsWith(primid))
                 {
-                    String s = name.Substring(6);
-                    if (uint.TryParse(s, out pickNum))
+                    int tl = primid.Length;
+                    if (name.Length > tl)
                     {
-                        prim = GetSimObject(pickNum, null);
-                        if (prim != null)
+                        String s = name.Substring(tl);
+                        uint pickNum;
+                        if (uint.TryParse(s, out pickNum))
                         {
-                            argsUsed = 1;
-                            return true;
+                            prim = GetSimObject(pickNum, null);
+                            if (prim != null)
+                            {
+                                argsUsed = 1;
+                                return true;
+                            }
                         }
                     }
                 }
-            }
             if (name.StartsWith("@"))
             {
                 int splitOffset = 0;
@@ -104,6 +107,92 @@ namespace Cogbot
                 return prim != null && (dist < 2);
             }
 
+            if (splitted.Length > 1 && !splitted[0].Contains(" "))
+            {
+                name = splitted[0] + " " + splitted[1];
+                prim = GetSimAvatarFromNameIfKnown(name);
+                if (prim != null)
+                {
+                    argsUsed = 2;
+                    return true;
+                }
+                prim = GetSimAvatarFromNameIfKnown(splitted[0]);
+                if (prim != null)
+                {
+                    argsUsed = 2;
+                    return true;
+                }
+            }
+            name = splitted[0];
+            if (splitted.Length > 1)
+            {
+                int useNth = 0;
+                List<SimObject> fnd = null;
+                int nth;
+                if (int.TryParse(name, out nth))
+                {
+                    splitted = Parser.SplitOff(splitted, 1);
+                    name = splitted[0];
+                    useNth = 1;
+                }
+                else
+                {
+                    nth = 1;
+                }
+                if (name.StartsWith("$"))
+                {
+                    fnd = ResolveCollection(name, out argsUsed);
+                }
+                else if (name.StartsWith("["))
+                {
+                    fnd = GetPrimitives(splitted, out argsUsed);
+                }
+                else if (name.StartsWith("("))
+                {
+                    argsUsed = 1;
+                    var result = GridMaster.client.evalLispCode(name);
+                    var acol = SingleNameValue.AsCollection(result);
+                    if (acol == null)
+                    {
+                        argsUsed = 0;
+                    }
+                    fnd = new List<SimObject>();
+                    GridMaster.AsPrimitives(fnd, acol);
+                }
+                else if (name.StartsWith("@"))
+                {
+                    double near;
+                    SimObject getSimObjectFromVector = GetSimObjectFromVector(
+                        GridMaster.GetVector(splitted, out argsUsed).GlobalPosition, out near);
+                    fnd = new List<SimObject>();
+                    if (near > 0.3)
+                    {
+                        fnd.Add(getSimObjectFromVector);
+                    }
+                    else
+                    {
+                        argsUsed = 0;
+                    }
+                }
+                else
+                {
+                    argsUsed = 0;
+                    fnd = new List<SimObject>();
+                    name = name.ToLower();
+                    string largs = name.Replace("_", " ");
+                    foreach (var o in SimObjects)
+                    {
+                        if (o.Matches(name))
+                        {
+                            fnd.Add(o);
+                            argsUsed = 1;
+                        }
+                    }
+                }
+                argsUsed += useNth;
+                prim = fnd[nth - 1];
+                return true;
+            }
             prim = null;
             argsUsed = 0;
             return false;
@@ -111,7 +200,13 @@ namespace Cogbot
 
         public bool tryGetPrim(string[] splitted, out SimObject prim, out int argsUsed)
         {
-            uint pickNum = 0;
+
+            if (tryGetSingleObjectByName(splitted, out prim, out argsUsed))
+            {
+                return true;
+            }
+
+            uint pickNum = 0;     
             List<SimObject> matches = GetPrimitives(splitted, out argsUsed);
 
             if (matches.Count == 0)
@@ -360,9 +455,8 @@ namespace Cogbot
             }
             int argsUsedLocally;
             string arg0Lower = args[0].ToLower();
-            ICollection starters = ResolveCollection(arg0Lower, out argsUsedLocally, null);
-            List<SimObject> starterSet = new List<SimObject>();
-            AsPrimitives(starterSet, starters);
+
+            List<SimObject> starterSet = ResolveCollection(arg0Lower, out argsUsedLocally);
             if (arg0Lower.StartsWith("$"))
             {
                 argsUsed = argsUsedLocally;
@@ -403,12 +497,56 @@ namespace Cogbot
             return prims;
         }
 
+        internal readonly Dictionary<string, IKeyValuePair<string, object>> ObjectGroups = new Dictionary<string, IKeyValuePair<string, object>>();
+
+
+        private ICollection ResolveGroupVar(string name)
+        {
+            IKeyValuePair<string, object> func;
+            if (ObjectGroups.TryGetValue(name.TrimStart(TrimCollectionStart), out func))
+            {
+                if (func == null) return null;
+                return SingleNameValue.AsCollection(func.Value);
+            }
+            return null;           
+        }
+
+        public ICollection ResolveForExternal(string name)
+        {
+            var expandGroupVar = ResolveGroupVar(name);
+            if (expandGroupVar != null) return expandGroupVar;
+            SimObject prim;
+            var splitted = Parser.ParseArguments(name);
+            int argsUsed;
+            if (tryGetSingleObjectByName(splitted, out prim, out argsUsed))
+            {
+                if (argsUsed > 0)
+                {
+                    return SingleNameValue.AsCollection(prim);
+                }
+            }
+            return null;
+        }
+
+        public List<SimObject> ResolveCollection(string arg0Lower, out int argsUsed)
+        {
+            ICollection starters = ResolveCollection(arg0Lower, out argsUsed, null); 
+            var prims = new List<SimObject>();
+            AsPrimitives(prims, starters);
+            return prims;
+        }
 
         private readonly DefaultWorldGroupProvider _defaultProvider;
         static readonly char[] TrimCollectionStart = new []{' ','\n','$'};
         public ICollection ResolveCollection(string arg0Lower, out int argsUsed, ICollectionProvider skip)
         {
             arg0Lower = arg0Lower.TrimStart(TrimCollectionStart).ToLower();
+            var expandGroupVar = ResolveGroupVar(arg0Lower);
+            if (expandGroupVar != null)
+            {
+                argsUsed = 1;
+                return expandGroupVar;
+            }
             var req = new RequesterSession(client);
             //req.SkippedProviders.Add(skip);
             client.SessionMananger = req;
@@ -448,16 +586,22 @@ namespace Cogbot
                 prims.AddRange(secondSet);
                 argsUsed += used;
             }
-            else if (arg0Lower == "max")
+            else if (arg0Lower == "keep")
             {
-                int nth = 30;
+                int nth;
                 if (int.TryParse(args[1], out nth))
                 {
                     used++;
                 }
                 if (prims.Count > nth)
                 {
-                    prims.RemoveRange(nth, prims.Count - nth);
+                    if (removeMatches)
+                    {
+                        prims.RemoveRange(nth, prims.Count - nth);
+                    } else
+                    {
+                        prims.RemoveRange(0, nth);
+                    }
                 }
                 prims = FilterSimObjects(Parser.SplitOff(args, used), out argsUsed, prims, removeMatches, relativeTo);
                 argsUsed += used;
@@ -469,12 +613,20 @@ namespace Cogbot
                 {
                     used++;
                 }
-                List<SimObject> prims0 = new List<SimObject>();
-                if (prims.Count >= nth)
+                if (!removeMatches)
                 {
-                    prims0.Add(prims[nth - 1]);
+                    List<SimObject> prims0 = new List<SimObject>();
+                    if (prims.Count >= nth)
+                    {
+                        prims0.Add(prims[nth - 1]);
+                    }
+                    prims = prims0;
                 }
-                prims = prims0;
+                else
+                {
+                    prims = new List<SimObject>(prims);
+                    prims.RemoveAt(nth);
+                }
                 prims = FilterSimObjects(Parser.SplitOff(args, used), out argsUsed, prims, removeMatches, relativeTo);
                 argsUsed += used;
             }
@@ -483,6 +635,10 @@ namespace Cogbot
                 List<SimObject> objs = new List<SimObject>();
                 AsPrimitives(objs, prims);
                 objs.Sort(((SimObject) relativeTo).CompareDistance);
+                if (removeMatches)
+                {
+                    objs.Reverse();
+                }
                 prims = objs;
                 prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims, removeMatches, relativeTo);
                 argsUsed += used;
@@ -499,12 +655,12 @@ namespace Cogbot
                     arg0Lower.StartsWith("$") ||
                     arg0Lower.StartsWith("@") ||
                     arg0Lower.StartsWith("primid") ||
-                    arg0Lower.Contains("-");
+                    arg0Lower.Substring(1).Contains("-");
 
                 if (!resolveCollection)
                 {
                     prims = FilterSpecAttribute.ApplyFilter(args, out used, ChangeType, prims, relativeTo,
-                                                            removeMatches, Debug);
+                                                            removeMatches, Debug, CompareObjectsChar);
                     resolveCollection = (used == 0);
                     if (!resolveCollection)
                     {
@@ -516,12 +672,7 @@ namespace Cogbot
                 }
                 //if (resolveCollection)
                 {
-                    var v = ResolveCollection(arg0Lower, out argsUsed, null);
-                    List<SimObject> rcol = new List<SimObject>();
-                    if (v != null)
-                    {
-                        AsPrimitives(rcol, v);
-                    }
+                    List<SimObject> rcol = ResolveCollection(arg0Lower, out argsUsed);
                     foreach (var o in prims.ToArray())
                     {
                         bool shared = rcol.Contains(o);
@@ -531,6 +682,16 @@ namespace Cogbot
                 }
             }
             return prims;
+        }
+
+        private bool CompareObjectsChar(char comparechar, object posresult, object compareto)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<FilterMember> GetFilters(Type type)
+        {
+            return FilterSpecAttribute.GetFilters(type);
         }
 
         public object ChangeType(string[] args, out int argsUsed, Type arg2)

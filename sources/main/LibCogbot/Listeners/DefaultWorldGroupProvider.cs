@@ -23,6 +23,7 @@ namespace Cogbot
                 if (avatar == null) return null;
                 return avatar.GetSelectedObjects();
             });
+            AddObjectGroup("assets", () => WorldObjects.SimRootObjects.CopyOf());
             AddObjectGroup("objects", () => WorldObjects.SimRootObjects.CopyOf());
             AddObjectGroup("prims", () => WorldObjects.SimObjects.CopyOf());
             AddObjectGroup("childprims", () => WorldObjects.SimChildObjects.CopyOf());
@@ -139,23 +140,7 @@ namespace Cogbot
 
         public ICollection GetGroup(ICollectionRequester requester, string name)
         {
-            IKeyValuePair<string, object> func;
-            if (ObjectGroups.TryGetValue(name.TrimStart(new[] {'$', ' '}), out func))
-            {
-                if (func == null) return null;
-                return SingleNameValue.AsCollection(func.Value);
-            }
-            SimObject prim;
-            var splitted = Parser.ParseArguments(name);
-            int argsUsed;
-            if (world.tryGetSingleObjectByName(splitted, out prim, out argsUsed))
-            {
-                if (argsUsed > 0)
-                {
-                    return SingleNameValue.AsCollection(prim);
-                }
-            }
-            return null;
+            return world.ResolveForExternal(name);
         }
 
         public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
@@ -178,7 +163,6 @@ namespace Cogbot
         }
 
 
-        readonly Dictionary<string, IKeyValuePair<string, object>> ObjectGroups = new Dictionary<string, IKeyValuePair<string, object>>();
         public IEnumerable<string> GroupNames
         {
             get { lock (ObjectGroups) return new List<string>(ObjectGroups.Keys); }
@@ -190,6 +174,11 @@ namespace Cogbot
             {
                 ObjectGroups[selecteditems.TrimStart(' ', '$').ToLower()] = new SingleNameValue(selecteditems, func);
             }
+        }
+
+        protected Dictionary<string, IKeyValuePair<string, object>> ObjectGroups
+        {
+            get { return world.ObjectGroups; }
         }
     }
 }
