@@ -35,7 +35,9 @@
 			failure/1, failure/2,
 			current_test/2,
 			botapi/1,
-			onChatTSHook/3, std_end/2, std_end/3,
+			onChatTSHook/3,
+			require_chat_hook/0,
+			std_end/2, std_end/3,
 			doTest/3 , ppTest/1]).
 :-use_module(library(swicli)).
 :-use_module(library('simulator/cogrobot')).
@@ -184,7 +186,7 @@ onChatTSHook0(_Originator, _Sender, _Event) :-!.
 require_chat_hook :-
 	chat_hook_installed.
 
-require_chat_hook :-	
+require_chat_hook :-
 	gridclient_ref(Obj),
 	cli_get(Obj , 'Self' , S),
         asserta(chat_hook_installed),
@@ -282,7 +284,7 @@ ppTest(List) :-
 	member(results(fail) , R), !,
 	(   member(name(N) , List) ;  N = 'no name'),
 	(   member(desc(D) , List) ;  D = ''),
-	concat_options(List , "" , Options),       
+	concat_options(List , "" , Options),
 	writef('****************\nFAIL: test %p %p %p FAILED\n%p\n' ,
 	       [N,D,Options,R]),
 	write_time_limit_exceeded , flush_output, !.
