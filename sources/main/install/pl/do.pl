@@ -58,8 +58,8 @@ do_page_content -->
 	   done_so_far(Plan),
 	   maplist(bundle_done_html, Plan, PlanHTML)
 	},
+	do_page_title,
 	html([
-	    h2('Done So Far'),
 	    div([id=bundlebox],
 		[ol([id=plan_list], PlanHTML)
 		]),
@@ -68,6 +68,16 @@ do_page_content -->
 
 bundle_done_html(finished, \finish_section) :- !.
 bundle_done_html(X, \bundle_section(X)).
+
+do_page_title -->
+	{
+	done_so_far(Progress),
+	memberchk(finished, Progress),!
+	},
+	html([h2('Installation Complete')]).
+
+do_page_title -->
+	html([h2('Working'),h3('Done So Far')]).
 
 finish_section -->
 	html([
@@ -85,14 +95,10 @@ do_buttons -->
 	done_so_far(Progress),
 	memberchk(finished, Progress),!
 	},
-	html([
-	    \wizard_button_default(reset, 'Finish Installation')
-	     ]).
-
+	[].
 
 do_buttons -->
 	html([
-	    \wizard_button(reset, 'Cancel The Installation'),
-	    \wizard_button_default(reset, 'Finish Installation')
+	    \wizard_button(reset, 'Cancel The Installation')
 	     ]).
 

@@ -27,6 +27,7 @@ find_cyc_server_question(X) :-
 	    X = [
 	    label(for=cycuri, 'URI of your Cyc server:'),
 	    input([
+		size=80,
 		name=cycuri,
 		id=cycuri,
 		type=text,
