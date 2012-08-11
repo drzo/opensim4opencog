@@ -406,7 +406,7 @@ namespace MushDLR223.Utilities
         public static DLRConsole SingleInstance = new DLRConsole();
         public static bool HasWinforms = false;
         public static bool IsOnMonoUnix = true;
-        public static bool AlwaysWrite = true;
+        public static bool AlwaysWrite = false;
         public static bool SafelyRun(MethodInvoker call)
         {
             return SafelyRun(call, Error);
@@ -990,12 +990,15 @@ namespace MushDLR223.Utilities
             string omittedPrefix = sender.ToUpper() + ":";
             if (tt.StartsWith(omittedPrefix))
             {
-                trimmed = trimmed.Substring(spaced + omittedPrefix.Length);//.TrimStart();
+                string before = trimmed;
+                trimmed = trimmed.Substring(0, spaced) +
+                          trimmed.Substring(spaced + omittedPrefix.Length).TrimStart();
                 return trimmed;
             }
             omittedPrefix = "[" + sender.ToUpper() + "]";
             if (tt.StartsWith(omittedPrefix))
             {
+                string before = trimmed;
                 trimmed = trimmed.Substring(0, spaced) +
                           trimmed.Substring(spaced + omittedPrefix.Length).TrimStart();
                 return trimmed;
