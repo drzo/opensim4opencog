@@ -74,6 +74,14 @@
 :-include('bundles/all.pl').
 :-include('bundles/core.pl').
 :-include('bundles/prolog.pl').
+:-include('bundles/cyc_query.pl').
+:-include('bundles/aiml_personality.pl').
+:-include('bundles/wordnet.pl').
+:-include('bundles/opencyc.pl').
+:-include('bundles/examples.pl').
+:-include('bundles/objects.pl').
+:-include('bundles/sources.pl').
+
 % If you add bundles, you have to add them above this line
 
 
