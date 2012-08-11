@@ -113,7 +113,6 @@
 <!-- Create the distribution directory -->
 <jar destfile="cogbot-prolog.zip">
 <fileset dir="." casesensitive="false">
-    <include name="bin/examples/**"/> 
     <include name="bin/prolog/**"/> 
     <include name="test/**"/> 
     <exclude name="**/CVS/*"/> 
