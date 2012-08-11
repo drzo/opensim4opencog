@@ -20,7 +20,7 @@ SL Protocol is the protocol for the free virtual world Second Life http:www.seco
 
 === The Objects Of The World ===
 
- * Land - The ground surface. The land is divided into a grid of _regions_ (sometimes called _sims_ ) 256 meters on a side. The land appears continuous - you can walk across the boundary.
+ * Land - The ground surface. The land is divided into a grid of _regions_ (sometimes called _sims_ ) 256 meters on a side. The land appears continuous - you can walk across the boundary. A collection of regions operating as a single 'world' is a _grid_.
 
  * Inventory - everything a user 'owns' is passivated into their 'inventory'. It can be copied from inventory to the world, a process called 'rezzing', or back, a process called 'taking'. So, if I tire of my castle in Second Life, I can take it back to inventory, making it disappear from the world, rez my beach house from my inventory, and invite my friends over for a little beach party. When scripts are passivated their state is preserved
 
@@ -123,6 +123,88 @@ state red
 }
 
 }}}
+
+Each script is single threaded and has it's own thread. All communication is by messaging.
+
+=== Communication ===
+
+SL has many ways to communicate. Objects can participate in all but voice. Avatars can participate in chat, IM, OwnerSay, and voice.
+
+Chat
+
+Chat is typing at each other. 
+
+Chat is done on numbered channels. Every 'chat' message has a channel number and an origin location. Avatars listen only to channel zero and the debug channel, #7FFFFFFF. Avatars my produce chat on any nonnegative channel by starting their message with '/7 this message said on chnnel 7'. 
+
+Avatar chat may be _whispered_, _said_, or _shouted_, and will be received by listeners with 10, 20, or 80 meters respectively.
+
+Objects may listen on any channel (including zero), and may whisper, say, or shout. Objects may also 'region say' to the entire region on any non zero channel, or ownersay to their owning avatar only (the normal way to print debug messages). 
+
+Conventionally, positive channels are reserved for avatars to control objects, while negative channels are for object to object communication.
+
+IM
+
+Avatars and objects may 'IM' avatars anywhere in the grid. This chat appears in a separate window.
+
+Link Messages
+
+Objects may send messages via the LSL api llMessageLinked to communicate with other scripts within the same prim or same linkset.
+
+This is a broadcast system.
+
+Link messages and multiple scripts are the most common means of encapsulation.
+
+Awkward as stringified messages appear at first, I've found I get a very large amount of code reuse.
+
+Script Injection
+
+Since an object can give an asset in it's inventory to another object, it can give a script. To prevent the obvious security hole of accepting arbitrary scripts, given scripts only run if the giver suppies a secret PIN code (set on the receiver by another LSL API).
+
+Script injection is very useful for implementing 'decorator' type. It's even fairly common for a script to change the behavior of an object by injecting a script that deletes a script, then takes over it's function.
+
+Gasp! Self modifying code!  (wait til the first time you llDie() an object, deleting your only copy of the code along with it).
+
+=== Off world communication ===
+
+HTTP
+
+Objects may issue HTTP requests and receive replies. The length is limited to about 1500 chars.
+
+They may also request a temporary (they last a week or so on SL) URL and act as a server. 
+
+Notecards
+
+LSL can read, but not write, a notecard in it's inventory. This is the conventional way to store static data.
+
+XML-RPC
+
+Linden Labs implemented an XML-RPC system that never worked well and is deprecated.
+
+Email
+
+Objects can send and receive email. This is quite useful for low rate 'wake up' type communication. For example, a commercial advertising company with hundreds of ads spread throughout SL could update all it's boards by email. At my university employer, we have 'help' objects students can touch to get help. These send an SMS to my phone via SMTP
+
+A note - the Pathways testbed server doesn't have an email gateway set up.
+
+libOMV
+
+Finally, the SL protocol can be implemented. This is what Cogbot does.
+
+A single library, libOMV, partially implements the protocol (it's a complex protocol). This library is in C#. So the core of Cogbot is written in C#.
+
+== User Names ==
+
+User names on grids are 
+
+== Final advice ==
+
+Obviously this page barely scratches the surface. Like any other computing environment, the best way to learn is to dive in and make things.
+
+Until we outgrow the ability to support this, contact Annie for an account on the Pathways server, which is our Cogbot testbed server.
+
+Have fun!
+
+
 
 
 
