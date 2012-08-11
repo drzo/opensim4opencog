@@ -188,48 +188,6 @@ test1(N) :-
 		  'annies haven/181.878403/140.768723/101.555061/'),
 	std_end(N , 65 , 1).
 
-
-/*
-
-	keep this stuff, it's from the old opensim build, but it's a record
-	of what tests we were doing
-
-test(3, N) :-
-	N= 'Rotating Obstacle',
-	start_test(N),
-	botapi(teleport('annies haven/137.404724/187.234711/1000.985291/')),
-	time_limit(15 , botapi('follow*'('annies haven/139.016434/206.675934/1000.985229/'))),
-	needed(_,3,1),
-	\+ obstacle(_),
-	end_test.
-
-
-test(6, N) :-
-	N= 'narrowest gap we can go through',
-	start_test(N),
-	botapi(teleport('annies haven/150.241486/131.945526/1000.985291/')),
-	time_limit(15 , botapi('follow*'('annies haven/148.898590/146.752121/1000.988281/'))),
-	\+ obstacle(_),
-	\+ forbidden(_,_,_),
-	end_test.
-
-test(6, N) :-
-	N= 'tortured prim tube',
-	start_test(N),
-	botapi(teleport('annies haven/236.392776/245.958130/1000.986572/')),
-	time_limit(20 , botapi('follow*'('annies haven/239.544891/232.117767/1000.987122/'))),
-	end_test.
-
-test(7, N) :-
-	N= 'jagged maze',
-	start_test(N),
-	botapi(teleport('annies haven/233.436218/221.673218/1000.988770/')),
-	time_limit(60 , botapi('follow*'('annies haven/248.193939/190.898941/1000.985291/'))),
-	\+ obstacle(_),
-	end_test.
-
-*/
-
 tpf_method(GoMethod) :-
 	retractall(goMethod(_)),
 	asserta(goMethod(GoMethod)),
