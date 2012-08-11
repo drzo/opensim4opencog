@@ -127,9 +127,15 @@ If you move the prim a little ways away, and type
 sit
 }}}
 
+@: Restrict the following commands to one or all avatars.
+
+
+
 the bot will sit on the ground instead.
 
 You can specify what the bot should sit on.  Name the prim *bot chair*, stand the bot up, and try
+
+SingleObject
 
 Specify Named prim (Notice that you need quotes if there are space)
 {{{
@@ -148,30 +154,39 @@ sit ff45-f45-f55-454-f-f45f-fff
 
 You can use simulator local IDs
 {{{
-sit localid345345345345
+sit lid345345345345
 }}}
 
-specify groups with commands like priminfo
 
-Single groups are:
+MultpleObjects specify many targets with commands like priminfo
+
+$,[,(,!, integer are special prefixs that change how command arguments are parsed
+
+"$" Single groups are:
 
  * $master
- * $master
- * $master
- * $master
- * $master
+ * $objects
+ * $avatars
+ * $accounts
+ * $attachments
+ * $self
+ * $selected (prims selected by the avatars)
 
-mindist 1 maxdist 3 nth 1
 
-!match 
+[ $objects mindist 1 maxdist 3 [ not match "red" ] bydist nth 1 ]
 
-! and $ in commands
-$master
-$selected   (group of selected prims)
+bydist - sort group by distance to avatar
+reverse - reverse that list order
+nth <1-based>   - grab only one element (negative numbers search from end)
+keep <number>   - retain only so many elements (negative numbers retain from end)
+not <.....>   
 
-@ coerces prim position to 3d location @primid 15
 
-@: Restrict the following commands to one or all avatars.
+
+
+btw: [ not match "red" ]
+
+is the same as:  !match "red"
 
 max is maximum prims in filterset
 dist is maximum dist to avatar
@@ -185,6 +200,10 @@ See all this stuff starting at line 445 of WorldCommandParsing
 {{{
 /priminfo [ $selected maxdist 2.1 mindist 1.9 max 4 nth2 matches Window !matches -like ownedby $master ]
 }}}
+
+
+
+@ coerces prim position to 3d location @lid152345234
 
 
 bang commands are deprecated -
