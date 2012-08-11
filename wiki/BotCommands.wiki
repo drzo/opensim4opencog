@@ -175,14 +175,14 @@ $,[,(,!, integer are special prefixs that change how command arguments are parse
 
 [ $objects mindist 1 maxdist 3 [ not match "red" ] bydist nth 1 ]
 
-bydist - sort group by distance to avatar
-reverse - reverse that list order
-nth <1-based>   - grab only one element (negative numbers search from end)
-keep <number>   - retain only so many elements (negative numbers retain from end)
-not <.....>   
-
-
-
+distfrom `<loc`>  - sort group by distance to `<loc`>
+bydist - sort group by distance to avatar (same as "distfrom $self")
+nth `<1-based`>  - grab only one element (negative numbers search from end)
+!nth `<1-based`> - remove only one element (negative numbers search from end)
+keep `<number`>  - retain so many elements (negative numbers retain from end)
+!keep `<number`> - discard so many elements (negative numbers discard from end)
+reverse - reverses list order
+not `<body`> - switches from normally filtering things for retention to removal
 
 btw: [ not match "red" ]
 
