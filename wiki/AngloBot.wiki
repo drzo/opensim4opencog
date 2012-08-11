@@ -50,9 +50,13 @@ Skein - like Inform 7  (how do we 'reset')?
 
 GUI tool to observe sysvars, botvars
 
+== Other implementations that might be useful ==
 
+http://www.agentfactory.com/index.php/Main_Page
 
+http://jason.sourceforge.net/Jason/Jason.html
 
+http://www.youtube.com/embed/r38b_b7IOkc
 
 == the convo on skype ==
 
@@ -523,5 +527,3 @@ We feed these new requirements into the top and loop again (usually the range of
 == Acceptance ==
 
 We're all happy with the design. We build it. The world applauds, and/or the project dissolves in blame and recriminations.
-
-
