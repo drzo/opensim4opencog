@@ -230,6 +230,14 @@ namespace MushDLR223.ScriptEngines
                         continue;
                     }
                 }
+                if (arg0Lower == null)
+                {
+                    string mname = memb.Name;
+                    if (mname.StartsWith("Set") || mname.StartsWith("get_") || mname.StartsWith("set_"))
+                    {
+                        continue;
+                    }
+                }
                 if (isNonPredicate)
                 {
                     if (useRelative)
