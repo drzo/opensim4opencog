@@ -34,15 +34,14 @@ do_plan_in_thread(Plan, Config) :-
 	make_directories_exist(Config),
 	retractall(current_progress_data(_)),
 	assert(current_progress_data([])),
-	do_plan_or_dont(Plan, Config).
-/*  TODO at end fix this
+	do_plan_or_dont(Plan, Config),
 	thread_create(do_plan_or_dont(Plan, Config),
 		      _,
 		      [
 		       alias(plan_execution_thread),
 		       at_exit(execute:execution_done),
 		       detached(true)]).
-*/
+
 
 execution_done :-
 	append_progress(finished).
@@ -51,7 +50,7 @@ done_so_far(NamesDone) :-
 	with_mutex(progress, current_progress_data(NamesDone)).
 
 append_progress(Item) :-
-	debugout('Appending ~w to done list~n', [Item]),
+	debug(executor, 'Appending ~w to done list~n', [Item]),
 	with_mutex(progress, append_progress_core(Item)).
 
 % famulus for append_progress - nobody else call
@@ -67,37 +66,44 @@ do_plan_or_dont(Plan, Config) :-
 do_plan_or_dont(Plan, _) :-
 	debugout('Plan failed to execute~w~n', [Plan]),!.
 
-do_plan([], _).
+do_plan([], _) :-
+	debug(executor, 'Finished executing~n',[]).
 
 do_plan([Name|T], Config) :-
 	bundle(Name, Type, _, _),
 	memberchk(Type, [group, license, licensepage, config, configpage]),!,
+	debug(executor, 'ignoring ~w by type~n', [Name]),
 	do_plan(T,  Config).
 
 do_plan([Name|T],  Config) :-
 	bundle(Name, files, _, Args),
+	debug(executor, 'in files ~w~n', [Name]),
 	memberchk(from(From), Args),
 	memberchk(to(To), Args),
 	id_abs_path(From, Config, FromAbs),
 	id_abs_path(To, Config, ToAbs),
 	exists_file(FromAbs),!,
+	debug(executor, '~w exists will unzip to ~w~n', [FromAbs, ToAbs]),
 	file_unzip(FromAbs, ToAbs),   % blocks
 	append_progress(Name),
 	do_plan(T,  Config).
 
 do_plan([Name|T],  Config) :-
 	bundle(Name, files, _, Args),
+	debug(executor, 'in files ~w~n', [Name]),
 	memberchk(from(From), Args),
 	id_abs_path(From, Config, FromAbs),
 	\+ exists_file(FromAbs),!,
 	memberchk(url(URL), Args),
 	id_abs_path(URL, Config, RealURL),
+	debug(executor, '~w doesnt exist, will download ~w~n', [FromAbs, URL]),
 	file_download(RealURL, FromAbs),   % blocks
 	append_progress(Name),
 	do_plan([Name|T],  Config).
 
 do_plan([Name|T],  Config) :-
 	bundle(Name, page, _, Args),!,
+	debug(executor, 'Will open page for ~w~n', [Name]),
 	memberchk(url(Page), Args),
 	www_open_url(Page),
 	append_progress(Name),
@@ -105,9 +111,10 @@ do_plan([Name|T],  Config) :-
 
 do_plan([Name|T], Config) :-
 	bundle(Name, goal, _, Args),!,
+	debug(executor, 'will run goal for ~w~n', [Name]),
 	memberchk(goal(G), Args),
 	(   call(G, Config)
-	;   debugout('goal ~w in bundle ~w has failed~n', [G, Name])
+	;   debug(executor, 'goal ~w in bundle ~w has failed~n', [G, Name])
 	),
 	append_progress(Name),
 	do_plan(T, Config).
@@ -117,7 +124,7 @@ do_plan([Name|T], Config) :-
 %
 do_plan([Name|T], Config) :-
 	bundle(Name, desktop, _, Args),!,
-	%%gtrace,
+	debug(executor, 'doing desktop for ~w~n', [Name]),
 	memberchk(path(ExePath), Args),
 	memberchk(icon(IconPath), Args),
 	id_abs_path(ExePath, Config, PLExe),
@@ -198,7 +205,6 @@ file_unzip(From, To) :-
 %
 
 id_abs_path(program(.), Config, NoTrail) :-
-	gtrace,
 	memberchk(install=Loc, Config),
 	prolog_to_os_filename(PLLoc, Loc),
 	trailing_slash(NoTrail, PLLoc).

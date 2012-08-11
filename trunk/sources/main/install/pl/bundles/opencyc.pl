@@ -12,7 +12,7 @@ deps(opencyc_group, find_cyc_server).
 
 bundle(configure_cyc_world,
        config,
-       'Configure The Cyc Client',
+       'Configure Pushing World Percepts To Cyc',
        Args) :-
 	configure_cyc_world_question(X),
 	Args = [inc(X)].
@@ -32,7 +32,7 @@ configure_cyc_world_question(X) :-
 	    input([
 		name=clearcycbetweensessions,
 		id=clearcycbetweensessionsfalse,
-		type=checkbox,
+		type=radio,
 		value=false
 		  ],'Retain Cyc KB between sessions')
 	   ])].

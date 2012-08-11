@@ -95,7 +95,7 @@ user:body(cogbot_web_style , Body) -->
 user:head(cogbot_web_style_refresh , Head) -->
 	html([\Head,
 	      \html_head,
-	      meta([http-equiv=refresh, content=15], [])
+	      meta([http-equiv=refresh, content=5], [])
 	     ]).
 
 user:body(cogbot_web_style_refresh , Body) -->
@@ -151,6 +151,7 @@ start:-
 
 autostart :-
        debug(message),
+       debug(executor),
        start,
        server_port(Port),
        format(string(S), 'http://127.0.0.1:~w/' , [Port]),

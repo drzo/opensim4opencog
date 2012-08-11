@@ -73,7 +73,7 @@ bundle(getgridcreds,
 	      ]),
 	    p([
 		label([for=loginuri], 'Login URI:'),
-		input([type=text, name=loginuri, id=loginuri,
+		input([type=text, size=80, name=loginuri, id=loginuri,
 		    value='https://login.agni.lindenlab.com/cgi-bin/login.cgi'],
 		  [])
 	      ]),
