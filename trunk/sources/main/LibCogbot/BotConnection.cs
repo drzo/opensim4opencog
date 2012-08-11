@@ -430,7 +430,9 @@ namespace Cogbot
         }
         internal object GetAvatar()
         {
-            if (!CogbotHelpers.IsNullOrZero(Self.AgentID) || WorldSystem.m_TheSimAvatar != null)
+            var av = WorldSystem.m_TheSimAvatar;
+            if (av != null) return av;
+            if (!CogbotHelpers.IsNullOrZero(Self.AgentID))
             {
                 return TheSimAvatar;
             }
