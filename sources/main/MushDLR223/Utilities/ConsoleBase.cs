@@ -984,7 +984,7 @@ namespace MushDLR223.Utilities
 
         static public string OmitPrefix(string sender, string trimmed)
         {
-            string tt = trimmed.Trim().ToUpper();
+            string tt = trimmed.TrimStart().ToUpper();
             int spaced = trimmed.Length - tt.Length;
 
             string omittedPrefix = sender.ToUpper() + ":";
@@ -997,7 +997,7 @@ namespace MushDLR223.Utilities
             if (tt.StartsWith(omittedPrefix))
             {
                 trimmed = trimmed.Substring(0, spaced) +
-                          trimmed.Substring(spaced + omittedPrefix.Length + 1).TrimStart();
+                          trimmed.Substring(spaced + omittedPrefix.Length).TrimStart();
                 return trimmed;
             }
             return trimmed;
@@ -1694,53 +1694,46 @@ namespace MushDLR223.Utilities
         }
         public static string GetCallerFormat(string format, out string prefix)
         {
-            if (!format.StartsWith("["))
+            string testit = format.Trim();
+            if (testit.EndsWith(":") || testit.Length < 4 || testit.StartsWith(":"))
             {
-                int fc = format.IndexOf(":");
-                var formatlow = format.ToLower();
-                if (fc > 1 && !formatlow.StartsWith("succ") && !formatlow.StartsWith("fail"))
-                {
-                    prefix = format.Substring(0, fc);
-                    if (prefix.Contains(" "))
-                    {
-                        prefix = CurrentCaller;
-                        fc = -1;
-                    }
-                    else
-                    {
-                        prefix = prefix.ToUpper();
-                    }
-                    format = format.Substring(fc + 1);
-                    return format;
-                }
-                else
+                prefix = CurrentCaller;
+                return format;
+            }
+            if (testit.StartsWith("["))
+            {
+                format = format.TrimStart();
+                int fi = format.IndexOf("]", 0);
+                if (fi < 4)
                 {
                     prefix = CurrentCaller;
                     return format;
                 }
+                prefix = format.Substring(1, fi - 1);
+                return format.Substring(prefix.Length + 2);
             }
-            else
+            int fc = format.IndexOf(":");
+            if (fc > 4 && fc < 32)
             {
-                int fc = format.IndexOf("]");
-                if (fc == -1)
+                string canformat = format.TrimStart();
+                fc = canformat.IndexOf(":");
+                string canprefix = canformat.Substring(0, fc);
+                if (!canprefix.Contains("(") && !canprefix.Contains(" "))
                 {
-                    prefix = CurrentCaller;
-                    return format;
-                }
-                else
-                {
-                    prefix = format.Substring(1, fc - 1);
-                    return format.Substring(fc + 1);
+                    prefix = canprefix;
+                    return canformat.Substring(fc + 1);
                 }
             }
+            prefix = CurrentCaller;
             return format;
+
         }
 
         public static void DebugWriteLine(object arg)
         {
             string prefix;
             string getCallerFormat = GetCallerFormat("" + arg, out prefix);
-            getCallerFormat = "[" + prefix + "] " + getCallerFormat;
+            getCallerFormat = "[" + prefix.ToUpper() + "] " + getCallerFormat;
             SystemWriteLine0(getCallerFormat);
         }
         public static void DebugWrite(string arg)
