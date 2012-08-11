@@ -1,0 +1,46 @@
+#A brief introduction to virtual worlds
+
+= Introduction =
+
+Many of Cogbot's users are not from the traditional virtual world communities, ubt are from an AI background. So I thought it might be useful to give a very brief introduction to the SL protocol virtual worlds.
+
+== What's a Virtual World? ==
+
+A virtual world is a simulated place populated by avatars who represent a mix of real (human) users and programmatic 'bots'.
+
+Unlike a computer game, the goal of a virtual world is usually social interaction. Like social interaction in the real world, the presence of 'something to talk about' helps lubricate interactions.
+
+Unlike a computer game, the creators of a virtual world provide a relatively sparse environment and rich tools for modifying that environment.
+
+The term 'virtual world' depends a bit on context.  We'll concentrate on 'SL Protocol' worlds, and from now on when I say VW I mean an SL Protocol virtual world.
+
+SL Protocol is the protocol for the free virtual world Second Life http:www.secondlife.com offered by Linden Labs. This protocol is the de facto standard for communicating with a virtual world server.
+
+== The Big Pieces ==
+
+=== The Objects Of The World ===
+
+ * Land - The ground surface. The land is divided into a grid of _regions_ (sometimes called _sims_ ) 256 meters on a side. The land appears continuous - you can walk across the boundary.
+
+ * Inventory - everything a user 'owns' is passivated into their 'inventory'. It can be copied from inventory to the world, a process called 'rezzing', or back, a process called 'taking'. So, if I tire of my castle in Second Life, I can take it back to inventory, making it disappear from the world, rez my beach house from my inventory, and invite my friends over for a little beach party.
+
+ * Assets - textures, sounds, notecards (a modifyable text file), scripts (see below), clothing, etc. These don't directly appear in world but influence objects and avatars (eg a prim might have a texture on it's face, or play a sound when touched).
+
+ * Prims - A prim is the smallest manipulable unit of geometry. SL geometry is based on parametric solids. So one doesn't have polys, like in a mesh system, but rather a box, sphere, torus, etc. These shapes are essentially those of a square, circle, or triangle, swept along a line or circle. 
+
+Prims are edited with tools built into the viewer. The organic editing tools give VW's a very dynamic feel. 
+There is a way to import traditional meshes, but newcomers should learn to use prims before trying to force fit the SL geometry into preexisting poly mesh tool pipelines.  
+
+ * Objects - An _object_ is a _linked_ set of _prims_. Objects move as rigid bodies. So, typically, a chair would consist of a number (anywhere from 3 to 20 or so) prims. One prim is the _root_. There is no hierarchy, but the children have a stable _link_ _number_.
+
+ * Scripts - Each prim can contain other objects and assets. A script living in a prim produces programmed behavior. A script can affect the prim it's in or affect avatars - for example, most chairs have a script that responds to a 'sit' event by playing an animation that makes the avatar sit naturally in the chair. Scripts have nearly unlimited control of objects, but limited control of avatars.
+
+ * Windlight - the trade name of the environmental controls that produce day and night
+
+ * Avatars - An _agent_ is a human or bot's presence in the world. It's visual appearance is an avatar. Avatars can wear so called _real_ clothing, which is simply a texture on the body mesh, or _prim_ clothing, which is an object 'attached' to the avatar mesh. In particular, the _real_ hair is of poor quality, so normally people use _prim_ _hair_, but many clothing accessories are prims. 
+
+* HUD - To modify the user interface of the program, one can build (from prims) a custom user control. This can be attached to the viewer's content area, much as if it were glued to the 'inside' of the screen.
+
+=== Implementation ===
+
+The user runs client software called a _viewer_.  Viewers tend to fall into three catagories - graphical viewers, used for normal work in the world, text viewers like _Radegast_, used to manipulate an avatar without the heavyweight graphical viewer, and _bots_, which provide some sort of programmatic control of an avatar. Cogbot can reasonably be called a 'bot on steroids'.
