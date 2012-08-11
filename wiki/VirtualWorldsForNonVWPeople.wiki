@@ -2,7 +2,7 @@
 
 = Introduction =
 
-Many of Cogbot's users are not from the traditional virtual world communities, ubt are from an AI background. So I thought it might be useful to give a very brief introduction to the SL protocol virtual worlds.
+Many of Cogbot's users are not from the traditional virtual world communities, but are from an AI background. So I thought it might be useful to give a very brief introduction to the SL protocol virtual worlds.
 
 == What's a Virtual World? ==
 
@@ -22,7 +22,7 @@ SL Protocol is the protocol for the free virtual world Second Life http:www.seco
 
  * Land - The ground surface. The land is divided into a grid of _regions_ (sometimes called _sims_ ) 256 meters on a side. The land appears continuous - you can walk across the boundary.
 
- * Inventory - everything a user 'owns' is passivated into their 'inventory'. It can be copied from inventory to the world, a process called 'rezzing', or back, a process called 'taking'. So, if I tire of my castle in Second Life, I can take it back to inventory, making it disappear from the world, rez my beach house from my inventory, and invite my friends over for a little beach party.
+ * Inventory - everything a user 'owns' is passivated into their 'inventory'. It can be copied from inventory to the world, a process called 'rezzing', or back, a process called 'taking'. So, if I tire of my castle in Second Life, I can take it back to inventory, making it disappear from the world, rez my beach house from my inventory, and invite my friends over for a little beach party. When scripts are passivated their state is preserved
 
  * Assets - textures, sounds, notecards (a modifyable text file), scripts (see below), clothing, etc. These don't directly appear in world but influence objects and avatars (eg a prim might have a texture on it's face, or play a sound when touched).
 
@@ -37,10 +37,93 @@ There is a way to import traditional meshes, but newcomers should learn to use p
 
  * Windlight - the trade name of the environmental controls that produce day and night
 
- * Avatars - An _agent_ is a human or bot's presence in the world. It's visual appearance is an avatar. Avatars can wear so called _real_ clothing, which is simply a texture on the body mesh, or _prim_ clothing, which is an object 'attached' to the avatar mesh. In particular, the _real_ hair is of poor quality, so normally people use _prim_ _hair_, but many clothing accessories are prims. 
+ * Avatars - An _agent_ is a human or bot's presence in the world. It's visual appearance is an avatar. Avatars can wear so called _real_ clothing, which is simply a texture on the body mesh, or _prim_ clothing, which is an object 'attached' to the avatar mesh. So a pair of jeans would likely be 'real' clothing, but a carmen miranda hat would be prim clothing. Avatars can play animations, which are BVH format animations of the rigged skeleton. So, for example, a dance floor would play an animation on the avatar to make it dance.
 
 * HUD - To modify the user interface of the program, one can build (from prims) a custom user control. This can be attached to the viewer's content area, much as if it were glued to the 'inside' of the screen.
 
 === Implementation ===
 
-The user runs client software called a _viewer_.  Viewers tend to fall into three catagories - graphical viewers, used for normal work in the world, text viewers like _Radegast_, used to manipulate an avatar without the heavyweight graphical viewer, and _bots_, which provide some sort of programmatic control of an avatar. Cogbot can reasonably be called a 'bot on steroids'.
+The user runs client software called a _viewer_.  Viewers tend to fall into three catagories - graphical viewers, used for normal work in the world, text viewers like _Radegast_, that don't display the world but allow the avatar to talk and exchange objects, and _bots_, which provide some sort of programmatic control of an avatar. Cogbot can reasonably be called a 'bot on steroids'.
+
+The other end of the system is the server. Technically, a viewer makes a number of connections to different services, but at this level of detail we can think of 'the server'.  There are two implementations of the SL protocol server. One is the proprietary servers used by Linden Labs to operate the Second Life grid. The other is the open source project http://www.opensimulator.org  
+
+Each _region_ is simulated by a process called the _simulator_. Traditionally, one hardware 2U server served one region. With better hardware, it is now common to run multiple simulators on one server. Opensim allows a single simulator process to handle multiple regions. But still, the basic unit of control is the region.
+
+Every object and avatar must be represented by an object (programming sense) in each simulator that 'knows' about the object. So when an object or avatar crosses a region boundary a process of handoff occurs. Particularly complex, scripts need to hand off state.
+
+In practice, this means that users tend to build things within a single region, since there's a perceptable 'bump' when crossing the boundary. An exception is large event auditoriums, which are built on the 'apex' where 4 regions meet so that the load of simulating the audience is spread over 4 simulators.
+
+Assets are served from a seperate 'asset server'.  Every asset has a UUID. So, for example, a block sitting in a region with some wood texture on it would have a representation in the region's simulator that had a UUID for each face of the block. Assets are immutable, though this is occasionally hidden by the UI (eg you can modify a notecard - but you're making a new version under the covers).
+Objects in inventory are also assets. (objects in world have a UUID, but it is not their inventory UUID).
+
+Assets have a permission system that is slightly unusual. Every asset and object has a set of permissions for the current owner, and a set for the next owner. When the object is transferred the next owner perms are copied to the current perms. The current owner can change the next owner perms, but not the current perms.
+
+The permissions are to copy, modify, and transfer the object. A common notation for perms is to use upper case for 'allow' and lower case for 'deny' - so CmT means allow copy and transfer but not modify (another common scheme is positional, with y and n).
+For example, Bob makes a box with a script in it. As creator his box and script are CMT.
+
+He sets the box next owner perms to CMt. He sets the script to be cmT. He then gives the box to Sally.
+
+Sally can make as many copies of the box as she wants, but only one copy will contain the script. She can resize the box. But she cant give the box (with its script inside) to Fred, because she doesn't have transfer permissions.
+
+She can take the script out of the box to inventory, but can't look at it's contents. She can give the script to Fred, but when she does so her copy will disappear.
+
+This perm system allows users to create objects that act like real objects (if I give you my bicycle I don't have a bicycle, and you don't have two bicycles), like files (I give you a pdf file, I still have it), and control whether the object can be examined deeply or changed.
+
+=== Scripts ===
+
+A script is an asset that can be placed in a prim.
+
+Scripts are written in LSL,  http://wiki.secondlife.com/wiki/LSL_Portal
+a small state/event based language. The source is sent to the server, compiled to CLI (.net) bytecode and executed. Sandboxing is done simply by selecting the desired API's (and limiting memory/cpu quotas).
+
+A typical LSL script. 
+
+{{{
+
+// This turns the prim red the first time it's touched
+// green the second, and so on
+
+// colors are represented by vectors, which are a fundamental type
+vector GREEN = <0.0, 1.0, 0.0>;  
+vector RED = <1.0, 0.0, 0.0>;
+
+// we start in default state - note the irregular syntax
+default {
+// on state change all queued events are flushed, the exit handler
+// is called on the old state, then the entry handler is called on
+// the new state
+      state_entry()
+      {
+           llSetColor(GREEN, ALL_SIDES);
+      }
+
+      // handle stopping the 'touch; (left click) action
+      // the in world equivilent of mouse up
+      touch_end(integer n)
+      {
+           state red;  // change state
+          // code here never executes
+      }
+}
+
+state red
+{
+      state_entry()
+      {
+           llSetColor(RED, ALL_SIDES);
+      }
+
+      // handle stopping the 'touch; (left click) action
+      // the in world equivilent of mouse up
+      touch_end(integer n)
+      {
+           state default;  // change state
+          // code here never executes
+      }
+}
+
+}}}
+
+
+
+
