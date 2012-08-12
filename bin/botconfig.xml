@@ -9,43 +9,6 @@
   <simURL>agni</simURL>
   <password>pass123</password>
   <startupLisp>
-    (setj WorldObjects:MaintainCollisions true)
-    (setj WorldPathSystem:MaintainCollisionsForeground false)
-    (setj WorldObjects:MaintainEffects true)
-    (setj WorldObjects:MaintainActions true)
-    (setj WorldObjects:MaintainAnims true)
-    
-    (setj WorldObjects:MaintainSounds false) ;; for testing in a noisey world
-    (setj MushDLR223.Utilities.DLRConsole:SkipStackTraces false)
-
-    ;; just testing connections    
-  '(progn
-    (setj WorldObjects:MaintainEffects false)
-    (setj WorldObjects:MaintainActions false)
-    (setj WorldObjects:MaintainAnims false)
-    (setj WorldObjects:GleanAssetsFromFolders false)
-    (setj WorldObjects:MaintainGroupMetaData false)
-    (setj WorldObjects:MaintainObjectUpdates false)
-    (setj WorldObjects:MaintainSimObjectInfoMap false)
-    (setj WorldObjects:SendSimObjectInfoMap false)
-    (setj WorldObjects:SendOnDataAspectUpdate false)
-    )
-
-   ;; for just simexport
-  '(progn
-    (setj WorldObjects:MaintainSimObjectInfoMap false)
-    (setj SimObjectImpl:AffordinancesGuessSimObjectTypes false)
-    (setj WorldObjects:IgnoreKillObjects true)
-    (setj WorldObjects:GleanAssetsFromFolders false)
-    (setj WorldObjects:SendOnDataAspectUpdate false)
-    (setj WorldObjects:MaintainGroupMetaData false)
-    (setj MushDLR223.Utilities.DLRConsole:SkipStackTraces true)
-    (setj WorldObjects:MaintainEffects false)
-    (setj WorldObjects:MaintainActions false)
-    (setj WorldObjects:MaintainAnims false)
-    (setj WorldObjects:SendSimObjectInfoMap false)
-    (setj SimAssetStore:DisableQueue true)
- )
 
     (setj GridAddress "https://login.agni.lindenlab.com/cgi-bin/login.cgi")
     (setj GridAddress "http://login.osgrid.org/")
