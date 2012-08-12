@@ -33,7 +33,8 @@ namespace Cogbot.Actions.Inventory.Shell
             }
             string[] objects = args.GetAfterIndex(prepLocatedAt);
 
-            ListAsSet<SimObject> allTargets = GetPrimitiveFromList(objects);
+            int argsUsed;
+            var allTargets = WorldSystem.GetPrimitives(objects, out argsUsed);
             int tc = allTargets.Count;
             if (tc == 0)
             {

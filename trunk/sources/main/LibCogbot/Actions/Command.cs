@@ -946,26 +946,5 @@ namespace Cogbot.Actions
            /// throw new NotImplementedException();
         }
 
-        protected ListAsSet<SimObject> GetPrimitiveFromList(string[] objects)
-        {
-            ListAsSet<SimObject> allTargets = new ListAsSet<SimObject>();
-            objects = (string[])objects.Clone();
-            while (objects.Length > 0)
-            {
-                int argsUsed0;
-                List<SimObject> PS = WorldSystem.GetPrimitives(objects, out argsUsed0);
-                if (argsUsed0 == 0)
-                {
-                    Failure("Cant decide how to get primitives/agents from " + objects[0]);
-                }
-                allTargets.AddRange(PS);
-                int leftOver = objects.Length - argsUsed0;
-                if (leftOver < 1) break;
-                Array.Copy(objects, argsUsed0, objects, 0, leftOver);
-                Array.Resize(ref objects, leftOver);
-            }
-            return allTargets;
-        }
-
     }
 }
