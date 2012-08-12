@@ -462,6 +462,12 @@ namespace Cogbot
                 argsUsed = argsUsedLocally;
                 return starterSet;
             }
+            if (arg0Lower == "[")
+            {
+                starterSet = GetPrimitives0(Parser.SplitOff(args, 1), out argsUsedLocally);
+                argsUsed = argsUsedLocally + 1;
+                return starterSet;
+            }
 
             if (argl == argsUsedLocally)
             {
@@ -483,6 +489,9 @@ namespace Cogbot
             AsPrimitives(prims, filterSimObjects);
 
             if (argsUsed >= args.Length) return prims;
+
+            if (args[argsUsed - 1] == "]") return prims;
+
             arg0Lower = args[argsUsed].ToLower();
 
             if (arg0Lower == "and" || arg0Lower == ",")
@@ -559,10 +568,7 @@ namespace Cogbot
             argsUsed = 0;
             return null;
         }
-        /*public List<SimObject> FilterSimObjects(string[] args, out int argsUsed, ListAsSet<SimObject> prims, bool removeMatches, MixinSubObjects relativeTo)
-        {
-            lock (prims) return FilterSimObjects(args, out argsUsed, prims.CopyOf(), removeMatches, relativeTo);
-        }*/
+
         public List<SimObject> FilterSimObjects(string[] args, out int argsUsed, List<SimObject> prims, bool removeMatches, MixinSubObjects relativeTo)
         {
             int consume = args.Length;
