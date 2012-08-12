@@ -197,6 +197,17 @@ is the same as
 }}}
 
 
+Some commands that take multiple objects such as "look" 
+
+{{{
+look [ objects maxdist 3 ]
+look primid34343434
+}}}
+
+some command can take multiple objects per single argument 
+
+
+
 {{{
 /priminfo [ $selected maxdist 2 ]
 }}}
