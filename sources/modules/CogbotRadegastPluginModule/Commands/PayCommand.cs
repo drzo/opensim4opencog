@@ -12,7 +12,7 @@ namespace Cogbot.Actions.Money
     {
         public PayCommand(BotClient client)
         {
-            Name = "Pay";
+            Name = "GUIPay";
             Description = "Pays a prim. Usage: Pay [prim] [amount]";
             Category = CommandCategory.Money;
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
