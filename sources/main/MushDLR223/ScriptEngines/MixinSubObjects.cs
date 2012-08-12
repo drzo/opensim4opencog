@@ -39,14 +39,14 @@ namespace MushDLR223.ScriptEngines
             var possible = FindFiltersForTarget(arg0Lower, example, relativeTo, warn);
             if (possible == null || possible.Count == 0)
             {
-                throw new NotSupportedException(arg0Lower);
+                throw new ParserFilterFormatException(arg0Lower, args, 0);
             }
             foreach (FilterMember member in possible)
             {
                 return ApplyFilterMember(args, out argsUsed, changeType, current, relativeTo,
                                          removeMatches, warn, negative, compareChar, compareTestChar, member);
             }
-            throw new NotSupportedException(arg0Lower);
+            throw new ParserFilterFormatException(arg0Lower, args, 0);
         }
 
         public static List<T> ApplyFilterMember<T>(string[] args, out int argsUsed, StringArgParser changeType,  List<T> current, object relativeTo, bool removeMatches, OutputDelegate warn, bool negative, char compareChar, CompareTestChar compareObjects, FilterMember fmemb) {

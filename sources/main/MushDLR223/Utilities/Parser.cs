@@ -851,6 +851,31 @@ namespace MushDLR223.ScriptEngines
             return text[start];
         }
 
+        public static string Join(string[] strings)
+        {
+            return string.Join(" ", strings);
+        }
+    }
+
+    public class ParserFilterFormatException : FormatException
+    {
+        private string[] Args;
+        private int Where;
+        private string Why;
+
+        public ParserFilterFormatException(string msg, string[] args, int where)
+        {
+            Why = msg;
+            Args = args;
+            Where = where;
+        }
+        public override string Message
+        {
+            get
+            {
+                return Why + ": arg= " + Where + " of " + string.Join(" ", Args);
+            }
+        }
     }
 
     public interface ParseInfo

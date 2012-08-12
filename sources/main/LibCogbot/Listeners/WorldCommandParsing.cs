@@ -484,6 +484,11 @@ namespace Cogbot
             }
 
             ICollection filterSimObjects = FilterSimObjects(args, out argsUsed, starterSet, false, TheSimAvatar);
+            if (argsUsed == 0 && args.Length != 0)
+            {
+                // filter failed
+                throw new ParserFilterFormatException(arg0Lower, args, 0);
+            }
 
             var prims = new List<SimObject>();
             AsPrimitives(prims, filterSimObjects);
@@ -688,34 +693,49 @@ namespace Cogbot
             }
             else
             {
-                bool resolveCollection =
+                bool nonFilter =
                     arg0Lower.StartsWith("$") ||
                     arg0Lower.StartsWith("@") ||
                     arg0Lower.StartsWith("primid") ||
                     arg0Lower.Substring(1).Contains("-");
 
-                if (!resolveCollection)
+                ParserFilterFormatException missingFilter = null;
+                if (!nonFilter)
                 {
                     // filters will re-namgate so use the incoming "removeMatches"
-                    prims = FilterSpecAttribute.ApplyFilter(args, out used, ChangeType, prims, relativeTo,
-                                                            removeMatches, Debug, CompareObjectsChar);
-                    resolveCollection = (used == 0);
-                    if (!resolveCollection)
+                    try
                     {
+                        prims = FilterSpecAttribute.ApplyFilter(args, out used, ChangeType, prims, relativeTo,
+                                                                removeMatches, Debug, CompareObjectsChar);
                         prims = FilterSimObjects(Parser.SplitOff(args, used),
                                                  out argsUsed, prims, removeMatches, relativeTo);
                         argsUsed += used;
                         return prims;
                     }
+                    catch (ParserFilterFormatException pff)
+                    {
+                        used = 0;
+                        missingFilter = pff;
+                    }
                 }
-                //if (resolveCollection)
+                List<SimObject> rcol = ResolveCollection(arg0Lower, out argsUsed);
+                if (rcol != null)
                 {
-                    List<SimObject> rcol = ResolveCollection(arg0Lower, out argsUsed);
                     foreach (var o in prims.ToArray())
                     {
                         bool shared = rcol.Contains(o);
                         if (!negated && shared) continue;
                         prims.Remove(o);
+                    }
+                }
+                else
+                {
+                    if (missingFilter != null)
+                    {
+                        argsUsed = 0;
+                        // what saort of erro should we make?
+                        Debug("no such filter or object: " + arg0Lower);
+                        throw missingFilter;
                     }
                 }
             }
