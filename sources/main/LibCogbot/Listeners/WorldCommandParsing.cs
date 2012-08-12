@@ -722,15 +722,10 @@ namespace Cogbot
                         missingFilter = pff;
                     }
                 }
-                List<SimObject> rcol = ResolveCollection(arg0Lower, out argsUsed);
+                List<SimObject> rcol = GetSingleArg(args, out argsUsed);
                 if (rcol != null)
                 {
-                    foreach (var o in prims.ToArray())
-                    {
-                        bool shared = rcol.Contains(o);
-                        if (!negated && shared) continue;
-                        prims.Remove(o);
-                    }
+                    return JoinLists(prims, negated, isIntersection, rcol);
                 }
                 else
                 {
@@ -800,13 +795,7 @@ namespace Cogbot
             {
                 foreach (T o in original.ToArray())
                 {
-                    bool contains = withSet.Contains(o);
-                    if (negated)
-                    {
-                        if (contains) original.Remove(o);
-                        continue;
-                    }
-                    if (!contains) original.Remove(o);
+                    if (negated == withSet.Contains(o)) original.Remove(o);
                 }
                 return original;
             }
