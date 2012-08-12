@@ -92,17 +92,11 @@ namespace Cogbot
         [ConfigSetting(Description = "if true, fire onPropertyChange once when object updated")]
         public static bool SendOnDataAspectUpdate = true;
         
-        [ConfigSetting(Description="if true, zero out the info for restoring an object back to inventory. this info is often useless in world")]
-        public static bool ZeroOutUselessUUIDs = false;
-
         [ConfigSetting(Description = "False since currently broken this is where FromTaskIDs are guessed as to being object or Avatars")]
         public static bool DiscoverTaskUUIDs = false;
 
         [ConfigSetting(ReadOnly = true, Description="if false the robot overlords escape their 3 law programming and rampage and Cogbot dies horribly")]
         public static bool UseNewEventSystem = true;
-
-        [ConfigSetting(Description = "True takes longer startup but speeds up runtime path finding")]
-        public static bool SimplifyBoxes = true;
         
         [ConfigSetting(Description="Send all object events. If set false the sim object event system is disabled.")]
         public static bool SendAllEvents = MaintainObjectUpdates;

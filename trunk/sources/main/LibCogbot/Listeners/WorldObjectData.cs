@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using Cogbot.World;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Drawing;
@@ -12,6 +13,9 @@ namespace Cogbot
 {
     partial class WorldObjects
     {
+
+        [ConfigSetting(Description = "if true, zero out the info for restoring an object back to inventory. this info is often useless in world")]
+        public static bool ZeroOutUselessUUIDs = false;
 
         private static readonly Dictionary<SimObject, ObjectMovementUpdate> LastObjectUpdate = new Dictionary<SimObject, ObjectMovementUpdate>();
         private static readonly Dictionary<UUID, ObjectMovementUpdate> LastObjectUpdateDiff = new Dictionary<UUID, ObjectMovementUpdate>();
@@ -693,5 +697,59 @@ namespace Cogbot
             }
             OnConnectedQueue.Enqueue(() => DelayedEval(func, action, tries));
         }
+
+        private void DeclareProperties(Primitive prim0, Primitive.ObjectProperties props, Simulator simulator)
+        {
+            if (props == null) return;
+            if (prim0 != null)
+            {
+                bool go = PrimFlags.ObjectGroupOwned == (prim0.Flags & PrimFlags.ObjectGroupOwned);
+                if (go && UUID.Zero != props.OwnerID)
+                {
+                    DeclareAvatarProfile(props.OwnerID);
+                }
+            }
+            string debugInfo = "" + prim0;
+            DeclareGroup(props.GroupID);
+
+            if (UUID.Zero != props.OwnerID)
+            {
+                DeclareAvatarProfile(props.OwnerID);
+            }
+            if (UUID.Zero != props.LastOwnerID)
+            {
+                DeclareAvatarProfile(props.LastOwnerID);
+            }
+            if (UUID.Zero != props.FolderID)
+            {
+                if (ZeroOutUselessUUIDs) props.FolderID = UUID.Zero;
+                //DeclareGeneric("Folder", props.FolderID, debugInfo);
+            }
+
+            if (UUID.Zero != props.ItemID)
+            {
+                if (ZeroOutUselessUUIDs) props.ItemID = UUID.Zero;
+                //DeclareGeneric("Item", props.ItemID, debugInfo);
+            }
+
+
+            if (UUID.Zero != props.FromTaskID && client.Self.AgentID != props.FromTaskID)
+            {
+                if (DeclareTask(props.FromTaskID, simulator) == null)
+                {
+                    if (ZeroOutUselessUUIDs) props.FromTaskID = UUID.Zero;
+                }
+            }
+
+            var tids = props.TextureIDs;
+            if (tids != null)
+            {
+                foreach (UUID tid in tids)
+                {
+                    DeclareTexture(tid);
+                }
+            }
+        }
+
     }
 }
