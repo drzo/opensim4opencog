@@ -30,9 +30,10 @@ namespace Cogbot.Actions.Objects
                 return Success("Done.");
             }
 
-            int argsUsed;
-            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
-            if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
+            int argsUsed = 0;
+            List<string> missingList = new List<string>();
+            var PS = WorldSystem.GetPrimitiveFromList(args, ref argsUsed, missingList);
+            if (IsEmpty(PS)) return Failure("Cannot find objects from " + missingList);
             foreach (var target in PS)
             {
                 WriteLine("\n {0}", WorldSystem.describePrim(target.Prim, true));
