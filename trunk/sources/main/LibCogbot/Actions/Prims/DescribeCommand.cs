@@ -88,8 +88,9 @@ namespace Cogbot.Actions
                         }
                         List<SimObject> PS = WorldSystem.GetPrimitives(argstokens, out argsUsed);
                         bool detailed = true;
-                        if (PS.Count > 1) detailed = false;
                         if (!IsEmpty(PS))
+                        {
+                            if (PS.Count > 1) detailed = false;
                             foreach (var prim in PS)
                             {
                                 found++;
@@ -104,6 +105,7 @@ namespace Cogbot.Actions
                                     WriteLine(WorldSystem.describePrim(prim.Prim, detailed));
                                 //if (found > 30) break;
                             }
+                        }
                         if (found == 0) WriteLine("I don't know about " + subject + ".");
                         WriteLine("PS.Count==" + PS.Count);
                     }
