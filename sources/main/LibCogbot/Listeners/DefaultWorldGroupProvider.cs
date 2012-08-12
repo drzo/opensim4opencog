@@ -23,6 +23,7 @@ namespace Cogbot
                 if (avatar == null) return null;
                 return avatar.GetSelectedObjects();
             });
+            AddObjectGroup("none", () => new List<SimObject>());
             AddObjectGroup("assets", () => WorldObjects.SimRootObjects.CopyOf());
             AddObjectGroup("objects", () => WorldObjects.SimRootObjects.CopyOf());
             AddObjectGroup("prims", () => WorldObjects.SimObjects.CopyOf());
