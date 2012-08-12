@@ -39,6 +39,11 @@ namespace Cogbot
 
         public List<SimObject> GetSingleArg(string[] splitted, out int argsUsed)
         {
+            if (splitted.Length == 0)
+            {
+                argsUsed = 0;
+                return new List<SimObject>();
+            }
             SimObject prim;
             UUID uuid = UUID.Zero;
             string name = splitted[0].Trim().Replace("  ", " ");
