@@ -676,6 +676,21 @@ namespace Cogbot
                 argsUsed = used;
                 return prims;
             }
+            else if (arg0Lower == "distfrom")
+            {
+                relativeTo = GetSimObjectS(Parser.SplitOff(args, 1), out used);
+                used++;
+                List<SimObject> objs = new List<SimObject>();
+                AsPrimitives(objs, prims);
+                objs.Sort(((SimObject)relativeTo).CompareDistance);
+                if (negated)
+                {
+                    objs.Reverse();
+                }
+                prims = objs;
+                argsUsed = used;
+                return prims;
+            }
             else if (arg0Lower == "reverse")
             {
                 used++;
