@@ -34,6 +34,8 @@ namespace Cogbot.World
     public class SimMesh : MeshedObject
     {
 
+        [ConfigSetting(Description = "True takes longer startup but speeds up runtime path finding")]
+        public static bool SimplifyBoxes = true;
 
 #if COLLIDER_ODE  
         private PhysicsVector LastPosition;
@@ -186,7 +188,7 @@ namespace Cogbot.World
             }
             else
             {
-                if (WorldObjects.SimplifyBoxes)
+                if (SimplifyBoxes)
                 {
                     int b = InnerBoxes.Count;
                     InnerBoxes = Box3Fill.Simplify((List<Box3Fill>)InnerBoxes);

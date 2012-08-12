@@ -965,58 +965,5 @@ namespace Cogbot
             return GetSimObjectLock[simulator.Handle];
         }
 
-
-        private void DeclareProperties(Primitive prim0, Primitive.ObjectProperties props, Simulator simulator)
-        {
-            if (props == null) return;
-            if (prim0 != null)
-            {
-                bool go = PrimFlags.ObjectGroupOwned == (prim0.Flags & PrimFlags.ObjectGroupOwned);
-                if (go && UUID.Zero != props.OwnerID)
-                {
-                    DeclareAvatarProfile(props.OwnerID);
-                }
-            }
-            string debugInfo = "" + prim0;
-            DeclareGroup(props.GroupID);
-
-            if (UUID.Zero != props.OwnerID)
-            {
-                DeclareAvatarProfile(props.OwnerID);
-            }
-            if (UUID.Zero != props.LastOwnerID)
-            {
-                DeclareAvatarProfile(props.LastOwnerID);
-            }
-            if (UUID.Zero != props.FolderID)
-            {
-                if (ZeroOutUselessUUIDs) props.FolderID = UUID.Zero;
-                //DeclareGeneric("Folder", props.FolderID, debugInfo);
-            }
-
-            if (UUID.Zero != props.ItemID)
-            {
-                if (ZeroOutUselessUUIDs) props.ItemID = UUID.Zero;
-                //DeclareGeneric("Item", props.ItemID, debugInfo);
-            }
-
-
-            if (UUID.Zero != props.FromTaskID && client.Self.AgentID != props.FromTaskID)
-            {
-                if (DeclareTask(props.FromTaskID, simulator) == null)
-                {
-                    if (ZeroOutUselessUUIDs) props.FromTaskID = UUID.Zero;
-                }
-            }
-
-            var tids = props.TextureIDs;
-            if (tids != null)
-            {
-                foreach (UUID tid in tids)
-                {
-                    DeclareTexture(tid);
-                }
-            }
-        }
     }
 }

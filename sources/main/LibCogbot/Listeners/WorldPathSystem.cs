@@ -25,6 +25,7 @@ namespace Cogbot
         static public int RealMeshes = 0;
         public static float MinEdgeSizeOfSimplify = 0.5f;
         public static float MinMassOfSimplify = 0.5f;
+
         [ConfigSetting(Description = "If you make true bot will mesh entire simulator for pathfinding. keep false so the bot only meshes what it needs")]
         public static bool MaintainCollisions = true; // keep false so the bot only meshes what it needs
         [ConfigSetting(Description = "if false, system wide don't mesh anything. e.g. a bot that never uses collisions.")]
