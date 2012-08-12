@@ -105,7 +105,7 @@ say hello world
 
 and the bot says hello world in local chat
 
-Lets have it sit.
+Lets have a sit.
 
 Rez a prim near the bot for it to sit on, and type
 
@@ -127,16 +127,9 @@ If you move the prim a little ways away, and type
 sit
 }}}
 
-@: Restrict the following commands to one or all avatars.
-
-
-
 the bot will sit on the ground instead.
 
 You can specify what the bot should sit on.  Name the prim *bot chair*, stand the bot up, and try
-
-SingleObject
-
 Specify Named prim (Notice that you need quotes if there are space)
 {{{
 sit "bot chair"
@@ -157,11 +150,16 @@ You can use simulator local IDs
 sit lid345345345345
 }}}
 
+=== Command Argument reader Impl ===
 
 Prims are read in into a command from three starting points
 
-* FilterList - Braces `[`]
-* SinglePrim
+ * PrimsArg - Reads one argument for a group or single prim
+ * ListOfPrimsArgs - Reads each argument like a PrimsArg and concats them together (priminfo select)
+ * FilterList (Braces `[`])  - Reads all arguments inside and does a union on all args
+
+Here are examples of a PrimsArg denoting one Prim
+
 {{{
 primid345345345
 }}}
@@ -169,25 +167,51 @@ primid345345345
 1 [attachments]
 }}}
 {{{
-"bot chair"
+1 "bot chair"
 }}}
 {{{
 $self
 }}}
-
-SinglePrimsList
 {{{
-primid345345345 $self `[objects bydist max 2 `]
+[$none +primid345345345 ]
+}}}
+
+
+A PrimsArg denoting possibly more than one Prim
+
+{{{
+$selected
+}}}
+
+these three are all the same
+{{{
+[$none +primid345345345 +[objects bydist max 2]]
+}}}
+{{{
+[primid345345345 +[objects bydist max 2]]
+}}}
+{{{
+[objects bydist max 2 +primid345345345]
+}}}
+
+
+This would match Zero
+{{{
+[+ primid345345345 $self [objects bydist max 2 ]]
 }}}
 
 
 
+Special prefixes that change how command arguments are parsed:
+ * + = append to list
+ * $ = use a botvar group
+ * [ = Start reading 
+ * ( = eval a lisp expression and insert it into arg
+ * ! = remove the elements denoted by the next arg
+ * integer = read the next args and get the "nth" item
 
 
-
-MultpleObjects specify many targets with commands like priminfo
-
-$,[,(,!, integer, are special prefixs that change how command arguments are parsed
+A Braced FilterList Starts with either a $group or a +PrimsArg
 
 "$" Single groups are:
 
@@ -197,7 +221,15 @@ $,[,(,!, integer, are special prefixs that change how command arguments are pars
  * $accounts
  * $attachments
  * $self
+ * $none
  * $selected (items selected by current bot)
+
+For the complete list type:
+{{{
+/paramhelp 
+}}}
+
+
 
 {{{
 [ $objects mindist 1 maxdist 3 [ not match "red" ] bydist nth 1 ]
@@ -231,9 +263,7 @@ look [ objects maxdist 3 ]
 look primid34343434
 }}}
 
-some command can take multiple objects per single argument 
-
-
+some commands can take multiple objects per single argument 
 
 {{{
 /priminfo [ $selected maxdist 2 ]
@@ -243,16 +273,11 @@ the selected prims (that is, the prims in my 'selected' grasper) tha are within 
 See all this stuff starting at line 445 of WorldCommandParsing
 
 {{{
-/priminfo [ $selected maxdist 2.1 mindist 1.9 max 4 nth2 matches Window !matches -like ownedby $master ]
+/priminfo [ $selected maxdist 2.1 mindist 1.9 max 4 nth2 matches Window !matches "-like" ownedby $master ]
 }}}
 
 
-
 @ coerces prim position to 3d location @lid152345234
-
-
-bang commands are deprecated -
-
 
 quit logs the bot off, and kills cogbot if no more are online.
 
@@ -263,7 +288,7 @@ need section for multiple av's
 
 == Ways of sending bot commands to the bot ==
 
-
+@: Restrict the following commands to one or all avatars.
 
 == Locations ==
 
