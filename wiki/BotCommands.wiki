@@ -177,7 +177,7 @@ $self
 
 SinglePrimsList
 {{{
-primid345345345 $self [objects bydist max 2 ]
+primid345345345 $self `[objects bydist max 2 `]
 }}}
 
 
