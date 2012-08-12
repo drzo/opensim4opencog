@@ -964,13 +964,5 @@ namespace Cogbot
             }
             return GetSimObjectLock[simulator.Handle];
         }
-
-        private List<SimObject> ColToList(ICollection starters)
-        {
-            if (starters == null) return null;
-            var prims = new List<SimObject>();
-            AsPrimitives(prims, starters);
-            return prims;
-        }
     }
 }

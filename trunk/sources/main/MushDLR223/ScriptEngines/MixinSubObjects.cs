@@ -403,7 +403,7 @@ namespace MushDLR223.ScriptEngines
             return found;
         }
 
-        private static bool IsAssignableFrom(Type lastParam, Type relativeToType)
+        public static bool IsAssignableFrom(Type lastParam, Type relativeToType)
         {
             if (lastParam.IsAssignableFrom(relativeToType)) return true;
             if (relativeToType == typeof(object))

@@ -318,7 +318,7 @@ namespace Cogbot
 
             if (o is UUID)
             {
-                oo = GetSimObjectFromUUID((UUID)o);
+                oo = GetSimObjectFromUUID((UUID) o);
                 if (oo != null) return oo;
                 o = o.ToString();
             }
@@ -327,7 +327,7 @@ namespace Cogbot
             {
                 SimObject prim;
                 int argsUsed;
-                if (tryGetPrim(new string[] { s }, out prim, out argsUsed))
+                if (tryGetPrim(new [] {s}, out prim, out argsUsed))
                 {
                     return prim;
                 }
@@ -335,31 +335,32 @@ namespace Cogbot
             return null;
         }
 
-        public void AsPrimitives(ICollection<Primitive> prims, IEnumerable positions)
+        public void AsPrimitives<T>(ICollection<T> prims, IEnumerable positions)
         {
             foreach (var o in positions)
             {
-                Primitive p = o as Primitive;
-                if (p != null)
-                {
-                    prims.Add(p);
-                    continue;
-                }
-                SimObject oo = AsSimObject(o);
-                if (oo == null) continue;
-                p = oo.Prim;
-                if (p != null) prims.Add(p);
-            }
-        }
-        public void AsPrimitives(ICollection<SimObject> prims, IEnumerable positions)
-        {
-            foreach (var o in positions)
-            {
-                SimObject oo = AsSimObject(o);
-                if (oo == null) continue;
+                T oo = (T) ConvertType(o, typeof(T));
+                if (ReferenceEquals(oo, null)) continue;
                 if (!prims.Contains(oo))
                     prims.Add(oo);
             }
+        }
+
+        private object ConvertType(object o, Type type)
+        {
+            if (FilterSpecAttribute.IsAssignableFrom(typeof (SimObject), type))
+            {
+                return AsSimObject(o);
+            }
+            if (FilterSpecAttribute.IsAssignableFrom(typeof (Primitive), type))
+            {
+                return AsSimObject(o).Prim;
+            }
+            if (FilterSpecAttribute.IsAssignableFrom(typeof (UUID), type))
+            {
+                return AsSimObject(o).ID;
+            }
+            return ConfigSettingAttribute.FindValueOfType(o, type, 2);
         }
 
         public delegate T StringParserMethod<T>(string[] args, out int argsUsed);
@@ -406,7 +407,7 @@ namespace Cogbot
             int argsUsedLocally;
             string arg0Lower = args[0].ToLower();
             List<SimObject> starterSet = null;
-            
+
             starterSet = ColToList(ResolveGroupVar(arg0Lower));
             if (arg0Lower.StartsWith("$") && false)
             {
@@ -422,6 +423,10 @@ namespace Cogbot
             if (argsUsedLocally > 0)
             {
                 args = Parser.SplitOff(args, argsUsedLocally);
+            }
+            else if (arg0Lower.StartsWith("+"))
+            {
+                starterSet = new List<SimObject>();
             }
             else
             {
@@ -537,6 +542,7 @@ namespace Cogbot
             int usedMore = 0;
             args = (string[])args.Clone();
             bool actuallyNegateNext = removeMatches;
+            bool isIntersection = true;
             while (args.Length > 0)
             {
                 if (args[0] == "]")
@@ -546,7 +552,8 @@ namespace Cogbot
                 }
                 int argsUsed0;
                 bool negateNext;
-                prims = GetUnionArg(args, out argsUsed0, prims, actuallyNegateNext, relativeTo, out negateNext);
+                prims = GetUnionArg(args, out argsUsed0, prims, ref isIntersection,
+                    actuallyNegateNext, relativeTo, out negateNext);
                 if (argsUsed0 == 0)
                 {
                     throw new ParserFilterFormatException("Cant GetSingleArg: ", args, 0);
@@ -558,9 +565,12 @@ namespace Cogbot
             }
             argsUsed = usedMore;
             return prims;
-        }        
-        
-        public List<SimObject> GetUnionArg(string[] args, out int argsUsed, List<SimObject> prims, bool negated, MixinSubObjects relativeTo, out bool negateNext){
+        }
+
+        public List<SimObject> GetUnionArg(string[] args, out int argsUsed, List<SimObject> prims,
+            ref bool isIntersection,
+            bool negated, MixinSubObjects relativeTo, out bool negateNext)
+        {
 
             string arg0Lower = args[0].ToLower();
 
@@ -592,25 +602,14 @@ namespace Cogbot
             {
                 var secondSet = StartGetUnionExprsn(Parser.SplitOff(args, 1), out used);
                 argsUsed = 1 + used;
-                if (negated)
-                {
-                    foreach (SimObject o in secondSet)
-                    {
-                        prims.Remove(o);
-                    }
-                    return prims;
-                }
-                secondSet.AddRange(prims);
-                return secondSet;
+                return JoinLists(prims, negated, isIntersection, secondSet);
             }
             if (arg0Lower == "+")
             {
-                var list = GetSingleArg(Parser.SplitOff(args, 1), out used);
-                argsUsed = used + 1;
-                list.AddRange(prims);
-                return list;
+                var secondSet = GetSingleArg(Parser.SplitOff(args, 1), out used);
+                argsUsed = 1 + used;
+                return JoinLists(prims, negated, false, secondSet);
             }
-
             if (arg0Lower == "keep" || arg0Lower == "max")
             {
                 int nth;
@@ -668,7 +667,7 @@ namespace Cogbot
                 used++;
                 List<SimObject> objs = new List<SimObject>();
                 AsPrimitives(objs, prims);
-                objs.Sort(((SimObject) relativeTo).CompareDistance);
+                objs.Sort(((SimObject)relativeTo).CompareDistance);
                 if (negated)
                 {
                     objs.Reverse();
@@ -770,6 +769,42 @@ namespace Cogbot
         public void AddObjectGroup(string selecteditems, Func<IList> func)
         {
             _defaultProvider.AddObjectGroup(selecteditems, func);
+        }
+
+        private List<SimObject> ColToList(ICollection starters)
+        {
+            if (starters == null) return null;
+            var prims = new List<SimObject>();
+            AsPrimitives(prims, starters);
+            return prims;
+        }
+
+        public static List<T> JoinLists<T>(List<T> original, bool negated, bool isIntersection, List<T> withSet)
+        {
+            if (isIntersection)
+            {
+                foreach (T o in original.ToArray())
+                {
+                    bool contains = withSet.Contains(o);
+                    if (negated)
+                    {
+                        if (contains) original.Remove(o);
+                        continue;
+                    }
+                    if (!contains) original.Remove(o);
+                }
+                return original;
+            }
+            if (negated)
+            {
+                foreach (T o in withSet)
+                {
+                    original.Remove(o);
+                }
+                return original;
+            }
+            withSet.AddRange(original);
+            return withSet;
         }
         /*
         public ICollection GetGroup(string name)
