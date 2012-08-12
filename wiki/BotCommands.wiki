@@ -194,7 +194,7 @@ these three are all the same
 [objects bydist max 2 +primid345345345]
 }}}
 "objects" above is treated as "$objects"
-So unless "+" or "$" is the first char, it will append "$" to the body 
+So unless "+" or "$" is the first char, it will prepend "$" to the body 
 
 
 
