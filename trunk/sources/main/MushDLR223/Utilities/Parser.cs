@@ -148,7 +148,7 @@ namespace MushDLR223.ScriptEngines
             return list.ToArray();
         }
 
-        public static char[] needSpacesArround = "+-[]!".ToCharArray();
+        public static char[] needSpacesArround = "+[]!".ToCharArray();
 
         public static string PaddSpecialChars(string str)
         {
