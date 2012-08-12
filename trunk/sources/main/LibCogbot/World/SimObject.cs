@@ -756,7 +756,7 @@ namespace Cogbot.World
             {
                 if (_PassableKnown)
                 {
-                    if (value && !_Passable && !WorldObjects.CanPhantomize)
+                    if (value && !_Passable && !WorldSystem.CanPhantomize)
                     {
                         Debug("Wont set IsPassable because WorldObjects.CanPhantomize=false");
                         return;
@@ -822,7 +822,7 @@ namespace Cogbot.World
             set
             {
                 if (IsPhantom == value) return;
-                if (!WorldObjects.CanPhantomize)
+                if (!WorldSystem.CanPhantomize)
                 {
                     Debug("Wont set IsPhantom because WorldObjects.CanPhantomize=false");
                     return;

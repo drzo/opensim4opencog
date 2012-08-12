@@ -13,8 +13,6 @@ namespace Cogbot
     {
 
         private static WorldPathSystem _SimPaths;
-        public Vector3 compPos;
-
 
         public WorldPathSystem SimPaths
         {
@@ -131,7 +129,7 @@ namespace Cogbot
             return SimRegion.GetRegion(uuid, client);
         }
 
-        private bool tryGetBuildingPos(List<Primitive> group, out Vector3 centroid)
+        public static bool tryGetCenterPos(List<Primitive> group, out Vector3 centroid)
         {
             centroid = new Vector3();
             if (group.Count < 4)
@@ -172,7 +170,7 @@ namespace Cogbot
                 }
 
                 Vector3 size = max - min;
-                if (size.X > buildingSize && size.Y > buildingSize && size.Z > buildingSize)
+                if (size.X > 3 && size.Y > 3 && size.Z > 3)
                 {
                     centroid = min + (size * (float)0.5);
                     return true;
@@ -186,62 +184,6 @@ namespace Cogbot
         {
             return (int)(Vector3.Mag(client.Self.RelativePosition - v1) -
                           Vector3.Mag(client.Self.RelativePosition - v2));
-        }
-
-        public List<Vector3> getBuildings(int num)
-        {
-            List<Vector3> ret = new List<Vector3>();
-            foreach (List<Primitive> group in primGroups.Values)
-            {
-                Vector3 pos = new Vector3();
-                if (tryGetBuildingPos(group, out pos))
-                    ret.Add(pos);
-            }
-
-            if (ret.Count <= num)
-                return ret;
-            else
-            {
-                ret.Sort(new Comparison<Vector3>(posComp));
-                return ret.GetRange(0, num);
-            }
-        }
-        public int comp(Avatar a1, Avatar a2)
-        {
-            return (int)(Vector3.Distance(a1.Position, compPos) - Vector3.Distance(a2.Position, compPos));
-        }
-
-        public List<Avatar> getAvatarsNear(Vector3 pos, int num)
-        {
-            compPos = pos;
-            List<Avatar> avatarList = new List<Avatar>();
-            Avatar self = TheSimAvatar.theAvatar;
-            foreach (SimAvatar simavatar in SimAvatars)
-            {
-                if (!simavatar.IsLocal) continue;
-                Avatar avatar = simavatar.theAvatar;
-                if (avatar == self) continue;
-                avatarList.Add(avatar);
-            }
-
-            if (avatarList.Count > num)
-            {
-                avatarList.Sort(new Comparison<Avatar>(comp));
-
-                for (; searchStep * num > avatarList.Count; --searchStep) ;
-
-                List<Avatar> ret = new List<Avatar>();
-                for (int i = 0; i < num && i < avatarList.Count; i += searchStep)
-                    ret.Add(avatarList[i]);
-                searchStep = (searchStep + 1) % 4 + 1;
-                updateNumberedAvatars(ret);
-                return ret;
-            }
-            else
-            {
-                updateNumberedAvatars(avatarList);
-                return avatarList;
-            }
         }
 
         private bool RelTryParse(string s, out float f, float f1)

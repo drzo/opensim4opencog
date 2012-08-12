@@ -25,13 +25,17 @@ namespace Cogbot
         static public int RealMeshes = 0;
         public static float MinEdgeSizeOfSimplify = 0.5f;
         public static float MinMassOfSimplify = 0.5f;
+        [ConfigSetting(Description = "If you make true bot will mesh entire simulator for pathfinding. keep false so the bot only meshes what it needs")]
         public static bool MaintainCollisions = true; // keep false so the bot only meshes what it needs
+        [ConfigSetting(Description = "if false, system wide don't mesh anything. e.g. a bot that never uses collisions.")]
         public static bool MaintainMeshes = true;
+        [ConfigSetting(Description = "Distance within which the av meshes objects automatically")]
         public static int WorthMeshingDistance = 160;
+        [ConfigSetting(Description = "if true, go ahead and mesh phantom objects. So you might want to set this true in a sim with many objects toggling between phantom and nonphantom.")]
         public static bool SkipPassableMeshes = true;
 
         public static readonly List<ulong> MaintainSimCollisionsList = new List<ulong>();
-        public static GridClient GridClientMaster;
+        //public static GridClient GridClientMaster;
         public static bool DebugPathSystem = false;
 
         public static bool MaintainSimCollisions(ulong handle)
@@ -42,15 +46,22 @@ namespace Cogbot
         public static bool IsWorthMeshing(SimObjectImpl impl)
         {
             Vector3d GlobalPosition;
-            GridClient client = GridClientMaster;
-            if (client == null) return true;
+            //GridClient client = GridClientMaster;
+            //if (client == null) return true;
             if (impl.TryGetGlobalPosition(out GlobalPosition))
             {
-                double d = Vector3d.Distance(GlobalPosition, client.Self.GlobalPosition);
-                if (d < WorldPathSystem.WorthMeshingDistance)
+                bool atLeastOnBC = false;
+                foreach (var client in ClientManager.KnownBotClients)
                 {
-                    return true;
+                    if (!client.IsLoggedInAndReady) continue;                    ;
+                    double d = Vector3d.Distance(GlobalPosition, client.Self.GlobalPosition);
+                    if (d < WorldPathSystem.WorthMeshingDistance)
+                    {
+                        return true;
+                    }
+                    atLeastOnBC = true;
                 }
+                if (!atLeastOnBC) return true;
             }
             return false;
         }
@@ -70,10 +81,8 @@ namespace Cogbot
                     //TrackPathsThread.Priority = ThreadPriority.AboveNormal;
                     TrackPathsThread.Start();
                 }
-                GridClientMaster = gc;
             }
         }
-
 
         static ListAsSet<SimObject> SimObjects
         {

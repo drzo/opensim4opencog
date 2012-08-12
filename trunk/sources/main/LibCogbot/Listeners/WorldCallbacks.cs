@@ -51,7 +51,7 @@ namespace Cogbot
         /// </summary>
         public virtual void SendOnUpdateDataAspect(BotMentalAspect ea, string property, object oldValue, object newValue)
         {
-            if (!WorldObjects.SendOnDataAspectUpdate) return;
+            if (!SendOnDataAspectUpdate) return;
             if (OnUpdateDataAspect != null)
                 OnUpdateDataAspect(ea, property, oldValue, newValue);
             MetaDataQueue.Enqueue("SendOnUpdateDataAspect " + ea + "." + property + "=" + newValue,

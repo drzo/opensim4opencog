@@ -646,7 +646,7 @@ namespace Cogbot.World
 
         public PermissionWho EffectivePermissionWho(SimObject exportPrim)
         {
-            if (WorldObjects.AssumeOwner) return PermissionWho.Owner;
+            if (WorldSystem.AssumeOwner) return PermissionWho.Owner;
             Primitive.ObjectProperties permProps = exportPrim.Properties;
             Primitive prim = exportPrim.Prim;
             UUID objectGroupID = UUID.Zero;
@@ -669,7 +669,7 @@ namespace Cogbot.World
 
         public PermissionWho EffectivePermissionWho(UUID ownerID, UUID objectGroupID, bool groupOwned)
         {
-            if (WorldObjects.AssumeOwner) return PermissionWho.Owner;
+            if (WorldSystem.AssumeOwner) return PermissionWho.Owner;
             if (ownerID == ID) return PermissionWho.Owner;
             if (!CogbotHelpers.IsNullOrZero(objectGroupID) && InGroup(objectGroupID))
             {

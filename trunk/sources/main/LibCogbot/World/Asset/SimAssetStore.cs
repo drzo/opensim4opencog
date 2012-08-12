@@ -16,6 +16,19 @@ namespace Cogbot.World
     public class SimAssetStore : ContextualSingleton
     {
 
+        [ConfigSetting(Description = "Make all uuids in inventory known to the system (so you can, for example, get their type with uuidtype). Setting false reduces traffic by not loading inventory stubs.")]
+        public bool GleanAssetsFromInventory = false;
+
+        [ConfigSetting(Description = "if true, any animation it sees it maintains a copy in cache and uses the cache. Animations can be on when other assets are off")]
+        public bool MaintainAnimsInFolders = true;
+
+        [ConfigSetting(Description = "Make all uuids in the cogbot disk cache known to the system (so you can, for example, get their type with uuidtype). Setting false reduces disk activity at startup by not loading inventory.")]
+        public bool GleanAssetsFromFolders = true;
+
+        [ConfigSetting(Description = "if true, any asset it sees it maintains a copy in cache and uses the cache")]
+        public bool MaintainAssetsInFolders = true;
+
+
         //internal static readonly Dictionary<UUID, object> uuidAsset = new Dictionary<UUID, object>();
 
         [NotConfigurable]
@@ -42,6 +55,10 @@ namespace Cogbot.World
         internal static readonly Dictionary<string, SimAsset> nameAsset = new Dictionary<string, SimAsset>();
 
         internal readonly BotClient Client;
+        protected WorldObjects WorldSystem
+        {
+            get { return Client.WorldSystem; }
+        }
 
         static public readonly TaskQueueHandler taskQueue = new TaskQueueHandler("SimAssetStore (Slowly)", TimeSpan.FromMilliseconds(60), false);
         static public readonly TaskQueueHandler taskQueueQuick = new TaskQueueHandler("SimAssetStore (Quickly)", TimeSpan.Zero, true);
@@ -109,7 +126,7 @@ namespace Cogbot.World
 
         private void LoadFolderId(UUID folderid)
         {
-            if (!WorldObjects.GleanAssetsFromFolders)
+            if (!GleanAssetsFromFolders)
             {
                 taskQueue.PauseBetweenOperations = TimeSpan.FromSeconds(6);
                 return;
@@ -145,7 +162,7 @@ namespace Cogbot.World
         public static bool downloadedAssetFoldersComplete = false;
         private void Ensure_Downloaded(object sender, SimConnectedEventArgs e)
         {
-            if (!WorldObjects.GleanAssetsFromInventory) return;
+            if (!GleanAssetsFromInventory) return;
             if (ensuredDownloadAssetFoldersComplete) return;
             ensuredDownloadAssetFoldersComplete = true;
             Inventory = Manager.Store;
@@ -249,7 +266,7 @@ namespace Cogbot.World
             return fName;
         }
 
-        static internal void FillAssetNames()
+        internal void FillAssetNames()
         {
             if (FilledInAssetsComplete) return;
             lock (uuidAssetLock)
@@ -848,7 +865,7 @@ namespace Cogbot.World
                     AddSound(valuePair.Value.ToLower().Replace("_"," "), valuePair.Key.ToString());
                 }
 
-                if (WorldObjects.MaintainAssetsInFolders && Directory.Exists("sound_files/"))
+                if (MaintainAssetsInFolders && Directory.Exists("sound_files/"))
                 {
                     foreach (string files in Directory.GetFiles("sound_files/"))
                     {
@@ -1077,7 +1094,7 @@ namespace Cogbot.World
                     //WorldObjects.RegisterUUID(uid, fName);
                     //                  nameAnim[fName] = uid;
                 }
-                if (WorldObjects.MaintainAnimsInFolders && Directory.Exists("bvh_files/"))
+                if (MaintainAnimsInFolders && Directory.Exists("bvh_files/"))
                 {
                     foreach (string files in Directory.GetFiles("bvh_files/"))
                     {
@@ -1518,7 +1535,7 @@ namespace Cogbot.World
 
         static public SimAsset SetAssetName(UUID uUID, string s, AssetType type)
         {
-            FillAssetNames();
+            TheStore.FillAssetNames();
             SimAsset anim = FindOrCreateAsset(uUID, type);
             anim.Name = ToAssetName(s);
             InternAsset(anim);
@@ -1531,7 +1548,7 @@ namespace Cogbot.World
             //if (uuidAsset.TryGetValue(uUID, out anim)) return (SimAsset)anim;
             //lock (uuidAsset)
             {
-                FillAssetNames();
+                TheStore.FillAssetNames();
                 if (!uuidAssetTryGetValue(uUID, out anim))
                 {
                     if (false)lock (SimAssets)

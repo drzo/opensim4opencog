@@ -441,7 +441,7 @@ namespace Cogbot.World
 
         public ThreadStart WithSitOn(SimObject obj, ThreadStart closure)
         {
-            bool CanUseSit = WorldObjects.CanUseSit;
+            bool CanUseSit = WorldSystem.CanUseSit;
             return () =>
                        {
                            bool SattedUpon = false;
