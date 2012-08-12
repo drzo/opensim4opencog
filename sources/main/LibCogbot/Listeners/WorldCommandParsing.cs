@@ -304,12 +304,6 @@ namespace Cogbot
             return null;
         }
 
-        public void updateNumberedAvatars(List<Avatar> avatars)
-        {
-            numberedAvatars.Clear();
-            for (int i = 0; i < avatars.Count; ++i)
-                numberedAvatars.Add(avatars[i].Name);
-        }
 
         public bool tryGetAvatar(string name, out SimAvatar avatar)
         {
@@ -326,14 +320,6 @@ namespace Cogbot
             return false;
         }
 
-        public string getAvatarName(Avatar avatar)
-        {
-            string name = avatar.Name;
-            for (int i = 0; i < numberedAvatars.Count; ++i)
-                if (numberedAvatars[i] == name)
-                    name = (i + 1) + ": " + name;
-            return name;
-        }
 
         public ListAsSet<SimObject> GetRelations(ICollection re)
         {

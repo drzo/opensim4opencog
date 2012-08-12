@@ -28,99 +28,36 @@ namespace Cogbot
 
     public partial class WorldObjects : AllEvents, ContextualSingleton
     {
-        public static bool AssumeOwner = false;
+        public bool AssumeOwner = false;
 
         public static bool IsOpenSim = false;
         
         [ConfigSetting(Description="Bot is allowed to temporarily make an object phantom to escape from confinement")]
-        public static bool CanPhantomize = false;
+        public bool CanPhantomize = false;
 
         [ConfigSetting(Description = "Bot is allowed to sit on things. Some things do obnoxious stuff like TP when sat on.")]
-        public static bool CanUseSit = true;
+        public bool CanUseSit = true;
 
         [ConfigSetting(ReadOnly=true, SkipSaveOnExit = true, Description = "If true the bot repeatedly reloads the scene to try to catch missing updates. GridMaster will turn this on/off only if it needed")]
-        public static bool DoSimulatorsCatchUp = false;
+        public static bool RegionMasterSimulatorsCatchUps = false;
 
         [ConfigSetting(Description = "if true, downloads animations")]
-        public static bool MaintainAnims = true;
+        public bool MaintainAnims = true;
 
-        [ConfigSetting(Description = "if true, any asset it sees it maintains a copy in cache and uses the cache")]
-        public static bool MaintainAssetsInFolders = true;
-
-        [ConfigSetting(Description = "Make all uuids in inventory known to the system (so you can, for example, get their type with uuidtype). Setting false reduces traffic by not loading inventory stubs.")]
-        public static bool GleanAssetsFromInventory = false;
-
-        [ConfigSetting(Description = "if true, any animation it sees it maintains a copy in cache and uses the cache. Animations can be on when other assets are off")]
-        public static bool MaintainAnimsInFolders = true;
-
-        [ConfigSetting(Description = "Make all uuids in the cogbot disk cache known to the system (so you can, for example, get their type with uuidtype). Setting false reduces disk activity at startup by not loading inventory.")]
-        public static bool GleanAssetsFromFolders = true;
-        
         [ConfigSetting(Description = "Ignore attachments - false reduces traffic in certain scenarios (eg rp sims with many complex av's with many attachments)")]
-        public static bool MaintainAttachments = true;
+        public bool MaintainAttachments = true;
 
         [ConfigSetting(Description = "in SL objects are killed simply because they're too far away. So in SL you want to ignore kill objects, in Opensim you don't")]
-        public static bool IgnoreKillObjects = false;
-
-        [ConfigSetting(Description = "If you make true bot will mesh entire simulator for pathfinding. keep false so the bot only meshes what it needs")]
-        public static bool MaintainCollisions
-        {
-            get
-            {
-                return WorldPathSystem.MaintainCollisions;
-            }
-            set
-            {
-                WorldPathSystem.MaintainCollisions = value;
-            }
-        }
-
-        [ConfigSetting(Description="if true, go ahead and mesh phantom objects. So you might want to set this true in a sim with many objects toggling between phantom and nonphantom.")]
-        public static bool SkipPassableMeshes
-        {
-            get
-            {
-                return WorldPathSystem.SkipPassableMeshes;
-            }
-            set
-            {
-                WorldPathSystem.SkipPassableMeshes = value;
-            }
-        }
-
-        [ConfigSetting(Description="if false, system wide don't mesh anything. e.g. a bot that never uses collisions.")]
-        public static bool MaintainMeshes     
-        {
-            get
-            {
-                return WorldPathSystem.MaintainMeshes;
-            }
-            set
-            {
-                WorldPathSystem.MaintainMeshes = value;
-            }
-        }
-        [ConfigSetting(Description="Distance within which the av meshes objects automatically")]
-        public static int WorthMeshingDistance
-        {
-            get
-            {
-                return WorldPathSystem.WorthMeshingDistance;
-            }
-            set
-            {
-                WorldPathSystem.WorthMeshingDistance = value;
-            }
-        }
+        public bool IgnoreKillObjects = false;
 
         [ConfigSetting(Description="if false ignores all effects (lookat, freelook, idle, particles, light)")]
-        public static bool MaintainEffects = true;
+        public bool MaintainEffects = true;
 
         [ConfigSetting(Description="have server send effects only from the master AV")]
-        public static bool MaintainOnlyMasterEffects = false;
+        public bool MaintainOnlyMasterEffects = false;
 
         [ConfigSetting(Description = "have server send effects only within this radius, affects sounds, chat, and many other htings that aren't strictly effects")]
-        public static float MaintainEffectsDistance = 80;
+        public float MaintainEffectsDistance = 80;
 
         [ConfigSetting(Description="have server send actions. right now the only action is sit, we'd like to have touch")]
         public static bool MaintainActions = true;
@@ -225,18 +162,17 @@ namespace Cogbot
         public static readonly ListAsSet<SimObject> SimChildObjects = new ListAsSet<SimObject>();
         public static readonly ListAsSet<SimObject> SimAttachmentObjects = new ListAsSet<SimObject>();
 
-        public static float buildingSize = 5;
-        public static TimeSpan burstInterval;
+        public SimAvatarClient m_TheSimAvatar;
+/*        public static TimeSpan burstInterval;
         [ConfigSetting(Description="how many object properties it requests at once")]
         public static int burstSize = 100;
         public DateTime burstStartTime;
         [ConfigSetting(Description="Min seconds between object properties requests (float)  throttles network traffic.")]
         public static float burstTime = 1;
-        public SimAvatarClient m_TheSimAvatar;
         public List<string> numberedAvatars;
         public List<SimObjectHeuristic> objectHeuristics;
         public Dictionary<UUID, List<Primitive>> primGroups;
-        public int searchStep;
+        public int searchStep;*/
         public bool IsDisposed = false;
 
         public override string GetModuleName()
@@ -320,13 +256,14 @@ namespace Cogbot
 
             lock (WorldObjectsMasterLock)
             {
+                RegionMasterSimulatorsCatchUps = false;
                 if (GridMaster == null || true)
                 {
                     GridMaster = this;
-                    if (client.Network.CurrentSim != null) DoSimulatorsCatchUp = true;
-                    if (DoSimulatorsCatchUp)
+                    if (client.Network.CurrentSim != null) RegionMasterSimulatorsCatchUps = true;
+                    if (RegionMasterSimulatorsCatchUps)
                     {
-                        DoSimulatorsCatchUp = false;
+                        RegionMasterSimulatorsCatchUps = false;
                         CatchUpQueue.AddFirst(DoCatchup);
                     }
                     client.Settings.USE_LLSD_LOGIN = false;
@@ -336,15 +273,7 @@ namespace Cogbot
                     //only one rpc at a time  (btw broken with OpenSim.. works with Linden)
                     //client.Settings.USE_LLSD_LOGIN = true;
                 }
-                DoSimulatorsCatchUp = false;
                 //new DebugAllEvents(client);
-
-                primGroups = new Dictionary<UUID, List<Primitive>>();
-
-                objectHeuristics = new List<SimObjectHeuristic>();
-                objectHeuristics.Add(new SimObjectHeuristic(distanceHeuristic));
-                //objectHeuristics.Add(new SimObjectHeuristic(nameLengthHeuristic));
-                objectHeuristics.Add(new SimObjectHeuristic(boringNamesHeuristic));
 
                 client.Settings.ENABLE_CAPS = true;
                 client.Settings.ENABLE_SIMSTATS = true;
@@ -366,13 +295,6 @@ namespace Cogbot
                 client.Network.SimConnected += Network_OnSimConnectedHook;
                 client.Inventory.ScriptRunningReply += Inventory_OnScriptRunning;
 
-
-                burstStartTime = DateTime.Now;
-                burstInterval = new TimeSpan(0, 0, 0, 0, (int)(burstTime * 1000));
-                searchStep = 1;
-
-                numberedAvatars = new List<string>();
-
                 if (RegionMasterTexturePipeline == null)
                 {
                     RegionMasterTexturePipeline = client.Assets;
@@ -393,9 +315,9 @@ namespace Cogbot
                         SimTypeSystem.LoadDefaultTypes();
                     }
                     const int InterLeave = 3000;
-                    EnsureSelectedTimer = new Timer(ReallyEnsureSelected_Thread, null, InterLeave/2, InterLeave);
-                    EnsureRequestedTimer = new Timer(ReallyEnsureRequested_Thread, null, InterLeave, InterLeave);
-                    _SimPaths = new WorldPathSystem(this);
+                    if (EnsureSelectedTimer == null) EnsureSelectedTimer = new Timer(ReallyEnsureSelected_Thread, null, InterLeave / 2, InterLeave);
+                    if (EnsureRequestedTimer == null) EnsureRequestedTimer = new Timer(ReallyEnsureRequested_Thread, null, InterLeave, InterLeave);
+                    if (_SimPaths == null) _SimPaths = new WorldPathSystem(this);
                 }
                 //SetWorldMaster(false);
                 //RegisterAll();
@@ -408,9 +330,9 @@ namespace Cogbot
             {
                 GridMaster.CatchUp(S);
             }
-            if (DoSimulatorsCatchUp)
+            if (RegionMasterSimulatorsCatchUps)
             {
-                DoSimulatorsCatchUp = false;
+                RegionMasterSimulatorsCatchUps = false;
                 CatchUpQueue.Enqueue(DoCatchup);
             }
             
@@ -1352,58 +1274,6 @@ namespace Cogbot
                 //if (prim.Properties.SalePrice != 0)
                 //    WriteLine("This object is for sale for L" + prim.Properties.SalePrice);
             }
-        }
-
-        public int comp(SimObject p1, SimObject p2)
-        {
-            return (int)(getFitness(p2) - getFitness(p1));
-        }
-
-        public List<Primitive> getPrimitives(int num)
-        {
-            List<SimObject> ret = new List<SimObject>();
-            TheSimAvatar.ScanNewObjects(10, 100, false);
-            var set = TheSimAvatar.GetKnownObjects();
-            lock (set) set.ForEach(prim => ret.Add(prim));
-            //foreach (Primitive prim in prims[simulator.Handle].ForEach.Values)
-            //{
-            //    ret.Add(prim);
-            //}
-
-            ret.Sort(new Comparison<SimObject>(comp));
-            if (ret.Count > num)
-                ret = ret.GetRange(0, num);
-
-            ret.Sort(TheSimAvatar.CompareDistance);
-
-            List<Primitive> ps = new List<Primitive>();
-            foreach (SimObject os in ret)
-            {
-                var osp = os.Prim;
-                ListAsSet<Primitive>.AddIfMissing(ps, osp);
-            }
-            return ps;
-        }
-
-
-        private float getFitness(SimObject prim)
-        {
-            if (true)
-            {
-                return /* ((float)prim.ToString().Length/5 -*/ (float)((PathSystem3D.Navigation.SimMover)TheSimAvatar).Distance(prim);
-            }
-            float fitness = 1;
-            foreach (SimObjectHeuristic heuristic in objectHeuristics)
-            {
-                fitness *= heuristic(prim);
-            }
-            return fitness;
-        }
-
-
-        private float boringNamesHeuristic(SimObject prim)
-        {
-            return prim.ToString().Length;
         }
 
         public string getObjectName(Primitive prim)
