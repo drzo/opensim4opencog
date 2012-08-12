@@ -205,10 +205,11 @@ This would match Zero
 Special prefixes that change how command arguments are parsed:
  * + = append to list
  * $ = use a botvar group
- * [ = Start reading 
+ * [ = Start reading a Braced FilterList
  * ( = eval a lisp expression and insert it into arg
  * ! = remove the elements denoted by the next arg
  * integer = read the next args and get the "nth" item
+ * @ = read a location and convert to a prim
 
 
 A Braced FilterList Starts with either a $group or a +PrimsArg
@@ -276,19 +277,7 @@ See all this stuff starting at line 445 of WorldCommandParsing
 /priminfo [ $selected maxdist 2.1 mindist 1.9 max 4 nth2 matches Window !matches "-like" ownedby $master ]
 }}}
 
-
 @ coerces prim position to 3d location @lid152345234
-
-quit logs the bot off, and kills cogbot if no more are online.
-
-need section for multiple av's
-
-
-
-
-== Ways of sending bot commands to the bot ==
-
-@: Restrict the following commands to one or all avatars.
 
 == Locations ==
 
@@ -304,6 +293,12 @@ need section for multiple av's
 [13:33] BinaBot Daxeline: ok /moveto @0*1
 [13:33] BinaBot Daxeline: ok /moveto @90*2
 
+
+See  issue 9  for a bit more info about format of args
+
+Douglas - feel free to blow this away if you integrate the info
+in here
+
 nice to have:
 match LSL's preferred representation
 
@@ -311,37 +306,14 @@ match LSL's preferred representation
 [13:20] bungiecord Burnstein: with a space
 [13:21] bungiecord Burnstein: so <4.0, 5.0, 18.0>
 
-== PrimSpec ==
+== Ways of sending bot commands to the bot ==
 
-Many commands refer to objects. For example
+need section for multiple av's
 
-{{{
-/touch red cube 1 min 3 dist 6
-}}}
+@: Restrict the following commands to one or all avatars.
 
-causes the bot to touch the nearest red cube that is a minimum of 3 meters away and a maximum of 6 meters distant.
+quit logs the bot off, and kills cogbot if no more are online.
 
-Here's the syntax for specifying an object
-
-{{{
-primspec --> single_primspec.
-primspec --> single_primspec, primspec.
-
-noun_primspec --> <string>.  % The name of the object
-noun_primspec --> <uuid>.  % the UUID of the object
-
-single_primspec --> noun_primspec.
-single_primspec --> 
-
-}}}
-
-
-==More In Issues==
-
-See  issue 9  for a bit more info about format of args
-
-Douglas - feel free to blow this away if you integrate the info
-in here
 
 ==  Inventory ==
 
