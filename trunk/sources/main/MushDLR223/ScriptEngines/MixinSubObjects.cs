@@ -137,12 +137,16 @@ namespace MushDLR223.ScriptEngines
         }
         public static List<FilterMember> FindFiltersForExampleSubType(string arg0Lower, Type exampleType, Type t, Type relativeToType, OutputDelegate warn)
         {
+            if (arg0Lower != null) arg0Lower = arg0Lower.ToLower();
             var possible = FindFiltersForExampleSubType(arg0Lower, exampleType, t, relativeToType, warn);
-            if (arg0Lower == null || possible.Count > 0 || !arg0Lower.EndsWith("of"))
+            if (arg0Lower == null || possible.Count > 0 || (!arg0Lower.EndsWith("of") && arg0Lower.StartsWith("get")))
             {
                 return possible;
             }
-            arg0Lower = arg0Lower.Substring(0, arg0Lower.Length - 2);
+            if (arg0Lower.EndsWith("of"))
+            {
+                arg0Lower = arg0Lower.Substring(0, arg0Lower.Length - 2);
+            }
             possible = FindFiltersForExampleSubType(arg0Lower, exampleType, t, relativeToType, warn);
             List<FilterMember> newPossible = new List<FilterMember>();
             foreach (var p in possible)
@@ -167,6 +171,28 @@ namespace MushDLR223.ScriptEngines
             else
             {
                 membs = t.GetMember(arg0Lower, seachFlags | BindingFlags.IgnoreCase);
+                if (membs.Length == 0)
+                {
+                    string es = arg0Lower;
+                    bool changedFront = false;
+                    string[] prefixs = new[] { "is", "get" };
+                    foreach (var c in prefixs)
+                    {
+                        if (es.StartsWith(c)) es = es.Substring(c.Length);
+                        changedFront = true;
+                    }
+                    if (!changedFront)
+                    {
+                        foreach (var c in prefixs)
+                        {
+                            if (!es.StartsWith(c))
+                            {
+                                membs = t.GetMember(c + es, seachFlags | BindingFlags.IgnoreCase);
+                            }
+                            if (membs.Length > 0) break;                           
+                        }
+                    }
+                }
             }
 
             List<FilterMember> found = new List<FilterMember>();
@@ -205,6 +231,7 @@ namespace MushDLR223.ScriptEngines
                 if (pi != null) mi = pi.GetGetMethod();
                 if (mi == null) continue;
                 Type returnType = mi.ReturnType;
+                if (returnType == typeof(void)) continue;               
                 var ps = mi.GetParameters();
                 bool isBoolReturn = returnType == typeof (bool);
                 fmemb.ReturnType = returnType;
