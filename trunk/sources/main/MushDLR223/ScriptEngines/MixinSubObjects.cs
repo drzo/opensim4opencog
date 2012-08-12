@@ -12,7 +12,8 @@ namespace MushDLR223.ScriptEngines
     {
         public bool LastArgIsSelf = false;
 
-        public static List<T> ApplyFilter<T>(string[] args, out int argsUsed, StringArgParser changeType, List<T> current, object relativeTo, bool removeMatches, OutputDelegate warn, CompareTestChar compareTestChar)
+        public static List<T> ApplyFilter<T>(string[] args, out int argsUsed, StringArgParser changeType, List<T> current, 
+            object relativeTo, bool removeMatches, OutputDelegate warn, CompareTestChar compareTestChar)
         {
             if (current.Count == 0)
             {
@@ -25,7 +26,7 @@ namespace MushDLR223.ScriptEngines
             bool negative = removeMatches;
             if (arg0Lower.StartsWith("!"))
             {
-                negative = true;
+                negative = !negative;
                 arg0Lower = arg0Lower.Substring(1);
             }
             int predAt = arg0Lower.IndexOfAny("<>=*".ToCharArray());
@@ -109,6 +110,8 @@ namespace MushDLR223.ScriptEngines
 
             Type exampleType = example.GetType();
             Type relativeToType = relativeTo == null ? typeof(object) : relativeTo.GetType();
+            List<FilterMember> firstTry = FindFiltersForExampleSubType(arg0Lower, exampleType, exampleType, relativeToType, warn);;
+            if (firstTry.Count > 0) return firstTry;
             if ((example is MixinSubObjects))
             {
                 List<FilterMember> newPossible = new List<FilterMember>();
@@ -133,20 +136,16 @@ namespace MushDLR223.ScriptEngines
                 return newPossible;
 
             }
-            return FindFiltersForExampleSubType(arg0Lower, exampleType, exampleType, relativeToType, warn);
+            return firstTry;
         }
         public static List<FilterMember> FindFiltersForExampleSubType(string arg0Lower, Type exampleType, Type t, Type relativeToType, OutputDelegate warn)
         {
-            if (arg0Lower != null) arg0Lower = arg0Lower.ToLower();
-            var possible = FindFiltersForExampleSubType(arg0Lower, exampleType, t, relativeToType, warn);
-            if (arg0Lower == null || possible.Count > 0 || (!arg0Lower.EndsWith("of") && arg0Lower.StartsWith("get")))
+            var possible = FindAllFilters(arg0Lower, exampleType, t, relativeToType, warn);
+            if (arg0Lower == null || possible.Count > 0 || !arg0Lower.EndsWith("of"))
             {
                 return possible;
             }
-            if (arg0Lower.EndsWith("of"))
-            {
-                arg0Lower = arg0Lower.Substring(0, arg0Lower.Length - 2);
-            }
+            arg0Lower = arg0Lower.Substring(0, arg0Lower.Length - 2);
             possible = FindFiltersForExampleSubType(arg0Lower, exampleType, t, relativeToType, warn);
             List<FilterMember> newPossible = new List<FilterMember>();
             foreach (var p in possible)

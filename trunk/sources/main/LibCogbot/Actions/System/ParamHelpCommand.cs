@@ -31,7 +31,7 @@ namespace Cogbot.Actions.System
                 WriteLine("$" + name);                
             }
             WriteLine("Filters:");
-            Type typesearch = typeof(SimObject);
+            Type typesearch = typeof(SimObjectImpl);
             IEnumerable<FilterMember> filters = WorldSystem.GetFilters(typesearch);
             foreach (FilterMember fmemb in filters)
             {
@@ -45,7 +45,7 @@ namespace Cogbot.Actions.System
                 if (fmemb.IsCollectionType) continue;
                 WriteLine("[!]"
                           + fmemb.ReflectionMember.Name + (fmemb.IsOf ? "Of" : "")
-                          + (fmemb.PreCompare ? "[<|>|=]" : "")
+                          + (fmemb.PreCompare ? "<>" : "")
                           + typeString(fmemb.CastArgTo));
             }
             return Success("Help complete");
