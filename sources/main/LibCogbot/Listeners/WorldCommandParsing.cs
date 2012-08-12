@@ -572,7 +572,12 @@ namespace Cogbot
                 return prims;
             }
             string arg0Lower = args[0].ToLower();
-
+            // terminal
+            if (arg0Lower == "]")
+            {
+                argsUsed = 1;
+                return prims;
+            }
             int used = 1;
             // Negation
             if (arg0Lower == "not")
@@ -584,6 +589,13 @@ namespace Cogbot
             {
                 var secondSet = GetPrimitives0(Parser.SplitOff(args, 1), out argsUsed);
                 prims.AddRange(secondSet);
+                argsUsed += used;
+            }
+            else if (arg0Lower == "[")
+            {
+                var secondSet = GetPrimitives0(args, out used);
+                prims.AddRange(secondSet);
+                prims = FilterSimObjects(Parser.SplitOff(args, used), out argsUsed, prims, removeMatches, relativeTo);
                 argsUsed += used;
             }
             else if (arg0Lower == "keep")
