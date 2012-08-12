@@ -148,9 +148,19 @@ namespace Cogbot
             {
                 nth--;
                 splitted = Parser.SplitOff(splitted, 1);
-                var fnd = GetSingleArg(splitted, out argsUsed);
+                List<SimObject> fnd = null;
+                if (splitted.Length == 0)
+                {
+                    argsUsed = 1;
+                    fnd = SimRootObjects.CopyOf();
+                }
+                else
+                {
+                    fnd = GetSingleArg(splitted, out argsUsed);
+                }
                 if (fnd == null) return fnd;
                 if (nth >= fnd.Count) nth = fnd.Count - 1;
+                if (nth < 0) return null;
                 if (m_TheSimAvatar != null) fnd.Sort(((SimObject) m_TheSimAvatar).CompareDistance);
                 return new List<SimObject>() {fnd[nth]};
             }
@@ -220,10 +230,16 @@ namespace Cogbot
         {
 
             List<SimObject> getSingleArg = GetSingleArg(splitted, out argsUsed);
-
-            if (getSingleArg != null && getSingleArg.Count == 1)
+            int count = getSingleArg != null ? getSingleArg.Count : -1;
+            if (count==1)
             {
                 prim = getSingleArg[0];
+                return true;
+            }
+            if (count > 1)
+            {
+                prim = getSingleArg[0];
+                Debug("matched too many objects " + count);
                 return true;
             }
             prim = null;
