@@ -9,8 +9,10 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions
 {
-    class Describe : Command, BotPersonalCommand
+    public class Describe : Command, BotPersonalCommand
     {
+        public static string DefaultLookString = "[objects bydist max 10]";
+
         public Describe(BotClient Client)
             : base(Client)
         {
@@ -79,7 +81,12 @@ namespace Cogbot.Actions
                     {
                         int found = 0;
                         int argsUsed;
-                        List<SimObject> PS = WorldSystem.GetPrimitives(args.tokens, out argsUsed);
+                        string[] argstokens = args.tokens;
+                        if (argstokens.Length == 0)
+                        {
+                            argstokens = Parser.ParseArguments(DefaultLookString);
+                        }
+                        List<SimObject> PS = WorldSystem.GetPrimitives(argstokens, out argsUsed);
                         bool detailed = true;
                         if (PS.Count > 1) detailed = false;
                         if (!IsEmpty(PS))

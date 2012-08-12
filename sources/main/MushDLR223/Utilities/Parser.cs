@@ -66,6 +66,9 @@ namespace MushDLR223.ScriptEngines
 
         public static string[] ParseArguments(string str)
         {
+            str = PaddSpecialChars(str);
+
+
             List<string> list = new List<string>();
             string current = String.Empty;
             string trimmed = null;
@@ -143,6 +146,35 @@ namespace MushDLR223.ScriptEngines
                 list.Add(trimmed);
 
             return list.ToArray();
+        }
+
+        public static char[] needSpacesArround = "+-[]!".ToCharArray();
+
+        public static string PaddSpecialChars(string str)
+        {
+            if (str.Length < 2) return str;
+            int startAt = 0;
+            int ioa = str.IndexOfAny(needSpacesArround, startAt);
+            if (ioa == -1) return str;
+            while (ioa != -1)
+            {
+                if (ioa > 0 && str[ioa - 1] != ' ')
+                {
+                    str = str.Substring(0, ioa) + " " + str.Substring(ioa);
+                    ioa = str.IndexOfAny(needSpacesArround, startAt);
+                    continue;
+                }
+                if (ioa == str.Length - 1) break;
+                if (str[ioa + 1] != ' ')
+                {
+                    str = str.Substring(0, ioa + 1) + " " + str.Substring(ioa + 1);
+                    ioa = str.IndexOfAny(needSpacesArround, startAt);
+                    continue;
+                }
+                startAt = ioa + 1;
+                ioa = str.IndexOfAny(needSpacesArround, startAt);
+            }
+            return str.Trim();
         }
 
         public static string[] SplitOff(string[] args, int p)

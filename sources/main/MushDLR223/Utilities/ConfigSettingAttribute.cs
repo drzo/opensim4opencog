@@ -556,6 +556,13 @@ namespace MushDLR223.Utilities
                     if ((inf.IsStatic || IsSingletonClass(inf.DeclaringType)) && (notPublicOK || inf.IsPublic) &&
                         (notWriteableOK || !readOnly))
                     {
+                        if (!notFromStringOK)
+                        {
+                            if (inf.FieldType.IsArray)
+                            {
+                                return false;
+                            }
+                        }
                         if (readOnly) notFromStringOK = true;
                         if (notFromStringOK || IsSettableType(inf.FieldType))
                         {
