@@ -158,6 +158,33 @@ sit lid345345345345
 }}}
 
 
+Prims are read in into a command from three starting points
+
+* FilterList - Braces `[`]
+* SinglePrim
+{{{
+primid345345345
+}}}
+{{{
+1 [attachments]
+}}}
+{{{
+"bot chair"
+}}}
+{{{
+$self
+}}}
+
+SinglePrimsList
+{{{
+primid345345345 $self [objects bydist max 2 ]
+}}}
+
+
+
+
+
+
 MultpleObjects specify many targets with commands like priminfo
 
 $,[,(,!, integer, are special prefixs that change how command arguments are parsed
