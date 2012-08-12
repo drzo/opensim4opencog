@@ -493,7 +493,7 @@ namespace Cogbot
             if (args[argsUsed - 1] == "]") return prims;
 
             arg0Lower = args[argsUsed].ToLower();
-
+            if (arg0Lower == "]") return prims;
             if (arg0Lower == "and" || arg0Lower == ",")
             {
                 argsUsed++;
@@ -539,7 +539,8 @@ namespace Cogbot
 
         public List<SimObject> ResolveCollection(string arg0Lower, out int argsUsed)
         {
-            ICollection starters = ResolveCollection(arg0Lower, out argsUsed, null); 
+            ICollection starters = ResolveCollection(arg0Lower, out argsUsed, null);
+            if (starters == null) return null;
             var prims = new List<SimObject>();
             AsPrimitives(prims, starters);
             return prims;
@@ -590,12 +591,14 @@ namespace Cogbot
             {
                 prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims, !removeMatches, relativeTo);
                 argsUsed += used;
+                return prims;
             }
             else if (arg0Lower == "and")
             {
                 var secondSet = GetPrimitives0(Parser.SplitOff(args, 1), out argsUsed);
                 prims.AddRange(secondSet);
                 argsUsed += used;
+                return prims;
             }
             else if (arg0Lower == "[")
             {
@@ -603,24 +606,40 @@ namespace Cogbot
                 prims.AddRange(secondSet);
                 prims = FilterSimObjects(Parser.SplitOff(args, used), out argsUsed, prims, removeMatches, relativeTo);
                 argsUsed += used;
+                return prims;
             }
-            else if (arg0Lower == "keep")
+
+            // locally negate
+            bool negated = removeMatches;
+            if (arg0Lower.StartsWith("!"))
+            {
+                negated = !negated;
+            }
+
+            if (arg0Lower == "keep" || arg0Lower == "max")
             {
                 int nth;
                 if (int.TryParse(args[1], out nth))
                 {
                     used++;
                 }
-                if (prims.Count > nth)
+                int keep = Math.Abs(nth);
+                if (keep > prims.Count) keep = prims.Count;
+                if (negated) keep = prims.Count - keep;
+
+                int removeCount = prims.Count - keep;
+
+                if (nth > 0)
                 {
-                    if (removeMatches)
-                    {
-                        prims.RemoveRange(nth, prims.Count - nth);
-                    } else
-                    {
-                        prims.RemoveRange(0, nth);
-                    }
+                    // keep the first few
+                    prims.RemoveRange(keep, removeCount);
                 }
+                else
+                {
+                    // keep the last few
+                    prims.RemoveRange(0, removeCount);
+                }
+
                 prims = FilterSimObjects(Parser.SplitOff(args, used), out argsUsed, prims, removeMatches, relativeTo);
                 argsUsed += used;
             }
@@ -631,7 +650,7 @@ namespace Cogbot
                 {
                     used++;
                 }
-                if (!removeMatches)
+                if (!negated)
                 {
                     List<SimObject> prims0 = new List<SimObject>();
                     if (prims.Count >= nth)
@@ -653,7 +672,7 @@ namespace Cogbot
                 List<SimObject> objs = new List<SimObject>();
                 AsPrimitives(objs, prims);
                 objs.Sort(((SimObject) relativeTo).CompareDistance);
-                if (removeMatches)
+                if (negated)
                 {
                     objs.Reverse();
                 }
@@ -677,6 +696,7 @@ namespace Cogbot
 
                 if (!resolveCollection)
                 {
+                    // filters will re-namgate so use the incoming "removeMatches"
                     prims = FilterSpecAttribute.ApplyFilter(args, out used, ChangeType, prims, relativeTo,
                                                             removeMatches, Debug, CompareObjectsChar);
                     resolveCollection = (used == 0);
@@ -694,7 +714,7 @@ namespace Cogbot
                     foreach (var o in prims.ToArray())
                     {
                         bool shared = rcol.Contains(o);
-                        if (!removeMatches && shared) continue;
+                        if (!negated && shared) continue;
                         prims.Remove(o);
                     }
                 }

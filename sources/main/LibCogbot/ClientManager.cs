@@ -192,6 +192,7 @@ namespace Cogbot
                 col.Add(typeof(ClientManager));
                 col.Add(typeof(Cogbot.SimEventMulticastPipeline));
                 col.Add(typeof(Cogbot.SimEventTextSubscriber));
+                col.Add(typeof(DotLisp.CLSMember));
             }
 
             LoadConfigFile(ClientManagerConfig.arguments.GetValue("botconfig", "botconfig.xml"));
