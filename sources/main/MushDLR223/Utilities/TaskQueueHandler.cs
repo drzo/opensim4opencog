@@ -274,6 +274,7 @@ namespace MushDLR223.Utilities
             }
             Trackers = new List<TaskStatistics> {Total, SinceLastPong, Every30Secs, SinceLastTaskStarted};
             KillTasksOverTimeLimit = false;
+            debugOutput = DLRConsole.DebugWriteLine;
             //NOP = NOP ?? (() => { });
             lock (TaskQueueHandlers)
             {
@@ -376,6 +377,7 @@ namespace MushDLR223.Utilities
         {
             try
             {
+                debugOutput = errOutput;
                 if (IsDisposing) return;
                 IsDisposing = true;
                 lock (TaskQueueHandlers)
@@ -774,8 +776,9 @@ namespace MushDLR223.Utilities
                     //wait longer (still no tasks)
                     continue;
                 }
-                if (!TurnOffDebugMessages) errOutput(CreateMessage("WaitOne: TIMEOUT ERROR {0} was {1} ", INFO,
-                                        GetTimeString(ThisMaxOperationTimespan)));
+                if (!TurnOffDebugMessages)
+                    WriteLine(CreateMessage("WaitOne: TIMEOUT ERROR {0} was {1} ", INFO,
+                                            GetTimeString(ThisMaxOperationTimespan)));
                 if (RealTodo > 1)
                 {
                     problems = true;
@@ -790,7 +793,7 @@ namespace MushDLR223.Utilities
                     //var len = DateTime.Now.Subtract(BusyStart);
                 }
                 if (this.RealTodo > 0) return true; ////r = true;
-                if (!TurnOffDebugMessages) errOutput(CreateMessage("Moving on with TIMEOUT {0} was {1} ", INFO,
+                if (!TurnOffDebugMessages) WriteLine(CreateMessage("Moving on with TIMEOUT {0} was {1} ", INFO,
                                         GetTimeString(ThisMaxOperationTimespan)));
                 if (this.RealTodo > 0) return true; ////r = true;
                 return false;
@@ -844,6 +847,7 @@ namespace MushDLR223.Utilities
                 CheckTimedProgress(Every30Secs);
                 if (RealTodo > 1 || problems || !WasStartCalled)
                 {
+                    if (RealTodo < 2) problems = false;
                     VeryBad("REALTODO = " + RealTodo + " " + INFO);
                 }
                 continue;
