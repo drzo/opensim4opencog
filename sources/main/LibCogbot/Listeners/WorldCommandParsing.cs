@@ -147,7 +147,7 @@ namespace Cogbot
                 }
                 else if (name.StartsWith("["))
                 {
-                    fnd = GetPrimitivesExpression(splitted, out argsUsed);
+                    fnd = GetUnion(splitted, out argsUsed);
                 }
                 else if (name.StartsWith("("))
                 {
@@ -255,7 +255,7 @@ namespace Cogbot
             }
 
             uint pickNum = 0;
-            List<SimObject> matches = GetPrimitivesExpression(splitted, out argsUsed);
+            List<SimObject> matches = GetUnion(splitted, out argsUsed);
 
             if (matches.Count == 0)
             {
@@ -449,11 +449,11 @@ namespace Cogbot
 
         public delegate T StringParserMethod<T>(string[] args, out int argsUsed);
         static Dictionary<string, List<SimObject>> GetPrimsCache = new Dictionary<string, List<SimObject>>();
-        public List<SimObject> GetPrimitivesExpression(string[] args, out int argsUsed)
+        public List<SimObject> GetUnion(string[] args, out int argsUsed)
         {
-            return WithCache(args, out argsUsed, GetPrimsCache, GetPrimitivesExpression0);
+            return WithCache(args, out argsUsed, GetPrimsCache, GetUnionExprsn);
         }
-        public T WithCache<T>(string[] args, out int argsUsed, Dictionary<string, T> cache, StringParserMethod<T> GetPrimitivesExpression0)
+        public T WithCache<T>(string[] args, out int argsUsed, Dictionary<string, T> cache, StringParserMethod<T> stringParserMethod)
         {
             if (args.Length > 0)
             {
@@ -468,7 +468,7 @@ namespace Cogbot
                     }
                 }
             }
-            var val = GetPrimitivesExpression0(args, out argsUsed);
+            var val = stringParserMethod(args, out argsUsed);
             if (argsUsed == 1)
             {
                 lock (cache)
@@ -479,7 +479,7 @@ namespace Cogbot
             return val;
         }
 
-        public List<SimObject> GetPrimitivesExpression0(string[] args, out int argsUsed)
+        public List<SimObject> GetUnionExprsn(string[] args, out int argsUsed)
         {
             int argl = args.Length;
             if (argl == 0)
@@ -498,7 +498,7 @@ namespace Cogbot
             }
             if (arg0Lower == "[")
             {
-                starterSet = GetPrimitivesExpression0(Parser.SplitOff(args, 1), out argsUsedLocally);
+                starterSet = GetUnionExprsn(Parser.SplitOff(args, 1), out argsUsedLocally);
                 argsUsed = argsUsedLocally + 1;
                 return starterSet;
             }
@@ -517,7 +517,7 @@ namespace Cogbot
                 starterSet = SimRootObjects.CopyOf();
             }
 
-            ICollection filterSimObjects = FilterSimObjects(args, out argsUsed, starterSet, false, TheSimAvatar);
+            ICollection filterSimObjects = GetUnion(args, out argsUsed, starterSet, false, TheSimAvatar);
             if (argsUsed == 0 && args.Length != 0)
             {
                 // filter failed
@@ -537,7 +537,7 @@ namespace Cogbot
             {
                 argsUsed++;
                 int moreUsed;
-                var more = GetPrimitivesExpression(Parser.SplitOff(args, argsUsed), out moreUsed);
+                var more = GetUnion(Parser.SplitOff(args, argsUsed), out moreUsed);
                 argsUsed += moreUsed;
                 AsPrimitives(prims, more);
             }
@@ -610,7 +610,7 @@ namespace Cogbot
             return null;
         }
 
-        public List<SimObject> FilterSimObjects(string[] args, out int argsUsed, List<SimObject> prims, bool removeMatches, MixinSubObjects relativeTo)
+        public List<SimObject> GetUnion(string[] args, out int argsUsed, List<SimObject> prims, bool removeMatches, MixinSubObjects relativeTo)
         {
             int consume = args.Length;
             if (consume == 0)
@@ -629,22 +629,22 @@ namespace Cogbot
             // Negation
             if (arg0Lower == "not")
             {
-                prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims, !removeMatches, relativeTo);
+                prims = GetUnion(Parser.SplitOff(args, 1), out argsUsed, prims, !removeMatches, relativeTo);
                 argsUsed += used;
                 return prims;
             }
             else if (arg0Lower == "or" || arg0Lower == "concat")
             {
-                var secondSet = GetPrimitivesExpression0(Parser.SplitOff(args, 1), out argsUsed);
+                var secondSet = GetUnionExprsn(Parser.SplitOff(args, 1), out argsUsed);
                 prims.AddRange(secondSet);
                 argsUsed += used;
                 return prims;
             }
             else if (arg0Lower == "[")
             {
-                var secondSet = GetPrimitivesExpression0(args, out used);
+                var secondSet = GetUnionExprsn(args, out used);
                 prims.AddRange(secondSet);
-                prims = FilterSimObjects(Parser.SplitOff(args, used), out argsUsed, prims, removeMatches, relativeTo);
+                prims = GetUnion(Parser.SplitOff(args, used), out argsUsed, prims, removeMatches, relativeTo);
                 argsUsed += used;
                 return prims;
             }
@@ -670,7 +670,7 @@ namespace Cogbot
                 var list = GetSingleArg(Parser.SplitOff(args, skip), out used);
                 prims.AddRange(list);
                 used += skip;
-                prims = FilterSimObjects(Parser.SplitOff(args, used), out argsUsed, prims, removeMatches, relativeTo);
+                prims = GetUnion(Parser.SplitOff(args, used), out argsUsed, prims, removeMatches, relativeTo);
                 argsUsed += used;
                 return prims;
             }
@@ -699,7 +699,7 @@ namespace Cogbot
                     prims.RemoveRange(0, removeCount);
                 }
 
-                prims = FilterSimObjects(Parser.SplitOff(args, used), out argsUsed, prims, removeMatches, relativeTo);
+                prims = GetUnion(Parser.SplitOff(args, used), out argsUsed, prims, removeMatches, relativeTo);
                 argsUsed += used;
             }
             else if (arg0Lower == "nth")
@@ -723,7 +723,7 @@ namespace Cogbot
                     prims = new List<SimObject>(prims);
                     prims.RemoveAt(nth);
                 }
-                prims = FilterSimObjects(Parser.SplitOff(args, used), out argsUsed, prims, removeMatches, relativeTo);
+                prims = GetUnion(Parser.SplitOff(args, used), out argsUsed, prims, removeMatches, relativeTo);
                 argsUsed += used;
             }
             else if (arg0Lower == "bydist")
@@ -736,13 +736,13 @@ namespace Cogbot
                     objs.Reverse();
                 }
                 prims = objs;
-                prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims, removeMatches, relativeTo);
+                prims = GetUnion(Parser.SplitOff(args, 1), out argsUsed, prims, removeMatches, relativeTo);
                 argsUsed += used;
             }
             else if (arg0Lower == "reverse")
             {
                 prims.Reverse();
-                prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims, removeMatches, relativeTo);
+                prims = GetUnion(Parser.SplitOff(args, 1), out argsUsed, prims, removeMatches, relativeTo);
                 argsUsed += used;
             }
             else
@@ -761,7 +761,7 @@ namespace Cogbot
                     {
                         prims = FilterSpecAttribute.ApplyFilter(args, out used, ChangeType, prims, relativeTo,
                                                                 removeMatches, Debug, CompareObjectsChar);
-                        prims = FilterSimObjects(Parser.SplitOff(args, used),
+                        prims = GetUnion(Parser.SplitOff(args, used),
                                                  out argsUsed, prims, removeMatches, relativeTo);
                         argsUsed += used;
                         return prims;
