@@ -8,7 +8,9 @@
 %
 % Usage:
 %
-% http://localhost:19888/weather?day=17.75&seed=218
+% http://localhost:19888/weather?utime=
+%
+% utime is unix timestamp.
 %
 % day is the day of the 336 day year, starting from 0 being April 1
 % of year 0, and fractional day. The day starts at sunrise.
@@ -37,12 +39,20 @@
 :- use_module(climate).
 :- use_module(windlight).
 
-:- http_handler('/weather', weather_handler, []).
+:- http_handler('/windlight', windlight_handler, []).
 
 start(Port) :-
     http_server(http_dispatch, [port(Port), workers(1)]),
     thread_get_message(_),
     halt.
+
+
+windlight_handler(Request) :-
+    http_parameters(Request, [utime(UTime, [integer, default(0)])]),
+    format('Content-type: text/plain~n~n'),
+    at_utime_windlight_str_is(UTime, Windlight),
+    format('~s', [Windlight]).
+
 
 weather_handler(Request) :-
     http_parameters(Request, [day(Day, [default(0)])]),
@@ -67,7 +77,6 @@ weather_handler(Request) :-
     format('Content-type: text/css\r\n\r\n~w', [Output]).
 
 temperature(_, 25).
-
 
 weather_for_day(Day,
 	weather(Sun, Temperature, SnowAccum, Snowing, Raining)) :-
