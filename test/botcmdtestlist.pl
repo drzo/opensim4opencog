@@ -1,21 +1,26 @@
-:- module(botcmdtestlist, [test/4]).
+:- module(botcmdtestlist, [bot_cmd_test/5]).
 :-use_module(library(swicli)).
 :-use_module(library('simulator/cogrobot')).
 :- use_module(test(testsupport)).
 
-:- discontiguous test/4.
+:- discontiguous bot_cmd_test/5.
 
-test('I will make the radegast GUI appear',
+:- meta_predicate  test(+, 0, +, +).
+
+bot_cmd_test(radegast_appear,
+	     'I will make the radegast GUI appear',
      botdo(showgui),
     10,
     'Did the Radegast GUI appear?').
 
-test('I will teleport to the location marked TELEPORT TEST',
+bot_cmd_test(teleport_test,
+	     'I will teleport to the location marked TELEPORT TEST',
      botdo(teleport('annies haven',237,19,23)),
      2,
      'Is the Bot at the teleport target?').
 
-test('I will sit on the botchair',
+bot_cmd_test(sit_on_botchair,
+	     'I will sit on the botchair',
      test_sit,
      1,
      'Did the bot sit on chair and then stand up?').
@@ -26,12 +31,14 @@ test_sit :-
 	sleep(10.0),
 	botapi(stand).
 
-test('I will move to the big yellow donut',
+bot_cmd_test(move_to_donut,
+	     'I will move to the big yellow donut',
      botapi(moveto(bigyellowdonut)),
      1,
      'Did the bot move to the donut?').
 
-test('I will describe objects around me',
+bot_cmd_test(describe_nearby,
+	     'I will describe objects around me',
      describe_stuff,
      1,
      'Did the bot describe the objects, and only the objects, near itself?').
@@ -41,7 +48,8 @@ describe_stuff :-
      botapi(describe(maxdist(4),family,parentof)).
 
 /*
-test('I will friend you',
+bot_cmd_test(friend_you,
+	     'I will friend you',
      friend_nearby,
      1,
      'Did the bot friend you?').
