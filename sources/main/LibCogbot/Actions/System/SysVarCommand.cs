@@ -37,7 +37,7 @@ namespace Cogbot.Actions.System
                       Example("sysvar Maintain false",
                               "set every sysvar that contains Maintain in it's name to false") +
                       Example("sysvar MaintainEffectsDistance 8.0",
-                              "set the maximum distance to notice effects to 8.0") + SysVarHtml();
+                              "set the maximum distance to notice effects to 8.0");
 
 
             Category = CommandCategory.BotClient;
@@ -121,9 +121,8 @@ namespace Cogbot.Actions.System
 
             int used = 0;
             var sysvars = GetSysVars();
-
             string find;
-            if (!args.TryGetValue("key", out find))
+            if (!args.TryGetValueOr("key", 0, out find))
             {
                 // display all
                 foreach (var sv in sysvars)
@@ -144,7 +143,7 @@ namespace Cogbot.Actions.System
                 }
             }
             string value;
-            if (!args.TryGetValue("value", out value))
+            if (!args.TryGetValueOr("value", 1,  out value))
             {
                 return Success("Found sysvars: " + found);             
             }

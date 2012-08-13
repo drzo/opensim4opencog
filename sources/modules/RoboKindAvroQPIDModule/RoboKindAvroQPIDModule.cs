@@ -118,6 +118,7 @@ namespace RoboKindAvroQPIDModule
 
         public override void StartupListener()
         {
+            return;
             EnsureLoginToQIPD();
             client.EachSimEvent += SendEachSimEvent;
             client.AddBotMessageSubscriber(this);
