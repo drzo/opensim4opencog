@@ -2,11 +2,9 @@
 		       logon_bots/0,
 		       botID/2,
 		       tribal_land/1,
-		       join_the_tribe/0,
                        set_num_bots/1,
                        tribe_size/1,
-                       set_tribe/1,
-		       test_commands/0
+                       set_tribe/1
 		      ]).
 
 %--------------------------------------------------------
@@ -145,22 +143,23 @@ hill_credentials(yuppie, 'Yuppie', Tribe, PW) :-
 
 bot_startup(_).
 
-everybody_be_tested :-
-	hill_person(Name),
-	ensure_tribal(Name),
-	fail.
-everybody_be_tested.
+:- dynamic  current_botcmd_test/2.
 
-ensure_tribal(Name):-thread_property(T,_),T=Name,!.
-ensure_tribal(Name):-thread_create(be_tested(Name),_, [alias(Name)]).
+bv:hook_botvar_get(BotID, bot, 'dotest', X) :-
+	current_botcmd_test(BotID, X),!.
 
-join_the_tribe :-
-	hill_person(Name),
-	thread_join(Name, _),
-	fail.
-join_the_tribe.
+bv:hook_botvar_get(_BotID, bot, dotest, nothing).
 
-test_commands :- everybody_be_tested.
+bv:hook_botvar_set(BotID, bot, 'dotest', X) :-
+	retractall(current_botcmd_test(BotID, _)),
+	assert(current_botcmd_test(BotID, X)),
+	ignore(X).
+
+bv:hook_botvar_key(_, bot, 'dotest').
+
+bv:hook_botvar_desc(_, bot, 'dotest',
+     "ReadWrite - The last test performed by the bot").
+
 
 
 
