@@ -55,7 +55,7 @@ namespace Cogbot.Actions.Objects
                     return ShowUsage(); //"Usage prim-uuid [copy] [mod] [xfer]";
 
                 int argsUsed;
-                List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+                List<SimObject> PS = WorldSystem.GetSingleArg(args, out argsUsed);
                 if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
 
                 for (int i = argsUsed; i < args.Length; i++)

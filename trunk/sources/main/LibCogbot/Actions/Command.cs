@@ -644,7 +644,7 @@ namespace Cogbot.Actions
                 argsUsed = 1;
                 return true;
             }
-            List<SimObject> OS = WorldSystem.GetPrimitives(args, out argsUsed);
+            List<SimObject> OS = WorldSystem.GetSingleArg(args, out argsUsed);
             if (OS.Count == 1)
             {
                 target = OS[0].ID;

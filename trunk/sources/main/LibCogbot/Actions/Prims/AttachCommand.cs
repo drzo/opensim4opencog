@@ -24,7 +24,7 @@ namespace Cogbot.Actions.Objects
                 return ShowUsage();
 
             int argsUsed;
-            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            List<SimObject> PS = WorldSystem.GetSingleArg(args, out argsUsed);
             args = args.AdvanceArgs(argsUsed);
             AttachmentPoint attachmentPoint = AttachmentPoint.Default;
             if (args.Length > 0)

@@ -63,7 +63,7 @@ namespace Cogbot.Actions.Objects
                     return ShowUsage();
 
                 args.AdvanceArgs(argsUsed);
-                List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+                List<SimObject> PS = WorldSystem.GetSingleArg(args, out argsUsed);
                 if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
 
                 PermissionWho who = 0;

@@ -37,7 +37,7 @@ namespace Cogbot.Actions.System
                 return Success(nfound + " entries found");
             }
             int argsUsed;
-            List<SimObject> worldSystemGetPrimitives = WorldSystem.GetPrimitives(args, out argsUsed);
+            List<SimObject> worldSystemGetPrimitives = WorldSystem.GetSingleArg(args, out argsUsed);
             if (IsEmpty(worldSystemGetPrimitives))
             {
                 return Failure("Cannot find objects from " + args.str);
