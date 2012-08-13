@@ -59,7 +59,7 @@
     </Reference>
     <Reference Include="Org.Mentalis.Security, Version=1.0.13.716, Culture=neutral, PublicKeyToken=085a8f6006888436">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Qpid.Common\lib\seclib-1.0.0\Org.Mentalis.Security.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\bin\Org.Mentalis.Security.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />

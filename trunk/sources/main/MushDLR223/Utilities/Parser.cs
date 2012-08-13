@@ -747,6 +747,17 @@ namespace MushDLR223.ScriptEngines
             return true;
         }
 
+        public bool TryGetValueOr<T>(string name, int arg, out T value)
+        {
+            int len;
+            if (TryGetValueInt<T>(name, out value, out len) >= 0)
+            {
+                KeysRequired = true;
+                return true;
+            }
+            value = ChangeType<T>(tokens[this.StartArg + arg]);
+            return true;
+        }
 
         public bool TryGetValueWithout(string key, out string value, out string[] strings)
         {
@@ -797,7 +808,7 @@ namespace MushDLR223.ScriptEngines
         private ParseInfo CmdInfo { get { return this; } }
 
         protected NamedParam[] VersionSelected;
-        public bool KeysRequired;
+        public bool KeysRequired = true;
 
         static NamedParam[] SelectVersion(string[] tokens, NamedParam[][] ParameterVersions)
         {
