@@ -26,7 +26,7 @@ namespace Cogbot.Actions.Scripting
             if (args.Length < 2) return ShowUsage();
             AssetType assetType;
 
-            FieldInfo fi = typeof(AssetType).GetField(args[1]);
+            FieldInfo fi = typeof(AssetType).GetField(args[1], BindingFlags.IgnoreCase | BindingFlags.Static);
             if (fi == null)
             {
                 int typeInt;
