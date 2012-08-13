@@ -34,10 +34,13 @@ namespace Cogbot.Actions.Estate
         {
             Name = "downloadterrain";
             Description = "Download the RAW terrain file for this estate.";
-            Details = AddUsage("downloadterrain [timeout-seconds]", "download terrain to SimName.raw using timeout (default 2 minutes)");
+            Details = AddUsage("downloadterrain [timeout-seconds]",
+                               "download terrain to SimName.raw using timeout (default 2 minutes)");
             Category = CommandCategory.Simulator;
             Parameters =
-                CreateParams(Optional("timeoutSeconds", typeof (int), "timeout in seconds"));
+                CreateParams(
+                    Optional("simulator", typeof (Simulator), "if ommited it uses current sim"),
+                    Optional("timeoutSeconds", typeof (int), "timeout in seconds"));
         }
 
         /// <summary>

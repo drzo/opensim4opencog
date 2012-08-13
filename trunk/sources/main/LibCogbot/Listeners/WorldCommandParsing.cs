@@ -904,6 +904,19 @@ namespace Cogbot
                 {
 
                 }
+                FieldInfo fi = type.GetField(name, BindingFlags.IgnoreCase | BindingFlags.Static);
+                if (fi != null)
+                {
+                    try
+                    {
+                        e = fi.GetValue(null);
+                    }
+                    catch (ArgumentException)
+                    {
+
+                    }
+                }
+
                 if (e == null) foreach (MethodInfo info in type.GetMethods(BindingFlags.Static | BindingFlags.Public))
                 {
                     if (info.ReturnType != type) continue;
@@ -999,7 +1012,7 @@ namespace Cogbot
             if (args.Length > 0)
             {
                 string s = String.Join(" ", args);
-                SimRegion R = SimRegion.GetRegion(s, Client);
+                SimRegion R = SimRegion.GetRegion(s, client);
                 if (R == null)
                 {
                     argsUsed = 0;
