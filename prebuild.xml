@@ -1141,6 +1141,7 @@
        <Reference name="System.Core" localCopy="false" />
        <Reference name="Radegast.exe" localCopy="false"/>
        <Reference name="MushDLR223"  localCopy="false"/>
+       <Reference name="CommandLine.dll"  localCopy="false" />
          <!--   
        <Reference name=" Khendys.Controls.ExRichTextBox.dll" localCopy="false"/>
        <Reference name=" Interop.IWshRuntimeLibrary.dll" localCopy="false"/>

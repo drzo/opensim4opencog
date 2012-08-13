@@ -43,11 +43,15 @@ namespace Cogbot
                 if(_arguments==null)
                 {
                     string[] use = Environment.GetCommandLineArgs() ?? new string[0];
-                    _arguments = new Parser(use);
+                    arguments = new Parser(use);
                 }
                 return _arguments;
             }
-            set { _arguments = value; }
+            set
+            {
+                value.KeysRequired = true;
+                _arguments = value;
+            }
         }
 
         private static Parser _arguments;
