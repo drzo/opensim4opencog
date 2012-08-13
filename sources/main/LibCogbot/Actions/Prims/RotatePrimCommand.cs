@@ -23,7 +23,7 @@ namespace Cogbot.Actions.Objects
                 return ShowUsage();// " Rotateprim prim [x y [z]]";
 
             int used;
-            List<SimObject> PS = WorldSystem.GetPrimitives(args, out used);
+            List<SimObject> PS = WorldSystem.GetSingleArg(args, out used);
             if (IsEmpty(PS)) return Failure("Cannot find prim: " + args.str);
             string[] to = Parser.SplitOff(args, used);
 

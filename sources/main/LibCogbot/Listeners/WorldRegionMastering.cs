@@ -786,7 +786,7 @@ namespace Cogbot
                 if (string.IsNullOrEmpty(fromName)) return null;
                 if (IsSystemName(fromName)) return null;
                 int au;
-                List<SimObject> ps = GetPrimitives(new string[] { fromName }, out au);
+                List<SimObject> ps = GetSingleArg(new string[] { fromName }, out au);
                 if (ps.Count == 1) p = ps[0];
             }
             if (p != null) return p;
