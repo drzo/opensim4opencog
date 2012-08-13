@@ -632,33 +632,7 @@ namespace Cogbot.Actions
 
         public bool UUIDTryParse(string[] args, int start, out UUID target, out int argsUsed)
         {
-            if (args==null|| args.Length==0)
-            {
-                target = UUID.Zero;
-                argsUsed = 0;
-                return false;
-            }
-            string p = args[0];
-            if (p.Contains("-") && UUID.TryParse(p, out target))
-            {
-                argsUsed = 1;
-                return true;
-            }
-            List<SimObject> OS = WorldSystem.GetSingleArg(args, out argsUsed);
-            if (OS.Count == 1)
-            {
-                target = OS[0].ID;
-                argsUsed = 1;
-                return true;
-            }
-            target = WorldSystem.GetAssetUUID(p, AssetType.Unknown);
-            if (target != UUID.Zero)
-            {
-                argsUsed = 1;
-                return true;
-            }
-            argsUsed = 0;
-            return false;
+            return  WorldSystem.UUIDTryParse(args, start, out target, out argsUsed);
         }
 
         public CmdResult Failure(string message)
@@ -734,65 +708,7 @@ namespace Cogbot.Actions
 
         protected bool TryEnumParse(Type type, string[] names, int argStart, out int argsUsed, out object value)
         {
-            ulong d = 0;
-            argsUsed = 0;
-            for (int i = argStart; i < names.Length; i++)
-            {
-                var name = names[i];
-
-                Object e = null;
-                try
-                {
-                    e = Enum.Parse(type, name);
-                }
-                catch (ArgumentException)
-                {
-
-                }
-                if (e != null)
-                {
-                    d += (ulong) e.GetHashCode();
-                    argsUsed++;
-                    continue;
-                }
-                try
-                {
-                    e = Enum.Parse(type, name, true);
-                }
-                catch (ArgumentException)
-                {
-
-                }
-
-                if (e != null)
-                {
-                    d += (ulong) e.GetHashCode();
-                    argsUsed++;
-                    continue;
-                }
-                ulong numd;
-                if (UInt64.TryParse(name, out numd))
-                {
-                    d += numd;
-                    argsUsed++;
-                    continue;
-                }
-                break;
-            }
-            if (argsUsed == 0)
-            {
-                value = null;
-                return false;
-            }
-            Type etype = Enum.GetUnderlyingType(type);
-            if (typeof (IConvertible).IsAssignableFrom(etype))
-            {
-                MethodInfo mi = etype.GetMethod("Parse",new Type[]{typeof(string)});
-                value = mi.Invoke(null, new object[] {d.ToString()});
-                return argsUsed > 0;
-            }
-            value = d;
-            return argsUsed > 0;
+            return WorldObjects.TryEnumParse(type, names, argStart, out argsUsed, out value);
         }
 
         static public bool IsEmpty(ICollection enumerable)
@@ -802,25 +718,9 @@ namespace Cogbot.Actions
 
         protected Simulator TryGetSim(string[] args, out int argsUsed)
         {
-            if (args.Length > 0)
-            {
-                string s = String.Join(" ", args);
-                SimRegion R = SimRegion.GetRegion(s, Client);
-                if (R == null)
-                {
-                    argsUsed = 0;
-                    WriteLine("cant find sim " + s);
-                    return null;
-                }
-
-                Simulator sim = R.TheSimulator;
-                if (sim == null) WriteLine("not connect to sim" + R);
-                argsUsed = args.Length;
-                return sim;
-            }
-            argsUsed = 0;
-            return Client.Network.CurrentSim;
+            return WorldSystem.TryGetSim(args, out argsUsed);
         }
+
         public string WriteLineResultName = "message";
         protected void SetWriteLine(string resultName)
         {

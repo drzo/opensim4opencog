@@ -29,9 +29,9 @@ namespace Cogbot.Actions.Land
             int counter = 0;
             StringBuilder result = new StringBuilder();
             // test argument that is is a valid integer, then verify we have that parcel data stored in the dictionary
-            if (Int32.TryParse(args[argsUsed], out parcelID) && UUIDTryParse(args, argsUsed+1, out ownerUUID, out argsUsed))
+            if (Int32.TryParse(args[argsUsed], out parcelID) && UUIDTryParse(args, argsUsed + 1, out ownerUUID, out argsUsed))
             {
-                Client.Parcels.ReturnObjects(CurSim,parcelID,ObjectReturnType.Owner,new List<UUID>{ownerUUID});
+                Client.Parcels.ReturnObjects(CurSim, parcelID, ObjectReturnType.Owner, new List<UUID> { ownerUUID });
                 return Success("returning parcel=" + parcelID + " sim=" + CurSim + " user=" + ownerUUID);
             }
             else
