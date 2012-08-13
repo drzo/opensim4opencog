@@ -737,7 +737,14 @@ namespace MushDLR223.ScriptEngines
         public bool TryGetValue<T>(string name, out T value)
         {
             int len;
-            return TryGetValueInt<T>(name, out value, out len) >= 0;
+            if (TryGetValueInt<T>(name, out value, out len) >= 0)
+            {
+                KeysRequired = true;
+                return true;
+            }
+            if (KeysRequired) return false;
+            value = ChangeType<T>(tokens[this.StartArg++]);
+            return true;
         }
 
 
@@ -782,8 +789,6 @@ namespace MushDLR223.ScriptEngines
             Parameters = info.Parameters;
             ParameterVersions = info.ParameterVersions;
             //ParamMap = new Dictionary<string, object>();
-            SelectVersion();
-            ParseTokens();
         }
 
 
@@ -792,39 +797,101 @@ namespace MushDLR223.ScriptEngines
         private ParseInfo CmdInfo { get { return this; } }
 
         protected NamedParam[] VersionSelected;
-        private void SelectVersion()
+        public bool KeysRequired;
+
+        static NamedParam[] SelectVersion(string[] tokens, NamedParam[][] ParameterVersions)
         {
-            if (VersionSelected != null) return;
-            VersionSelected = Parameters;
-            if (ParameterVersions == null || ParameterVersions.Length == 0) return;
-            int tokenLen = tokens.Length;
-            if (ParameterVersions.Length > 1)
+            if (ParameterVersions == null || ParameterVersions.Length == 0)
             {
-                foreach (var vchck in ParameterVersions)
+                return null;
+            }
+            NamedParam[] best = null;
+            float bestScore = 99999999;
+            foreach (NamedParam[] version in ParameterVersions)
+            {
+                float thisScore = TestSelectVersion(version, tokens);
+
+                if (thisScore <= bestScore)
                 {
-                    if (VersionSelected.Length == tokenLen)
-                    {
-                        VersionSelected = vchck;
-                    }
+                    best = version;
+                    bestScore = thisScore;
                 }
             }
-            int skip = this.StartArg;
+            return best;
+        }
+
+        public static float TestSelectVersion(NamedParam[] VersionSelected, string[] tokens)
+        {
+            int tokenLen = tokens.Length;
+            int max;
+            int requireds = 0;
+            int optionals = 0;
+            int requiredsG = 0;
+            int optionalsG = 0;
             int argCurrent = 0;
+            int used = 0;
+            int len = 0;
+            int argStart = used + len;
             foreach (NamedParam param in VersionSelected)
             {
-                if (skip > 0)
+                if (param.IsOptional) optionals += 1;
+                else requireds += 1;
+                object value;
+                if (TryGetKey(param, argStart, tokens, out value, out used, out len))
                 {
-                    skip--;
-                    continue;
+
+                    if (param.IsOptional)
+                    {
+                        optionalsG++;
+                    }
+                    else
+                    {
+                        requiredsG++;
+                    }
+                    argStart = used + len;
                 }
-                string name = ToKey(param.Key);
-                if (!ParamMap.ContainsKey(name))
-                    ParamMap[name] = null;
             }
+            if (requireds > tokenLen) return 99999;
+            return requireds/(requiredsG + 1) - optionalsG/(optionals + 1);
+        }
+
+        private static bool TryGetKey(NamedParam param, int argStart, string[] args, out object o, out int used, out int len)
+        {
+            string name = ToKey(param.Key);
+            used = 0;
+            for (int i = argStart; i < args.Length; i++)
+            {
+                used = 1;
+                string s = args[i];
+                if (ToKey(s) != name) continue;
+                if (param.Type == typeof (bool))
+                {
+                    o = true;
+                    len = 1;
+                    return true;
+                }
+                if (i + 1 < args.Length)
+                {
+                    o = args[i + 1];
+                    len = 2;
+                    return true;
+                }
+                len = -1;
+                o = null;
+                return true;
+            }
+            len = 0;
+            o = null;
+            return false;
         }
 
         protected void ParseTokens()
         {
+            if (VersionSelected == null)
+            {
+                VersionSelected = SelectVersion(tokens, ParameterVersions);
+                ParseTokens();
+            }
             int tokenLen = tokens.Length;
             int skip = this.StartArg;
             int argCurrent = 0;
