@@ -130,6 +130,12 @@ namespace Cogbot
                 }
                 return fnd;
             }
+            if (name == "+")
+            {
+                var fnd = GetSingleArg(Parser.SplitOff(splitted, 1), out argsUsed);
+                argsUsed++;
+                return fnd;
+            }
             if (name.StartsWith("("))
             {
                 argsUsed = 1;
