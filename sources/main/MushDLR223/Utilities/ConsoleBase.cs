@@ -1394,11 +1394,11 @@ namespace MushDLR223.Utilities
             Commands.Resolve(parts);
         }
 
-        public string ReadLine(string p, bool isCommand, bool e)
+        public string ReadLine(string p, bool isCommand, bool echo)
         {
             m_cursorXPosition = 0;
             prompt = p;
-            m_echo = e;
+            m_echo = echo;
             int historyLine = m_history.Count;
 
             SetCursorLeft(0); // Needed for mono
