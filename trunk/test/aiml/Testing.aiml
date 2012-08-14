@@ -74,14 +74,14 @@
 <topic name="botcmdtesting">
 <category>
     <pattern>PERFORM TEST *</pattern>
-    <template><system lang="swi">dotest(<star />)<system></template>
+    <template><system lang="swi">do_test(<star />)<system></template>
 </category>
 </topic>
 
 <!-- partner -->
 <category>
     <pattern>BE MY PARTNER IN THESE TESTS</pattern>
-    <template><think><set name="topic">partner</set></think>perform test botcmdtests:test1</template>
+    <template><think><set name="topic">partner</set></think>perform test test1</template>
 </category>
 <topic name="partner">
 <category>

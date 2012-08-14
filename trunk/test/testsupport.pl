@@ -38,7 +38,9 @@
 			onChatTSHook/3,
 			require_chat_hook/0,
 			std_end/2, std_end/3,
-			doTest/3 , ppTest/1]).
+			doTest/3 , ppTest/1,
+		        next_test/2,
+		        do_test/1]).
 :-use_module(library(swicli)).
 :-use_module(library('simulator/cogrobot')).
 
@@ -58,7 +60,7 @@ dbgFmt(F,A):-'format'(user_error,F,A),flush_output.
 
 % unify if this is the bot's name
 botName(Name) :- current_botname(Name).
-     %%   Name = 'testbot Ogborn'.  %TODO Douglas, how do I read this from
+%   Name = 'testbot Ogborn'.  %TODO Douglas, how do I read this from
 % Configuration in clientManager.cs
 
 needed(TestName , Number) :-
@@ -311,6 +313,22 @@ write_time_limit_exceeded :-
 write_time_limit_exceeded :- !.
 
 
+
+
+:- set_prolog_flag(double_quotes, chars).
+
+next_test(Last, Next) :-
+	atom(Last),
+	atom_chars(Last, Chars),
+	append("test", NumChars, Chars),
+	number_chars(N, NumChars),
+	NN is N + 1,
+	number_chars(NN, NNChars),
+	append("test", NNChars, NextChars),
+	atom_chars(Next, NextChars).
+
+do_test(Test) :-
+	call(Test).
 
 
 
