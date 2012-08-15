@@ -137,7 +137,7 @@ tribal_land('annies haven II/164/135/21').
 :-dynamic(tribe_size/1).
 
 set_num_bots(Value):-retractall(tribe_size(_)),assert(tribe_size(Value)).
-:-set_num_bots(6).
+:-set_num_bots(2).
 
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

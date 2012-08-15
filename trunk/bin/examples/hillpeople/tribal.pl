@@ -36,9 +36,10 @@
 :- dynamic tribal_dyn:current_action/2.
 
 dump_action(Action) :-
-	botvar_get(bot, dumpaction, "true"),
-	write('A:'),
-	write(Action),nl.
+	current_bot(ID),
+	botID(Name, ID),
+	debug(be_tribal, '~w does ~w', [Name, Action]).
+
 dump_action(_).
 
 
@@ -132,6 +133,23 @@ be_tribal_loop(Loc0, Name, Status0):-
 be_tribal_next(Loc, Name, Status):-
        retractall(be_tribal_status(_Loc, Name, _Status)),
        assert(be_tribal_status(Loc, Name, Status)).
+
+
+%%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%	Debug
+%
+%%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+be_tribal(
+    Loc,
+    Name,
+    Status) :-
+	debug(
+	    be_tribal,
+	    '~w: ~w, ~w~n',
+	    [Name, Loc, Status]),
+	fail.
 
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
