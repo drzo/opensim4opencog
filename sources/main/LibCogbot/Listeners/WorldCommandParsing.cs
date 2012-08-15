@@ -202,33 +202,34 @@ namespace Cogbot
         public List<SimObject> GetPrimitives(string[] splitted, out int argsUsed)
         {
             List<string> missingOk = new List<string>();
-            argsUsed = 0;
-            var prim = GetPrimitiveFromList(splitted, ref argsUsed, missingOk);
+            var prim = GetPrimitiveFromList(splitted, out argsUsed, missingOk);
             if (prim != null) return prim.CopyOf();
             return null;
         }
 
-        public ListAsSet<SimObject> GetPrimitiveFromList(string[] objects, ref int argsUsed, List<string> missingOK)
+        public ListAsSet<SimObject> GetPrimitiveFromList(string[] args, out int argsUsed, List<string> missingOK)
         {
             ListAsSet<SimObject> allTargets = new ListAsSet<SimObject>();
-            objects = (string[])objects.Clone();
-            while (objects.Length > 0)
+            args = (string[])args.Clone();
+            int argsUsedTotal = 0;
+            while (args.Length > 0)
             {
                 int argsUsed0;
-                List<SimObject> PS = GetSingleArg(objects, out argsUsed0);
+                List<SimObject> PS = GetSingleArg(args, out argsUsed0);
                 if (argsUsed0 == 0)
                 {
-                    missingOK.Add(objects[0]);
+                    missingOK.Add(args[0]);
                     argsUsed0 = 1;
                 }
                 if (argsUsed0 == 0)
                 {
-                    throw new ParserFilterFormatException("Cant GetSingleArg: ", objects, 0);
+                    throw new ParserFilterFormatException("Cant GetSingleArg: ", args, 0);
                 }
-                argsUsed += argsUsed0;
+                argsUsedTotal += argsUsed0;
                 if (PS != null) allTargets.AddRange(PS);
-                objects = Parser.SplitOff(objects, argsUsed0);
+                args = Parser.SplitOff(args, argsUsed0);
             }
+            argsUsed = argsUsedTotal;
             if (allTargets.Count == 0) return null;
             return allTargets;
         }
@@ -505,7 +506,7 @@ namespace Cogbot
             var splitted = Parser.ParseArguments(name);
             int argsUsed = 0;
             List<string> missingOk = new List<string>();
-            var prim = GetPrimitiveFromList(splitted, ref argsUsed, missingOk);
+            var prim = GetPrimitiveFromList(splitted, out argsUsed, missingOk);
             if (prim != null || missingOk.Count == 0)
             {
                 if (argsUsed > 0)

@@ -30,9 +30,9 @@ namespace Cogbot.Actions.Objects
                 return Success("Done.");
             }
 
-            int argsUsed = 0;
+            int argsUsed;
             List<string> missingList = new List<string>();
-            var PS = WorldSystem.GetPrimitiveFromList(args, ref argsUsed, missingList);
+            var PS = WorldSystem.GetPrimitiveFromList(args, out argsUsed, missingList);
             if (IsEmpty(PS)) return Failure("Cannot find objects from " + missingList);
             foreach (var target in PS)
             {
