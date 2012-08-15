@@ -128,6 +128,15 @@ The args can also be passed as a list, so
 botClientCmd(waitpos([30, tree, 1])).
 }}}
 
+= AIML =
+
+You can directly call prolog from AIML via the system tag.
+
+{{{
+<system lang="swi">some_pred(X)</system>
+}}}
+
+DOUGLAS TODO - need explanation of how to load init file
 
 = [SwiCLI] =
 
