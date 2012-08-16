@@ -102,7 +102,7 @@ namespace ABCLScriptEngine
     }
 
 
-    public class ABCLInterpreter : LispInterpreter, ScriptInterpreter
+    public class ABCLInterpreter : LispInterpreter, ScriptInterpreter, ScriptInterpreterFactory
     {
 
         public object Impl
@@ -271,7 +271,7 @@ namespace ABCLScriptEngine
 
         public override bool LoadsFileType(string filename)
         {
-            return filename.EndsWith("lisp") || base.LoadsFileType0(filename);
+            return filename.EndsWith("lisp") || base.LoadsFileType(filename);
         }
 
         public override object Read(string p, TextReader stringCodeReader, OutputDelegate WriteLine)

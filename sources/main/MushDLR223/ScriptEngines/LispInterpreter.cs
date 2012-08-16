@@ -25,7 +25,7 @@ namespace MushDLR223.ScriptEngines
             }
         }
 
-        public override bool LoadsFileType(string filename)
+        public override ScriptInterpreter GetLoaderOfFiletype(string filename)
         {
             filename = filename.ToLower();
             bool b = GetType().Name.ToLower().StartsWith(filename);
@@ -33,7 +33,7 @@ namespace MushDLR223.ScriptEngines
             {
                 ScriptManager.WriteLine("LispInterpreter LoadsFileType " + GetType() + " => " + filename);
             }
-            return b;
+            return b ? this : null;
         }
 
         /// <summary>

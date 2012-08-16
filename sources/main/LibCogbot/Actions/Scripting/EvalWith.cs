@@ -8,7 +8,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Scripting
 {
-    class EvalWith : Command, SystemApplicationCommand
+    class EvalWith : Command, BotSystemCommand
     {
         public EvalWith(BotClient Client)
             : base(Client)

@@ -192,7 +192,7 @@ require_chat_hook :-
 	gridclient_ref(Obj),
 	cli_get(Obj , 'Self' , S),
         asserta(chat_hook_installed),
-	cli_add_event_handler(S , 'ChatFromSimulator' , onChatTSHook(_,_,_)).
+	cli_add_event_handler(S , 'ChatFromSimulator' , testsupport:onChatTSHook(_,_,_)).
 
 % string_subst(?S , ?T , ?R , ?NS)
 % Substitute all occurances of T with R in S, producing NS
@@ -215,7 +215,7 @@ list_string_subst(S , _ , _ , S).
 
 botapi(A) :- notrace(ignore(catch(botcmd(A),_,fail))).
 
-%%user:onChatTSHook(X,Y,Z):-testsupport:onChatTSHook(X,Y,Z).
+user:onChatTSHook(X,Y,Z):-testsupport:onChatTSHook(X,Y,Z).
 
 %
 % results(+Name , -R)

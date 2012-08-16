@@ -398,6 +398,10 @@ namespace MushDLR223.ScriptEngines
         static object ScanAppDomainLock = new object();
         private static bool ScanAppDomainInProgress = false;
         private static Thread ScanAppDomainThread;
+
+        private static Dictionary<string, ScriptInterpreterFactory> TypeToInterpFactory =
+            new Dictionary<string, ScriptInterpreterFactory>();
+
         public static void StartScanningAppDomain()
         {
             lock (ScanAppDomainLock)
@@ -450,42 +454,88 @@ namespace MushDLR223.ScriptEngines
             var Interpreters = ScriptManager.Interpreters;
             lock (Interpreters)
             {
-                if (Interpreters.Count == 0)
-                {
-                    var ret = UsedCSharpScriptDefinedType(self, type);
-                    if (ret != null) return ret;
-                    ScanPredfinedAssemblies();
-                    InstanceNewInterpTypes(self);
-                }
+                var ret = UsedCSharpScriptDefinedType(self, type);
+                if (ret != null) return ret;
                 ScriptInterpreter typed = null;
-                foreach (var set in Interpreters)
+                foreach (ScriptInterpreter set in Interpreters)
                 {
-                    if (set.LoadsFileType(type, self))
+                    if (set.LoadsFileType(type))
                     {
                         typed = set;
-#if COGBOT
-                        if (set is BotScriptInterpreter)
-                        {
-                            if (self is BotClient)
-                            {
-                                ((BotScriptInterpreter)set).BotClient = self as BotClient;
-                            }
-                        }
-#endif
-                        if (typed.Self == self) return set;
+                        if (self != null) if (typed.IsSelf(self)) return set;
                     }
                 }
                 if (typed != null)
                 {
                     return typed.newInterpreter(self);
                 }
-
-                return UsedCSharpScriptDefinedType(self, type);
+                ScanPredfinedAssemblies();
+                InstanceNewInterpTypes(self);
+                return FindOrCreate(type, self, parent);
                 //default
                 var dl = new DotLispInterpreter();
                 dl.Self = self;
                 return dl;
             } // method: LoadScriptInterpreter
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="lang"></param>
+        /// <param name="source"></param>
+        /// <param name="extendEnv"></param>
+        /// <param name="scopeOrCurrentResolver"></param>
+        /// <param name="reusableIdentityOrSelf"></param>
+        /// <param name="parentCtx"></param>
+        /// <returns></returns>
+        public static object EvalFromReader(string lang, TextReader source, bool extendEnv,
+            ICollectionProvider scopeOrCurrentResolver, object reusableIdentityOrSelf, ScriptInterpreter parentCtx)
+        {
+            if (parentCtx == null)
+            {
+                parentCtx = FindOrCreate(lang, reusableIdentityOrSelf, null);
+            }
+            var si = parentCtx.newInterpreter(reusableIdentityOrSelf);
+            if (extendEnv) si = si.newInterpreter(scopeOrCurrentResolver);
+            return si.Eval(source);
+        }
+
+
+        public static ScriptInterpreter FindOrCreate(string type, object self, ScriptInterpreter parent)
+        {
+            ScriptInterpreterFactory maker;
+            if (parent == null)
+            {
+                maker = GetInterpreterFactory(type);
+            }
+            else
+            {
+                maker = parent.GetLoaderOfFiletype(type) ?? GetInterpreterFactory(type);
+            }
+            if (maker == null) return null;
+            ScriptInterpreter si = maker.GetLoaderOfFiletype(type);
+            if (si == null) return null;
+            return si.newInterpreter(self);
+        }
+
+        public static ScriptInterpreterFactory GetInterpreterFactory(string type)
+        {
+            lock (TypeToInterpFactory)
+            {
+                ScriptInterpreterFactory function;
+                if (TypeToInterpFactory.TryGetValue(type, out function)) return function;
+                lock (Interpreters)
+                {
+                    foreach (ScriptInterpreterFactory interpreter in Interpreters)
+                    {
+                        var nonnull = interpreter.GetLoaderOfFiletype(type);
+                        if (nonnull != null) return nonnull;
+                    }
+                    ScanPredfinedAssemblies();
+                    StartScanningAppDomain();
+                    return null;// return new ScriptManager();
+                }
+            }
         }
 
         private static ScriptInterpreter UsedCSharpScriptDefinedType(object self, string type)

@@ -194,8 +194,7 @@ namespace MushDLR223.ScriptEngines
         public static string Rejoin(string[] args, int p)
         {
             if (p >= args.Length) return string.Empty;
-            if (p == args.Length) return args[p];
-            string newstring = args[p];
+            string newstring = EscapeIfNeeded(args[p]);
             for (int i = p + 1; i < args.Length; i++)
             {
                 newstring += " ";
@@ -207,19 +206,19 @@ namespace MushDLR223.ScriptEngines
         public static string EscapeIfNeeded(string s)
         {
             if (s.Length == 0) return "\"\"";
-            bool needsQuotes = s.Contains(" ");
+            bool needsDoubleQuotes = s.Contains(" ");
             bool needsSQuotes = s.Contains("\"");
             if (needsSQuotes)
             {
                 return "'" + s + "'";
             }
-            if (needsQuotes) return "\"" + s + "\"";
+            if (needsDoubleQuotes) return "\"" + s + "\"";
             return s;
         }
 
-        static string[] preps = { "of", "to", "in", "for", "with", "as", "by", "at", "from", "on", "is" };
+        readonly string[] preps = { "of", "to", "in", "for", "with", "as", "by", "at", "from", "on", "is" };
 
-        public readonly Dictionary<string, object>/*NameValueCollection*/ prepPhrases;
+        public readonly Dictionary<string, object> prepPhrases;
         public string objectPhrase;
         public string str;
         public string[] tokens;
@@ -258,7 +257,7 @@ namespace MushDLR223.ScriptEngines
         }
 
         public Parser(string[] Args)
-            : this(Args, string.Join(" ", Args ?? new string[0]))
+            : this(Args, Rejoin(Args ?? new string[0],0))
         {
         }
         public Parser(string Args)
@@ -283,10 +282,6 @@ namespace MushDLR223.ScriptEngines
             str = _str;
             tokens = tokes;
             prepPhrases = new Dictionary<string, object>();// new NameValueCollection();
-            foreach (string prep in preps)
-            {
-                EnsurePrepKey(prep);
-            }
             objectPhrase = "";
 
             string currentPrep = "";
@@ -418,133 +413,6 @@ namespace MushDLR223.ScriptEngines
         public static string[] Parse(string command)
         {
             return Parser.ParseArguments(command);
-        }
-        private int CountNever
-        {
-            get
-            {
-                return prepPhrases.Count;
-            }
-        }
-#if false
-        // Variables
-        // private readonly Dictionary<String,String> Parameters = new Dictionary<string, string>();
-        private string[] tokens;
-        private string[] Keys;
-        private string[] Values;
-        private bool[] Flags;
-        private int[] OriginalPart;
-        
-        // Constructor
-        public Parser(string[] Args)
-        {
-            new Parser(string.Join(" ", Args));
-            Keys = new string[Args.Length];
-            Values = new string[Args.Length];
-            Flags = new bool[Args.Length];
-            tokens = Args;
-            //Parameters = new StringDictionary();
-            Regex Splitter = new Regex(@"^-{1,2}|=",
-                RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-            Regex Remover = new Regex(@"^['""]?(.*?)['""]?$",
-                RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-            string Parameter = null;
-            string[] Parts;
-
-            // Valid parameters forms:
-            // {-,/,--}param{ ,=,:}((",')value(",'))
-            // Examples: 
-            // -param1 value1 --param2
-            //   /param4=happy -param5 '--=nice=--'
-            foreach (string Txt in Args)
-            {
-                // Look for new parameters (-,/ or --) and a
-                // possible enclosed value (=,:)
-                Parts = Splitter.Split(Txt, 3);
-
-                switch (Parts.Length)
-                {
-                    // Found a value (for the last parameter 
-                    // found (space separator))
-                    case 1:
-                        if (Parameter != null)
-                        {
-                            if (!ContainsKey(Parameter))
-                            {
-                                Parts[0] =
-                                    Remover.Replace(Parts[0], "$1");
-
-                                Add(Parameter, Parts[0]);
-                            }
-                            Parameter = null;
-                        }
-                        // else Error: no parameter waiting for a value (skipped)
-                        break;
-
-                    // Found just a parameter
-                    case 2:
-                        // The last parameter is still waiting. 
-                        // With no value, set it to true.
-                        if (Parameter != null)
-                        {
-                            if (!ContainsKey(Parameter))
-                                AddTrue(Parameter);
-                        }
-                        Parameter = Parts[1];
-                        break;
-
-                    // Parameter with enclosed value
-                    case 3:
-                        // The last parameter is still waiting. 
-                        // With no value, set it to true.
-                        if (Parameter != null)
-                        {
-                            if (!ContainsKey(Parameter))
-                                AddTrue(Parameter);
-                        }
-
-                        Parameter = Parts[1];
-
-                        // Remove possible enclosing characters (",')
-                        if (!ContainsKey(Parameter))
-                        {
-                            Parts[2] = Remover.Replace(Parts[2], "$1");
-                            Add(Parameter, Parts[2]);
-                        }
-
-                        Parameter = null;
-                        break;
-                }
-            }
-            // In case a parameter is still waiting
-            if (Parameter != null)
-            {
-                if (!ContainsKey(Parameter))
-                    AddTrue(Parameter);
-            }
-            checkKVs();
-        }
-#endif
-        private void checkKVs()
-        {
-            return;
-            string[] s = GetAfterIndex(0);
-            OutputDelegate d = DLRConsole.DebugWriteLine;
-            foreach (var a in s)
-            {
-                d(a);
-            }
-            foreach (var a in tokens)
-            {
-                d(a);
-            }
-            DLRConsole.SystemFlush();
-            if (s.Length == tokens.Length)
-            {
-
-            }
         }
 
         private bool ContainsKey(string k)

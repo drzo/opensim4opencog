@@ -17,7 +17,7 @@ namespace MushDLR223.ScriptEngines
         /// 
         /// </summary>
         /// <returns></returns>
-        public override DotLispInterpreterBase MakeInterp(object self)
+        protected override DotLispInterpreterBase MakeInterp(object self)
         {
             var v = new DotLispInterpreter();
             v._dotLispInterpreter = new Interpreter(_dotLispInterpreter);
@@ -48,7 +48,7 @@ namespace MushDLR223.ScriptEngines
 
         public override bool LoadsFileType(string filename)
         {
-            return filename.EndsWith("lisp") || base.LoadsFileType0(filename);
+            return filename.EndsWith("lisp") || base.LoadsFileType(filename);
         }
 
         public override bool IsSubscriberOf(string eventName)
@@ -187,7 +187,7 @@ namespace MushDLR223.ScriptEngines
         /// </summary>
         /// <returns></returns>
         /// 
-        public abstract DotLispInterpreterBase MakeInterp(object selt);
+        protected abstract DotLispInterpreterBase MakeInterp(object selt);
 
         public override ScriptInterpreter newInterpreter(object self)
         {

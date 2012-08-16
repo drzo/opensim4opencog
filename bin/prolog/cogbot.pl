@@ -8,6 +8,9 @@
 % Revised At:   $Date: 2002/07/11 21:57:28 $
 % ===================================================================
 
+:-ensure_loaded(library(swicli)).
+
+end_of_file.
 
 :-dynamic(cogbot_pl_dir/1).
 :-dynamic(cogbot_temp_dir/1).

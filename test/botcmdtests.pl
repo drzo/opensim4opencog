@@ -46,10 +46,10 @@ assertIfNewRC(Gaf):-asserta(Gaf).
 :- assertIfNewRC(user:file_search_path(library, './prolog')).
 
 
-:- use_module(test(testsupport)).
-:-use_module(library(swicli)).
-:-use_module(library('simulator/cogrobot')).
-:- use_module(test(botcmdtestlist)).
+:- ensure_loaded(test(testsupport)).
+:-ensure_loaded(library(swicli)).
+:-ensure_loaded(library('simulator/cogrobot')).
+:- ensure_loaded(test(botcmdtestlist)).
 
 :-dynamic
 	botID/2,
@@ -121,8 +121,8 @@ pw('hillpeople').
 
 :-dynamic(tribe/1).
 
-tribe('Hillperson').
-%tribe('Dougstribe').
+%tribe('Hillperson').
+tribe('Dougstribe').
 
 set_tribe(Value):-retractall(tribe(_)),assert(tribe(Value)).
 

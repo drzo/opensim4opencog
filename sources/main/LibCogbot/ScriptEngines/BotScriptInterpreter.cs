@@ -13,10 +13,15 @@ namespace Cogbot.ScriptEngines
     {
         public  BotClient BotClient;
 
+        public override ScriptInterpreter GetLoaderOfFiletype(string filenameorext)
+        {
+            return LoadsFileType(filenameorext) ? this : null;
+        }
+
         public override bool LoadsFileType(string filename)
         {
             return filename.EndsWith("bot") || filename.EndsWith("txt") || filename.EndsWith("note") ||
-                   base.LoadsFileType0(filename);
+                   base.LoadsFileType(filename);
         }
 
         public override void InternType(Type t)
