@@ -158,7 +158,7 @@ namespace RTParser
             }
         }
 
-        static private void AddTagHandler(Type type)
+        static public void AddTagHandler(Type type)
         {
             Assembly tagDLL = type.Assembly;
             // store Assembly

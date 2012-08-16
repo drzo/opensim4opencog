@@ -125,7 +125,7 @@ namespace CycWorldModule.DotCYC
         /// 
         /// </summary>
         /// <returns></returns>
-        public override DotLispInterpreterBase MakeInterp(object self)
+        protected override DotLispInterpreterBase MakeInterp(object self)
         {
             var v = new CycInterpreter();
             v.Intern("*SELF*", self);

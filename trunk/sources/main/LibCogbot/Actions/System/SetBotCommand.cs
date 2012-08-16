@@ -15,7 +15,7 @@ namespace Cogbot.Actions.System
                 Name = "setbot";
                 Description = "Sets the current bot for subsequent botcmd REPL commands.";
                 Details =
-                    AddUsage("setbot <name>", "Sets the bot by user name") +
+                    AddUsage("setbot <none|<name>>", "Sets the bot by user name") +
                     Example(@"
 ... log on two bots, Ima Bot and Another Bot
 /setbot Ima Bot
@@ -32,9 +32,10 @@ namespace Cogbot.Actions.System
             public override CmdResult ExecuteRequest(CmdRequest args)
             {
                 string botname = String.Join(" ",args).Trim();
-                ClientManager.SetOnlyOneCurrentREPLBotClient(botname);
+                object key = args.Output;
+                ClientManager.SetOnlyOneCurrentREPLBotClient(key, botname);
                 // This is a dummy command. Calls to it should be intercepted and handled specially
-                return Success("SetOnlyOneCurrentBotClient=" + TheBotClient.ClientManager.OnlyOneCurrentBotClient);
+                return Success("SetOnlyOneCurrentBotClient=" + TheBotClient.ClientManager.GetCurrentBotClient(key));
             }
         }
     

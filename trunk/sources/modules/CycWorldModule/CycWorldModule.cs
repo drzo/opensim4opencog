@@ -41,7 +41,8 @@ namespace CycWorldModule
                 {
                     CycModule = this;
                     startIt = true;
-                } else
+                }
+                else
                 {
                     DLRConsole.DebugWriteLine("\n\n\nStaring more than one CycModule?!");
                 }

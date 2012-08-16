@@ -13,7 +13,7 @@ namespace Cogbot.Actions.Scripting
             : base(Client)
         {
             Name = "evalsys";
-            Description = "Enqueue a lisp task. Usage: EvalSys <lisp expression>";
+            Description = "Enqueue a lisp task in ClientMananger. Usage: EvalSys <lisp expression>";
         }
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {

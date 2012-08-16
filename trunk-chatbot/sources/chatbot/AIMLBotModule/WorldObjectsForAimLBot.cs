@@ -277,9 +277,6 @@ namespace AIMLBotModule
                 MyBot.outputDelegate = WriteLine;
                 MyBot.isAcceptingUserInput = false;
                 MyBot.useServitor = UseServitorEngine;
-
-                MyBot.AddExcuteHandler("bot", BotExecHandler);
-                MyBot.AddExcuteHandler("lisp", (SystemExecHandler)LispExecHandler);
                 MyBot.loadGlobalBotSettings();
                 //MyBot.GlobalSettings.addSetting("name", client.BotLoginParams.FirstName+ " " + client.BotLoginParams.LastName);
                 MyBot.loadAIMLFromDefaults();

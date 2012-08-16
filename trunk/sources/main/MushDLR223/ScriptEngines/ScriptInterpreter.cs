@@ -5,11 +5,16 @@ namespace MushDLR223.ScriptEngines
 {
     public delegate void OutputDelegate(string s, params object[] args);
 
-    public interface ScriptInterpreter : IDisposable
+    public interface ScriptInterpreterFactory
+    {
+        ScriptInterpreter GetLoaderOfFiletype(string type);
+    }
+
+    public interface ScriptInterpreter : ScriptInterpreterFactory, IDisposable
     {        
         bool LoadFile(string filename, OutputDelegate WriteLine);
 
-        bool LoadsFileType(string filenameorext, object self);
+        bool LoadsFileType(string filenameorext);
 
         object Read(string context_name, System.IO.TextReader stringCodeReader, OutputDelegate WriteLine);
 
@@ -35,6 +40,9 @@ namespace MushDLR223.ScriptEngines
 
         object Self { get; set; }
         object Impl { get; }
+
+        bool IsSelf(object self);
+        void Init(object self);
     }
 
     public class subtask

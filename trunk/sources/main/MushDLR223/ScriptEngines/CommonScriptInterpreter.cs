@@ -11,8 +11,26 @@ namespace MushDLR223.ScriptEngines
     {
     }
 
-    abstract public class CommonScriptInterpreter
+    abstract public class CommonScriptInterpreter : ScriptInterpreterFactory, ScriptInterpreter
     {
+
+        public readonly Dictionary<object, ScriptInterpreter> interpsForObjects =
+            new Dictionary<object, ScriptInterpreter>();
+
+        public ScriptInterpreter FindOrCreate(object key, ScriptInterpreter parent)
+        {
+            if (parent != null) return parent.newInterpreter(key);
+            lock (interpsForObjects)
+            {
+                ScriptInterpreter mini;
+                if (!interpsForObjects.TryGetValue(key, out mini))
+                {
+                    mini = newInterpreter(key);
+                    interpsForObjects[key] = mini;
+                }
+                return mini;
+            }
+        }
 
         public void WriteText(string format, params object[] args)
         {
@@ -40,57 +58,54 @@ namespace MushDLR223.ScriptEngines
             // }
         }
 
-        public virtual object Self
-        {
-            get { return GetSymbol("this") ?? OriginalSelf; }
-            set { Intern("this", value); }
-        }
 
-        
         public object OriginalSelf;
 
-        protected CommonScriptInterpreter()
+        public virtual object Self
         {
-        }
-
-        private void InitSelf(object self)
-        {
-            try
+            get { return OriginalSelf ?? GetSymbol("self") ?? OriginalSelf; }
+            set
             {
-                OriginalSelf = self;
-                ScriptManager.AddInterpreter(this as ScriptInterpreter);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("SetSelf=" + e);
-                Console.ReadLine();
+                OriginalSelf = value;
+                Intern("self", value);
             }
         }
 
         public abstract void Init(object self);
 
-        public object ConvertArgToLisp(object code)
+        public virtual object ConvertArgToLisp(object code)
         {
             return code;//ScriptManager.argString(code);
         }
 
-        public object ConvertArgFromLisp(object code)
+        public virtual object ConvertArgFromLisp(object code)
         {
             return code;
         }
 
         #region ScriptInterpreter Members
 
-        public abstract bool LoadFile(string filename, OutputDelegate WriteLine);
-
-        public bool LoadsFileType(string filenameorext, object self)
+        /// <summary>
+        /// 
+        /// 
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public virtual bool LoadFile(string filename, OutputDelegate WriteLine)
         {
-            return LoadsFileType(filenameorext);
+            if (!File.Exists(filename)) return false;
+            System.IO.FileStream f = System.IO.File.OpenRead(filename);
+            StreamReader r = new StreamReader(f);
+            r.BaseStream.Seek(0, SeekOrigin.Begin);
+            return Read(filename, new StringReader(r.ReadToEnd()), WriteLine) != null;
         }
 
-        public abstract bool LoadsFileType(string filenameorext);
+        public virtual ScriptInterpreter GetLoaderOfFiletype(string filenameorext)
+        {
+            return LoadsFileType(filenameorext) ? this : null;
+        }
 
-        public virtual bool LoadsFileType0(string filename)
+        public virtual bool LoadsFileType(string filename)
         {
             filename = filename.ToLower();
             string myname = GetType().Name.ToLower();
@@ -98,7 +113,7 @@ namespace MushDLR223.ScriptEngines
             bool b = myname.StartsWith(filename);
             if (b)
             {
-                ScriptManager.WriteLine("LoadsFileType0 " + GetType() + " => " + filename);                
+                ScriptManager.WriteLine("LoadsFileType " + GetType() + " => " + filename);
             }
             return b;
         }
@@ -110,28 +125,62 @@ namespace MushDLR223.ScriptEngines
             if (lispCode is String)
             {
                 stringCodeReader = new StringReader(lispCode.ToString());
-            } else if (lispCode is TextReader)
+            }
+            else if (lispCode is TextReader)
             {
                 stringCodeReader = lispCode as TextReader;
-            } else
+            }
+            else
             {
                 stringCodeReader = null;
             }
 
-            if (stringCodeReader!=null) lispCode = Read("" + this, stringCodeReader, output);
+            if (stringCodeReader != null) lispCode = Read("" + this, stringCodeReader, output);
             output("Eval> " + lispCode);
             if (Eof(lispCode))
                 return lispCode.ToString();
             return Eval(lispCode);
         }
 
-        public abstract object Read(string context_name, System.IO.TextReader stringCodeReader, OutputDelegate WriteLine);
-        public abstract bool Eof(object codeTree);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="context_name"></param>
+        /// <param name="stringCodeReader"></param>
+        /// <returns></returns>
+        public virtual object Read(string context_name, System.IO.TextReader stringCodeReader, OutputDelegate WriteLine)
+        {
+            object res = null;
+            int line = 0;
+            while (stringCodeReader.Peek() != -1)
+            {
+                line++;
+                res = Eval(stringCodeReader.ReadLine());
+            }
+            return res;
+        } // method: Read
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="codeTree"></param>
+        /// <returns></returns>
+        public virtual bool Eof(object codeTree)
+        {
+            if (codeTree == null) return true;
+            String str = codeTree.ToString().Trim();
+            return String.IsNullOrEmpty(str);
+        } // method: Eof
+
         public abstract void Intern(string varname, object value);
         public abstract object Eval(object code);
         public abstract string Str(object code);
         public abstract ScriptInterpreter newInterpreter(object self);
-        public abstract bool IsSubscriberOf(string eventName);
+        public virtual bool IsSubscriberOf(string eventName)
+        {
+            return GetSymbol(eventName) != null;
+        }
         public abstract object GetSymbol(string eventName);
         public abstract void InternType(Type t);
 
@@ -153,6 +202,17 @@ namespace MushDLR223.ScriptEngines
             return defaultValue;
         }
 
+
+        #region ScriptInterpreter Members
+
+        virtual public object Impl { get { return this; } }
+        public virtual bool IsSelf(object self)
+        {
+            if (self==null) return OriginalSelf == null;
+            return OriginalSelf == self;
+        }
+
+        #endregion
     }
 
 }

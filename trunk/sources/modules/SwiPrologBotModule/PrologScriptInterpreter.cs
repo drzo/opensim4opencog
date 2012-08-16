@@ -217,7 +217,7 @@ namespace PrologScriptEngine
 
         #endregion
     }
-    public class PrologScriptInterpreter : CommonScriptInterpreter, ScriptInterpreter
+    public class PrologScriptInterpreter : CommonScriptInterpreter, ScriptInterpreter, ScriptInterpreterFactory
     {
         public static bool AutoInternMethods = false;
         static public void Main(string[] args)
@@ -232,10 +232,15 @@ namespace PrologScriptEngine
         ///</summary>
         public PrologCLR prologClient;
 
+        public override ScriptInterpreter GetLoaderOfFiletype(string filenameorext)
+        {
+            return LoadsFileType(filenameorext) ? this : null;
+        }
+
         public override bool LoadsFileType(string filename)
         {
             return filename.EndsWith("pl") || filename.EndsWith("swi") || filename.EndsWith("prolog") ||
-                   base.LoadsFileType0(filename);
+                   base.LoadsFileType(filename);
         }
         static HashSet<Type> _types = new HashSet<Type>();
         private static int _reachAllTypes = 1;
@@ -249,7 +254,7 @@ namespace PrologScriptEngine
             InternTypeS(type, _reachAllTypes);
         }
 
-        public object Impl
+        override public object Impl
         {
             get { return this; }
         }

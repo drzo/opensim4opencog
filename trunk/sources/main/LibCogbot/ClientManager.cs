@@ -155,17 +155,21 @@ namespace Cogbot
             set { _si = value; }
         }
 
-        public BotClient OnlyOneCurrentBotClient
+        public BotClient GetCurrentBotClient(object key)
         {
-            get
+            if (key == null) key = CurrentOutput;
+            var bcs = BotClients;
+            if (bcs.Count == 1) foreach (var bc in bcs) return bc;
+            lock (Set_OnlyOneCurrentBotClient)
             {
-                //if (Set_OnlyOneCurrentBotClient != null) return Set_OnlyOneCurrentBotClient;
-                var bcs = BotClients;
-                if (bcs.Count == 1) foreach (var bc in bcs) return bc;
-                return Set_OnlyOneCurrentBotClient;
+                if (Set_OnlyOneCurrentBotClient.Count == 0) return null;
+                BotClient one;
+                Set_OnlyOneCurrentBotClient.TryGetValue(key, out one);
+                return one;
             }
         }
-        public BotClient Set_OnlyOneCurrentBotClient;
+
+        public Dictionary<object, BotClient> Set_OnlyOneCurrentBotClient = new Dictionary<object, BotClient>();
 
         public List<Type> registrationTypes;
         public List<Type> registeredSystemApplicationCommandTypes = new List<Type>();
@@ -245,17 +249,19 @@ namespace Cogbot
         }
 
 
-        public void SetOnlyOneCurrentREPLBotClient(string currentBotClient)
+        public void SetOnlyOneCurrentREPLBotClient(object consoleKey, string currentBotClient)
         {
+            if (consoleKey == null) consoleKey = CurrentOutput;
+            if (currentBotClient == "none") currentBotClient = null;
             if (string.IsNullOrEmpty(currentBotClient))
             {
-                Set_OnlyOneCurrentBotClient = null;
+                Set_OnlyOneCurrentBotClient[consoleKey] = null;
                 return;
             }
             BotClient oBotClient = GetBotByName(currentBotClient);
             if (oBotClient == null)
-                WriteLine("SetOnlyOneCurrentBotClient to unkown bot: " + currentBotClient);
-            else Set_OnlyOneCurrentBotClient = oBotClient;
+                WriteLine("SetOnlyOneCurrentBotClient to non-bot: " + currentBotClient);
+            else Set_OnlyOneCurrentBotClient[consoleKey] = LastRefBotClient = oBotClient;
 
         }
 
@@ -335,20 +341,7 @@ namespace Cogbot
             }
             if (string.IsNullOrEmpty(text)) return null;
 
-#if false
-            bool lastBotExec = false;
-            lock (BotByName)
-            {
-                if (BotByName.Count == 0 && LastBotClient != null)
-                {
-                    lastBotExec = true;
-                }
-            }
-            if (lastBotExec)
-            {
-                return LastBotClient.ExecuteBotCommand(text, WriteLine);
-            }
-#endif            
+            var OnlyOneCurrentBotClient = GetCurrentBotClient(WriteLine);
             if (OnlyOneCurrentBotClient != null)
             {
                 return OnlyOneCurrentBotClient.ExecuteBotCommand(text, session, WriteLine);
@@ -664,8 +657,12 @@ namespace Cogbot
         {
             get
             {
-                if (OnlyOneCurrentBotClient != null) return OnlyOneCurrentBotClient;
                 if (LastRefBotClient != null) return LastRefBotClient;
+                var bcs = BotClients;
+                foreach(var bc in bcs)
+                {
+                    return bc;
+                }
                 return null;
             }
         }
@@ -706,6 +703,7 @@ namespace Cogbot
                 BotClient bc = GetBotByName(fullName);
                 if (bc != null)
                 {
+                    LastRefBotClient = bc;
                     WriteLine(";; Reusing {0}", fullName);
                     lock (BotByName) BotByName[bc.NameKey()] = bc;
                     if (!string.IsNullOrEmpty(passwd))
@@ -1087,7 +1085,6 @@ namespace Cogbot
                     client = new BotClient(this, gc);
                     client.SetLoginAcct(account);
                     lock (BotByName) BotByName[account.BotLName] = client;
-                    LastRefBotClient = client;
                     if (BotClientCreated != null) BotClientCreated(client);
                 }
                 account.Client = client;
@@ -1188,7 +1185,7 @@ namespace Cogbot
         {
             //   WriteLine("Type quit to exit.  Type help for a command list.");
             StartUpLisp();
-
+            CurrentOutput = WriteLine;
             while (Running)
             {
                 if (!ClientManagerConfig.CogbotREPL || ClientManagerConfig.REPLPaused)
@@ -1198,11 +1195,11 @@ namespace Cogbot
                 }
                 string input = ConsoleApp.consoleBase.CmdPrompt(GetPrompt);
                 if (string.IsNullOrEmpty(input)) continue;
-                CmdResult executeCommand = ExecuteCommand(input, null, WriteLine);
+                CmdResult executeCommand = ExecuteCommand(input, null, CurrentOutput);
                 FlushWriter(System.Console.Out);
                 FlushWriter(System.Console.Error);
                 if (executeCommand == null) continue;
-                WriteLine(executeCommand.ToString());
+                CurrentOutput(executeCommand.ToString());
             }
             Dispose();
         }
@@ -1405,7 +1402,7 @@ namespace Cogbot
             }
         }
 
-
+        public OutputDelegate CurrentOutput = null;
         private string GetPrompt()
         {
             int online = 0;
@@ -1419,7 +1416,8 @@ namespace Cogbot
                 else offline++;
                 botClients++;
             }
-            BotClient one = OnlyOneCurrentBotClient;
+
+            BotClient one = GetCurrentBotClient(CurrentOutput);
             if (botClients == 1 && one == null) one = firstWorking;
 
             if (botClients == 1 && one != null)
@@ -1872,7 +1870,6 @@ namespace Cogbot
                 if (KnownBotClients.Count==0)
                 {
                     bc = new BotClient(this, client);
-                    LastRefBotClient = bc;
                     if (BotClientCreated != null) BotClientCreated(bc);
                     return bc;
                 }

@@ -970,39 +970,6 @@ namespace RTParser
             CycAccess v = TheCyc.GetCycAccess;
 
 
-            clojureInterpreter = new ClojureInterpreter(this);
-            clojureInterpreter.Init(this);
-            clojureInterpreter.Intern("MyBot", this);
-            clojureInterpreter.Intern("Users", BotUsers);
-            AddExcuteHandler("cloj", ClojExecHandler);
-#if USE_SWIPROLOG
-            try
-            {
-                if (!IsMonoRuntime)
-                {
-                    swiInterpreter = new PrologScriptInterpreter(this);
-                        //ScriptManager.LoadScriptInterpreter("PrologScriptInterpreter", this);
-                    swiInterpreter.Init(this);
-                    AddExcuteHandler("swi", SWIExecHandler);
-                    //swiInterpreter.Intern("MyBot", this);
-                    //swiInterpreter.Intern("Users", BotUsers);
-                }
-            }
-            catch (Exception e)
-            {
-              //  writeToLog(e);
-            }
-#endif
-#if !(NOT_FAKE_LISTENERS)
-
-            if (!clojureInterpreter.IsSubscriberOf("thisClient"))
-            {
-                clojureInterpreter.Intern("thisClient", this);
-                clojureInterpreter.Intern("True", true);
-                clojureInterpreter.Intern("False", false);
-                listeners["AIMLBotModule"] = this;
-            }
-#endif
             setup();
             GlobalSettings.IsTraced = true;
         }
@@ -1727,130 +1694,6 @@ The AIMLbot program.
 
         #endregion
 
-        private object EvalAIMLHandler(string cmd, Request user)
-        {
-            XmlNode node = StaticAIMLUtils.getTemplateNode(cmd);
-            LineInfoElementImpl.unsetReadonly(node);
-            if (Loader == null)
-            {
-                Loader = new AIMLLoader(this, GetBotRequest("EvalAIMLHandler " + cmd));
-            }
-            var res = ImmediateAiml(node, user, Loader);
-            return res;
-        }
-
-
-        private object ClojExecHandler(string cmd, Request user)
-        {
-            ClojureInterpreter cloj = clojureInterpreter;
-            lock (cloj)
-            {
-                bool hasUser = cloj.IsSubscriberOf("MyUser");
-
-                if (hasUser)
-                {
-                    object o = cloj.GetSymbol("MyUser");
-                    object r = cloj.Eval(o);
-                    if (user.Requester != null && r != user.Requester)
-                    {
-                        cloj.Intern("MyUser", user.Requester);
-                    }
-                }
-                else
-                {
-                    if (user.Requester != null)
-                    {
-                        cloj.Intern("MyUser", user.Requester);
-                    }
-                }
-
-                StringReader stringCodeReader = new StringReader(cmd);
-                object lispCode = cloj.Read("ClojExecHandler", stringCodeReader, writeToLog);
-                if (cloj.Eof(lispCode))
-                    return "EOF on " + lispCode ?? "NULL";
-                return cloj.Eval(lispCode);
-            }
-        }        
-#if USE_SWIPROLOG
-        private object SWIExecHandler(string cmd, Request user)
-        {
-            ScriptInterpreter swi = swiInterpreter;
-            if (swi == null) return null;
-            lock (swi)
-            {
-                bool hasUser = swi.IsSubscriberOf("MyUser");
-
-                if (hasUser)
-                {
-                    object o = swi.GetSymbol("MyUser");
-                    object r = swi.Eval(o);
-                    if (user.Requester != null && r != user.Requester)
-                    {
-                        swi.Intern("MyUser", user.Requester);
-                    }
-                }
-                else
-                {
-                    if (user.Requester != null)
-                    {
-                        swi.Intern("MyUser", user.Requester);
-                    }
-                }
-
-                StringReader stringCodeReader = new StringReader(cmd);
-                object lispCode = swi.Read("SWIExecHandler", stringCodeReader, writeToLog);
-                if (swi.Eof(lispCode))
-                    return "EOF on " + lispCode ?? "NULL";
-                return swi.Eval(lispCode);
-            }
-        }
-#endif
-        internal Unifiable SystemExecute(Unifiable cmd, Unifiable langu, Request user)
-        {
-            if (IsNullOrEmpty(langu))
-            {
-                langu = GlobalSettings.grabSettingOrDefault("systemlang", "bot");
-            }
-            else
-            {
-                langu = ToLower(Trim(langu));
-            }
-            Unifiable s = "The system tag should be doing '" + cmd + "' lang=" + langu;
-            writeToLog(s.AsString());
-            SystemExecHandler handler;
-            if (SettingsDictionary.TryGetValue(ExecuteHandlers, langu, out handler))
-            {
-                try
-                {
-                    object o = handler(cmd, user);
-                    return Unifiable.Create(o);
-                }
-                catch (Exception e)
-                {
-                    writeToLog(e);
-                    return Unifiable.Empty;
-                }
-            }
-            else
-            {
-                try
-                {
-                    object self = user;
-                    ScriptInterpreter parent = null;
-                    ScriptInterpreter si = ScriptManager.LoadScriptInterpreter(langu, self, parent);
-                    object o = ScriptManager.EvalScriptInterpreter(cmd.ToValue(user.CurrentQuery), langu, self, parent, writeToLog);
-                    string siStr = si.Str(o);
-                    return Unifiable.Create(siStr);
-                }
-                catch (Exception e)
-                {
-                    writeToLog(e);
-                }
-            }
-            writeToLog(s);
-            return Unifiable.Empty;
-        }
-
 
         internal readonly Dictionary<string, SystemExecHandler> ExecuteHandlers =
             new Dictionary<string, SystemExecHandler>();
@@ -1858,7 +1701,7 @@ The AIMLbot program.
         public void AddExcuteHandler(string lang, SystemExecHandler handler)
         {
             lang = ToLower(Trim(lang));
-            ExecuteHandlers[lang] = handler;
+            lock (ExecuteHandlers) ExecuteHandlers[lang] = handler;
         }
 
 
@@ -2220,7 +2063,7 @@ The AIMLbot program.
             this.BotAsUser = thisBotAsUser;
             if (useServitor) { updateRTP2Sevitor(); }
 
-            clojureInterpreter.Intern("BotAsUser", thisBotAsUser);
+            ExternalIntern("BotAsUser", thisBotAsUser);
             thisBotAsUser.IsRoleAcct = true;
             SharedGlobalSettings = this.GlobalSettings;
             thisBotAsUser.Predicates = new SettingsDictionary(myName, this, () => SharedGlobalSettings);
@@ -2239,6 +2082,7 @@ The AIMLbot program.
             NamePath = ToScriptableName(NameAsSet);
             thisBotAsUser.UserID = NamePath;
             this.StartHttpServer();
+            SetupExecHandlers();
 
             //var OnTaskAtATimeHandler = HeardSelfSayQueue = thisBotAsUser.OnTaskAtATimeHandler;
             //OnTaskAtATimeHandler.Name = "TaskQueue For " + myName;
@@ -2431,10 +2275,6 @@ The AIMLbot program.
             return FindUser0(old) == FindUser0(next);
         }
 
-        private ClojureInterpreter clojureInterpreter;
-#if USE_SWIPROLOG
-        private PrologScriptInterpreter swiInterpreter;
-#endif
         private List<string> _RuntimeDirectories;
         public ICollectionRequester ObjectRequester;
 

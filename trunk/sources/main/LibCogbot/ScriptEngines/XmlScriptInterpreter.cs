@@ -21,7 +21,7 @@ namespace Cogbot.ScriptEngines
     {
         public BotClient BotClient;
 
-        public object Impl
+        override public object Impl
         {
             get { return this; }
         }
@@ -34,7 +34,7 @@ namespace Cogbot.ScriptEngines
         public override bool LoadsFileType(string filename)
         {
             return filename.EndsWith("xml") ||
-                   base.LoadsFileType0(filename);
+                   base.LoadsFileType(filename);
         }
 
         public override void InternType(Type t)

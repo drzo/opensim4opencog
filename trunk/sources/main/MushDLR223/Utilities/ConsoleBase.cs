@@ -945,9 +945,10 @@ namespace MushDLR223.Utilities
         static public void WriteNewLine(ConsoleColor senderColor, string sender, ConsoleColor color, string format, params object[] args)
         {
             if (NoConsoleVisible) return;
-            if (sender == "COMMAND")
+            if (AvoidPrefix(sender))
             {
                 var c = CurrentCaller;
+                format = sender + ": " + format;
             }
             lock (cmdline) lock (m_syncRoot)
                 {
@@ -1713,6 +1714,11 @@ namespace MushDLR223.Utilities
                     return format;
                 }
                 prefix = format.Substring(1, fi - 1);
+                if (AvoidPrefix(prefix))
+                {
+                    prefix = CurrentCaller;
+                    return format;
+                }
                 return format.Substring(prefix.Length + 2);
             }
             int fc = format.IndexOf(":");
@@ -1721,7 +1727,7 @@ namespace MushDLR223.Utilities
                 string canformat = format.TrimStart();
                 fc = canformat.IndexOf(":");
                 string canprefix = canformat.Substring(0, fc);
-                if (!canprefix.Contains("(") && !canprefix.Contains(" "))
+                if (!AvoidPrefix(canprefix))
                 {
                     prefix = canprefix;
                     return canformat.Substring(fc + 1);
@@ -1730,6 +1736,15 @@ namespace MushDLR223.Utilities
             prefix = CurrentCaller;
             return format;
 
+        }
+
+        private static bool AvoidPrefix(string canprefix)
+        {
+            if (canprefix.Length < 4) return true;
+            if (canprefix.Contains("(") || canprefix.Contains(" ")) return true;
+            canprefix = canprefix.ToUpper();
+            if (canprefix == "COMMAND" || canprefix == "THREADHELPER" || canprefix == "SUCCESS" || canprefix == "FAILURE") return true;
+            return false; 
         }
 
         public static void DebugWriteLine(object arg)
@@ -1791,7 +1806,7 @@ namespace MushDLR223.Utilities
                     }
                     SkipStackTracesBusy = false;
                     string cn = CallerName(s, useMethodName);
-                    if (cn=="COMMAND")
+                    if (AvoidPrefix(cn))
                     {
                         continue;
                     }

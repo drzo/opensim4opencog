@@ -51,46 +51,47 @@
      (setj INSTALLER_firstname (0 (.Split (System.Web.HttpUtility:UrlDecode INSTALLER_botname) (vector (0 " ")))))
      (setj INSTALLER_lastname (1(.Split (System.Web.HttpUtility:UrlDecode INSTALLER_botname) (vector (0 " ")))))
      (setj INSTALLER_url (System.Web.HttpUtility:UrlDecode INSTALLER_loginuri))
-     (create-botclient INSTALLER_firstname INSTALLER_lastname (System.Web.HttpUtility:UrlDecode INSTALLER_botpassword) INSTALLER_url "last")
+    ' (create-botclient INSTALLER_firstname INSTALLER_lastname (System.Web.HttpUtility:UrlDecode INSTALLER_botpassword) INSTALLER_url "last")
     ))
 
   </startupLisp>
   <startupClientLisp>
 
+      ;;; PHASE FOR  SETTINGS
+
     (setj installed_components '())
     (load "personalInstallConfig.lisp")
 
-    (setj UseAIMLBotModule False)
+    (setj UseAIMLBotModule  True) ;;(member "aiml" installed_components)
     (setj UseCycWorldModule False)
     (setj UseTheSimiansModule False)
     (setj UseIRCModule (member "irc" installed_components))
-    (setj UsePrologScripting False)
+    (setj UsePrologScripting True)
     (setj UseAutoLogin True)
     (setj UseGUI  False)
     (setj MasterName "Nephrael Rajesh")
 
     '(if UseGUI (thisClient.ExecuteCommand "showgui tray")) ;; minimize radegast to tray - not good on mono becasue the hwnd not created
 
+      ;;; PHASE FOR LOAD LISTENERS
     (thisClient.ExecuteCommand "debug Debug")
+
     (thisClient.ExecuteCommand "load CogbotRadegastPluginModule")
     (thisClient.ExecuteCommand "load RoboKindAvroQPIDPluginModule")
-    (thisClient.ExecuteCommand "load ABCLInterpreterModule")
-    
-
-
+    (thisClient.ExecuteCommand "load ABCLInterpreterModule")   
     (if UsePrologScripting (thisClient.ExecuteCommand "load PrologBotModule"))
+    (if UseCycWorldModule (thisClient.ExecuteCommand "load CycWorldModule"))
+    (if UseTheSimiansModule (thisClient.ExecuteCommand "load TheSimiansModule"))
+
+
+      ;;;  PHASE FOR STARTUP LISTENERS
+    (thisClient.ExecuteCommand "debug Debug")
 
     (if UseIRCModule
     (progn
     (thisClient.ExecuteCommand "load IrcRegionModule")
     (thisClient.ExecuteCommand "thread irc #logicmoo-cogbot cogbot_ irc.freenode.net")  ;; to connect to IRC
     ))
-
-
-    (if UseCycWorldModule (thisClient.ExecuteCommand "load CycWorldModule"))
-    (if UseTheSimiansModule (thisClient.ExecuteCommand "load TheSimiansModule"))
-    (thisClient.ExecuteCommand "debug Debug")
-
 
 
     ;; log into Secondlife

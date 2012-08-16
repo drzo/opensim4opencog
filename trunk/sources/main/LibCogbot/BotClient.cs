@@ -268,10 +268,6 @@ namespace Cogbot
         public InventoryFolder CurrentDirectory = null;
 
         public Cogbot.WorldObjects WorldSystem;
-        static public BotClient SingleInstance
-        {
-            get { return ClientManager.SingleInstance.LastBotClient; }
-        }
 
         readonly public Dictionary<string, Cogbot.Listener> Plugins;
         public SortedDictionary<string, CommandInfo> Commands;
@@ -300,6 +296,7 @@ namespace Cogbot
             OpenMetaverse.Utils.InternStrings = true;
             LoginRetries = LoginRetriesFresh;
             ClientManager = manager;
+            ClientManager.LastRefBotClient = this;
             _gridClient = g;
             manager.AddBotClient(this);
             NeedRunOnLogin = true;

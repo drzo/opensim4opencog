@@ -55,8 +55,11 @@
    inventory_node_name/2
    ]).
 
+
 :-set_prolog_flag(double_quotes,string).
 :-at_initialization(set_prolog_flag(double_quotes,string)).
+
+% let bv module see into use_module/1 caller
 
 %% app_init(+Call)
 % On app load run Call
@@ -185,12 +188,13 @@ logon_bot(First, Last, Password, Loginuri, Location, BotID):-
         set_current_bot(BotID),
 	cli_call(BotID,'LoginBlocked',_).
 
+rescope_modules.
 
-ahook_bot_created(BotID):-forall(bv:hook_bot_created(BotID),true).
+ahook_bot_created(BotID):-rescope_modules,forall(bv:hook_bot_created(BotID),true).
 
-ahook_bot_loggedin(BotID):-forall(catch(bv:hook_bot_loggedin(BotID),_,true),true).
+ahook_bot_loggedin(BotID):-rescope_modules,forall(catch(bv:hook_bot_loggedin(BotID),_,true),true).
 
-ahook_bot_event(BotID,B,C):-forall(catch(bv:hook_bot_event(BotID,B,C),_,true),true).
+ahook_bot_event(BotID,B,C):-rescope_modules,forall(catch(bv:hook_bot_event(BotID,B,C),_,true),true).
 
 %------------------------------------------------------------------------------
 % create a botclient (will call startups (like botconfig.xml) but no call to implicit login)
