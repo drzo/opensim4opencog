@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Cogbot;
+using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
@@ -33,7 +34,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Agent
 {
-    public class WhoCommand: Command, RegionMasterCommand
+    public class WhoCommand: Command, RegionMasterCommand, FFIComplete
     {
         public WhoCommand(BotClient testClient)
         {
@@ -41,45 +42,49 @@ namespace Cogbot.Actions.Agent
             if (Reloading(testClient)) return;
             Description = "Lists seen avatars.";
             Category = CommandCategory.Other;
-            AddVersion(CreateParams(), Description);
+            AddVersion(CreateParams(Optional("--presence", typeof(bool), "Use Presence List")), Description);
             ResultMap = CreateParams(
-                "avatarList", typeof (List<Avatar>), "list of present avatars",
+                "avatarList", typeof(List<SimAvatar>), "list of present avatars",
+                "presenceList", typeof(List<SimAvatar>), "list of present avatars",
                 "message", typeof(string), "if success was false, the reason why",
                 "success", typeof (bool), "true if command was successful");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
-		{
-			StringBuilder result = new StringBuilder();
-            if (args.Length > 0)
+        {
+            bool writeInfo = !args.IsFFI;
+            if (args.ContainsFlag("--presence"))
             {
                 foreach (var A in WorldObjects.SimAvatars)
                 {
-                    result.AppendLine(A.ToString());
+                    AppendMap(Results, "presenceList", A);
+                    if (writeInfo) WriteLine(A.ToString() + " local=" + A.IsLocal);
                 }
             }
+            else
             {
                 foreach (Simulator sim in LockInfo.CopyOf(Client.Network.Simulators))
                 {
                     if (sim.ObjectsAvatars.Count == 0) continue;
-                    result.AppendLine();
-                    result.Append("Region: " + sim);
+                    if (writeInfo) WriteLine("");
+                    if (writeInfo) WriteLine("Region: " + sim);
                     sim.ObjectsAvatars.ForEach(
                         delegate(Avatar av)
-                        {
-                            if (string.IsNullOrEmpty(av.Name))
                             {
-                                Client.Objects.SelectObjects(sim, new uint[] { av.LocalID }, true);
+                                AppendMap(Results, "avatarList", av);
+                                if (string.IsNullOrEmpty(av.Name))
+                                {
+                                    Client.Objects.SelectObjects(sim, new uint[] {av.LocalID}, true);
+                                }
+                                if (writeInfo) WriteLine("");
+                                if (writeInfo)
+                                    WriteLine(" {0} (Group: {1}, Location: {2}, UUID: {3})",
+                                              av.Name, av.GroupName, av.Position, av.ID.ToString());
                             }
-                            result.AppendLine();
-                            result.AppendFormat(" {0} (Group: {1}, Location: {2}, UUID: {3})",
-                                av.Name, av.GroupName, av.Position, av.ID.ToString());
-                        }
-                    );
+                        );
                 }
             }
-
-            return Success(result.ToString());;
-		}
+            return SuccessOrFailure();
+        }
     }
 }

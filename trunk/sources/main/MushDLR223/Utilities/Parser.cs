@@ -16,6 +16,7 @@ namespace MushDLR223.ScriptEngines
         }
         public object CallerAgent;
         public OutputDelegate Output;
+        public bool IsFFI = false;
 
         public CmdRequest(CmdRequest other, String[] args)
             : base(args)

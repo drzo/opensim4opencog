@@ -8,7 +8,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
 {
-    public class AnimInfoCommand : Command, GridMasterCommand
+    public class AnimInfoCommand : Command, GridMasterCommand, FFINOUSE
     {
         public AnimInfoCommand(BotClient testClient)
         {
