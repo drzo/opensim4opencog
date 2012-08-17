@@ -32,7 +32,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Agent
 {
-    public class ProfileCloneCommand : Command, BotPersonalCommand, BotStatefullCommand
+    public class ProfileCloneCommand : Command, BotPersonalCommand, BotStatefullCommand, FFIComplete
     {
         Avatar.AvatarProperties Properties;
         Avatar.Interests Interests;
@@ -56,7 +56,7 @@ namespace Cogbot.Actions.Agent
             Category = CommandCategory.Other;
             AddVersion(CreateParams("agent", typeof(UUID), "agent you are going to " + Name),
                        "copies the profile specified by agent's uuid");
-             DefaultResultMap();
+            DefaultResultMap();
         }
 
         #region Implementation of IDisposable
@@ -83,6 +83,7 @@ namespace Cogbot.Actions.Agent
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
+            bool writeInfo = !args.IsFFI;
             if (args.Length < 1)
                 return ShowUsage();
 
@@ -112,7 +113,7 @@ namespace Cogbot.Actions.Agent
 
             // Wait for all the packets to arrive
             ReceivedProfileEvent.Reset();
-            ReceivedProfileEvent.WaitOne(5000, false);
+            ReceivedProfileEvent.WaitOne(10000, false);
 
             // Check if everything showed up
             if (!ReceivedInterests || !ReceivedProperties || !ReceivedGroups)
@@ -131,7 +132,7 @@ namespace Cogbot.Actions.Agent
                 Client.Groups.RequestJoinGroup(groupID);
             }
 
-            return Success("Synchronized our profile to the profile of " + targetID.ToString());
+            return Success("Synchronizing our profile to the profile of " + targetID.ToString());
         }                           
 
         void Groups_OnGroupJoined(object sender, GroupOperationEventArgs e)

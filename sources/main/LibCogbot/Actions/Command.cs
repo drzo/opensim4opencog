@@ -73,6 +73,27 @@ namespace Cogbot.Actions
     }
 
     /// <summary>
+    /// Command is complete enough to be called by the foriegn function interface and from console
+    /// </summary>
+    public interface FFIComplete
+    {
+    }
+    /// <summary>
+    /// Some design work must be done to decide how FFI will construct arguments and what results are returned
+    /// Should be bugged if it is needed
+    /// Command is still operational via console
+    /// </summary>
+    public interface FFITODO
+    {
+    }
+    /// <summary>
+    /// THe FFI arleady has a better way to call and the command should not be used
+    /// Command is still operational via console
+    /// </summary>
+    public interface FFINOUSE
+    {
+    }
+    /// <summary>
     /// An interface for commands is only invoked on Region mastering bots
     /// Such as terrain uploads and simulator info (10 bots doing the command at once will create problems)
     /// Non region master bots are thinner clients and usually not fit for object tracking
@@ -846,5 +867,23 @@ namespace Cogbot.Actions
            /// throw new NotImplementedException();
         }
 
+        protected void AppendMap(IDictionary<string, object> dictionary, string propname, object item)
+        {
+            propname = Parser.ToKey(propname);
+            Type t = GetPropType(propname);
+            object value;
+            lock (dictionary) if (!dictionary.TryGetValue(propname, out value))
+            {
+                dictionary[propname] =
+                    value =
+                    typeof (List<>).MakeGenericType(new[] {t}).GetConstructor(new Type[0]).Invoke(new object[0]);
+            }
+            ((IList) value).Add(item);
+        }
+
+        private Type GetPropType(string propname)
+        {
+            return typeof(object);
+        }
     }
 }

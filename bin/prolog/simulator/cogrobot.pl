@@ -913,6 +913,7 @@ wbot_to_namespace(BotID,"",BotName):-wbotname(BotID,Name),global_tokey(Name,BotN
 wbot_to_namespace(BotID,bot,BotName):-wbotname(BotID,Name),global_tokey(Name,BotName),!.
 wbot_to_namespace(_BotID,NameSpaceS,NameSpace):-global_tokey(NameSpaceS,NameSpace).
 
+/*
 ahook_botvar_get(BotID,NameSpace0,Key0,Value):-
    wbot_to_namespace(BotID,NameSpace0,NameSpace),global_tokey(Key0,Key),
    clause(bv:hook_botvar_get(BotID,MNameSpace,MKey,Value),BODY),
@@ -922,6 +923,17 @@ ahook_botvar_set(BotID,NameSpace0,Key0,Value):-
    wbot_to_namespace(BotID,NameSpace0,NameSpace),global_tokey(Key0,Key),
    clause(bv:hook_botvar_set(BotID,MNameSpace,MKey,Value),BODY),
    once((wbot_samekey(BotID,NameSpace,MNameSpace),wbot_samekey(BotID,Key,MKey))), catch(user:(BODY),_,fail).
+
+*/
+
+ahook_botvar_get(BotID,NameSpace0,Key0,Value):-
+   wbot_to_namespace(BotID,NameSpace0,NameSpace),global_tokey(Key0,Key),
+   catch(bv:hook_botvar_get(BotID,NameSpace,Key,Value),E,cli_debug(ahook_botvar_get(BotID,NameSpace,Key,E))).
+
+ahook_botvar_set(BotID,NameSpace0,Key0,Value):-
+   wbot_to_namespace(BotID,NameSpace0,NameSpace),global_tokey(Key0,Key),
+   catch(bv:hook_botvar_set(BotID,NameSpace,Key,Value),E,cli_debug(ahook_botvar_set(BotID,NameSpace,Key,Value,E))).
+
 
 ahook_botvar_key(BotID,NameSpace0,Key):-
    wbot_to_namespace(BotID,NameSpace0,NameSpace),

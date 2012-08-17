@@ -8,7 +8,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
 {
-    public class AnimCommand : Command, BotPersonalCommand
+    public class AnimCommand : Command, BotPersonalCommand, FFITODO
     {
         public static bool NOSEARCH_ANIM = false;
         public AnimCommand(BotClient testClient)
