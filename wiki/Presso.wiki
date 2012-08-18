@@ -9,6 +9,23 @@ This initial goal does not attempt to define what interesting should mean. But i
 Sometimes creating plugins that are to be part of a toolbox of things that a serious AI program might need. 
 
 
+= Organization =
+
+Cogbot -
+ * libOMV
+ * scene graph
+ * pathfinding
+ * botcmds/botvars
+
+Modules -
+
+ * Radegast
+ * AIML
+
+Universe -
+
+
+
 = Cover =
 
  * libOMV
@@ -38,6 +55,4 @@ NLP bundle
   * BTML
   * AgentSpeak
   * Simians
-
-
 
