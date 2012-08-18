@@ -13,6 +13,11 @@ namespace Cogbot.Actions.System
     {
         public TasksCommand(BotClient testClient)
         {
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Shows the list of task queue statuses. SL/Opensim is a streaming system." +
 " Many things happen asynchronously. Each asynch activity is represented by a 'task'. These tasks are" +
 " processed from task queues. This command displays the status of the queues. It is mostly useful for debugging" +
@@ -58,7 +63,10 @@ namespace Cogbot.Actions.System
             int found = 0;
             lock (TaskQueueHandler.TaskQueueHandlers)
             {
-                foreach (var queueHandler in TaskQueueHandler.TaskQueueHandlers)
+                var atq = TheBotClient != null
+                              ? TheBotClient.AllTaskQueues()
+                              : ClientManager.SingleInstance.AllTaskQueues();
+                foreach (var queueHandler in atq)
                 {
                     found++;
                     if (queueHandler.Busy)

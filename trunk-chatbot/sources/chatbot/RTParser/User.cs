@@ -133,7 +133,7 @@ namespace RTParser
                 TaskQueueHandler tqh;
                 if (!TaskQueueHandlers.TryGetValue(find, out tqh))
                 {
-                    tqh = new TaskQueueHandler(UserName + " tq " + find);
+                    tqh = new TaskQueueHandler(bot.ObjectRequester, UserName + " tq " + find);
                     TaskQueueHandlers[find] = tqh;
                     tqh.Start();
                     return tqh;

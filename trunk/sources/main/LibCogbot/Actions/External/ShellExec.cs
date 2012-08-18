@@ -28,6 +28,11 @@ namespace Cogbot.Actions.External
             : base(Client)
         {
             Name = "ShellExec";
+            TheBotClient = Client;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Do an shell exec to filename";
             Details = AddUsage(Name + " filename", Description);
             Category = CommandCategory.Simulator;

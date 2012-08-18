@@ -68,7 +68,7 @@ namespace CycWorldModule.DotCYC
                     SimCyclifier.assertVocabGafNow(C("genls"), cv, cycFort);
                     simCyclifier.assertVocabGaf(CycAccess.comment, cv, "The sim enum value for: " + fort);
                     MemberInfo mi = fort;
-                    simCyclifier.DocQueue.Enqueue(() =>
+                    SimCyclifier.DocQueue.Enqueue(() =>
                                                       {
                                                           ele = SimCyclifier.GetDocString(docMembers, mi);
                                                           if (!String.IsNullOrEmpty(ele))

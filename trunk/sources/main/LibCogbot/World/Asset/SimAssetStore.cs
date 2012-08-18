@@ -60,8 +60,8 @@ namespace Cogbot.World
             get { return Client.WorldSystem; }
         }
 
-        static public readonly TaskQueueHandler taskQueue = new TaskQueueHandler("SimAssetStore (Slowly)", TimeSpan.FromMilliseconds(60), false);
-        static public readonly TaskQueueHandler taskQueueQuick = new TaskQueueHandler("SimAssetStore (Quickly)", TimeSpan.Zero, true);
+        static public readonly TaskQueueHandler taskQueue = new TaskQueueHandler(null, "SimAssetStore (Slowly)", TimeSpan.FromMilliseconds(60), false);
+        static public readonly TaskQueueHandler taskQueueQuick = new TaskQueueHandler(null, "SimAssetStore (Quickly)", TimeSpan.Zero, true);
         public static readonly TaskQueueHandler SlowConnectedQueue = taskQueue;
         public static readonly object SavingFileLock = new object();
 

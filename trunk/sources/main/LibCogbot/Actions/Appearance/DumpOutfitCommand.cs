@@ -11,29 +11,31 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
 {
-    public class DumpOutfitCommand : Command, BotPersonalCommand
+    public class DumpOutfitCommand : Command, BotPersonalCommand, FFIComplete
     {
 
         public DumpOutfitCommand(BotClient testClient)
         {
             Name = "dumpoutfit";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Dumps all of the textures from an avatars outfit to the hard drive.";
             Category = CommandCategory.Inventory;
-            Details = AddUsage(Name + " [agent-spec]", "if not specified then use $self");
-            Parameters = CreateParams(
-                Optional("target", typeof(AgentSpec),
-                                    "the agents you wish to see " + Name +
-                                    " (see meets a specified <a href='wiki/BotCommands#AgentSpec'>Agent Spec</a>.)"));
+            Details = AddUsage(Name + " [agent-spec]", "may use $self");
+            Parameters = CreateParams("target", typeof (AgentSpec), "the agents you wish to see " + Name);
             ResultMap = CreateParams(
-                "message", typeof(string), "if success was false, the reason why",
-                "success", typeof(bool), "true if command was successful");
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if command was successful");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage(); // " dumpoutfit [avatar-uuid]";
-
+            bool writeInfo = !args.IsFFI;
             //UUID target = UUID.Zero;
 
             //if (!UUIDTryParse(args, 0 , out target))

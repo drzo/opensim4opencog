@@ -223,8 +223,8 @@ namespace AIMLBotModule
         public Bot _MyBot;
         private RTParser.User _MyUser;
 
-        readonly TaskQueueHandler AimlBotReadSimData = new TaskQueueHandler("AIMLBot ReadSim");
-        readonly TaskQueueHandler AimlBotRespond = new TaskQueueHandler("AIMLBot ChatRespond");
+        readonly TaskQueueHandler AimlBotReadSimData;
+        readonly TaskQueueHandler AimlBotRespond;
         public static bool StartupBlocking = true;
 
         public override void StartupListener()
@@ -620,7 +620,7 @@ namespace AIMLBotModule
             {
             if (RunInThreadPool)
                 {
-                Enqueue(name, () => client.InvokeThread(name, action));
+                    Enqueue(name, () => client.InvokeThread(name, action));
                 }
             else
             {
@@ -631,6 +631,8 @@ namespace AIMLBotModule
         public WorldObjectsForAimLBot(BotClient testClient)
             : base(testClient)
         {
+            AimlBotRespond = new TaskQueueHandler(client, "AIMLBot ChatRespond");
+            AimlBotReadSimData = new TaskQueueHandler(client, "AIMLBot ReadSim");
             provideWorldUserVars = provideWorldBotVars = new ProvideWorldVars(this);
             provideAIMLVars = new ProvideAIMLVars(this);
         }
@@ -888,7 +890,7 @@ namespace AIMLBotModule
             }
         }
 
-        static readonly TaskQueueHandler writeLock = new TaskQueueHandler("AIMLBot Console Writer");
+        static readonly TaskQueueHandler writeLock = new TaskQueueHandler(null, "AIMLBot Console Writer");
         public void WriteLine(string s, params object[] args)
         {
             if (args == null || args.Length == 0)

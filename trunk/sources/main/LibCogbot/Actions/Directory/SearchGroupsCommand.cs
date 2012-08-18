@@ -17,6 +17,11 @@ namespace Cogbot.Actions.Search
         public SearchGroupsCommand(BotClient testClient)
         {
             Name = "searchgroups";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Searches groups.";
             Details = AddUsage(Name + " [search text]", "searches " + Name.Replace("seaches", ""));
             Category = CommandCategory.Groups;

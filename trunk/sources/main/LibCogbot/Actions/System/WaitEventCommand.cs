@@ -12,10 +12,17 @@ namespace Cogbot.Actions.System
         public WaitEventCommand(BotClient testClient)
         {
             Name = "waitevent";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "waits until a certain event takes place. see " +
                           Htmlize.Wiki("SimObjectEvents", "Object Events") + " for info about the format";
-            Details = AddUsage("waitevent timewaitms event-name [command] ", "wait for timewaitms for event to match evnet-name, if no event comes thru unblock and call command") +
-                Example("waitevent 10000 On-Say say ten seconds are up an no one says a word", "waits ten seconds for someone to say something, if no one says anything it speaks the phrase");
+            AddUsage("waitevent timewaitms event-name [command] ",
+                     "wait for timewaitms for event to match evnet-name, if no event comes thru unblock and call command");
+            AddExample("waitevent 10000 On-Say say ten seconds are up an no one says a word",
+                       "waits ten seconds for someone to say something, if no one says anything it speaks the phrase");
             Parameters = CreateParams(
                 "timewaitms", typeof(TimeSpan), "the amount of time to block waiting for the event",
                 "eventName",typeof(string),Htmlize.Wiki("SimObjectEvents", "Sim Object Events") + " for info about the format",

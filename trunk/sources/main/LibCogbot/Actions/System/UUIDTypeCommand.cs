@@ -21,7 +21,7 @@ namespace Cogbot.Actions.Search
 (setj SimAssetStore:EnableDownloadAssetDefault  True)" +
 "</pre><p>in botconfig.xml</p>";
             Details = AddUsage("uuidtype <uuid>", "print what sort of  this UUID is") +
-                Example("/uuidtype  3a3e92ed-a94f-46dc-9f92-88c790b5701e",
+                AddExample("/uuidtype  3a3e92ed-a94f-46dc-9f92-88c790b5701e",
 @"[12:54] UUID=3a3e92ed-a94f-46dc-9f92-88c790b5701e is of Type='cogbot.World.SimAnimation' toString='3a3e92ed-a94f-46dc-9f92-88c790b5701e NODATA'
 [12:54] UUID Type: Success: Done with UUID 3a3e92ed-a94f-46dc-9f92-88c790b5701e obj= 3a3e92ed-a94f-46dc-9f92-88c790b5701e NODATA
 [12:54] UUID Type: Success: Done with UUID 3a3e92ed-a94f-46dc-9f92-88c790b5701e obj= 3a3e92ed-a94f-46dc-9f92-88c790b5701e NODATA");

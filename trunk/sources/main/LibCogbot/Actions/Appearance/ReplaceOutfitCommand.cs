@@ -15,6 +15,10 @@ namespace Cogbot.Actions.Appearance
         public ReplaceOutfitCommand(BotClient Client)
             : base(Client)
         {
+        }
+
+        override public void MakeInfo()
+        {
             Description =
                 @"<p>Same as right clicking and choosing 'replace outfit' in a normal client.</p>
 <p>See <a href='wiki/BotCommands#Inventory'>Inventory</a> for Inventory FormatException</p>

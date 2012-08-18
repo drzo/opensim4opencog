@@ -15,10 +15,16 @@ namespace Cogbot.Actions.System
             : base(testClient)
         {
             Name = "showeffects";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Prints out information for every viewer effect that is received. Usage: showeffects [on/off]";
-            Details = AddUsage("showeffects on", "Turn on effect listing") +
-                AddUsage("showeffects off", "Turn off effect listing") +
-                Example(@"/showeffects on
+            Details = AddUsage("showeffects on", "Turn on effect listing");
+            AddUsage("showeffects off", "Turn off effect listing");
+            AddExample(
+                @"/showeffects on
 [14:53] ViewerEffect [LookAt]: SourceID: a910f6af-de58-4106-8b90-37f1fca9695f TargetID: a910f6af-de58-4106-8b90-37f1fca9695f TargetPos: <-0.840918242931366, -0.136444821953774, -0.523678779602051> Type: FreeLook Duration: 2 ID: f263233c-4f93-09e3-cae3-9c8f1675d282
 [14:53] ViewerEffect [LookAt]: SourceID: a910f6af-de58-4106-8b90-37f1fca9695f TargetID: 5d9b2843-cd64-480c-9524-74e607629bae TargetPos: <0, 0, 0> Type: Focus Duration: 1.701412E+38 ID: f263233c-4f93-09e3-cae3-9c8f1675d282
 [14:53] ViewerEffect [LookAt]: SourceID: a910f6af-de58-4106-8b90-37f1fca9695f TargetID: a910f6af-de58-4106-8b90-37f1fca9695f TargetPos: <5, 0, 0> Type: Focus Duration: 1.701412E+38 ID: f263233c-4f93-09e3-cae3-9c8f1675d282
@@ -32,7 +38,8 @@ namespace Cogbot.Actions.System
 [14:54] ViewerEffect [LookAt]: SourceID: 8f6ce54e-95f5-46d0-b090-c5361c821232 TargetID: 8f6ce54e-95f5-46d0-b090-c5361c821232 TargetPos: <-0.860213756561279, -0.469168335199356, -0.19978304207325> Type: FreeLook Duration: 2 ID: 65afbdef-6a7c-ed45-bfdc-d322b9690caf
 [14:54] Primitive: Script running
 [14:54] ViewerEffect [LookAt]: SourceID: 8f6ce54e-95f5-46d0-b090-c5361c821232 TargetID: 8f6ce54e-95f5-46d0-b090-c5361c821232 TargetPos: <1.99089336395264, -0.19064100086689, 0> Type: Idle Duration: 3 ID: 65afbdef-6a7c-ed45-bfdc-d322b9690caf
-/showeffects off", "turn effects on, see some, turn off");
+/showeffects off",
+                "turn effects on, see some, turn off");
             ParameterVersions = CreateParamVersions(
                 CreateParams("on", typeof(bool), "turn on listing"),
                 CreateParams("off", typeof(bool), "turn off listing"));

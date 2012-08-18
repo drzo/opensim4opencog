@@ -17,7 +17,7 @@ namespace Cogbot.Actions.Search
             Name = "Save UUIDs";
             Description = "Saves resolution of UUID types in a file.";
             Details = AddUsage("saveuuids <filename>", "create file filename") + 
-                Example(
+                AddExample(
 @"
 /saveuuids c:\somepath\somefile.xml  might produce a file like
 

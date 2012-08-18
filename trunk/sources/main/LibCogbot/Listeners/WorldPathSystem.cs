@@ -14,7 +14,7 @@ namespace Cogbot
     public class WorldPathSystem: IDisposable
     {
        public SimGlobalRoutes GlobalRoutes = SimGlobalRoutes.Instance;
-       static public readonly TaskQueueHandler MeshingQueue = new TaskQueueHandler("world MeshingQueue", TimeSpan.FromSeconds(10), true);
+       static public readonly TaskQueueHandler MeshingQueue = new TaskQueueHandler(null, "world MeshingQueue", TimeSpan.FromSeconds(10), true);
        //   static object GlobalRoutes = new object();
         static Thread TrackPathsThread;
         static bool IsDisposing = false;

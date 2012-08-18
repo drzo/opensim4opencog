@@ -118,14 +118,14 @@ namespace Cogbot
         private static bool inRTimer = false;
 
 
-        private static readonly TaskQueueHandler PropertyQueue = new TaskQueueHandler("NewObjectQueue", TimeSpan.Zero, true);
-        public static readonly TaskQueueHandler UpdateObjectData = new TaskQueueHandler("UpdateObjectData");
-        public static readonly TaskQueueHandler ParentGrabber = new TaskQueueHandler("ParentGrabber", TimeSpan.FromSeconds(1), false);
-        public static readonly TaskQueueHandler TaskInvGrabber = new TaskQueueHandler("TaskInvGrabber", TimeSpan.FromMilliseconds(100), false);
+        private static readonly TaskQueueHandler PropertyQueue = new TaskQueueHandler(null, "NewObjectQueue", TimeSpan.Zero, true);
+        public static readonly TaskQueueHandler UpdateObjectData = new TaskQueueHandler(null, "UpdateObjectData");
+        public static readonly TaskQueueHandler ParentGrabber = new TaskQueueHandler(null, "ParentGrabber", TimeSpan.FromSeconds(1), false);
+        public static readonly TaskQueueHandler TaskInvGrabber = new TaskQueueHandler(null, "TaskInvGrabber", TimeSpan.FromMilliseconds(100), false);
 
         private static readonly List<ThreadStart> ShutdownHooks = new List<ThreadStart>();
-        private static readonly TaskQueueHandler EventQueue = new TaskQueueHandler("World EventQueue");
-        private static readonly TaskQueueHandler CatchUpQueue = new TaskQueueHandler("Simulator catchup", TimeSpan.FromSeconds(60), false);
+        private static readonly TaskQueueHandler EventQueue = new TaskQueueHandler(null, "World EventQueue");
+        private static readonly TaskQueueHandler CatchUpQueue = new TaskQueueHandler(null, "Simulator catchup", TimeSpan.FromSeconds(60), false);
         private static readonly TaskQueueHandler MetaDataQueue = PropertyQueue;//new TaskQueueHandler("MetaData Getter", TimeSpan.FromSeconds(0), false);
         public readonly TaskQueueHandler OnConnectedQueue;
         public static readonly TaskQueueHandler SlowConnectedQueue = SimAssetStore.SlowConnectedQueue;
@@ -235,8 +235,9 @@ namespace Cogbot
         {
             _defaultProvider = new DefaultWorldGroupProvider(this);
             MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(client, _defaultProvider);
-            OnConnectedQueue = new TaskQueueHandler(new NamedPrefixThing("OnConnectedQueue", client.GetName),
+            OnConnectedQueue = new TaskQueueHandler(client, new NamedPrefixThing("OnConnectedQueue", client.GetName),
                                                     TimeSpan.FromMilliseconds(20), false);
+            client.AddTaskQueue("OnConnectedQueue", OnConnectedQueue);
             client.WorldSystem = this;
             RegisterAll();
             DLRConsole.TransparentCallers.Add(typeof (WorldObjects));

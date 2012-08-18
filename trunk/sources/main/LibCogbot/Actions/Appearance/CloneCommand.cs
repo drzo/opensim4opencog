@@ -16,40 +16,35 @@ namespace Cogbot.Actions.Appearance
         public CloneCommand(BotClient testClient)
         {
             Name = "clone";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Clone the appearance of a nearby avatar.";
-            Details = AddUsage(Name + " [agent-spec]", "no prim-spec then use OLD self");
+            Details = AddUsage(Name + " [agent-spec]", "use $self of OLD self");
             Category = CommandCategory.Appearance;
             Parameters = CreateParams(
-                Optional("target", typeof(AgentSpec),
-                                    "the agent you wish to see " + Name +
-                                    " (see meets a specified <a href='wiki/BotCommands#AgentSpec'>Agent Spec</a>.)"));
+                Optional("--detatchall", typeof (bool), "Detatch all first"),
+                "target", typeof (AgentSpec), "the agent you wish to see " + Name);
             ResultMap = CreateParams(
-                "message", typeof(string), "if success was false, the reason why",
-                "success", typeof(bool), "true if command was successful");
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if command was successful");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-            string targetName = String.Empty;
-            bool detatchAll = false;
-            for (int ct = 0; ct < args.Length; ct++)
-                targetName = targetName + args[ct] + " ";
-            targetName = targetName.TrimEnd();
+            bool detatchAll = args.IsTrue("--detatchall");
 
-            if (targetName.Length == 0)
-                return ShowUsage();// " clone [name]";
-            UUID target = WorldSystem.GetUserID(targetName);
-
-            //            if (Client.Directory.PeopleSearch(DirectoryManager.DirFindFlags.People, targetName, 0, 1000 * 10,
-            //                out matches) && matches.Count > 0)
-            if (target != UUID.Zero)
+            SimAvatar simAv;
+            if (args.TryGetValue("target", out simAv))
             {
-                //   UUID target = matches[0].AgentID;
+                UUID target = simAv.ID;
+                string targetName = simAv.GetName();
                 targetName += String.Format(" ({0})", target);
-#if COGBOT_LIBOMV
                 if (Client.Appearances.ContainsKey(target))
                 {
-                #region AvatarAppearance to AgentSetAppearance
+                    #region AvatarAppearance to AgentSetAppearance
 
                     AvatarAppearancePacket appearance = TheBotClient.Appearances[target];
                     AgentSetAppearancePacket set = Client.Appearance.MakeAppearancePacket();
@@ -69,7 +64,7 @@ namespace Cogbot.Actions.Appearance
 
                     set.ObjectData.TextureEntry = appearance.ObjectData.TextureEntry;
 
-                #endregion AvatarAppearance to AgentSetAppearance
+                    #endregion AvatarAppearance to AgentSetAppearance
 
                     // Detach everything we are currently wearing
                     if (detatchAll) Client.Appearance.AddAttachments(new List<InventoryItem>(), true);
@@ -82,7 +77,7 @@ namespace Cogbot.Actions.Appearance
                 else
                 {
                     /// allow clone thyself
-                    if (Client.Self.AgentID==target)
+                    if (Client.Self.AgentID == target)
                     {
                         AgentSetAppearancePacket set = Client.Appearance.MakeAppearancePacket();
 
@@ -96,12 +91,8 @@ namespace Cogbot.Actions.Appearance
             }
             else
             {
-                return Failure("Couldn't find avatar " + targetName);
+                return Failure("Couldn't find avatar " + args.str);
             }
-#else
-            }
-            return Failure("Not COGBOT_LIBOMV! so can't find avatar " + targetName);
-#endif       
         }
     }
 }

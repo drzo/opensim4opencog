@@ -14,6 +14,10 @@ namespace Cogbot.Actions.Communication
             : base(testClient)
         {
             Name = "echoMaster";
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Repeat everything that master says from open channel to open channel.";
             Details = AddUsage("echomaster", "toggles this commnand on/off");
             Category = CommandCategory.Communication;

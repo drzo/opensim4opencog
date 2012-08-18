@@ -370,7 +370,7 @@ namespace Cogbot
                     // message from system
                     if (FromAgentName == "System") return;
                     // message from others
-                    CommandInfo ci;
+                    CommandInstance ci;
                     if (Commands.TryGetValue("im", out ci))
                     {
                         var whisper = ci.WithBotClient as Cogbot.Actions.Communication.ImCommand;

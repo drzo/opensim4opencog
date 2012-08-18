@@ -69,6 +69,8 @@ namespace MushDLR223.ScriptEngines
         {
             memberTarget = null;
             IsOptional = false;
+            IsOneOf = false;
+            IsSequence = false; 
             IsRest = false;
             Comment = null;
             _key = ToKey(k);
@@ -193,6 +195,8 @@ namespace MushDLR223.ScriptEngines
             memberTarget = param.memberTarget;
             IsOptional = false;
             IsRest = false;
+            IsOneOf = false;
+            IsSequence = false;
             Comment = null;
             _Type = param._Type;
             _value = o;
@@ -210,6 +214,8 @@ namespace MushDLR223.ScriptEngines
         {
             memberTarget = null;
             IsOptional = false;
+            IsOneOf = false;
+            IsSequence = false;
             IsRest = false;
             Comment = null;
             _Type = type;
@@ -282,6 +288,10 @@ namespace MushDLR223.ScriptEngines
             get { return _key; }
             set { _key = string.Intern(value); }
         }
+
+        public bool IsSequence;
+
+        public bool IsOneOf;
 
         public override string ToString()
         {

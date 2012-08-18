@@ -39,14 +39,16 @@ namespace Cogbot.Actions.Agent
         public WhoCommand(BotClient testClient)
         {
             Name = "Who";
-            if (Reloading(testClient)) return;
+        }
+        public void MakeInfo()
+        {
             Description = "Lists seen avatars.";
             Category = CommandCategory.Other;
-            AddVersion(CreateParams(Optional("--presence", typeof(bool), "Use Presence List")), Description);
+            AddVersion(CreateParams(Optional("--presence", typeof (bool), "Use Presence List")), Description);
             ResultMap = CreateParams(
-                "avatarList", typeof(List<SimAvatar>), "list of present avatars",
-                "presenceList", typeof(List<SimAvatar>), "list of present avatars",
-                "message", typeof(string), "if success was false, the reason why",
+                "avatarList", typeof (List<SimAvatar>), "list of present avatars",
+                "presenceList", typeof (List<SimAvatar>), "list of present avatars",
+                "message", typeof (string), "if success was false, the reason why",
                 "success", typeof (bool), "true if command was successful");
         }
 
@@ -68,13 +70,14 @@ namespace Cogbot.Actions.Agent
                     if (sim.ObjectsAvatars.Count == 0) continue;
                     if (writeInfo) WriteLine("");
                     if (writeInfo) WriteLine("Region: " + sim);
+                    Simulator simulator = sim;
                     sim.ObjectsAvatars.ForEach(
                         delegate(Avatar av)
                             {
                                 AppendMap(Results, "avatarList", av);
                                 if (string.IsNullOrEmpty(av.Name))
                                 {
-                                    Client.Objects.SelectObjects(sim, new uint[] {av.LocalID}, true);
+                                    Client.Objects.SelectObjects(simulator, new uint[] {av.LocalID}, true);
                                 }
                                 if (writeInfo) WriteLine("");
                                 if (writeInfo)

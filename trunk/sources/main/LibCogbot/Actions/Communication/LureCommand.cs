@@ -14,6 +14,11 @@ namespace Cogbot.Actions.Communication
         public LureCommand(BotClient testClient)
         {
             Name = "lure";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Send a lure to a user.";
             Category = CommandCategory.Friends;
             Details = AddUsage(Name + " [agent-spec]", "lure agent-spec to our location");

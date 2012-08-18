@@ -22,6 +22,11 @@ namespace Cogbot.Actions.Groups
         public GroupRolesCommand(BotClient testClient)
         {
             Name = "grouproles";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Dump group roles to console.";
             Category = CommandCategory.Groups;
             AddUsage(CreateParams("group", typeof (Group), "group you are going to see " + Name), Description);

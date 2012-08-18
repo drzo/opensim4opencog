@@ -270,7 +270,7 @@ namespace Cogbot
         public Cogbot.WorldObjects WorldSystem;
 
         readonly public Dictionary<string, Cogbot.Listener> Plugins;
-        public SortedDictionary<string, CommandInfo> Commands;
+        public SortedDictionary<string, CommandInstance> Commands;
 
         public UUID AnimationFolder = UUID.Zero;
 
@@ -337,8 +337,9 @@ namespace Cogbot
             //manager.AddBotClientToTextForm(this);
 
             botPipeline = new SimEventMulticastPipeline(this);
-            OneAtATimeQueue = new TaskQueueHandler(new NamedPrefixThing("OneAtATimeQueue", GetName), new TimeSpan(0, 0, 0, 0, 10),
+            OneAtATimeQueue = new TaskQueueHandler(this, new NamedPrefixThing("OneAtATimeQueue", GetName), new TimeSpan(0, 0, 0, 0, 10),
                                                    true, true);
+            AddTaskQueue("OneAtATimeQueue", OneAtATimeQueue);
 
             SetSecurityLevel(OWNERLEVEL, null, BotPermissions.Owner);
             ClientManager.PostAutoExecEnqueue(OneAtATimeQueue.Start);
@@ -385,7 +386,7 @@ namespace Cogbot
             //registrationTypes["sound"] = new Cogbot.Objects(this);
             var gc = gridClient;
             //_gridClient = null;
-            Commands = new SortedDictionary<string, CommandInfo>();
+            Commands = new SortedDictionary<string, CommandInstance>();
 			RegisterCommand("login", new Login(this));
 			RegisterCommand("logout", new Logout(this));
 			RegisterCommand("stop", new StopCommand(this));

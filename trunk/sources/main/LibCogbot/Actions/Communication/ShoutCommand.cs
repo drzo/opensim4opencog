@@ -13,6 +13,11 @@ namespace Cogbot.Actions.Communication
         public ShoutCommand(BotClient testClient)
         {
             Name = "shout";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = Name + "s something (optionally to channel)";
             Details = AddUsage(Name + " [#channel] something", Description);
             Category = CommandCategory.Communication;

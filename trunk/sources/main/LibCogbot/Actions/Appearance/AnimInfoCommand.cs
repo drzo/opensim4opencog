@@ -12,13 +12,19 @@ namespace Cogbot.Actions.Appearance
     {
         public AnimInfoCommand(BotClient testClient)
         {
-            TheBotClient = testClient;
             Name = "animinfo";
-            Description = "Show debug info about anims.";
-            Details = AddUsage(Name + " <match>", "shows the info about animation") +
-                    Example(Name + " stand1", "shows that it loops and durration");
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
+            Description = "Show debug info about anims.";                    
+            AddExample(Name + " stand1", "shows that it loops and durration");
             Category = CommandCategory.Appearance;
-            Parameters = CreateParams(Optional("anim", typeof (SimAnimation), "the animation you want info about such as duration"));
+            AddVersion(
+                CreateParams(Optional("anim", typeof (SimAnimation),
+                                      "the animation you want info about such as duration")),
+                "shows the info about animation");
             ResultMap = CreateParams(
                 "message", typeof(string), "debug infos about the animations",
                 "success", typeof(bool), "true if command was successful");

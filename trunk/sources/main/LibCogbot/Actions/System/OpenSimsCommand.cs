@@ -19,7 +19,10 @@ namespace Cogbot.Actions
             Description = "Interface to the OpenSims module. <a href='wiki/World'>Documentation Here</a>";
             Details = "DMILES TODO";
             Category = CommandCategory.Objects;
-            Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(UUID)) };  //DMILES TODO
+            Parameters = CreateParams(
+                Required("target", typeof (PrimSpec),
+                         "the agents you wish to see " + Name +
+                         " (see meets a specified <a href='wiki/BotCommands#PrimSpec'>PrimSpec</a>.)"));
             // DMILE
             Name = "Use..";
         }

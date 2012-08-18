@@ -12,6 +12,11 @@ namespace Cogbot.Actions.Communication
         public MeCommand(BotClient testClient)
 		{
 			Name = "me";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Emote something.";
             Details = AddUsage(Name + " (optional channel) whatever", "emotes whatever (optionally to channel)");
             Category = CommandCategory.Communication;

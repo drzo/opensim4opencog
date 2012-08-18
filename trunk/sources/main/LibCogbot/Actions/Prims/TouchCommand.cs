@@ -16,7 +16,7 @@ namespace Cogbot.Actions
 Ignores the object's default action, always touches.";
             Category = CommandCategory.Objects;
             AddVersion(CreateParams("object", typeof(PrimSpec),
-                "The object to touch, as specified in <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>"), "Ignores the object's default action, always touches.");
+                "The object to touch"), "Ignores the object's default action, always touches.");
             ResultMap = CreateParams(
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if we touched the object");

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -71,8 +72,8 @@ namespace Cogbot
     public class ClientManager : IDisposable,ScriptExecutorGetter
     {
 
-        public static readonly TaskQueueHandler OneAtATimeQueue = new TaskQueueHandler("ClientManager.OneAtATime", new TimeSpan(0, 0, 0, 0, 10), true, false);
-        public static readonly TaskQueueHandler PostAutoExec = new TaskQueueHandler("ClientManager.PostAutoExec", new TimeSpan(0, 0, 0, 0, 10), false, false);
+        public static readonly TaskQueueHandler OneAtATimeQueue = new TaskQueueHandler(null, "ClientManager.OneAtATime", new TimeSpan(0, 0, 0, 0, 10), true, false);
+        public static readonly TaskQueueHandler PostAutoExec = new TaskQueueHandler(null, "ClientManager.PostAutoExec", new TimeSpan(0, 0, 0, 0, 10), false, false);
         public static object SingleInstanceLock = new object();
         public static event Action<BotClient> BotClientCreated;
 
@@ -1429,6 +1430,16 @@ namespace Cogbot
             return result;
         }
 
+
+        public SortedList<string, CommandInfo> AllCommands()
+        {
+            var all = new SortedList<string, CommandInfo>();
+            foreach (KeyValuePair<string, CommandInfo> pair in groupActions)
+            {
+                all.Add(pair.Key, pair.Value);
+            }
+            return all;
+        }
         /// <summary>
         /// 
         /// </summary>
@@ -1666,7 +1677,7 @@ namespace Cogbot
 
             if (!groupActions.ContainsKey(name))
             {
-                groupActions.Add(name, BotClient.newCommandInfo(command));
+                groupActions.Add(name, command.GetCmdInfo());
                 command.Name = orginalName;
             }
             else
@@ -1895,17 +1906,29 @@ namespace Cogbot
             text = Parser.ParseArguments(text)[0].ToLower();
             CommandInfo fnd;
 
-            if (groupActions.TryGetValue(text, out fnd)) return fnd.MakeInstance(null);
+            if (groupActions.TryGetValue(text, out fnd)) return fnd.MakeInstanceCM(null);
             if (clientCmds)
             {
                 var bc = LastBotClient;
                 if (bc != null)
                 {
-                    if (bc.Commands.TryGetValue(text, out fnd)) return fnd.MakeInstance(bc);
+                    CommandInstance ci;
+                    if (bc.Commands.TryGetValue(text, out ci)) return ci.MakeInstance(bc);
                 }
             }
             if (text.EndsWith("s")) return GetCommand(text.Substring(0, text.Length - 1), clientCmds);
             return null;
+        }
+
+
+        public List<TaskQueueHandler> AllTaskQueues()
+        {
+            List<TaskQueueHandler> all = new List<TaskQueueHandler>();
+            foreach (var tq in TaskQueueHandler.TaskQueueHandlers)
+            {
+                if (tq.Owner == null) all.Add(tq);
+            }
+            return all;
         }
     }
 

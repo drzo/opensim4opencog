@@ -17,6 +17,11 @@ namespace Cogbot.Actions.Groups
         public LeaveGroupCommand(BotClient testClient)
         {
             Name = "leavegroup";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Leave a group.";
             Category = CommandCategory.Groups;
             Details = AddUsage(Name + " group", Description);

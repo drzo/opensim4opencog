@@ -19,9 +19,14 @@ namespace Cogbot.Actions.WebUtil
             : base(Client)
         {
             Name = "HttpGet";
+            TheBotClient = Client;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Do an http get.";
             Details = AddUsage(Name + " url", "read the contents of a URL to return result") +
-                    Example(Name + " http://localhost:5580/action?cmd=say&args=hello",
+                    AddExample(Name + " http://localhost:5580/action?cmd=say&args=hello",
                                     "makes the bot say something");
             Parameters = CreateParams("url", typeof(Uri), "url to get");
             Category = CommandCategory.Simulator;

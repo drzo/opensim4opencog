@@ -75,8 +75,8 @@ namespace CycWorldModule.DotCYC
         }// new Dictionary<string, CycFort>();
         static CycConnectionForm cycConnection;
         static readonly DateTime baseTime = new DateTime(1970, 1, 1, 0, 0, 0);
-        private static readonly TaskQueueHandler cycAccessQueueHandler = new TaskQueueHandler("CycAssertions");
-        public static readonly TaskQueueHandler cycInfoMapSaver = new TaskQueueHandler("CycInfoMapSaver");
+        private static readonly TaskQueueHandler cycAccessQueueHandler = new TaskQueueHandler(null, "CycAssertions");
+        public static readonly TaskQueueHandler cycInfoMapSaver = new TaskQueueHandler(null, "CycInfoMapSaver");
         private static TaskQueueHandler SharedTaskQueueHandler = null;// new TaskQueueHandler("SimCyclifier", 0);
 
         readonly static public Dictionary<object, CycFort> cycTerms = new Dictionary<object, CycFort>(CompareKeys);
@@ -226,7 +226,7 @@ namespace CycWorldModule.DotCYC
                 }
                 if (SharedTaskQueueHandler == null)
                 {
-                    SharedTaskQueueHandler = new TaskQueueHandler("SimCyclifier");
+                    SharedTaskQueueHandler = new TaskQueueHandler(tf.client, "SimCyclifier");
                     SharedTaskQueueHandler.AddFirst(AssertKE);
                 }
                 eventFilter.EventsEnabled = true;
@@ -2516,7 +2516,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
         }
 
         static Dictionary<Assembly, XElement> AssmblyXDoics = new Dictionary<Assembly, XElement>();
-        public TaskQueueHandler DocQueue = new TaskQueueHandler("Cyc Doc Queue", TimeSpan.FromSeconds(1), true);
+        static public TaskQueueHandler DocQueue = new TaskQueueHandler(null, "Cyc Doc Queue", TimeSpan.FromSeconds(1), true);
         readonly public SimEventSubscriber eventFilter;
         public static double Dist100 = 100;
         static private readonly List<string> DuplicateCheck =  new List<string>();

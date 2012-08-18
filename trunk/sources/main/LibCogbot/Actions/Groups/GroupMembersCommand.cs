@@ -23,6 +23,11 @@ namespace Cogbot.Actions.Groups
         public GroupMembersCommand(BotClient testClient)
         {
             Name = "groupmembers";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Dump group members to console.";
             Category = CommandCategory.Groups;
             Details = AddUsage(Name + " group", Description);

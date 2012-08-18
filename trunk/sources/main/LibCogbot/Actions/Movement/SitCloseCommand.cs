@@ -10,7 +10,7 @@ using PathSystem3D.Navigation;
 
 namespace Cogbot.Actions.Movement
 {
-    class Sit : Command, BotPersonalCommand
+    class Sit : Command, BotPersonalCommand, FFIComplete
     {
         public bool sittingOnGround = false;
 
@@ -18,13 +18,15 @@ namespace Cogbot.Actions.Movement
         public Sit(BotClient Client)
             : base(Client)
         {
+            TheBotClient = Client;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Sit on the ground or on an object. Sit with no params sits on the ground.";
             Details = "<p>sit</p><p>sit on &lt;primspec&gt;</p><p>example: sit   <i>sit on ground</i></p><p>example: sit on chair</p>";
-            ParameterVersions = CreateParamVersions(
-               CreateParams(),
-               CreateParams(
-                   "on", typeof(PrimSpec),
-                   "The object to sit on, as specified in <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>"));
+            AddUsage(CreateParams(), "sit on ground");
+            AddUsage(CreateParams("on", typeof (PrimSpec), "The object to sit on"), "Sit on Object");
             ResultMap = CreateParams(
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if we sat");

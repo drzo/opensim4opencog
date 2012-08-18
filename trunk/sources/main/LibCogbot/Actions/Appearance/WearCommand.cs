@@ -6,28 +6,28 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
 {
-    public class WearCommand : Command, BotPersonalCommand
+    public class WearCommand : Command, BotPersonalCommand, FFIComplete
     {
         public WearCommand(BotClient testClient)
         {
             TheBotClient = testClient;
             Name = "wear";
+        }
+
+        override public void MakeInfo()
+        {
             Category = CommandCategory.Appearance;
             Description = @"<p>Same as right clicking and choosing 'replace outfit' in a normal client.</p>
 <p>See <a href='wiki/BotCommands#Inventory'>Inventory</a> for Inventory FormatException</p>
 <p>If the argument is a folder the entire folder is worn (but not items in contained folders).</p>
 <p>Adding 'nobake' doesn't rebake the avatar's textures.</p>";
             Details = "wear [nobake] /Clothing/Dance Party";
-            ParameterVersions = CreateParamVersions(
+            Parameters =
                 CreateParams(
-                   Optional("nobake", typeof(bool), "Do not rebake the avatar's textures"),
-                   "outfit", typeof(InventoryFolder),
-                   "Folder of items to wear. See <a href='wiki/BotCommands#Inventory'>Inventory</a> for format."),
-                CreateParams(
-                   Optional("nobake", typeof(bool), "Do not rebake the avatar's textures"),
-                   "outfit", typeof(InventoryItem),
-                   "Item to wear. See <a href='wiki/BotCommands#Inventory'>Inventory</a> for format.")
-               );
+                    Optional("nobake", typeof (bool), "Do not rebake the avatar's textures"),
+                    "outfit", typeof (InventoryBase),
+                    "Folder of items to wear. See <a href='wiki/BotCommands#Inventory'>Inventory</a> for format.");
+
             ResultMap = CreateParams(
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if outfit was worn");

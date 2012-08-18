@@ -33,6 +33,11 @@ namespace Cogbot.Actions.Estate
         public DownloadTerrainCommand(BotClient testClient)
         {
             Name = "downloadterrain";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Download the RAW terrain file for this estate.";
             Details = AddUsage("downloadterrain [timeout-seconds]",
                                "download terrain to SimName.raw using timeout (default 2 minutes)");

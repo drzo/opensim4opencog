@@ -51,7 +51,7 @@ namespace CogbotRadegastPluginModule
 {
     public partial class SimObjectsConsole : UserControl, IContextMenuProvider
     {
-        private TaskQueueHandler addObjects = new TaskQueueHandler("SimObjectsConsole", TimeSpan.Zero, false);
+        private TaskQueueHandler addObjects;
         private RadegastInstance instance;
         public readonly CogbotRadegastPlugin Plugin;
 
@@ -67,6 +67,7 @@ namespace CogbotRadegastPluginModule
             this.instance = instance;
             InitializeComponent();
             Plugin = plugin;
+            addObjects = new TaskQueueHandler(plugin.TheBot, "SimObjectsConsole", TimeSpan.Zero, false);
             Disposed += new EventHandler(frmObjects_Disposed);
 
             //propRequester = new PropertiesQueue(instance);

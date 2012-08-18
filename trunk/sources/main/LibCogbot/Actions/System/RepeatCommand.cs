@@ -14,30 +14,39 @@ namespace Cogbot.Actions
         public RepeatCommand(BotClient testClient)
         {
             Name = "repeat";
-            Description = "Repeats a command in its own thread.";
-            Details = Example("repeat 30 jump", "jump 30 times");
-            Parameters = CreateParams(
-                "count", typeof(int), "number of times to repeat",
-                "command", typeof(BotCommand), "command to repeat");
+            TheBotClient = testClient;            
+        }
+
+        override public void MakeInfo()
+        {
+            Description = "repeats a task every so many seconds";
+            AddExample("repeat movement 30 jump", "jump every 30 seconds in the movement thread");
+            AddVersion(CreateParams(
+                           "taskid", typeof (string), "the task queue this thread will use or 'create' or 'list'",
+                           Optional("--kill", typeof (bool), "whether to kill or append to previous taskid"),
+                           "seconds", typeof (int), "number of seconds between repeats",
+                           Rest("command", typeof (BotCommand), "command to repeat")), Description);
 
             Category = CommandCategory.BotClient;
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-            //BotClient Client = TheBotClient;
-            if (args.Length < 2)
+            bool kill = args.IsTrue("--kill");
+            bool createFresh;
+            string id = GetTaskID(args, out createFresh);
+            if (kill && createFresh)
             {
-                return ShowUsage();// " ";
+                return Failure("Cannot create and kill in the same operation");
             }
             int secondsOfSleep;
-            if (!int.TryParse(args[0], out secondsOfSleep))
+            if (!args.TryGetValue("seconds", out secondsOfSleep))
             {
                 return ShowUsage();
-            }
+            }            
             // remove the time
-            args = args.AdvanceArgs(1);
-            String cmd = String.Join(" ", args);
+            String cmd;
+            args.TryGetValue("command", out cmd);
             ThreadStart thread = () =>
                                            {
                                                try
@@ -81,8 +90,9 @@ namespace Cogbot.Actions
                                                }
                                            };
             String threadName = "Repeating " + cmd;
-            TheBotClient.InvokeThread(threadName, thread);
-            return Success(threadName);
+            string message = TheBotClient.CreateTask(id, thread, threadName, createFresh, kill, null, WriteLine);
+            Results.Add("taskid", id);
+            return Success(message);
         }
     }
 }

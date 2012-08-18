@@ -9,25 +9,30 @@ namespace Cogbot.Actions.Appearance
     /// <summary>
     /// Set avatars current appearance to appearance last stored on simulator
     /// </summary>
-    public class AppearanceCommand : Command, BotPersonalCommand
+    public class AppearanceCommand : Command, BotPersonalCommand, FFIComplete
     {
 		public AppearanceCommand(BotClient testClient)
         {
             Name = "appearance";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = @"Set your current appearance to your last saved appearance.  Makes sure the bot is not a cloud.
 <p>Adding 'nobake' doesn't rebake the avatar's textures.</p>
 <p>Adding 'wait' blocks until server informs the appreance is set.</p>";
 		    Details = AddUsage("appearance [nobake][wait][send]", "tells the server to use the last cached appearence baking or not") +
-                    Example("appearance", "Same as rebaking in a normal client") +
-                    Example("appearance wait", "Same as rebaking in a normal client") +
-		            Example("appearance nobake", "fast way to tell the server you are not a cloud");
+                    AddExample("appearance", "Same as rebaking in a normal client") +
+                    AddExample("appearance wait", "Same as rebaking in a normal client") +
+		            AddExample("appearance nobake", "fast way to tell the server you are not a cloud");
 		    Parameters =
 		        CreateParams(Optional("nobake", typeof (bool), "Do not rebake the avatar's textures"),
                                         Optional("wait", typeof(bool), "Wait until server informs the appreance is set"),
                                         Optional("send", typeof(bool), "Let server decide if no baking is needed or not"));
-            ResultMap = CreateParams(
-                 "message", typeof(string), "if success was false, the reason why",
-                 "success", typeof(bool), "true if outfit was worn");
+		    ResultMap = CreateParams(
+		        "message", typeof (string), "if success was false, the reason why",
+		        "success", typeof (bool), "true if outfit was worn");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

@@ -16,6 +16,11 @@ namespace Cogbot.Actions.Estate
         public UploadRawTerrainCommand(BotClient testClient)
         {
             Name = "uploadterrain";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Upload a raw terrain file to a simulator.";
             Details = AddUsage(Name + " filename", "upload filename");
             Category = CommandCategory.Simulator;

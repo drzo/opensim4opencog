@@ -16,7 +16,7 @@ namespace Cogbot.Actions.System
                 Description = "Sets the current bot for subsequent botcmd REPL commands.";
                 Details =
                     AddUsage("setbot <none|<name>>", "Sets the bot by user name") +
-                    Example(@"
+                    AddExample(@"
 ... log on two bots, Ima Bot and Another Bot
 /setbot Ima Bot
 /say hi, I am Ima Bot

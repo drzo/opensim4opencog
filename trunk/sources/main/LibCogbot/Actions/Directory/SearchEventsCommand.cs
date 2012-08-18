@@ -16,6 +16,11 @@ namespace Cogbot.Actions.Search
         public SearchEventsCommand(BotClient testClient)
         {
             Name = "searchevents";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Searches Events list.";
             Details = AddUsage(Name + " [search text]", "searches " + Name.Replace("seaches", ""));
             Category = CommandCategory.Search;
