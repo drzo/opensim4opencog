@@ -9,13 +9,18 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
 {
-    public class SetTextureIndexCommand : Command, BotPersonalCommand
+    public class SetTextureIndexCommand : Command, BotPersonalCommand, FFIComplete
     {
         uint SerialNum = 666;
 
         public SetTextureIndexCommand(BotClient testClient)
         {
             Name = "SetTexture";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Set appearance texture of avatar.";
             Details = AddUsage(Name + " [face-index] [texture-uuid]", "set the texture on face-index");
             Category = CommandCategory.Appearance;

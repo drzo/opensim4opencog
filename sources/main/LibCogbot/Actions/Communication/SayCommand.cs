@@ -13,6 +13,11 @@ namespace Cogbot.Actions.Communication
         public SayCommand(BotClient testClient)
 		{
 			Name = "say";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "chat a message.  If the message starts with #&lt;integer&gt; it is chatted on a channel." +
                           "see <a href='wiki/BotCommands#shout'>shout</a> and <a href='wiki/BotCommands#whisper'>whisper</a> to " +
                           "increase or decrease range. If the message is surrounded by &lt; and &gt; it is interpreted as passed " +

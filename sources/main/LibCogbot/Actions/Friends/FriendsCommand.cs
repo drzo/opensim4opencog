@@ -23,6 +23,11 @@ namespace Cogbot.Actions.Friends
         {
             // The name of the command
             Name = "Friends List";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "List avatar friends.";
             Details = AddUsage(Name, Description);
             Category = CommandCategory.Friends;

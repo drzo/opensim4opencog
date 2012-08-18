@@ -32,11 +32,11 @@ namespace Cogbot.Actions.System
                            Optional("value", typeof (object), "value to set")),
                        "Show sysvars matching key if value is supplied it tried to set those values");
 
-            Details = Example("sysvar CanUseSit True", "allow the bot to sit on things") +
-                      Example("sysvar CanUseSit no", "don't allow the bot to sit on things") +
-                      Example("sysvar Maintain false",
+            Details = AddExample("sysvar CanUseSit True", "allow the bot to sit on things") +
+                      AddExample("sysvar CanUseSit no", "don't allow the bot to sit on things") +
+                      AddExample("sysvar Maintain false",
                               "set every sysvar that contains Maintain in it's name to false") +
-                      Example("sysvar MaintainEffectsDistance 8.0",
+                      AddExample("sysvar MaintainEffectsDistance 8.0",
                               "set the maximum distance to notice effects to 8.0");
 
 

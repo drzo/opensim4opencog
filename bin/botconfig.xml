@@ -90,7 +90,7 @@
     (if UseIRCModule
     (progn
     (thisClient.ExecuteCommand "load IrcRegionModule")
-    (thisClient.ExecuteCommand "thread irc #logicmoo-cogbot cogbot_ irc.freenode.net")  ;; to connect to IRC
+    (thisClient.ExecuteCommand "thread irc irc #logicmoo-cogbot cogbot_ irc.freenode.net")  ;; to connect to IRC
     ))
 
 
@@ -121,7 +121,7 @@
 
     (if (>= (thisClient.BotLoginParams.URI.IndexOf "osgrid" ) 0)
     (progn
-    (thisClient.ExecuteCommand (@"thread setmaster Daxxon Kinoc"))
+    (thisClient.ExecuteCommand (@"thread setmaster setmaster Daxxon Kinoc"))
     (thisClient.ExecuteCommand (@"goto MilSpecMoo/128/128/26"))
     (if UseAIMLBotModule (thisClient.ExecuteCommand "aiml @off")) ;; turns on aiml for all users
     '(thisClient.ExecuteCommand "appearance nobake")
@@ -131,7 +131,7 @@
 
     (if (>= (thisClient.BotLoginParams.URI.IndexOf "localhost" ) 0)
     (progn
-    (thisClient.ExecuteCommand (@"thread setmaster Daxxon Kinoc"))
+    (thisClient.ExecuteCommand (@"thread setmaster setmaster Daxxon Kinoc"))
     (thisClient.ExecuteCommand (@"goto portia/135/222/54"))
     '(thisClient.ExecuteCommand "appearance nobake")
     '(thisClient.ExecuteCommand "appearance send")
@@ -141,7 +141,7 @@
 
     (if (>= (thisClient.BotLoginParams.URI.IndexOf "agni" ) 0)
     (progn
-    (thisClient.ExecuteCommand (@"thread setmaster Daxxon Jaxxon"))
+    (thisClient.ExecuteCommand (@"thread setmaster setmaster Daxxon Jaxxon"))
     (if UseAIMLBotModule (thisClient.ExecuteCommand "aiml @on") );; turns on aiml for all users
     (thisClient.ExecuteCommand (@ "im $master I am located in {0}" (str thisClient.Network.CurrentSim.Name)) )
     (thisClient.ExecuteCommand "appearance send")
@@ -149,7 +149,7 @@
 
     (if (>= (thisClient.BotLoginParams.URI.IndexOf "portia" ) 0)
     (progn
-    (thisClient.ExecuteCommand (@"thread setmaster Daxxon Kinoc"))
+    (thisClient.ExecuteCommand (@"thread setmaster setmaster Daxxon Kinoc"))
     (thisClient.ExecuteCommand (@"goto portia/135/222/54"))
     '(thisClient.ExecuteCommand "appearance nobake")
     '(thisClient.ExecuteCommand "appearance send")
@@ -159,10 +159,10 @@
    ;;(if UseAIMLBotModule (thisClient.ExecuteCommand "aiml @on")) ;; turns on/off aiml for all users
    (thisClient.ExecuteCommand "appearance nobake")
 
-    (thisClient.ExecuteCommand "thread setmaster Nephrael Rae") ;; change this to your name on AGNI
-    (thisClient.ExecuteCommand "thread setmaster BinaBot Daxeline")
-    (thisClient.ExecuteCommand "thread setmaster Douglas Miles") ;; change this to your name on OpenSim
-    (thisClient.ExecuteCommand "thread setmaster Annie Obscure") ;; change this to your name on AGNI/OpenSim
+    (thisClient.ExecuteCommand "thread setmaster setmaster Nephrael Rae") ;; change this to your name on AGNI
+    (thisClient.ExecuteCommand "thread setmaster setmaster BinaBot Daxeline")
+    (thisClient.ExecuteCommand "thread --wait 30 setmaster setmaster Annie Obscure") ;; change this to your name on AGNI/OpenSim
+    (thisClient.ExecuteCommand "thread setmaster setmaster Douglas Miles") ;; change this to your name on OpenSim
     (thisClient.ExecuteCommand "setmaster Nephrael Rajesh") ;; change this to your name on AGNI
 
     (thisClient.ExecuteCommand "appearance nobake")

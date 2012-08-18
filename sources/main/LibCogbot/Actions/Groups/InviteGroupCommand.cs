@@ -14,6 +14,11 @@ namespace Cogbot.Actions.Groups
         public InviteGroupCommand(BotClient testClient)
         {
             Name = "invitegroup";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "invite an avatar into a group.";
             Category = CommandCategory.Groups;
             Details = AddUsage(Name + " AvatarUUID GroupUUID RoleUUID", Description);

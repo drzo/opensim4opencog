@@ -9,11 +9,16 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
 {
-    public class AvatarInfoCommand : Command, RegionMasterCommand
+    public class AvatarInfoCommand : Command, RegionMasterCommand, FFINOUSE
     {
         public AvatarInfoCommand(BotClient testClient)
         {
             Name = "avatarinfo";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Print out information on a nearby avatar.";
             Details = AddUsage(Name + " [agent-spec]", "no prim-spec then use $self");
             Category = CommandCategory.Appearance;

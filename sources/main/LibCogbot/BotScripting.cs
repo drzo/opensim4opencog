@@ -65,9 +65,9 @@ namespace Cogbot
     public partial class BotClient : ScriptExecutor, ICollectionRequester
     {
 
-        public static CommandInfo newCommandInfo(Command describe)
+        public static CommandInstance newCommandInfo(Command describe)
         {
-            return new CommandInfo(describe);
+            return new CommandInstance(describe);
         }
 
         public ScriptInterpreter _LispTaskInterperter;
@@ -389,10 +389,10 @@ namespace Cogbot
             while (name.EndsWith(".")) name = name.Substring(0, name.Length - 1);
             Monitor.Enter(Commands);
             live.TheBotClient = this;
-            CommandInfo prev;
+            CommandInstance prev;
             if (!Commands.TryGetValue(name, out prev))
             {
-                CommandInfo command = new CommandInfo(live);
+                CommandInstance command = new CommandInstance(live);
                 Commands.Add(name, command);
                 command.Name = orginalName;
                 if (command.IsStateFul)
@@ -422,7 +422,15 @@ namespace Cogbot
             ClientManager.DoCommandAll(line, uUID, outputDelegate);
         }
 
-
+        public SortedList<string, CommandInfo> AllCommands()
+        {
+            var all = ClientManager.AllCommands();
+            foreach (KeyValuePair<string, CommandInstance> pair in Commands)
+            {
+                all.Add(pair.Key, pair.Value.CmdInfo);
+            }
+            return all;
+        }
 
         public CmdResult ExecuteCommand(string text, object session, OutputDelegate WriteLine)
         {
@@ -567,7 +575,7 @@ namespace Cogbot
             }
             if (string.IsNullOrEmpty(text)) return null;
             text = Parser.ParseArguments(text)[0].ToLower();
-            CommandInfo fnd;
+            CommandInstance fnd;
             if (Commands == null || Commands.Count == 0)
             {
                 WriteLine("No commands defined yet " + this);
@@ -579,7 +587,8 @@ namespace Cogbot
                 var cm = ClientManager;
                 if (cm != null)
                 {
-                    if (cm.groupActions.TryGetValue(text, out fnd)) return fnd.MakeInstance(null);
+                    CommandInfo fnd2;
+                    if (cm.groupActions.TryGetValue(text, out fnd2)) return fnd2.MakeInstanceCM(null);
                 }
             }
             if (text.EndsWith("s")) return GetCommand(text.Substring(0, text.Length - 1), managerCmds);
@@ -887,6 +896,106 @@ namespace Cogbot
         public RequesterSession SessionMananger { get; set; }
 
         #endregion
+
+        public Dictionary<string, TaskQueueHandler> BotTaskQueues = new Dictionary<string, TaskQueueHandler>();
+        public TaskQueueHandler GetTaskQueueHandler(string id)
+        {
+            lock(BotTaskQueues)
+            {
+                TaskQueueHandler tq;
+                if (!BotTaskQueues.TryGetValue(id.ToLower(), out tq))
+                {
+                    tq = new TaskQueueHandler(this, new NamedPrefixThing(id, GetName), TimeSpan.FromMilliseconds(1), true);
+                    AddTaskQueue(id, tq);
+                }
+                return tq;
+            }
+        }
+
+        public void AddTaskQueue(string id, TaskQueueHandler tq)
+        {
+            lock (BotTaskQueues) BotTaskQueues[id.ToLower()] = tq;
+        }
+
+        public List<TaskQueueHandler> AllTaskQueues()
+        {
+            List<TaskQueueHandler> all = ClientManager.AllTaskQueues();
+            foreach (var tq in TaskQueueHandler.TaskQueueHandlers)
+            {
+                if (tq.Owner == this)
+                {
+                    all.Add(tq);
+                }
+            }
+            return all;
+        }
+        
+        public string CreateTask(string id, ThreadStart task, string debugName0, bool createFresh, bool kill, EventWaitHandle mre, OutputDelegate WriteLine)
+        {
+            BotClient TheBotClient = this;
+            string[] debugName = new[] { debugName0 };
+            ThreadStart thread =
+                () =>
+                {
+                    try
+                    {
+                        try
+                        {
+                            task();
+                        }
+                        catch (ThreadAbortException e)
+                        {
+                            WriteLine("Aborting " + debugName[0]);
+                        }
+                        catch (Exception e)
+                        {
+                            WriteLine("Problem with {0} {1}", debugName[0], e);
+                        }
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            if (mre != null) mre.Set();
+                            if (createFresh)
+                            {
+                                TheBotClient.RemoveThread(Thread.CurrentThread);
+                            }
+                        }
+                        catch (OutOfMemoryException)
+                        {
+                        }
+                        catch (StackOverflowException)
+                        {
+                        }
+                        catch (Exception)
+                        {
+                        }
+                        WriteLine("done with " + debugName[0]);
+                    }
+                };
+            String threadName = id;
+            if (createFresh)
+            {
+                TheBotClient.InvokeThread(threadName, thread);
+            }
+            else
+            {
+                TaskQueueHandler tq = TheBotClient.GetTaskQueueHandler(id);
+                if (kill)
+                {
+                    tq.DestroyAllCurrentTasks(true);
+                }
+                if (task != null) tq.Enqueue(thread);
+                debugName[0] += tq;
+            }
+            return debugName[0];
+        }
+
+        public static string UniqueThreadID()
+        {
+            return "" + UUID.Random();
+        }
     }
 
 

@@ -23,6 +23,11 @@ namespace Cogbot.Actions.Communication
         public MuteCommand(BotClient Client)
             : base(Client)
         {
+            TheBotClient = Client;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Mute avatars or objects, or display the mute list. unmute unmutes.";
             Details = "<p>mute Fluffybunny Resident</p>" +
 "<p>mute Particles &lt;primspec&gt;  mutes all but a specific element from:</p>" +

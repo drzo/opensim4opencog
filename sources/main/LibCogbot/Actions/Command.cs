@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using Cogbot;
 using Cogbot.World;
 using MushDLR223.ScriptEngines;
@@ -34,9 +35,9 @@ namespace Cogbot.Actions
     {
         public static string NoEnts(string example)
         {
-            if (example==null)
+            if (example == null)
             {
-              ///  return null;
+                ///  return null;
             }
             return example.Replace("\"", "&qt;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\r\n", "<br>").Replace("\n", "<br>");
         }
@@ -75,7 +76,7 @@ namespace Cogbot.Actions
     /// <summary>
     /// Command is complete enough to be called by the foriegn function interface and from console
     /// </summary>
-    public interface FFIComplete
+    public interface FFIComplete : FFIMarker
     {
     }
     /// <summary>
@@ -83,14 +84,20 @@ namespace Cogbot.Actions
     /// Should be bugged if it is needed
     /// Command is still operational via console
     /// </summary>
-    public interface FFITODO
+    public interface FFITODO : FFIMarker
     {
     }
     /// <summary>
     /// THe FFI arleady has a better way to call and the command should not be used
     /// Command is still operational via console
     /// </summary>
-    public interface FFINOUSE
+    public interface FFINOUSE : FFIMarker
+    {
+    }
+    /// <summary>
+    /// Has some FFI state subclass
+    /// </summary>
+    public interface FFIMarker
     {
     }
     /// <summary>
@@ -141,8 +148,50 @@ namespace Cogbot.Actions
     public interface BotCommand : MushDLR223.ScriptEngines.ScriptedCommand
     {
     }
+    public class CommandInstance
+    {
+        public CommandInfo CmdInfo;
+        public Command MakeInstance(BotClient client)
+        {
+            if (WithBotClient != null)
+            {
+                if (WithBotClient._mClient == client)
+                {
+                    return WithBotClient;
+                }
+            }
+            var cmd = (Command)CmdInfo.CmdTypeConstructor.Invoke(new object[] { client });
+            cmd.TheBotClient = client;
+            WithBotClient = cmd;
+            if (CmdInfo.IsStateFul) WithBotClient = cmd;
+            return cmd;
+        }
+        public Command WithBotClient;
+        public bool IsStateFul
+        {
+            get
+            {
+                return CmdInfo.IsStateFul;
+            }
+        }
+        public Type CmdType
+        {
+            get
+            {
+                return CmdInfo.CmdType;
+            }
+        }
 
-    public class  CommandInfo
+        public string Name { get; set; }
+
+        public CommandInstance(Command describe)
+        {
+            WithBotClient = describe;
+            CmdInfo = describe.GetCmdInfo();
+            Name = CmdInfo.Name;
+        }
+    }
+    public class CommandInfo
     {
         public bool IsStateFul;
         public CommandCategory Category;
@@ -167,7 +216,6 @@ namespace Cogbot.Actions
         public NamedParam[] ResultMap;
 
         public Type CmdType;
-        public Command WithBotClient;
         public ConstructorInfo CmdTypeConstructor;
         public string Description
         {
@@ -220,6 +268,11 @@ namespace Cogbot.Actions
         }
         public void LoadFromCommand(Command live)
         {
+            CmdType = live.GetType();
+            lock (Command.MadeInfos)
+            {
+                Command.MadeInfos[CmdType] = this;
+            }
             IsStateFul = live.IsStateFull || live is BotStatefullCommand;
             Name = live.Name;
             usageString = live.Details;
@@ -227,37 +280,52 @@ namespace Cogbot.Actions
             helpString = live.Description;
             Category = live.Category;
             ResultMap = live.ResultMap;
-            CmdType = live.GetType();
             CmdTypeConstructor = CmdType.GetConstructors()[0];
             IsGridClientCommand = CmdTypeConstructor.GetParameters()[0].ParameterType == typeof(GridClient);
-            if (IsStateFul) WithBotClient = live;
         }
 
-        public Command MakeInstance(BotClient client)
+
+        public bool Matches(string str)
         {
-            if (WithBotClient != null)
-            {
-                if (WithBotClient._mClient == client)
-                {
-                    return WithBotClient;
-                }
-            }
-            var cmd = (Command) CmdTypeConstructor.Invoke(new object[] {client});
-            cmd.TheBotClient = client;
-            WithBotClient = cmd;
+            return ("" + Name + " " + Description).Contains(str);
+        }
+
+        public Command MakeInstanceCM(BotClient o)
+        {
+            var cmd = (Command)CmdTypeConstructor.Invoke(new object[] { o });
+            cmd.TheBotClient = o;            
             return cmd;
         }
-
     }
 
     public abstract partial class Command : IComparable, ParseInfo
     {
+        public virtual void MakeInfo()
+        {
+
+        }
+        public CommandInfo GetCmdInfo()
+        {
+            CommandInfo ci;
+            lock (MadeInfos)
+            {
+                if (!MadeInfos.TryGetValue(GetType(), out ci))
+                {
+                    MakeInfo();
+                    ci = MadeInfos[GetType()] = new CommandInfo(this);
+                }
+            }
+            return ci;
+        }
+
+        public static Dictionary<Type, CommandInfo> MadeInfos = new Dictionary<Type, CommandInfo>();
+
         public bool IsStateFull;
         public CommandCategory Category;
         public string Name { get; set; }
         protected string helpString;
         protected string usageString;
-       
+
         virtual public string Description
         {
             get
@@ -405,7 +473,7 @@ namespace Cogbot.Actions
         {
             if (this is BotStatefullCommand && !(this is SystemApplicationCommand))
             {
-               // DLRConsole.DebugWriteLine("" + this + " is not a BotStatefullCommand?!");                
+                // DLRConsole.DebugWriteLine("" + this + " is not a BotStatefullCommand?!");                
             }
         } // constructor
 
@@ -419,7 +487,7 @@ namespace Cogbot.Actions
             ResultMap = CreateParams(
                 "message", typeof(string), "if success was false, the reason why",
                 "success", typeof(bool), "true if command was successful");
-           // Parameters = CreateParams("stuff", typeof (string), "this command is missing documentation!");
+            // Parameters = CreateParams("stuff", typeof (string), "this command is missing documentation!");
 
             _mClient = bc;
             WriteLineDelegate = StaticWriteLine;
@@ -440,12 +508,12 @@ namespace Cogbot.Actions
             }
             if (this is RegionMasterCommand)
             {
-               // Parameters = new[] { new NamedParam(typeof(Simulator), null) };
+                // Parameters = new[] { new NamedParam(typeof(Simulator), null) };
                 Category = CommandCategory.Simulator;
             }
             if (this is SystemApplicationCommand)
             {
-               // Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+                // Parameters = new[] { new NamedParam(typeof(GridClient), null) };
                 Category = CommandCategory.BotClient;
             }
             if (this.GetType().Namespace.ToString() == "Cogbot.Actions.Movement")
@@ -564,7 +632,7 @@ namespace Cogbot.Actions
             get { return CallerID; }
         }
 
-        public CmdResult acceptInputWrapper(string verb, string args,UUID callerID, OutputDelegate writeLine)
+        public CmdResult acceptInputWrapper(string verb, string args, UUID callerID, OutputDelegate writeLine)
         {
             if (this is BotPersonalCommand)
             {
@@ -579,11 +647,11 @@ namespace Cogbot.Actions
             this.WriteLineDelegate = writeLine;
             return acceptInput(verb, Parser.ParseArgs(args), writeLine);
         }
-            
+
         public virtual CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             this.WriteLineDelegate = WriteLine;
-            CallerID = CogbotHelpers.NonZero(fromAgentID, UUID.Zero);            
+            CallerID = CogbotHelpers.NonZero(fromAgentID, UUID.Zero);
             return ExecuteRequest(new CmdRequest(args, fromAgentID, WriteLine, this));
         }
 
@@ -619,7 +687,7 @@ namespace Cogbot.Actions
             }
             finally
             {
-              //??  WriteLine = StaticWriteLine;
+                //??  WriteLine = StaticWriteLine;
             }
         }
 
@@ -635,7 +703,7 @@ namespace Cogbot.Actions
                 throw new ArgumentException("Object is not of type Command.");
         }
 
-  
+
         // Helpers
 
         protected Vector3 GetSimPosition()
@@ -647,13 +715,13 @@ namespace Cogbot.Actions
         {
             UUID uuid = UUID.Zero;
             int argsUsed;
-            if (UUIDTryParse(new[] { p }, 0, out uuid,out argsUsed)) return uuid;
+            if (UUIDTryParse(new[] { p }, 0, out uuid, out argsUsed)) return uuid;
             return UUID.Parse(p);
         }
 
         public bool UUIDTryParse(string[] args, int start, out UUID target, out int argsUsed)
         {
-            return  WorldSystem.UUIDTryParse(args, start, out target, out argsUsed);
+            return WorldSystem.UUIDTryParse(args, start, out target, out argsUsed);
         }
 
         public CmdResult Failure(string message)
@@ -775,17 +843,21 @@ namespace Cogbot.Actions
                 var o = paramz[i++];
                 if (o is NamedParam)
                 {
-                    paramsz.Add((NamedParam) o);
+                    paramsz.Add((NamedParam)o);
                     continue;
                 }
                 if (o is string)
                 {
-                    string k = (string) o;
+                    string k = (string)o;
                     Type t = paramz[i++] as Type;
                     string comment = "" + paramz[i++];
                     NamedParam namedParam = new NamedParam(k, t);
                     namedParam.Comment = comment;
                     paramsz.Add(namedParam);
+                }
+                else
+                {
+                    throw new FormatException("CreateParams: " + o);
                 }
             }
             return paramsz.ToArray();
@@ -812,6 +884,27 @@ namespace Cogbot.Actions
             return namedParam;
         }
 
+        protected static NamedParam Required(string name, Type type, string desc)
+        {
+            var o = Optional(name, type, desc);
+            o.IsOptional = false;
+            return o;
+        }
+
+        protected static NamedParam SequenceOf(string name, NamedParam param)
+        {
+            NamedParam namedParam = new NamedParam(name, param.Type.MakeArrayType(), param);
+            namedParam.Comment = "list of " + param.Key;
+            namedParam.IsSequence = true;
+            return namedParam;
+        }
+
+        protected static NamedParam OneOf(params NamedParam[] oneof)
+        {
+            NamedParam namedParam = new NamedParam("oneOf", typeof (object), null, oneof);
+            namedParam.IsOneOf = true;
+            return namedParam;
+        }
 
         protected string AddUsage(string example, string comment)
         {
@@ -823,10 +916,11 @@ namespace Cogbot.Actions
             Details = idea;
             return idea;
         }
-
-        protected static string Example(string typed, string output)
+        protected string AddExample(string typed, string output)
         {
-            return "<p><pre>" + Htmlize.NoEnts(typed) + "</pre><br>Returns<br><pre>" + Htmlize.NoEnts(output) + "</pre></p>";
+            string idea = "<p><pre>" + Htmlize.NoEnts(typed) + "</pre><br>Returns<br><pre>" + Htmlize.NoEnts(output) + "</pre></p>";
+            Details = idea;
+            return idea;
         }
 
         protected void AddVersion(NamedParam[] paramSpec, string comment)
@@ -850,7 +944,7 @@ namespace Cogbot.Actions
                 }
                 else
                 {
-                    argstring = string.Format("<{0}>", argstring);                
+                    argstring = string.Format("<{0}>", argstring);
                 }
                 usage += " " + argstring;
             }
@@ -864,7 +958,7 @@ namespace Cogbot.Actions
 
         protected void DefaultResultMap()
         {
-           /// throw new NotImplementedException();
+            /// throw new NotImplementedException();
         }
 
         protected void AppendMap(IDictionary<string, object> dictionary, string propname, object item)
@@ -873,17 +967,31 @@ namespace Cogbot.Actions
             Type t = GetPropType(propname);
             object value;
             lock (dictionary) if (!dictionary.TryGetValue(propname, out value))
-            {
-                dictionary[propname] =
-                    value =
-                    typeof (List<>).MakeGenericType(new[] {t}).GetConstructor(new Type[0]).Invoke(new object[0]);
-            }
-            ((IList) value).Add(item);
+                {
+                    dictionary[propname] =
+                        value =
+                        typeof(List<>).MakeGenericType(new[] { t }).GetConstructor(new Type[0]).Invoke(new object[0]);
+                }
+            ((IList)value).Add(item);
         }
 
         private Type GetPropType(string propname)
         {
             return typeof(object);
         }
+
+        public static string GetTaskID(CmdRequest args, out bool createFresh)
+        {
+            createFresh = false;
+            String id;
+            args.TryGetValue("taskid", out id);
+            if (id == "create")
+            {
+                createFresh = true;
+                id = BotClient.UniqueThreadID();
+            }
+            return id;
+        }
+
     }
 }

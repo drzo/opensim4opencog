@@ -20,6 +20,11 @@ namespace Cogbot.Actions.Groups
         public ActivateGroupCommand(BotClient testClient)
         {
             Name = "activategroup";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Set a group as active.";
             Category = CommandCategory.Groups;
             Details = AddUsage(Name + " group", Description);

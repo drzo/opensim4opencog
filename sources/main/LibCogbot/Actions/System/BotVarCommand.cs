@@ -22,7 +22,7 @@ namespace Cogbot.Actions.System
                 "Display bot vars. Bot vars are an interface between botcmd and AIML. " +
                 "For more information on bot vars see <a href='wiki/BotVars'>Bot Vars</a>";
             Details = AddUsage("botvar <varname>", "display a bot var") +
-                Example("botvar master", "displays the name of the bot's master");
+                AddExample("botvar master", "displays the name of the bot's master");
 
             Parameters = NamedParam.CreateParams(
                 "varname", typeof(string), "bot var to display");

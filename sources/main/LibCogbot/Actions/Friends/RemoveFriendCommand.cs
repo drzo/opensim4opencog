@@ -24,6 +24,11 @@ namespace Cogbot.Actions.Friends
         {
             // The name of the command
             Name = "Remove Friend";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = Name + " from agent-spec.";
             Details = AddUsage(Name + " agent", Description);
             Category = CommandCategory.Friends;

@@ -18,6 +18,10 @@ namespace Cogbot.Actions.Communication
         public ImCommand(BotClient testClient)
         {
             Name = "im";
+        }
+
+        override public void MakeInfo()
+        {
             Description = "IM a user. Has nothing to do with SL 'whisper'";
             Details = AddUsage("im to <avatar name> <message>", "IM Avatar with Message") +
                     AddUsage("im <message>", "reply to the last person who IMed you");
@@ -34,7 +38,7 @@ namespace Cogbot.Actions.Communication
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 2)
-                return ShowUsage();// " im [firstname] [lastname] [message]";
+                return ShowUsage(); // " im [firstname] [lastname] [message]";
 
             string message = String.Empty;
 
@@ -87,55 +91,67 @@ namespace Cogbot.Actions.Communication
                 }
             }
             UUID found = WorldSystem.GetUserID(ToAvatarName);
-            if (found==UUID.Zero)
+            if (found != UUID.Zero)
             {
-                return Failure( "Name lookup for " + ToAvatarName + " failed");
+                if (message.Length > 1023) message = message.Remove(1023);
+                TheBotClient.InstantMessage(found, message, UUID.Zero);
+                return Success("Instant Messaged " + found.ToString() + " with message: " + message);
             }
-            if (message.Length > 1023) message = message.Remove(1023);
-            TheBotClient.InstantMessage(found, message, UUID.Zero);
-            return Success("Instant Messaged " + found.ToString() + " with message: " + message);
-        }
+            UUID ToGroupID = UUID.Zero;
+            ManualResetEvent WaitForSessionStart = new ManualResetEvent(false);
 
-        public CmdResult acceptInputOBSOLETE(string verb, Parser args, OutputDelegate WriteLine)
-        {
-            //base.acceptInput(verb, args);
-
-            string to = args["to"];
-
-            if (to.Length > 0)
+            if (UUIDTryParse(args, 0, out ToGroupID, out argsUsed))
             {
-                int argsUsed;
-                List<SimObject> PS =
-                    WorldSystem.GetPrimitives(to.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries), out argsUsed);
-                if (!IsEmpty(PS))
+                string messageGroup = String.Empty;
+                for (int ct = argsUsed; ct < args.Length; ct++)
+                    messageGroup += args[ct] + " ";
+                messageGroup = messageGroup.TrimEnd();
+                if (messageGroup.Length > 1023) messageGroup = messageGroup.Remove(1023);
+                EventHandler<GroupChatJoinedEventArgs> callback =
+                    delegate(object sender, GroupChatJoinedEventArgs e)
+                        {
+                            if (e.Success)
+                            {
+                                WriteLine("Joined {0} Group Chat Success!", e.SessionName);
+                                WaitForSessionStart.Set();
+                            }
+                            else
+                            {
+                                WriteLine("Join Group Chat failed :(");
+                            }
+                        };
+                try
                 {
-                    foreach (var prim in PS)
+                    Client.Self.GroupChatJoined += callback;
+                    if (!Client.Self.GroupChatSessions.ContainsKey(ToGroupID))
                     {
-                        currentAvatar = prim.ID;
-                        break;
+                        WaitForSessionStart.Reset();
+                        Client.Self.RequestJoinGroupChat(ToGroupID);
+                    }
+                    else
+                    {
+                        WaitForSessionStart.Set();
+                    }
+
+                    if (WaitForSessionStart.WaitOne(20000, false))
+                    {
+                        Client.Self.InstantMessageGroup(ToGroupID, messageGroup);
+                    }
+                    else
+                    {
+                        return Failure("Timeout waiting for group session start");
                     }
                 }
-                else
+                finally
                 {
-                    SimAvatar avatar;
-                    if (!WorldSystem.tryGetAvatar(to, out avatar))
-                    {
-                        return Failure("I don't know who " + to + "is.");
-                    }
-                    currentAvatar = avatar.ID;
+                    Client.Self.GroupChatJoined -= callback;
                 }
-
+                return Success("Instant Messaged group " + ToGroupID.ToString() + " with message: " + messageGroup);
             }
-            else if (currentAvatar == UUID.Zero)
-            {
-                return Failure("Please provide a name to whisper to.");
-            }
-
-            if (currentSession != UUID.Zero)
-                Client.Self.InstantMessage(currentAvatar, args.objectPhrase, currentSession);
             else
-                Client.Self.InstantMessage(currentAvatar, args.objectPhrase);
-            return Success("sent message");
+            {
+                return Failure("failed to instant message group/avatar " + ToAvatarName);
+            }
         }
 
         #region Implementation of IDisposable

@@ -58,9 +58,13 @@ namespace Cogbot.Actions.WebUtil
             : base(Client)
         {
             Name = "HttpPost";
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Post the name/value paires the contents of a URL to return result";
             Details = AddUsage(Name + " url [n1 v1 [n2 v2]]", Description) +
-                    Example(Name + " http://localhost:5580/ cmd say args hello",
+                    AddExample(Name + " http://localhost:5580/ cmd say args hello",
                                     "makes the bot say something");
             Parameters = CreateParams("url", typeof (Uri), "url to post to",
                                                  "name-value", typeof (string), "name value pairs");

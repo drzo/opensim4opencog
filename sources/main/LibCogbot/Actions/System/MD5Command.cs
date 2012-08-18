@@ -10,11 +10,16 @@ namespace Cogbot.Actions.System
         public MD5Command(BotClient testClient)
         {
             Name = "md5";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = 
 @"Creates an MD5 hash from a given string. The string must be double quoted if it contains blanks.
 Currently the function isn't that useful, since the underlying C# md5 pads short strings to 32 bytes
 producing a different hash than LSL produces";
-            Details = Example(
+            AddExample(
                 @"md5 ""tacos of god:12873""
 prints
 [19:53] md5: Success: $1$08b90c2ebcce5d7f46176eb7c05af0ea

@@ -14,6 +14,11 @@ namespace Cogbot.Actions.Groups
         public GroupsCommand(BotClient testClient)
         {
             Name = "groups";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "List avatar groups. Usage: groups";
             Category = CommandCategory.Groups;
             Details = AddUsage(Name, Description);

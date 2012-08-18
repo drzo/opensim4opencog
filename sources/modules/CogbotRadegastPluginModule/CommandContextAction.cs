@@ -59,7 +59,7 @@ namespace CogbotRadegastPluginModule
                 lock (ClientManager.SingleInstance.groupActions)
                     foreach (var c in ClientManager.SingleInstance.groupActions.Values)
                     {
-                        if (AddCommand(c.MakeInstance(TheBotClient))) groupCommands++;
+                        if (AddCommand(c.MakeInstanceCM(TheBotClient))) groupCommands++;
                     }
             }
             if (TheBotClient != null && TheBotClient.Commands != null)

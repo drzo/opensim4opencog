@@ -24,6 +24,11 @@ namespace Cogbot.Actions.Search
         public SearchLandCommand(BotClient testClient)
         {
             Name = "searchland";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Searches for land for sale. for usage information type: searchland";
             Category = CommandCategory.Search;
             Details = AddUsage(Name + " [type] [max price] [min size]",

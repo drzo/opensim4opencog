@@ -156,7 +156,7 @@ namespace Cogbot
         public SimEventMulticastPipeline(object publisher)
         {
             Publisher = publisher;
-            taskQueue = new TaskQueueHandler(new NamedPrefixThing("SimEventMulticastPipeline ", publisher.ToString));
+            taskQueue = new TaskQueueHandler(publisher as ContextualSingleton, new NamedPrefixThing("SimEventMulticastPipeline ", publisher.ToString));
             EventsEnabled = true;
         }
 

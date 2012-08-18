@@ -24,7 +24,7 @@ namespace MushDLR223.Utilities
         public static readonly TimeSpan TOO_SHORT_INTERVAL = TimeSpan.FromMilliseconds(3);
         public static readonly HashSet<TaskQueueHandler> TaskQueueHandlers = new HashSet<TaskQueueHandler>();
         private readonly LinkedList<TASK> EventQueue = new LinkedList<TASK>();
-
+        public object Owner;
         private readonly object EventQueueLock = new object();
         private readonly object PingNeverAbortLock = new object();
         private readonly object OneTaskAtATimeLock = new object();
@@ -236,8 +236,8 @@ namespace MushDLR223.Utilities
             }
         }
 
-        public TaskQueueHandler(object named)
-            : this(named, TimeSpan.FromMilliseconds(10), TimeSpan.MaxValue, true, true)
+        public TaskQueueHandler(object owner, object named)
+            : this(owner, named, TimeSpan.FromMilliseconds(10), TimeSpan.MaxValue, true, true)
         {
             if (DebugLevel > 0) VeryBad("CREATE TaskQueueHandler1 " + named);
         }
@@ -247,21 +247,22 @@ namespace MushDLR223.Utilities
             : this(str, TimeSpan.FromMilliseconds(msWaitBetween), true)
         {
         }
-        */        
+        */
 
-        public TaskQueueHandler(object named, TimeSpan msWaitBetween, bool autoStart)
-            : this(named, msWaitBetween, TimeSpan.MaxValue, autoStart, true)
+        public TaskQueueHandler(object owner, object named, TimeSpan msWaitBetween, bool autoStart)
+            : this(owner, named, msWaitBetween, TimeSpan.MaxValue, autoStart, true)
         {
             if (DebugLevel > 0) VeryBad("CREATE TaskQueueHandler3");
         }
-        public TaskQueueHandler(object str, TimeSpan msWaitBetween, bool autoStart, bool doDebug) :
-            this(str, msWaitBetween, TimeSpan.MaxValue, autoStart, doDebug)
+        public TaskQueueHandler(object owner, object str, TimeSpan msWaitBetween, bool autoStart, bool doDebug) :
+            this(owner, str, msWaitBetween, TimeSpan.MaxValue, autoStart, doDebug)
         {
             if (DebugLevel > 0) VeryBad("CREATE TaskQueueHandler4");
         }
 
-        public TaskQueueHandler(object str, TimeSpan msWaitBetween, TimeSpan maxPerOperation, bool autoStart, bool doDebug)
+        public TaskQueueHandler(object owner, object str, TimeSpan msWaitBetween, TimeSpan maxPerOperation, bool autoStart, bool doDebug)
         {
+            Owner = owner;
             _Name = str;
             System.Diagnostics.Debug.Listeners.Clear();
             NeverStart = !doDebug;

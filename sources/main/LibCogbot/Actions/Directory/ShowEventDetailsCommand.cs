@@ -12,6 +12,11 @@ namespace Cogbot.Actions.Search
         public ShowEventDetailsCommand(BotClient testClient)
         {
             Name = "showevent";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Shows an Events details.";
             Details = AddUsage(Name + " [eventID]", "Display SL event with eventID");
             Category = CommandCategory.Other;

@@ -113,6 +113,11 @@ namespace Cogbot.Actions.SimExport
             : base(testClient)
         {
             Name = "backuptext";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Backup inventory to a folder on your hard drive.";
             Details = AddUsage(Name + " [to <directory>] | [abort] | [status]", Description);            
         }

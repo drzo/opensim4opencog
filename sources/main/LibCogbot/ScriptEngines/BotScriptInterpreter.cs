@@ -43,7 +43,7 @@ namespace Cogbot.ScriptEngines
         public override object GetSymbol(string eventName)
         {
             eventName = eventName.ToLower();
-            CommandInfo o;
+            CommandInstance o;
             BotClient.Commands.TryGetValue(eventName,out o);
             return o;
         }

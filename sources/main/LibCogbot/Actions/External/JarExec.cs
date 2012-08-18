@@ -34,6 +34,11 @@ namespace Cogbot.Actions.External
             : base(Client)
         {
             Name = "JarExec";
+            TheBotClient = Client;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Do an java jar exec to filename";
             Details = AddUsage(Name + " filename", Description);
             Category = CommandCategory.Simulator;

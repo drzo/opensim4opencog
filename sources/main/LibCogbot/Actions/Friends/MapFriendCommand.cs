@@ -17,6 +17,11 @@ namespace Cogbot.Actions.Friends
         public MapFriendCommand(BotClient testClient)
         {
             Name = "Map Friend";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Show a friends location.";
             Details = AddUsage(Name + " agent", Description);
             Category = CommandCategory.Friends;

@@ -36,28 +36,7 @@ namespace Cogbot.Actions.System
                 detailed = true;
             }
             int found = 0;
-            var dictionary = new SortedDictionary<string, CommandInfo>(TheBotClient.ClientManager.groupActions);
-            foreach (var action in TheBotClient.Commands)
-            {
-                if (dictionary.ContainsKey(action.Key))
-                {
-                    dictionary[action.Key] = action.Value;
-                } else
-                {
-                    dictionary.Add(action.Key, action.Value);
-                }
-            }
-            foreach (var action in ClientManager.groupActions)
-            {
-                if (dictionary.ContainsKey(action.Key))
-                {
-                    dictionary[action.Key] = action.Value;
-                }
-                else
-                {
-                    dictionary.Add(action.Key, action.Value);
-                }
-            }
+            var dictionary = TheBotClient.AllCommands();
             foreach (string action in dictionary.Keys)
             {
                 CommandInfo info = dictionary[action];
@@ -91,7 +70,7 @@ namespace Cogbot.Actions.System
                 }
                 if (showPLVersionOfHelp)
                 {
-                    foreach (var s in Client.Commands.Values)
+                    foreach (var s in Client.AllCommands().Values)
                     {
                         WriteLine(s.ToPrologString() + ".");
                     }
@@ -100,16 +79,26 @@ namespace Cogbot.Actions.System
             }
             if (args.Length > 0)
             {
-                if (Client.Commands.ContainsKey(args[0]))
-                    return Success(Client.Commands[args[0]].Description);
-                else
+                int found = 0;
+                foreach (var s in Client.AllCommands().Values)
+                {
+                    if (s.Matches(args[0]))
+                    {
+                        found++;
+                        WriteLine(s.Name + ": " + s.Description);
+                    }
+                }
+                if (found == 0)
+                {
                     return Failure("Command " + args[0] + " Does not exist. \"help\" to display all available commands.");
+                }
+                return Success("found=" + found);
             }
             StringBuilder result = new StringBuilder();
             var CommandTree = new SortedDictionary<CommandCategory, List<CommandInfo>>();
 
             CommandCategory cc;
-            foreach (CommandInfo c in TheBotClient.Commands.Values)
+            foreach (CommandInfo c in TheBotClient.AllCommands().Values)
             {
                 if (c.Category.Equals(null))
                     cc = CommandCategory.Unknown;

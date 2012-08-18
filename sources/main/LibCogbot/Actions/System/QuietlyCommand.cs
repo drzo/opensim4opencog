@@ -11,11 +11,14 @@ namespace Cogbot.Actions.System
         public QuietlyCommand(BotClient testClient)
         {
             Name = "quietly";
-            Description = "Invoke a botcmd without printing anything.";
-            Details = Example("quietly priminfo", "run priminfo and discard results");
-            Parameters = CreateParams(
-    "command", typeof(BotCommand), "command to execute quietly");
+            TheBotClient = testClient;
+        }
 
+        override public void MakeInfo()
+        {
+            Description = "Invoke a botcmd without printing anything.";
+            AddExample("quietly priminfo", "run priminfo and discard results");
+            AddVersion(CreateParams("command", typeof(BotCommand), "command to execute quietly"), Description);            
             Category = CommandCategory.BotClient;
         }
 

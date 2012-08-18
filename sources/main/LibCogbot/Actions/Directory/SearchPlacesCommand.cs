@@ -19,6 +19,11 @@ namespace Cogbot.Actions.Search
         public SearchPlacesCommand(BotClient testClient)
         {
             Name = "searchplaces";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Searches Places.";
             Details = AddUsage(Name + " [search text]", "searches " + Name.Replace("seaches", ""));
             Category = CommandCategory.Other;

@@ -11,12 +11,16 @@ namespace Cogbot.Actions.System
         public ToBotCommand(BotClient testClient)
         {
             Name = "tobot";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description =
                 "Send a command only to one bot.  This is useful when more than one bot is listening to your botcommands on open channel." +
                 "The bot must be logged on from the same Cogbot instance";
-            Details = 
-                AddUsage("tobot <avatar> <botcmd>", "Send the command only to avatar") +
-                Example("tobot \"Nephrael Rae\" anim KISS", "Make Nephrael Rae play the kiss animation");
+            AddUsage("tobot <avatar> <botcmd>", "Send the command only to avatar");
+            AddExample("tobot \"Nephrael Rae\" anim KISS", "Make Nephrael Rae play the kiss animation");
             Parameters = CreateParams(
                 "avatar", typeof(AgentSpec), "the avatar to perform the command on",
                 "command", typeof(BotCommand), "the command to perform");
@@ -37,14 +41,18 @@ namespace Cogbot.Actions.System
         public AllBotsCommand(BotClient testClient)
         {
             Name = "AllBots";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description =
                 "Send a command to all bots.  This is useful when more than one bot is listening to your botcommands on open channel." +
                 "The bots must be logged on from the same Cogbot instance";
-            Details = 
-                AddUsage("allbots <botcmd>", "Send the command only to avatar") +
-                Example("allbots anim KISS", "Make all bots play the kiss animation");
+            AddUsage("allbots <botcmd>", "Send the command only to avatar");
+            AddExample("allbots anim KISS", "Make all bots play the kiss animation");
             Parameters = CreateParams(
-                "command", typeof(BotCommand), "the command to perform");
+                "command", typeof (BotCommand), "the command to perform");
             Category = CommandCategory.BotClient;
         }
 

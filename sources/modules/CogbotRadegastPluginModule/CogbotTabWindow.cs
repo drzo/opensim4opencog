@@ -111,7 +111,7 @@ namespace CogbotRadegastPluginModule
 
             ctxAnim.Visible = true;
             ctxTextures.Visible = true;
-
+            writeLock = new TaskQueueHandler(man.TheBot, "FormWriter", TimeSpan.Zero, false);
 
 
             // Callbacks
@@ -739,7 +739,7 @@ namespace CogbotRadegastPluginModule
         }
 
 
-        private readonly TaskQueueHandler writeLock = new TaskQueueHandler("FormWriter", TimeSpan.Zero, false);        
+        private readonly TaskQueueHandler writeLock;
         public void WriteLine(string str, params object[] args)
         {
 

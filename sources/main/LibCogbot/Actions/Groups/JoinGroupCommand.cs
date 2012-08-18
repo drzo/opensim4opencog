@@ -21,6 +21,11 @@ namespace Cogbot.Actions.Groups
         public JoinGroupCommand(BotClient testClient)
         {
             Name = "joingroup";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "join a group.";
             Parameters = CreateParams("group", typeof(Group), "group you are going to " + Name);
             Details = AddUsage(Name + " group", Description);

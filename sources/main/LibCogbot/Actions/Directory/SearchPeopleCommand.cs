@@ -17,6 +17,11 @@ namespace Cogbot.Actions.Search
         public SearchPeopleCommand(BotClient testClient)
         {
             Name = "searchpeople";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Searches for other avatars.";
             Details = AddUsage(Name + " [search text]", "searches " + Name.Replace("seaches", ""));
             Category = CommandCategory.Friends;

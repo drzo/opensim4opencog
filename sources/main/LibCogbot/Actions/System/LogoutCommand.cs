@@ -13,10 +13,12 @@ namespace Cogbot.Actions
             : base(Client)
         {
             Name = "Logout";
-            Description = "Logout from grid";
-            Details = AddUsage("logout", "logout the targeted bot");
-            Parameters = CreateParams();
+        }
 
+        override public void MakeInfo()
+        {
+            Description = "Logout from grid";
+            AddVersion(CreateParams(), "logout the targeted bot");
             Category = CommandCategory.BotClient;
             Parameters = new[] { new NamedParam(typeof(GridClient), null) };
         }
