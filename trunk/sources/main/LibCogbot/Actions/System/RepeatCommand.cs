@@ -25,7 +25,7 @@ namespace Cogbot.Actions
                            "taskid", typeof (string), "the task queue this thread will use or 'create' or 'list'",
                            Optional("--kill", typeof (bool), "whether to kill or append to previous taskid"),
                            "seconds", typeof (int), "number of seconds between repeats",
-                           Rest("command", typeof (BotCommand), "command to repeat")), Description);
+                           Rest("command", typeof(string[]), "The command to repeat synchronously")), Description);
 
             Category = CommandCategory.BotClient;
         }
