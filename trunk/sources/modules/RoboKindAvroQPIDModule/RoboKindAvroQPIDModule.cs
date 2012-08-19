@@ -34,6 +34,7 @@ namespace RoboKindAvroQPIDModule
 
         readonly List<object> cogbotSendersToNotSendToCogbot = new List<object>();
 
+        public static bool DISABLE_AVRO = true;
         public static string REPORT_REQUEST = "REPORT_REQUEST";
         private RoboKindListener RK_listener;
         private RoboKindPublisher RK_publisher;
@@ -42,6 +43,8 @@ namespace RoboKindAvroQPIDModule
 
         public bool LogEventFromCogbot(object sender, CogbotEvent evt)
         {
+            if (DISABLE_AVRO) return true;
+            EnsureStarted();
             if (evt.Sender == this) return false;
             if (!IsQPIDRunning) return false;
             if (!cogbotSendersToNotSendToCogbot.Contains(sender)) cogbotSendersToNotSendToCogbot.Add(sender);
@@ -84,6 +87,8 @@ namespace RoboKindAvroQPIDModule
 
         public bool LogEventFromRoboKind(object sender, CogbotEvent evt)
         {
+            if (DISABLE_AVRO) return false;
+            EnsureStarted();
             if (cogbotSendersToNotSendToCogbot.Contains(sender))
             {
                 return false;
@@ -95,6 +100,8 @@ namespace RoboKindAvroQPIDModule
 
         public void OnEvent(CogbotEvent evt)
         {
+            if (DISABLE_AVRO) return;
+            EnsureStarted();
             if (evt.IsEventType(SimEventType.DATA_UPDATE)) return;
             LogEventFromCogbot(evt.Sender, evt);
         }
@@ -102,10 +109,16 @@ namespace RoboKindAvroQPIDModule
         public override void Dispose()
         {
             EventsEnabled = false;
-            RK_listener.Shutdown();
-            RK_listener.OnAvroMessage -= AvroReceived;
-            RK_listener = null;
-            RK_publisher.Shutdown();
+            if (RK_listener != null)
+            {
+                RK_listener.Shutdown();
+                RK_listener.OnAvroMessage -= AvroReceived;
+                RK_listener = null;
+            }
+            if (RK_publisher != null)
+            {
+                RK_publisher.Shutdown();
+            }
             RK_publisher = null;
         }
 
@@ -118,7 +131,15 @@ namespace RoboKindAvroQPIDModule
 
         public override void StartupListener()
         {
-            return;
+            EnsureStarted();
+        }
+
+        private bool EnsuredStarted = false;
+        private void EnsureStarted()
+        {
+            if (DISABLE_AVRO) return;
+            if (EnsuredStarted) return;
+            EnsuredStarted = true;           
             EnsureLoginToQIPD();
             client.EachSimEvent += SendEachSimEvent;
             client.AddBotMessageSubscriber(this);
@@ -180,7 +201,8 @@ namespace RoboKindAvroQPIDModule
 
         private void AvroReceived(IMessage msg)
         {
-            //if (DisableSpam) return;
+            if (DISABLE_AVRO) return;
+            EnsureStarted();
             LogEventFromRoboKind(this, MsgToCogEvent(this, msg));
         }
 
