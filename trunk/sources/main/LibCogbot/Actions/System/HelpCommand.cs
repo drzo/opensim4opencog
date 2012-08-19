@@ -47,7 +47,7 @@ namespace Cogbot.Actions.System
                     continue;
                 }
                 found++;
-                WriteLine(overview);
+                WriteLine("[HELP] " + overview);
                 if (detailed)
                 {
                     WriteLine(info.usageString);

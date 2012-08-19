@@ -1200,7 +1200,7 @@ namespace Cogbot
                 FlushWriter(System.Console.Out);
                 FlushWriter(System.Console.Error);
                 if (executeCommand == null) continue;
-                CurrentOutput(executeCommand.ToString());
+                CurrentOutput(executeCommand.ToPostExecString());
             }
             Dispose();
         }

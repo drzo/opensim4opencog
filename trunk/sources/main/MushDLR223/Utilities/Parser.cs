@@ -755,7 +755,13 @@ namespace MushDLR223.ScriptEngines
                 KeysRequired = true;
                 return true;
             }
-            value = ChangeType<T>(tokens[this.StartArg + arg]);
+            int index = this.StartArg + arg;
+            if (index >= tokens.Length)
+            {
+                value = default(T);
+                return false;
+            }
+            value = ChangeType<T>(tokens[index]);
             return true;
         }
 
