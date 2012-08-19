@@ -18,10 +18,8 @@ namespace Cogbot.Actions.Movement
             Name = "Crouch";
             Category = CommandCategory.Movement;
             ParameterVersions = CreateParamVersions(
-                CreateParams(),
-                CreateParams(Optional("on", typeof(bool), "begin crouching")),
-                CreateParams("off", typeof(bool), "stop crouching")
-               );
+                CreateParams(Optional("on", typeof (bool), "begin or stop crouching")));
+               
             ResultMap = CreateParams(
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if we crouched");

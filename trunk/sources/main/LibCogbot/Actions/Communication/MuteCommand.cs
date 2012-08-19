@@ -8,7 +8,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Communication
 {
-    class UnmuteCommand : MuteCommand
+    class UnmuteCommand : MuteCommand, FFITODO
     {
         public UnmuteCommand(BotClient Client)
             : base(Client)
@@ -39,18 +39,16 @@ namespace Cogbot.Actions.Communication
 <li>ObjectSounds - don't mute sounds</li>
 <li>All - don't mute anything</li>
 </ul>";
-            ParameterVersions = CreateParamVersions(
-                CreateParams(
-                   Optional("element", typeof(MuteFlags), "element to not mute"),
-                   "av", typeof(AgentSpec),
-                   "Avatar to mute"),
-                CreateParams(
-                   Optional("element", typeof(MuteFlags), "element to not mute"),
-                   "object", typeof(PrimSpec),
-                   "object to mute"));
+            AddVersion(CreateParams(
+                          Optional("show", typeof(bool), "show mutelists"),
+                          Optional("request", typeof(bool), "request mutelists"),
+                          Optional("element", typeof(MuteFlags), "element to not mute"),
+                          "targets", typeof(List<SimObject>), "objects and agents to mute"), Description);
             ResultMap = CreateParams(
-                 "message", typeof(string), "if success was false, the reason why",
-                 "success", typeof(bool), "true if we muted the object");
+                "message", typeof(string), "if success was false, the reason why",
+                "muted", typeof(List<SimObject>), "list of muteds",
+                "ummuted", typeof(List<SimObject>), "list of unmuteds",
+                "success", typeof(bool), "true if we muted the object");
          }
 
         public override CmdResult acceptInput(string verb, Parser pargs, OutputDelegate WriteLine)

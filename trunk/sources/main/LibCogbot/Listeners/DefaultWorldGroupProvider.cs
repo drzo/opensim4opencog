@@ -16,102 +16,117 @@ namespace Cogbot
         public DefaultWorldGroupProvider(WorldObjects objects)
         {
             world = objects;
-            // set of currently selected objects
-            AddObjectGroup("selected", () =>
-            {
-                SimActor avatar = this.avatar;
-                if (avatar == null) return null;
-                return avatar.GetSelectedObjects();
-            });
-            AddObjectGroup("none", () => new List<SimObject>());
-            AddObjectGroup("assets", () => WorldObjects.SimRootObjects.CopyOf());
-            AddObjectGroup("objects", () => WorldObjects.SimRootObjects.CopyOf());
-            AddObjectGroup("prims", () => WorldObjects.SimObjects.CopyOf());
-            AddObjectGroup("childprims", () => WorldObjects.SimChildObjects.CopyOf());
-            AddObjectGroup("attachments", () => WorldObjects.SimAttachmentObjects.CopyOf());
+            AddObjectGroup("selected", "set of currently selected objects", () =>
+                                                                                {
+                                                                                    SimActor avatar = this.avatar;
+                                                                                    if (avatar == null) return null;
+                                                                                    return avatar.GetSelectedObjects();
+                                                                                });
+            AddObjectGroup("none", "empty list", () => new List<SimObject>());
+            AddObjectGroup("assets", "known assets", () => WorldObjects.SimRootObjects.CopyOf());
+            AddObjectGroup("objects", "known sim oot objects", () => WorldObjects.SimRootObjects.CopyOf());
+            AddObjectGroup("prims", "all prims (attached and otherwise and avatars etc)",
+                           () => WorldObjects.SimObjects.CopyOf());
+            AddObjectGroup("childprims", "known childs rez in world not attachments",
+                           () => WorldObjects.SimChildObjects.CopyOf());
+            AddObjectGroup("attachments", "known attacments (everyones)",
+                           () => WorldObjects.SimAttachmentObjects.CopyOf());
             // all known accounts
-            AddObjectGroup("accounts", () => WorldObjects.SimAccounts.CopyOf());
+            AddObjectGroup("accounts", "known accounts", () => WorldObjects.SimAccounts.CopyOf());
             // all known avatars
-            AddObjectGroup("avatars", () => WorldObjects.SimAvatars.CopyOf());
+            AddObjectGroup("avatars", "known avatars", () => WorldObjects.SimAvatars.CopyOf());
             // this bot's master(s)
-            AddObjectGroup("master", () =>
-                                         {
-                                             var v = new List<object>();
-                                             if (objects.client.MasterKey != UUID.Zero)
-                                             {
-                                                 v.Add(objects.CreateSimAvatar(objects.client.MasterKey, objects, null));
+            AddObjectGroup("master", "known masters", () =>
+                                                          {
+                                                              var v = new List<object>();
+                                                              if (objects.client.MasterKey != UUID.Zero)
+                                                              {
+                                                                  v.Add(objects.CreateSimAvatar(
+                                                                            objects.client.MasterKey, objects, null));
 
-                                             }
-                                             else
-                                             {
-                                                 v.Add(objects.client.MasterName);
-                                             }
-                                             return v;
-                                         });
+                                                              }
+                                                              else
+                                                              {
+                                                                  v.Add(objects.client.MasterName);
+                                                              }
+                                                              return v;
+                                                          });
             // the current bot
-            AddObjectGroup("self", () =>
-                                       {
-                                           SimActor avatar = this.avatar;
-                                           if (avatar == null) return null;
-                                           var v = new List<SimObject> { avatar }; return v;
-                                       });
-            // list of all av's, attachments, and objects in this region
-            // used in "moveprim $regionprims <0,0,-1>
-            AddObjectGroup("regionprims", () =>
-                                         {
-                                             List<SimObject> here = new List<SimObject>();
-                                             SimActor avatar = this.avatar;
-                                             if (avatar == null) return null;
-                                             ulong areg = avatar.RegionHandle;
-                                             foreach (SimObject o in WorldObjects.SimObjects.CopyOf())
-                                             {
-                                                 if (o.RegionHandle == areg) here.Add(o);
-                                             }
-                                             return here;
-                                         });
-            // list of all av's, attachments, and objects known to system
-            AddObjectGroup("allprims", () => WorldObjects.SimObjects.CopyOf());
-            // list of all objects that have an affordance or makes sense for the bot to know about
-            AddObjectGroup("selfknownprims", () =>
-                                        {
-                                            SimActor avatar = this.avatar;
-                                            if (avatar == null) return null;
-                                            return avatar.GetKnownObjects();
-                                        });
+            AddObjectGroup("self", "the robot's avatar", () =>
+                                                             {
+                                                                 SimActor avatar = this.avatar;
+                                                                 if (avatar == null) return null;
+                                                                 var v = new List<SimObject> {avatar};
+                                                                 return v;
+                                                             });
+            AddObjectGroup("nearest", "nearest root prim", () =>
+                                                               {
+                                                                   var sortme = WorldObjects.SimRootObjects.CopyOf();
+                                                                   if (sortme.Count == 0) return null;
+                                                                   sortme.Sort(this.avatar.CompareDistance);
+                                                                   var v = new List<SimObject> {sortme[0]};
+                                                                   return v;
+                                                               });
+            AddObjectGroup("regionprims",
+                           "list of all av's, attachments, and objects in this region used in 'moveprim $regionprims <0,0,-1>'",
+                           () =>
+                               {
+                                   List<SimObject> here = new List<SimObject>();
+                                   SimActor avatar = this.avatar;
+                                   if (avatar == null) return null;
+                                   ulong areg = avatar.RegionHandle;
+                                   foreach (SimObject o in WorldObjects.SimObjects.CopyOf())
+                                   {
+                                       if (o.RegionHandle == areg) here.Add(o);
+                                   }
+                                   return here;
+                               });
+            AddObjectGroup("allprims", "list of all av's, attachments, and objects known to system",
+                           () => WorldObjects.SimObjects.CopyOf());
+
+            AddObjectGroup("selfknownprims",
+                           "list of all objects that have an affordance or makes sense for the bot to know about",
+                           () =>
+                               {
+                                   SimActor avatar = this.avatar;
+                                   if (avatar == null) return null;
+                                   return avatar.GetKnownObjects();
+                               });
             // the 'current object' - the current object is determined in a complex way
             // but is generally the last object acted upon by the av. it's only allowed to be changed every 30 sec
             // and might be overwritten by aiml. 
             // the intent is to support the notion of a pronoun 'it'
             // if the bot's head is free (not being animated) it will look at target
-            AddObjectGroup("lasteventprim", () =>
-                                         {
-                                             SimActor avatar = this.avatar;
-                                             if (avatar == null) return null;
-                                             var v = new List<SimPosition>();
-                                             var a = avatar.CurrentAction;
-                                             if (a != null && a.Target != null)
-                                             {
-                                                 v.Add(a.Target);
-                                                 return v;
-                                             }
-                                             SimPosition p = null;// avatar.ApproachPosition;
-                                             if (p != null)
-                                             {
-                                                 v.Add(p);
-                                                 return v;
-                                             }
-                                             var r = GetTargetInEvent(v, avatar);
-                                             if (r != null) return r;
-                                             if (objects.client.MasterKey != UUID.Zero)
-                                             {
-                                                 var master = WorldObjects.GetSimObjectFromUUID(objects.client.MasterKey);
-                                                 if (master != null)
-                                                 {
-                                                     return GetTargetInEvent(v, master);
-                                                 }
-                                             }
-                                             return null;
-                                         });
+            AddObjectGroup("lasteventprim", "the 'current object' - the current object is determined in a complex way",
+                           () =>
+                               {
+                                   SimActor avatar = this.avatar;
+                                   if (avatar == null) return null;
+                                   var v = new List<SimPosition>();
+                                   var a = avatar.CurrentAction;
+                                   if (a != null && a.Target != null)
+                                   {
+                                       v.Add(a.Target);
+                                       return v;
+                                   }
+                                   SimPosition p = null; // avatar.ApproachPosition;
+                                   if (p != null)
+                                   {
+                                       v.Add(p);
+                                       return v;
+                                   }
+                                   var r = GetTargetInEvent(v, avatar);
+                                   if (r != null) return r;
+                                   if (objects.client.MasterKey != UUID.Zero)
+                                   {
+                                       var master = WorldObjects.GetSimObjectFromUUID(objects.client.MasterKey);
+                                       if (master != null)
+                                       {
+                                           return GetTargetInEvent(v, master);
+                                       }
+                                   }
+                                   return null;
+                               });
         }
 
         private static IList GetTargetInEvent(List<SimPosition> v, SimObject master)
@@ -169,7 +184,7 @@ namespace Cogbot
             get { lock (ObjectGroups) return new List<string>(ObjectGroups.Keys); }
         }
 
-        public void AddObjectGroup(string selecteditems, Func<IList> func)
+        public void AddObjectGroup(string selecteditems, string desc, Func<IList> func)
         {
             lock (ObjectGroups)
             {

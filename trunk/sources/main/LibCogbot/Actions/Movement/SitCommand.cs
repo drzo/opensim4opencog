@@ -1,63 +1,69 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using MushDLR223.Utilities;
-using OpenMetaverse;
-using OpenMetaverse.Packets;
+using System.Threading;
+using Cogbot.World;
+using OpenMetaverse; //using libsecondlife;
 
 using MushDLR223.ScriptEngines;
+using PathSystem3D.Navigation;
 
 namespace Cogbot.Actions.Movement
 {
-    public class SitCommand : Command, BotPersonalCommand
+    class Sit : Command, BotPersonalCommand, FFIComplete
     {
-        public SitCommand(BotClient testClient)
-		{
-			Name = "sitclose";
-			Description = "Attempt to sit on the closest prim";
-            AddVersion(CreateParams(), Description);
+        public bool sittingOnGround = false;
+
+        bool registeredCallback = false;
+        public Sit(BotClient Client)
+            : base(Client)
+        {
+            TheBotClient = Client;
+        }
+
+        override public void MakeInfo()
+        {
+            Description = "Sit on the ground or on an object. Sit with no params sits on the ground.";
+            Details = "<p>sit</p><p>sit on &lt;primspec&gt;</p><p>example: sit   <i>sit on ground</i></p><p>example: sit on chair</p>";
+            AddVersion(CreateParams(
+                           Optional("on", typeof(PrimSpec), "The object to sit on (may use $nearest)"),
+                           Optional("down", typeof(bool), "will use ground sitting")),
+                       "Sit on Object");
+            ResultMap = CreateParams(
+                 "message", typeof(string), "if success was false, the reason why",
+                 "success", typeof(bool), "true if we sat");
             Category = CommandCategory.Movement;
-		}
-			
+        }
+
         public override CmdResult ExecuteRequest(CmdRequest args)
-		{
-            Primitive closest = null;
-		    double closestDistance = Double.MaxValue;
-            Simulator sim = Client.Network.CurrentSim;
-            if (sim == null)
-            {
-                WriteLine("Client Current Sim== null!");
-                foreach (Simulator s in LockInfo.CopyOf(Client.Network.Simulators))
-                {
-                    sim = s;
-                    break;                    
-                }
-                Client.Network.CurrentSim = sim;
-            }
-            sim.ObjectsPrimitives.ForEach(
-                delegate(Primitive prim)
-                {
-                    float distance = Vector3.Distance(GetSimPosition(), prim.Position);
+        {
+            if (args.Length < 1)
+                return ShowUsage(); // " siton UUID";
 
-                    if (closest == null || distance < closestDistance)
-                    {
-                        closest = prim;
-                        closestDistance = distance;
-                    }
-                }
-            );
-
-            if (closest != null)
+            int argsUsed;
+            SimPosition pos;
+            if (!args.TryGetValue("on", out pos))
             {
-                Client.Self.RequestSit(closest.ID, Vector3.Zero);
-                Client.Self.Sit();
-
-                return Success("Sat on " + closest.ID + " (" + closest.LocalID + "). Distance: " + closestDistance);
+                sittingOnGround = WorldSystem.TheSimAvatar.SitOnGround();
+                return !sittingOnGround
+                           ? Failure("$bot did not yet sit on the ground.")
+                           : Success("$bot sat on the ground.");
             }
-            else
+            if (pos is SimObject)
             {
-                return Failure("Couldn't find a nearby prim to sit on");
+                if (WorldSystem.TheSimAvatar.SitOn(pos as SimObject)) Success("$bot sat on " + pos);
+                if (!args.IsTrue("down")) return Failure("$bot did not yet sit on " + pos);
+
             }
-		}
+            else if (pos == null)
+            {
+                return Failure("$bot did not yet find " + args.str);
+            }
+            // @todo use autoppoiolot to the location andf then sit
+            TheSimAvatar.GotoTargetAStar(pos);
+            sittingOnGround = WorldSystem.TheSimAvatar.SitOnGround();
+            if (sittingOnGround) return Success("$bot sat at " + pos);
+            return Failure("$bot did not sit at " + pos);
+        }
     }
 }

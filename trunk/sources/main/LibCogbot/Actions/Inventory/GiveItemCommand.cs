@@ -17,22 +17,24 @@ namespace Cogbot.Actions.Inventory.Shell
         {
             Name = "give";
             Description = "Gives items from the current working directory to an avatar or object.";
-            usageString = "give <item1> [item2] [item3] [...] to <agent/primSpec1> [agent/primSpec2] [...] ";
+            usageString = "give items <item1> [item2] [item3] [...] to <agent/primSpec1> [agent/primSpec2] [...] ";
+            Parameters =
+                CreateParams(
+                    Optional("--move", typeof (bool), "To move instead of copy"),
+                    "items", typeof (List<string>), "the inventoiry items",
+                    "to", typeof (string), "the receivers list");
             Category = CommandCategory.Inventory;
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
+            bool moveInsteadOfCopy = args.IsTrue("--move");
             string[] toks;
-            bool moveInsteadOfCopy = args.GetWithout("--move", out toks);
-            toks = (string[])toks.Clone();
-            int prepLocatedAt = args.IndexOf("to");
-            if (prepLocatedAt < 1 || prepLocatedAt + 1 > args.Length)
+            string[] objects;
+            if (!args.TryGetValue("items", out toks) || !args.TryGetValue("to", out objects))
             {
                 return ShowUsage();
             }
-            string[] objects = args.GetAfterIndex(prepLocatedAt);
-
             int argsUsed;
             var allTargets = WorldSystem.GetPrimitives(objects, out argsUsed);
             int tc = allTargets.Count;
@@ -43,7 +45,6 @@ namespace Cogbot.Actions.Inventory.Shell
 
             Success("Going to give to " + tc + " avatar/objects");
 
-            Array.Resize(ref toks, prepLocatedAt);
 
             int given = 0;
             foreach (var dest in allTargets)

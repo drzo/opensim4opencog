@@ -95,13 +95,13 @@ namespace Cogbot.Actions.System
                 return Success("found=" + found);
             }
             StringBuilder result = new StringBuilder();
-            var CommandTree = new SortedDictionary<CommandCategory, List<CommandInfo>>();
+            var CommandTree = new SortedDictionary<string, List<CommandInfo>>();
 
-            CommandCategory cc;
+            string cc;
             foreach (CommandInfo c in TheBotClient.AllCommands().Values)
             {
                 if (c.Category.Equals(null))
-                    cc = CommandCategory.Unknown;
+                    cc = "Unknown";
                 else
                     cc = c.Category;
 

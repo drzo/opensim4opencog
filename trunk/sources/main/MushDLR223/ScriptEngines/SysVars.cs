@@ -85,7 +85,7 @@ namespace MushDLR223.ScriptEngines
             {
                 if (value is String)
                 {
-                    string vs = (String)value;
+                    string vs = (String) value;
                     try
                     {
                         var e = Enum.Parse(type, vs, false);
@@ -99,8 +99,22 @@ namespace MushDLR223.ScriptEngines
                     }
                 }
             }
+            foreach (TypeChanger tc in LockInfo.CopyOf(TypeChangers))
+            {
+                bool didit;
+                object o = tc(value, type, out didit);
+                if (didit) return o;
+            }
             return Convert.ChangeType(value, type);
         }
+
+        public static void AddTypeChanger(TypeChanger tc)
+        {
+            lock (TypeChangers) TypeChangers.Add(tc);
+        }
+
+        private static readonly List<TypeChanger> TypeChangers = new List<TypeChanger>();
+        public delegate object TypeChanger(object value, Type to, out bool converted);
 
     }
 
