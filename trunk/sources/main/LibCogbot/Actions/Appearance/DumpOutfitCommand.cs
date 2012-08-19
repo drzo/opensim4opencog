@@ -11,7 +11,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
 {
-    public class DumpOutfitCommand : Command, BotPersonalCommand, FFIComplete
+    public class DumpOutfitCommand : Command, BotPersonalCommand, FFIComplete, AsynchronousCommand
     {
 
         public DumpOutfitCommand(BotClient testClient)

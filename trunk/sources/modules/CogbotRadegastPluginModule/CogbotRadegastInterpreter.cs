@@ -1,3 +1,4 @@
+using System;
 using Cogbot;
 using MushDLR223.ScriptEngines;
 using Radegast;
@@ -60,27 +61,41 @@ namespace CogbotRadegastPluginModule
             OutputDelegate newOutputDelegate = new OutputDelegate(WriteLine);
             CmdResult result;
             var botClient = BotClient;
-            if (botClient == null)
+            bool needResult = true;
+            try
             {
-                result = clientManager.ExecuteCommand(cmdline, session, newOutputDelegate);
-            }
-            else
-            {
-                result = botClient.ExecuteCommand(cmdline, session, newOutputDelegate);
-            }
+                if (botClient == null)
+                {
+                    result = clientManager.ExecuteCommand(cmdline, session, newOutputDelegate, needResult);
+                }
+                else
+                {
+                    result = botClient.ExecuteCommand(cmdline, session, newOutputDelegate, needResult);
+                }
 
-            if (result != null)
+                if (result != null)
+                {
+                    WriteLine(result.ToString());
+                }
+                else
+                {
+                    WriteLine("No result returned: {0}", cmdline);
+                }
+            }
+            catch (NoSuchCommand nsc)
             {
-                //WriteLine(result.ToString());
-            } else
+                WriteLine("NoSuchCommand: {0} => {1}", cmdline, nsc);
+            }
+            catch (Exception nsc)
             {
-                WriteLine("No result returned: {0}", cmdline);
+                WriteLine("Exception: {0} => {1}", cmdline, nsc);
             }
         }
 
         public void Help(string helpArgs, ConsoleWriteLine WriteLine)
         {
-            WriteLine(clientManager.ExecuteCommand("help " + helpArgs, null ,new OutputDelegate(WriteLine)).ToString());         
+            WriteLine(
+                clientManager.ExecuteCommand("help " + helpArgs, null, new OutputDelegate(WriteLine), true).ToString());
         }
 
         public void Dispose()

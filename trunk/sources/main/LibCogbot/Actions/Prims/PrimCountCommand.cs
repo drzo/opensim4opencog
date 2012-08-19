@@ -7,7 +7,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Land
 {
-    public class PrimCountCommand : Command, RegionMasterCommand
+    public class PrimCountCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         public PrimCountCommand(BotClient testClient)
 		{

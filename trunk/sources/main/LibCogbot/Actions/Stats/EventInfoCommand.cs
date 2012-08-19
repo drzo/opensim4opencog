@@ -7,7 +7,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Inventory
 {
-    class EventInfoCommand : Command, RegionMasterCommand
+    class EventInfoCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
 
         public EventInfoCommand(BotClient Client)

@@ -315,37 +315,27 @@ namespace Cogbot
             return GetBotByName(named);
         }
 
-        public CmdResult ExecuteCommand(string text, object session, OutputDelegate WriteLine)
+        public CmdResult ExecuteCommand(string text, object session, OutputDelegate WriteLine, bool needResult)
         {
-            if (string.IsNullOrEmpty(text)) return null;
-            text = text.Trim();
-            while (text.StartsWith("/"))
+            text = GetCommandText(text);
+            try
             {
-                text = text.Substring(1).TrimStart();
+                return ExecuteBotsCommand(text, session, WriteLine, needResult);
             }
-            if (string.IsNullOrEmpty(text)) return null;
-            CmdResult res = ExecuteBotsCommand(text, session, WriteLine);
-            if (res != null) return res;
-            res = ExecuteSystemCommand(text, session, WriteLine);
-            if (res != null) return res;
-            WriteLine("I don't understand the ExecuteCommand \"" + text + "\".");
-            return null;
+            catch (NoSuchCommand)
+            {
+            }
+            return ExecuteSystemCommand(text, session, WriteLine, needResult);
         }
 
-        private CmdResult ExecuteBotsCommand(string text, object session, OutputDelegate WriteLine)
+        private CmdResult ExecuteBotsCommand(string text, object session, OutputDelegate WriteLine, bool needResult)
         {
-            if (string.IsNullOrEmpty(text)) return null;
-            text = text.Trim();
-            while (text.StartsWith("/"))
-            {
-                text = text.Substring(1).TrimStart();
-            }
-            if (string.IsNullOrEmpty(text)) return null;
+            text = GetCommandText(text);
 
             var OnlyOneCurrentBotClient = GetCurrentBotClient(WriteLine);
             if (OnlyOneCurrentBotClient != null)
             {
-                return OnlyOneCurrentBotClient.ExecuteBotCommand(text, session, WriteLine);
+                return OnlyOneCurrentBotClient.ExecuteBotCommand(text, session, WriteLine, needResult);
 
             }
             var BotClients = this.BotClients;
@@ -355,7 +345,7 @@ namespace Cogbot
             foreach (BotClient currentClient in BotClients)
                 if (currentClient != null)
                 {
-                    CmdResult t = currentClient.ExecuteBotCommand(text, session, WriteLine);
+                    CmdResult t = currentClient.ExecuteBotCommand(text, session, WriteLine, needResult);
                     if (BotClients.Count < 2) return t;
 
                     if (t == null) continue;
@@ -383,19 +373,12 @@ namespace Cogbot
             return new CmdResult(res + " " + success + " successes", true, CmdResult.CreateMap());
         }
 
-        public CmdResult ExecuteSystemCommand(string text, object session, OutputDelegate WriteLine)
+        public CmdResult ExecuteSystemCommand(string text, object session, OutputDelegate WriteLine, bool needResult)
         {
-            string res = String.Empty;
+            text = GetCommandText(text);
             try
             {
                 {
-                    if (string.IsNullOrEmpty(text)) return null;
-                    text = text.Trim();
-                    while (text.StartsWith("/"))
-                    {
-                        text = text.Substring(1).TrimStart();
-                    }
-                    if (string.IsNullOrEmpty(text)) return null;
 
                     string verb = Parser.ParseArguments(text)[0];
                     var cmd = GetCommand(verb, false);
@@ -403,17 +386,30 @@ namespace Cogbot
                     {
                         string pargs = (text.Length > verb.Length) ? text.Substring(verb.Length + 1) : "";
                         return BotClient.DoCmdAct(cmd, verb, pargs, BotClient.SessionToCallerId(session),
-                                                  WriteLine);
+                                                  WriteLine, needResult);
                     }
-                    return null;
+                    throw new NoSuchCommand(verb);
                 }
             }
             catch (Exception e)
             {
+                if (e is NoSuchCommand) throw e;
                 string newVariable = "ClientManager: " + text + " caused " + e;
                 WriteLine(newVariable);
                 return new CmdResult(newVariable, false, CmdResult.CreateMap());
             }
+        }
+
+        public static string GetCommandText(string text)
+        {
+            if (string.IsNullOrEmpty(text)) throw new NoSuchCommand("<empty>");
+            text = text.Trim();
+            while (text.StartsWith("/"))
+            {
+                text = text.Substring(1).TrimStart();
+            }
+            if (string.IsNullOrEmpty(text)) throw new NoSuchCommand("<empty>");
+            return text;
         }
 
 
@@ -526,7 +522,7 @@ namespace Cogbot
 
         public CmdResult ExecuteCommand(string text)
         {
-            return ExecuteCommand(text, this, WriteLine);
+            return ExecuteCommand(text, this, WriteLine, false);
         }
 
 
@@ -1196,11 +1192,18 @@ namespace Cogbot
                 }
                 string input = ConsoleApp.consoleBase.CmdPrompt(GetPrompt);
                 if (string.IsNullOrEmpty(input)) continue;
-                CmdResult executeCommand = ExecuteCommand(input, null, CurrentOutput);
-                FlushWriter(System.Console.Out);
-                FlushWriter(System.Console.Error);
-                if (executeCommand == null) continue;
-                CurrentOutput(executeCommand.ToPostExecString());
+                try
+                {
+                    CmdResult executeCommand = ExecuteCommand(input, null, CurrentOutput, true);
+                    FlushWriter(System.Console.Out);
+                    FlushWriter(System.Console.Error);
+                    if (executeCommand == null) continue;
+                    CurrentOutput(executeCommand.ToPostExecString());
+                }
+                catch (Exception e)
+                {
+                    CurrentOutput("" + e);
+                }
             }
             Dispose();
         }
@@ -1475,7 +1478,7 @@ namespace Cogbot
                 {
                     foreach (BotClient client in BotClients)
                     {
-                        client.ExecuteCommand(cmd, fromAgentID, WriteLine);
+                        client.ExecuteCommand(cmd, fromAgentID, WriteLine, true);
                         break;
                     }
                 }
@@ -1492,8 +1495,15 @@ namespace Cogbot
             }
             else
             {
-                CmdResult res = ExecuteSystemCommand(cmd, fromAgentID, WriteLine);
-                if (res != null) return;               
+                bool needResult = true;
+                try
+                {
+                    ExecuteSystemCommand(cmd, fromAgentID, WriteLine, needResult);
+                    return;
+                } catch (NoSuchCommand)
+                {
+                }
+            
                 // Make an immutable copy of the Clients dictionary to safely iterate over
                 int completed = 0;
 
@@ -1503,7 +1513,7 @@ namespace Cogbot
                         delegate(object state)
                         {
                             BotClient testClient = (BotClient)state;
-                            testClient.ExecuteCommand(cmd, fromAgentID, WriteLine);
+                            testClient.ExecuteCommand(cmd, fromAgentID, WriteLine, needResult);
                             ++completed;
                         },
                         client);
@@ -1734,7 +1744,7 @@ namespace Cogbot
                 {
                     AddClientTodo(
                         (bc) =>
-                        bc.ExecuteCommand(String.Format("botscript {0}", botscriptFile), UUID.Zero, GlobalWriteLine));
+                        bc.ExecuteCommand(String.Format("botscript {0}", botscriptFile), UUID.Zero, GlobalWriteLine, true));
                     
                 }
             }
@@ -1929,6 +1939,14 @@ namespace Cogbot
                 if (tq.Owner == null) all.Add(tq);
             }
             return all;
+        }
+    }
+
+    public class NoSuchCommand : Exception
+    {
+        public NoSuchCommand(string empty)
+        {
+          
         }
     }
 

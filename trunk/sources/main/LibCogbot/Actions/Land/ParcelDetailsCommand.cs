@@ -9,7 +9,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Land
 {
-    public class ParcelDetailsCommand : Command, RegionMasterCommand
+    public class ParcelDetailsCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         public ParcelDetailsCommand(BotClient testClient)
         {

@@ -7,7 +7,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Money
 {
-    public class SaleInfoCommand : Cogbot.Actions.Command, RegionMasterCommand
+    public class SaleInfoCommand : Cogbot.Actions.Command, RegionMasterCommand, AsynchronousCommand
     {
         public SaleInfoCommand(BotClient client)
         {

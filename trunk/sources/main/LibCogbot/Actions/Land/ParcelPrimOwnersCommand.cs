@@ -8,7 +8,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Land
 {
-    public class ParcelPrimOwnersCommand : Command, RegionMasterCommand
+    public class ParcelPrimOwnersCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         public ParcelPrimOwnersCommand(BotClient testClient)
         {

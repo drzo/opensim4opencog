@@ -49,7 +49,7 @@ namespace Cogbot.Actions.Voice
         }
     }
 
-    public class VoiceTestCommand : Command, RegionMasterCommand
+    public class VoiceTestCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         static AutoResetEvent EventQueueRunningEvent = new AutoResetEvent(false);
         static AutoResetEvent ProvisionEvent = new AutoResetEvent(false);

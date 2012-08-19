@@ -8,7 +8,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
 {
-    public class RegionInfoCommand : Command, RegionMasterCommand
+    public class RegionInfoCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         public RegionInfoCommand(BotClient testClient)
 		{

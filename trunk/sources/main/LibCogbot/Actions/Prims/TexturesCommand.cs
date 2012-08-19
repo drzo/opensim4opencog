@@ -7,7 +7,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Inventory
 {
-    public class TexturesCommand : Command, RegionMasterCommand
+    public class TexturesCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         Dictionary<UUID, UUID> alreadyRequested = new Dictionary<UUID, UUID>();
         bool enabled = false;

@@ -253,7 +253,7 @@ namespace Cogbot.Actions.Land
         private void DownloadRegionImage(GridRegion region)
         {
             string filename = region.Name + "_" + region.X + "_" + region.Y + ".tga";
-            Client.ExecuteCommand("download " + region.MapImageID + " " + AssetType.Texture + " " + filename + " jp2k", Client, WriteLine);
+            Client.ExecuteCommand("download " + region.MapImageID + " " + AssetType.Texture + " " + filename + " jp2k", Client, WriteLine, false);
         }
 
         #region Implementation of IDisposable

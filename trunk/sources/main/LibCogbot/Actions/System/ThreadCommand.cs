@@ -131,23 +131,23 @@ namespace Cogbot.Actions
                 args.TryGetValue("command", out cmdS);
             }
             string cmd = Parser.Rejoin(cmdS, 0);
+            bool needResult = mre != null;
+            CmdResult[] result = null;
+            if (needResult)
+            {
+                result = new CmdResult[1];
+            }
             ThreadStart task = () =>
                                    {
-                                       var result = Client.ExecuteCommand(cmd, fromAgentID, WriteLine);
-                                       if (result == null)
-                                       {
-                                           WriteLine("No command found! \"" + cmd + "\"");
-                                       }
-                                       else
-                                       {
-                                           WriteLine(result.ToString());
-                                       }
+                                       var res = Client.ExecuteCommand(cmd, fromAgentID, WriteLine, needResult);
+                                       if (result != null) result[0] = res;
                                    };
             string message = TheBotClient.CreateTask(id, task, cmd, createFresh, kill, mre, WriteLine);
             Results.Add("taskid", id);
             if (mre != null)
             {
                 if (!mre.WaitOne(wait)) return Failure("Timeout: " + message);
+                return result[0] ?? Success(message);
             }
             return Success(message);
         }

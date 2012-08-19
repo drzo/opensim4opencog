@@ -7,7 +7,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Objects
 {
-    public class ObjectInventoryCommand : Command, RegionMasterCommand
+    public class ObjectInventoryCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         public ObjectInventoryCommand(BotClient testClient)
         {

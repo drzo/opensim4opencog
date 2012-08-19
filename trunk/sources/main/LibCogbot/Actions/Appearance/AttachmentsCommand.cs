@@ -7,7 +7,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
 {
-    public class AttachmentsCommand : Command, RegionMasterCommand, FFIComplete
+    public class AttachmentsCommand : Command, RegionMasterCommand, FFIComplete, AsynchronousCommand
     {
         public AttachmentsCommand(BotClient testClient)
         {

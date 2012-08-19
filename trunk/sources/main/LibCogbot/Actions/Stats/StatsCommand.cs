@@ -9,7 +9,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
 {
-    public class StatsCommand : Command, RegionMasterCommand
+    public class StatsCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         public StatsCommand(BotClient testClient)
         {

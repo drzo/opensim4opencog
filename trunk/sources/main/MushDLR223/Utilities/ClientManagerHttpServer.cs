@@ -335,12 +335,12 @@ namespace MushDLR223.Utilities
                     {
                         //res = _botClient.ExecuteCommand(cmd + " " + text, wrresp.WriteLine);
                         res = _botClient.ExecuteCommand("aiml @withuser " + defaultUser + " - " + text, request,
-                                                        wrresp.WriteLine);
+                                                        wrresp.WriteLine, true);
                     }
                     else
                     {
                         res = _botClient.ExecuteCommand("aiml @withuser " + username + " - " + text, request,
-                                                        wrresp.WriteLine);
+                                                        wrresp.WriteLine, true);
                     }
                     AddToBody(response, "");
                     AddToBody(response, "\n<!-- End Response !-->");
@@ -543,7 +543,7 @@ namespace MushDLR223.Utilities
 
     public interface ScriptExecutor
     {
-        CmdResult ExecuteCommand(string s, object session, OutputDelegate outputDelegate);
+        CmdResult ExecuteCommand(string s, object session, OutputDelegate outputDelegate, bool needResult);
         CmdResult ExecuteXmlCommand(string s, object session, OutputDelegate outputDelegate);
         string GetName();
         object getPosterBoard(object slot);

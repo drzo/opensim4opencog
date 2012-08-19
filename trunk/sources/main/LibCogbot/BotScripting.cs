@@ -432,19 +432,23 @@ namespace Cogbot
             return all;
         }
 
-        public CmdResult ExecuteCommand(string text, object session, OutputDelegate WriteLine)
+        public CmdResult ExecuteCommand(string text, object session, OutputDelegate WriteLine, bool needResult)
         {
-            if (string.IsNullOrEmpty(text)) return null;
-            text = text.Trim();
-            while (text.StartsWith("/"))
+            text = ClientManager.GetCommandText(text);
+            try
             {
-                text = text.Substring(1).TrimStart();
+                return ExecuteBotCommand(text, session, WriteLine, needResult);
             }
-            if (string.IsNullOrEmpty(text)) return null;
-            CmdResult res = ExecuteBotCommand(text, session, WriteLine);
-            if (res != null) return res;
-            res = ClientManager.ExecuteSystemCommand(text, session, WriteLine);
-            if (res != null) return res;
+            catch (NoSuchCommand)
+            {
+            }
+            try
+            {
+                return ClientManager.ExecuteSystemCommand(text, session, WriteLine, needResult);
+            }
+            catch (NoSuchCommand)
+            {
+            }
             string verb = Parser.ParseArguments(text)[0];
             Command act = GetCommand(verb, false);
             if (act != null)
@@ -453,7 +457,7 @@ namespace Cogbot
                 {
                     if (!WorldSystem.IsGridMaster)
                     {
-                        WriteLine("I am not gridMaster " + text + ".");
+                        throw new NoSuchCommand("I am not gridMaster " + text + ".");
                         return null;
                     }
                 }
@@ -466,25 +470,15 @@ namespace Cogbot
                 }
                 string pargs = (text.Length > verb.Length) ? text.Substring(verb.Length + 1) : "";
                 return BotClient.DoCmdAct(act, verb, pargs, BotClient.SessionToCallerId(session),
-                                          WriteLine);
+                                          WriteLine, needResult);
             }
-            WriteLine("I don't understand the ExecuteCommand " + text + ".");
-            return null;
+            throw new NoSuchCommand("I don't understand the ExecuteCommand " + text + ".");
         }
 
 
-        public CmdResult ExecuteBotCommand(string text, object session, OutputDelegate WriteLine)
+        public CmdResult ExecuteBotCommand(string text, object session, OutputDelegate WriteLine, bool needResult)
         {
-            if (text == null)
-            {
-                return null;
-            }
-            text = text.Trim();
-            while (text.StartsWith("/")) text = text.Substring(1).TrimStart();
-            if (text.Length == 0)
-            {
-                return null;
-            }
+            text = ClientManager.GetCommandText(text);
             try
             {
 
@@ -505,6 +499,7 @@ namespace Cogbot
                     {
                         if (!WorldSystem.IsGridMaster)
                         {
+                            throw new NoSuchCommand("I am not gridMaster " + text + ".");
                             return null;
                         }
                     }
@@ -512,6 +507,7 @@ namespace Cogbot
                     {
                         if (!IsRegionMaster)
                         {
+                            throw new NoSuchCommand("I am not regionMaster " + text + ".");
                             return null;
                         }
                     }
@@ -519,12 +515,13 @@ namespace Cogbot
                     {
                         CmdResult res;
                         if (text.Length > verb.Length)
-                            return DoCmdAct(act, verb, text.Substring(verb.Length + 1), session, WriteLine);
+                            return DoCmdAct(act, verb, text.Substring(verb.Length + 1), session, WriteLine, needResult);
                         else
-                            return DoCmdAct(act, verb, "", session, WriteLine);
+                            return DoCmdAct(act, verb, "", session, WriteLine, needResult);
                     }
                     catch (Exception e)
                     {
+                        if (e is NoSuchCommand) throw e;
                         LogException("ExecuteBotCommand " + text, e);
                         return new CmdResult("ExecuteBotCommand " + text + "cuased " + e, false);
                     }
@@ -534,20 +531,22 @@ namespace Cogbot
                     if (WorldSystem == null || WorldSystem.SimAssetSystem == null)
                         return new CmdResult("no world yet for gesture", false);
                     UUID assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Gesture);
-                    if (assetID != UUID.Zero) return ExecuteBotCommand("gesture " + assetID, session, WriteLine);
-                    assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Animation);
-                    if (assetID != UUID.Zero) return ExecuteBotCommand("anim " + assetID, session, WriteLine);
-                    return null;
+                    if (assetID != UUID.Zero) return ExecuteBotCommand("play " + assetID, session, WriteLine, needResult);
+                    assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Unknown);
+                    if (assetID != UUID.Zero) return ExecuteBotCommand("play " + assetID, session, WriteLine, needResult);
+                    throw new NoSuchCommand(verb);
                 }
             }
             catch (Exception e)
             {
+                if (e is NoSuchCommand) throw e;
                 LogException("ExecuteBotCommand " + text, e);
                 return null;
             }
         }
 
-        static public CmdResult DoCmdAct(Command command, string verb, string args, object callerSession, OutputDelegate del)
+        static public CmdResult DoCmdAct(Command command, string verb, string args, 
+            object callerSession, OutputDelegate del, bool needResult)
         {
             BotClient robot = command._mClient;
             var callerID = SessionToCallerId(callerSession);
@@ -570,10 +569,10 @@ namespace Cogbot
                                    }
                                    finally
                                    {
-                                       mre.Set();
+                                       if (needResult) mre.Set();
                                    }
                                });
-                mre.WaitOne();
+                if (needResult) mre.WaitOne();
                 return res[0];
             }
             else
@@ -877,11 +876,15 @@ namespace Cogbot
             return XmlInterp.ExecuteXmlCommand(cmd, session, line);
 
         }
-        public CmdResult ExecuteCommand(string text)
+        public void ExecuteCommand(string text)
+        {
+            ExecuteCommand(text, false);
+        }
+        public CmdResult ExecuteCommand(string text, bool needResult)
         {
             // done inside the callee InvokeJoin("ExecuteCommand " + text);
             OutputDelegate WriteLine = DisplayNotificationInChat;
-            return ExecuteCommand(text, this, WriteLine);
+            return ExecuteCommand(text, this, WriteLine, needResult);
         }
 
         private bool InvokeJoin(string s)

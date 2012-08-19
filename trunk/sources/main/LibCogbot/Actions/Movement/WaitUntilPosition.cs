@@ -31,16 +31,12 @@ namespace Cogbot.Actions.Movement
             string str = Parser.Rejoin(args, 0);
             int argcount;
             float maxSeconds;
-            if (!float.TryParse(args[0], out maxSeconds))
+            if (!args.TryGetValue("seconds", out maxSeconds))
             {
                 maxSeconds = 60000;
             }
-            else
-            {
-                args = args.AdvanceArgs(1);
-            }
-            SimPosition pos = WorldSystem.GetVector(args, out argcount);
-            if (pos == null)
+            SimPosition pos;
+            if (!args.TryGetValue("position", out pos))
             {
                 return Failure(String.Format("Cannot {0} to {1}", Name, String.Join(" ", args)));
             }

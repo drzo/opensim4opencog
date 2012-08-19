@@ -8,7 +8,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Voice
 {
-    public class ParcelVoiceInfoCommand : Command, RegionMasterCommand
+    public class ParcelVoiceInfoCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         private AutoResetEvent ParcelVoiceInfoEvent = new AutoResetEvent(false);
         private string VoiceRegionName = null;

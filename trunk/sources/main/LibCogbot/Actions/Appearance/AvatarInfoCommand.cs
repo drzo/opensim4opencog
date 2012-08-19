@@ -9,7 +9,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
 {
-    public class AvatarInfoCommand : Command, RegionMasterCommand, FFINOUSE
+    public class AvatarInfoCommand : Command, RegionMasterCommand, FFINOUSE, AsynchronousCommand
     {
         public AvatarInfoCommand(BotClient testClient)
         {

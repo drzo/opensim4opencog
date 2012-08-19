@@ -7,7 +7,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.SimExport
 {
-    public class OrphanCommand : Cogbot.Actions.Command, RegionMasterCommand
+    public class OrphanCommand : Cogbot.Actions.Command, RegionMasterCommand, AsynchronousCommand
     {
         public OrphanCommand(BotClient client)
         {

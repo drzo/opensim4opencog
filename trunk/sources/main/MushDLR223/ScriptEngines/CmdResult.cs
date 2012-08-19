@@ -135,7 +135,7 @@ namespace MushDLR223.ScriptEngines
         public override string ToString()
         {
             if (!Success) return string.Format("ERROR: {0}", Message);
-            return Message;
+            return ToPostExecString();
         }
 
         /// <summary>

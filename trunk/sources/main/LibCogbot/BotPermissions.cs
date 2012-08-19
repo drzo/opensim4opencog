@@ -261,7 +261,7 @@ namespace Cogbot
                         if (found > 0)
                         {
                             groupName = groupName.Substring(0, found).Trim();
-                            ExecuteCommand("joingroup " + groupName);
+                            ExecuteCommand("joingroup " + groupName, false);
                         }
                     }
                     break;
@@ -400,7 +400,7 @@ namespace Cogbot
                             });
                         }
                         string cmd = Message;
-
+                        bool needResult = true;
                         if (cmd.StartsWith("cmcmd "))
                         {
                             cmd = cmd.Substring(6);
@@ -412,7 +412,7 @@ namespace Cogbot
                         {
                             cmd = cmd.Substring(4);
                             WriteLine(string.Format("invoke='{0}'", cmd));
-                            var res = ExecuteCommand(cmd, FromAgentID, WriteLine);
+                            var res = ExecuteCommand(cmd, FromAgentID, WriteLine, needResult);
                             WriteLine("iresult='" + res + "'");
                         }
                         else if (cmd.StartsWith("/") || cmd.StartsWith("@"))
@@ -420,7 +420,7 @@ namespace Cogbot
                             cmd = cmd.Substring(1);
                             WriteLine("");
                             WriteLine(string.Format("invoke='{0}'", cmd));
-                            var res = ExecuteCommand(cmd, FromAgentID, WriteLine);
+                            var res = ExecuteCommand(cmd, FromAgentID, WriteLine, needResult);
                             WriteLine("iresult='" + res + "'");
                         }
                     }

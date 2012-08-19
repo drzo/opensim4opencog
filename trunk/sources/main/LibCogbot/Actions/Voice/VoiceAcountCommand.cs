@@ -9,7 +9,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Voice
 {
-    public class VoiceAccountCommand : Command, RegionMasterCommand
+    public class VoiceAccountCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         private AutoResetEvent ProvisionEvent = new AutoResetEvent(false);
         private string VoiceAccount = null;

@@ -56,17 +56,7 @@ namespace Cogbot.Actions
                                                    {
                                                        try
                                                        {
-                                                           var result = Client.ExecuteCommand(cmd, fromAgentID,
-                                                                                              WriteLine);
-                                                           if (result == null)
-                                                           {
-                                                               WriteLine("No command found! \"" + cmd + "\"");
-                                                               return;
-                                                           }
-                                                           else
-                                                           {
-                                                               WriteLine(result.ToString());
-                                                           }
+                                                           Client.ExecuteCommand(cmd, fromAgentID, WriteLine, false);
                                                        }
                                                        catch (ThreadAbortException e)
                                                        {
