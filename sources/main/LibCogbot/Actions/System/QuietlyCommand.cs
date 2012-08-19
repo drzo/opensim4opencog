@@ -6,7 +6,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
 {
-    public class QuietlyCommand : Command, BotSystemCommand
+    public class QuietlyCommand : Command, BotSystemCommand, SynchronousCommand
     {
         public QuietlyCommand(BotClient testClient)
         {

@@ -12,7 +12,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
 {
-    public class LoadCommand : Command, BotSystemCommand //SystemApplicationCommand
+    public class LoadCommand : Command, BotSystemCommand, SynchronousCommand
     {
         public LoadCommand(BotClient testClient)
         {

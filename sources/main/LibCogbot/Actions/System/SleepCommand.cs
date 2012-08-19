@@ -7,7 +7,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
 {
-    public class SleepCommand : Command, BotSystemCommand
+    public class SleepCommand : Command, BotSystemCommand, SynchronousCommand
     {
         uint sleepSerialNum = 1;
 

@@ -5,7 +5,7 @@ using Radegast;
 
 namespace Cogbot.Actions.System
 {
-    class Login : Command, BotSystemCommand
+    class Login : Command, BotSystemCommand, SynchronousCommand
     {
 
         public Login(BotClient Client)

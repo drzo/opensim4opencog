@@ -493,7 +493,7 @@ namespace Cogbot
                     InvokeJoin("ExecuteBotCommand " + text);
                     return new CmdResult(evalLispString(text).ToString(), true);
                 }
-                //            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
+
                 text = text.Replace("\"", "").Replace("  ", " ");
                 string verb = text.Split(' ')[0];
                 verb = verb.ToLower();
@@ -549,14 +549,37 @@ namespace Cogbot
 
         static public CmdResult DoCmdAct(Command command, string verb, string args, object callerSession, OutputDelegate del)
         {
+            BotClient robot = command._mClient;
             var callerID = SessionToCallerId(callerSession);
             string cmdStr = "ExecuteActBotCommand " + verb + " " + args;
-            if (command is BotPersonalCommand)
+            string sync = command.TaskQueueNameOrNull;
+            if (command is SynchronousCommand)
             {
-                BotClient robot = command.TheBotClient;
                 robot.InvokeJoin(cmdStr);
             }
-            return command.acceptInputWrapper(verb, args, callerID, del);
+            if (sync != null)
+            {
+                CmdResult[] res = new CmdResult[1];
+                ManualResetEvent mre = new ManualResetEvent(false);
+                var tq = robot.GetTaskQueueHandler(sync);
+                tq.Enqueue(() =>
+                               {
+                                   try
+                                   {
+                                       res[0] = command.acceptInputWrapper(verb, args, callerID, del);
+                                   }
+                                   finally
+                                   {
+                                       mre.Set();
+                                   }
+                               });
+                mre.WaitOne();
+                return res[0];
+            }
+            else
+            {
+                return command.acceptInputWrapper(verb, args, callerID, del);
+            }
             //robot.OneAtATimeQueue.Enqueue(cmdStr, () => command.acceptInputWrapper(verb, args, callerID, del));
         }
 
@@ -863,8 +886,7 @@ namespace Cogbot
 
         private bool InvokeJoin(string s)
         {
-            // return InvokeJoin(s, -1);
-            return true;
+            return InvokeJoin(s, -1);
         }
         private bool InvokeJoin(string s, int millisecondsTimeout)
         {
