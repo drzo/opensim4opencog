@@ -24,6 +24,10 @@ namespace Cogbot.Utilities
             : base(bc)
         {
             Name = "tcpserver";
+		}
+
+		override public void MakeInfo()
+		{
             Description = "";
         }
         public override CmdResult ExecuteRequest(CmdRequest args)

@@ -26,9 +26,6 @@ namespace Cogbot.Actions.Appearance
             Category = CommandCategory.Inventory;
             Details = AddUsage(Name + " [agent-spec]", "may use $self");
             Parameters = CreateParams("target", typeof (AgentSpec), "the agents you wish to see " + Name);
-            ResultMap = CreateParams(
-                "message", typeof (string), "if success was false, the reason why",
-                "success", typeof (bool), "true if command was successful");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

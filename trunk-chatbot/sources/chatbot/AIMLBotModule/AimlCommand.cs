@@ -22,7 +22,12 @@ namespace AIMLBotModule
             : base(testClient)
         {
             Name = "aiml";
-            Description = "Usage: aiml [@[[on|off|reload|learn]|text|setuser]] [operands]";
+            TheBotClient = testClient;
+        }
+
+        override public void MakeInfo()
+        {
+			            Description = "Usage: aiml [@[[on|off|reload|learn]|text|setuser]] [operands]";
             Category = CommandCategory.Communication;
         }
 

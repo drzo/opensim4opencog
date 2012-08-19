@@ -20,10 +20,11 @@ namespace Cogbot.Actions.Appearance
             Description = "Prints a list of the currently known agent attachments or on another avatar";
             Details = AddUsage(Name + " [agent-spec]", "no prim-spec then use $self");
             Category = CommandCategory.Appearance;
-            Parameters = CreateParams(Optional("target", typeof (AgentSpec), "the agents you wish to see " + Name));
+            Parameters = CreateParams(Optional("targets", typeof (AgentSpec), "the agents you wish to see " + Name));
             ResultMap = CreateParams(
                 "message", typeof(string), "if success was false, the reason why",
-                "attachments", typeof(SimObject), "attachments found",
+                "list", typeof(SimObject), "attachments found",
+                "count", typeof(int), "attachments counts",
                 "success", typeof(bool), "true if command was successful");
         }
 
@@ -31,19 +32,22 @@ namespace Cogbot.Actions.Appearance
         {
             if (Client.Network.CurrentSim == null) return Failure("not yet connected");
             int argsUsed;
-            List<SimObject> OS = WorldSystem.GetPrimitives(args, out argsUsed);
+			var args0 = args.OnlyKey("targets");
+            List<SimObject> OS = WorldSystem.GetPrimitives(args0, out argsUsed);
             bool writeInfo = !args.IsFFI;
-            if (OS.Count == 0)
+            if (IsEmpty(OS))
             {
                 OS.Add(TheSimAvatar);
             }
+            int total = 0;
             foreach (var O in OS)
             {
                 if (writeInfo) WriteLine("Attachments for " + O);
                 int count = O.Children.Count;
+                total++;
                 foreach (var s in O.Children)
                 {
-                    AppendMap(Results, "attachments", O);
+                    AppendItem("list", O);
                     if (!writeInfo) continue;
                     String point = "Unknown";
                     Primitive prim = s.Prim;
@@ -55,9 +59,9 @@ namespace Cogbot.Actions.Appearance
                     // TODO: Done? Fetch properties for the objects with missing property sets so we can show names
                     WriteLine("[Attachment @ {0}] {1}", point, s);
                 }
-                return Success("Found " + count + " attachments");
             }
-            return Success("Found " + OS.Count + " attachments");
+            SetResult("count", total);
+            return SuccessOrFailure();
         }
     }
 }

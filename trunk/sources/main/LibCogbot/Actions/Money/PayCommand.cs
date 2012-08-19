@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Cogbot;
 using Cogbot.World;
 using OpenMetaverse;
-
+using Radegast;
 
 using MushDLR223.ScriptEngines;
 
@@ -12,32 +12,37 @@ namespace Cogbot.Actions.Money
     {
         public PayCommand(BotClient client)
         {
-            Name = "Pay";
+            Name = "GUIPay";
             Description = "Pays a prim. Usage: Pay [prim] [amount]";
             Category = CommandCategory.Money;
-            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
+            Parameters = CreateParams("target", typeof(PrimSpec), "The target(s) of the " + Name,
+                                      "ammount", typeof(string), "The ammount to pay");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-            if (args.Length==0) {
+            if (args.Length == 0)
+            {
                 return ShowUsage();
             }
-            int used;
-            SimObject o = WorldSystem.GetSimObjectS(args, out used);
-            if (o == null) return Failure(string.Format("Cant find {0}", args.str));
+            SimObject o;
+            if (!args.TryGetValue("target", out o)) return Failure(string.Format("Cant find {0}", args.str));
 
             bool isObject = !(o is SimAvatar);
             UUID target = o.ID;
             GridClient client = TheBotClient;
-            //if (used == args.Length) (new frmPay(TheBotClient.TheRadegastInstance, o.ID, o.GetName(), isObject)).ShowDialog();
-            //else
+            string strA;
+            if (!args.TryGetValue("ammount", out strA))
+            {
+                return Failure("Cant determine amount from: " + strA);
+            }
+            else
             {
                 int amount;
-                string strA = args[used].Replace("$","").Replace("L","");               
+                strA = strA.Replace("$", "").Replace("L", "");
                 if (!int.TryParse(strA, out amount))
                 {
-                    return Failure("Cant determine amount from: " + args[used]);
+                    return Failure("Cant determine amount from: " + strA);
                 }
                 if (!isObject)
                 {

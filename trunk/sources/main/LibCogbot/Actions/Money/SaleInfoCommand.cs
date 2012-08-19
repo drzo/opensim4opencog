@@ -12,53 +12,52 @@ namespace Cogbot.Actions.Money
         public SaleInfoCommand(BotClient client)
         {
             Name = "SaleInfo";
-            Description = "sets or prints SaleInfo on a prim. Usage: SaleInfo [prim] [amount] [saletype]";
+            Description = "sets or prints SaleInfo on a prim. Usage: SaleInfo <prim> [amount] [saletype]";
             Category = CommandCategory.Objects;
-            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
+            Parameters = CreateParams("target", typeof (PrimSpec), "The target(s) of the " + Name,
+                                      "ammount", typeof (string), "The ammount to pay",
+                                      Optional("saletype", typeof (string), "The ammount to pay"));
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-            if (args.Length==0) {
+            if (args.Length == 0)
+            {
                 return ShowUsage();
             }
-            int used;
-            SimObject o = WorldSystem.GetSimObjectS(args, out used);
-            if (o == null) return Failure(string.Format("Cant find {0}", args.str));
+            SimObject o;
+            if (!args.TryGetValue("target", out o))
+            {
+                return Failure(string.Format("Cant find {0}", args.str));
+            }
+            bool isObject = !(o is SimAvatar);
+            UUID target = o.ID;
             Primitive currentPrim = o.Prim;
             if (currentPrim == null) return Failure(string.Format("No Prim localId for {0}", args.str));
             Primitive.ObjectProperties props = o.Properties;
-            if (used == args.Length)
+            WorldObjects.EnsureSelected(currentPrim, WorldSystem.GetSimulator(currentPrim));
+            if (props == null) return Failure("no props on " + o + " yet try again");
+            GridClient client = TheBotClient;
+            string strA;
+            if (!args.TryGetValue("ammount", out strA))
             {
-                WorldObjects.EnsureSelected(currentPrim, WorldSystem.GetSimulator(currentPrim));
-                if (props == null) return Failure( "no props on " + o + " yet try again");
                 return Success(string.Format("saletype {0} {1} {2}", o.ID, props.SalePrice, props.SaleType));
             }
             int amount;
-            string strA = args[used].Replace("$", "").Replace("L", "");
+            strA = strA.Replace("$", "").Replace("L", "");
             if (!int.TryParse(strA, out amount))
             {
-                return Failure("Cant determine amount: " + strA);
+                return Failure("Cant determine amount from: " + strA);
             }
-            used++;
-            strA = args[used];
-            FieldInfo fi = typeof (SaleType).GetField(strA);
-            SaleType saletype = SaleType.Original;
-            if (fi==null)
+            SaleType saletype;
+            if (!args.TryGetValue("saletype", out saletype))
             {
-                int st;
-                if (!int.TryParse(strA, out st))
-                {
-                    return Failure("Cant determine SaleType: " + strA);
-                }
-                saletype = (SaleType) st;
-            } else
-            {
-                saletype = (SaleType) fi.GetValue(null);
+                saletype = SaleType.Original;
+                //return Failure("Cant determine SaleType: " + strA);
             }
 
-            WriteLine("Setting Ammount={0} SaleType={1} for {2}", saletype, amount, o);
-            TheBotClient.Objects.SetSaleInfo(WorldSystem.GetSimulator(currentPrim),currentPrim.LocalID,saletype,amount);
+            WriteLine("Setting Ammount={0} SaleType={1} for {2}", saletype, amount, o);            
+            TheBotClient.Objects.SetSaleInfo(WorldSystem.GetSimulator(currentPrim), currentPrim.LocalID, saletype, amount);
 
             return Success(Name + " on " + o);
         }

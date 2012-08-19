@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using Cogbot;
@@ -9,7 +10,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
 {
-    public class AvatarInfoCommand : Command, RegionMasterCommand, FFINOUSE, AsynchronousCommand
+    public class AvatarInfoCommand : Command, RegionMasterCommand, FFIComplete, AsynchronousCommand
     {
         public AvatarInfoCommand(BotClient testClient)
         {
@@ -19,41 +20,37 @@ namespace Cogbot.Actions.Appearance
 
         override public void MakeInfo()
         {
-            Description = "Print out information on a nearby avatar.";
+            Description = "Print out information on a nearby avatars.";
             Details = AddUsage(Name + " [agent-spec]", "no prim-spec then use $self");
             Category = CommandCategory.Appearance;
-            Parameters = CreateParams(
-                Optional("target", typeof(AgentSpec),
-                                    "the agent you wish to see " + Name +
-                                    " (see meets a specified <a href='wiki/BotCommands#AvatarSpec'>Avatar Spec</a>.)"));
+            Parameters = CreateParams(Optional("targets", typeof(AgentSpec), "the agent you wish to see " + Name));
             ResultMap = CreateParams(
+                "list", typeof(List<SimAvatar>), "list of present agents",
                 "message", typeof(string), "if success was false, the reason why",
                 "success", typeof(bool), "true if command was successful");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
+            ICollection PS;
             if (args.Length == 0)
             {
-                //return ShowUsage();// " avatarinfo [firstname] [lastname]";
-                int count = 0;
-                foreach (var s in WorldObjects.SimAvatars)
-                {
-                    WriteLine(" {0}: {1}", s.GetName(), s.DebugInfo());
-                    count++;
-                }
-                return Success("Avatars shown: " + count);
+                PS = WorldObjects.SimAvatars;
             }
-
-            int argsUsed;
-            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
-            if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
-            foreach (var O in PS)
+            else
+            {
+                int argsUsed;
+                PS = WorldSystem.GetPrimitives(args.OnlyKey("targets"), out argsUsed);
+                if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
+            }
+            AppendList("list", PS);
+            SetResult("count", PS.Count);
+            if (args.IsFFI) return SuccessOrFailure();
+            
+            foreach (SimObject O in PS)
             {
                 Primitive foundAv = O.Prim;
                 StringBuilder output = new StringBuilder();
-                string targetName = String.Join(" ", args, 0, argsUsed);
-                output.AppendFormat("{0} ({1})", targetName, O.ID);
                 output.AppendLine();
                 if (foundAv.Textures == null)
                 {
@@ -66,7 +63,7 @@ namespace Cogbot.Actions.Appearance
                         if (foundAv.Textures.FaceTextures[i] != null)
                         {
                             Primitive.TextureEntryFace face = foundAv.Textures.FaceTextures[i];
-                            AvatarTextureIndex type = (AvatarTextureIndex) i;
+                            AvatarTextureIndex type = (AvatarTextureIndex)i;
 
                             output.AppendFormat("{0}: {1}", type, face.TextureID);
                             output.AppendLine();

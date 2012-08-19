@@ -46,8 +46,7 @@ namespace Cogbot.Actions.Agent
             Category = CommandCategory.Other;
             AddVersion(CreateParams(Optional("--presence", typeof (bool), "Use Presence List")), Description);
             ResultMap = CreateParams(
-                "avatarList", typeof (List<SimAvatar>), "list of present avatars",
-                "presenceList", typeof (List<SimAvatar>), "list of present avatars",
+                "agents", typeof (List<SimAvatar>), "list of present agents",
                 "message", typeof (string), "if success was false, the reason why",
                 "success", typeof (bool), "true if command was successful");
         }
@@ -55,16 +54,19 @@ namespace Cogbot.Actions.Agent
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             bool writeInfo = !args.IsFFI;
+            int count = 0;
             if (args.ContainsFlag("--presence"))
             {
-                foreach (var A in WorldObjects.SimAvatars)
+                foreach (var A in WorldObjects.SimAccounts)
                 {
-                    AppendMap(Results, "presenceList", A);
-                    if (writeInfo) WriteLine(A.ToString() + " local=" + A.IsLocal);
+                    count++;
+                    AppendItem("agents", A);
+                    if (writeInfo) WriteLine(A + " local=" + A.IsLocal);
                 }
             }
             else
             {
+                int[] count0 = {0};
                 foreach (Simulator sim in LockInfo.CopyOf(Client.Network.Simulators))
                 {
                     if (sim.ObjectsAvatars.Count == 0) continue;
@@ -74,19 +76,22 @@ namespace Cogbot.Actions.Agent
                     sim.ObjectsAvatars.ForEach(
                         delegate(Avatar av)
                             {
-                                AppendMap(Results, "avatarList", av);
+                                count0[0]++;
+                                SimObject A = WorldSystem.GetSimObject(av, simulator);
+                                AppendItem("avatars", A);
                                 if (string.IsNullOrEmpty(av.Name))
                                 {
                                     Client.Objects.SelectObjects(simulator, new uint[] {av.LocalID}, true);
                                 }
-                                if (writeInfo) WriteLine("");
                                 if (writeInfo)
                                     WriteLine(" {0} (Group: {1}, Location: {2}, UUID: {3})",
                                               av.Name, av.GroupName, av.Position, av.ID.ToString());
                             }
                         );
                 }
+                count = count0[0];
             }
+            SetResult("count", count);
             return SuccessOrFailure();
         }
     }

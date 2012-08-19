@@ -51,6 +51,11 @@ namespace MushDLR223.ScriptEngines
             if (GetAfter(loc, out args)) return args;
             return null;
         }
+
+        public string[] OnlyKey(string key)
+        {
+            return tokens;
+        }
     }
 
     public class Parser : ParseInfo
