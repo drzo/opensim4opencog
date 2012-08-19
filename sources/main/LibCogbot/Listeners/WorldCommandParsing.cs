@@ -808,9 +808,9 @@ namespace Cogbot
             return Convert.ChangeType(args[0], arg2);
         }
 
-        public void AddObjectGroup(string selecteditems, Func<IList> func)
+        public void AddObjectGroup(string selecteditems,string desc, Func<IList> func)
         {
-            _defaultProvider.AddObjectGroup(selecteditems, func);
+            _defaultProvider.AddObjectGroup(selecteditems, desc, func);
         }
 
         private List<SimObject> ColToList(ICollection starters)

@@ -142,7 +142,7 @@ namespace CogbotRadegastPluginModule
             }
             TheWorldSystem.OnAddSimObject += Objects_OnAddSimObject;
             TheWorldSystem.OnUpdateDataAspect += Objects_OnUpdateSimObject;
-            TheWorldSystem.AddObjectGroup("SelectedObjects", () => SelectedItems);
+            TheWorldSystem.AddObjectGroup("SelectedObjects","Objects seletected int he UI", () => SelectedItems);
         }
 
         private void Network_OnDisconnected(object sender, DisconnectedEventArgs e)

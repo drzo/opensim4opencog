@@ -34,7 +34,6 @@
    sim_event_db/3,
    obj2Npl/2,
    npl2Obj/2,
-   %%cli_fmt/3,
    create_write_hook/2,
    create_write_hook/1,
    uuid_to_cli_image/2,
@@ -344,6 +343,9 @@ wabcall(Call):-once(((thread_self(TID),current_bot_db(TID,Save))->TODO=set_curre
 %
 wbotcmd(BotID,StrIn):-wbotcmd(BotID,StrIn,Out),cli_get(Out,success,@(true)),!.
 wbotcmd(BotID,StrIn,Out):-cmdargs_to_atomstr(StrIn,Str),wbotcmd(BotID,Str,{pluggable_callback(botcmd)},Out),!.
+
+:-meta_predicate(wbotcmd(+,+,//,?)).
+:-meta_predicate(botcmd(+,//,?)).
 wbotcmd(BotID,StrIn,WriteDelegate,Out):-cmdargs_to_atomstr(StrIn,Str),cli_call(BotID,executeCommand(Str,BotID,WriteDelegate),Out),!.
 
 

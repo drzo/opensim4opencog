@@ -191,10 +191,12 @@ namespace Cogbot.Actions
             Name = CmdInfo.Name;
         }
     }
-    public class CommandInfo
+    public class CommandInfo: ParseInfo
     {
+        public static Dictionary<Type, CommandInfo> MadeInfos = new Dictionary<Type, CommandInfo>();
+
         public bool IsStateFul;
-        public CommandCategory Category;
+        public string Category;
         public string Name { get; set; }
         public string helpString;  // overview
         public string usageString;   // after the colon of Usage:
@@ -212,8 +214,8 @@ namespace Cogbot.Actions
         /// <summary>
         /// Introspective Parameters for calling command from code
         /// </summary>
-        public NamedParam[][] ParameterVersions;
-        public NamedParam[] ResultMap;
+        public List<KeyParams> ParameterVersions { get; set; }
+        public NamedParam[] ResultMap { get; set; }
 
         public Type CmdType;
         public ConstructorInfo CmdTypeConstructor;
@@ -227,7 +229,7 @@ namespace Cogbot.Actions
         public String ToPrologString()
         {
             return "command(" + ToPLAtomStr(Name) + "," + ToPLAtomStr(Description) + "," + ToPLAtomStr(usageString) +
-                   "," + ToPLAtomStr(ParameterVersions) + "," + ToPLAtomStr(ResultMap) + ")";
+                   "," + ToPLAtomStr(ParameterVersions.ToArray()) + "," + ToPLAtomStr(ResultMap) + ")";
         }
 
         private string ToPLAtomStr(Array ar)
@@ -269,16 +271,23 @@ namespace Cogbot.Actions
         public void LoadFromCommand(Command live)
         {
             CmdType = live.GetType();
-            lock (Command.MadeInfos)
+            lock (MadeInfos)
             {
-                Command.MadeInfos[CmdType] = this;
+                MadeInfos[CmdType] = this;
             }
             IsStateFul = live.IsStateFull || live is BotStatefullCommand;
             Name = live.Name;
             usageString = live.Details;
-            ParameterVersions = live.ParameterVersions;
+            if (ParameterVersions == null) ParameterVersions = live.ParameterVersions;
+            else
+            {
+                foreach (var v in live.ParameterVersions)
+                {
+                    if (!ParameterVersions.Contains(v)) ParameterVersions.Add(v);
+                }
+            }
             helpString = live.Description;
-            Category = live.Category;
+            Category = "" + live.Category;
             ResultMap = live.ResultMap;
             CmdTypeConstructor = CmdType.GetConstructors()[0];
             IsGridClientCommand = CmdTypeConstructor.GetParameters()[0].ParameterType == typeof(GridClient);
@@ -296,9 +305,29 @@ namespace Cogbot.Actions
             cmd.TheBotClient = o;            
             return cmd;
         }
+
+
+        public static string ToBNF(NamedParam[] parameters)
+        {
+            string usage = "";
+            foreach (var p in parameters)
+            {
+                string argstring = p.Key;
+                if (p.IsOptional)
+                {
+                    argstring = string.Format("[{0}]", argstring);
+                }
+                else
+                {
+                    argstring = string.Format("<{0}>", argstring);
+                }
+                usage += " " + argstring;
+            }
+            return usage;
+        }
     }
 
-    public abstract partial class Command : IComparable, ParseInfo
+    public abstract partial class Command : IComparable
     {
         public virtual void MakeInfo()
         {
@@ -307,18 +336,17 @@ namespace Cogbot.Actions
         public CommandInfo GetCmdInfo()
         {
             CommandInfo ci;
-            lock (MadeInfos)
+            lock (CommandInfo.MadeInfos)
             {
-                if (!MadeInfos.TryGetValue(GetType(), out ci))
+                if (!CommandInfo.MadeInfos.TryGetValue(GetType(), out ci))
                 {
                     MakeInfo();
-                    ci = MadeInfos[GetType()] = new CommandInfo(this);
+                    DefaultResultMap();
+                    ci = CommandInfo.MadeInfos[GetType()] = new CommandInfo(this);
                 }
             }
             return ci;
         }
-
-        public static Dictionary<Type, CommandInfo> MadeInfos = new Dictionary<Type, CommandInfo>();
 
         public bool IsStateFull;
         public CommandCategory Category;
@@ -369,16 +397,35 @@ namespace Cogbot.Actions
             }
         }
 
+        public List<KeyParams> _parameterVersions;
         /// <summary>
         /// Introspective Parameters for calling command from code
         /// </summary>
-        public NamedParam[][] ParameterVersions { get; set; }
+        public List<KeyParams> ParameterVersions
+        {
+            get
+            {
+                if (_parameterVersions == null) 
+                {
+                    _parameterVersions = new List<KeyParams>();
+                }
+                return _parameterVersions;
+            }
+            set
+            {
+                foreach (var paramse in value)
+                {
+                    AddVersion(paramse);
+                }
+            }
+        }
         public NamedParam[] Parameters
         {
             get
             {
-                if (ParameterVersions == null || ParameterVersions.Length == 0) return null;
-                return ParameterVersions[0];
+                if (VersionSelected != null) return VersionSelected.Parameters;
+                if (ParameterVersions == null || ParameterVersions.Count == 0) return null;
+                return ParameterVersions[0].Parameters;
             }
             set
             {
@@ -389,18 +436,17 @@ namespace Cogbot.Actions
 
         private void AddVersion(NamedParam[] value)
         {
-            if (ParameterVersions == null || ParameterVersions.Length == 0)
+            AddVersion(new KeyParams(value));
+
+        }
+        private void AddVersion(KeyParams value)
+        {
+            VersionSelected = value;
+            var copy = ParameterVersions;
+            if (!copy.Contains(VersionSelected))
             {
-                ParameterVersions = new NamedParam[1][];
-                ParameterVersions[0] = value;
-                return;
+                copy.Add(VersionSelected);
             }
-            var copy = new List<NamedParam[]>(ParameterVersions);
-            if (!copy.Contains(value))
-            {
-                copy.Add(value);
-            }
-            ParameterVersions = copy.ToArray();
         }
 
         public NamedParam[] ResultMap;
@@ -484,10 +530,6 @@ namespace Cogbot.Actions
 
         public Command(BotClient bc)
         {
-            ResultMap = CreateParams(
-                "message", typeof(string), "if success was false, the reason why",
-                "success", typeof(bool), "true if command was successful");
-            // Parameters = CreateParams("stuff", typeof (string), "this command is missing documentation!");
 
             _mClient = bc;
             WriteLineDelegate = StaticWriteLine;
@@ -652,7 +694,7 @@ namespace Cogbot.Actions
         {
             this.WriteLineDelegate = WriteLine;
             CallerID = CogbotHelpers.NonZero(fromAgentID, UUID.Zero);
-            return ExecuteRequest(new CmdRequest(args, fromAgentID, WriteLine, this));
+            return ExecuteRequest(new CmdRequest(args, fromAgentID, WriteLine, this.GetCmdInfo()));
         }
 
         virtual public CmdResult ExecuteRequest(CmdRequest args)
@@ -811,6 +853,8 @@ namespace Cogbot.Actions
         }
 
         public string WriteLineResultName = "message";
+        private KeyParams VersionSelected;
+
         protected void SetWriteLine(string resultName)
         {
             WriteLineResultName = resultName;
@@ -863,9 +907,14 @@ namespace Cogbot.Actions
             return paramsz.ToArray();
         }
 
-        protected static NamedParam[][] CreateParamVersions(params NamedParam[][] paramz)
+        protected static List<KeyParams> CreateParamVersions(params NamedParam[][] paramz)
         {
-            return paramz;
+            var list = new List<KeyParams>();
+            foreach (var paramse in paramz)
+            {
+                list.Add(new KeyParams(paramse));
+            }
+            return list;
         }
 
         protected static NamedParam Optional(string name, Type type, string description)
@@ -930,24 +979,11 @@ namespace Cogbot.Actions
         protected string AddUsage(NamedParam[] parameters, string description)
         {
             AddVersion(parameters);
-            string usage = Name;
-            if (string.IsNullOrEmpty(usage))
+            if (string.IsNullOrEmpty(Name))
             {
                 throw new NullReferenceException(GetType().Name);
             }
-            foreach (var p in parameters)
-            {
-                string argstring = p.Key;
-                if (p.IsOptional)
-                {
-                    argstring = string.Format("[{0}]", argstring);
-                }
-                else
-                {
-                    argstring = string.Format("<{0}>", argstring);
-                }
-                usage += " " + argstring;
-            }
+            string usage = Name + " " + CommandInfo.ToBNF(parameters);
             return AddUsage(usage, description);
         }
 
@@ -958,7 +994,10 @@ namespace Cogbot.Actions
 
         protected void DefaultResultMap()
         {
-            /// throw new NotImplementedException();
+            ResultMap = ResultMap ??
+                        CreateParams(
+                            "message", typeof (string), "if success was false, the reason why",
+                            "success", typeof (bool), "true if command was successful");
         }
 
         protected void AppendMap(IDictionary<string, object> dictionary, string propname, object item)

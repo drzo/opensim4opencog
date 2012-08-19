@@ -14,10 +14,14 @@ namespace Cogbot.Actions.Movement
             : base(client)
         {
             Name = "moveto";
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Moves the avatar to the specified global position using robot turnto and walk. Usage: moveto x y z";
             Category = CommandCategory.Movement;
-            Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
-
+            AddUsage(Name + " wp5", "move to wp6");
+            Parameters = CreateParams("loc", typeof (SimPosition), "the location you wish to " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -29,7 +33,8 @@ namespace Cogbot.Actions.Movement
             {
                 return Failure("Not yet logged in!");
             }
-            SimPosition position = WorldSystem.GetVector(args, out argsUsed);
+            string[] argsGetProperty = args.GetProperty("loc");
+            SimPosition position = WorldSystem.GetVector(argsGetProperty, out argsUsed);
             if (position == null)
             {
                 return Failure("Coulnd not resolve location: " + args.str);
