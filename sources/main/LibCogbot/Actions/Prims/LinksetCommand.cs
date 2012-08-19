@@ -17,11 +17,9 @@ namespace Cogbot.Actions.Objects
             Name = "Linkset";
             Description = "Takes from a prim. Usage: Take [prim]";
             Category = Cogbot.Actions.CommandCategory.Objects;
-            Parameters = new[]
-                             {
-                                 new NamedParam(typeof (SimObject), typeof (UUID)),
-                                 new NamedParam(typeof (List<SimObject>), typeof (List<UUID>))
-                             };
+            Parameters = CreateParams("root", typeof (PrimSpec), "The root of " + Name,
+                                      "childs", typeof (PrimSpec), "The childs of " + Name);
+
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

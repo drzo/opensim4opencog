@@ -16,7 +16,7 @@ namespace Cogbot.Actions.System
             Name = "stats";
             Description = "Provide connection figures and statistics";
             Category = CommandCategory.Simulator;
-            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
+            Parameters = CreateParams();
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

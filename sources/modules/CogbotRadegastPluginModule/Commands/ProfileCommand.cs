@@ -9,7 +9,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Agent
 {
-    public class ProfileCommand : Command, GridMasterCommand
+    public class ProfileCommand : Command, GridMasterCommand, GUICommand
     {
 
         public ProfileCommand(BotClient testClient)
@@ -18,7 +18,9 @@ namespace Cogbot.Actions.Agent
             Name = "Profile";
             Description = "Shows the Avatars profile in a UI component. Usage: profile <avatar>";
             Category = CommandCategory.Friends;
-            Parameters = new [] {  new NamedParam(typeof(Avatar), typeof(UUID)) };
+            AddVersion(CreateParams("agent", typeof(SimAvatar), "agent you are going to " + Name),
+                       "shows the profile specified by agent's uuid");
+
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

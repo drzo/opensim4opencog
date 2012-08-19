@@ -18,7 +18,7 @@ namespace Cogbot.Actions.Agent
             Name = "PointAt";
             Description = "PointAts from a prim. Usage: PointAt [prim]";
             Category = Cogbot.Actions.CommandCategory.Objects;
-            Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
         }
 
         ListAsSet<EffectBeamInfo> BeamInfos = new ListAsSet<EffectBeamInfo>();

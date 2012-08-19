@@ -15,7 +15,7 @@ namespace Cogbot.Actions.Money
 			Name = "balance";
 			Description = "Shows the amount of L$.";
             Category = CommandCategory.Money;
-            Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+            Parameters = CreateParams();
 		}
 
         public override CmdResult ExecuteRequest(CmdRequest args)

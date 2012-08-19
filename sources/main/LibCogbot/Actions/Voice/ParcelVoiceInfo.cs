@@ -22,7 +22,7 @@ namespace Cogbot.Actions.Voice
             Category = CommandCategory.Parcel;
 
             TheBotClient = testClient;
-            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
+            Parameters = CreateParams();
         }
 
         private bool registered = false;

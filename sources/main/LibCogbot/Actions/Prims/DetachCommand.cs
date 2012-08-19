@@ -16,25 +16,25 @@ namespace Cogbot.Actions.Objects
             Name = "detach";
             Description = "detach prims or specified attachment point";
             Details = "detach <all|attachmentPoint|prim> Example: /detach prim98922187";
+            AddExample("detach [attachments parent $self attachpoint LeftHand]", "detach anything attached to left hand");
             Category = CommandCategory.Objects;
-            Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage();
-            if (args[0].ToLower()=="all")
+            if (args.ContainsFlag("--all"))
             {
                 List<uint> ids = new List<uint>();
-                foreach(SimObject o in TheSimAvatar.Children)
+                foreach (SimObject o in TheSimAvatar.Children)
                 {
                     Success("Detatching " + o);
                     ids.Add(o.LocalID);
                 }
                 Client.Objects.DetachObjects(TheSimAvatar.GetSimulator(), ids);
                 return Success("detatched all " + ids.Count);
-                
             }
             object obj;
             AttachmentPoint attachmentPoint = AttachmentPoint.Default;

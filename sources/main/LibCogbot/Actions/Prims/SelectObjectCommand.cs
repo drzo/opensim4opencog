@@ -14,7 +14,7 @@ namespace Cogbot.Actions.Objects
             Name = "selectobject";
             Description = "Re selectobject [re|de] [prim]";
             Category = Cogbot.Actions.CommandCategory.Objects;
-            Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The objects to " + Name);
             //client.RegisterCommand("deselect", this);
         }
 

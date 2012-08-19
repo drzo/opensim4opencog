@@ -11,7 +11,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
 {
-    public class ShowRadCommand : Command, BotSystemCommand
+    public class ShowRadCommand : Command, BotSystemCommand, GUICommand
     {
         public ShowRadCommand(BotClient testClient)
         {

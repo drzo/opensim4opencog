@@ -20,7 +20,7 @@ namespace Cogbot.Actions.Objects
                       AddUsage("select none", "Clears the select buffer") +
                       AddUsage("select", "Shows the select buffer");
             Category = Cogbot.Actions.CommandCategory.Objects;
-            Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The objects to " + Name);
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

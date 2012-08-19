@@ -15,7 +15,7 @@ namespace Cogbot.Actions.Land
             Description = "Displays current wind data";
             Details = "wind [position]";
             Category = CommandCategory.Simulator;
-            Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
+            Parameters = CreateParams("position", typeof (SimPosition), "the location you wish to " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

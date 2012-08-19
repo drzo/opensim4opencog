@@ -13,7 +13,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.SimExport
 {
-    public class ShowImageCommand : Command, GridMasterCommand
+    public class ShowImageCommand : Command, GridMasterCommand, GUICommand
     {
 
         public ShowImageCommand(BotClient testClient)

@@ -14,7 +14,7 @@ namespace Cogbot.Actions.Pathfinder
             Name = "Block Path";
             Description = "Puts one minute temp blocks toward objects";
             Category = Cogbot.Actions.CommandCategory.Movement;
-            Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
+            Parameters = CreateParams("position", typeof (SimPosition), "the location you wish to " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

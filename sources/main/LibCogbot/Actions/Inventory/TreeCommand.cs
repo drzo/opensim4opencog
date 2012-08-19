@@ -24,7 +24,9 @@ namespace Cogbot.Actions.Land
             usage += "]";
             Details = usage;
             Category = CommandCategory.Objects;
-            Parameters = new[] { new NamedParam(typeof(Tree), typeof(Tree)), new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
+            Parameters = CreateParams("tree", typeof (Tree), "the Tree foliage type you wish to rez",
+                                      "position", typeof (SimPosition), "the location you wish to creat the tree");
+
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

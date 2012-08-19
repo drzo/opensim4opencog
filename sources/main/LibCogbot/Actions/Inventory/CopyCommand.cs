@@ -14,7 +14,7 @@ namespace Cogbot.Actions.Inventory
             Name = "Copy";
             Description = "Copys from a prim. Usage: Copy [prim]";
             Category = Cogbot.Actions.CommandCategory.Objects;
-            Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

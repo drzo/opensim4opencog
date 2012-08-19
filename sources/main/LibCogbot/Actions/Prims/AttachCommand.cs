@@ -15,7 +15,10 @@ namespace Cogbot.Actions.Objects
             Description = "attach a prim to specified (or default) attachment point from the world";
             Details = "attach <prim> [attachmentPoint] [rotation] Example: /attach 98922187 RightHand";
             Category = CommandCategory.Objects;
-            Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof (PrimSpec), "The targets of " + Name,
+                                      Optional("attachpoint", typeof (AttachmentPoint), "where to attach to"),
+                                      Optional("rotation", typeof (Quaternion), "rotation to attach to"));
+           
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

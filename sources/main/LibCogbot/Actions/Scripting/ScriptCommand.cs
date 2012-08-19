@@ -13,12 +13,9 @@ namespace Cogbot.Actions.Scripting
             Name = "Script";
             Description = "Reads BotClient commands from a file. One command per line, arguments separated by spaces. Usage: script <filename> [type]";
             Category = CommandCategory.BotClient;
-            Parameters = new[]
-                             {
-                                 new NamedParam("pathname", typeof (String), typeof (String)),
-                                 new NamedParam("scripttype", typeof (String), null, "bot", "cs")
-                             };
-
+            Parameters = CreateParams(
+                new NamedParam("pathname", typeof (String), typeof (String)),
+                new NamedParam("scripttype", typeof (String), null, "bot", "cs"));
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

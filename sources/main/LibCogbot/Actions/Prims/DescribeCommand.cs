@@ -31,8 +31,7 @@ namespace Cogbot.Actions
 [09:18] Success: describe complete
 [09:18] Success: describe complete
 </pre>";
-            Parameters = CreateParams("object", typeof(PrimSpec),
-                "The object to describe");
+            Parameters = CreateParams("object", typeof(PrimSpec), "The object to describe");
             ResultMap = CreateParams(
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if we got the description");

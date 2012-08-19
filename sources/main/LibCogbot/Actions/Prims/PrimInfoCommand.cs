@@ -14,7 +14,7 @@ namespace Cogbot.Actions.Objects
             Name = "priminfo";
             Description = "Dumps information about a specified prim. " + "Usage: priminfo [prim-uuid]";
             Category = CommandCategory.Objects;
-            Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

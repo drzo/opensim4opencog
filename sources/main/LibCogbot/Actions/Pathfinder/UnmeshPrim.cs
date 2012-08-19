@@ -13,7 +13,7 @@ namespace Cogbot.Actions.Pathfinder
             Name = GetType().Name;
             Description = "Unmeshes all prims and removes collision planes. Usage: UnmeshPrim [prims] ";
             Category = Cogbot.Actions.CommandCategory.Movement;
-            Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The objects to " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

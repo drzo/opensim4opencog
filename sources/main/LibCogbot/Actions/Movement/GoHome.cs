@@ -11,7 +11,7 @@ namespace Cogbot.Actions.Movement
             Name = "gohome";
             Description = "Teleports home";
             Category = CommandCategory.Movement;
-            Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+            Parameters = CreateParams();
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

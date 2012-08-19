@@ -16,7 +16,7 @@ namespace Cogbot.Actions.SimExport
             Name = "exportparticles";
             Description = "Reverse engineers a prim with a particle system to an LSL script. Usage: exportscript [prim-uuid]";
             Category = CommandCategory.Objects;
-            Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

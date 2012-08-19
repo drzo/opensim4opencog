@@ -14,7 +14,7 @@ namespace Cogbot.Actions.SimExport
             Name = "orphans";
             Description = "Finds objects without locations [prim]";
             Category = Cogbot.Actions.CommandCategory.Objects;
-            Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

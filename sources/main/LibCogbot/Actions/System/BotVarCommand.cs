@@ -24,8 +24,7 @@ namespace Cogbot.Actions.System
             Details = AddUsage("botvar <varname>", "display a bot var") +
                 AddExample("botvar master", "displays the name of the bot's master");
 
-            Parameters = NamedParam.CreateParams(
-                "varname", typeof(string), "bot var to display");
+            Parameters = CreateParams("varname", typeof (string), "bot var to display");
 
             Category = CommandCategory.BotClient;
         }

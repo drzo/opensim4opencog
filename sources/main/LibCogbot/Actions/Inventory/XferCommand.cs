@@ -22,7 +22,7 @@ namespace Cogbot.Actions.SimExport
             Name = "xfer";
             Description = "Downloads the specified asset using the Xfer system. Usage: xfer [uuid]";
             Category = CommandCategory.Inventory;
-            Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
+            Parameters = CreateParams("position", typeof (SimPosition), "the location you wish to " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

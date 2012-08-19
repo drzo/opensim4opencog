@@ -8,7 +8,7 @@ namespace Cogbot.Actions.Groups
     /// <summary>
     /// Shows group info Dialog using Radegast UI
     /// </summary>
-    public class GroupInfoCommand : Command, GridMasterCommand
+    public class GroupInfoCommand : Command, GridMasterCommand, GUICommand
     {
         private string GroupName;
         private UUID GroupUUID = UUID.Zero;
@@ -18,7 +18,9 @@ namespace Cogbot.Actions.Groups
             Name = "groupinfo";
             Description = "Shows the group UI. Usage: groupinfo GroupName";
             Category = CommandCategory.Groups;
-            Parameters = new[] { new NamedParam(typeof(Group), typeof(UUID)) };
+            AddVersion(CreateParams("groupid", typeof(Group), "groupid you are going to " + Name),
+                       "shows the profile specified by groupid");
+
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

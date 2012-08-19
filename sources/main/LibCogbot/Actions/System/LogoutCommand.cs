@@ -20,7 +20,7 @@ namespace Cogbot.Actions
             Description = "Logout from grid";
             AddVersion(CreateParams(), "logout the targeted bot");
             Category = CommandCategory.BotClient;
-            Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+            Parameters = CreateParams();
         }
 
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)

@@ -16,11 +16,8 @@ namespace Cogbot.Actions.Movement
             Description = "Block until the robot gets to a certain position for a certain maxwait";
             Category = Cogbot.Actions.CommandCategory.Movement;
             Details = "waitpos seconds <x,y,z>";
-            Parameters = new[]
-                             {
-                                 new NamedParam("seconds", typeof (TimeSpan), typeof (float)),
-                                 new NamedParam("position", typeof (SimPosition), typeof (Vector3d))
-                             };
+            Parameters = CreateParams("seconds", typeof (TimeSpan), typeof (float),
+                                      "position", typeof (SimPosition), typeof (Vector3d));
 
         }
 

@@ -150,6 +150,12 @@ namespace Cogbot.Actions
     /// </summary>    
     public interface AsynchronousCommand
     {
+    }    
+    /// <summary>
+    /// An interface for commands that require a windowing interface
+    /// </summary>    
+    public interface GUICommand : AsynchronousCommand
+    {
     }
     /// <summary>
     /// An interface for commands that are not recreated per call instance
@@ -227,7 +233,7 @@ namespace Cogbot.Actions
         /// Introspective Parameters for calling command from code
         /// </summary>
         public List<KeyParams> ParameterVersions { get; set; }
-        public NamedParam[] ResultMap { get; set; }
+        public KeyParams ResultMap { get; set; }
 
         public Type CmdType;
         public ConstructorInfo CmdTypeConstructor;
@@ -432,13 +438,13 @@ namespace Cogbot.Actions
                 }
             }
         }
-        public NamedParam[] Parameters
+        public KeyParams Parameters
         {
             get
             {
-                if (VersionSelected != null) return VersionSelected.Parameters;
+                if (VersionSelected != null) return VersionSelected;
                 if (ParameterVersions == null || ParameterVersions.Count == 0) return null;
-                return ParameterVersions[0].Parameters;
+                return ParameterVersions[0];
             }
             set
             {
@@ -462,7 +468,7 @@ namespace Cogbot.Actions
             }
         }
 
-        public NamedParam[] ResultMap;
+        public KeyParams ResultMap;
 
         /// <summary>
         /// Show commandusage
@@ -482,7 +488,7 @@ namespace Cogbot.Actions
         public IDictionary<string, object> Results = CmdResult.CreateMap();
         protected T GetParamValue<T>(string paramName, Parser parser)
         {
-            foreach (NamedParam param in Parameters)
+            foreach (NamedParam param in Parameters.Parameters)
             {
 
             }
@@ -556,12 +562,12 @@ namespace Cogbot.Actions
             }
             if (this is BotPersonalCommand)
             {
-                //Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+                //Parameters = CreateParams();
                 Category = CommandCategory.Other;
             }
             if (this is BotSystemCommand)
             {
-                //Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+                //Parameters = CreateParams();
                 Category = CommandCategory.Simulator;
             }
             if (this is RegionMasterCommand)
@@ -571,7 +577,7 @@ namespace Cogbot.Actions
             }
             if (this is SystemApplicationCommand)
             {
-                // Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+                // Parameters = CreateParams();
                 Category = CommandCategory.BotClient;
             }
             if (this.GetType().Namespace.ToString() == "Cogbot.Actions.Movement")
@@ -894,7 +900,7 @@ namespace Cogbot.Actions
             }
         }
 
-        protected static NamedParam[] CreateParams(params object[] paramz)
+        protected static KeyParams CreateParams(params object[] paramz)
         {
             List<NamedParam> paramsz = new List<NamedParam>();
             int argNum = 1;
@@ -920,7 +926,7 @@ namespace Cogbot.Actions
                     throw new FormatException("CreateParams: " + o);
                 }
             }
-            return paramsz.ToArray();
+            return new KeyParams(paramsz.ToArray());
         }
 
         protected static List<KeyParams> CreateParamVersions(params NamedParam[][] paramz)
@@ -932,7 +938,15 @@ namespace Cogbot.Actions
             }
             return list;
         }
-
+        protected static List<KeyParams> CreateParamVersions(params KeyParams[] paramz)
+        {
+            var list = new List<KeyParams>();
+            foreach (var paramse in paramz)
+            {
+                list.Add(paramse);
+            }
+            return list;
+        }
         protected static NamedParam Optional(string name, Type type, string description)
         {
             NamedParam namedParam = new NamedParam(name, type);
@@ -988,18 +1002,18 @@ namespace Cogbot.Actions
             return idea;
         }
 
-        protected void AddVersion(NamedParam[] paramSpec, string comment)
+        protected void AddVersion(KeyParams paramSpec, string comment)
         {
             AddUsage(paramSpec, comment);
         }
-        protected string AddUsage(NamedParam[] parameters, string description)
+        protected string AddUsage(KeyParams parameters, string description)
         {
             AddVersion(parameters);
             if (string.IsNullOrEmpty(Name))
             {
                 throw new NullReferenceException(GetType().Name);
             }
-            string usage = Name + " " + CommandInfo.ToBNF(parameters);
+            string usage = Name + " " + CommandInfo.ToBNF(parameters.Parameters);
             return AddUsage(usage, description);
         }
 

@@ -14,7 +14,7 @@ namespace Cogbot.Actions.Objects
             Name = "objectinventory";
             Description = "Retrieves a listing of items inside an object (task inventory). Usage: objectinventory [objectID]";
             Category = CommandCategory.Inventory;
-            Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
