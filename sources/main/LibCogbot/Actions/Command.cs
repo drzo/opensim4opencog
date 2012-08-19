@@ -882,24 +882,6 @@ namespace Cogbot.Actions
             WriteLineResultName = resultName;
         }
 
-        protected void AppendResults(string name, string format)
-        {
-            lock (Results)
-            {
-                object obj;
-                if (!Results.TryGetValue(name, out obj))
-                {
-                    Results[name] = format;
-                }
-                else
-                {
-                    string before = "" + obj;
-                    string newstring = before + "\n" + format;
-                    Results[name] = newstring.TrimStart();
-                }
-            }
-        }
-
         protected static KeyParams CreateParams(params object[] paramz)
         {
             List<NamedParam> paramsz = new List<NamedParam>();
@@ -1030,18 +1012,71 @@ namespace Cogbot.Actions
                             "success", typeof (bool), "true if command was successful");
         }
 
-        protected void AppendMap(IDictionary<string, object> dictionary, string propname, object item)
+        protected void AppendResults(string name, string format)
+        {
+            lock (Results)
+            {
+                object obj;
+                if (!Results.TryGetValue(name, out obj))
+                {
+                    Results[name] = format;
+                }
+                else
+                {
+                    string before = "" + obj;
+                    string newstring = before + "\n" + format;
+                    Results[name] = newstring.TrimStart();
+                }
+            }
+        }
+
+        protected void SetResult(string propname, object item)
         {
             propname = Parser.ToKey(propname);
+            success++;
+            Results[propname] = item;
+        }
+
+        protected void AppendList(string propname, IEnumerable items)
+        {
+            propname = Parser.ToKey(propname);
+            success++;
+            foreach (var c in items)
+            {
+                AppendItem(propname, c);
+            }
+        }
+
+        protected void AppendList<T>(IEnumerable<T> items)
+        {
+            string propname = Parser.ToKey(typeof (T).GetType().Name + "s");
+            success++;
+            foreach (var c in items)
+            {
+                AppendItem(propname, c);
+            }
+        }
+
+        protected void AppendItem(object item)
+        {
+            AppendItem(item.GetType().Name + "s", item);
+        }
+
+        protected void AppendItem(string propname, object item)
+        {
+            propname = Parser.ToKey(propname);
+            success++;
+            var dictionary = Results;
             Type t = GetPropType(propname);
             object value;
-            lock (dictionary) if (!dictionary.TryGetValue(propname, out value))
+            lock (dictionary)
+                if (!dictionary.TryGetValue(propname, out value))
                 {
                     dictionary[propname] =
                         value =
-                        typeof(List<>).MakeGenericType(new[] { t }).GetConstructor(new Type[0]).Invoke(new object[0]);
+                        typeof (List<>).MakeGenericType(new[] {t}).GetConstructor(new Type[0]).Invoke(new object[0]);
                 }
-            ((IList)value).Add(item);
+            ((IList) value).Add(item);
         }
 
         private Type GetPropType(string propname)

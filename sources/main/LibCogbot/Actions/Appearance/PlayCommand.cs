@@ -24,15 +24,15 @@ namespace Cogbot.Actions.Appearance
                       AddUsage("anim stopall +HOVER 5 +23423423423-4234234234-234234234-23423423 10 -CLAP",
                                "stop all current anims, begin hover, wait 5 seconds, begin clapping (used uuid), wait 10 seconds, stop clapping (used name)");
 
+            //// we dont use sequenceOf here... for ideas
+            NamedParam sequenceOf = SequenceOf("doList",
+                                                  OneOf(
+                                                      Required("asset_0-N", typeof(SimAsset), "+/-animuuid"),
+                                                      Required("stopall", typeof(bool), "stops all current anims/played items"),
+                                                      Required("seconds", typeof(int), "how long to pause for")));
             Category = CommandCategory.Appearance;
-            AddVersion(CreateParams(
-                           SequenceOf("doList",
-                                      OneOf(
-                                          Required("asset_0-N", typeof (SimAsset), "+/-animuuid"),
-                                          Required("stopall", typeof (bool), "stops all current anims/played items"),
-                                          Required("seconds", typeof (int), "how long to pause for")))),
-                       "run the anim list");
-
+            
+            AddVersion(CreateParams("dolist", typeof (string[]), "asset play list"), "run the anim list");
             AddVersion(CreateParams(), "just lists anims currently running");
 
             ResultMap = CreateParams(
@@ -56,7 +56,7 @@ namespace Cogbot.Actions.Appearance
                 string alist = String.Empty;
                 foreach (var anim in gestures)
                 {
-                    AppendMap(Results, "assets", WorldSystem.GetAsset(anim.Key));
+                    AppendItem("assets", WorldSystem.GetAsset(anim.Key));
                     if (!writeInfo) continue;
                     alist += WorldSystem.GetAnimationName(anim.Key);
                     alist += " ";
@@ -155,7 +155,7 @@ namespace Cogbot.Actions.Appearance
                 }
                 SimAsset asset = SimAssetStore.FindAsset(anim);
                 animsRan++;
-                AppendMap(Results, "assets", WorldSystem.GetAsset(anim));
+                AppendItem("assets", WorldSystem.GetAsset(anim));
                 if (asset is SimGesture)
                 {
                     Client.Self.PlayGesture(asset.AssetID);

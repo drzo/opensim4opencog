@@ -22,9 +22,6 @@ namespace Cogbot.Actions.Communication
             Details = AddUsage("echomaster", "toggles this commnand on/off");
             Category = CommandCategory.Communication;
             Parameters = CreateParams();
-            ResultMap = CreateParams(
-                "message", typeof (string), "if success was false, the reason why",
-                "success", typeof (bool), "true if command was successful");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

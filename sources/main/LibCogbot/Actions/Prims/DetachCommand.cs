@@ -14,7 +14,12 @@ namespace Cogbot.Actions.Objects
         public DetachCommand(BotClient testClient)
         {
             Name = "detach";
-            Description = "detach prims or specified attachment point";
+            TheBotClient = testClient;
+		}
+
+		override public void MakeInfo()
+		{
+			Description = "detach prims or specified attachment point";
             Details = "detach <all|attachmentPoint|prim> Example: /detach prim98922187";
             AddExample("detach [attachments parent $self attachpoint LeftHand]", "detach anything attached to left hand");
             Category = CommandCategory.Objects;
@@ -36,23 +41,10 @@ namespace Cogbot.Actions.Objects
                 Client.Objects.DetachObjects(TheSimAvatar.GetSimulator(), ids);
                 return Success("detatched all " + ids.Count);
             }
-            object obj;
-            AttachmentPoint attachmentPoint = AttachmentPoint.Default;
-            int argsUsed;
-            if (TryEnumParse(typeof(AttachmentPoint), args, 0, out argsUsed, out obj))
-            {
-                attachmentPoint = (AttachmentPoint)obj;
-                List<uint> ids = new List<uint>();
-                foreach (SimObject o in TheSimAvatar.Children)
-                {
-                    if (o.AttachPoint != attachmentPoint) continue;
-                    Success("Detatching " + o);
-                    ids.Add(o.LocalID);
-                }
-                Client.Objects.DetachObjects(TheSimAvatar.GetSimulator(), ids);
-                return Success("detatched  " + attachmentPoint + " " + ids.Count);
-            }
-            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+
+            int	 argsUsed;
+            string[] keyargs = args.OnlyKey("targets");
+            List<SimObject> PS = WorldSystem.GetPrimitives(keyargs, out argsUsed);
             List<uint> idz = new List<uint>();
             foreach (var o in PS)
             {
