@@ -427,7 +427,7 @@ namespace Cogbot
             var all = ClientManager.AllCommands();
             foreach (KeyValuePair<string, CommandInstance> pair in Commands)
             {
-                all.Add(pair.Key, pair.Value.CmdInfo);
+                all[pair.Key] = pair.Value.CmdInfo;
             }
             return all;
         }
@@ -574,7 +574,9 @@ namespace Cogbot
                 text = text.Substring(1).TrimStart();
             }
             if (string.IsNullOrEmpty(text)) return null;
-            text = Parser.ParseArguments(text)[0].ToLower();
+            string[] pargs = Parser.ParseArguments(text);
+            if (pargs==null || pargs.Length == 0) return null;
+            text = pargs[0].ToLower();
             CommandInstance fnd;
             if (Commands == null || Commands.Count == 0)
             {

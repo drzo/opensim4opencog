@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading;
 
@@ -273,6 +274,18 @@ namespace MushDLR223.ScriptEngines
         public static IDictionary<string, object> CreateMap()
         {
             return new Dictionary<string, object>();
+        }
+
+        public string ToPostExecString()
+        {
+            string SkipKey = Parser.ToKey("message");
+            StringWriter tw = new StringWriter();
+            foreach (KeyValuePair<string, object> kv in Results)
+            {
+                if (Parser.ToKey(kv.Key) == SkipKey) continue;
+                tw.WriteLine("" + kv.Key + " = " + kv.Value);
+            }
+            return tw.ToString();
         }
     }
 }
