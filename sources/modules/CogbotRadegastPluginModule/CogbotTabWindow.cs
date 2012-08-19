@@ -445,7 +445,7 @@ namespace CogbotRadegastPluginModule
             if (bc != null)
             {
                 WriteLine("cogbot> " + s);
-                WriteLine("" + bc.ExecuteCommand(s, e, WriteLine));
+                WriteLine("" + bc.ExecuteCommand(s, e, WriteLine, true));
                 ClearChatInput();
                 return;
             }
@@ -453,7 +453,7 @@ namespace CogbotRadegastPluginModule
             if (gm != null)
             {
                 WriteLine("gridmaster> " + s);
-                WriteLine("" + gm.client.ExecuteCommand(s, e, WriteLine));
+                WriteLine("" + gm.client.ExecuteCommand(s, e, WriteLine, false));
                 ClearChatInput();
                 return;
             }

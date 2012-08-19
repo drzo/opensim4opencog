@@ -8,7 +8,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Money
 {
-    public class BalanceCommand : Command, BotPersonalCommand
+    public class BalanceCommand : Command, BotPersonalCommand, AsynchronousCommand
     {
         public BalanceCommand(BotClient testClient)
 		{

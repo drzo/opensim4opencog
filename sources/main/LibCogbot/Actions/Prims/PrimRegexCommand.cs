@@ -6,7 +6,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Objects
 {
-    public class PrimRegexCommand : Command, RegionMasterCommand
+    public class PrimRegexCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         public PrimRegexCommand(BotClient testClient)
         {

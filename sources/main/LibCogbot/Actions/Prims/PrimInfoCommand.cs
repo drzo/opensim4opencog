@@ -7,7 +7,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Objects
 {
-    public class PrimInfoCommand : Command, RegionMasterCommand
+    public class PrimInfoCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         public PrimInfoCommand(BotClient testClient)
         {

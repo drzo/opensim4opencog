@@ -9,7 +9,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.SimExport
 {
-    public class ExportParticlesCommand : Command, RegionMasterCommand
+    public class ExportParticlesCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         public ExportParticlesCommand(BotClient testClient)
         {

@@ -7,7 +7,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Land
 {
-    public class WindCommand : Command, RegionMasterCommand
+    public class WindCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         public WindCommand(BotClient testClient)
         {

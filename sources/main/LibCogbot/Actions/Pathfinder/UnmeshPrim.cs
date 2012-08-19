@@ -50,7 +50,7 @@ namespace Cogbot.Actions.Pathfinder
                 TheSimAvatar.GetSimRegion().GetPathStore(TheSimAvatar.SimPosition).RemoveAllCollisionPlanes();
             }
 
-            return TheBotClient.ExecuteCommand("meshinfo", fromAgentID, WriteLine);
+            return TheBotClient.ExecuteCommand("meshinfo", fromAgentID, WriteLine, args.WantsResult);
         }
     }
 }

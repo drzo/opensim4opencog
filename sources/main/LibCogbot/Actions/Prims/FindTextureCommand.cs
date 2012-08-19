@@ -5,7 +5,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Search
 {
-    public class FindTextureCommand : Command, RegionMasterCommand
+    public class FindTextureCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         public FindTextureCommand(BotClient testClient)
         {

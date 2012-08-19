@@ -9,7 +9,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Estate
 {
-    public class UploadRawTerrainCommand : Command, RegionMasterCommand
+    public class UploadRawTerrainCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         AutoResetEvent WaitForUploadComplete = new AutoResetEvent(false);
 

@@ -104,7 +104,7 @@ namespace Cogbot.ScriptEngines
             while (stringCodeReader.Peek() != -1)
             {
                 line++;
-                res = BotClient.ExecuteCommand(stringCodeReader.ReadLine(), context_name, WriteLine);
+                res = BotClient.ExecuteCommand(stringCodeReader.ReadLine(), context_name, WriteLine, true);
             }
             return res;
         } // method: Read
@@ -141,7 +141,7 @@ namespace Cogbot.ScriptEngines
         /// <returns></returns>
         public override object Eval(object code)
         {
-            return BotClient.ExecuteCommand(code.ToString());
+            return BotClient.ExecuteCommand(code.ToString(), true);
         } // method: Eval
 
 
@@ -538,7 +538,7 @@ namespace Cogbot.ScriptEngines
 
         private string EvaluateCommand(string cmd)
         {
-            return BotClient.ExecuteCommand(cmd).ToString();
+            return BotClient.ExecuteCommand(cmd, true).ToString();
         }
 
         public string genActReport(string planID, string seqID, string act, string status)
@@ -569,7 +569,7 @@ namespace Cogbot.ScriptEngines
             outputDelegate("<output>"); //string
             try
             {
-                res = BotClient.ExecuteCommand(cmd, session, outputDelegate);
+                res = BotClient.ExecuteCommand(cmd, session, outputDelegate, true);
             }
             finally
             {

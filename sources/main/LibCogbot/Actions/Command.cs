@@ -105,7 +105,7 @@ namespace Cogbot.Actions
     /// Such as terrain uploads and simulator info (10 bots doing the command at once will create problems)
     /// Non region master bots are thinner clients and usually not fit for object tracking
     /// </summary>
-    public interface RegionMasterCommand : BotCommand
+    public interface RegionMasterCommand : BotCommand, SynchronousCommand
     {
     }
     /// <summary>
@@ -143,6 +143,12 @@ namespace Cogbot.Actions
     /// An interface for commands that have to move thru a single TODO queue
     /// </summary>    
     public interface SynchronousCommand
+    {
+    }
+    /// <summary>
+    /// An interface for commands that have to move thru a single TODO queue
+    /// </summary>    
+    public interface AsynchronousCommand
     {
     }
     /// <summary>
@@ -537,7 +543,7 @@ namespace Cogbot.Actions
 
         public Command(BotClient bc)
         {
-            if (this is SynchronousCommand)
+            if (this is SynchronousCommand && !(this is AsynchronousCommand))
             {
                 TaskQueueNameOrNull = "OneAtATimeQueue";
             }

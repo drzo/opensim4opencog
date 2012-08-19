@@ -378,21 +378,22 @@ namespace Cogbot.World
         protected void IndicateTarget(SimPosition pos, bool tf)
         {
             return;
+            bool needResult = false;
             BotClient Client = WorldSystem.client;
             if (tf)
             {
                 SimObject obj = pos as SimObject;
                 if (obj != null)
                 {
-                    Client.ExecuteCommand("pointat " + obj.ID, this, Debug);
+                    Client.ExecuteCommand("pointat " + obj.ID, this, Debug, needResult);
                 }
                 else
                 {
                     var vFinalLocation = pos.UsePosition.GlobalPosition;
-                    Client.ExecuteCommand("pointat " + vFinalLocation.ToRawString(), this, Debug);
+                    Client.ExecuteCommand("pointat " + vFinalLocation.ToRawString(), this, Debug, needResult);
                 }
             }
-            else Client.ExecuteCommand("pointat", this, Debug);
+            else Client.ExecuteCommand("pointat", this, Debug, needResult);
         }
 
         public virtual bool IsControllable

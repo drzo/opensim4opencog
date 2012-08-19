@@ -8,7 +8,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Communication
 {
-    public class EchoMasterCommand: Command, BotPersonalCommand, BotStatefullCommand
+    public class EchoMasterCommand: Command, BotSystemCommand, BotStatefullCommand
     {
         public EchoMasterCommand(BotClient testClient)
             : base(testClient)

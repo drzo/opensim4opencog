@@ -7,7 +7,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
 {
-    public class ShowEffectsCommand : Command, RegionMasterCommand, BotStatefullCommand
+    public class ShowEffectsCommand : Command, RegionMasterCommand, BotStatefullCommand, AsynchronousCommand
     {
         bool ShowEffects = false;
 

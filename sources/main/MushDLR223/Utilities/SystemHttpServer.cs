@@ -353,12 +353,12 @@ namespace MushDLR223.Utilities
                     {
                         //res = _botClient.ExecuteCommand(cmd + " " + text, wrresp.WriteLine);
                         res = _botClient.ExecuteCommand("aiml @withuser " + defaultUser + " - " + text, request,
-                                                        response.WriteLine);
+                                                        response.WriteLine, true);
                     }
                     else
                     {
                         res = _botClient.ExecuteCommand("aiml @withuser " + username + " - " + text, request,
-                                                        response.WriteLine);
+                                                        response.WriteLine, true);
                     }
                     AddToBody(response, "");
                     AddToBody(response, "\n<!-- End Response !-->");

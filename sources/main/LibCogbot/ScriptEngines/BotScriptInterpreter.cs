@@ -105,7 +105,7 @@ namespace Cogbot.ScriptEngines
             while (stringCodeReader.Peek() != -1)
             {
                 line++;
-                res = BotClient.ExecuteCommand(stringCodeReader.ReadLine(), context_name, WriteLine);
+                res = BotClient.ExecuteCommand(stringCodeReader.ReadLine(), context_name, WriteLine, true);
             }
             return res;
         } // method: Read
@@ -142,7 +142,7 @@ namespace Cogbot.ScriptEngines
         /// <returns></returns>
         public override object Eval(object code)
         {
-            return BotClient.ExecuteCommand(code.ToString());
+            return BotClient.ExecuteCommand(code.ToString(), true);
         } // method: Eval
 
 

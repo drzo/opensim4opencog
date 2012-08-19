@@ -34,7 +34,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Agent
 {
-    public class WhoCommand: Command, RegionMasterCommand, FFIComplete
+    public class WhoCommand : Command, RegionMasterCommand, FFIComplete, AsynchronousCommand
     {
         public WhoCommand(BotClient testClient)
         {

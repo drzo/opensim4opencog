@@ -8,7 +8,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
 {
-    public class DilationCommand : Command, RegionMasterCommand
+    public class DilationCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
 		public DilationCommand(BotClient testClient)
         {

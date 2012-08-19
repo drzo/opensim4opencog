@@ -88,7 +88,7 @@ if absent all actions are stopped."));
                 aborted[0]++;
             }
             WorldSystem.TheSimAvatar.StopMoving();
-            Client.ExecuteCommand("pointat", this, WriteLine);
+            Client.ExecuteCommand("pointat", this, WriteLine, false);
             return Success("Stopped " + aborted[0]);
         }
     }

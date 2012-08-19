@@ -48,7 +48,7 @@ namespace Cogbot.Actions.Pathfinder
                 Cogbot.WorldPathSystem.MeshingQueue.Enqueue(SimRegion.BakeRegions);
             }
 
-            return TheBotClient.ExecuteCommand("meshinfo", fromAgentID, WriteLine);
+            return TheBotClient.ExecuteCommand("meshinfo", fromAgentID, WriteLine, args.WantsResult);
         }
     }
 }

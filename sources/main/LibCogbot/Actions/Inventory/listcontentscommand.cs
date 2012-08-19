@@ -7,7 +7,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Inventory.Shell
 {
-    public class ListContentsCommand : Command, BotPersonalCommand
+    public class ListContentsCommand : Command, BotPersonalCommand, AsynchronousCommand
     {
         private InventoryManager Manager;
         private OpenMetaverse.Inventory Inventory;

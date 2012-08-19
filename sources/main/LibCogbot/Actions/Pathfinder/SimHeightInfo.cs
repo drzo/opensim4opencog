@@ -5,7 +5,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Pathfinder
 {
-    public class simhinfo : Cogbot.Actions.Command, RegionMasterCommand
+    public class simhinfo : Cogbot.Actions.Command, RegionMasterCommand, AsynchronousCommand
     {
         public simhinfo(BotClient client)
         {
@@ -31,7 +31,7 @@ namespace Cogbot.Actions.Pathfinder
         }
     }
 
-    public class simzinfo : Cogbot.Actions.Command, RegionMasterCommand
+    public class simzinfo : Cogbot.Actions.Command, RegionMasterCommand, AsynchronousCommand
     {
         public simzinfo(BotClient client)
         {

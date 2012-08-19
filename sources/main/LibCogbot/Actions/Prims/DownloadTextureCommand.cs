@@ -10,7 +10,7 @@ using MushDLR223.ScriptEngines;
 namespace Cogbot.Actions.SimExport
 {
 
-    public class DownloadTextureCommand : Command, RegionMasterCommand
+    public class DownloadTextureCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         UUID TextureID = UUID.Zero;
         AutoResetEvent DownloadHandle = new AutoResetEvent(false);

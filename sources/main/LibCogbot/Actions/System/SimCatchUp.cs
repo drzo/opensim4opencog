@@ -5,7 +5,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Land
 {
-    class SimCatchUp : Cogbot.Actions.Command, RegionMasterCommand
+    class SimCatchUp : Cogbot.Actions.Command, RegionMasterCommand, AsynchronousCommand
     {
         public SimCatchUp(BotClient client)
         {

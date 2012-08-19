@@ -8,7 +8,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Land
 {
-    public class ParcelInfoCommand : Command, RegionMasterCommand
+    public class ParcelInfoCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         private AutoResetEvent ParcelsDownloaded = new AutoResetEvent(false);
 
