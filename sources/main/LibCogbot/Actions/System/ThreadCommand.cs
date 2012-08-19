@@ -38,7 +38,7 @@ namespace Cogbot.Actions
             AddVersion(CreateParams(
                            "taskid", typeof (string), "the task queue this thread will use or 'create' or 'list'",
                            Optional("--kill", typeof(bool), "whether to kill or append to previous taskid"),
-                           "command", typeof(BotCommand), "The command to execute asynchronously or 'kill'",
+                           "command", typeof(string[]), "The command to execute asynchronously",
                            Optional("--wait", typeof(TimeSpan), "blocks until the thread completes")),
                        Description);
             ResultMap = CreateParams(
@@ -124,8 +124,13 @@ namespace Cogbot.Actions
             {
                 return Failure("Cannot create and kill in the same operation");
             }
-            String cmd;
-            args.TryGetValue("command", out cmd);
+            string[] cmdS;
+            args.TryGetValue("command", out cmdS);
+            if (cmdS == null)
+            {
+                args.TryGetValue("command", out cmdS);
+            }
+            string cmd = Parser.Rejoin(cmdS, 0);
             ThreadStart task = () =>
                                    {
                                        var result = Client.ExecuteCommand(cmd, fromAgentID, WriteLine);

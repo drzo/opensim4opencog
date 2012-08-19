@@ -387,7 +387,7 @@ namespace Cogbot.World
         }
 
 
-        public void TalkTo(SimAvatar avatar, String talkAbout)
+        public void TalkTo(SimObject avatar, String talkAbout)
         {
             //SimAvatar avatarWasInDialogWith = ((SimAvatarImpl) avatar).InDialogWith;
             //SimAvatar wasInDialogWith = InDialogWith;
@@ -411,7 +411,7 @@ namespace Cogbot.World
             //}
         }
 
-        public void TalkTo(SimAvatar avatar, BotMentalAspect talkAbout)
+        public void TalkTo(SimObject avatar, BotMentalAspect talkAbout)
         {
             ///  TODO find a better text representation (a thought bubble maybe?)
             TalkTo(avatar, "" + talkAbout);
@@ -634,8 +634,8 @@ namespace Cogbot.World
         bool SitOnGround();
         SimObject StandUp();
         //void StopMoving();
-        void TalkTo(SimAvatar avatar, BotMentalAspect talkAbout);
-        void TalkTo(SimAvatar avatar, string talkAbout);
+        void TalkTo(SimObject avatar, BotMentalAspect talkAbout);
+        void TalkTo(SimObject avatar, string talkAbout);
         ThreadStart WithAnim(SimAsset anim, ThreadStart closure);
         ThreadStart WithAnim(UUID animID, ThreadStart closure);
         ThreadStart WithGrabAt(SimObject obj, ThreadStart closure);
