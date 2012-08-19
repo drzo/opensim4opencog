@@ -27,7 +27,7 @@ namespace Cogbot.Actions.Movement
             Name = "Fly To";
             Description = "Fly the avatar toward the specified position for a maximum of seconds. Usage: FlyTo x y z [seconds]";
             Category = CommandCategory.Movement;
-            Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
+            Parameters = CreateParams("position", typeof (SimPosition), "the location you wish to " + Name);
             callback = new EventHandler<TerseObjectUpdateEventArgs>(Objects_OnObjectUpdated);
         }
 

@@ -15,7 +15,7 @@ namespace Cogbot.Actions.Objects
             Description = "drops a specified attachment into the world";
             Details = "drop <prim|attachmentPoint> example: /drop LeftHand ";
             Category = CommandCategory.Objects;
-            Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The objects to " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

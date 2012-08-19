@@ -16,7 +16,7 @@ namespace Cogbot.Actions.Pathfinder
             Name = GetType().Name;
             Description = "Shows meshinfo";
             Category = Cogbot.Actions.CommandCategory.Movement;
-            Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

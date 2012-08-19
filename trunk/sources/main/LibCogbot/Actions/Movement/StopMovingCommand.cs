@@ -13,7 +13,7 @@ namespace Cogbot.Actions.Movement
             Name = "stopmoving";
             Description = "stops all movement threads";
             Category = CommandCategory.Movement;
-            Parameters = new[] { new NamedParam(typeof(GridClient), typeof(GridClient)) };
+            Parameters = CreateParams();
 
         }
 

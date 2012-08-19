@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
+using OpenMetaverse.Assets;
 using OpenMetaverse.Packets;
 using PathSystem3D.Navigation;
 
@@ -16,7 +17,7 @@ namespace Cogbot.Actions.Movement
             Name = "goto_landmark";
             Description = "Teleports to a Landmark. Usage: goto_landmark [UUID]";
             Category = CommandCategory.Movement;
-            Parameters = new[] { new NamedParam(typeof(InventoryLandmark), typeof(UUID)) };
+            Parameters = CreateParams("position", typeof(AssetLandmark), "the location you wish to " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

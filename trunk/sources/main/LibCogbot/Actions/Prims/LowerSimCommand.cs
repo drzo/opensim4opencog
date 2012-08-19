@@ -19,6 +19,10 @@ namespace Cogbot.Actions.Land
 
             Name = "lowersim";
             Description = "Lowers all parent prims on a simulator. Usage: lowersim DaxlandWest -10";
+            Parameters =
+                CreateParams(
+                    Optional("ammount", typeof (float), "ammount to raise the sim.. therefore use a negative to lower"),
+                    Optional("simulator", typeof (Simulator), "if ommited it uses current sim"));       
             Category = CommandCategory.Objects;
         }
 

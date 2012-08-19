@@ -21,7 +21,7 @@ namespace Cogbot.Actions.Movement
             Description = "Moves the avatar to the specified global position using robot turnto and walk. Usage: moveto x y z";
             Category = CommandCategory.Movement;
             AddUsage(Name + " wp5", "move to wp6");
-            Parameters = CreateParams("loc", typeof (SimPosition), "the location you wish to " + Name);
+            Parameters = CreateParams("position", typeof(SimPosition), "the location you wish to " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

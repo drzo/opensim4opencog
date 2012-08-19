@@ -14,7 +14,7 @@ namespace Cogbot.Actions.Land
 			Name = "primcount";
 			Description = "Shows the number of objects currently being tracked.";
             Category = CommandCategory.Simulator;
-            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
+            Parameters = CreateParams();
 		}
 
         public override CmdResult ExecuteRequest(CmdRequest args)

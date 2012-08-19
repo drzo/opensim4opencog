@@ -17,7 +17,7 @@ namespace Cogbot.Actions.System
             Name = "uptime";
             Description = "Shows the login name, login time and length of time logged on.";
             Category = CommandCategory.Simulator;
-            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
+            Parameters = CreateParams();
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

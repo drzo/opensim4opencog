@@ -15,7 +15,7 @@ namespace Cogbot.Actions.System
 			Name = "regioninfo";
 			Description = "Prints out info about all the current region";
             Category = CommandCategory.Simulator;
-            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
+            Parameters = CreateParams();
 		}
 
         public override CmdResult ExecuteRequest(CmdRequest args)

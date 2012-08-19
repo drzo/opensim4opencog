@@ -9,14 +9,14 @@ using Radegast.Rendering;
 
 namespace Cogbot.Actions
 {
-    public class PrimWorkshopCommand : Cogbot.Actions.Command, RegionMasterCommand
+    public class PrimWorkshopCommand : Cogbot.Actions.Command, RegionMasterCommand, GUICommand
     {
         public PrimWorkshopCommand(BotClient client)
         {
             Name = "Prim Workshop";
             Description = "Runs PrimWorkshop on a prim. Usage: PrimWorkshop [prim]";
             Category = Cogbot.Actions.CommandCategory.Objects;
-            Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args0)

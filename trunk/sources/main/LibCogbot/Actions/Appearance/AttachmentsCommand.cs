@@ -20,10 +20,7 @@ namespace Cogbot.Actions.Appearance
             Description = "Prints a list of the currently known agent attachments or on another avatar";
             Details = AddUsage(Name + " [agent-spec]", "no prim-spec then use $self");
             Category = CommandCategory.Appearance;
-            Parameters = CreateParams(
-                Optional("target", typeof(AgentSpec),
-                                    "the agents you wish to see " + Name +
-                                    " (see meets a specified <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>.)"));
+            Parameters = CreateParams(Optional("target", typeof (AgentSpec), "the agents you wish to see " + Name));
             ResultMap = CreateParams(
                 "message", typeof(string), "if success was false, the reason why",
                 "attachments", typeof(SimObject), "attachments found",

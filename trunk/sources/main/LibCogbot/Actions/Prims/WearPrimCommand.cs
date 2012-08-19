@@ -17,7 +17,7 @@ namespace Cogbot.Actions.Objects
             Name = "WearPrim";
             Description = "Takes (derez to inventory) and wears a prim. Usage: wearprim [prim]";
             Category = Cogbot.Actions.CommandCategory.Objects;
-            Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
         }
 
 

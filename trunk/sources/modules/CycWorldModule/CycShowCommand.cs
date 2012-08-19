@@ -14,7 +14,7 @@ namespace CycWorldModule
             : base(Client)
         {
             Name = "CycShow";
-            Parameters = new []{ new NamedParam("uri",typeof(SimObject), typeof(UUID))};
+            Parameters = CreateParams("targets", typeof (PrimSpec), "The targets of " + Name);
         }
         public override CmdResult ExecuteRequest(CmdRequest args)
         {

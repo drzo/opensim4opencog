@@ -16,7 +16,7 @@ namespace Cogbot.Actions.Money
 			Name = "Give All Money";
 			Description = "Gives you all it's money.";
             Category = CommandCategory.Money;
-            Parameters = new[] { new NamedParam(typeof(SimAvatar), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
 		}
 
         public override CmdResult ExecuteRequest(CmdRequest args)

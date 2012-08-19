@@ -15,7 +15,7 @@ namespace Cogbot.Actions.System
             Name = "dilation";
             Description = "Shows time dilation for current sim.";
             Category = CommandCategory.Simulator;
-            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
+            Parameters = CreateParams();
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

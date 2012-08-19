@@ -13,6 +13,7 @@ namespace Cogbot.Actions.Objects
         {
             Name = "derez";
             Description = "De-Rezes a specified prim. " + "Usage: derez [prim-uuid]";
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
             Category = CommandCategory.Objects;
         }
 

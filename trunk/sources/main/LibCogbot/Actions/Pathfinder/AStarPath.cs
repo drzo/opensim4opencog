@@ -17,8 +17,7 @@ namespace Cogbot.Actions.Pathfinder
             Name = GetType().Name;
             Description = "Return the path that would be used by A* Pathfinding to get to object";
             Category = Cogbot.Actions.CommandCategory.Movement;
-            Parameters = new[] { new NamedParam( typeof(SimPosition), typeof(Vector3d)) };
-
+            Parameters = CreateParams("position", typeof(SimPosition), "the location you wish to " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

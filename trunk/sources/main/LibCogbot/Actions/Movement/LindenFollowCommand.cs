@@ -20,7 +20,7 @@ namespace Cogbot.Actions.Movement
 			Name = "Linden follow";
 			Description = "Follow another avatar. Usage: follow [FirstName LastName]/off.";
             Category = CommandCategory.Movement;
-            Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
+            Parameters = CreateParams("position", typeof (SimPosition), "the location you wish to " + Name);
 
 		}
 

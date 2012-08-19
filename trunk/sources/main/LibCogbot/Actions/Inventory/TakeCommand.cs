@@ -14,7 +14,7 @@ namespace Cogbot.Actions.Objects
             Name = "Take";
             Description = "Takes from a prim. Usage: Take [prim]";
             Category = Cogbot.Actions.CommandCategory.Objects;
-            Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The objects to " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

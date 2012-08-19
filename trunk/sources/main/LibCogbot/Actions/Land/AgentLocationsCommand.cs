@@ -18,7 +18,8 @@ namespace Cogbot.Actions.Land
             Name = "agentlocations";
             Description = "Downloads all of the agent locations in a specified region. Usage: agentlocations [regionhandle]";
             Category = CommandCategory.Simulator;
-            Parameters = new [] { new NamedParam(typeof(SimRegion), typeof(ulong)) };
+            Parameters =
+                CreateParams(Optional("simulator", typeof (Simulator), "if ommited it uses current sim"));
 
         }
 

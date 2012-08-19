@@ -15,7 +15,7 @@ namespace Cogbot.Actions.Money
             Name = "Pay";
             Description = "Pays a prim. Usage: Pay [prim] [amount]";
             Category = CommandCategory.Money;
-            Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

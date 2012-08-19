@@ -8,14 +8,14 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Money
 {
-    public class PayCommand : Cogbot.Actions.Command, RegionMasterCommand
+    public class PayCommand : Cogbot.Actions.Command, RegionMasterCommand, GUICommand
     {
         public PayCommand(BotClient client)
         {
             Name = "GUIPay";
             Description = "Pays a prim. Usage: Pay [prim] [amount]";
             Category = CommandCategory.Money;
-            Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

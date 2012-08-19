@@ -13,7 +13,7 @@ namespace Cogbot.Actions.Pathfinder
             Name = "WalkTo";
             Description = "Go to the avatar toward the specified position for a maximum of seconds. Usage: WalkTo [prim | [x y]] [dist]";
             Category = Cogbot.Actions.CommandCategory.Movement;
-            Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
+            Parameters = CreateParams("position", typeof (SimPosition), "the location you wish to " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

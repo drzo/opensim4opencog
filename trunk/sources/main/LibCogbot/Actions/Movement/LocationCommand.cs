@@ -22,7 +22,7 @@ namespace Cogbot.Actions.Movement
             Description = "Finds out in which direction yourself, an object or a building or a person is.";
             Details = "To find out wher an object, building or a person is, type \"where is [object/person name]\"";
             Details += "\nTo locate the coordinates of yourself, type in \"locate\"";
-            Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(UUID)) };
+            Parameters = CreateParams("position", typeof(SimPosition), "the location you wish to " + Name);
         }
 
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)

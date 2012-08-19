@@ -10,15 +10,12 @@ namespace Cogbot.Actions.System
     public class SwipCommand : Command, SystemApplicationCommand, AsynchronousCommand
     {
         private PrologScriptEngine.PrologScriptInterpreter pse = null;
-		public SwipCommand(BotClient testClient)
+        public SwipCommand(BotClient testClient)
         {
             Name = "swip";
             Description = "runs swi-prolog commands on current sim.";
             Category = CommandCategory.Simulator;
-		    Parameters = new[]
-		                     {
-		                         new NamedParam("prologCode", typeof (string), null)
-		                     };
+            Parameters = CreateParams(new NamedParam("prologCode", typeof (string), null));
         }
 
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)

@@ -12,7 +12,7 @@ namespace Cogbot.Actions.Pathfinder
             Name = GetType().Name;
             Description = "Calculates the Height (Z) level of walking at point. Usage: simzinfo 120 123 30";
             Category = Cogbot.Actions.CommandCategory.Movement;
-            Parameters = new[] {  new NamedParam(typeof(SimPosition),typeof(SimPosition)) };
+            Parameters = CreateParams("location", typeof(SimPosition), "postion for " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -38,7 +38,7 @@ namespace Cogbot.Actions.Pathfinder
             Name = GetType().Name;
             Description = "Calculates the Z level of walking at point. Usage: simzinfo 120 123";
             Category = Cogbot.Actions.CommandCategory.Movement;
-            Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
+            Parameters = CreateParams("location", typeof(SimPosition), "postion for " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
