@@ -67,6 +67,11 @@ namespace Cogbot
     public partial class BotClient : IDisposable, HasInstancesOfType
     {
 
+        /// <summary>
+        /// When the bot needs to be running a script Syncronously
+        /// </summary>
+        public bool InScriptMode {get; set;}
+
         public static implicit operator GridClient(BotClient m)
         {
             return m.gridClient;

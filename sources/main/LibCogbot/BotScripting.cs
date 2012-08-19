@@ -154,8 +154,8 @@ namespace Cogbot
             //lock (RunStartupClientLisplock)
             {
                 StartupClientLisp();
-                InvokeJoin("Waiting on RunOnLogin");
                 if (!NeedRunOnLogin) return;
+                InvokeJoin("Waiting on RunOnLogin");
                 NeedRunOnLogin = false;
                 string onLogin = ClientManager.config.GetValue("onLogin", String.Empty);
                 if (onLogin.Length > 1)
@@ -552,9 +552,16 @@ namespace Cogbot
             var callerID = SessionToCallerId(callerSession);
             string cmdStr = "ExecuteActBotCommand " + verb + " " + args;
             string sync = command.TaskQueueNameOrNull;
-            if (command is SynchronousCommand)
+            if (robot.InScriptMode || (command is SynchronousCommand && !(command is AsynchronousCommand)))
             {
-                robot.InvokeJoin(cmdStr);
+                if (!needResult)
+                {
+
+                }
+                else
+                {
+                    robot.InvokeJoin(cmdStr);
+                }
             }
             if (sync != null)
             {
