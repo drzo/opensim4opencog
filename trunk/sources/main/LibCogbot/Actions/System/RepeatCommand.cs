@@ -45,8 +45,9 @@ namespace Cogbot.Actions
                 return ShowUsage();
             }            
             // remove the time
-            String cmd;
-            args.TryGetValue("command", out cmd);
+            string[] cmdS;
+            args.TryGetValue("command", out cmdS);
+            string cmd = Parser.Rejoin(cmdS, 0);
             ThreadStart thread = () =>
                                            {
                                                try

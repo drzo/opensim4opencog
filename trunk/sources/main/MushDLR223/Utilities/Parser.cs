@@ -732,9 +732,10 @@ namespace MushDLR223.ScriptEngines
                 return true;
             }
             int len;
-            if (TryGetValueInt<T>(key, out value, out len) != MISSING)
+            int at;
+            bool atKey;
+            if (TryGetValueInt<T>(key, out value, out at, out len, out atKey))
             {
-                KeysRequired = true;
                 return true;
             }
             if (KeysRequired) return false;
@@ -750,7 +751,9 @@ namespace MushDLR223.ScriptEngines
         public bool TryGetValueOr<T>(string key, int arg, out T value)
         {
             int len;
-            if (TryGetValueInt<T>(key, out value, out len) != MISSING)
+            int at;
+            bool atKey;
+            if (TryGetValueInt(key, out value, out at, out len, out atKey))
             {
                 KeysRequired = true;
                 return true;
@@ -768,41 +771,42 @@ namespace MushDLR223.ScriptEngines
         public bool TryGetValueWithout<T>(string key, out T value, out string[] strings)
         {
             int len;
-            int at = TryGetValueInt(key, out value, out len);
-            if (at == MISSING)
+            int at;
+            bool atKey;
+            if (!TryGetValueInt(key, out value, out at, out len, out atKey))
             {
                 strings = tokens;
                 return false;
             }
             else
             {
-                ModArgs = strings = GetWithoutIndex(at, len);
+                ModArgs = strings = GetWithoutIndex(at, len + (atKey ? 1 : 0));
                 return true;
             }
         }
 
-        public int TryGetValueInt<T>(string key, out T value, out int len)
+        public bool TryGetValueInt<T>(string key, out T value, out int found, out int len, out bool atKey)
         {
             EnsurePreParsed();
-            bool atKey;
             key = ToKey(key);
             len = ValueLen(key, typeof (T));
-            int found = IndexOf(key, false, out atKey);
             object ovalue;
-            if (!ParamMap.TryGetValue(key, out ovalue))
+            found = IndexOf(key, false, out atKey);
+            if (ParamMap.TryGetValue(key, out ovalue))
             {
-                if (found == MISSING)
-                {
-                    value = default(T);
-                    len = 0;
-                    return MISSING;
-                }
-                string[] after = GetAfterIndex(found + (atKey ? 1 : 0));
-                value = ChangeType<T>(after);
-                return found;
+                value = ChangeType<T>(ovalue);
+                return true;
             }
-            value = ChangeType<T>(ovalue);
-            return found;
+            if (found == MISSING)
+            {
+                value = default(T);
+                len = 0;
+                return false;
+            }
+            int startAt = found + (atKey ? 1 : 0);
+            string[] after = new List<string>(tokens).GetRange(startAt, len).ToArray();
+            value = ChangeType<T>(after);
+            return true;
         }
 
         private int ValueLen(string key, Type t)

@@ -198,7 +198,7 @@ namespace AIMLBotModule
             }
         }
 
-        static public void TalkToObject(SimActor av, SimObject obj)
+        static public void TalkToObject(SimObject av, SimObject obj)
         {
             try
             {
@@ -209,7 +209,7 @@ namespace AIMLBotModule
                 Logger.Log("[AIMLBOT] exception " + e, Helpers.LogLevel.Error, e);
             }
         }
-        private void TalkToObject0(SimActor av, SimObject obj)
+        private void TalkToObject0(SimObject av, SimObject obj)
         {
             if (MyBotNullWarning()) return;
             string objName = obj.GetName();
@@ -260,10 +260,10 @@ namespace AIMLBotModule
                     RegisterTalkToCmd = false;
                     SimTypeUsage u = SimTypeSystem.CreateTypeUsage("TalkToObject");
                     u.SpecifiedProperties.Add("LispScript");
-                    u.LispScript = "(AIMLBotModule:WorldObjectsForAimLBot:TalkToObject TheBot TheTarget)";
+                    u.LispScript = "(AIMLBotModule.WorldObjectsForAimLBot:TalkToObject TheBot TheTarget)";
                     u = SimTypeSystem.CreateTypeUsage("KissTheObject");
                     u.SpecifiedProperties.Add("LispScript");
-                    u.LispScript = "(AIMLBotModule:WorldObjectsForAimLBot:TalkToObject TheBot TheTarget)";
+                    u.LispScript = "(AIMLBotModule.WorldObjectsForAimLBot:TalkToObject TheBot TheTarget)";
                 }
             }
         }
