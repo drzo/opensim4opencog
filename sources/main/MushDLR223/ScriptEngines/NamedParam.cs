@@ -76,12 +76,23 @@ namespace MushDLR223.ScriptEngines
             _key = ToKey(k);
             _value = v;
             _Type = null;
+            if (v != null)
+            {
+                if (v is Type)
+                {
+                    _Type = v as Type;
+                }
+                else
+                {
+                    _Type = v.GetType();
+                }
+            }
             Choices = null;
             info = null;
             checkKey(k);
         }
 
-        private NamedParam(string k, Type v)
+        public NamedParam(string k, Type v)
             : this(k, (object)null)
         {
             _Type = v;

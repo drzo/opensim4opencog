@@ -26,10 +26,12 @@ namespace Cogbot.Actions.System
                           "Cogbot won't make a special request from the server to get information about this sort of thing" +
                           "and will provide information about it only if available" +
                           "For booleans anything but no or false (case insensitive) is true.";
-            AddVersion(CreateParams(), "List all Sysvars and their settings");
+            AddVersion(CreateParams(Optional("save", typeof(string), "filename.xml to save to"),
+                                    Optional("load", typeof(string), "filename.xml to load from")),
+                       "List all Sysvars and their settings");
             AddVersion(CreateParams(
                            "key", typeof (string), "substring to match sysvar names",
-                           Optional("value", typeof (object), "value to set")),
+                           Optional("value", typeof(object), "value to set")),
                        "Show sysvars matching key if value is supplied it tried to set those values");
 
             Details = AddExample("sysvar CanUseSit True", "allow the bot to sit on things") +

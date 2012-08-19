@@ -105,7 +105,20 @@ namespace MushDLR223.ScriptEngines
                 object o = tc(value, type, out didit);
                 if (didit) return o;
             }
-            return Convert.ChangeType(value, type);
+            if (value is IConvertible)
+            {
+                if (typeof(IConvertible).IsAssignableFrom(type))
+                {
+                    try
+                    {
+                        return Convert.ChangeType(value, type);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+            return null;// Convert.ChangeType(value, type);
         }
 
         public static void AddTypeChanger(TypeChanger tc)

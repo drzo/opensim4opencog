@@ -251,6 +251,7 @@ namespace Cogbot
 
             lock (WorldObjectsMasterLock)
             {
+                ScriptManager.AddTypeChanger(this.TypeChangerProc);
                 RegionMasterSimulatorsCatchUps = false;
                 if (GridMaster == null || true)
                 {
