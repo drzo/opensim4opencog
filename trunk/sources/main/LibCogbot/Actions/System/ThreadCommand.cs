@@ -37,9 +37,9 @@ namespace Cogbot.Actions
                        "detroys all previous 'movement' and adds the command the movement queue");
             AddVersion(CreateParams(
                            "taskid", typeof (string), "the task queue this thread will use or 'create' or 'list'",
-                           Optional("--kill", typeof (bool), "whether to kill or append to previous taskid"),
-                           "command", typeof (BotCommand), "The command to execute asynchronously or 'kill'",
-                           Optional("--wait", typeof (TimeSpan), "blocks until the thread completes")),
+                           Optional("--kill", typeof(bool), "whether to kill or append to previous taskid"),
+                           "command", typeof(BotCommand), "The command to execute asynchronously or 'kill'",
+                           Optional("--wait", typeof(TimeSpan), "blocks until the thread completes")),
                        Description);
             ResultMap = CreateParams(
                 "message", typeof (string), "if the inner command failed, the reason why",

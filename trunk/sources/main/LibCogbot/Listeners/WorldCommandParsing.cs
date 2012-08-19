@@ -256,11 +256,15 @@ namespace Cogbot
 
         public SimObject GetSimObjectS(string[] args, out int argsUsed)
         {
+            SimObject prim;
             List<SimObject> primitives = GetSingleArg(args, out argsUsed);
-            if (primitives.Count != 1) return null;
-            SimObject prim = primitives[0];
-            if (prim != null) return prim;
+            if (primitives != null)
+            {
+                if (primitives.Count != 1) return null;
 
+                prim = primitives[0];
+                if (prim != null) return prim;
+            }
             prim = GetSimAvatarFromNameIfKnown(args[0]);
             argsUsed = prim != null ? 1 : 0;
             return prim;
@@ -368,23 +372,6 @@ namespace Cogbot
                 if (!prims.Contains(oo))
                     prims.Add(oo);
             }
-        }
-
-        private object ConvertType(object o, Type type)
-        {
-            if (FilterSpecAttribute.IsAssignableFrom(typeof (SimObject), type))
-            {
-                return AsSimObject(o);
-            }
-            if (FilterSpecAttribute.IsAssignableFrom(typeof (Primitive), type))
-            {
-                return AsSimObject(o).Prim;
-            }
-            if (FilterSpecAttribute.IsAssignableFrom(typeof (UUID), type))
-            {
-                return AsSimObject(o).ID;
-            }
-            return ConfigSettingAttribute.FindValueOfType(o, type, 2);
         }
 
         public delegate T StringParserMethod<T>(string[] args, out int argsUsed);
@@ -775,38 +762,6 @@ namespace Cogbot
             return FilterSpecAttribute.GetFilters(type);
         }
 
-        public object ChangeType(string[] args, out int argsUsed, Type arg2)
-        {
-            if (typeof(SimObject).IsAssignableFrom(arg2))
-            {
-                return GetSimObjectS(args, out argsUsed);
-            }
-            if (typeof(UUID).IsAssignableFrom(arg2))
-            {
-                argsUsed = 1;
-                UUID fnd = GetUserID(args[0]);
-                if (fnd == UUID.Zero)
-                {
-                    return GetSimObjectS(args, out argsUsed).ID;
-                }
-                return fnd;
-            }
-            if (typeof(string) == arg2)
-            {
-                argsUsed = 1;
-                return args[0];
-            }
-            if (arg2.IsEnum)
-            {
-                object val;
-                if (TryEnumParse(arg2, args, 0, out argsUsed, out val))
-                {
-                    return val;
-                }
-            }
-            argsUsed = 1;
-            return Convert.ChangeType(args[0], arg2);
-        }
 
         public void AddObjectGroup(string selecteditems,string desc, Func<IList> func)
         {
@@ -1034,6 +989,139 @@ namespace Cogbot
             }
             argsUsed = 0;
             return client.Network.CurrentSim;
+        }
+
+        private static object ConvertType(object o, Type type)
+        {
+            try
+            {
+                return ScriptManager.ChangeType(o, type);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public object ChangeType(string[] args, out int argsUsed, Type type)
+        {
+            var o = ChangeType0(args, out argsUsed, type);
+            if (o != null) return o;
+            o = ConvertType(args, type);
+            if (o == null) return o;
+            argsUsed = args.Length;
+            return o;
+        }
+
+        private object TypeChangerProc(object value, Type to, out bool converted)
+        {
+            if (value == null)
+            {
+                converted = false;
+                return null;
+            }
+            {
+                var v2 = value;
+                if (v2 is string[])
+                {
+                    string[] s2 = (string[]) v2;
+                    if (s2.Length == 1)
+                    {
+                        v2 = s2[0];
+                    }
+                }
+                var o = ConvertType0(v2, to);
+                converted = to.IsInstanceOfType(o);
+                if (converted) return o;
+            }
+            if (value is string)
+            {
+                value = new[] {(string) value};
+            }
+            if (value is string[])
+            {
+                int argsUsed;
+                object o = ChangeType0((string[])value, out argsUsed, to);
+                converted = to.IsInstanceOfType(o);
+                return o;
+            }
+            converted = false;
+            return null;
+        }
+
+        private object ConvertType0(object o, Type type)
+        {
+            if (type == typeof(TimeSpan))
+            {
+                double seconds;
+                if (double.TryParse("" + o, out seconds))
+                {
+                    return TimeSpan.FromSeconds(seconds);
+                }
+            }
+            if (FilterSpecAttribute.IsAssignableFrom(typeof(SimObject), type))
+            {
+                return AsSimObject(o);
+            }
+            if (FilterSpecAttribute.IsAssignableFrom(typeof(Primitive), type))
+            {
+                return AsSimObject(o).Prim;
+            }
+            if (FilterSpecAttribute.IsAssignableFrom(typeof(UUID), type))
+            {
+                return AsSimObject(o).ID;
+            }
+            if (o is IConvertible)
+            {
+                if (typeof(IConvertible).IsAssignableFrom(type))
+                {
+                    try
+                    {
+                        return Convert.ChangeType(o, type);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+            return ConfigSettingAttribute.FindValueOfType(o, type, 2);
+        }
+        public object ChangeType0(string[] args, out int argsUsed, Type arg2)
+        {
+            if (args.Length == 0)
+            {
+                argsUsed = 0;
+                return null;
+            }
+            if (typeof(SimObject).IsAssignableFrom(arg2))
+            {
+                return GetSimObjectS(args, out argsUsed);
+            }
+            if (typeof(UUID).IsAssignableFrom(arg2))
+            {
+                argsUsed = 1;
+                UUID fnd = GetUserID(args[0]);
+                if (fnd == UUID.Zero)
+                {
+                    return GetSimObjectS(args, out argsUsed).ID;
+                }
+                return fnd;
+            }
+            if (typeof(string) == arg2)
+            {
+                argsUsed = 1;
+                return args[0];
+            }
+            if (arg2.IsEnum)
+            {
+                object val;
+                if (TryEnumParse(arg2, args, 0, out argsUsed, out val))
+                {
+                    return val;
+                }
+            }
+            argsUsed = 1;
+            return Convert.ChangeType(args[0], arg2);
         }
     }
 

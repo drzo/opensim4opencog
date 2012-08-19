@@ -476,6 +476,8 @@ namespace MushDLR223.ScriptEngines
 
         public bool ContainsFlag(string key)
         {
+            EnsurePreParsed();
+            if (ParamMap.ContainsKey(key)) return true;
             while (key.StartsWith("-"))
             {
                 key = key.Substring(1);
@@ -505,30 +507,105 @@ namespace MushDLR223.ScriptEngines
             atKey = false;
             if (KeysRequired) return MISSING;
             int index = 0;
-            if (VersionSelected == null)
+            EnsureVersionSelected();
+            foreach (var param in VersionSelected.Parameters)
+            {
+                if (index >= tokens.Length) return MISSING;
+                if (param.IsOptional)
+                {
+                    if (ToKey(tokens[index]) != key)
+                    {
+                        continue;
+                    }
+                }
+                if (ToKey(param.Key) == key)
+                {
+                    return index;
+                }
+                index++;
+            }
+            return MISSING;
+
+        }
+
+
+        public bool HasAllRequiredKeys()
+        {
+            EnsureVersionSelected();
+            foreach (NamedParam p in VersionSelected.Parameters)
+            {
+                if (p.IsOptional) continue;
+                string key = ToKey(p.Key);
+                bool fnd = false;
+                foreach (var s in tokens)
+                {
+                    if (key == ToKey(s))
+                    {
+                        fnd = true;
+                        break;
+                    }
+                }
+                if (!fnd) return false;
+            }
+            return true;
+        }
+        private bool preparseStarted = false;
+        private void EnsurePreParsed()
+        {
+            if (!EnsureVersionSelected()) return;
+            if (preparseStarted) return;
+            preparseStarted = true;
+            ParseAndRemoveOptionalKeys();
+            if (HasAllRequiredKeys())
+            {
+                KeysRequired = true;
+            }
+            else
+            {
+                KeysRequired = false;
+            }
+        }
+        public int ParseAndRemoveOptionalKeys()
+        {
+            EnsureVersionSelected();
+            int count = 0;            
+            foreach (NamedParam p in VersionSelected.Parameters)
+            {
+                if (!p.IsOptional) continue;
+                string key = ToKey(p.Key);
+                bool atKey;
+                int i = IndexOf(key, false, out atKey);
+                if (i == MISSING)
+                {
+                    continue;
+                }
+                int startVal = i + (atKey ? 1 : 0);
+                int len = ValueLen(key, null);
+                if (len == 0 && atKey)
+                {
+                    ParamMap[key] = IsTrueString(tokens[i]);
+                }
+                else
+                {
+                    string[] arg = new List<string>(tokens).GetRange(startVal, len).ToArray();
+                    ParamMap[key] = ChangeType(arg, p.Type);
+                }
+                count++;
+                tokens = GetWithoutIndex(i, (atKey ? 1 : 0) + ValueLen(key, null));
+            }
+            return count;
+        }
+
+        private bool EnsureVersionSelected()
+        {
+            if (VersionSelected == null && ParameterVersions != null)
             {
                 VersionSelected = ParameterVersions[0];
                 if (ParameterVersions.Count != 1)
                 {
                 }
             }
-            foreach (var param in VersionSelected.Parameters)
-            {
-                if (ToKey(param.Key) == key)
-                {
-                    return index;
-                }
-                if (param.IsOptional)
-                {
-                    if (ToKey(tokens[i]) != key)
-                    {
-                        continue;
-                    }
-                }
-                index++;
-            }
-            return MISSING;
-
+            return VersionSelected != null;
         }
 
         private string[] GetWithoutIndex(int i, int len)
@@ -637,11 +714,23 @@ namespace MushDLR223.ScriptEngines
 
         private T ChangeType<T>(object value)
         {
-            return (T)ScriptManager.ChangeType(value, typeof(T));
+            return (T)ChangeType(value, typeof(T));
+        }
+
+        private static object ChangeType(object value, Type t)
+        {
+            return ScriptManager.ChangeType(value, t);
         }
 
         public bool TryGetValue<T>(string key, out T value)
         {
+            EnsurePreParsed();
+            object obj;
+            if (ParamMap.TryGetValue(key, out obj))
+            {
+                value = (T) obj;
+                return true;
+            }
             int len;
             if (TryGetValueInt<T>(key, out value, out len) != MISSING)
             {
@@ -649,6 +738,11 @@ namespace MushDLR223.ScriptEngines
                 return true;
             }
             if (KeysRequired) return false;
+            NamedParam parm = GetParm(key);
+            if (parm.IsOptional)
+            {
+                return false;
+            }
             value = ChangeType<T>(tokens[this.StartArg++]);
             return true;
         }
@@ -683,6 +777,7 @@ namespace MushDLR223.ScriptEngines
 
         public int TryGetValueInt<T>(string key, out T value, out int len)
         {
+            EnsurePreParsed();
             bool atKey;
             key = ToKey(key);
             len = ValueLen(key, typeof (T));
@@ -696,7 +791,8 @@ namespace MushDLR223.ScriptEngines
                     len = 0;
                     return MISSING;
                 }
-                value = ChangeType<T>(GetAfterIndex(found + (atKey ? 1 : 0)));
+                string[] after = GetAfterIndex(found + (atKey ? 1 : 0));
+                value = ChangeType<T>(after);
                 return found;
             }
             value = ChangeType<T>(ovalue);
