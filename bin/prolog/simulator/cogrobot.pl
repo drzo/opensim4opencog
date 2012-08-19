@@ -346,7 +346,7 @@ wbotcmd(BotID,StrIn,Out):-cmdargs_to_atomstr(StrIn,Str),wbotcmd(BotID,Str,{plugg
 
 :-meta_predicate(wbotcmd(+,+,//,?)).
 :-meta_predicate(botcmd(+,//,?)).
-wbotcmd(BotID,StrIn,WriteDelegate,Out):-cmdargs_to_atomstr(StrIn,Str),cli_call(BotID,executeCommand(Str,BotID,WriteDelegate),Out),!.
+wbotcmd(BotID,StrIn,WriteDelegate,Out):-cmdargs_to_atomstr(StrIn,Str),cli_call(BotID,executeCommand(Str,BotID,WriteDelegate,'@'(true)),Out),!.
 
 
 % wrappered execute command in a convenience pred
