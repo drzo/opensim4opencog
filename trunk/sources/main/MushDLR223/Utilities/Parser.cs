@@ -923,6 +923,8 @@ namespace MushDLR223.ScriptEngines
         }
         public static bool operator ==(KeyParams p1, KeyParams p2)
         {
+            if (ReferenceEquals(null, p2)) return ReferenceEquals(null, p1);
+            if (ReferenceEquals(null, p1)) return false;
             if (Equals(p1.Parameters, p2.Parameters)) return true;
             if (p1.Parameters.Length == p2.Parameters.Length)
             {
@@ -946,8 +948,6 @@ namespace MushDLR223.ScriptEngines
         ///                 </param>
         public bool Equals(KeyParams other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
             return this == other;
         }
 
