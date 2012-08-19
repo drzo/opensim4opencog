@@ -552,7 +552,7 @@ namespace Cogbot
             var callerID = SessionToCallerId(callerSession);
             string cmdStr = "ExecuteActBotCommand " + verb + " " + args;
             string sync = command.TaskQueueNameOrNull;
-            if (robot.InScriptMode || (command is SynchronousCommand && !(command is AsynchronousCommand)))
+            if (robot != null && (robot.InScriptMode || (command is SynchronousCommand && !(command is AsynchronousCommand))))
             {
                 if (!needResult)
                 {
@@ -567,7 +567,15 @@ namespace Cogbot
             {
                 CmdResult[] res = new CmdResult[1];
                 ManualResetEvent mre = new ManualResetEvent(false);
-                var tq = robot.GetTaskQueueHandler(sync);
+                TaskQueueHandler tq = null;
+                if (robot == null)
+                {
+                    tq = Cogbot.ClientManager.OneAtATimeQueue;
+                }
+                else
+                {
+                    tq = robot.GetTaskQueueHandler(sync);
+                }
                 tq.Enqueue(() =>
                                {
                                    try
