@@ -28,12 +28,8 @@ namespace Cogbot.Actions.Appearance
             ParameterVersions = CreateParamVersions(
                 CreateParams(
                     Optional("nobake", typeof (bool), "Do not rebake the avatar's textures"),
-                    "outfit", typeof (InventoryFolder),
-                    "Folder of items to wear. See <a href='wiki/BotCommands#Inventory'>Inventory</a> for format."),
-                CreateParams(
-                    Optional("nobake", typeof (bool), "Do not rebake the avatar's textures"),
-                    "outfit", typeof (InventoryItem),
-                    "Item to wear. See <a href='wiki/BotCommands#Inventory'>Inventory</a> for format.")
+                    "outfit", typeof (InventoryBase),
+                    "Folder or items to wear. See <a href='wiki/BotCommands#Inventory'>Inventory</a> for format.")
                 );
             ResultMap = CreateParams(
                 "message", typeof (string), "if success was false, the reason why",
