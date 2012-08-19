@@ -288,7 +288,7 @@ namespace Cogbot
             ClientManagerConfig.arguments.Destructive = true;
             string[] oArgs;
             // Change current working directory to Program install dir?
-            if (ClientManagerConfig.arguments.GetWithout("--lcd", out oArgs))
+            if (ClientManagerConfig.arguments.GetWithoutFlag("--lcd", out oArgs))
             {
                 ChangeLCD = true;
             }
@@ -299,24 +299,24 @@ namespace Cogbot
                 ChangeLCD = false;
                 Directory.SetCurrentDirectory(newDir);
             }
-            if (ClientManagerConfig.arguments.GetWithout("--noexcpt", out oArgs))
+            if (ClientManagerConfig.arguments.GetWithoutFlag("--noexcpt", out oArgs))
             {
                 SetExceptionHandlers(false);
             }
             else SetExceptionHandlers(true);
 
-            if (ClientManagerConfig.arguments.GetWithout("--console", out oArgs))
+            if (ClientManagerConfig.arguments.GetWithoutFlag("--console", out oArgs))
             {
                 ClientManagerConfig.DosBox = true;
                 ClientManagerConfig.CogbotREPL = true;
             }
 
-            if (ClientManagerConfig.arguments.GetWithout("--noconfig", out oArgs))
+            if (ClientManagerConfig.arguments.GetWithoutFlag("--noconfig", out oArgs))
             {
                 ClientManagerConfig.arguments = new Parser(oArgs);
                 ClientManagerConfig.NoLoadConfig = true;
             }
-            if (ClientManagerConfig.arguments.GetWithout("--nogui", out oArgs))
+            if (ClientManagerConfig.arguments.GetWithoutFlag("--nogui", out oArgs))
             {
                 ClientManagerConfig.ShowRadegast = false;
                 ClientManagerConfig.DosBox = true;
@@ -336,15 +336,15 @@ namespace Cogbot
             }
             
             if (!ClientManagerConfig.ShowRadegast) ClientManagerConfig.CogbotREPL = true;
-            if (ClientManagerConfig.arguments.GetWithout("--gui", out oArgs))
+            if (ClientManagerConfig.arguments.GetWithoutFlag("--gui", out oArgs))
             {
                 ClientManagerConfig.ShowRadegast = true;
             }
-            if (ClientManagerConfig.arguments.GetWithout("--repl", out oArgs))
+            if (ClientManagerConfig.arguments.GetWithoutFlag("--repl", out oArgs))
             {
                 ClientManagerConfig.CogbotREPL = true;
             }
-            if (ClientManagerConfig.arguments.GetWithout("--norepl", out oArgs))
+            if (ClientManagerConfig.arguments.GetWithoutFlag("--norepl", out oArgs))
             {
                 ClientManagerConfig.CogbotREPL = false;
             }

@@ -68,7 +68,7 @@ namespace MushDLR223.ScriptEngines
         public NamedParam(KeyType k, object v)
         {
             memberTarget = null;
-            IsOptional = false;
+            IsRequired = true;
             IsOneOf = false;
             IsSequence = false; 
             IsRest = false;
@@ -193,7 +193,13 @@ namespace MushDLR223.ScriptEngines
         private Type _Type;
         public object memberTarget;
         public string Comment;
-        public bool IsOptional;
+        public bool IsOptional
+        {
+            get { return !IsRequired; }
+            set { IsRequired = !value; }
+        }
+
+        public bool IsRequired;
         public bool IsRest;
 
         /// <summary>
@@ -204,7 +210,7 @@ namespace MushDLR223.ScriptEngines
         public NamedParam(NamedParam param, object o)
         {
             memberTarget = param.memberTarget;
-            IsOptional = false;
+            IsRequired = true;
             IsRest = false;
             IsOneOf = false;
             IsSequence = false;
@@ -224,7 +230,7 @@ namespace MushDLR223.ScriptEngines
         public NamedParam(Type type, Type DataType)
         {
             memberTarget = null;
-            IsOptional = false;
+            IsRequired = true;
             IsOneOf = false;
             IsSequence = false;
             IsRest = false;
@@ -243,6 +249,7 @@ namespace MushDLR223.ScriptEngines
                 if (_Type != null) return _Type;
                 if (_value is NullType) return ((NullType) _value).Type.DeclaringType;
                 if (_value != null) return _value.GetType();
+                if (info==null) return null;
                 return info.DeclaringType;
             }
         }

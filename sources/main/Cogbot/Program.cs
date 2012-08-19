@@ -35,7 +35,7 @@ namespace Cogbot
         [STAThread]
         public static void Main(string[] args)
         {
-            var state = Parser.ParseArgs(args).GetWithout("--mta", out args) ? ApartmentState.MTA : ApartmentState.STA;
+            var state = Parser.ParseArgs(args).GetWithoutFlag("--mta", out args) ? ApartmentState.MTA : ApartmentState.STA;
             ProgramUtil.RunInThread(state, () => Run(args), true);
         }
 
@@ -45,7 +45,7 @@ namespace Cogbot
         /// <param name="args"></param>
         public static void Start(string[] args)
         {
-            var state = Parser.ParseArgs(args).GetWithout("--mta", out args) ? ApartmentState.MTA : ApartmentState.STA;
+            var state = Parser.ParseArgs(args).GetWithoutFlag("--mta", out args) ? ApartmentState.MTA : ApartmentState.STA;
             ProgramUtil.RunInThread(state, () => Run(args), false);
         }
 

@@ -428,9 +428,9 @@ namespace MushDLR223.ScriptEngines
 
         private bool ContainsKey(string k)
         {
-            bool atKey;
+            int keyLen;
             if (ParamMap.ContainsKey(k)) return true;
-            return IndexOf(k, false, out atKey) != MISSING;
+            return IndexOf(k, false, out keyLen) != MISSING;
         }
 
         private void AddTrue(string ks)
@@ -478,16 +478,13 @@ namespace MushDLR223.ScriptEngines
         public bool ContainsFlag(string key)
         {
             EnsurePreParsed();
+            key = ToKey(key);
             if (ParamMap.ContainsKey(key)) return true;
-            while (key.StartsWith("-"))
-            {
-                key = key.Substring(1);
-            }
-            bool atKey;
-            return IndexOf(key, true, out atKey) != MISSING && atKey;
+            int keyLen;
+            return IndexOf(key, true, out keyLen) != MISSING && keyLen > 0;
         }
 
-        public int IndexOf(string key, bool requireKey, out bool atKey)
+        public int IndexOf(string key, bool requireKey, out int keyLen)
         {
             int i = 0;
             key = ToKey(key);
@@ -495,17 +492,17 @@ namespace MushDLR223.ScriptEngines
             {
                 if (ToKey(tok).Equals(key))
                 {
-                    atKey = true;
+                    keyLen = 1;
                     return i;
                 }
                 i++;
             }
             if (requireKey)
             {
-                atKey = true;
+                keyLen = 1;
                 return MISSING;
             }
-            atKey = false;
+            keyLen = 0;
             if (KeysRequired) return MISSING;
             int index = 0;
             EnsureVersionSelected();
@@ -569,30 +566,31 @@ namespace MushDLR223.ScriptEngines
         public int ParseAndRemoveOptionalKeys()
         {
             EnsureVersionSelected();
-            int count = 0;            
+            int count = 0;
             foreach (NamedParam p in VersionSelected.Parameters)
             {
                 if (!p.IsOptional) continue;
                 string key = ToKey(p.Key);
-                bool atKey;
-                int i = IndexOf(key, false, out atKey);
+                int keyLen;
+                int i = IndexOf(key, false, out keyLen);
                 if (i == MISSING)
                 {
                     continue;
                 }
-                int startVal = i + (atKey ? 1 : 0);
+                int startAt = i + keyLen;
                 int len = ValueLen(key, null);
-                if (len == 0 && atKey)
+                len = LenCheck(startAt, len);
+                if (len == 0 && keyLen > 0)
                 {
                     ParamMap[key] = IsTrueString(tokens[i]);
                 }
                 else
                 {
-                    string[] arg = new List<string>(tokens).GetRange(startVal, len).ToArray();
+                    string[] arg = new List<string>(tokens).GetRange(startAt, len).ToArray();
                     ParamMap[key] = ChangeType(arg, p.Type);
                 }
                 count++;
-                tokens = GetWithoutIndex(i, (atKey ? 1 : 0) + ValueLen(key, null));
+                tokens = GetWithoutIndex(i, keyLen + len);
             }
             return count;
         }
@@ -624,17 +622,30 @@ namespace MushDLR223.ScriptEngines
             return ModArgs = p.ToArray();
         }
 
-        public bool GetWithout(string key, out string[] args)
+        public bool GetWithoutFlag(string key, out string[] args)
         {
-            bool atKey;
-            int i = IndexOf(key, false, out atKey);
+            return GetWithout(key, out args, typeof (bool));
+        }
+        public bool GetWithout(string key, out string[] args, Type suggest)
+        {
+            int keyLen;
+            int i = IndexOf(key, false, out keyLen);
             if (i == MISSING)
             {
                 args = tokens;
                 return false;
             }
-            ModArgs = args = GetWithoutIndex(i, (atKey ? 1 : 0) + ValueLen(key, null));
+            int len = ValueLen(key, suggest);
+            len = LenCheck(i + keyLen, len);
+            ModArgs = args = GetWithoutIndex(i, keyLen + len);
             return i != MISSING;
+        }
+
+        private int LenCheck(int startAt, int len)
+        {
+            if (len >= 0) return len;
+            len = tokens.Length - startAt;
+            return len;
         }
 
         private string[] accume = null;
@@ -654,14 +665,16 @@ namespace MushDLR223.ScriptEngines
 
         public bool GetAfter(string key, out string[] args)
         {
-            bool atKey;
-            int i = IndexOf(key, false, out atKey);
+            int keyLen;
+            int i = IndexOf(key, false, out keyLen);
             args = tokens;
             if (i == MISSING)
             {
                 return false;
             }
-            ModArgs = args = GetAfterIndex(i + (atKey ? 1 : 0) + ValueLen(key, null));
+            int len = ValueLen(key, null);
+            len = LenCheck(i + keyLen, len);
+            ModArgs = args = GetAfterIndex(i + keyLen + len);
             return true;
 
         }
@@ -734,8 +747,8 @@ namespace MushDLR223.ScriptEngines
             }
             int len;
             int at;
-            bool atKey;
-            if (TryGetValueInt<T>(key, out value, out at, out len, out atKey))
+            int keyLen;
+            if (TryGetValueInt<T>(key, out value, out at, out len, out keyLen))
             {
                 return true;
             }
@@ -753,8 +766,8 @@ namespace MushDLR223.ScriptEngines
         {
             int len;
             int at;
-            bool atKey;
-            if (TryGetValueInt(key, out value, out at, out len, out atKey))
+            int keyLen;
+            if (TryGetValueInt(key, out value, out at, out len, out keyLen))
             {
                 KeysRequired = true;
                 return true;
@@ -773,26 +786,26 @@ namespace MushDLR223.ScriptEngines
         {
             int len;
             int at;
-            bool atKey;
-            if (!TryGetValueInt(key, out value, out at, out len, out atKey))
+            int keyLen;
+            if (!TryGetValueInt(key, out value, out at, out len, out keyLen))
             {
                 strings = tokens;
                 return false;
             }
             else
             {
-                ModArgs = strings = GetWithoutIndex(at, len + (atKey ? 1 : 0));
+                ModArgs = strings = GetWithoutIndex(at, len + keyLen);
                 return true;
             }
         }
 
-        public bool TryGetValueInt<T>(string key, out T value, out int found, out int len, out bool atKey)
+        public bool TryGetValueInt<T>(string key, out T value, out int found, out int len, out int keyLen)
         {
             EnsurePreParsed();
             key = ToKey(key);
-            len = ValueLen(key, typeof (T));
             object ovalue;
-            found = IndexOf(key, false, out atKey);
+            found = IndexOf(key, false, out keyLen);
+            len = ValueLen(key, typeof(T));
             if (ParamMap.TryGetValue(key, out ovalue))
             {
                 value = ChangeType<T>(ovalue);
@@ -804,23 +817,32 @@ namespace MushDLR223.ScriptEngines
                 len = 0;
                 return false;
             }
-            int startAt = found + (atKey ? 1 : 0);
+            int startAt = found + keyLen;
+            len = LenCheck(startAt, len);
             string[] after = new List<string>(tokens).GetRange(startAt, len).ToArray();
             value = ChangeType<T>(after);
             return true;
         }
 
         private int ValueLen(string key, Type t)
-        {
-            if (t != typeof(bool)) return 1;
+        {            
             NamedParam kt = GetParm(key);
-            if (kt.Type == typeof(bool)) return kt.IsOptional ? 0 : 1;
+            t = t ?? kt.Type;
+            if (t == null)
+            {
+                return 0;
+            }
+            if (t == typeof(bool)) return kt.IsOptional ? 0 : 1;
+            if (kt.IsRest || (t != null && t.IsArray))
+            {
+                return -1;
+            }
             return 1;
         }
 
         private NamedParam GetParm(string key)
         {
-            key = ToKey(key);
+            if (VersionSelected == null) return default(NamedParam);
             foreach (var param in VersionSelected.Parameters)
             {
                 if (ToKey(param.Key) == key)
