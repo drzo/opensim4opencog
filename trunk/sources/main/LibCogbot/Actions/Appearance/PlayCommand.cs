@@ -5,7 +5,6 @@ using System.Threading;
 using Cogbot.World;
 
 using MushDLR223.ScriptEngines;
-using Plossum.CommandLine;
 
 namespace Cogbot.Actions.Appearance
 {

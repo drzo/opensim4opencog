@@ -11,7 +11,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Agent
 {
-    public class PointAtCommand : Cogbot.Actions.Command, BotSystemCommand
+    public class PointAtCommand : Cogbot.Actions.Command, BotPersonalCommand
     {
         public PointAtCommand(BotClient client)
         {

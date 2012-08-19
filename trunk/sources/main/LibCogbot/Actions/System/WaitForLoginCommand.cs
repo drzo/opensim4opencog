@@ -11,7 +11,7 @@ using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace Cogbot.Actions.System
 {
-    public class WaitForLoginCommand : Command, BotSystemCommand
+    public class WaitForLoginCommand : Command, BotSystemCommand, SynchronousCommand
     {
         public WaitForLoginCommand(BotClient testClient)
         {

@@ -8,7 +8,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
 {
-    public class SetMasterKeyCommand : Command, BotSystemCommand
+    public class SetMasterKeyCommand : Command, BotSystemCommand, SynchronousCommand
     {
 
         public SetMasterKeyCommand(BotClient testClient)

@@ -136,7 +136,13 @@ namespace Cogbot.Actions
     /// An interface for commands that DO REQUIRE a connected grid client
     /// such as say,jump,movement
     /// </summary>    
-    public interface BotPersonalCommand : BotCommand
+    public interface BotPersonalCommand : BotCommand, SynchronousCommand
+    {
+    }
+    /// <summary>
+    /// An interface for commands that have to move thru a single TODO queue
+    /// </summary>    
+    public interface SynchronousCommand
     {
     }
     /// <summary>
@@ -329,6 +335,7 @@ namespace Cogbot.Actions
 
     public abstract partial class Command : IComparable
     {
+        public string TaskQueueNameOrNull { get; set; }
         public virtual void MakeInfo()
         {
 
@@ -530,7 +537,10 @@ namespace Cogbot.Actions
 
         public Command(BotClient bc)
         {
-
+            if (this is SynchronousCommand)
+            {
+                TaskQueueNameOrNull = "OneAtATimeQueue";
+            }
             _mClient = bc;
             WriteLineDelegate = StaticWriteLine;
             Name = GetType().Name.Replace("Command", "");
