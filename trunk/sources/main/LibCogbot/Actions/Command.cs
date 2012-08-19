@@ -146,7 +146,7 @@ namespace Cogbot.Actions
     {
     }
     /// <summary>
-    /// An interface for commands that have to move thru a single TODO queue
+    /// An interface for commands that are mainly informational
     /// </summary>    
     public interface AsynchronousCommand
     {

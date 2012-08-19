@@ -12,7 +12,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Movement
 {
-    class LocationCommand : Command, BotSystemCommand
+    class LocationCommand : Command, BotSystemCommand, AsynchronousCommand
     {
         public LocationCommand(BotClient Client)
             : base(Client)
