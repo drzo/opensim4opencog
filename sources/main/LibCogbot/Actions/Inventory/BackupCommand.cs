@@ -130,7 +130,7 @@ namespace Cogbot.Actions.SimExport
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            Execute(new[] {"abort"}, default(UUID), WriteLine);       
+            StopBackup();     
         }
 
         #endregion
@@ -143,16 +143,7 @@ namespace Cogbot.Actions.SimExport
             }
             else if (args.Length == 1 && args[0] == "abort")
             {
-                if (!BackgroundBackupRunning)
-                    return Success(BackgroundBackupStatus);
-
-                BackupWorker.CancelAsync();
-                QueueWorker.CancelAsync();
-
-                Thread.Sleep(500);
-
-                // check status
-                return Success(BackgroundBackupStatus);
+                return StopBackup();
             }
             else if (args.Length != 2)
             {
@@ -177,6 +168,20 @@ namespace Cogbot.Actions.SimExport
 
             BackupWorker.RunWorkerAsync(args);
             return Success("Started background operations.");
+        }
+
+        private CmdResult StopBackup()
+        {
+            if (!BackgroundBackupRunning)
+                return Success(BackgroundBackupStatus);
+
+            BackupWorker.CancelAsync();
+            QueueWorker.CancelAsync();
+
+            Thread.Sleep(500);
+
+            // check status
+            return Success(BackgroundBackupStatus);
         }
 
         void bwQueueRunner_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)

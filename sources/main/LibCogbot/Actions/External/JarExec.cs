@@ -42,12 +42,12 @@ namespace Cogbot.Actions.External
             Description = "Do an java jar exec to filename";
             Details = AddUsage(Name + " filename", Description);
             Category = CommandCategory.Simulator;
-            Parameters = CreateParams("filename", typeof (string), "filename to " + Name);
+            Parameters = CreateParams(Rest("filename", typeof (string), "filename to " + Name));
         }
 
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
-            return Success(DoShellExec("java.exe",args.str));
+            return Success(DoShellExec("java.exe", args.str));
         }
     }
 }

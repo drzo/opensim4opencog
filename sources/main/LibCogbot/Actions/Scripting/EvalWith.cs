@@ -16,7 +16,7 @@ namespace Cogbot.Actions.Scripting
             Name = "evalwith";
             Description = "Evals a command with a scripting interpretor. Usage: evalwith <Interp> <Expression>";
         }
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 2) return ShowUsage();
             string interp = args[0];

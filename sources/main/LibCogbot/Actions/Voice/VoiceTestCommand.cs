@@ -73,21 +73,11 @@ namespace Cogbot.Actions.Voice
             {
                 return ShowUsage("VoiceTest [firstname] [lastname] [password] [loginuri]");
             }
-            bool doLogins = true;
-            if (args.Length == 0)
-            {
-                doLogins = false;
-                args = new CmdRequest(args, new[]
-                                                {
-                                                    Client.Self.FirstName,
-                                                    Client.Self.LastName,
-                                                    Client.BotLoginParams.Password,
-                                                });
-            }
 
-            string firstName = args[0];
-            string lastName = args[1];
-            string password = args[2];
+            bool doLogins = args.Length > 0;
+            string firstName = args.Length > 0 ? args[0] : Client.Self.FirstName;
+            string lastName = args.Length > 1 ? args[1] : Client.Self.LastName;
+            string password = args.Length > 2 ? args[2] : Client.BotLoginParams.Password;
             string loginURI = Client.Settings.LOGIN_SERVER;
 
 

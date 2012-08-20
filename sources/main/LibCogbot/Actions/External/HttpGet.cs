@@ -31,7 +31,7 @@ namespace Cogbot.Actions.WebUtil
             Parameters = CreateParams("url", typeof(Uri), "url to get");
             Category = CommandCategory.Simulator;
         }
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             return Success(DoHttpGet(args.str));
         }

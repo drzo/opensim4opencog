@@ -16,7 +16,7 @@ namespace Cogbot.Actions.Scripting
             Description = "Enqueue a lisp task on a bot. Usage: Eval <lisp expression>";
             Category = CommandCategory.BotClient;
         }
-       public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+       public override CmdResult ExecuteRequest(CmdRequest args)
        {
            //base.acceptInput(verb, args);
            return Success(TheBotClient.evalLispString(args.str));

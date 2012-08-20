@@ -25,7 +25,7 @@ namespace Cogbot.Actions.Movement
             Parameters = CreateParams("position", typeof(SimPosition), "the location you wish to " + Name);
         }
 
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             SimPosition position;
             int argUsed;

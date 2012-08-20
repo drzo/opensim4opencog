@@ -22,7 +22,7 @@ namespace Cogbot.Actions.Movement
                  "success", typeof(bool), "true if we flew");
         }
 
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             //  base.acceptInput(verb, args);
 

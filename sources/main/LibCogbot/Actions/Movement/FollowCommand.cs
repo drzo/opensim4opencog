@@ -31,8 +31,9 @@ namespace Cogbot.Actions.Movement
         }
 
 
-        public override CmdResult acceptInput(string verb, Parser pargs, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest pargs)
         {
+            string verb = pargs.CmdName;
             // base.acceptInput(verb, args);
             string[] args = pargs.tokens;
             UUID primID = UUID.Zero;

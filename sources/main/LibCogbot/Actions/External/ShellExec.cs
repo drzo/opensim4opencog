@@ -38,7 +38,7 @@ namespace Cogbot.Actions.External
             Category = CommandCategory.Simulator;
             Parameters = CreateParams("filename", typeof(string), "filename to " + Name);
         }
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             return Success(DoShellExec(args[0], Parser.Rejoin(args.tokens, 1)));
         }

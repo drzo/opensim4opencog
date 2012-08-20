@@ -347,7 +347,12 @@ namespace Cogbot.Actions
 
     public abstract partial class Command : IComparable
     {
-        public string TaskQueueNameOrNull { get; set; }
+        private string _taskQueueNameOrNullSet;
+        public virtual string TaskQueueNameOrNull
+        {
+            get { return _taskQueueNameOrNullSet ?? (ImpliesSync ? "OneAtATimeQueue" : null); }
+            set { _taskQueueNameOrNullSet = value; }
+        }
         public virtual void MakeInfo()
         {
 
@@ -560,10 +565,6 @@ namespace Cogbot.Actions
 
         public Command(BotClient bc)
         {
-            if (this is SynchronousCommand && !(this is AsynchronousCommand))
-            {
-                TaskQueueNameOrNull = "OneAtATimeQueue";
-            }
             _mClient = bc;
             WriteLineDelegate = StaticWriteLine;
             Name = GetType().Name.Replace("Command", "");
@@ -599,7 +600,7 @@ namespace Cogbot.Actions
 
 
 
-        /// <summary>
+       /* /// <summary>
         /// 
         /// </summary>
         /// <param name="verb"></param>
@@ -612,14 +613,15 @@ namespace Cogbot.Actions
             {
                 Results.Clear();
                 if (args == null) return Failure("No Args (Parse error)");
-                return Execute(args.tokens, CallerID, writeLine);
+                CallerID = CogbotHelpers.NonZero(CallerID, UUID.Zero);
+                return ExecuteRequestSyn(new CmdRequest(args.tokens, fromAgentID, writeLine, this.GetCmdInfo()));
             }
             catch (Exception e)
             {
                 return Failure("" + e);
             }
         } // method: acceptInput
-
+        */
 
 
         /// <summary>
@@ -707,7 +709,8 @@ namespace Cogbot.Actions
             get { return CallerID; }
         }
 
-        public CmdResult acceptInputWrapper(string verb, string args, UUID callerID, OutputDelegate writeLine)
+        public abstract CmdResult ExecuteRequest(CmdRequest args);
+        public CmdResult ExecuteRequestSyn(CmdRequest args)
         {
             if (this is BotPersonalCommand)
             {
@@ -715,63 +718,23 @@ namespace Cogbot.Actions
                 {
                     return Failure("Not yet logged in!");
                 }
-            }
-            Results.Clear();
-            CallerID = callerID;
-            success = failure = 0;
-            this.WriteLineDelegate = writeLine;
-            return acceptInput(verb, Parser.ParseArgs(args), writeLine);
-        }
-
-        public virtual CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
-        {
-            this.WriteLineDelegate = WriteLine;
-            CallerID = CogbotHelpers.NonZero(fromAgentID, UUID.Zero);
-            return ExecuteRequestSyn(new CmdRequest(args, fromAgentID, WriteLine, this.GetCmdInfo()));
-        }
-        
-        public CmdResult ExecuteRequestSyn(CmdRequest args)
-        {
-            var cr = ExecuteRequest(args);
-            cr.IsCompleted = true;
-            return cr;
-        }
-        virtual public CmdResult ExecuteRequest(CmdRequest args)
-        {
+            } 
             Results.Clear();
             CallerID = CogbotHelpers.NonZero((UUID)args.CallerAgent, UUID.Zero);
             success = failure = 0;
             var wlpre = this.WriteLineDelegate;
             this.WriteLineDelegate = args.Output;
-            Parser p = args;
-            p.tokens = args.tokens;
             try
             {
-                return acceptInput(Name, p, this.WriteLine);
+                var cr = ExecuteRequest(args);
+                cr.IsCompleted = true;
+                return cr;
             }
             finally
             {
                 WriteLineDelegate = wlpre;
             }
         }
-
-        public virtual CmdResult ExecuteCmd(string[] args, UUID fromAgentID, OutputDelegate writeLine)
-        {
-            CallerID = fromAgentID;
-            success = failure = 0;
-            this.WriteLineDelegate = writeLine;
-            Parser p = Parser.ParseArgs(String.Join(" ", args));
-            p.tokens = args;
-            try
-            {
-                return acceptInput(Name, p, writeLine);
-            }
-            finally
-            {
-                //??  WriteLine = StaticWriteLine;
-            }
-        }
-
 
         public int CompareTo(object obj)
         {
@@ -851,6 +814,10 @@ namespace Cogbot.Actions
             }
             try
             {
+                if (DLRConsole.DebugWriteLine == WriteLineDelegate)
+                {
+                    return;
+                }
                 DLRConsole.DebugWriteLine(message);
             }
             catch (Exception e)
@@ -893,6 +860,11 @@ namespace Cogbot.Actions
 
         public string WriteLineResultName = "message";
         private KeyParams VersionSelected;
+
+        public virtual bool ImpliesSync
+        {
+            get { return this is SynchronousCommand && !(this is AsynchronousCommand); }
+        }
 
         protected void SetWriteLine(string resultName)
         {

@@ -27,7 +27,7 @@ namespace Cogbot.Actions
             Name = "Use..";
         }
 
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             //   base.acceptInput(verb, args);
             string to_op = "";

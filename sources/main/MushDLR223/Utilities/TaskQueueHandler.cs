@@ -11,8 +11,192 @@ using ThreadState=System.Threading.ThreadState;
 
 namespace MushDLR223.Utilities
 {
-    public class TaskQueueHandler : IDisposable
-    {        
+    public interface IOwned
+    {
+        object Owner { get; set; }
+    }
+    public interface Abortable : IEquatable<Abortable>, IOwned
+    {
+        object Impl { get; }
+        bool IsAlive { get; }
+        bool Busy { get; }
+        string Name { get; }
+        bool DebugQueue { get; set; }
+        void Abort();
+        void Join();
+        string ToDebugString(bool b);
+        void Enqueue(ThreadStart thread);
+        bool MatchesId(string id);
+    }
+    public class AAbortable : Abortable
+    {
+        public Thread thread;
+        public String name;
+        public TaskQueueHandler tq;
+        private object owner;
+        private Action<Abortable> OnDeath;
+        public AAbortable(Thread thread1, Action<Abortable> onDeath)
+        {
+            name = thread1.Name;
+            thread = thread1;
+            OnDeath = onDeath;
+        }
+        public AAbortable(TaskQueueHandler thread1)
+        {
+            tq = thread1;
+        }
+
+        public void Abort()
+        {
+            if (tq != null) tq.DestroyAllCurrentTasks(true);
+            if (thread != null) thread.Abort();
+            if (OnDeath != null) OnDeath(this);
+        }
+        public string Name
+        {
+            get
+            {
+                if (name != null) return name;
+                if (tq != null) return tq.Name;
+                if (thread != null) return thread.Name;
+                return "Abortable" + GetHashCode();
+            }
+            set
+            {
+                name = value;
+            }
+        }
+
+        public bool IsAlive
+        {
+            get
+            {
+                if (tq != null) return tq.Busy;
+                if (thread != null) return thread.IsAlive;
+                return false;
+            }
+        }
+
+        public bool Busy
+        {
+            get { return IsAlive; }
+        }
+
+        public bool DebugQueue
+        {
+            get { return (tq != null) && tq.DebugQueue; }
+            set { if (tq != null) tq.DebugQueue = value; }
+        }
+
+        public void Join()
+        {
+            if (tq != null) tq.InvokeJoin("Abortable " + Name, 5 * 60000); // 5 minutes
+            if (thread != null) thread.Join();
+        }
+
+        /// <summary>
+        /// Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>.
+        /// </summary>
+        /// <returns>
+        /// true if the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>; otherwise, false.
+        /// </returns>
+        /// <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:System.Object"/>. 
+        ///                 </param><exception cref="T:System.NullReferenceException">The <paramref name="obj"/> parameter is null.
+        ///                 </exception><filterpriority>2</filterpriority>
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (!(obj is Abortable)) return false;
+            return Equals((Abortable)obj);
+        }
+
+        /// <summary>
+        /// Indicates whether the current object is equal to another object of the same type.
+        /// </summary>
+        /// <returns>
+        /// true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
+        /// </returns>
+        /// <param name="other">An object to compare with this object.
+        ///                 </param>
+        public bool Equals(Abortable other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.Impl, Impl);
+        }
+
+        /// <summary>
+        /// Serves as a hash function for a particular type. 
+        /// </summary>
+        /// <returns>
+        /// A hash code for the current <see cref="T:System.Object"/>.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = (thread != null ? thread.GetHashCode() : 0);
+                result = (result * 397) ^ (name != null ? name.GetHashCode() : 0);
+                result = (result * 397) ^ (tq != null ? tq.GetHashCode() : 0);
+                return result;
+            }
+        }
+
+
+        public string ToDebugString(bool b)
+        {
+            if (tq != null) return tq.ToDebugString(b);
+            if (thread != null) return "Thread: " + thread.Name + " isBusy=" + Busy;
+            return "Abortable " + name + GetHashCode();
+        }
+
+        public void Enqueue(ThreadStart task)
+        {
+            if (tq != null) tq.Enqueue(task);
+            throw new NotImplementedException();
+        }
+
+        #region Implementation of IOwned
+
+        public object Owner
+        {
+            get
+            {
+                if (tq != null) return tq.Owner;
+                return owner;
+            }
+            set
+            {
+                if (tq != null) tq.Owner = value;
+                owner = value;
+            }
+        }
+
+        #endregion
+
+        #region Implementation of Abortable
+
+        public object Impl
+        {
+            get { return (object)thread ?? tq; }
+        }
+
+        #endregion
+        public bool MatchesId(string id)
+        {
+            return ((Name.ToLower()) + " ").StartsWith(id.ToLower() + " ");
+        }
+    }
+
+    public class TaskQueueHandler : IDisposable, IOwned, Abortable
+    {
+        public bool MatchesId(string id)
+        {
+            return ((Name.ToLower()) + " ").StartsWith(id.ToLower() + " ");
+        }
+
         public static readonly OutputDelegate errOutput = DLRConsole.SYSTEM_ERR_WRITELINE;
         public static bool TurnOffDebugMessages = true;
         protected ThreadControl LocalThreadControl = new ThreadControl(new ManualResetEvent(false));
@@ -24,7 +208,7 @@ namespace MushDLR223.Utilities
         public static readonly TimeSpan TOO_SHORT_INTERVAL = TimeSpan.FromMilliseconds(3);
         public static readonly HashSet<TaskQueueHandler> TaskQueueHandlers = new HashSet<TaskQueueHandler>();
         private readonly LinkedList<TASK> EventQueue = new LinkedList<TASK>();
-        public object Owner;
+        public object Owner { get; set; }
         private readonly object EventQueueLock = new object();
         private readonly object PingNeverAbortLock = new object();
         private readonly object OneTaskAtATimeLock = new object();
@@ -489,6 +673,19 @@ namespace MushDLR223.Utilities
             debugOutput = debugOutput ?? errOutput;
         }
 
+        /// <summary>
+        /// Indicates whether the current object is equal to another object of the same type.
+        /// </summary>
+        /// <returns>
+        /// true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
+        /// </returns>
+        /// <param name="other">An object to compare with this object.
+        ///                 </param>
+        public bool Equals(Abortable other)
+        {
+            return Impl == other.Impl;
+        }
+
         public override string ToString()
         {
             return ToDebugString(false);
@@ -517,6 +714,16 @@ namespace MushDLR223.Utilities
                                }
                            }
                        };
+        }
+
+        public void Abort()
+        {
+            DestroyAllCurrentTasks(true);
+        }
+
+        public void Join()
+        {
+            InvokeJoin("Abortable.Join " + this, 10*60000);
         }
 
         public string ToDebugString(bool detailed)
@@ -1903,6 +2110,11 @@ namespace MushDLR223.Utilities
             }
         }
 
+        public bool IsAlive
+        {
+            get { return Busy || true; }
+        }
+
         public bool Busy
         {
             get { return SinceLastTaskStarted.Busy; }
@@ -2178,6 +2390,15 @@ namespace MushDLR223.Utilities
                 EventQueue.Clear();
             }
         }
+
+        #region Implementation of Abortable
+
+        public object Impl
+        {
+            get { return this; }
+        }
+
+        #endregion
     }
 
     public class TaskThreadHolder

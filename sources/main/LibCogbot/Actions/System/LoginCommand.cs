@@ -25,7 +25,7 @@ namespace Cogbot.Actions.System
 
         }
 
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             //base.acceptInput(verb, args);
             string[] tokens = args.objectPhrase.Split(null);

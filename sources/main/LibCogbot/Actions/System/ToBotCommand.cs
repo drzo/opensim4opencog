@@ -35,7 +35,7 @@ namespace Cogbot.Actions.System
             string botcmd = String.Join(" ", args, 1, args.Length - 1).Trim();
             return
                 Success("tobot " + oBotClient + " " +
-                        oBotClient.ExecuteCommand(botcmd, fromAgentID, WriteLine, args.WantsResult));
+                        oBotClient.ExecuteCommand(botcmd, fromAgentID, WriteLine, args.CmdFlags));
         }
     }
     public class AllBotsCommand : Command, SystemApplicationCommand
@@ -67,7 +67,7 @@ namespace Cogbot.Actions.System
             int[] completed = {0};
             var BotClients = ClientManager.BotClients;
             int count = BotClients.Count;
-            if (count == 0) return ClientManager.ExecuteSystemCommand(cmd, fromAgentID, WriteLine, args.WantsResult);
+            if (count == 0) return ClientManager.ExecuteSystemCommand(cmd, fromAgentID, WriteLine, args.CmdFlags);
             CmdResult[] results = new CmdResult[count];
             int[] clientNum = {0};
             foreach (BotClient client in BotClients)
@@ -78,7 +78,7 @@ namespace Cogbot.Actions.System
                     delegate(object state)
                         {
                             BotClient testClient = (BotClient) state;
-                            results[clientNum[0]] = testClient.ExecuteCommand(cmd, fromAgentID, WriteLine, args.WantsResult);
+                            results[clientNum[0]] = testClient.ExecuteCommand(cmd, fromAgentID, WriteLine, args.CmdFlags);
                             ++completed[0];
                         },
                     client);

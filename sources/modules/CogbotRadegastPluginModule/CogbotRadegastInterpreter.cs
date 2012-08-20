@@ -61,7 +61,7 @@ namespace CogbotRadegastPluginModule
             OutputDelegate newOutputDelegate = new OutputDelegate(WriteLine);
             CmdResult result;
             var botClient = BotClient;
-            bool needResult = true;
+            CMDFLAGS needResult = CMDFLAGS.Inherit;
             try
             {
                 if (botClient == null)
@@ -94,8 +94,7 @@ namespace CogbotRadegastPluginModule
 
         public void Help(string helpArgs, ConsoleWriteLine WriteLine)
         {
-            WriteLine(
-                clientManager.ExecuteCommand("help " + helpArgs, null, new OutputDelegate(WriteLine), true).ToString());
+            clientManager.ExecuteCommand("help " + helpArgs, null, new OutputDelegate(WriteLine), CMDFLAGS.Inherit);
         }
 
         public void Dispose()

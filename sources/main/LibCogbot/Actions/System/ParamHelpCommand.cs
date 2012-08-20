@@ -23,7 +23,7 @@ namespace Cogbot.Actions.System
             Name = "paramhelp";
         }
 
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             string str;
             if (args.TryGetValue("commandMask", out str))

@@ -261,7 +261,7 @@ namespace Cogbot
                         if (found > 0)
                         {
                             groupName = groupName.Substring(0, found).Trim();
-                            ExecuteCommand("joingroup " + groupName, false);
+                            ExecuteCommand("joingroup " + groupName, CMDFLAGS.NoResult);
                         }
                     }
                     break;
@@ -400,7 +400,7 @@ namespace Cogbot
                             });
                         }
                         string cmd = Message;
-                        bool needResult = true;
+                        CMDFLAGS needResult = CMDFLAGS.Console;
                         if (cmd.StartsWith("cmcmd "))
                         {
                             cmd = cmd.Substring(6);

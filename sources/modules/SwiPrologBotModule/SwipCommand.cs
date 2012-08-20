@@ -18,10 +18,11 @@ namespace Cogbot.Actions.System
             Parameters = CreateParams(new NamedParam("prologCode", typeof (string), null));
         }
 
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest pargs)
         {
+            string verb = pargs.CmdName;
             int argsUsed;
-            string text = args.str;
+            string text = pargs.str;
             try
             {
                 pse = pse ?? new PrologScriptInterpreter(this);

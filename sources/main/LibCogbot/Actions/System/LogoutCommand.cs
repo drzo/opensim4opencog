@@ -23,7 +23,7 @@ namespace Cogbot.Actions
             Parameters = CreateParams();
         }
 
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (Client.Network.Connected)
             {

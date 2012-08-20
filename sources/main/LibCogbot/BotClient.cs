@@ -77,7 +77,6 @@ namespace Cogbot
             return m.gridClient;
         }
 
-        public object GridClientNullLock = new object();
         /// <summary>Networking subsystem</summary>
         public NetworkManager Network { get { return gridClient.Network; } }
 
@@ -150,7 +149,7 @@ namespace Cogbot
         {
             get
             {
-                lock (GridClientNullLock)
+                //lock (GridClientNullLock)
                 {
                     GridClientAccessed = true;
                     return _gridClient;
@@ -161,16 +160,14 @@ namespace Cogbot
         private GridClient _gridClient;
      
         private readonly SimEventPublisher botPipeline;
-        public IList<Thread> GetBotCommandThreads()
-        {
-            lock (botCommandThreads) return botCommandThreads;
-        }
 
         public void AddThread(Thread thread)
         {
+            Abortable newAAbortable = new AAbortable(thread, RemoveThread);
+            newAAbortable.Owner = this;
             lock (botCommandThreads)
             {
-                botCommandThreads.Add(thread);
+                botCommandThreads.Add(newAAbortable);
             }
         }
 
@@ -178,13 +175,26 @@ namespace Cogbot
         {
             lock (botCommandThreads)
             {
-                botCommandThreads.Remove(thread);
+                Abortable remove = null;
+                foreach (var a in botCommandThreads)
+                {
+                    if (a.Impl == thread)
+                    {
+                        remove = a;
+                        break;
+                    }
+                }
+                if (remove != null) botCommandThreads.Remove(remove);
             }
+        }
+        public void RemoveThread(Abortable abortable)
+        {
+            lock (botCommandThreads) botCommandThreads.Remove(abortable);
         }
 
         public event Action OnDispose;
 
-        private readonly IList<Thread> botCommandThreads = new ListAsSet<Thread>();
+        private readonly IList<Abortable> botCommandThreads = new ListAsSet<Abortable>();
         readonly public XmlScriptInterpreter XmlInterp;
         public UUID GroupID = UUID.Zero;
         public Dictionary<UUID, GroupMember> GroupMembers = null; // intialized from a callback
@@ -413,6 +423,9 @@ namespace Cogbot
 			RegisterCommand("use", new Use(this));
 			RegisterCommand("eval", new Eval(this));
 			RegisterCommand("wear", new ReplaceOutfitCommand(this));
+            RegisterCommand("task", new ThreadCommand(this));
+            RegisterCommand("thread", new ThreadCommand(this));
+            
 
             Commands["locate"] = Commands["location"] = Commands["where"] = newCommandInfo(new Actions.Movement.LocationCommand(this));
             var follow = newCommandInfo(new Follow(this));

@@ -24,8 +24,9 @@ namespace Cogbot.Actions.Movement
 
 		}
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine1)
+        public override CmdResult ExecuteRequest(CmdRequest argsI)
 		{
+            string[] args = argsI;
             Client.Network.RegisterCallback(PacketType.AlertMessage, AlertMessageHandler);
             // Construct the target name from the passed arguments
 			string target = String.Empty;

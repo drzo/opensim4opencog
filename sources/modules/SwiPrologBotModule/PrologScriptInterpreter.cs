@@ -293,19 +293,18 @@ namespace PrologScriptEngine
 
         public override object GetSymbol(string eventName)
         {
-            return prologClient.GetSymbol(eventName);
+            return PrologCLR.InvokeFromC(() => prologClient.GetSymbol(eventName), false);
         }
 
         public override bool IsSubscriberOf(string eventName)
         {
-            return prologClient.IsDefined(eventName);
+            return PrologCLR.InvokeFromC(() => prologClient.IsDefined(eventName), false);
         }
 
         public PrologScriptInterpreter(object self)
             : base()
         {
             Init(self);
-            PrologCLR.PlNamed("MyBot");
         }
 
         static private readonly object GroupInitLock = new object();
@@ -340,11 +339,6 @@ namespace PrologScriptEngine
                 WriteLine("CSERROR: " + e);
                 return false;
             }
-            if (!File.Exists(filename)) return false;
-            System.IO.FileStream f = System.IO.File.OpenRead(filename);
-            StreamReader r = new StreamReader(f);
-            r.BaseStream.Seek(0, SeekOrigin.Begin);
-            return Read(filename, new StringReader(r.ReadToEnd()), WriteLine) != null;
         }
 
         /// <summary>

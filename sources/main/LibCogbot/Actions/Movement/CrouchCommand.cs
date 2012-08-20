@@ -25,7 +25,7 @@ namespace Cogbot.Actions.Movement
                  "success", typeof(bool), "true if we crouched");
         }
 
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
 
             string[] tokens = args.tokens;

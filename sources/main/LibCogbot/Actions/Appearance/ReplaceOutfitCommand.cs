@@ -36,7 +36,7 @@ namespace Cogbot.Actions.Appearance
                 "success", typeof (bool), "true if outfit was worn");
         }
 
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             //AutoResetEvent are = new AutoResetEvent(false);
            // AppearanceManager.AppearanceUpdatedCallback callback = (Primitive.TextureEntry te) => are.Set();
