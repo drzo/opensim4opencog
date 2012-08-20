@@ -205,7 +205,7 @@ namespace Cogbot
             }
 
             LoadConfigFile(ClientManagerConfig.arguments.GetValue("botconfig", "botconfig.xml"));
-            foreach (var arg in ClientManagerConfig.arguments.prepPhrases)
+            foreach (var arg in ClientManagerConfig.arguments.ParamMap)
             {
                 string value;
                 if (ClientManagerConfig.arguments.TryGetValue(arg.Key, out value))
@@ -313,6 +313,26 @@ namespace Cogbot
             }
             string named = gridClient.Self.Name;
             return GetBotByName(named);
+        }
+
+        static public CmdResult ExecuteCommand(CmdRequest request, BotClient maybe)
+        {
+            bool sync = request.RunSync;
+            var verb = request.CmdName;
+            Command cmd = null;
+            if (maybe != null)
+            {
+                cmd = maybe.GetCommand(verb, true);
+                request.Output = maybe.WriteLine;
+            }
+            else
+            {
+                cmd = SingleInstance.GetCommand(verb, true);
+                request.Output = GlobalWriteLine;
+            }
+            var result = request.Results = cmd.Results = request.Results ?? cmd.Results;
+            return BotClient.DoCmdAct(cmd, () => cmd.ExecuteRequestSyn(request), "execCmd " + verb, sync) ??
+                   new CmdResult(result);
         }
 
         public CmdResult ExecuteCommand(string text, object session, OutputDelegate WriteLine, bool needResult)

@@ -22,9 +22,6 @@ namespace Cogbot.Actions.Search
             Category = CommandCategory.Other;
             Parameters =
                 CreateParams("eventID", typeof (UUID), "event you want info for");
-            ResultMap = CreateParams(
-                "message", typeof (string), "if success was false, the reason why",
-                "success", typeof (bool), "true if command was successful");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

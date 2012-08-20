@@ -19,8 +19,8 @@ namespace Cogbot.Actions.Pathfinder
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int argsUsed;
-			args.OnlyKey("targets");
-            ICollection<SimObject> objs = WorldSystem.GetPrimitives(args, out argsUsed);
+            var keyargs = args.GetProperty("targets");
+            ICollection<SimObject> objs = WorldSystem.GetPrimitives(keyargs, out argsUsed);
             bool rightNow = true;
             if (argsUsed == 0)
             {

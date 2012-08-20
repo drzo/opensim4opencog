@@ -545,12 +545,23 @@ namespace Cogbot
             }
         }
 
+
+        public CmdResult ExecuteCommand(CmdRequest request)
+        {
+            return Cogbot.ClientManager.ExecuteCommand(request, this);
+        }
+
         static public CmdResult DoCmdAct(Command command, string verb, string args, 
             object callerSession, OutputDelegate del, bool needResult)
         {
-            BotClient robot = command._mClient;
+
             var callerID = SessionToCallerId(callerSession);
             string cmdStr = "ExecuteActBotCommand " + verb + " " + args;
+            return DoCmdAct(command, () => command.acceptInputWrapper(verb, args, callerID, del), cmdStr, needResult);
+        }
+        static public CmdResult DoCmdAct(Command command, Func<CmdResult> task, string debugStr, bool needResult)
+        {
+            BotClient robot = command._mClient;
             string sync = command.TaskQueueNameOrNull;
             if (robot != null && (robot.InScriptMode || (command is SynchronousCommand && !(command is AsynchronousCommand))))
             {
@@ -560,7 +571,7 @@ namespace Cogbot
                 }
                 else
                 {
-                    robot.InvokeJoin(cmdStr);
+                    robot.InvokeJoin(debugStr);
                 }
             }
             if (sync != null)
@@ -580,7 +591,7 @@ namespace Cogbot
                                {
                                    try
                                    {
-                                       res[0] = command.acceptInputWrapper(verb, args, callerID, del);
+                                       res[0] = task();
                                    }
                                    finally
                                    {
@@ -592,7 +603,7 @@ namespace Cogbot
             }
             else
             {
-                return command.acceptInputWrapper(verb, args, callerID, del);
+                return task();
             }
             //robot.OneAtATimeQueue.Enqueue(cmdStr, () => command.acceptInputWrapper(verb, args, callerID, del));
         }

@@ -32,12 +32,12 @@ namespace Cogbot.Actions.Appearance
         {
             if (Client.Network.CurrentSim == null) return Failure("not yet connected");
             int argsUsed;
-			var args0 = args.OnlyKey("targets");
+            var args0 = args.GetProperty("targets");
             List<SimObject> OS = WorldSystem.GetPrimitives(args0, out argsUsed);
             bool writeInfo = !args.IsFFI;
             if (IsEmpty(OS))
             {
-                OS.Add(TheSimAvatar);
+                OS = new List<SimObject> {TheSimAvatar};
             }
             int total = 0;
             foreach (var O in OS)

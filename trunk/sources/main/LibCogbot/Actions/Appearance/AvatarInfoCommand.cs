@@ -40,7 +40,7 @@ namespace Cogbot.Actions.Appearance
             else
             {
                 int argsUsed;
-                PS = WorldSystem.GetPrimitives(args.OnlyKey("targets"), out argsUsed);
+                PS = WorldSystem.GetPrimitives(args.GetProperty("targets"), out argsUsed);
                 if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
             }
             AppendList("list", PS);
