@@ -735,12 +735,13 @@ namespace MushDLR223.ScriptEngines
 
         private bool EnsureVersionSelected()
         {
-            if (VersionSelected == null && ParameterVersions != null)
+            if (VersionSelected == null)
             {
-                VersionSelected = ParameterVersions[0];
-                if (ParameterVersions.Count != 1)
+                if (ParameterVersions == null || ParameterVersions.Count == 0)
                 {
+                    return false;
                 }
+                VersionSelected = SelectVersion(tokens, ParameterVersions);
             }
             return VersionSelected != null;
         }
@@ -1014,7 +1015,7 @@ namespace MushDLR223.ScriptEngines
         protected KeyParams VersionSelected;
         public bool KeysRequired = true;
 
-        static KeyParams SelectVersion(string[] tokens, List<KeyParams> ParameterVersions)
+        static KeyParams SelectVersion(string[] tokens, IList<KeyParams> ParameterVersions)
         {
             if (ParameterVersions == null || ParameterVersions.Count == 0)
             {
@@ -1032,7 +1033,7 @@ namespace MushDLR223.ScriptEngines
                     bestScore = thisScore;
                 }
             }
-            return best;
+            return best ?? ParameterVersions[0];
         }
 
         public static float TestSelectVersion(NamedParam[] VersionSelected, string[] tokens)
@@ -1102,11 +1103,7 @@ namespace MushDLR223.ScriptEngines
 
         protected void ParseTokens()
         {
-            if (VersionSelected == null)
-            {
-                VersionSelected = SelectVersion(tokens, ParameterVersions);
-                ParseTokens();
-            }
+            EnsureVersionSelected();
             int tokenLen = tokens.Length;
             int skip = this.StartArg;
             int argCurrent = 0;
