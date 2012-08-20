@@ -47,8 +47,9 @@ namespace Cogbot.Actions.Agent
             }
         }
 
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
+            string verb = args.CmdName;
             acceptInput0(verb, args);
             return Success(verb + " complete");
         }

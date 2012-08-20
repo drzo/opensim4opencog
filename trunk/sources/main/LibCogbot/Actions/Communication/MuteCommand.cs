@@ -51,8 +51,9 @@ namespace Cogbot.Actions.Communication
                 "success", typeof(bool), "true if we muted the object");
          }
 
-        public override CmdResult acceptInput(string verb, Parser pargs, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest pargs)
         {
+            string verb = pargs.CmdName;
             string[] args = pargs.tokens;
             var chat = TheBotClient.Self;
             string arg1 = "show";

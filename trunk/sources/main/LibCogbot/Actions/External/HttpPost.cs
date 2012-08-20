@@ -70,7 +70,7 @@ namespace Cogbot.Actions.WebUtil
                                                  "name-value", typeof (string), "name value pairs");
 
         }
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             String url = args[0];
 

@@ -41,7 +41,7 @@ l2:-logon_bot('Nephrael','Rae','abc123', "https://login.agni.lindenlab.com/cgi-b
 :-cli_load_assembly('IKVM.OpenJDK.Core.dll').
 
 
-:-set_num_bots(6).
+:-set_num_bots(2).
 :-set_tribe('Dougstribe').
 %%:-logon_bots.
 %%:-logon_bots,ebt.

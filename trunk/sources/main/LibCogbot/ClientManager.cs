@@ -317,7 +317,7 @@ namespace Cogbot
 
         static public CmdResult ExecuteCommand(CmdRequest request, BotClient maybe)
         {
-            bool sync = request.RunSync;
+            CMDFLAGS sync = request.CmdFlags;
             var verb = request.CmdName;
             Command cmd = null;
             if (maybe != null)
@@ -335,7 +335,7 @@ namespace Cogbot
                    new CmdResult(result);
         }
 
-        public CmdResult ExecuteCommand(string text, object session, OutputDelegate WriteLine, bool needResult)
+        public CmdResult ExecuteCommand(string text, object session, OutputDelegate WriteLine, CMDFLAGS needResult)
         {
             text = GetCommandText(text);
             try
@@ -348,7 +348,7 @@ namespace Cogbot
             return ExecuteSystemCommand(text, session, WriteLine, needResult);
         }
 
-        private CmdResult ExecuteBotsCommand(string text, object session, OutputDelegate WriteLine, bool needResult)
+        private CmdResult ExecuteBotsCommand(string text, object session, OutputDelegate WriteLine, CMDFLAGS needResult)
         {
             text = GetCommandText(text);
 
@@ -393,7 +393,7 @@ namespace Cogbot
             return new CmdResult(res + " " + success + " successes", true, CmdResult.CreateMap());
         }
 
-        public CmdResult ExecuteSystemCommand(string text, object session, OutputDelegate WriteLine, bool needResult)
+        public CmdResult ExecuteSystemCommand(string text, object session, OutputDelegate WriteLine, CMDFLAGS needResult)
         {
             text = GetCommandText(text);
             try
@@ -542,7 +542,7 @@ namespace Cogbot
 
         public CmdResult ExecuteCommand(string text)
         {
-            return ExecuteCommand(text, this, WriteLine, false);
+            return ExecuteCommand(text, this, WriteLine, CMDFLAGS.NoResult);
         }
 
 
@@ -1214,7 +1214,7 @@ namespace Cogbot
                 if (string.IsNullOrEmpty(input)) continue;
                 try
                 {
-                    CmdResult executeCommand = ExecuteCommand(input, null, CurrentOutput, true);
+                    CmdResult executeCommand = ExecuteCommand(input, null, CurrentOutput, CMDFLAGS.Console);
                     FlushWriter(System.Console.Out);
                     FlushWriter(System.Console.Error);
                     if (executeCommand == null) continue;
@@ -1498,7 +1498,7 @@ namespace Cogbot
                 {
                     foreach (BotClient client in BotClients)
                     {
-                        client.ExecuteCommand(cmd, fromAgentID, WriteLine, true);
+                        client.ExecuteCommand(cmd, fromAgentID, WriteLine, CMDFLAGS.NoResult);
                         break;
                     }
                 }
@@ -1507,15 +1507,15 @@ namespace Cogbot
                     WriteLine("You must login at least one bot to use the help command");
                 }
             }
-            else if (false && firstToken == "script")
+            /*else if (false && firstToken == "script")
             {
                 // No reason to pass this to all bots, and we also want to allow it when there are no bots
                 ScriptCommand command = new ScriptCommand(null);
                 Logger.Log(command.ExecuteCmd(args, UUID.Zero, WriteLine), Helpers.LogLevel.Info);
-            }
+            }*/
             else
             {
-                bool needResult = true;
+                CMDFLAGS needResult = CMDFLAGS.Console;
                 try
                 {
                     ExecuteSystemCommand(cmd, fromAgentID, WriteLine, needResult);
@@ -1764,7 +1764,7 @@ namespace Cogbot
                 {
                     AddClientTodo(
                         (bc) =>
-                        bc.ExecuteCommand(String.Format("botscript {0}", botscriptFile), UUID.Zero, GlobalWriteLine, true));
+                        bc.ExecuteCommand(String.Format("botscript {0}", botscriptFile), UUID.Zero, GlobalWriteLine, CMDFLAGS.Foregrounded));
                     
                 }
             }
@@ -1951,9 +1951,9 @@ namespace Cogbot
         }
 
 
-        public List<TaskQueueHandler> AllTaskQueues()
+        public ListAsSet<Abortable> AllTaskQueues()
         {
-            List<TaskQueueHandler> all = new List<TaskQueueHandler>();
+            var all = new ListAsSet<Abortable>();
             foreach (var tq in TaskQueueHandler.TaskQueueHandlers)
             {
                 if (tq.Owner == null) all.Add(tq);

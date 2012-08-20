@@ -8,6 +8,36 @@ using MushDLR223.Utilities;
 
 namespace MushDLR223.ScriptEngines
 {
+    [Flags]
+    public enum CMDFLAGS
+    {
+        Inherit = 0,
+        /// <summary>
+        /// Command *must* to build a return
+        /// </summary>
+        ForceResult = 1,
+        /// <summary>
+        /// Command does not *have* to build a return
+        /// </summary>
+        NoResult = 2,
+        /// <summary>
+        /// Force the command to be ran outside of a TaskQueue 
+        /// </summary>
+        ForceAsync = 4,
+        /// <summary>
+        /// Force the command to complete before returning 
+        /// </summary>
+        ForceCompletion = 8,
+        /// <summary>
+        /// Force the command to complete before returning 
+        /// </summary>
+        IsConsole = 16,
+
+        Foregrounded = ForceCompletion | ForceResult,
+        Backgrounded = ForceAsync | NoResult,
+        Console = ForceResult | IsConsole,
+    }
+
     public class CmdRequest : Parser, ParseInfo
     {
         public static string cmdnameProp = "name";
@@ -38,6 +68,18 @@ namespace MushDLR223.ScriptEngines
             get { return ParamMap; }
         }
 
+        public CMDFLAGS CmdFlags
+        {
+            get
+            {
+                return (CMDFLAGS)this["CmdFlags"];
+            }
+            set
+            {
+                this["CmdFlags"] = value;
+            }
+        }
+
         public bool IsFFI
         {
             get
@@ -53,11 +95,11 @@ namespace MushDLR223.ScriptEngines
         {
             get
             {
-                return thisBool("RunSync");
+                return (CmdFlags & CMDFLAGS.ForceCompletion) != 0;
             }
             set
             {
-                this["RunSync"] = value;
+                CmdFlags |= (value ? CMDFLAGS.ForceCompletion : CMDFLAGS.ForceAsync);
             }
         }
         public string CmdName
@@ -65,10 +107,16 @@ namespace MushDLR223.ScriptEngines
             get { return "" + this[cmdnameProp]; }
             set { this[cmdnameProp] = value; }
         }
-        public string Wants
+        public bool WantsResults
         {
-            get { return "" + this[cmdnameProp]; }
-            set { this[cmdnameProp] = value; }
+            get
+            {
+                return (CmdFlags & CMDFLAGS.ForceResult) != 0;
+            }
+            set
+            {
+                CmdFlags |= (value ? CMDFLAGS.ForceResult : CMDFLAGS.NoResult);
+            }
         }
 
         public static CmdRequest MakeCmdRequest(IDictionary<string, object> request)
@@ -97,24 +145,14 @@ namespace MushDLR223.ScriptEngines
         }
         public object CallerAgent;
         public OutputDelegate Output;
-        public bool WantsResult = true;
 
         public IDictionary<string, object> Results;
 
-        public CmdRequest(CmdRequest other, String[] args)
+        public CmdRequest(string verb, string args, object callerIDORZero, OutputDelegate writeLine, ParseInfo command)
             : base(args)
         {
-            CallerAgent = other.CallerAgent;
-            Output = other.Output;
-            KeysRequired = false;
-            IsFFI = false;
-            SetCmdInfo(other);
-        }
-
-
-        public CmdRequest(string[] text, object callerIDORZero, OutputDelegate writeLine, ParseInfo command)
-            : base(text)
-        {
+            CmdFlags = CMDFLAGS.Inherit;
+            CmdName = verb;
             CallerAgent = callerIDORZero;
             Output = writeLine;
             IsFFI = false;
@@ -122,8 +160,10 @@ namespace MushDLR223.ScriptEngines
             SetCmdInfo(command);
         }
 
-        private CmdRequest(IDictionary<string, object> dictionary) : base((string[])null)
+        private CmdRequest(IDictionary<string, object> dictionary)
+            : base((string[])null)
         {
+            CmdFlags = CMDFLAGS.Inherit;
             ParamMap = dictionary;
         }
 
@@ -134,17 +174,17 @@ namespace MushDLR223.ScriptEngines
             ParseTokens();
             return this;
         }
+    }
 
+    public class Parser : ParseInfo
+    {
         public string[] GetProperty(string loc)
         {
             string[] args;
             if (GetAfter(loc, out args)) return args;
             return tokens;
         }
-    }
 
-    public class Parser : ParseInfo
-    {
         const int MISSING = -1;
         protected int StartArg;
 
@@ -374,7 +414,7 @@ namespace MushDLR223.ScriptEngines
             }
         }
 
-        public Parser(string[] tokes, string _str)
+        protected Parser(string[] tokes, string _str)
         {
             str = _str;
             tokens = tokes;
@@ -612,6 +652,10 @@ namespace MushDLR223.ScriptEngines
                 }
                 if (ToKey(param.Key) == key)
                 {
+                    if (key == "command")
+                    {
+
+                    }
                     return index;
                 }
                 index++;
@@ -709,7 +753,7 @@ namespace MushDLR223.ScriptEngines
             {
                 p.Add(tokens[j]);
             }
-            for (int j = i + 1 + len; j < tokens.Length; j++)
+            for (int j = i + len; j < tokens.Length; j++)
             {
                 p.Add(tokens[j]);
             }
@@ -852,8 +896,20 @@ namespace MushDLR223.ScriptEngines
             {
                 return false;
             }
-            value = ChangeType<T>(tokens[this.StartArg++]);
+            if (this.StartArg >= tokens.Length)
+            {
+                return false;
+            }
+            len = LenCheck(StartArg, len);
+            value = ChangeType<T>(GetRange(StartArg, len));
+            StartArg += len;
             return true;
+        }
+
+        private string[] GetRange(int start, int len)
+        {
+            if (len < 0) len = LenCheck(StartArg, len);
+            return new List<string>(tokens).GetRange(start, len).ToArray();
         }
 
         public bool TryGetValueOr<T>(string key, int arg, out T value)

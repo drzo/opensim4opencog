@@ -26,13 +26,16 @@ namespace Cogbot.Actions.System
         {
             if (args.Length < 1) return ShowUsage();
             string botcmd = String.Join(" ", args, 0, args.Length).Trim();
-			try {
-			    Client.ExecuteCommand(botcmd, fromAgentID, WriteNothing, false);
-			} catch (Exception e) {
-				return Failure(string.Empty);
-			}
-			return Success(string.Empty);
-		}
+            try
+            {
+                Client.ExecuteCommand(botcmd, fromAgentID, WriteNothing, args.CmdFlags);
+            }
+            catch (Exception e)
+            {
+                return Failure(string.Empty);
+            }
+            return Success(string.Empty);
+        }
 
         static void WriteNothing(string str, params object[] args)
         {

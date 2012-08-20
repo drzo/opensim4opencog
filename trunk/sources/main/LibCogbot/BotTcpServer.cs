@@ -415,7 +415,7 @@ namespace Cogbot.Utilities
             }
             using (StringWriter wl = new StringWriter())
             {
-                CmdResult s = botclient.ExecuteCommand(cmd, this, wl.WriteLine, true);
+                CmdResult s = botclient.ExecuteCommand(cmd, this, wl.WriteLine, CMDFLAGS.Foregrounded);
                 return wl.ToString() + s;
             }
         }

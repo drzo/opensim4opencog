@@ -177,7 +177,7 @@ namespace Cogbot
         {
             if (evt.Verb == "On-Execute-Command")
             {
-                ExecuteCommand(evt.GetArgs()[0].ToString(), null, WriteLine, false);
+                ExecuteCommand(evt.GetArgs()[0].ToString(), null, WriteLine, CMDFLAGS.NoResult);
             }
         }
 

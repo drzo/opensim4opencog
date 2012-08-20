@@ -432,7 +432,7 @@ namespace Cogbot
             return all;
         }
 
-        public CmdResult ExecuteCommand(string text, object session, OutputDelegate WriteLine, bool needResult)
+        public CmdResult ExecuteCommand(string text, object session, OutputDelegate WriteLine, CMDFLAGS needResult)
         {
             text = ClientManager.GetCommandText(text);
             try
@@ -476,7 +476,7 @@ namespace Cogbot
         }
 
 
-        public CmdResult ExecuteBotCommand(string text, object session, OutputDelegate WriteLine, bool needResult)
+        public CmdResult ExecuteBotCommand(string text, object session, OutputDelegate WriteLine, CMDFLAGS needResult)
         {
             text = ClientManager.GetCommandText(text);
             try
@@ -548,22 +548,46 @@ namespace Cogbot
 
         public CmdResult ExecuteCommand(CmdRequest request)
         {
-            return Cogbot.ClientManager.ExecuteCommand(request, this);
+            return ClientManager.ExecuteCommand(request, this);
         }
 
         static public CmdResult DoCmdAct(Command command, string verb, string args, 
-            object callerSession, OutputDelegate del, bool needResult)
+            object callerSession, OutputDelegate del, CMDFLAGS needResult)
         {
 
             var callerID = SessionToCallerId(callerSession);
             string cmdStr = "ExecuteActBotCommand " + verb + " " + args;
-            return DoCmdAct(command, () => command.acceptInputWrapper(verb, args, callerID, del), cmdStr, needResult);
+            var cmdr = new CmdRequest(verb, args, callerID, del, command.GetCmdInfo());
+            return DoCmdAct(command, () => command.ExecuteRequestSyn(cmdr) ,cmdStr, needResult);
         }
-        static public CmdResult DoCmdAct(Command command, Func<CmdResult> task, string debugStr, bool needResult)
+        static public CmdResult DoCmdAct(Command command, Func<CmdResult> task, string debugStr, CMDFLAGS flags)
         {
             BotClient robot = command._mClient;
             string sync = command.TaskQueueNameOrNull;
-            if (robot != null && (robot.InScriptMode || (command is SynchronousCommand && !(command is AsynchronousCommand))))
+            bool needResult = (flags & CMDFLAGS.ForceResult) != 0;
+            bool isConsole = (flags & CMDFLAGS.IsConsole) != 0;
+            bool forceAsync = (flags & CMDFLAGS.ForceAsync) != 0;
+            bool forceCompletion = (flags & CMDFLAGS.ForceCompletion) != 0;
+            bool inherit = (flags & CMDFLAGS.Inherit) != 0;
+            bool scriptMode = robot != null && robot.InScriptMode;
+            bool cmdRequestsSync = command.ImpliesSync;
+            bool invokeJoin = scriptMode || cmdRequestsSync;
+
+            if (needResult)
+            {
+                invokeJoin = true;
+            }
+            if (forceCompletion)
+            {
+                forceAsync = false;
+            }
+            if (forceAsync)
+            {
+                sync = null;
+                needResult = false;
+                invokeJoin = false;
+            }
+            if (invokeJoin)
             {
                 if (!needResult)
                 {
@@ -571,21 +595,21 @@ namespace Cogbot
                 }
                 else
                 {
-                    robot.InvokeJoin(debugStr);
+                    if (robot != null) robot.InvokeJoin(debugStr);
                 }
             }
             if (sync != null)
             {
                 CmdResult[] res = new CmdResult[1];
                 ManualResetEvent mre = new ManualResetEvent(false);
-                TaskQueueHandler tq = null;
+                Abortable tq = null;
                 if (robot == null)
                 {
                     tq = Cogbot.ClientManager.OneAtATimeQueue;
                 }
                 else
                 {
-                    tq = robot.GetTaskQueueHandler(sync);
+                    tq = robot.GetTaskQueueHandler(sync, true);
                 }
                 tq.Enqueue(() =>
                                {
@@ -666,7 +690,7 @@ namespace Cogbot
         }
         internal void RegisterType(Type t)
         {
-            lock (GridClientNullLock)
+            //lock (GridClientNullLock)
             {
                 RegisterType0(t);
             }
@@ -904,9 +928,9 @@ namespace Cogbot
         }
         public void ExecuteCommand(string text)
         {
-            ExecuteCommand(text, false);
+            ExecuteCommand(text, CMDFLAGS.NoResult);
         }
-        public CmdResult ExecuteCommand(string text, bool needResult)
+        public CmdResult ExecuteCommand(string text, CMDFLAGS needResult)
         {
             // done inside the callee InvokeJoin("ExecuteCommand " + text);
             OutputDelegate WriteLine = DisplayNotificationInChat;
@@ -950,15 +974,20 @@ namespace Cogbot
 
         #endregion
 
-        public Dictionary<string, TaskQueueHandler> BotTaskQueues = new Dictionary<string, TaskQueueHandler>();
-        public TaskQueueHandler GetTaskQueueHandler(string id)
+        public Abortable GetTaskQueueHandler(string id, bool createIfMissing)
         {
-            lock(BotTaskQueues)
+            id = id.ToLower();
+            IList<Abortable> BotTaskQueues = AllTaskQueues();
+            lock (BotTaskQueues)
             {
-                TaskQueueHandler tq;
-                if (!BotTaskQueues.TryGetValue(id.ToLower(), out tq))
+                foreach (Abortable tq0 in BotTaskQueues)
                 {
-                    tq = new TaskQueueHandler(this, new NamedPrefixThing(id, GetName), TimeSpan.FromMilliseconds(1), true);
+                    if (tq0.MatchesId(id)) return tq0;
+                }
+                if (!createIfMissing) return null;
+                var tq = new TaskQueueHandler(this, new NamedPrefixThing(id, GetName), TimeSpan.FromMilliseconds(1),
+                                              true);
+                {
                     AddTaskQueue(id, tq);
                 }
                 return tq;
@@ -967,12 +996,12 @@ namespace Cogbot
 
         public void AddTaskQueue(string id, TaskQueueHandler tq)
         {
-            lock (BotTaskQueues) BotTaskQueues[id.ToLower()] = tq;
+            tq.Owner = this;
         }
 
-        public List<TaskQueueHandler> AllTaskQueues()
+        public ListAsSet<Abortable> AllTaskQueues()
         {
-            List<TaskQueueHandler> all = ClientManager.AllTaskQueues();
+            ListAsSet<Abortable> all = ClientManager.AllTaskQueues();
             foreach (var tq in TaskQueueHandler.TaskQueueHandlers)
             {
                 if (tq.Owner == this)
@@ -980,6 +1009,7 @@ namespace Cogbot
                     all.Add(tq);
                 }
             }
+            all.AddRange(botCommandThreads);
             return all;
         }
         
@@ -1034,10 +1064,10 @@ namespace Cogbot
             }
             else
             {
-                TaskQueueHandler tq = TheBotClient.GetTaskQueueHandler(id);
+                Abortable tq = TheBotClient.GetTaskQueueHandler(id, true);
                 if (kill)
                 {
-                    tq.DestroyAllCurrentTasks(true);
+                    tq.Abort();
                 }
                 if (task != null) tq.Enqueue(thread);
                 debugName[0] += tq;

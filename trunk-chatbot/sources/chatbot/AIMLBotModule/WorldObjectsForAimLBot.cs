@@ -140,7 +140,7 @@ namespace AIMLBotModule
                             return sw.ToString();
                         }
                     }
-                    CmdResult s = client.ExecuteCommand(cmd, request, sw.WriteLine, true);
+                    CmdResult s = client.ExecuteCommand(cmd, request, sw.WriteLine, CMDFLAGS.Foregrounded);
                     if (cmd.StartsWith("anim"))
                     {
                         AddAnimToNextResponse(sw.ToString());
@@ -171,7 +171,7 @@ namespace AIMLBotModule
                     }
                     else
                     {
-                        s = client.ExecuteCommand(cmd, request, sw.WriteLine, true);
+                        s = client.ExecuteCommand(cmd, request, sw.WriteLine, CMDFLAGS.Foregrounded);
                     }
                     return String.Format("{0}{1}", sw, s);
                 }

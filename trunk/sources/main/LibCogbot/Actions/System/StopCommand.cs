@@ -30,11 +30,12 @@ if absent all actions are stopped."));
             Category = CommandCategory.BotClient;
         }
 
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             //base.acceptInput(verb, args);
 
             BotClient Client = TheBotClient;
+            string onlyShow = "";
             int[] aborted = {0};
             if (args.objectPhrase.Length == 0)
             {
@@ -42,13 +43,17 @@ if absent all actions are stopped."));
                 {
                     //WriteLine(action + ": " + Client.Commands[action].makeHelpString());
                 }
-                int n = 0;
-                var botCommandThreads = Client.GetBotCommandThreads();
+                int n = 0, found = 0;
+                var botCommandThreads = Client.AllTaskQueues();
                 //lock (botCommandThreads)
                 {
                     int num = botCommandThreads.Count;
-                    foreach (Thread t in LockInfo.CopyOf(botCommandThreads))
+                    foreach (var t in LockInfo.CopyOf(botCommandThreads))
                     {
+                        if (!t.MatchesId(onlyShow)) continue;
+                        if (t.Impl == t) found++; else n++;
+
+
                         Client.RemoveThread(t);
                         n++;
                         num--;
@@ -60,7 +65,7 @@ if absent all actions are stopped."));
                         }
                         else
                         {
-                            Thread thread = t;
+                            var thread = t;
                             DLRConsole.ExecWithMaxTime(() =>
                                                            {
                                                                WriteLine("Killing/Removing {0}: {1} IsAlive={2}", num,
@@ -88,7 +93,7 @@ if absent all actions are stopped."));
                 aborted[0]++;
             }
             WorldSystem.TheSimAvatar.StopMoving();
-            Client.ExecuteCommand("pointat", this, WriteLine, false);
+            Client.ExecuteCommand("pointat", this, WriteLine, CMDFLAGS.Backgrounded);
             return Success("Stopped " + aborted[0]);
         }
     }

@@ -1489,17 +1489,30 @@ namespace RTParser
                     writeToLog("Loaded Corpus Bigrams: '{0}'", file);
                 }
             }
-            Console.WriteLine("*** Start WN-Load ***");
-            if (_wordNetEngine == null) _wordNetEngine = new WordNetEngine(PathToWordNet, true);
-            Console.WriteLine("*** DONE WN-Load ***");
-
-            Console.WriteLine("*** Start Lucene ***");
-            var myLuceneIndexer = new MyLuceneIndexer(PathToLucene, fieldName, this, wordNetEngine);
-            this.LuceneIndexer = myLuceneIndexer;
-            myLuceneIndexer.TheBot = this;
-            TripleStore = myLuceneIndexer.TripleStoreProxy;
-            myLuceneIndexer.wordNetEngine = wordNetEngine;
-            Console.WriteLine("*** DONE Lucene ***");
+            if (_wordNetEngine == null)
+            {
+                Console.WriteLine("*** Start WN-Load ***");
+                _wordNetEngine = new WordNetEngine(PathToWordNet, true);
+                Console.WriteLine("*** DONE WN-Load ***");
+            }
+            else
+            {
+                Console.WriteLine("*** REUSING WN-Load ***");
+            }
+            if (this.LuceneIndexer == null)
+            {
+                Console.WriteLine("*** Start Lucene ***");
+                var myLuceneIndexer = new MyLuceneIndexer(PathToLucene, fieldName, this, wordNetEngine);
+                this.LuceneIndexer = myLuceneIndexer;
+                myLuceneIndexer.TheBot = this;
+                TripleStore = myLuceneIndexer.TripleStoreProxy;
+                myLuceneIndexer.wordNetEngine = wordNetEngine;
+                Console.WriteLine("*** DONE Lucene ***");
+            }
+            else
+            {
+                Console.WriteLine("*** REUSING Lucene ***");
+            }
         }
 
         private int napNum = 0;

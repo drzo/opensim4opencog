@@ -23,25 +23,26 @@ namespace Cogbot.Actions.Objects
             Parameters = CreateParams("targets", typeof(PrimSpec), "The objects to " + Name);
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest argsI)
         {
             ListAsSet<SimPosition> objs = TheSimAvatar.GetSelectedObjects();
 
-            if (args.Length == 0)
+            if (argsI.Length == 0)
             {
                 foreach (var o in objs)
                 {
                     WriteLine(" " + o);
                 }
+                return SuccessOrFailure();
             }
-            if (args.Length == 1 && args[0].ToLower() == "none")
+            if (argsI.ContainsFlag("--clear"))
             {
                 objs.Clear();
                 bool was = TheSimAvatar.SelectedBeam;
                 TheSimAvatar.SelectedBeam = !was;
                 TheSimAvatar.SelectedBeam = was;
             }
-            else
+            var args = argsI.GetProperty("targets");
             {
                 int used = 0;
                 bool remove = false;

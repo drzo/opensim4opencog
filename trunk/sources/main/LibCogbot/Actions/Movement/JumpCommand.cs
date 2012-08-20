@@ -20,7 +20,7 @@ namespace Cogbot.Actions.Movement
             Category = CommandCategory.Movement;
         }
 
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
           //  base.acceptInput(verb, args);
 

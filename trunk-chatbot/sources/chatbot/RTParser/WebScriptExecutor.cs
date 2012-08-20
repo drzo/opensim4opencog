@@ -46,7 +46,7 @@ namespace RTParser.Web
             responseQueue.Enqueue(message);
         }
 
-        public CmdResult ExecuteCommand(string s, object session, OutputDelegate outputDelegate, bool needResult)
+        public CmdResult ExecuteCommand(string s, object session, OutputDelegate outputDelegate, CMDFLAGS needResult)
         {
             StringWriter sw = new StringWriter();
             if (s == null) return new CmdResult("null cmd", false);
@@ -129,7 +129,7 @@ namespace RTParser.Web
 
         public CmdResult ExecuteXmlCommand(string s, object session, OutputDelegate outputDelegate)
         {
-            return ExecuteCommand(s, session, outputDelegate, true);
+            return ExecuteCommand(s, session, outputDelegate, CMDFLAGS.Foregrounded);
         }
 
         public string GetName()

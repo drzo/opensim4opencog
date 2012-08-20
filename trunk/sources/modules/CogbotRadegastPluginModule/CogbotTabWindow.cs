@@ -40,6 +40,7 @@ using Cogbot;
 using Cogbot.Library;
 using Cogbot;
 using Cogbot.World;
+using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using Radegast;
 using Radegast.Netcom;
@@ -445,7 +446,7 @@ namespace CogbotRadegastPluginModule
             if (bc != null)
             {
                 WriteLine("cogbot> " + s);
-                WriteLine("" + bc.ExecuteCommand(s, e, WriteLine, true));
+                WriteLine("" + bc.ExecuteCommand(s, e, WriteLine, CMDFLAGS.Foregrounded));
                 ClearChatInput();
                 return;
             }
@@ -453,7 +454,7 @@ namespace CogbotRadegastPluginModule
             if (gm != null)
             {
                 WriteLine("gridmaster> " + s);
-                WriteLine("" + gm.client.ExecuteCommand(s, e, WriteLine, false));
+                WriteLine("" + gm.client.ExecuteCommand(s, e, WriteLine, CMDFLAGS.Foregrounded));
                 ClearChatInput();
                 return;
             }

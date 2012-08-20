@@ -97,14 +97,14 @@ namespace Cogbot.ScriptEngines
         /// <param name="context_name"></param>
         /// <param name="stringCodeReader"></param>
         /// <returns></returns>
-        public override object Read(string context_name, System.IO.TextReader stringCodeReader, OutputDelegate WriteLine)
+        public override object Read(string context_name, System.IO.TextReader stringCodeReader, OutputDelegate WritResulteLine)
         {
             CmdResult res = null;
             int line = 0;
             while (stringCodeReader.Peek() != -1)
             {
                 line++;
-                res = BotClient.ExecuteCommand(stringCodeReader.ReadLine(), context_name, WriteLine, true);
+                res = BotClient.ExecuteCommand(stringCodeReader.ReadLine(), context_name, WriteLine, CMDFLAGS.ForceCompletion);
             }
             return res;
         } // method: Read
@@ -141,7 +141,7 @@ namespace Cogbot.ScriptEngines
         /// <returns></returns>
         public override object Eval(object code)
         {
-            return BotClient.ExecuteCommand(code.ToString(), true);
+            return BotClient.ExecuteCommand(code.ToString(), CMDFLAGS.Foregrounded);
         } // method: Eval
 
 
@@ -538,7 +538,7 @@ namespace Cogbot.ScriptEngines
 
         private string EvaluateCommand(string cmd)
         {
-            return BotClient.ExecuteCommand(cmd, true).ToString();
+            return BotClient.ExecuteCommand(cmd, CMDFLAGS.Foregrounded).ToString();
         }
 
         public string genActReport(string planID, string seqID, string act, string status)
@@ -569,7 +569,7 @@ namespace Cogbot.ScriptEngines
             outputDelegate("<output>"); //string
             try
             {
-                res = BotClient.ExecuteCommand(cmd, session, outputDelegate, true);
+                res = BotClient.ExecuteCommand(cmd, session, outputDelegate, CMDFLAGS.Foregrounded);
             }
             finally
             {

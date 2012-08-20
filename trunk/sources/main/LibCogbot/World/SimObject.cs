@@ -378,7 +378,7 @@ namespace Cogbot.World
         protected void IndicateTarget(SimPosition pos, bool tf)
         {
             return;
-            bool needResult = false;
+            CMDFLAGS needResult = CMDFLAGS.Backgrounded;
             BotClient Client = WorldSystem.client;
             if (tf)
             {

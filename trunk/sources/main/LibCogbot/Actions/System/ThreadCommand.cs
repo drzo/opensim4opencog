@@ -37,9 +37,11 @@ namespace Cogbot.Actions
                        "detroys all previous 'movement' and adds the command the movement queue");
             AddVersion(CreateParams(
                            "taskid", typeof (string), "the task queue this thread will use or 'create' or 'list'",
-                           Optional("--kill", typeof (bool), "whether to kill or append to previous taskid"),
                            Optional("--wait", typeof (TimeSpan), "blocks until the thread completes"),
-                           Rest("command", typeof (string[]), "The command to execute asynchronously")),
+                           Optional("--kill", typeof(bool), "whether to kill or append to previous taskid"),
+                           Optional("--debug", typeof(bool), "turn task debugging on"),
+                           Optional("--nodebug", typeof(bool), "turn task debugging off"),
+                           Rest("command", typeof(string[]), "The command to execute asynchronously")),
                        Description);
             ResultMap = CreateParams(
                 "message", typeof (string), "if the inner command failed, the reason why",
@@ -51,50 +53,26 @@ namespace Cogbot.Actions
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             bool kill = args.IsTrue("--kill");
+            bool asyc = args.IsTrue("--async");
             TimeSpan wait;
             ManualResetEvent mre = null;
             if (args.TryGetValue("--wait", out wait))
             {
                 mre = new ManualResetEvent(false);
-            }
-            if (args[0] == "list")
-            {
+            }            
+            bool newDebug = args.IsTrue("--debug");
+            bool changeDebug = newDebug || args.IsTrue("--nodebug");
 
-                int n = 0;
-                var botCommandThreads = Client.GetBotCommandThreads();
+            bool createFresh = false;
+            string id = args.Length == 0 ? "list" : GetTaskID(args, out createFresh);
+            id = (id == "list") ? "" : id;
+            int n = 0;
+            int found = 0;
+            if (id == "" || kill || changeDebug)
+            {
+                
+                var botCommandThreads = Client.AllTaskQueues();
                 List<string> list = new List<string>();
-                //lock (botCommandThreads)
-                {
-                    int num = botCommandThreads.Count;
-                    foreach (Thread t in LockInfo.CopyOf(botCommandThreads))
-                    {
-                        n++;
-                        num--;
-                        //System.Threading.ThreadStateException: Thread is dead; state cannot be accessed.
-                        //  at System.Threading.Thread.IsBackgroundNative()
-                        if (!t.IsAlive)
-                        {
-                            list.Add(string.Format("{0}: {1} IsAlive={2}", num, t.Name, t.IsAlive));
-                        }
-                        else
-                        {
-                            list.Insert(0, string.Format("{0}: {1} IsAlive={2}", num, t.Name, t.IsAlive));
-                            if (kill)
-                            {
-                                t.Abort();
-                            }
-                        }
-                        if (kill)
-                        {
-                            Client.RemoveThread(t);
-                        }
-                    }
-                }
-                foreach (var s in list)
-                {
-                    WriteLine(s);
-                }
-                int found = 0;
                 lock (TaskQueueHandler.TaskQueueHandlers)
                 {
                     var atq = TheBotClient != null
@@ -102,9 +80,20 @@ namespace Cogbot.Actions
                                   : ClientManager.SingleInstance.AllTaskQueues();
                     foreach (var queueHandler in atq)
                     {
-                        found++;
+                        if (!queueHandler.MatchesId(id)) continue;
+                        if (queueHandler.Impl == queueHandler) found++; else n++;
+                        if (changeDebug) queueHandler.DebugQueue = newDebug;
                         if (queueHandler.Busy)
-                            WriteLine(queueHandler.ToDebugString(true));
+                        {
+                            string str = queueHandler.ToDebugString(true);
+                            if (kill)
+                            {
+                                queueHandler.Abort();
+                                str = "Killing " + str;
+                            }
+
+                            WriteLine(str);
+                        }
                         else
                         {
                             list.Add(queueHandler.ToDebugString(true));
@@ -115,38 +104,50 @@ namespace Cogbot.Actions
                 {
                     WriteLine(s);
                 }
-                return Success("TaskQueueHandlers: " + found + ", threads: " + n);
             }
-
-            bool createFresh;
-            string id = GetTaskID(args, out createFresh);
+            
             if (kill && createFresh)
             {
                 return Failure("Cannot create and kill in the same operation");
             }
             string[] cmdS;
             args.TryGetValue("command", out cmdS);
-            if (cmdS == null)
+            if (cmdS == null || cmdS.Length == 0)
             {
-                args.TryGetValue("command", out cmdS);
+                return Success("TaskQueueHandlers: " + found + ", threads: " + n);
             }
+
+            /// task is killed if request.. now making a new one
             string cmd = Parser.Rejoin(cmdS, 0);
             bool needResult = mre != null;
             CmdResult[] result = null;
+            if (createFresh) needResult = false;
             if (needResult)
             {
                 result = new CmdResult[1];
             }
+            CMDFLAGS flags = needResult ? CMDFLAGS.ForceResult : CMDFLAGS.Inherit;
+            if (asyc) flags |= CMDFLAGS.ForceAsync;
+
             ThreadStart task = () =>
                                    {
-                                       var res = Client.ExecuteCommand(cmd, fromAgentID, WriteLine, needResult);
-                                       if (result != null) result[0] = res;
+                                       try
+                                       {
+                                           var res = Client.ExecuteCommand(cmd, fromAgentID, WriteLine,
+                                                                       flags);
+                                           if (result != null) result[0] = res;
+                                       }
+                                       catch (Exception)
+                                       {                                           
+                                           throw;
+                                       } 
                                    };
-            string message = TheBotClient.CreateTask(id, task, cmd, createFresh, kill, mre, WriteLine);
+            string message = TheBotClient.CreateTask(id, task, cmd, createFresh, false, mre, WriteLine);
             Results.Add("taskid", id);
             if (mre != null)
             {
                 if (!mre.WaitOne(wait)) return Failure("Timeout: " + message);
+                if (result == null) return Success(message);
                 return result[0] ?? Success(message);
             }
             return Success(message);
