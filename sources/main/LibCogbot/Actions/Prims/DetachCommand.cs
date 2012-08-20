@@ -43,7 +43,7 @@ namespace Cogbot.Actions.Objects
             }
 
             int	 argsUsed;
-            string[] keyargs = args.OnlyKey("targets");
+            string[] keyargs = args.GetProperty("targets");
             List<SimObject> PS = WorldSystem.GetPrimitives(keyargs, out argsUsed);
             List<uint> idz = new List<uint>();
             foreach (var o in PS)

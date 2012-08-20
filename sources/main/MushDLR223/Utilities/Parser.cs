@@ -10,14 +10,96 @@ namespace MushDLR223.ScriptEngines
 {
     public class CmdRequest : Parser, ParseInfo
     {
+        public static string cmdnameProp = "name";
+        protected object this[string name]
+        {
+            get
+            {
+                lock (SyncRoot)
+                {
+                    return CmdResult.GetValue(ParamMap, name);
+                }
+            }
+            set
+            {
+                lock (SyncRoot)
+                {
+                    ParamMap[ToKey(name)] = value;
+                }
+            }
+        }
+        protected bool thisBool(string key)
+        {
+            lock (SyncRoot) return CmdResult.GetBool(ParamMap, key);
+        }
+
+        protected object SyncRoot
+        {
+            get { return ParamMap; }
+        }
+
+        public bool IsFFI
+        {
+            get
+            {
+                return thisBool("IsFFI");
+            }
+            set
+            {
+                this["IsFFI"] = value;
+            }
+        }
+        public bool RunSync
+        {
+            get
+            {
+                return thisBool("RunSync");
+            }
+            set
+            {
+                this["RunSync"] = value;
+            }
+        }
+        public string CmdName
+        {
+            get { return "" + this[cmdnameProp]; }
+            set { this[cmdnameProp] = value; }
+        }
+        public string Wants
+        {
+            get { return "" + this[cmdnameProp]; }
+            set { this[cmdnameProp] = value; }
+        }
+
+        public static CmdRequest MakeCmdRequest(IDictionary<string, object> request)
+        {
+            return MakeCmdRequest("" + request[cmdnameProp], request, null);
+        }
+        public static CmdRequest MakeCmdRequest(IDictionary<string, object> request, IDictionary<string, object> result)
+        {
+            return MakeCmdRequest("" + request[cmdnameProp], request, result);
+        }
+        public static CmdRequest MakeCmdRequest(string cmdname, IDictionary<string, object> request)
+        {
+            return MakeCmdRequest(cmdname, request, null);
+        }
+        public static CmdRequest MakeCmdRequest(string cmdname, IDictionary<string, object> request, IDictionary<string, object> result)
+        {
+            request[cmdnameProp] = cmdname;
+            var cmd = new CmdRequest(request);
+            cmd.IsFFI = true;
+            if (result != null) cmd.Results = result;
+            return cmd;
+        }
         public static implicit operator string[](CmdRequest request)
         {
             return request.tokens;
         }
         public object CallerAgent;
         public OutputDelegate Output;
-        public bool IsFFI = false;
         public bool WantsResult = true;
+
+        public IDictionary<string, object> Results;
 
         public CmdRequest(CmdRequest other, String[] args)
             : base(args)
@@ -25,6 +107,7 @@ namespace MushDLR223.ScriptEngines
             CallerAgent = other.CallerAgent;
             Output = other.Output;
             KeysRequired = false;
+            IsFFI = false;
             SetCmdInfo(other);
         }
 
@@ -34,9 +117,16 @@ namespace MushDLR223.ScriptEngines
         {
             CallerAgent = callerIDORZero;
             Output = writeLine;
+            IsFFI = false;
             KeysRequired = false;
             SetCmdInfo(command);
         }
+
+        private CmdRequest(IDictionary<string, object> dictionary) : base((string[])null)
+        {
+            ParamMap = dictionary;
+        }
+
         public CmdRequest AdvanceArgs(int used)
         {
             StartArg += used;
@@ -49,11 +139,6 @@ namespace MushDLR223.ScriptEngines
         {
             string[] args;
             if (GetAfter(loc, out args)) return args;
-            return null;
-        }
-
-        public string[] OnlyKey(string key)
-        {
             return tokens;
         }
     }
@@ -62,13 +147,7 @@ namespace MushDLR223.ScriptEngines
     {
         const int MISSING = -1;
         protected int StartArg;
-        private IDictionary<string, object> ParamMap
-        {
-            get
-            {
-                return prepPhrases;
-            }
-        }
+
         public T GetValue<T>(string Param)
         {
             Param = ToKey(Param);
@@ -82,6 +161,7 @@ namespace MushDLR223.ScriptEngines
 
         public static string[] ParseArguments(string str)
         {
+            if (str == null) return null;
             str = PaddSpecialChars(str);
 
 
@@ -234,7 +314,7 @@ namespace MushDLR223.ScriptEngines
 
         readonly string[] preps = { "of", "to", "in", "for", "with", "as", "by", "at", "from", "on", "is" };
 
-        public readonly Dictionary<string, object> prepPhrases;
+        public IDictionary<string, object> ParamMap;
         public string objectPhrase;
         public string str;
         public string[] tokens;
@@ -258,7 +338,7 @@ namespace MushDLR223.ScriptEngines
             {
                 Param = ToKey(Param);
                 object obj;
-                if (!prepPhrases.TryGetValue(Param, out obj) || ReferenceEquals(null, obj))
+                if (!ParamMap.TryGetValue(Param, out obj) || ReferenceEquals(null, obj))
                 {
                     
                     return null;
@@ -268,14 +348,15 @@ namespace MushDLR223.ScriptEngines
             set
             {
                 Param = ToKey(Param);
-                prepPhrases[Param] = value;
+                ParamMap[Param] = value;
             }
         }
 
         public Parser(string[] Args)
-            : this(Args, Rejoin(Args ?? new string[0],0))
+            : this(Args, Args == null ? null : Rejoin(Args, 0))
         {
         }
+
         public Parser(string Args)
             : this(SafeParseArgs(Args), Args)
         {
@@ -297,9 +378,17 @@ namespace MushDLR223.ScriptEngines
         {
             str = _str;
             tokens = tokes;
-            prepPhrases = new Dictionary<string, object>();// new NameValueCollection();
+            ParamMap = new Dictionary<string, object>(); // new NameValueCollection();
             objectPhrase = "";
 
+            if (tokens != null || tokes.Length > 0)
+            {
+                PrepTokens();
+            }
+        }
+
+        private void PrepTokens()
+        {
             string currentPrep = "";
             // sometimes ParseArgumetns throw exception
 
@@ -385,17 +474,17 @@ namespace MushDLR223.ScriptEngines
                     {
                         EnsurePrepKey(currentPrep);
                         if (!firstTok)
-                            prepPhrases[currentPrep] += " ";
-                        prepPhrases[currentPrep] += prep;
+                            ParamMap[currentPrep] += " ";
+                        ParamMap[currentPrep] += prep;
                         firstTok = false;
                     }
                 }
-            }
+            }       
         }
 
         private void EnsurePrepKey(string prep)
         {
-            if (!prepPhrases.ContainsKey(prep)) prepPhrases[prep] = String.Empty;
+            if (!ParamMap.ContainsKey(prep)) ParamMap[prep] = String.Empty;
         }
 
         public static Parser ParseArgs(string args)
@@ -461,7 +550,7 @@ namespace MushDLR223.ScriptEngines
         private void Add(string k, string v)
         {
             k = ToKey(k);
-            prepPhrases[k] = v;
+            ParamMap[k] = v;
         }
 
         public static string ToKey(string k)

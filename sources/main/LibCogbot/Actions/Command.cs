@@ -485,14 +485,25 @@ namespace Cogbot.Actions
             return res;
         }
 
-        public IDictionary<string, object> Results = CmdResult.CreateMap();
-        protected T GetParamValue<T>(string paramName, Parser parser)
+        private IDictionary<string, object> _results;
+        public IDictionary<string, object> Results
         {
-            foreach (NamedParam param in Parameters.Parameters)
+            get
             {
+                if (_results == null) _results = CmdResult.CreateMap();
+                return _results;
+            }
+            set
+            {
+                if (_results == value) return;
+                if (_results == null)
+                {
+                    _results = value;
+                    return;
+                }
+                _results = value;
 
             }
-            return default(T);
         }
 
 
@@ -716,9 +727,15 @@ namespace Cogbot.Actions
         {
             this.WriteLineDelegate = WriteLine;
             CallerID = CogbotHelpers.NonZero(fromAgentID, UUID.Zero);
-            return ExecuteRequest(new CmdRequest(args, fromAgentID, WriteLine, this.GetCmdInfo()));
+            return ExecuteRequestSyn(new CmdRequest(args, fromAgentID, WriteLine, this.GetCmdInfo()));
         }
-
+        
+        public CmdResult ExecuteRequestSyn(CmdRequest args)
+        {
+            var cr = ExecuteRequest(args);
+            cr.IsCompleted = true;
+            return cr;
+        }
         virtual public CmdResult ExecuteRequest(CmdRequest args)
         {
             Results.Clear();

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -18,8 +19,8 @@ namespace MushDLR223.ScriptEngines
             {
                 lock (SyncRoot)
                 {
-                    object res;
-                    if (!Results.TryGetValue("Message", out res)) return "no message";
+                    object res = GetValue(Results, "Message");
+                    if (res == null) return "no message";
                     return res.ToString();
                 }
             }
@@ -34,11 +35,7 @@ namespace MushDLR223.ScriptEngines
         {
            get
            {
-               lock (SyncRoot)
-                {
-                    object res;
-                    return Results.TryGetValue("InvalidArgs", out res) && (bool)res;
-                }
+               return thisBool("InvalidArgs");
            } 
            set
            {
@@ -47,13 +44,8 @@ namespace MushDLR223.ScriptEngines
         }
         public bool Success
         {
-            get
-            {
-                lock (SyncRoot)
-                {
-                    object res;
-                    return Results.TryGetValue("Success", out res) && (bool)res;
-                }
+            get {
+                return thisBool("Success");
             }
             set
             {
@@ -64,11 +56,7 @@ namespace MushDLR223.ScriptEngines
         {
             get
             {
-                lock (SyncRoot)
-                {
-                    object res;
-                    return Results.TryGetValue("IsCompleted", out res) && (bool)res;
-                }
+                return thisBool("IsCompleted");
             }
             set
             {
@@ -82,29 +70,45 @@ namespace MushDLR223.ScriptEngines
         {
             get
             {
-                lock (SyncRoot)
-                {
-                    object res;
-                    return Results.TryGetValue("CompletedSynchronously", out res) && (bool)res;
-                }
+                return thisBool("CompletedSynchronously");
             }
             set
             {
                 this["CompletedSynchronously"] = value;
             }
         }
+
+        private bool thisBool(string key)
+        {
+            lock (SyncRoot) return GetBool(Results, key);
+        }
+
+        public static bool GetBool(IDictionary<string, object> map, string key)
+        {
+            object res;
+            return TryGetValue(map, key, out res) && (bool) res;
+        }
+
+        public static bool TryGetValue<T>(IDictionary<string, T> map, string name, out T res)
+        {
+            if (map.TryGetValue(name, out res)) return true;
+            string nameToLower = name.ToLower();
+            if (nameToLower != name && map.TryGetValue(nameToLower, out res)) return true;
+            var name2 = ToCamelCase(name);
+            if (name2 != name && map.TryGetValue(name2, out res)) return true;
+            return false;
+        }
+        public static object GetValue(IDictionary<string, object> map, string name)
+        {
+            object res;
+            if (TryGetValue(map, name, out res)) return res;
+            return null;
+        }
+
         protected object this[string name]
         {
-            get
-            {
-                lock (SyncRoot)
-                {
-                    object res;
-                    if (Results.TryGetValue(name.ToLower(), out res)) return res;
-                    var name2 = ToCamelCase(name);
-                    if (name2 != name && Results.TryGetValue(name.ToLower(), out res)) return res;
-                    return null;
-                }
+            get {
+                lock (SyncRoot) return GetValue(Results, name);
             }
             set
             {
@@ -119,13 +123,21 @@ namespace MushDLR223.ScriptEngines
         {
             get { return Results; }
         }
-        public CmdResult(string usage, bool b, IDictionary<string,object> resholder)
+        public CmdResult(string usage, bool b, IDictionary<string, object> resholder)
         {
             Results = resholder;
             Message = usage;
             Success = b;
             IsCompleted = true;
             CompletedSynchronously = true;
+            InvalidArgs = false;
+        }
+        public CmdResult(IDictionary<string, object> resholder)
+        {
+            Results = resholder;
+            Success = false;
+            IsCompleted = false;
+            CompletedSynchronously = false;
             InvalidArgs = false;
         }
         public CmdResult(string param1, bool param2)
