@@ -1,16 +1,21 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Threading;
 using System.IO;
-using System.IO.Compression;
-using System.Text;
 using System.Xml;
-using cogbot.Listeners;
+using Cogbot;
+using Cogbot.Actions;
+using Cogbot.World;
+using MushDLR223.Utilities;
 using OpenMetaverse;
+using OpenMetaverse.Assets;
+using OpenMetaverse.StructuredData;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.SimExport
+namespace SimExportModule
 {
     public class Linkset
     {

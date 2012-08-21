@@ -4,18 +4,18 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.IO;
-using cogbot.Actions.SimExport;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using System.Xml;
+using Cogbot;
+using Cogbot.Actions;
+using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.StructuredData;
-
 using MushDLR223.ScriptEngines;
 using PathSystem3D.Navigation;
 
-namespace cogbot.Actions.SimExport
+namespace SimExportModule
 {
     public partial class ImportCommand 
     {
@@ -118,7 +118,7 @@ namespace cogbot.Actions.SimExport
                 {
                     if (_prim == null)
                     {
-                        SetOldPrim(Primitive.FromTotalOSD(LoadOSD()));
+                        SetOldPrim(Primitive.FromOSD(LoadOSD()));
                         State = PrimImportState.LoadedLLSD;
                         PrimOSD = null;
                     }
@@ -366,7 +366,7 @@ namespace cogbot.Actions.SimExport
             {
                 get
                 {
-                    if (ParentID == 0) return null;
+                    if (ParentID == 0) return UUID.Zero;
                     if (_ParentUUID != null) return _ParentUUID;
                     if (ParentPrim != null) return _ParentUUID = ParentPrim.OldID;
                     return _ParentUUID = LoadOSD()["ParentUUID"];
@@ -423,7 +423,7 @@ namespace cogbot.Actions.SimExport
                     {
                         string data = File.ReadAllText(importProgress);
                         var sdata = data.Split(',');
-                        NewID = UUIDFactory.GetUUID(sdata[0]);
+                        NewID = new UUID(sdata[0]);
                         //NewLocalID = uint.Parse(sdata[1]);
                         if (sdata.Length > 3)
                         {

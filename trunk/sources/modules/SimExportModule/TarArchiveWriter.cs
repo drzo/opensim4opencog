@@ -32,7 +32,7 @@ using System.Text;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.SimExport
+namespace SimExportModule
 {
     /// <summary>
     /// Produces a tar archive in tar v7 format

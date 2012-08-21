@@ -5,8 +5,9 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.Actions;
+using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -14,14 +15,12 @@ using OpenMetaverse.Assets;
 
 using MushDLR223.ScriptEngines;
 using PathSystem3D.Mesher;
-using ExportCommand = cogbot.Actions.SimExport.ImportCommand;
-using UUIDFactory = cogbot.Listeners.CogbotHelpers;
 
-namespace cogbot.Actions.SimExport
+namespace SimExportModule
 {
     public partial class ExportCommand : Command, RegionMasterCommand, BotStatefullCommand
     {
-        private readonly TaskQueueHandler slowlyExport = new TaskQueueHandler("slowlyExport", TimeSpan.FromMilliseconds(100),
+        private readonly TaskQueueHandler slowlyExport = new TaskQueueHandler(null, "slowlyExport", TimeSpan.FromMilliseconds(100),
                                                                     true);
         public readonly HashSet<SimObject> SIPrims = new HashSet<SimObject>();
         public static Dictionary<UUID, ErrorInfo> Errors = new Dictionary<UUID, ErrorInfo>();
@@ -182,7 +181,11 @@ namespace cogbot.Actions.SimExport
         }
 
         #endregion
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
+        {
+            return Execute(args.tokens, (UUID) args.CallerAgent, WriteLine);
+        }
+        public CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             Client.Self.Movement.Camera.Far = 1023;
             Client.Self.Movement.SendUpdate(true);
@@ -194,7 +197,7 @@ namespace cogbot.Actions.SimExport
             AttemptSitMover();
             WorldObjects.MaintainSimObjectInfoMap = false;
             SimObjectImpl.AffordinancesGuessSimObjectTypes = false;
-            WorldObjects.IgnoreKillObjects = true;
+            WorldSystem.IgnoreKillObjects = true;
             inventoryHolder.Clear();
             lslScripts.Clear();
             successfullyExportedPrims.Clear();
@@ -692,7 +695,7 @@ namespace cogbot.Actions.SimExport
                 string mh1 = mh[i];
                 try
                 {
-                    childs[i] = UUIDFactory.GetUUID(mh1);
+                    childs[i] = new UUID(mh1);
                 }
                 catch (Exception)
                 {
@@ -898,7 +901,7 @@ namespace cogbot.Actions.SimExport
                     }
                 }
             }
-            return Primitive.FromTotalOSD(OSDParser.DeserializeLLSDXml(File.ReadAllText(filename)));
+            return Primitive.FromOSD(OSDParser.DeserializeLLSDXml(File.ReadAllText(filename)));
         }
 
         public void ToFile(Primitive prim, string exportFile)
@@ -909,7 +912,7 @@ namespace cogbot.Actions.SimExport
                 SaveToDisk(exportFile, prim);
                 return;
             }
-            OSDMap primOSD = prim.GetTotalOSD();
+            OSDMap primOSD = (OSDMap)prim.GetOSD();
             AddExportUser(primOSD["CreatorID"]);
             AddExportGroup(primOSD["GroupID"]);
             AddExportUser(primOSD["OwnerID"]);

@@ -4,18 +4,17 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.IO;
-using cogbot.Actions.SimExport;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using System.Xml;
+using Cogbot;
+using Cogbot.Actions;
+using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.StructuredData;
-
 using MushDLR223.ScriptEngines;
-using ExportCommand = cogbot.Actions.SimExport.ImportCommand;
 
-namespace cogbot.Actions.SimExport
+namespace SimExportModule
 {
     public class ImportSettings
     {
@@ -51,7 +50,7 @@ namespace cogbot.Actions.SimExport
         {
             if (string.IsNullOrEmpty(issues)) return true;
             if (!(arglist.Contains(issues.TrimEnd('s').ToLower()) || arglist.Contains("issue"))) return false;
-            ExportCommand.Exporting.Success("Allowing: " + issues + " with " + allowed);
+            ImportCommand.Exporting.Success("Allowing: " + issues + " with " + allowed);
             return true;
         }
 
@@ -190,7 +189,7 @@ namespace cogbot.Actions.SimExport
                     ChangeList.Add(before, utcNewID);
                     return utcNewID;
                 }
-                return utcNewID ?? UUID.Zero;
+                return utcNewID;
             }
             MissingItemInfo mis = new MissingItemInfo(memberName, before);
             if (missing != null) missing.Add(mis);
@@ -246,7 +245,11 @@ namespace cogbot.Actions.SimExport
         }
 
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate writeLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
+        {
+            return Execute(args.tokens, (UUID)args.CallerAgent, WriteLine);
+        }
+        public CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate writeLine)
         {
             if (!IsLocalScene)
             {
@@ -592,7 +595,7 @@ namespace cogbot.Actions.SimExport
                     return ptc.NewID;
                 }
             }
-            return null;
+            return UUID.Zero;
         }
 
         private void ScanForChangeList()

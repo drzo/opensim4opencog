@@ -5,8 +5,9 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.Actions;
+using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -14,9 +15,8 @@ using OpenMetaverse.Assets;
 
 using MushDLR223.ScriptEngines;
 using PathSystem3D.Mesher;
-using ExportCommand = cogbot.Actions.SimExport.ImportCommand;
 
-namespace cogbot.Actions.SimExport
+namespace SimExportModule
 {
 
     public partial class ExportCommand : Command, RegionMasterCommand
@@ -295,7 +295,7 @@ namespace cogbot.Actions.SimExport
         private void Asset_Xfer(object sender, XferReceivedEventArgs e)
         {
             if (!IsExporting) return;
-            var assetID = e.Xfer.AssetID;
+            UUID assetID = GetAssetID(e.Xfer);
             var assetType = e.Xfer.AssetType;
             if (assetType==AssetType.Unknown)
             {
@@ -316,6 +316,12 @@ namespace cogbot.Actions.SimExport
                         Logger.Log(ex.Message, Helpers.LogLevel.Error);
                     }
                 }
+        }
+
+        private UUID GetAssetID(XferDownload xferDownload)
+        {
+            //@todo
+            throw new NotImplementedException();
         }
 
         public void Assets_OnReceived(AssetDownload transfer, Asset asset)

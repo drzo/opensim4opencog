@@ -6,7 +6,7 @@ using System.Xml;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 // taken initially from http://openmetaverse.org/svn/omf/libopenmetaverse/trunk/Programs/SimExport -r2392
-namespace cogbot.Actions.SimExport
+namespace SimExportModule
 {
     public class SimExport
     {
@@ -165,7 +165,7 @@ namespace cogbot.Actions.SimExport
                             texturePipeline.TransferCount, /*texturePipeline.QueuedCount*/ float.NaN, /*texturesFinished.Count*/ float.NaN), Helpers.LogLevel.Info);
                         break;
                     case "terrain":
-                        TerrainPatch[] patches = client.Network.CurrentSim.SharedData.Terrain;
+                        TerrainPatch[] patches = client.Network.CurrentSim.Terrain;
                         if (patches != null)
                         {
                             int count = 0;
@@ -183,7 +183,7 @@ namespace cogbot.Actions.SimExport
                         }
                         break;
                     case "saveterrain":
-                        patches = client.Network.CurrentSim.SharedData.Terrain;
+                        patches = client.Network.CurrentSim.Terrain;
                         if (patches != null)
                         {
                             try
