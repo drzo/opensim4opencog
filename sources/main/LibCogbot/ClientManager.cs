@@ -362,6 +362,7 @@ namespace Cogbot
             string res = null;
             int success = 0;
             int failure = 0;
+            string verb = text;
             foreach (BotClient currentClient in BotClients)
                 if (currentClient != null)
                 {
@@ -384,13 +385,13 @@ namespace Cogbot
                 }
             if (success == 0)
             {
-                return new ACmdResult(res + " " + failure + " failures ", false);
+                return ACmdResult.Complete(verb,  res + " " + failure + " failures ", false);
             }
             if (failure > 0)
             {
-                return new ACmdResult(res + " " + failure + " failures and " + success + " successes", false);
+                return ACmdResult.Complete(verb,  res + " " + failure + " failures and " + success + " successes", false);
             }
-            return new ACmdResult(res + " " + success + " successes", true);
+            return ACmdResult.Complete(verb,  res + " " + success + " successes", true);
         }
 
         public CmdResult ExecuteSystemCommand(string text, object session, OutputDelegate WriteLine, CMDFLAGS needResult)
@@ -416,7 +417,7 @@ namespace Cogbot
                 if (e is NoSuchCommand) throw e;
                 string newVariable = "ClientManager: " + text + " caused " + e;
                 WriteLine(newVariable);
-                return new ACmdResult(newVariable, false);
+                return ACmdResult.Complete(text, newVariable, false);
             }
         }
 

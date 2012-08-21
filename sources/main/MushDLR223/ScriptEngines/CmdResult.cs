@@ -7,6 +7,36 @@ using System.Threading;
 
 namespace MushDLR223.ScriptEngines
 {
+    [Flags]
+    public enum CMDFLAGS
+    {
+        Inherit = 0,
+        /// <summary>
+        /// Command *must* to build a return
+        /// </summary>
+        ForceResult = 1,
+        /// <summary>
+        /// Command does not *have* to build a return
+        /// </summary>
+        NoResult = 2,
+        /// <summary>
+        /// Force the command to be ran outside of a TaskQueue 
+        /// </summary>
+        ForceAsync = 4,
+        /// <summary>
+        /// Force the command to complete before returning 
+        /// </summary>
+        ForceCompletion = 8,
+        /// <summary>
+        /// Force the command to complete before returning 
+        /// </summary>
+        IsConsole = 16,
+
+        Foregrounded = ForceCompletion | ForceResult,
+        Backgrounded = ForceAsync | NoResult,
+        Console = ForceResult | IsConsole,
+    }
+
     public interface CmdResult
     {
         bool Success { get; set; }
@@ -103,7 +133,7 @@ namespace MushDLR223.ScriptEngines
             if (map.TryGetValue(name, out res)) return true;
             string nameToLower = name.ToLower();
             if (nameToLower != name && map.TryGetValue(nameToLower, out res)) return true;
-            var name2 = ToCamelCase(name);
+            var name2 = Parser.ToCamelCase(name);
             if (name2 != name && map.TryGetValue(name2, out res)) return true;
             return false;
         }
@@ -123,7 +153,7 @@ namespace MushDLR223.ScriptEngines
             {
                 lock (SyncRoot)
                 {
-                    Results[ToCamelCase(name)] = value;
+                    Results[Parser.ToCamelCase(name)] = value;
                 }
             }
         }
@@ -133,9 +163,14 @@ namespace MushDLR223.ScriptEngines
             get { return Results; }
         }
 
-        public ACmdResult(string message, bool passFail)
+        public static ACmdResult Complete(string verb, string message, bool passFail)
         {
-            Results = ACmdResult.CreateMap();
+            return ACmdResult.Complete(verb,  message, passFail);
+        }
+        public ACmdResult(string verb, string message, bool passFail)
+        {
+            Results = CmdRequest.CreateMap();
+            Results["verb"] = verb;
             Message = message;
             Success = passFail;
             IsCompleted = true;
@@ -169,121 +204,273 @@ namespace MushDLR223.ScriptEngines
             }
         }
 
-        static readonly Dictionary<string, string> CamelCache = new Dictionary<string, string>();
-        static readonly Dictionary<string, string> PrologCache = new Dictionary<string, string>();
-        public static string ToCase(string name, Dictionary<string, string> cache, Func<string, string> toCase)
+        public string ToPostExecString()
         {
-            lock (cache)
+            string SkipKey = Parser.ToKey("message");
+            StringWriter tw = new StringWriter();
+            foreach (KeyValuePair<string, object> kv in Results)
             {
-                string camel;
-                if (cache.TryGetValue(name, out camel))
-                {
-                    return camel;
-                }
-                camel = toCase(name);
-                cache[name] = camel;
-                return camel;
+                if (Parser.ToKey(kv.Key) == SkipKey) continue;
+                tw.WriteLine("" + kv.Key + " = " + kv.Value);
             }
+            return tw.ToString();
         }
-        public static string ToCamelCase(string name)
-        {
-            return ToCase(name, CamelCache, ToCamelCase0);
-        }
-        public static string ToCamelCase0(string name)
-        {
+    }
 
-            if (name.Contains("-"))
-            {
-                // LISPY
-                name = name.ToLower();
-            }
-            char[] camelToCharArray = name.ToCharArray();
-            var ch = camelToCharArray[0];
-            if (Char.IsUpper(ch))
-            {
-                return name;
-            }
-            StringBuilder sb = new StringBuilder(camelToCharArray.Length);
-            sb.Append(Char.ToUpper(ch));
-            bool makeNextUpper = false;
-            for (int i = 1; i < camelToCharArray.Length; i++)
-            {
-                ch = camelToCharArray[i];
-                if (makeNextUpper)
-                {
-                    sb.Append(Char.ToUpper(ch));
-                    makeNextUpper = false;
-                    continue;
-                }
-                makeNextUpper = Char.IsSymbol(ch);
-                if (makeNextUpper) continue;
-                sb.Append(ch);
-            }
-            return sb.ToString();
-        }
-        public static string ToPrologCase(string name)
+    public class CmdRequest : Parser, ParseInfo, CmdResult
+    {
+        public static string cmdnameProp = "verb";
+        protected object this[string name]
         {
-            return ToCase(name, PrologCache, ToPrologCase0);
-        }
-        public static string ToPrologCase0(string pn)
-        {
-            bool cameCased = false;
-            foreach (char c in pn)
+            get
             {
-                if (Char.IsUpper(c) || c == '.' || c == '-')
+                lock (SyncRoot)
                 {
-                    cameCased = true;
-                    break;
+                    return ACmdResult.GetValue(ParamMap, name);
                 }
             }
-            if (!cameCased) return pn;
-            StringBuilder newname = new StringBuilder();
-            bool lastCapped = true;
-            bool lastUnderscored = true;
-            foreach (char c in pn)
+            set
             {
+                lock (SyncRoot)
+                {
+                    ParamMap[ToKey(name)] = value;
+                }
+            }
+        }
+        protected bool thisBool(string key)
+        {
+            lock (SyncRoot) return ACmdResult.GetBool(ParamMap, key);
+        }
 
-                if (Char.IsUpper(c))
+        protected object SyncRoot
+        {
+            get { return ParamMap; }
+        }
+
+        public CMDFLAGS CmdFlags
+        {
+            get
+            {
+                return (CMDFLAGS)this["CmdFlags"];
+            }
+            set
+            {
+                this["CmdFlags"] = value;
+            }
+        }
+
+        public bool IsFFI
+        {
+            get
+            {
+                return thisBool("IsFFI");
+            }
+            set
+            {
+                this["IsFFI"] = value;
+            }
+        }
+        public bool RunSync
+        {
+            get
+            {
+                return (CmdFlags & CMDFLAGS.ForceCompletion) != 0;
+            }
+            set
+            {
+                CmdFlags |= (value ? CMDFLAGS.ForceCompletion : CMDFLAGS.ForceAsync);
+            }
+        }
+        public string CmdName
+        {
+            get { return "" + this[cmdnameProp]; }
+            set { this[cmdnameProp] = value; }
+        }
+        public bool WantsResults
+        {
+            get
+            {
+                return (CmdFlags & CMDFLAGS.ForceResult) != 0;
+            }
+            set
+            {
+                CmdFlags |= (value ? CMDFLAGS.ForceResult : CMDFLAGS.NoResult);
+            }
+        }
+
+        public static CmdRequest MakeCmdRequest(IDictionary<string, object> request)
+        {
+            return MakeCmdRequest("" + request[cmdnameProp], request, null);
+        }
+        public static CmdRequest MakeCmdRequest(IDictionary<string, object> request, IDictionary<string, object> result)
+        {
+            return MakeCmdRequest("" + request[cmdnameProp], request, result);
+        }
+        public static CmdRequest MakeCmdRequest(string cmdname, IDictionary<string, object> request)
+        {
+            return MakeCmdRequest(cmdname, request, null);
+        }
+        public static CmdRequest MakeCmdRequest(string cmdname, IDictionary<string, object> request, IDictionary<string, object> result)
+        {
+            request[cmdnameProp] = cmdname;
+            var cmd = new CmdRequest(request);
+            cmd.IsFFI = true;
+            if (result != null) cmd.Results = result;
+            return cmd;
+        }
+        public static implicit operator string[](CmdRequest request)
+        {
+            return request.tokens;
+        }
+        public object CallerAgent;
+        public OutputDelegate Output;
+
+        private IDictionary<string, object> _results;
+        public IDictionary<string, object> Results
+        {
+            get
+            {
+                if (_results == null)
                 {
-                    if (lastCapped)
+                    return ParamMap;
+                }
+                return _results;
+            }
+            set
+            {
+                if (_results == value) return;
+                if (_results == null)
+                {
+                    _results = value;
+                    return;
+                }
+                _results = value;
+
+            }
+        }
+
+        public CmdRequest(string verb, string args, object callerIDORZero, OutputDelegate writeLine, ParseInfo command)
+            : base(args)
+        {
+            CmdFlags = CMDFLAGS.Inherit;
+            CmdName = verb;
+            CallerAgent = callerIDORZero;
+            Output = writeLine;
+            IsFFI = false;
+            KeysRequired = false;
+            SetCmdInfo(command);
+        }
+
+        private CmdRequest(IDictionary<string, object> dictionary)
+            : base((string[])null)
+        {
+            CmdFlags = CMDFLAGS.Inherit;
+            ParamMap = dictionary;
+        }
+
+        public CmdRequest AdvanceArgs(int used)
+        {
+            StartArg += used;
+            tokens = SplitOff(tokens, used);
+            ParseTokens();
+            return this;
+        }
+
+        public event OutputDelegate CallbackEvents;
+        public String Message
+        {
+            get
+            {
+                lock (SyncRoot)
+                {
+                    object res = GetValue(Results, "Message");
+                    if (res == null)
                     {
-                        newname.Append(CharToLower(c));
+                        return "no message";
                     }
-                    else
-                    {
-                        if (!lastUnderscored) newname.Append('_');
-                        newname.Append(CharToLower(c));
-                        lastCapped = true;
-                    }
-                    lastUnderscored = false;
-                }
-                else
-                {
-                    if (c == '_' || c == '-')
-                    {
-                        lastCapped = false;
-                        if (lastUnderscored) continue;
-                        newname.Append('_');
-                        lastUnderscored = true;
-                        continue;
-                    }
-                    newname.Append(CharToLower(c));
-                    lastCapped = false;
-                    lastUnderscored = false;
+                    return res.ToString();
                 }
             }
-            return newname.ToString();
+            set
+            {
+                string before = "" + this["Message"];
+                string newstring = before + "\n" + value;
+                Results["Message"] = newstring.TrimStart();
+            }
+        }
+        public bool InvalidArgs
+        {
+            get
+            {
+                return thisBool("InvalidArgs");
+            }
+            set
+            {
+                this["InvalidArgs"] = value;
+            }
+        }
+        public bool Success
+        {
+            get
+            {
+                return thisBool("Success");
+            }
+            set
+            {
+                this["Success"] = value;
+            }
+        }
+        public bool IsCompleted
+        {
+            get
+            {
+                return thisBool("IsCompleted");
+            }
+            set
+            {
+                this["IsCompleted"] = value;
+            }
+        }
+        /// <summary>
+        /// true if the asynchronous operation completed synchronously; otherwise, false.
+        /// </summary>
+        public bool CompletedSynchronously
+        {
+            get
+            {
+                return thisBool("CompletedSynchronously");
+            }
+            set
+            {
+                this["CompletedSynchronously"] = value;
+            }
         }
 
-        private static char CharToLower(char c)
+        public override string ToString()
         {
-            if (c == '-') return '_';
-            return Char.ToLower(c);
+            if (!Success) return string.Format("ERROR: {0}", Message);
+            return ToPostExecString();
         }
 
-        public static IDictionary<string, object> CreateMap()
+        /// <summary>
+        /// Gets a System.Threading.WaitHandle that is used to wait for an asynchronous operation to complete.
+        /// </summary>
+        /// A System.Threading.WaitHandle that is used to wait for an asynchronous operation to complete.
+        public WaitHandle AsyncWaitHandle
         {
-            return new Dictionary<string, object>();
+            get { throw new NotImplementedException(); }
+        }
+
+        /// <summary>
+        /// Gets a user-defined object that qualifies or contains information about an asynchronous operation.
+        /// </summary>
+        /// Returns: A user-defined object that qualifies or contains information about an asynchronous operation.
+        public object AsyncState
+        {
+            get
+            {
+                return this;/* throw new NotImplementedException();*/
+            }
         }
 
         public string ToPostExecString()
@@ -296,6 +483,23 @@ namespace MushDLR223.ScriptEngines
                 tw.WriteLine("" + kv.Key + " = " + kv.Value);
             }
             return tw.ToString();
+        }
+
+        public CmdResult Complete(string verb, string message, bool successOrFalse)
+        {
+            Success = successOrFalse;
+            if (!successOrFalse) this["FailureMessage"] = message;
+            string msg = "" + GetValue(Results, "Message");
+            if (string.IsNullOrEmpty(msg))
+            {
+                Message = message;
+            }
+            else if (!msg.Contains(message))
+            {
+                Message += message;
+            }
+            IsCompleted = true;
+            return this;
         }
     }
 }

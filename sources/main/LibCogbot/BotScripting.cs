@@ -485,7 +485,7 @@ namespace Cogbot
                 if (text.StartsWith("("))
                 {
                     InvokeJoin("ExecuteBotCommand " + text);
-                    return new ACmdResult(evalLispString(text).ToString(), true);
+                    return ACmdResult.Complete("evalLispString", evalLispString(text).ToString(), true);
                 }
 
                 text = text.Replace("\"", "").Replace("  ", " ");
@@ -513,23 +513,20 @@ namespace Cogbot
                     }
                     try
                     {
-                        CmdResult res;
-                        if (text.Length > verb.Length)
-                            return DoCmdAct(act, verb, text.Substring(verb.Length + 1), session, WriteLine, needResult);
-                        else
-                            return DoCmdAct(act, verb, "", session, WriteLine, needResult);
+                        string args = (text.Length > verb.Length) ? text.Substring(verb.Length + 1) : "";
+                        return DoCmdAct(act, verb, args, session, WriteLine, needResult);
                     }
                     catch (Exception e)
                     {
                         if (e is NoSuchCommand) throw e;
-                        LogException("ExecuteBotCommand " + text, e);
-                        return new ACmdResult("ExecuteBotCommand " + text + "cuased " + e, false);
+                        LogException("ExecuteBotCommand Command " + text, e);
+                        return ACmdResult.Complete("ExecuteBotCommand", "ExecuteBotCommand " + text + "cuased " + e, false);
                     }
                 }
                 else
                 {
                     if (WorldSystem == null || WorldSystem.SimAssetSystem == null)
-                        return new ACmdResult("no world yet for gesture", false);
+                        return ACmdResult.Complete(verb, "no world yet for gesture", false);
                     UUID assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Gesture);
                     if (assetID != UUID.Zero) return ExecuteBotCommand("play " + assetID, session, WriteLine, needResult);
                     assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Unknown);
@@ -896,14 +893,16 @@ namespace Cogbot
         {
             var si = ScriptManager.LoadScriptInterpreter(scripttype, this, _LispTaskInterperter);
             object o = si.Read(scripttype, reader, WriteLine);
-            if (o is CmdResult) return (CmdResult)o;
-            if (o == null) return new ACmdResult("void", true);
-            if (si.Eof(o)) return new ACmdResult("EOF " + o, true);
+            if (o is CmdResult) return (CmdResult) o;
+            string verb = "ExecuteTask " + scripttype;
+            if (o == null) return ACmdResult.Complete(verb, "void", true);
+            if (si.Eof(o)) return ACmdResult.Complete(verb, "EOF " + o, true);
             o = si.Eval(o);
-            if (o is CmdResult) return (CmdResult)o;
-            if (o == null) return new ACmdResult("void", true);
-            if (si.Eof(o)) return new ACmdResult("EOF " + o, true);
-            return new ACmdResult("" + o, true);
+            if (o is CmdResult) return (CmdResult) o;
+            verb = "ExecuteTask " + o;
+            if (o == null) return ACmdResult.Complete(verb, "void", true);
+            if (si.Eof(o)) return ACmdResult.Complete(verb, "EOF " + o, true);
+            return ACmdResult.Complete(verb, "" + o, true);
         }
 
         public string DoHttpGet(string url)
