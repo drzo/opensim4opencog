@@ -28,7 +28,6 @@ namespace Cogbot.Actions.Inventory.Shell
         {
             Manager = Client.Inventory;
             Inventory = Manager.Store;
-            StringBuilder result = new StringBuilder();
 
             InventoryFolder rootFolder = Inventory.RootFolder;
             int found = 0;
@@ -65,7 +64,7 @@ namespace Cogbot.Actions.Inventory.Shell
             return Success("remed=" + remed + " items=" + items + " total=" + found); ;
         }
 
-        void PrintFolder(InventoryFolder f, StringBuilder result, int indent)
+        void PrintFolder(InventoryFolder f, OutputDelegate result, int indent)
         {
             List<InventoryBase> contents = Manager.FolderContents(f.UUID, Client.Self.AgentID,
                 true, true, InventorySortOrder.ByName, 10000);
@@ -74,7 +73,7 @@ namespace Cogbot.Actions.Inventory.Shell
             {
                 foreach (InventoryBase i in contents)
                 {
-                    result.AppendFormat("{0}{1} ({2})\n", new String(' ', indent * 2), i.Name, i.UUID);
+                    result("{0}{1} ({2})\n", new String(' ', indent * 2), i.Name, i.UUID);
                     if (i is InventoryFolder)
                     {
                         InventoryFolder folder = (InventoryFolder)i;

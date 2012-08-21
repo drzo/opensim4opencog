@@ -21,8 +21,11 @@ namespace Cogbot.Actions.Money
 
         public override CmdResult ExecuteRequest(CmdRequest args)
 		{
-			if (fromAgentID == UUID.Zero)
-				return Failure("Unable to send money to console.  This command only works when IMed.");
+            var fromAgentID = CogbotHelpers.NonZero((UUID)BotClient.SessionToCallerId(args.CallerAgent), UUID.Zero);
+            if (fromAgentID == UUID.Zero)
+                return Failure("Unable to send money to console.  This command only works when IMed.");
+            if (fromAgentID == Client.Self.AgentID)
+                return Failure("Unable to send money to self.");
 
 		    int amount = Client.Self.Balance;
 		    Client.Self.GiveAvatarMoney(fromAgentID, Client.Self.Balance, "BotClient.GiveAll");

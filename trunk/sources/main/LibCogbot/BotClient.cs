@@ -170,6 +170,15 @@ namespace Cogbot
                 botCommandThreads.Add(newAAbortable);
             }
         }
+        public void AddThread(AAbortable newAAbortable)
+        {
+            newAAbortable.AddFinalizer(RemoveThread);
+            newAAbortable.Owner = this;
+            lock (botCommandThreads)
+            {
+                botCommandThreads.Add(newAAbortable);
+            }
+        }
 
         public void RemoveThread(Thread thread)
         {

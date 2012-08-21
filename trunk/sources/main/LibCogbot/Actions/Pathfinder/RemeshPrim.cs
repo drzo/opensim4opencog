@@ -49,7 +49,7 @@ namespace Cogbot.Actions.Pathfinder
                 Cogbot.WorldPathSystem.MeshingQueue.Enqueue(SimRegion.BakeRegions);
             }
 
-            return TheBotClient.ExecuteCommand("meshinfo", fromAgentID, WriteLine, args.CmdFlags);
+            return TheBotClient.ExecuteCommand("meshinfo", args.CallerAgent, args.Output, args.CmdFlags);
         }
     }
 }

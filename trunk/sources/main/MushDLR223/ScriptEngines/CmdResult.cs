@@ -7,7 +7,16 @@ using System.Threading;
 
 namespace MushDLR223.ScriptEngines
 {
-    public class CmdResult : IAsyncResult
+    public interface CmdResult
+    {
+        bool Success { get; set; }
+        bool IsCompleted { get; set; }
+        bool InvalidArgs { get; set; }
+        bool CompletedSynchronously { get; }
+        string Message { get; set; }
+        string ToPostExecString();
+    }
+    public class ACmdResult : IAsyncResult, CmdResult
     {
         static public Dictionary<string, Type> ResultTypes = new Dictionary<string, Type>();
         public IDictionary<string, object> Results;
@@ -123,26 +132,15 @@ namespace MushDLR223.ScriptEngines
         {
             get { return Results; }
         }
-        public CmdResult(string usage, bool b, IDictionary<string, object> resholder)
+
+        public ACmdResult(string message, bool passFail)
         {
-            Results = resholder;
-            Message = usage;
-            Success = b;
+            Results = ACmdResult.CreateMap();
+            Message = message;
+            Success = passFail;
             IsCompleted = true;
             CompletedSynchronously = true;
             InvalidArgs = false;
-        }
-        public CmdResult(IDictionary<string, object> resholder)
-        {
-            Results = resholder;
-            Success = false;
-            IsCompleted = false;
-            CompletedSynchronously = false;
-            InvalidArgs = false;
-        }
-        public CmdResult(string param1, bool param2)
-            : this(param1, param2, new Dictionary<string, object>())
-        {
         }
         public override string ToString()
         {

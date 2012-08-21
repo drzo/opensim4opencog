@@ -186,15 +186,30 @@ namespace MushDLR223.Utilities
         #endregion
         public bool MatchesId(string id)
         {
-            return ((Name.ToLower()) + " ").StartsWith(id.ToLower() + " ");
+            return TaskQueueHandler.MatchesIdExtracted(id, Name);
+        }
+
+        public void AddFinalizer(Action<Abortable> fin)
+        {
+            var add = OnDeath;
+            OnDeath = (o) =>
+                          {
+                              OnDeath(o);
+                              fin(o);
+                          };
         }
     }
 
     public class TaskQueueHandler : IDisposable, IOwned, Abortable
     {
+        public static bool MatchesIdExtracted(string id, string name)
+        {
+            if (string.IsNullOrEmpty(id)) return true;
+            return (" " + (name.ToLower()) + " ").Contains(" " + id.ToLower() + " ");
+        }
         public bool MatchesId(string id)
         {
-            return ((Name.ToLower()) + " ").StartsWith(id.ToLower() + " ");
+            return TaskQueueHandler.MatchesIdExtracted(id, Name);
         }
 
         public static readonly OutputDelegate errOutput = DLRConsole.SYSTEM_ERR_WRITELINE;

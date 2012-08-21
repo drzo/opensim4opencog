@@ -56,7 +56,7 @@ namespace Cogbot.Actions
                                                    {
                                                        try
                                                        {
-                                                           Client.ExecuteCommand(cmd, fromAgentID, WriteLine, args.CmdFlags);
+                                                           Client.ExecuteCommand(cmd, args.CallerAgent, WriteLine, args.CmdFlags);
                                                        }
                                                        catch (ThreadAbortException e)
                                                        {

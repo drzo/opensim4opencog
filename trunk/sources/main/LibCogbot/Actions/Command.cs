@@ -490,14 +490,37 @@ namespace Cogbot.Actions
             return res;
         }
 
+        public CmdRequest CurrentRequest
+        {
+            get
+            {
+                if (_currentRequest != null) return _currentRequest;
+                return _lastRequest;
+            }
+            set
+            {
+                _currentRequest = value;
+                _lastRequest = value;
+            }
+        }
+
+        [ThreadStatic]
+        private CmdRequest _currentRequest;
+        private CmdRequest _lastRequest;
+
+
         private IDictionary<string, object> _results;
         public IDictionary<string, object> Results
         {
             get
             {
-                if (_results == null) _results = CmdResult.CreateMap();
+                if (_results == null)
+                {
+                    return CurrentRequest.Results;
+                }
                 return _results;
             }
+            /*
             set
             {
                 if (_results == value) return;
@@ -508,13 +531,13 @@ namespace Cogbot.Actions
                 }
                 _results = value;
 
-            }
+            }*/
         }
 
 
 
         private OutputDelegate _writeLine;
-        public UUID CallerID = UUID.Zero;
+
         protected void WriteLine(string s, params object[] args)
         {
             if (s == null) return;
@@ -623,19 +646,6 @@ namespace Cogbot.Actions
         } // method: acceptInput
         */
 
-
-        /// <summary>
-        /// When set to true, think will be called.
-        /// </summary>
-        public bool Active;
-
-        /// <summary>
-        /// Called twice per second, when Command.Active is set to true.
-        /// </summary>
-        public virtual void Think()
-        {
-        }
-
         internal BotClient _mClient = null;
 
         public BotClient Client
@@ -704,11 +714,6 @@ namespace Cogbot.Actions
             }
         }
 
-        protected UUID fromAgentID
-        {
-            get { return CallerID; }
-        }
-
         public abstract CmdResult ExecuteRequest(CmdRequest args);
         public CmdResult ExecuteRequestSyn(CmdRequest args)
         {
@@ -718,9 +723,8 @@ namespace Cogbot.Actions
                 {
                     return Failure("Not yet logged in!");
                 }
-            } 
-            Results.Clear();
-            CallerID = CogbotHelpers.NonZero((UUID)args.CallerAgent, UUID.Zero);
+            }
+            CurrentRequest = args;
             success = failure = 0;
             var wlpre = this.WriteLineDelegate;
             this.WriteLineDelegate = args.Output;
@@ -832,14 +836,14 @@ namespace Cogbot.Actions
             {
                 message = Name + ": " + message;
             }
-            var cr = new CmdResult(message, tf, Results);
+            var cr = CurrentRequest.Complete(message, tf);
             LocalWL(message);
             return cr;
         }
         protected CmdResult SuccessOrFailure()
         {
-            var cr = new CmdResult(Name + " " + failure + " failures and " + success + " successes", failure == 0, Results);
-            LocalWL(cr.ToString());
+            var cr = CurrentRequest.Complete(Name + " " + failure + " failures and " + success + " successes", failure == 0);
+            LocalWL(cr.ToPostExecString());
             return cr;
         }
 

@@ -167,7 +167,7 @@ namespace AIMLBotModule
                     if (cmd.StartsWith("anim") || cmd.StartsWith("thread anim 4"))
                     {
                         AddAnimToNextResponse(sw.ToString());
-                        s = new CmdResult("", true);
+                        s = new ACmdResult("", true);
                     }
                     else
                     {

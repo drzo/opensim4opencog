@@ -67,6 +67,7 @@ namespace AIMLBotModule
         {
             try
             {
+                var fromAgentID = CogbotHelpers.NonZero((UUID)BotClient.SessionToCallerId(args.CallerAgent), UUID.Zero);
                 return Execute0(args, fromAgentID, WriteLine);
             }
             catch (Exception e)
