@@ -133,7 +133,7 @@ namespace Cogbot.Actions
                                    {
                                        try
                                        {
-                                           var res = Client.ExecuteCommand(cmd, fromAgentID, WriteLine,
+                                           var res = Client.ExecuteCommand(cmd, args.CallerAgent, args.Output,
                                                                        flags);
                                            if (result != null) result[0] = res;
                                        }

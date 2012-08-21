@@ -28,7 +28,7 @@ namespace Cogbot.Actions.System
             string botcmd = String.Join(" ", args, 0, args.Length).Trim();
             try
             {
-                Client.ExecuteCommand(botcmd, fromAgentID, WriteNothing, args.CmdFlags);
+                Client.ExecuteCommand(botcmd, args.CallerAgent, WriteNothing, args.CmdFlags);
             }
             catch (Exception e)
             {

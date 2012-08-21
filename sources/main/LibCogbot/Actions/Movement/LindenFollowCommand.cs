@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
@@ -10,7 +11,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Movement
 {
-    public class FollowCommand: Command, BotPersonalCommand
+    public class FollowCommand: Command, BotPersonalCommand, BotStatefullCommand
     {
         const float DISTANCE_BUFFER = 3.0f;
         uint targetLocalID = 0;
@@ -50,6 +51,7 @@ namespace Cogbot.Actions.Movement
             }
 		}
 
+        bool Active;
         bool Follow(string name)
         {
             foreach (Simulator sim in LockInfo.CopyOf(Client.Network.Simulators))
@@ -65,6 +67,7 @@ namespace Cogbot.Actions.Movement
                 {
                     targetLocalID = target.LocalID;
                     Active = true;
+                    EnsureRunning();
                     return true;
                 }
             }
@@ -79,7 +82,29 @@ namespace Cogbot.Actions.Movement
             return false;
         }
 
-		public override void Think()
+        private bool isDisposing = false;
+        private AAbortable ThinkThread;
+        private void EnsureRunning()
+        {
+            if (isDisposing || ThinkThread != null) return;
+            ThinkThread = new AAbortable(new Thread(SecondLoop) { Name = "LindenFollow" }, OnDeath);
+            TheBotClient.AddThread(ThinkThread);
+        }
+
+        private void OnDeath(Abortable obj)
+        {
+            ThinkThread = null;
+            EnsureRunning();
+        }
+
+        private void SecondLoop()
+        {
+            while (true)
+            {
+                Think();
+            }
+        }
+        public void Think()
 		{
             if (Active)
             {
@@ -125,8 +150,6 @@ namespace Cogbot.Actions.Movement
                     }
                 }
             }
-
-			base.Think();
 		}
 
         private void AlertMessageHandler(object sender, PacketReceivedEventArgs e)
@@ -141,5 +164,23 @@ namespace Cogbot.Actions.Movement
                 Logger.Log("FollowCommand: " + message, Helpers.LogLevel.Info, Client);
             }
         }
+
+        #region Implementation of IDisposable
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            isDisposing = true;
+            Client.Network.UnregisterCallback(PacketType.AlertMessage, AlertMessageHandler);
+            if (ThinkThread!=null)
+            {
+                ThinkThread.Abort();
+            }
+        }
+
+        #endregion
     }
 }

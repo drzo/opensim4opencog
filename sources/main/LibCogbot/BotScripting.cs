@@ -485,7 +485,7 @@ namespace Cogbot
                 if (text.StartsWith("("))
                 {
                     InvokeJoin("ExecuteBotCommand " + text);
-                    return new CmdResult(evalLispString(text).ToString(), true);
+                    return new ACmdResult(evalLispString(text).ToString(), true);
                 }
 
                 text = text.Replace("\"", "").Replace("  ", " ");
@@ -523,13 +523,13 @@ namespace Cogbot
                     {
                         if (e is NoSuchCommand) throw e;
                         LogException("ExecuteBotCommand " + text, e);
-                        return new CmdResult("ExecuteBotCommand " + text + "cuased " + e, false);
+                        return new ACmdResult("ExecuteBotCommand " + text + "cuased " + e, false);
                     }
                 }
                 else
                 {
                     if (WorldSystem == null || WorldSystem.SimAssetSystem == null)
-                        return new CmdResult("no world yet for gesture", false);
+                        return new ACmdResult("no world yet for gesture", false);
                     UUID assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Gesture);
                     if (assetID != UUID.Zero) return ExecuteBotCommand("play " + assetID, session, WriteLine, needResult);
                     assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Unknown);
@@ -554,13 +554,14 @@ namespace Cogbot
         static public CmdResult DoCmdAct(Command command, string verb, string args, 
             object callerSession, OutputDelegate del, CMDFLAGS needResult)
         {
-
-            var callerID = SessionToCallerId(callerSession);
+            
             string cmdStr = "ExecuteActBotCommand " + verb + " " + args;
-            var cmdr = new CmdRequest(verb, args, callerID, del, command.GetCmdInfo());
-            return DoCmdAct(command, () => command.ExecuteRequestSyn(cmdr) ,cmdStr, needResult);
+            callerSession = SessionToCallerId(callerSession);
+            var cmdr = new CmdRequest(verb, args, callerSession, del, command.GetCmdInfo());
+            return DoCmdAct(command, () => command.ExecuteRequestSyn(cmdr), cmdr, cmdStr, needResult) ?? cmdr;
         }
-        static public CmdResult DoCmdAct(Command command, Func<CmdResult> task, string debugStr, CMDFLAGS flags)
+
+        static public CmdResult DoCmdAct(Command command, Func<CmdResult> task, CmdRequest req, string debugStr, CMDFLAGS flags)
         {
             BotClient robot = command._mClient;
             string sync = command.TaskQueueNameOrNull;
@@ -896,13 +897,13 @@ namespace Cogbot
             var si = ScriptManager.LoadScriptInterpreter(scripttype, this, _LispTaskInterperter);
             object o = si.Read(scripttype, reader, WriteLine);
             if (o is CmdResult) return (CmdResult)o;
-            if (o == null) return new CmdResult("void", true);
-            if (si.Eof(o)) return new CmdResult("EOF " + o, true);
+            if (o == null) return new ACmdResult("void", true);
+            if (si.Eof(o)) return new ACmdResult("EOF " + o, true);
             o = si.Eval(o);
             if (o is CmdResult) return (CmdResult)o;
-            if (o == null) return new CmdResult("void", true);
-            if (si.Eof(o)) return new CmdResult("EOF " + o, true);
-            return new CmdResult("" + o, true);
+            if (o == null) return new ACmdResult("void", true);
+            if (si.Eof(o)) return new ACmdResult("EOF " + o, true);
+            return new ACmdResult("" + o, true);
         }
 
         public string DoHttpGet(string url)

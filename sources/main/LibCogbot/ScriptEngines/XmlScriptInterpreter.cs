@@ -573,7 +573,7 @@ namespace Cogbot.ScriptEngines
             }
             finally
             {
-                res = res ?? new CmdResult("cannot process " + cmd, false);
+                res = res ?? new ACmdResult("cannot process " + cmd, false);
                 outputDelegate("\n</output>");
                 outputDelegate("<message>" + res.Message + "</message>"); //string
                 outputDelegate("<success>" + res.Success + "</success>"); //True/False

@@ -23,10 +23,10 @@ namespace Cogbot.Actions.Communication
             Category = CommandCategory.Communication;
             Parameters = CreateParams();
         }
-
+        bool Active;
         public override CmdResult ExecuteRequest(CmdRequest args)
-		{
-			if (!Active)
+        {
+            if (!Active)
 			{
 				Active = true;
                 Client.Self.ChatFromSimulator += Self_ChatFromSimulator;
@@ -38,7 +38,7 @@ namespace Cogbot.Actions.Communication
                 Client.Self.ChatFromSimulator -= Self_ChatFromSimulator;
 				return Success("Echoing is now off.");
 			}
-		}
+        }
 
         void Self_ChatFromSimulator(object sender, ChatEventArgs e)
         {
@@ -56,7 +56,8 @@ namespace Cogbot.Actions.Communication
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            
+            Active = false;
+            Client.Self.ChatFromSimulator -= Self_ChatFromSimulator;   
         }
 
         #endregion

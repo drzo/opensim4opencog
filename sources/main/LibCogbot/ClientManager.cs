@@ -330,9 +330,9 @@ namespace Cogbot
                 cmd = SingleInstance.GetCommand(verb, true);
                 request.Output = GlobalWriteLine;
             }
-            var result = request.Results = cmd.Results = request.Results ?? cmd.Results;
-            return BotClient.DoCmdAct(cmd, () => cmd.ExecuteRequestSyn(request), "execCmd " + verb, sync) ??
-                   new CmdResult(result);
+            var result = request.Results = request.Results ?? cmd.Results;
+            return BotClient.DoCmdAct(cmd, () => cmd.ExecuteRequestSyn(request), request, "execCmd " + verb, sync) ??
+                   (CmdResult) request;
         }
 
         public CmdResult ExecuteCommand(string text, object session, OutputDelegate WriteLine, CMDFLAGS needResult)
@@ -384,13 +384,13 @@ namespace Cogbot
                 }
             if (success == 0)
             {
-                return new CmdResult(res + " " + failure + " failures ", false, CmdResult.CreateMap());
+                return new ACmdResult(res + " " + failure + " failures ", false);
             }
             if (failure > 0)
             {
-                return new CmdResult(res + " " + failure + " failures and " + success + " successes", false, CmdResult.CreateMap());
+                return new ACmdResult(res + " " + failure + " failures and " + success + " successes", false);
             }
-            return new CmdResult(res + " " + success + " successes", true, CmdResult.CreateMap());
+            return new ACmdResult(res + " " + success + " successes", true);
         }
 
         public CmdResult ExecuteSystemCommand(string text, object session, OutputDelegate WriteLine, CMDFLAGS needResult)
@@ -416,7 +416,7 @@ namespace Cogbot
                 if (e is NoSuchCommand) throw e;
                 string newVariable = "ClientManager: " + text + " caused " + e;
                 WriteLine(newVariable);
-                return new CmdResult(newVariable, false, CmdResult.CreateMap());
+                return new ACmdResult(newVariable, false);
             }
         }
 

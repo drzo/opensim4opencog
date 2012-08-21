@@ -45,7 +45,7 @@ namespace Cogbot.Actions.Voice
         {
             BotClient Client = TheBotClient;
             if (!IsVoiceManagerRunning()) 
-                return Failure(String.Format("VoiceManager not running for {0}", fromAgentID));
+                return Failure(String.Format("VoiceManager not running for {0}", Client));
 
             if (!Client.VoiceManager.RequestParcelVoiceInfo()) 
             {
