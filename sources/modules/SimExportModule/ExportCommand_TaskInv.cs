@@ -6,8 +6,9 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.Actions;
+using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -15,10 +16,9 @@ using OpenMetaverse.Assets;
 
 using MushDLR223.ScriptEngines;
 using PathSystem3D.Mesher;
-using ExportCommand = cogbot.Actions.SimExport.ImportCommand;
-using UUIDFactory = cogbot.Listeners.CogbotHelpers;
+using ExportCommand = SimExportModule.ImportCommand;
 
-namespace cogbot.Actions.SimExport
+namespace SimExportModule
 {
 
     public partial class ExportTaskAsset
@@ -98,10 +98,10 @@ namespace cogbot.Actions.SimExport
                     return;
                 }
                 string[] lr = eMessage.Split(new[] { ',' });
-                var objid = UUIDFactory.GetUUID(lr[0]);
+                var objid = new UUID(lr[0]);
                 Importing.MustExport.Add(objid);
                 lock (fileWriterLock) File.WriteAllText(dumpDir + objid + ".objectAsset", eMessage);
-                var exportPrimID = UUIDFactory.GetUUID(lr[1]);
+                var exportPrimID = new UUID(lr[1]);
                 var objectNumber = int.Parse(lr[2]);
                 string exportFile = dumpDir + exportPrimID + "." + objectNumber + ".rti";              
                 lock (fileWriterLock)
@@ -112,7 +112,7 @@ namespace cogbot.Actions.SimExport
                         if (rt.Length > 30)
                         {
                             lr = rt.Split(new[] { ',' });
-                            var oldobjid = UUIDFactory.GetUUID(lr[0]);
+                            var oldobjid = new UUID(lr[0]);
                             KillInWorldAndDisk(oldobjid);
                         }
                     }
@@ -485,7 +485,7 @@ namespace cogbot.Actions.SimExport
             UUID into = UUID.Zero;
             if (!settings.Contains("info"))
             {
-                into = UUIDFactory.NonZero(FolderCalled("TaskInvKilled"),
+                into = CogbotHelpers.NonZero(FolderCalled("TaskInvKilled"),
                                            Client.Inventory.FindFolderForType(AssetType.TrashFolder));
             }
             int count = 0;
@@ -497,7 +497,7 @@ namespace cogbot.Actions.SimExport
                     if (count > 1) if (settings.Contains("once")) return;
                     string filetext = File.ReadAllText(file);
                     string[] csv = filetext.Split(new[] { ',' });
-                    UUID assetID = UUIDFactory.GetUUID(csv[2]);
+                    UUID assetID = new UUID(csv[2]);
                     uint localID = uint.Parse(csv[0]);
                     var O1 = WorldObjects.GetSimObjectFromUUID(assetID);
                     if (O1 == null)
@@ -545,9 +545,9 @@ namespace cogbot.Actions.SimExport
                     {
                         string filetext = File.ReadAllText(file);
                         string[] csv = filetext.Split(new[] { ',' });
-                        UUID assetID = UUIDFactory.GetUUID(csv[2]);
+                        UUID assetID = new UUID(csv[2]);
                         Importing.KillID(assetID);
-                        UUID holderID = UUIDFactory.GetUUID(csv[3]);
+                        UUID holderID = new UUID(csv[3]);
                         string exportFile = dumpDir + "" + holderID + ".task";
                         if (File.Exists(exportFile))
                         {

@@ -1,16 +1,22 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
-using System.Text;
+using System.Reflection;
+using System.Threading;
+using System.IO;
 using System.Xml;
+using Cogbot;
+using Cogbot.Actions;
+using Cogbot.World;
+using MushDLR223.Utilities;
 using OpenMetaverse;
-
-using MushDLR223.ScriptEngines;
+using OpenMetaverse.Assets;
 using OpenMetaverse.StructuredData;
 
-namespace cogbot.Actions.SimExport
+using MushDLR223.ScriptEngines;
+
+namespace SimExportModule
 {
     public partial class OarFile
     {

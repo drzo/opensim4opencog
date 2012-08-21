@@ -5,8 +5,9 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.Actions;
+using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -14,9 +15,9 @@ using OpenMetaverse.Assets;
 
 using MushDLR223.ScriptEngines;
 using PathSystem3D.Mesher;
-using ExportCommand = cogbot.Actions.SimExport.ImportCommand;
+using ExportCommand = SimExportModule.ImportCommand;
 
-namespace cogbot.Actions.SimExport
+namespace SimExportModule
 {
     public class LinkSetBuffer
     {
@@ -131,11 +132,11 @@ namespace cogbot.Actions.SimExport
         public bool ExportPrim(BotClient Client, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
         {
             uint localID = exportPrim.LocalID;
-            WorldObjects.EnsureRequested(settings.CurSim, localID + 1);
+            WorldObjects.EnsureRequested(localID + 1, settings.CurSim);
             try
             {
                 Client.Objects.SelectObject(settings.CurSim, localID);
-                WorldObjects.EnsureRequested(settings.CurSim, localID);
+                WorldObjects.EnsureRequested(localID, settings.CurSim);
                 return ExportPrim0(Client, exportPrim, Failure, settings);
             }
             finally
@@ -459,7 +460,7 @@ namespace cogbot.Actions.SimExport
                     Vector3 pp = prim.Position;
                     Quaternion pr = prim.Rotation;
                     //prim = prim.Clone(); 
-                    OSDMap primOSD = prim.GetTotalOSD();
+                    OSDMap primOSD = (OSDMap) prim.GetOSD();
                     if (prim.ParentID != 0)
                     {
                         var parent = WorldSystem.GetLibOMVHostedPrim(prim.ParentID, settings.CurSim, false);
@@ -544,7 +545,7 @@ namespace cogbot.Actions.SimExport
 
         }
 
-        private TaskQueueHandler KillInWorldTask = new TaskQueueHandler("KillInWorldAndDisk");
+        private TaskQueueHandler KillInWorldTask = new TaskQueueHandler(null, "KillInWorldAndDisk");
         public void KillInWorldAndDisk(UUID oldobjid)
         {
             if (CogbotHelpers.IsNullOrZero(oldobjid)) return;
@@ -560,7 +561,8 @@ namespace cogbot.Actions.SimExport
                 SimObject O = GetSimObjectFromUUID(oldobjid);
                 if (O != null)
                 {
-                    UUID into = FolderCalled("TaskInvKilled") ?? Client.Inventory.FindFolderForType(AssetType.TrashFolder);
+                    UUID into = CogbotHelpers.NonZero(FolderCalled("TaskInvKilled"),
+                                                      Client.Inventory.FindFolderForType(AssetType.TrashFolder));
                     Client.Inventory.RequestDeRezToInventory(O.LocalID, DeRezDestination.TrashFolder, into,
                                      UUID.Random());
                     return;

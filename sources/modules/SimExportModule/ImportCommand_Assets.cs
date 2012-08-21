@@ -4,18 +4,19 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.IO;
-using cogbot.Actions.SimExport;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using System.Xml;
+using Cogbot;
+using Cogbot.Actions;
+using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.StructuredData;
-
 using MushDLR223.ScriptEngines;
-using UUIDFactory = cogbot.Listeners.CogbotHelpers;
+using PathSystem3D.Navigation;
 
-namespace cogbot.Actions.SimExport
+
+namespace SimExportModule
 {
     public partial class ImportCommand 
     {
@@ -220,7 +221,7 @@ namespace cogbot.Actions.SimExport
                     {
                         string data = File.ReadAllText(importProgress);
                         var sdata = data.Split(',');
-                        NewID = UUIDFactory.GetUUID(sdata[1]);
+                        NewID = new UUID(sdata[1]);
                         // NewLocalID = uint.Parse(sdata[1]);
                         RezRequested = true;
                     }
@@ -769,7 +770,7 @@ namespace cogbot.Actions.SimExport
         static public UUID GetMissingFiller(AssetType type)
         {
             string id = "40400000-0404-0404-0404-0000000000" + String.Format("{0:X2}", (sbyte)type);
-            return UUIDFactory.GetUUID(id);
+            return new UUID(id);
         }
     }
 }

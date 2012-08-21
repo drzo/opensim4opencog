@@ -5,18 +5,18 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.Actions;
+using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse.Assets;
 
 using MushDLR223.ScriptEngines;
-using PathSystem3D.Mesher;
-using ExportCommand = cogbot.Actions.SimExport.ImportCommand;
+using ExportCommand = SimExportModule.ImportCommand;
 
-namespace cogbot.Actions.SimExport
+namespace SimExportModule
 {
     public partial class ExportCommand : Command, RegionMasterCommand
     {
@@ -189,7 +189,7 @@ namespace cogbot.Actions.SimExport
             simInfoMap["KilledObjects"] = true;
             var exceptFor = new HashSet<object>() { typeof(IList), typeof(IDictionary), typeof(object) };
             OSD.AddObjectOSD0(CurSim.Stats, simInfoMap, typeof(Simulator.SimStats), exceptFor, true, prefixFP);
-            OSD.AddObjectOSD0(CurSim.SharedData, simInfoMap, typeof(Simulator.SimPooledData), exceptFor, true, prefixFP);
+           //@todo OSD.AddObjectOSD0(CurSim.SharedData, simInfoMap, typeof(Simulator.SimPooledData), exceptFor, true, prefixFP);
             OSD.AddObjectOSD0(CurSim, simInfoMap, typeof(Simulator), exceptFor, true, prefixFP);
             string output = OSDParser.SerializeLLSDXmlString(simInfoMap);
             {
@@ -309,7 +309,7 @@ namespace cogbot.Actions.SimExport
         }
         public void SaveTerrainRaw32(string path)
         {
-            var patches = Client.Network.CurrentSim.SharedData.Terrain;
+            var patches = Client.Network.CurrentSim.Terrain;
             if (patches != null)
             {
                 int count = 0;
