@@ -48,10 +48,11 @@ namespace RTParser.Web
 
         public CmdResult ExecuteCommand(string s, object session, OutputDelegate outputDelegate, CMDFLAGS needResult)
         {
+            string verb = GetType().Name;
             StringWriter sw = new StringWriter();
-            if (s == null) return new ACmdResult("null cmd", false);
+            if (s == null) return ACmdResult.Complete(verb, "null cmd", false);
             s = s.Trim();
-            if (s == "") return new ACmdResult("empty cmd", false);
+            if (s == "") return ACmdResult.Complete(verb, "empty cmd", false);
             if (TheBot.useServitor)
             {
                 TheBot.updateRTP2Sevitor();
@@ -101,7 +102,7 @@ namespace RTParser.Web
                     if (outputDelegate != null) outputDelegate(res);
                     WriteLine(res);
                 }
-                return new ACmdResult(res, r);
+                return ACmdResult.Complete(verb, res, r);
 
             }
             else
@@ -123,7 +124,7 @@ namespace RTParser.Web
                 //res = res.Replace("menevalue=", "mene value=");
             if (outputDelegate != null) outputDelegate(res);
             WriteLine(res);
-            return new ACmdResult(res, r);
+            return ACmdResult.Complete(verb, res, r);
             }
         }
 

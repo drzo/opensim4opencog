@@ -448,8 +448,8 @@ namespace Cogbot
             }
             //if (Dialog != InstantMessageDialog.MessageFromAgent && Dialog != InstantMessageDialog.MessageFromObject)
             {
-                string debug = String.Format("{0} {1} {2} {3}: {4}",
-                                             groupIM ? "GroupIM" : "IM", Dialog, Type, perms,
+                string debug = String.Format("{0} {1} {2} {3} {4} {5}: {6}",
+                                             groupIM ? "GroupIM" : "IM", Dialog, Type, perms, FromAgentID, FromAgentName,
                                              Helpers.StructToString(origin));
                 if (!displayedMessage)
                 {

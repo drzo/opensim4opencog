@@ -836,13 +836,13 @@ namespace Cogbot.Actions
             {
                 message = Name + ": " + message;
             }
-            var cr = CurrentRequest.Complete(message, tf);
+            var cr = CurrentRequest.Complete(Name, message, tf);
             LocalWL(message);
             return cr;
         }
         protected CmdResult SuccessOrFailure()
         {
-            var cr = CurrentRequest.Complete(Name + " " + failure + " failures and " + success + " successes", failure == 0);
+            var cr = CurrentRequest.Complete(Name, Name + " " + failure + " failures and " + success + " successes", failure == 0);
             LocalWL(cr.ToPostExecString());
             return cr;
         }

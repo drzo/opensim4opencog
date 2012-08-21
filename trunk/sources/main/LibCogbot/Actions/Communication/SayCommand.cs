@@ -68,7 +68,7 @@ namespace Cogbot.Actions.Communication
             {
                 TheBotClient.Talk(text, channel, ChatType.Normal);
             }
-            return args.Complete("said: " + text, true);
+            return args.Complete(Name, "said: " + text, true);
         }
     }
 }
