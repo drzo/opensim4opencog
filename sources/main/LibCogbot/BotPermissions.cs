@@ -111,16 +111,37 @@ namespace Cogbot
                         return bp;
                     }
             }
-            return BotPermissions.Stranger;
+            else if (Friends.FriendList != null)
+            {
+                FriendInfo fi;
+                if (Friends.FriendList.TryGetValue(uuid, out fi))
+                {
+                    BotPermissions start = RecognizedFriendSecurityLevel;
+                    if (fi.CanModifyMyObjects)
+                    {
+                        start |= BotPermissions.Trusted;
+                    }
+                    if (!fi.CanSeeMeOnMap)
+                    {
+                        start |= BotPermissions.Friend;
+                    }
+                    return start;
+                }
+            }
+            else if (GroupMembers != null && GroupMembers.ContainsKey(uuid))
+            {
+                return RecognizedGroupSecurityLevel;
+            }
+            return StrangerSecurityLevel;
         }
+
+        public BotPermissions RecognizedFriendSecurityLevel = BotPermissions.Friend;
+        public BotPermissions RecognizedGroupSecurityLevel = BotPermissions.Group;
+        public BotPermissions StrangerSecurityLevel = BotPermissions.Stranger;
         
         private BotPermissions GetSecurityLevel(InstantMessage im)
         {
             BotPermissions perms = GetSecurityLevel(im.FromAgentID, im.FromAgentName);
-            if (im.Dialog==InstantMessageDialog.InventoryOffered)
-            {
-                
-            }
             return perms;
         }
 
@@ -207,22 +228,17 @@ namespace Cogbot
             UUID RegionID, Vector3 Position,
             InstantMessageDialog Dialog, ChatType Type, EventArgs origin)
         {
-            bool IsOwner = (Type == ChatType.OwnerSay);
             if (Dialog == InstantMessageDialog.GroupNotice)
             {
                 GroupIM = true;
             }
 
-            // Received an IM from someone that is authenticated
-            if (FromAgentID == MasterKey || FromAgentName == MasterName)
-            {
-                IsOwner = true;
-            }
             BotPermissions perms = GetSecurityLevel(FromAgentID, FromAgentName);
 
-            if (perms == BotPermissions.Owner)
+            // Received an IM from someone that is authenticated
+            if (Type == ChatType.OwnerSay || FromAgentID == MasterKey || FromAgentName == MasterName)
             {
-                IsOwner = true;
+                perms |= BotPermissions.Owner;
             }
 
             bool displayedMessage = false;
@@ -248,7 +264,7 @@ namespace Cogbot
                 case InstantMessageDialog.MessageBox:
                     break;
                 case InstantMessageDialog.GroupInvitation:
-                    if (IsOwner)
+                    if ((perms & BotPermissions.AcceptGroupAndFriendRequests) != 0)
                     {
                         string groupName = Message;
                         int found = groupName.IndexOf("Group:");
@@ -299,7 +315,7 @@ namespace Cogbot
                     break;
                 case InstantMessageDialog.Lure911:
                 case InstantMessageDialog.RequestTeleport:
-                    if (IsOwner)
+                    if ((perms & BotPermissions.AcceptTeleport) != 0)
                     {
                         TheSimAvatar.StopMoving();
                         if (RegionID != UUID.Zero)
@@ -348,7 +364,7 @@ namespace Cogbot
                 case InstantMessageDialog.GroupNoticeRequested:
                     break;
                 case InstantMessageDialog.FriendshipOffered:
-                    if (IsOwner)
+                    if ((perms & BotPermissions.AcceptGroupAndFriendRequests) != 0)
                     {
                         DisplayNotificationInChat("Accepting Friendship from " + FromAgentName);
                         Friends.AcceptFriendship(FromAgentID, IMSessionID);
@@ -380,24 +396,26 @@ namespace Cogbot
                             whisper.currentSession = IMSessionID;
                         }
                     }
-                    if (IsOwner)
+                    if ((perms & BotPermissions.ExecuteCommands) != 0)
                     {
                         OutputDelegate WriteLine;
                         if (origin is InstantMessageEventArgs)
                         {
-                            WriteLine = new OutputDelegate((string text, object[] ps) =>
-                            {
-                                string reply0 = DLRConsole.SafeFormat(text, ps);
-                                InstantMessage(FromAgentID, reply0, IMSessionID);
-                            });
+                            WriteLine = new OutputDelegate(
+                                (string text, object[] ps) =>
+                                    {
+                                        string reply0 = DLRConsole.SafeFormat(text, ps);
+                                        InstantMessage(FromAgentID, reply0, IMSessionID);
+                                    });
                         }
                         else
                         {
-                            WriteLine = new OutputDelegate((string text, object[] ps) =>
-                            {
-                                string reply0 = DLRConsole.SafeFormat(text, ps);
-                                Talk(reply0, 0, Type);
-                            });
+                            WriteLine = new OutputDelegate(
+                                (string text, object[] ps) =>
+                                    {
+                                        string reply0 = DLRConsole.SafeFormat(text, ps);
+                                        Talk(reply0, 0, Type);
+                                    });
                         }
                         string cmd = Message;
                         CMDFLAGS needResult = CMDFLAGS.Console;
@@ -428,10 +446,9 @@ namespace Cogbot
                 default:
                     break;
             }
-            if (Dialog != InstantMessageDialog.MessageFromAgent && Dialog != InstantMessageDialog.MessageFromObject)
+            //if (Dialog != InstantMessageDialog.MessageFromAgent && Dialog != InstantMessageDialog.MessageFromObject)
             {
-                string debug = String.Format("{0} {1} {2} {3} {4}: {5}",
-                                             IsOwner ? "IsOwner" : "NonOwner",
+                string debug = String.Format("{0} {1} {2} {3}: {4}",
                                              groupIM ? "GroupIM" : "IM", Dialog, Type, perms,
                                              Helpers.StructToString(origin));
                 if (!displayedMessage)
@@ -441,7 +458,7 @@ namespace Cogbot
                 }
             }
         }
-        public static bool AcceptAllInventoryItems = false;
+        public bool AcceptAllInventoryItems = false;
         public static bool HasPermission(BotPermissions them, BotPermissions testFor)
         {
             if ((them & BotPermissions.Ignore) != 0) return false;
@@ -461,21 +478,7 @@ namespace Cogbot
                 e.Accept = true;
                 return;
             }
-            if (_masterKey != UUID.Zero)
-            {
-                if (e.Offer.FromAgentID != _masterKey)
-                {
-                    e.Accept = false;
-                    return;
-                }
-            }
-            else if (GroupMembers != null && !GroupMembers.ContainsKey(e.Offer.FromAgentID))
-            {
-                e.Accept = false;
-                return;
-            }
-
-            e.Accept = true;
+            e.Accept = false;
         }
     }
     /// <summary>
@@ -494,6 +497,7 @@ namespace Cogbot
         AcceptTeleport,
 
         Stranger = ChatWith,
+        Group = Friend,
         Friend = AcceptInventory | ChatWith | AcceptGroupAndFriendRequests | AcceptTeleport,
         Trusted = Friend | ExecuteCommands,
         Owner = Trusted | ExecuteCode,
