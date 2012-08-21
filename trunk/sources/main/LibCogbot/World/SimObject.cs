@@ -2986,9 +2986,9 @@ namespace Cogbot.World
                 // set { _Mesh = value; }
             }
 
-            internal bool MadeNonPhysical = false;
-            internal bool MadeNonTemp = false;
-            internal bool MadePhantom = false;
+            public bool MadeNonPhysical = false;
+            public bool MadeNonTemp = false;
+            public bool MadePhantom = false;
             public bool IsMeshed { get; set; }
 
             public void RemoveCollisions()
