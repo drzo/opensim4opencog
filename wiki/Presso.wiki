@@ -43,6 +43,7 @@ Universe -
  * ABCL
  * pathfinding
  * IRC
+ * plugins
 
 
 NLP bundle
@@ -55,4 +56,3 @@ NLP bundle
   * BTML
   * AgentSpeak
   * Simians
-
