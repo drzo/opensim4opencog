@@ -2,25 +2,29 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
 {
-    class Help : Command, SystemApplicationCommand
+    internal class Help : Command, SystemApplicationCommand
     {
         public Help(BotClient Client)
             : base(Client)
         {
-            Description = "Print help on everything, or help on a topic string. The full help text is searched for the string.";
+        }
+
+        public override void MakeInfo()
+        {
+            Description =
+                "Print help on everything, or help on a topic string. The full help text is searched for the string.";
             Details = AddUsage("help", "shows the overview of all commands") +
-                    AddUsage("help moveto", "shows overvierw and usage/examples on the moveto command");
+                      AddUsage("help moveto", "shows overvierw and usage/examples on the moveto command");
             Parameters = CreateParams(
-                    Optional("topic", typeof(string), "Optional text to search for."));
+                Optional("topic", typeof (string), "Optional text to search for."));
 
             ResultMap = CreateParams(
-                 "message", typeof(string), "if success was false, the reason why",
-                 "success", typeof(bool), "true if outfit was worn");
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if outfit was worn");
 
             Category = CommandCategory.BotClient;
             Name = "help";
@@ -41,7 +45,7 @@ namespace Cogbot.Actions.System
             {
                 CommandInfo info = dictionary[action];
                 string overview = action.TrimEnd('s') + ": " + info.Description;
-                string s = overview + " " + info.usageString;
+                string s = overview + " " + info.Details;
                 if (!s.ToLower().Contains(mustHave))
                 {
                     continue;
@@ -50,10 +54,10 @@ namespace Cogbot.Actions.System
                 WriteLine("[HELP] " + overview);
                 if (detailed)
                 {
-                    WriteLine(info.usageString);
+                    WriteLine(info.Details);
                 }
             }
-            if (found == 0) WriteLine("I don't know about the verb " + args.objectPhrase + ".");
+            if (found == 0) WriteLine("I don't know about the verb " + args.GetString("topic") + ".");
             return Success("Help complete");
         }
 
@@ -117,7 +121,8 @@ namespace Cogbot.Actions.System
 
             foreach (var kvp in CommandTree)
             {
-                result.AppendFormat(Environment.NewLine + "* {0} Related Commands:" + Environment.NewLine, kvp.Key.ToString());
+                result.AppendFormat(Environment.NewLine + "* {0} Related Commands:" + Environment.NewLine,
+                                    kvp.Key.ToString());
                 int colMax = 0;
                 for (int i = 0; i < kvp.Value.Count; i++)
                 {
@@ -134,7 +139,8 @@ namespace Cogbot.Actions.System
             }
             result.AppendLine(Environment.NewLine + "Help [command] for usage/information");
 
-            return Success(result.ToString()); ;
+            return Success(result.ToString());
+            ;
         }
     }
 }

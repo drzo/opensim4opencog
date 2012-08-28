@@ -1,7 +1,6 @@
 using System;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
@@ -14,11 +13,11 @@ namespace Cogbot.Actions.System
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Invoke a botcmd without printing anything.";
             AddExample("quietly priminfo", "run priminfo and discard results");
-            AddVersion(CreateParams("command", typeof(BotCommand), "command to execute quietly"), Description);            
+            AddVersion(CreateParams("command", typeof (BotCommand), "command to execute quietly"), Description);
             Category = CommandCategory.BotClient;
         }
 
@@ -37,7 +36,7 @@ namespace Cogbot.Actions.System
             return Success(string.Empty);
         }
 
-        static void WriteNothing(string str, params object[] args)
+        private static void WriteNothing(string str, params object[] args)
         {
         }
     }

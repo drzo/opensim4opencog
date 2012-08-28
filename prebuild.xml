@@ -1465,6 +1465,36 @@
      </Files>
 </Project>
 
+
+  <Project name="SimExportModule" path="sources/modules/SimExportModule" type="Library" frameworkVersion="v3_5">
+     <Configuration name="Debug">
+       <Options>
+           <OutputPath>../../../bin/</OutputPath>
+           <XmlDocFile>SimExportModule.XML</XmlDocFile>
+       </Options>
+     </Configuration>
+     <Configuration name="Release">
+       <Options>
+           <OutputPath>../../../bin/</OutputPath>
+           <XmlDocFile>SimExportModule.XML</XmlDocFile>
+       </Options>
+     </Configuration>
+
+     <ReferencePath>../../../bin</ReferencePath>
+     <Reference name="Cogbot.Library" localCopy="false"/>
+     <Reference name="MushDLR223"  localCopy="false"/>
+     <Reference name="System.Windows.Forms" localCopy="false"/>
+     <Reference name="System.Data" localCopy="false"/>
+     <Reference name="OpenMetaverse" localCopy="false"/>
+     <Reference name="OpenMetaverse.StructuredData" localCopy="false"/>
+     <Reference name="OpenMetaverseTypes" localCopy="false"/>     
+     <Reference name="System" localCopy="false"/>
+     <Reference name="System.Core" localCopy="false"/>
+     <Files>
+         <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
+     </Files>
+</Project>
+
     <Project name="IrcRegionModule" path="sources/modules/IrcRegionModule" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>

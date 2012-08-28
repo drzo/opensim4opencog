@@ -5,16 +5,19 @@ using OpenMetaverse;
 using Cogbot.World;
 using System.Threading;
 using Cogbot; //using libsecondlife;
-
 using MushDLR223.ScriptEngines;
 using PathSystem3D.Navigation;
 
 namespace Cogbot.Actions
 {
-    class Use : Command, BotPersonalCommand
+    internal class Use : Command, BotPersonalCommand
     {
         public Use(BotClient Client)
             : base(Client)
+        {
+        }
+
+        public override void MakeInfo()
         {
             Description = "Interface to the OpenSims module. <a href='wiki/World'>Documentation Here</a>";
             Details = "DMILES TODO";
@@ -29,14 +32,8 @@ namespace Cogbot.Actions
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-            //   base.acceptInput(verb, args);
-            string to_op = "";
-            string objname = "";
-            if (args["to"].Length > 0)
-            {
-                to_op = args["to"];
-            }
-            objname = args.objectPhrase;
+            string to_op = args.GetString("verb");
+            string objname = args.GetString("target");
             if (objname == "")
             {
                 return Failure("$bot don't know what object to use.");
@@ -46,11 +43,11 @@ namespace Cogbot.Actions
                 SimObject objToUse;
                 if (WorldSystem.tryGetPrim(objname, out objToUse))
                 {
-                    if ((BotNeeds)TheSimAvatar["CurrentNeeds"] == null)
+                    if ((BotNeeds) TheSimAvatar["CurrentNeeds"] == null)
                     {
                         TheSimAvatar["CurrentNeeds"] = new BotNeeds(90.0f);
                     }
-                    SimTypeUsage usage = objToUse.Affordances.GetBestUse((BotNeeds)TheSimAvatar["CurrentNeeds"]);
+                    SimTypeUsage usage = objToUse.Affordances.GetBestUse((BotNeeds) TheSimAvatar["CurrentNeeds"]);
                     if (usage == null)
                     {
                         //usage = new MoveToLocation(TheSimAvatar, objToUse);
@@ -64,18 +61,22 @@ namespace Cogbot.Actions
             WriteLine("Trying to (" + to_op + ") with (" + objname + ")");
             TheBotClient.UseInventoryItem(to_op, objname);
             return Success("completed to (" + to_op + ") with (" + objname + ")");
-
         }
     }
 
-    class DoCommand : Command, BotPersonalCommand
+    internal class DoCommand : Command, BotPersonalCommand
     {
         public DoCommand(BotClient Client)
         {
             Name = GetType().Name.ToLower().Replace("command", "");
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Tell a bot to do an action on an object";
             Details = "Usage: " + Name + " [UseTypeName] [object]";
         }
+
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 2) return ShowUsage();
@@ -91,11 +92,15 @@ namespace Cogbot.Actions
         }
     }
 
-    class SimTypeCommand : Command, SystemApplicationCommand
+    internal class SimTypeCommand : Command, SystemApplicationCommand
     {
         public SimTypeCommand(BotClient Client)
         {
-            Name = GetType().Name.ToLower().Replace("command","");
+            Name = GetType().Name.ToLower().Replace("command", "");
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Manipulates the SimType typesystem";
             Details = "Usage: " + Name + " [ini|list|objects|uses|instances|load]";
         }
@@ -140,4 +145,3 @@ namespace Cogbot.Actions
         }
     }
 }
-

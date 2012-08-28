@@ -38,6 +38,7 @@ namespace Cogbot
             return tryGetPrim(args.tokens, out prim, out argsUsed);
         }
 
+        [TypeConversion]
         public List<SimObject> GetSingleArg(string[] splitted, out int argsUsed)
         {
             if (splitted.Length == 0)
@@ -199,6 +200,7 @@ namespace Cogbot
             return prim == null ? null : new List<SimObject>() { prim };
         }
 
+        [TypeConversion]
         public List<SimObject> GetPrimitives(string[] splitted, out int argsUsed)
         {
             List<string> missingOk = new List<string>();
@@ -254,6 +256,7 @@ namespace Cogbot
             return false;
         }
 
+        [TypeConversion]
         public SimObject GetSimObjectS(string[] args, out int argsUsed)
         {
             SimObject prim;
@@ -270,6 +273,7 @@ namespace Cogbot
             return prim;
         }
 
+        [TypeConversion]
         public static SimPosition GetSimPositionByName(string arg)
         {
             int argsUsed;
@@ -330,6 +334,7 @@ namespace Cogbot
             return more;
         }
 
+        [TypeConversion]
         private SimObject AsSimObject(object ov)
         {
             Object o = ov;
@@ -343,7 +348,10 @@ namespace Cogbot
             {
                 return GetSimObject(p);
             }
-
+            if (o is string[])
+            {
+                o = Parser.Rejoin((string[]) o, 0);
+            }
             if (o is UUID)
             {
                 oo = GetSimObjectFromUUID((UUID) o);
@@ -768,6 +776,7 @@ namespace Cogbot
             _defaultProvider.AddObjectGroup(selecteditems, desc, func);
         }
 
+        [TypeConversion]
         private List<SimObject> ColToList(ICollection starters)
         {
             if (starters == null) return null;
@@ -964,11 +973,20 @@ namespace Cogbot
                 argsUsed = 1;
                 return true;
             }
+
+            foreach (var ibf in client.BotInventory.GetFound(p, false))
+            {
+                target = ibf.UUID;
+                argsUsed = 1;
+                return true;
+            }
+
             argsUsed = 0;
             return false;
         }
 
 
+        [TypeConversion]
         public Simulator TryGetSim(string[] args, out int argsUsed)
         {
             if (args.Length > 0)
@@ -989,6 +1007,26 @@ namespace Cogbot
             }
             argsUsed = 0;
             return client.Network.CurrentSim;
+        }
+
+        [TypeConversion]
+        public static ICollection<SimAsset> GetAlist(string[] tokens)
+        {
+            ICollection<SimAsset> list = SimAssetStore.GetAssets(AssetType.Unknown);
+            ICollection<SimAsset> found = new List<SimAsset>();
+            lock (list)
+                foreach (SimAsset A in list)
+                {
+                    foreach (string s in tokens)
+                    {
+                        if (A.Matches(s))
+                        {
+                            found.Add(A);
+                            break;
+                        }
+                    }
+                }
+            return found;
         }
 
         private static object ConvertType(object o, Type type)
@@ -1048,8 +1086,18 @@ namespace Cogbot
             converted = false;
             return null;
         }
-
         private object ConvertType0(object o, Type type)
+        {
+            try
+            {
+                return ConvertType00(o, type);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+        private object ConvertType00(object o, Type type)
         {
             if (type == typeof(TimeSpan))
             {

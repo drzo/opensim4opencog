@@ -1,10 +1,8 @@
-
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Voice
@@ -18,10 +16,13 @@ namespace Cogbot.Actions.Voice
         public VoiceAccountCommand(BotClient testClient)
         {
             Name = "voiceaccount";
+            TheBotClient = testClient;
+        }
+
+        public override void MakeInfo()
+        {
             Description = "obtain voice account info. Usage: voiceaccount";
             Category = CommandCategory.Voice;
-
-            TheBotClient = testClient;
         }
 
         private bool registered = false;
@@ -45,9 +46,9 @@ namespace Cogbot.Actions.Voice
 
             if (!TheBotClient.VoiceManager.RequestProvisionAccount())
             {
-                return Failure( "RequestProvisionAccount failed. Not available for the current grid?");
+                return Failure("RequestProvisionAccount failed. Not available for the current grid?");
             }
-            ProvisionEvent.WaitOne(30 * 1000, false);
+            ProvisionEvent.WaitOne(30*1000, false);
 
             if (String.IsNullOrEmpty(VoiceAccount) && String.IsNullOrEmpty(VoicePassword))
             {
@@ -55,10 +56,10 @@ namespace Cogbot.Actions.Voice
             }
 
             return Success(String.Format("Voice Account for {0}: user \"{1}\", password \"{2}\"",
-                                 Client.Self.Name, VoiceAccount, VoicePassword));
+                                         Client.Self.Name, VoiceAccount, VoicePassword));
         }
 
-        void Voice_OnProvisionAccount(string username, string password)
+        private void Voice_OnProvisionAccount(string username, string password)
         {
             VoiceAccount = username;
             VoicePassword = password;

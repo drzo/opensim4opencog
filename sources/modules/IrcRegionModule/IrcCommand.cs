@@ -192,6 +192,10 @@ namespace IrcRegionModule
         {
             Name = "irc";
             if (bc != null) TheBC = bc;
+        }
+
+        public override void MakeInfo()
+        {
             Description = "connects to IRC. Usage: irc channel nick server";
             Category = CommandCategory.Other;            
             ircClient = new IrcClient();

@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Scripting
@@ -11,7 +10,12 @@ namespace Cogbot.Actions.Scripting
         public ScriptCommand(BotClient testClient)
         {
             Name = "Script";
-            Description = "Reads BotClient commands from a file. One command per line, arguments separated by spaces. Usage: script <filename> [type]";
+        }
+
+        public override void MakeInfo()
+        {
+            Description =
+                "Reads BotClient commands from a file. One command per line, arguments separated by spaces. Usage: script <filename> [type]";
             Category = CommandCategory.BotClient;
             Parameters = CreateParams(
                 new NamedParam("pathname", typeof (String), typeof (String)),
@@ -21,16 +25,16 @@ namespace Cogbot.Actions.Scripting
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
-                return ShowUsage();// " script [filename]";
+                return ShowUsage(); // " script [filename]";
 
             String scripttype = "bot";
             string filename = args[0];
             var fs = filename.Split(new[] {'.'});
-            if (fs.Length>1)
+            if (fs.Length > 1)
             {
                 scripttype = fs[1];
             }
-            if (args.Length>1)
+            if (args.Length > 1)
             {
                 scripttype = args[1];
             }
@@ -39,7 +43,7 @@ namespace Cogbot.Actions.Scripting
             FileStream f = File.OpenRead(filename);
             StreamReader r = new StreamReader(f);
             r.BaseStream.Seek(0, SeekOrigin.Begin);
-            return Client.ExecuteTask(scripttype, new StringReader(r.ReadToEnd()),WriteLine);
+            return Client.ExecuteTask(scripttype, new StringReader(r.ReadToEnd()), WriteLine);
         }
     }
 }

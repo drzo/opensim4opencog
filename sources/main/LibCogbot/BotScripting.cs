@@ -596,6 +596,7 @@ namespace Cogbot
                     if (robot != null) robot.InvokeJoin(debugStr);
                 }
             }
+            req.CmdFlags |= flags;
             if (sync != null)
             {
                 CmdResult[] res = new CmdResult[1];
@@ -966,6 +967,9 @@ namespace Cogbot
         }
 
         private object _RequesterLock = new object();
+        [ThreadStatic]
+        public Command CurrentCommand;
+
         public object SessionLock
         {
             get { return _RequesterLock; }
@@ -1068,6 +1072,7 @@ namespace Cogbot
                 if (kill)
                 {
                     tq.Abort();
+                    tq.Resume();
                 }
                 if (task != null) tq.Enqueue(thread);
                 debugName[0] += tq;

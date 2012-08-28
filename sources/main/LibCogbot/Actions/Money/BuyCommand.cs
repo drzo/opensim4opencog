@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Cogbot;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Money
@@ -12,20 +11,27 @@ namespace Cogbot.Actions.Money
         public BuyCommand(BotClient client)
         {
             Name = "Buy";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Buys from a prim. Usage: Buy [prim]";
             Category = CommandCategory.Objects;
-            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
+            Parameters = CreateParams("targets", typeof (PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-            if (args.Length==0) {
+            if (args.Length == 0)
+            {
                 return ShowUsage();
             }
-            int used;
-            int argsUsed;
-            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
-            if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
+
+            List<SimObject> PS;
+            if (!args.TryGetValue("targets", out PS) || IsEmpty(PS))
+            {
+                return Failure("Cannot find objects from " + args.GetString("targets"));
+            }
             foreach (var o in PS)
             {
                 //SimObject o = WorldSystem.GetSimObject(currentPrim);

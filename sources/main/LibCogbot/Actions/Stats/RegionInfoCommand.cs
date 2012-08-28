@@ -3,7 +3,6 @@ using System.Text;
 using Cogbot.Actions;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
@@ -11,12 +10,16 @@ namespace Cogbot.Actions.System
     public class RegionInfoCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
         public RegionInfoCommand(BotClient testClient)
-		{
-			Name = "regioninfo";
-			Description = "Prints out info about all the current region";
+        {
+            Name = "regioninfo";
+        }
+
+        public override void MakeInfo()
+        {
+            Description = "Prints out info about all the current region";
             Category = CommandCategory.Simulator;
             Parameters = CreateParams();
-		}
+        }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {

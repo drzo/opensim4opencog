@@ -4,14 +4,13 @@ using System.Threading;
 using Cogbot.World;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
 {
     public class CloneCommand : Command, BotPersonalCommand
     {
-        uint SerialNum = 2;
+        private uint SerialNum = 2;
 
         public CloneCommand(BotClient testClient)
         {
@@ -19,7 +18,7 @@ namespace Cogbot.Actions.Appearance
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Clone the appearance of a nearby avatar.";
             Details = AddUsage(Name + " [agent-spec]", "use $self of OLD self");

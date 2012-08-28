@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Objects
@@ -12,8 +11,12 @@ namespace Cogbot.Actions.Objects
         public DeRezCommand(BotClient testClient)
         {
             Name = "derez";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "De-Rezes a specified prim. " + "Usage: derez [prim-uuid]";
-            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
+            Parameters = CreateParams("targets", typeof (PrimSpec), "The targets of " + Name);
             Category = CommandCategory.Objects;
         }
 
@@ -26,9 +29,11 @@ namespace Cogbot.Actions.Objects
                 return ShowUsage();
             }
 
-            int argsUsed;
-            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
-            if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
+            List<SimObject> PS;
+            if (!args.TryGetValue("targets", out PS) || IsEmpty(PS))
+            {
+                return Failure("Cannot find objects from " + args.GetString("targets"));
+            } 
             foreach (var target in PS)
             {
                 WorldSystem.DeletePrim(target.Prim);

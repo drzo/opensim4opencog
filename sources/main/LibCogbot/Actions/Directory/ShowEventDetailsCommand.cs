@@ -2,12 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Search
 {
-    class ShowEventDetailsCommand : Command, GridMasterCommand
+    internal class ShowEventDetailsCommand : Command, GridMasterCommand
     {
         public ShowEventDetailsCommand(BotClient testClient)
         {
@@ -15,7 +14,7 @@ namespace Cogbot.Actions.Search
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Shows an Events details.";
             Details = AddUsage(Name + " [eventID]", "Display SL event with eventID");
@@ -27,7 +26,7 @@ namespace Cogbot.Actions.Search
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
-                return ShowUsage();// " showevent [eventID] (use searchevents to get ID)";
+                return ShowUsage(); // " showevent [eventID] (use searchevents to get ID)";
 
             Client.Directory.EventInfoReply += Directory_EventDetails;
             uint eventID;
@@ -39,17 +38,20 @@ namespace Cogbot.Actions.Search
             }
             else
             {
-                return ShowUsage();// " showevent [eventID] (use searchevents to get ID)";
+                return ShowUsage(); // " showevent [eventID] (use searchevents to get ID)";
             }
         }
 
-        void Directory_EventDetails(object sender, EventInfoReplyEventArgs e)
+        private void Directory_EventDetails(object sender, EventInfoReplyEventArgs e)
         {
             float x, y;
-            Helpers.GlobalPosToRegionHandle((float)e.MatchedEvent.GlobalPos.X, (float)e.MatchedEvent.GlobalPos.Y, out x, out y);
-            StringBuilder sb = new StringBuilder("secondlife://" + e.MatchedEvent.SimName + "/" + x + "/" + y + "/0" + Environment.NewLine);
+            Helpers.GlobalPosToRegionHandle((float) e.MatchedEvent.GlobalPos.X, (float) e.MatchedEvent.GlobalPos.Y,
+                                            out x, out y);
+            StringBuilder sb =
+                new StringBuilder("secondlife://" + e.MatchedEvent.SimName + "/" + x + "/" + y + "/0" +
+                                  Environment.NewLine);
             sb.AppendLine(e.MatchedEvent.ToString());
-            
+
             //sb.AppendFormat("       Name: {0} ({1})" + System.Environment.NewLine, e.MatchedEvent.Name, e.MatchedEvent.ID);
             //sb.AppendFormat("   Location: {0}/{1}/{2}" + System.Environment.NewLine, e.MatchedEvent.SimName, x, y);
             //sb.AppendFormat("       Date: {0}" + System.Environment.NewLine, e.MatchedEvent.Date);

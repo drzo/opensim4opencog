@@ -5,16 +5,15 @@ using System.Threading;
 using Cogbot;
 using Cogbot.Actions;
 using OpenMetaverse;
-
 // the Namespace used for all BotClient commands
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Search
 {
-    class SearchPlacesCommand : Command, GridMasterCommand
+    internal class SearchPlacesCommand : Command, GridMasterCommand
     {
-        AutoResetEvent waitQuery = new AutoResetEvent(false);
-        int resultCount;
+        private AutoResetEvent waitQuery = new AutoResetEvent(false);
+        private int resultCount;
 
         public SearchPlacesCommand(BotClient testClient)
         {
@@ -22,7 +21,7 @@ namespace Cogbot.Actions.Search
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Searches Places.";
             Details = AddUsage(Name + " [search text]", "searches " + Name.Replace("seaches", ""));
@@ -38,7 +37,7 @@ namespace Cogbot.Actions.Search
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
-                return ShowUsage();// " searchplaces [search text]";
+                return ShowUsage(); // " searchplaces [search text]";
 
             string searchText = string.Empty;
             for (int i = 0; i < args.Length; i++)
@@ -49,19 +48,23 @@ namespace Cogbot.Actions.Search
             StringBuilder result = new StringBuilder();
 
             EventHandler<PlacesReplyEventArgs> callback = delegate(object sender, PlacesReplyEventArgs e)
-            {
-                result.AppendFormat("Your search string '{0}' returned {1} results" + Environment.NewLine,
-                    searchText, e.MatchedPlaces.Count);
-                foreach (DirectoryManager.PlacesSearchData place in e.MatchedPlaces)
-                {
-                    result.AppendLine(place.ToString());
-                }
+                                                              {
+                                                                  result.AppendFormat(
+                                                                      "Your search string '{0}' returned {1} results" +
+                                                                      Environment.NewLine,
+                                                                      searchText, e.MatchedPlaces.Count);
+                                                                  foreach (
+                                                                      DirectoryManager.PlacesSearchData place in
+                                                                          e.MatchedPlaces)
+                                                                  {
+                                                                      result.AppendLine(place.ToString());
+                                                                  }
 
-                waitQuery.Set();
-            };
+                                                                  waitQuery.Set();
+                                                              };
 
             Client.Directory.PlacesReply += callback;
-            Client.Directory.StartPlacesSearch(searchText);            
+            Client.Directory.StartPlacesSearch(searchText);
 
             if (!waitQuery.WaitOne(20000, false) && Client.Network.Connected)
             {
@@ -70,7 +73,8 @@ namespace Cogbot.Actions.Search
 
             Client.Directory.PlacesReply -= callback;
 
-            return Success(result.ToString());;
+            return Success(result.ToString());
+            ;
         }
     }
 }

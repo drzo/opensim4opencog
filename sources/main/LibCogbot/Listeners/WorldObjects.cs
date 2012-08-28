@@ -1304,7 +1304,7 @@ namespace Cogbot
                                     ((fs & PrimFlags.CastShadows) != 0));
         }
 
-        public IEnumerable<SimObject> GetAllSimObjects()
+        public List<SimObject> GetAllSimObjects()
         {
             return SimObjects.CopyOf();
         }

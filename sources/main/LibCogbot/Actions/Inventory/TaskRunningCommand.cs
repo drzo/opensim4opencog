@@ -1,9 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Objects
@@ -13,8 +13,16 @@ namespace Cogbot.Actions.Objects
         public TaskRunningCommand(BotClient testClient)
         {
             Name = "taskrunning";
-            Description = "Retrieves or set IsRunning flag on items inside an object (task inventory). Usage: taskrunning objectID [[scriptName] true|false]";
+        }
+
+        public override void MakeInfo()
+        {
+            Description =
+                "Retrieves or set IsRunning flag on items inside an object (task inventory). Usage: taskrunning objectID [[scriptName] true|false]";
             Category = CommandCategory.Inventory;
+            Parameters = CreateParams(Optional("--set", typeof (string), "The value to " + Name),
+                                      Optional("--match", typeof (string), "The value to " + Name),
+                                      "targets", typeof (PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -23,61 +31,49 @@ namespace Cogbot.Actions.Objects
                 return ShowUsage(); // " taskrunning objectID [[scriptName] true|false]";
 
 
-            int argsUsed;
-            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
-            if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
+            List<SimObject> PS;
+            if (!args.TryGetValue("targets", out PS) || IsEmpty(PS as ICollection))
+            {
+                PS = WorldSystem.GetAllSimObjects();
+            }
 
+            string matching = args.GetString("match");
+            string tf = args.GetString("set").ToLower();
             foreach (var found in PS)
             {
-
                 uint objectLocalID = found.LocalID;
                 UUID objectID = found.ID;
 
 
-                List<InventoryBase> items = Client.Inventory.GetTaskInventory(objectID, objectLocalID, 1000 * 30);
+                List<InventoryBase> items = Client.Inventory.GetTaskInventory(objectID, objectLocalID, 1000*30);
 
                 //bool wantSet = false;
                 bool setTaskTo = false;
                 if (items != null)
                 {
                     string result = String.Empty;
-                    string matching = String.Empty;
                     bool setAny = false;
-                    if (args.Length > 1)
+                    if (tf == "true")
                     {
-                        matching = args[1];
-
-                        string tf;
-                        if (args.Length > 2)
-                        {
-                            tf = args[2];
-                        }
-                        else
-                        {
-                            tf = matching.ToLower();
-                        }
-                        if (tf == "true")
-                        {
-                            setAny = true;
-                            setTaskTo = true;
-                        }
-                        else if (tf == "false")
-                        {
-                            setAny = true;
-                            setTaskTo = false;
-                        }
-
+                        setAny = true;
+                        setTaskTo = true;
+                    }
+                    else if (tf == "false")
+                    {
+                        setAny = true;
+                        setTaskTo = false;
                     }
                     bool wasRunning = false;
 
                     EventHandler<ScriptRunningReplyEventArgs> callback;
                     using (AutoResetEvent OnScriptRunningReset = new AutoResetEvent(false))
                     {
-                        callback = ((s,e) =>
+                        callback = ((s, e) =>
                                         {
                                             if (e.ObjectID == objectID)
                                             {
-                                                result += String.Format(" IsMono: {0} IsRunning: {1}", e.IsMono, e.IsRunning);
+                                                result += String.Format(" IsMono: {0} IsRunning: {1}", e.IsMono,
+                                                                        e.IsRunning);
                                                 wasRunning = e.IsRunning;
                                                 OnScriptRunningReset.Set();
                                             }
@@ -94,7 +90,7 @@ namespace Cogbot.Actions.Objects
                             }
                             else
                             {
-                                InventoryItem item = (InventoryItem)items[i];
+                                InventoryItem item = (InventoryItem) items[i];
                                 AssetType assetType = item.AssetType;
                                 result += String.Format("[Item] Name: {0} Desc: {1} Type: {2}", item.Name,
                                                         item.Description,

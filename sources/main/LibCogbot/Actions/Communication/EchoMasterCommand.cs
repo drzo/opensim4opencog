@@ -3,50 +3,48 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Communication
 {
-    public class EchoMasterCommand: Command, BotSystemCommand, BotStatefullCommand, AsynchronousCommand
+    public class EchoMasterCommand : Command, BotSystemCommand, BotStatefullCommand, AsynchronousCommand
     {
         public EchoMasterCommand(BotClient testClient)
             : base(testClient)
         {
             Name = "echoMaster";
         }
-
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Repeat everything that master says from open channel to open channel.";
             Details = AddUsage("echomaster", "toggles this commnand on/off");
             Category = CommandCategory.Communication;
             Parameters = CreateParams();
         }
-        bool Active;
+
+        private bool Active;
+
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (!Active)
-			{
-				Active = true;
+            {
+                Active = true;
                 Client.Self.ChatFromSimulator += Self_ChatFromSimulator;
-				return Success("Echoing is now on.");
-			}
-			else
-			{
-				Active = false;
+                return Success("Echoing is now on.");
+            }
+            else
+            {
+                Active = false;
                 Client.Self.ChatFromSimulator -= Self_ChatFromSimulator;
-				return Success("Echoing is now off.");
-			}
+                return Success("Echoing is now off.");
+            }
         }
 
-        void Self_ChatFromSimulator(object sender, ChatEventArgs e)
+        private void Self_ChatFromSimulator(object sender, ChatEventArgs e)
         {
-            if (e.Message.Length > 0 &&
-                (Client.MasterKey == e.SourceID || (Client.MasterName == e.FromName && !Client.AllowObjectMaster)))
+            if (e.Message.Length > 0 && (Client.GetSecurityLevel(e.SourceID, e.FromName) & BotPermissions.IsMaster) != 0)
                 Client.Self.Chat(e.Message, 0, ChatType.Normal);
         }
-
 
         #region Implementation of IDisposable
 
@@ -57,7 +55,7 @@ namespace Cogbot.Actions.Communication
         public void Dispose()
         {
             Active = false;
-            Client.Self.ChatFromSimulator -= Self_ChatFromSimulator;   
+            Client.Self.ChatFromSimulator -= Self_ChatFromSimulator;
         }
 
         #endregion

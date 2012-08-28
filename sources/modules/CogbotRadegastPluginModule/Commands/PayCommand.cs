@@ -13,6 +13,10 @@ namespace Cogbot.Actions.Money
         public PayCommand(BotClient client)
         {
             Name = "GUIPay";
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Pays a prim. Usage: Pay [prim] [amount]";
             Category = CommandCategory.Money;
             Parameters = CreateParams("target", typeof(PrimSpec), "The target(s) of the " + Name,

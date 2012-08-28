@@ -5,7 +5,6 @@ using System.Text;
 using Cogbot;
 using OpenMetaverse;
 using Cogbot.World;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
@@ -18,16 +17,16 @@ namespace Cogbot.Actions.Appearance
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Print out information on a nearby avatars.";
             Details = AddUsage(Name + " [agent-spec]", "no prim-spec then use $self");
             Category = CommandCategory.Appearance;
-            Parameters = CreateParams(Optional("targets", typeof(AgentSpec), "the agent you wish to see " + Name));
+            Parameters = CreateParams(Optional("targets", typeof (AgentSpec), "the agent you wish to see " + Name));
             ResultMap = CreateParams(
-                "list", typeof(List<SimAvatar>), "list of present agents",
-                "message", typeof(string), "if success was false, the reason why",
-                "success", typeof(bool), "true if command was successful");
+                "list", typeof (List<SimAvatar>), "list of present agents",
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if command was successful");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -46,7 +45,7 @@ namespace Cogbot.Actions.Appearance
             AppendList("list", PS);
             SetResult("count", PS.Count);
             if (args.IsFFI) return SuccessOrFailure();
-            
+
             foreach (SimObject O in PS)
             {
                 Primitive foundAv = O.Prim;
@@ -63,7 +62,7 @@ namespace Cogbot.Actions.Appearance
                         if (foundAv.Textures.FaceTextures[i] != null)
                         {
                             Primitive.TextureEntryFace face = foundAv.Textures.FaceTextures[i];
-                            AvatarTextureIndex type = (AvatarTextureIndex)i;
+                            AvatarTextureIndex type = (AvatarTextureIndex) i;
 
                             output.AppendFormat("{0}: {1}", type, face.TextureID);
                             output.AppendLine();

@@ -4,14 +4,13 @@ using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Groups
 {
     public class JoinGroupCommand : Command, BotPersonalCommand
     {
-        ManualResetEvent GetGroupsSearchEvent = new ManualResetEvent(false);
+        private ManualResetEvent GetGroupsSearchEvent = new ManualResetEvent(false);
         private UUID queryID = UUID.Zero;
         private UUID resolvedGroupID = UUID.Zero;
         private string groupName;
@@ -24,10 +23,10 @@ namespace Cogbot.Actions.Groups
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "join a group.";
-            Parameters = CreateParams("group", typeof(Group), "group you are going to " + Name);
+            Parameters = CreateParams("group", typeof (Group), "group you are going to " + Name);
             Details = AddUsage(Name + " group", Description);
             Category = CommandCategory.Groups;
         }
@@ -48,7 +47,7 @@ namespace Cogbot.Actions.Groups
 
                 resolvedGroupName = groupName = args[1];
                 int argsUsed;
-                if (!UUIDTryParse(args,1, out resolvedGroupID,out argsUsed))
+                if (!UUIDTryParse(args, 1, out resolvedGroupID, out argsUsed))
                     return Failure(resolvedGroupName + " doesn't seem a valid UUID");
             }
             else
@@ -58,7 +57,7 @@ namespace Cogbot.Actions.Groups
                 groupName = groupName.Trim();
 
                 Client.Directory.DirGroupsReply += Directory_DirGroups;
-                                
+
                 queryID = Client.Directory.StartGroupSearch(groupName, 0);
 
                 GetGroupsSearchEvent.WaitOne(60000, false);
@@ -94,7 +93,7 @@ namespace Cogbot.Actions.Groups
             return Failure("Unable to join the group " + resolvedGroupName);
         }
 
-        void Directory_DirGroups(object sender, DirGroupsReplyEventArgs e)
+        private void Directory_DirGroups(object sender, DirGroupsReplyEventArgs e)
         {
             if (queryID == e.QueryID)
             {
@@ -118,7 +117,7 @@ namespace Cogbot.Actions.Groups
                         foreach (DirectoryManager.GroupSearchData groupRetrieved in e.MatchedGroups)
                         {
                             WriteLine(groupRetrieved.GroupName + "\t\t\t(" +
-                                Name + " UUID " + groupRetrieved.GroupID.ToString() + ")");
+                                      Name + " UUID " + groupRetrieved.GroupID.ToString() + ")");
 
                             if (groupRetrieved.GroupName.ToLower() == groupName.ToLower())
                             {
@@ -128,15 +127,15 @@ namespace Cogbot.Actions.Groups
                             }
                         }
                         if (string.IsNullOrEmpty(resolvedGroupName))
-                            resolvedGroupName = "Ambiguous name. Found " + e.MatchedGroups.Count.ToString() + " groups (UUIDs on console)";
+                            resolvedGroupName = "Ambiguous name. Found " + e.MatchedGroups.Count.ToString() +
+                                                " groups (UUIDs on console)";
                     }
-
                 }
                 GetGroupsSearchEvent.Set();
             }
         }
 
-        void Groups_OnGroupJoined(object sender, GroupOperationEventArgs e)
+        private void Groups_OnGroupJoined(object sender, GroupOperationEventArgs e)
         {
             WriteLine(Client.ToString() + (e.Success ? " joined " : " failed to join ") + e.GroupID.ToString());
 
@@ -156,6 +155,6 @@ namespace Cogbot.Actions.Groups
 
             joinedGroup = e.Success;
             GetGroupsSearchEvent.Set();
-        }                        
+        }
     }
 }

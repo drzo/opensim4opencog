@@ -3,7 +3,6 @@ using OpenMetaverse;
 using System.Collections.Generic;
 using System.Threading;
 using Cogbot.World;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
@@ -12,48 +11,38 @@ namespace Cogbot.Actions.Appearance
     {
         public AnimInfoCommand(BotClient testClient)
         {
-            Name = "animinfo";
+            Name = "assetinfo";
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
-            Description = "Show debug info about anims.";                    
+            Description = "Show debug info about assets.";
             AddExample(Name + " stand1", "shows that it loops and durration");
             Category = CommandCategory.Appearance;
             AddVersion(
-                CreateParams(Optional("anim", typeof (SimAnimation),
-                                      "the animation you want info about such as duration")),
+                CreateParams(Optional("assets", typeof(List<SimAsset>),
+                                      "the asset you want info about such as duration")),
                 "shows the info about animation");
             ResultMap = CreateParams(
-                "message", typeof(string), "debug infos about the animations",
+                "message", typeof(string), "debug infos about the asset",
                 "success", typeof(bool), "true if command was successful");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-
-            ICollection<SimAsset> list = SimAssetStore.GetAssets(AssetType.Animation);
             int count = 0;
-            string alist = String.Empty;
-            lock (list)
-            foreach (SimAsset A in list)
+            List<SimAsset> As;
+            if (args.TryGetValue("assets", out As))
             {
-                foreach (string s in args.tokens)
+                foreach (var A in As)
                 {
-                   if (A.Matches(s))
-                   {
-                       alist += " ";
-                       alist += A.DebugInfo();
-                       alist += Environment.NewLine;
-                       count++;
-                       continue;
-                   } 
+                    WriteLine(A.DebugInfo());
+                    count++;
+                    continue;
                 }
             }
-            WriteLine("Currently: {0}", alist);
-
-            return Success("Shown " + count + " amins");
+            return Success("Shown " + count + " assets");
         }
     }
 }

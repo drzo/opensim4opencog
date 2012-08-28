@@ -839,6 +839,7 @@ namespace Cogbot
                 }
             }
             UUID found = UUID.Zero;
+            if (ToAvatarName.IndexOf('-') > 1 && UUID.TryParse(ToAvatarName, out found)) return found;
             // case sensitive
             lock (Name2Key) if (Name2Key.TryGetValue(ToAvatarName, out found)) return found;
             // case insensitive
@@ -851,7 +852,6 @@ namespace Cogbot
 
                     }
                 }
-            if (UUID.TryParse(ToAvatarName, out found)) return found;
             {
                 client.Directory.StartPeopleSearch(/*DirectoryManager.DirFindFlags.People,*/ ToAvatarName, 0/*, UUID.Random()*/);
 

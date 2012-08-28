@@ -4,14 +4,13 @@ using System.Threading;
 using Cogbot.World;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
 {
     public class SetTextureIndexCommand : Command, BotPersonalCommand, FFIComplete
     {
-        uint SerialNum = 666;
+        private uint SerialNum = 666;
 
         public SetTextureIndexCommand(BotClient testClient)
         {
@@ -19,7 +18,7 @@ namespace Cogbot.Actions.Appearance
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Set appearance texture of avatar.";
             Details = AddUsage(Name + " [face-index] [texture-uuid]", "set the texture on face-index");
@@ -28,9 +27,10 @@ namespace Cogbot.Actions.Appearance
                 "textureIndex", typeof (AvatarTextureIndex), "face index of where to set the texture",
                 "texture", typeof (SimTexture), "texture UUID to set the face");
             ResultMap = CreateParams(
-                "message", typeof(string), "if success was false, the reason why",
-                "success", typeof(bool), "true if command was successful");
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if command was successful");
         }
+
         /// <summary>
         /// //settexture 5 8dcd4a48-2d37-4909-9f78-f7a9eb4ef903
         /// </summary>
@@ -44,10 +44,9 @@ namespace Cogbot.Actions.Appearance
             AvatarTextureIndex index = AvatarTextureIndex.Unknown;
             if (args.Length > 1)
             {
-
                 Object val;
                 int argsUsed;
-                if (TryEnumParse(typeof(AvatarTextureIndex), args, 0, out argsUsed, out val))
+                if (TryEnumParse(typeof (AvatarTextureIndex), args, 0, out argsUsed, out val))
                 {
                     index = (AvatarTextureIndex) val;
                 }
@@ -64,13 +63,12 @@ namespace Cogbot.Actions.Appearance
             AgentSetAppearancePacket set = Client.Appearance.MakeAppearancePacket();
             Primitive.TextureEntry te;
             if (!Client.Appearances.ContainsKey(target))
-            {                
+            {
                 te = new Primitive.TextureEntry(set.ObjectData.TextureEntry, 0,
                                                 set.ObjectData.TextureEntry.Length);
             }
             else
             {
-
                 #region AvatarAppearance to AgentSetAppearance
 
                 AvatarAppearancePacket appearance = TheBotClient.Appearances[target];
@@ -91,12 +89,10 @@ namespace Cogbot.Actions.Appearance
                 set.ObjectData.TextureEntry = appearance.ObjectData.TextureEntry;
 
                 te = new Primitive.TextureEntry(appearance.ObjectData.TextureEntry, 0,
-                   appearance.ObjectData.TextureEntry.Length);
+                                                appearance.ObjectData.TextureEntry.Length);
 
                 #endregion AvatarAppearance to AgentSetAppearance
-
             }
-
 
             #region TextureEntry
 
@@ -109,13 +105,11 @@ namespace Cogbot.Actions.Appearance
             set.ObjectData.TextureEntry = te.GetBytes();
 
             #endregion TextureEntry
+
             // Send the new appearance packet
             Client.Network.SendPacket(set);
 #endif
-            return Success("Setting texture entry for " + (AvatarTextureIndex)index + " to " + asset);
-
+            return Success("Setting texture entry for " + (AvatarTextureIndex) index + " to " + asset);
         }
-
     }
-
 }

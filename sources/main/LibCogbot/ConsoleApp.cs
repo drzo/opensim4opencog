@@ -294,7 +294,7 @@ namespace Cogbot
             }
             string newDir;
             // Change current working directory to  --cd whatnot
-            if (ClientManagerConfig.arguments.TryGetValueWithout("--cd", out newDir, out oArgs))
+            if (ClientManagerConfig.arguments.TryGetValueWithout("--cd", out newDir, true, out oArgs))
             {
                 ChangeLCD = false;
                 Directory.SetCurrentDirectory(newDir);

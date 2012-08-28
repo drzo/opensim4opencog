@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Land
@@ -16,26 +15,30 @@ namespace Cogbot.Actions.Land
         public AgentLocationsCommand(BotClient testClient)
         {
             Name = "agentlocations";
-            Description = "Downloads all of the agent locations in a specified region. Usage: agentlocations [regionhandle]";
+        }
+
+        public override void MakeInfo()
+        {
+            Description =
+                "Downloads all of the agent locations in a specified region. Usage: agentlocations [regionhandle]";
             Category = CommandCategory.Simulator;
             Parameters =
                 CreateParams(Optional("simulator", typeof (Simulator), "if ommited it uses current sim"));
-
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             ulong regionHandle;
-                        
+
             int argsUsed;
             Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
             if (args.Length == 0)
                 regionHandle = CurSim.Handle;
             else if (!(args.Length == 1 && UInt64.TryParse(args[0], out regionHandle)))
-                return ShowUsage();// " agentlocations [regionhandle]";
+                return ShowUsage(); // " agentlocations [regionhandle]";
 
-            List<MapItem> items = Client.Grid.MapItems(regionHandle, GridItemType.AgentLocations, 
-                GridLayerType.Objects, 1000 * 20);
+            List<MapItem> items = Client.Grid.MapItems(regionHandle, GridItemType.AgentLocations,
+                                                       GridLayerType.Objects, 1000*20);
 
             if (items != null)
             {
@@ -44,10 +47,10 @@ namespace Cogbot.Actions.Land
 
                 for (int i = 0; i < items.Count; i++)
                 {
-                    MapAgentLocation location = (MapAgentLocation)items[i];
+                    MapAgentLocation location = (MapAgentLocation) items[i];
 
                     ret.AppendLine(String.Format("{0} avatar(s) at {1},{2}", location.AvatarCount, location.LocalX,
-                        location.LocalY));
+                                                 location.LocalY));
                 }
 
                 return Success(ret.ToString());

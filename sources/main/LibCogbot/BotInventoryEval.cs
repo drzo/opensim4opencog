@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -430,7 +432,7 @@ namespace Cogbot
         //RadegastInstance instance;
         //Dictionary<UUID, TreeNode> FolderNodes = new Dictionary<UUID, TreeNode>();
 
-        private InventoryManager Manager
+        public InventoryManager Manager
         {
             get
             {
@@ -996,8 +998,119 @@ namespace Cogbot
             }
         }
 
-     
+        public List<InventoryBase> FolderContents(UUID fid)
+        {
+            var f = Manager.Store.GetContents(fid);
+            if (f != null && f.Count > 0) return f;
+            var contents = Manager.FolderContents(fid, client.Self.AgentID, true, true, InventorySortOrder.ByName, 5);
+            if (contents != null) return contents;
+            contents = Manager.FolderContents(fid, UUID.Zero, true, true, InventorySortOrder.ByName, 5);
+            if (contents != null) return contents;
+            return null;
+        }
 
+        public List<InventoryBase> FindAll(string[] args, bool itemsOnly, Action<string> failure)
+        {
+            List<InventoryBase> total = new List<InventoryBase>();
+            string ret = "";
+            for (int i = 0; i < args.Length; ++i)
+            {
+                string inventoryName = args[i];
+                List<InventoryBase> ibs = GetFound(inventoryName, itemsOnly);
+                if (0 == ibs.Count)
+                {
+                    failure(inventoryName);
+                    continue;
+                }                    
+                total.AddRange(ibs);
+            }
+            return total;
+        }
+
+        public List<InventoryBase> GetFound(string lowerMatch, bool itemsOnly)
+        {
+            string folderPrefix = "/";
+            if (client.CurrentDirectory == null)
+            {
+                client.CurrentDirectory = Manager.Store.RootFolder;
+            }
+
+            var startAt = client.CurrentDirectory;
+            if (lowerMatch.StartsWith("//"))
+            {
+                startAt = Manager.Store.LibraryFolder;
+                lowerMatch = lowerMatch.Substring(2);
+            }
+            else if (lowerMatch.StartsWith("/"))
+            {
+                startAt = Manager.Store.RootFolder;
+                lowerMatch = lowerMatch.Substring(1);
+            }
+
+            folderPrefix = "";
+
+            List<InventoryBase> found = new List<InventoryBase>();
+            var inventoryName = new Regex("^" + lowerMatch + "$", RegexOptions.IgnoreCase);
+            // WARNING: Uses local copy of inventory contents, need to download them first.
+            FindMatches(folderPrefix, inventoryName, FolderContents(startAt.UUID), itemsOnly, found);
+            return found;
+        }
+
+
+        private void FindMatches(String folderPrefix, Regex inventoryName, IEnumerable<InventoryBase> contents, bool itemsOnly, List<InventoryBase> matches)
+        {
+            if (contents != null)
+                foreach (InventoryBase b in contents)
+                {
+                    if (inventoryName.IsMatch(b.Name) ||
+                        inventoryName.IsMatch(folderPrefix + b.Name) ||
+                        inventoryName.IsMatch(b.UUID.ToString()))
+                    {
+                        FindSubItems(b, itemsOnly, matches);
+                    }
+                    else if (b is InventoryFolder)
+                    {
+                        FindMatches(folderPrefix + b.Name + "/", inventoryName, FolderContents(b.UUID), itemsOnly,
+                                    matches);
+                    }
+                    else if (b is InventoryItem)
+                    {
+                        InventoryItem ii = (InventoryItem) b;
+                        if (inventoryName.IsMatch(ii.AssetUUID.ToString()))
+                        {
+                            FindSubItems(b, itemsOnly, matches);
+                        }
+                    }
+                }
+        }
+
+        private void FindSubItems(InventoryBase b, bool itemsOnly, List<InventoryBase> dest)
+        {
+            if (b is InventoryItem || !itemsOnly)
+            {
+                dest.Add(b);
+            }
+            else if (b is InventoryFolder)
+            {
+                InventoryFolder folder = b as InventoryFolder;
+                List<InventoryBase> folderContents = FolderContents(folder.UUID);
+                if (folderContents != null)
+                    foreach (InventoryBase list in folderContents)
+                    {
+                        FindSubItems(list, itemsOnly, dest);
+                    }
+            }
+        }
+
+        public IEnumerable ItemsOnly(List<InventoryBase> bases)
+        {
+            var items = new List<InventoryBase>();
+            foreach (InventoryBase inventoryBase in bases)
+            {
+                FindSubItems(inventoryBase, true, items);
+            }
+            return items;
+        }
     }
 
     public class AttachmentInfo

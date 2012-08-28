@@ -5,7 +5,6 @@ using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Assets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Inventory
@@ -19,8 +18,13 @@ namespace Cogbot.Actions.Inventory
         public ViewNotecardCommand(BotClient testClient)
         {
             Name = "viewnote";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Downloads and displays a notecard asset";
-			Details = "viewnote [notecard asset uuid]";
+            Details = "viewnote [notecard asset uuid]";
+            Parameters = CreateParams("asset", typeof (AssetNotecard), "the notecard");
             Category = CommandCategory.Inventory;
         }
 
@@ -32,18 +36,18 @@ namespace Cogbot.Actions.Inventory
         /// <returns></returns>
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-
             if (args.Length < 1)
             {
-                return ShowUsage();// " viewnote [notecard asset uuid]";
+                return ShowUsage(); // " viewnote [notecard asset uuid]";
             }
             UUID note = UUID.Zero;
-            if (!UUID.TryParse(args[0], out note))
+            int argsUsed;
+            if (!UUIDTryParse(args.GetProperty("asset"), 0, out note, out argsUsed))
             {
-                return Failure( "First argument expected UUID.");
+                return Failure("First argument expected UUID.");
             }
 
-             AutoResetEvent waitEvent = new AutoResetEvent(false);
+            AutoResetEvent waitEvent = new AutoResetEvent(false);
 
             StringBuilder result = new StringBuilder();
 
@@ -51,19 +55,21 @@ namespace Cogbot.Actions.Inventory
             if (Client.Inventory.Store.Contains(note))
             {
                 // retrieve asset from store
-                InventoryItem ii = (InventoryItem)Client.Inventory.Store[note];
+                InventoryItem ii = (InventoryItem) Client.Inventory.Store[note];
 
                 // make request for asset
                 Client.Assets.RequestInventoryAsset(ii, true,
-                    delegate(AssetDownload transfer, Asset asset)
-                    {
-                        if (transfer.Success)
-                        {
-                            result.AppendFormat("Raw Notecard Data: " + Environment.NewLine + " {0}", Utils.BytesToString(asset.AssetData));
-                            waitEvent.Set();
-                        }
-                    }
-                );
+                                                    delegate(AssetDownload transfer, Asset asset)
+                                                        {
+                                                            if (transfer.Success)
+                                                            {
+                                                                result.AppendFormat(
+                                                                    "Raw Notecard Data: " + Environment.NewLine + " {0}",
+                                                                    Utils.BytesToString(asset.AssetData));
+                                                                waitEvent.Set();
+                                                            }
+                                                        }
+                    );
 
                 // wait for reply or timeout
                 if (!waitEvent.WaitOne(10000, false))
@@ -77,7 +83,8 @@ namespace Cogbot.Actions.Inventory
             }
 
             // return results
-            return Success(result.ToString());;
+            return Success(result.ToString());
+            ;
         }
     }
 }

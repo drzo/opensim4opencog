@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Land
@@ -12,11 +11,15 @@ namespace Cogbot.Actions.Land
     {
         private AutoResetEvent ParcelsDownloaded = new AutoResetEvent(false);
 
-      //  NetworkManager.DisconnectedCallback callback;
+        //  NetworkManager.DisconnectedCallback callback;
 
         public ParcelInfoCommand(BotClient testClient)
         {
             Name = "parcelinfo";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Prints out info about all the parcels in this simulator";
             Category = CommandCategory.Parcel;
 
@@ -27,12 +30,9 @@ namespace Cogbot.Actions.Land
         {
             StringBuilder sb = new StringBuilder();
             string result;
-          //  Client.Network.OnDisconnected += callback;
+            //  Client.Network.OnDisconnected += callback;
             EventHandler<SimParcelsDownloadedEventArgs> del =
-                (sender,e)=>
-                {
-                    ParcelsDownloaded.Set();
-                };
+                (sender, e) => { ParcelsDownloaded.Set(); };
 
             ParcelsDownloaded.Reset();
             Client.Parcels.SimParcelsDownloaded += del;
@@ -48,16 +48,17 @@ namespace Cogbot.Actions.Land
 
                 if (ParcelsDownloaded.WaitOne(30000, false) && Client.Network.Connected)
                 {
-                    AddSuccess(string.Format("Downloaded {0} Parcels in {1} " + Environment.NewLine, CurSim.Parcels.Count, CurSim.Name));
+                    AddSuccess(string.Format("Downloaded {0} Parcels in {1} " + Environment.NewLine,
+                                             CurSim.Parcels.Count, CurSim.Name));
 
                     CurSim.Parcels.ForEach(delegate(Parcel parcel)
                                                {
                                                    AddSuccess(string.Format(
-                                                               "Parcel[{0}]: Name: \"{1}\", Description: \"{2}\" ACLBlacklist Count: {3}, ACLWhiteList Count: {5} Traffic: {4}" +
-                                                               Environment.NewLine,
-                                                               parcel.LocalID, parcel.Name, parcel.Desc,
-                                                               parcel.AccessBlackList.Count, parcel.Dwell,
-                                                               parcel.AccessWhiteList.Count));
+                                                                  "Parcel[{0}]: Name: \"{1}\", Description: \"{2}\" ACLBlacklist Count: {3}, ACLWhiteList Count: {5} Traffic: {4}" +
+                                                                  Environment.NewLine,
+                                                                  parcel.LocalID, parcel.Name, parcel.Desc,
+                                                                  parcel.AccessBlackList.Count, parcel.Dwell,
+                                                                  parcel.AccessWhiteList.Count));
                                                    AddSuccess(Helpers.StructToString(parcel));
                                                    foreach (
                                                        ParcelManager.ParcelAccessEntry white in parcel.AccessWhiteList)
@@ -75,7 +76,6 @@ namespace Cogbot.Actions.Land
                                                                        black.AgentID);
                                                    }
                                                });
-
                 }
                 else
                     Failure("Failed to retrieve information on all the simulator parcels");
@@ -87,10 +87,9 @@ namespace Cogbot.Actions.Land
                 Client.Parcels.SimParcelsDownloaded -= del;
                 //Client.Network.OnDisconnected -= callback;
             }
-
         }
 
-        void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
+        private void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
         {
             ParcelsDownloaded.Set();
         }

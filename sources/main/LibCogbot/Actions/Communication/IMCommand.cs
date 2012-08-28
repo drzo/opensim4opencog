@@ -5,7 +5,6 @@ using Cogbot;
 using Cogbot.World;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Communication
@@ -20,19 +19,19 @@ namespace Cogbot.Actions.Communication
             Name = "im";
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "IM a user. Has nothing to do with SL 'whisper'";
             Details = AddUsage("im to <avatar name> <message>", "IM Avatar with Message") +
-                    AddUsage("im <message>", "reply to the last person who IMed you");
+                      AddUsage("im <message>", "reply to the last person who IMed you");
             Category = CommandCategory.Communication;
             Parameters =
                 CreateParams(
-                            "to", typeof(Avatar), "who you are IMing",
-                            "message", typeof(string), "what you IM");
+                    "to", typeof (Avatar), "who you are IMing",
+                    "message", typeof (string), "what you IM");
             ResultMap = CreateParams(
-                            "personFound", typeof(bool), "true iff we found the person to whisper to",
-                            "sentCorrect", typeof(bool), "true iff we successfully sent the message");
+                "personFound", typeof (bool), "true iff we found the person to whisper to",
+                "sentCorrect", typeof (bool), "true iff we successfully sent the message");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -162,10 +161,8 @@ namespace Cogbot.Actions.Communication
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-
         }
 
         #endregion
-
     }
 }

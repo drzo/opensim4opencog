@@ -1,42 +1,36 @@
 using System;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
-
 using MushDLR223.ScriptEngines;
 using Cogbot.World;
 
 namespace Cogbot.Actions.Pathfinder
 {
-
-
     public class AStarPath : Cogbot.Actions.Command, BotPersonalCommand
     {
         // http://logicmoo.dyndns.org:5580/?cmd=astarpath&args=%22Douglas%20Miles%22%20%22Nephrael%20Rae%22
         public AStarPath(BotClient client)
         {
             Name = GetType().Name;
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Return the path that would be used by A* Pathfinding to get to object";
             Category = Cogbot.Actions.CommandCategory.Movement;
-            Parameters = CreateParams("position", typeof(SimPosition), "the location you wish to " + Name);
+            Parameters = CreateParams(
+                OptionalFlag("--local", "use local " + Name),
+                "start", typeof (SimPosition), "the start you wish to " + Name,
+                "end", typeof (SimPosition), "the end you wish to " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-            int argcount;
-            bool asLocal = false;
-            if (args.Length > 1 && args[0] == "local")
-            {
-                args = args.AdvanceArgs(1);
-                asLocal = true;
-            }
-            SimPosition pos = WorldSystem.GetVector(args, out argcount);
-            if (pos == null)
-            {
-                return Failure(String.Format("Cannot {0} to {1}", Name, String.Join(" ", args)));
-            }
-            args = args.AdvanceArgs(argcount);
+            bool asLocal = args.IsTrue("--local");
+            SimPosition pos, pos2;
+            if (!args.TryGetValue("start", out pos)) pos = TheSimAvatar;
+            if (!args.TryGetValue("end", out pos2)) pos = TheSimAvatar;
             Vector3d from, to;
-            SimPosition pos2 = WorldSystem.GetVector(args, out argcount);
             if (pos2 == null)
             {
                 pos2 = pos;
@@ -67,9 +61,10 @@ namespace Cogbot.Actions.Pathfinder
             return Success("SUCCESS " + Name);
         }
 
-        public static  string VectorRoundString(Vector3d vector3D)
+        public static string VectorRoundString(Vector3d vector3D)
         {
-            return string.Format("<{0},{1},{2}>", Math.Round(vector3D.X, 1), Math.Round(vector3D.Y, 1), Math.Round(vector3D.Z, 1));
+            return string.Format("<{0},{1},{2}>", Math.Round(vector3D.X, 1), Math.Round(vector3D.Y, 1),
+                                 Math.Round(vector3D.Z, 1));
         }
     }
 }

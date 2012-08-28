@@ -4,7 +4,6 @@ using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Groups
@@ -15,21 +14,22 @@ namespace Cogbot.Actions.Groups
     public class ActivateGroupCommand : Command, BotPersonalCommand
     {
         private ManualResetEvent GroupsEvent = new ManualResetEvent(false);
-        string activeGroup;
+        private string activeGroup;
 
         public ActivateGroupCommand(BotClient testClient)
         {
             Name = "activategroup";
             TheBotClient = testClient;
         }
-
-        override public void MakeInfo()
+ 
+        public override void MakeInfo()
         {
             Description = "Set a group as active.";
             Category = CommandCategory.Groups;
             Details = AddUsage(Name + " group", Description);
-            Parameters = CreateParams("group", typeof(Group), "group you are going to " + Name);
+            Parameters = CreateParams("group", typeof (Group), "group you are going to " + Name);
         }
+
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
@@ -43,7 +43,8 @@ namespace Cogbot.Actions.Groups
             groupName = groupName.Trim();
 
             UUID groupUUID = Client.GroupName2UUID(groupName);
-            if (UUID.Zero != groupUUID) {
+            if (UUID.Zero != groupUUID)
+            {
                 EventHandler<PacketReceivedEventArgs> pcallback = AgentDataUpdateHandler;
                 Client.Network.RegisterCallback(PacketType.AgentDataUpdate, pcallback);
 
@@ -68,10 +69,11 @@ namespace Cogbot.Actions.Groups
 
         private void AgentDataUpdateHandler(object sender, PacketReceivedEventArgs e)
         {
-            AgentDataUpdatePacket p = (AgentDataUpdatePacket)e.Packet;
+            AgentDataUpdatePacket p = (AgentDataUpdatePacket) e.Packet;
             if (p.AgentData.AgentID == Client.Self.AgentID)
             {
-                activeGroup = Utils.BytesToString(p.AgentData.GroupName) + " ( " + Utils.BytesToString(p.AgentData.GroupTitle) + " )";
+                activeGroup = Utils.BytesToString(p.AgentData.GroupName) + " ( " +
+                              Utils.BytesToString(p.AgentData.GroupTitle) + " )";
                 GroupsEvent.Set();
             }
         }

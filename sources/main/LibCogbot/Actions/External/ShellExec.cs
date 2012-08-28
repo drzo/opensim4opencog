@@ -5,7 +5,6 @@ using System.IO;
 using System.Text;
 using System.Net;
 //using OpenMetaverse; //using libsecondlife;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.External
@@ -31,13 +30,14 @@ namespace Cogbot.Actions.External
             TheBotClient = Client;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Do an shell exec to filename";
             Details = AddUsage(Name + " filename", Description);
             Category = CommandCategory.Simulator;
-            Parameters = CreateParams("filename", typeof(string), "filename to " + Name);
+            Parameters = CreateParams("filename", typeof (string), "filename to " + Name);
         }
+
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             return Success(DoShellExec(args[0], Parser.Rejoin(args.tokens, 1)));

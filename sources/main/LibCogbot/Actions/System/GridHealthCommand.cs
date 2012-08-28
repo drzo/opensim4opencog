@@ -5,7 +5,6 @@ using System.Threading;
 using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 using OpenMetaverse.Packets;
 using System.Windows.Forms;
@@ -17,17 +16,22 @@ namespace Cogbot.Actions.Land
     /// </summary>
     public class GridHealthCommand : Command, GridMasterCommand, BotStatefullCommand
     {
-        bool registeredPackHandler = false;
-        bool needGridRequest = true;
+        private bool registeredPackHandler = false;
+        private bool needGridRequest = true;
+
         public GridHealthCommand(BotClient testClient)
             : base(testClient)
         {
             Name = "gridhealth";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Runs a TP check to make sure ALL sims are useable on the grid.";
-            AddVersion(CreateParams(Optional("regionhandle", typeof(UUID), "UUID of region handle")),
-                     "test health of one or all regions");
+            AddVersion(CreateParams(Optional("regionhandle", typeof (UUID), "UUID of region handle")),
+                       "test health of one or all regions");
             Category = CommandCategory.Simulator;
-          
+
             RegisterGridHandler();
             //TheBotClient.WorldSystem.OnConnectedQueue.Enqueue("gridhealth", MakeGridRequest);
         }
@@ -46,7 +50,7 @@ namespace Cogbot.Actions.Land
             var regions = LockInfo.CopyOf(Regions);
             AddSuccess("Testing " + regions.Count);
             int passes = 0, failures = 0, tested = 0;
-            var skipRegions = new[] { "sttc_0013" };
+            var skipRegions = new[] {"sttc_0013"};
             foreach (var r in regions.Values)
             {
                 AddSuccess("Region: " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
@@ -83,22 +87,24 @@ namespace Cogbot.Actions.Land
                 {
                     AddSuccess("FAIL: " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
                     failures++;
-                   // break;
+                    // break;
                 }
             }
             return
                 Success("Found passes=" + passes + " falures=" + failures + " on " + tested + "/" + regions.Count +
                         " total");
         }
+
         private bool RegionTest(GridRegion r)
         {
             Control.CheckForIllegalCrossThreadCalls = false;
             AddSuccess("Testing: " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
             //return TestViaLogin(r);
-            bool t1 =  MiniMapTest(r);
+            bool t1 = MiniMapTest(r);
             AddSuccess("MINIMAP " + (t1 ? "PASS" : "FAIL") + ": " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
             return TeleportTest(r);
         }
+
         /*
         private bool TestViaLogin(GridRegion r)
         {
@@ -143,11 +149,12 @@ namespace Cogbot.Actions.Land
 
         private bool MiniMapTest(GridRegion r)
         {
-            var itemList = Client.Grid.MapItems(r.RegionHandle, OpenMetaverse.GridItemType.AgentLocations, GridLayerType.Objects, 2000);
-            if (itemList==null)
+            var itemList = Client.Grid.MapItems(r.RegionHandle, OpenMetaverse.GridItemType.AgentLocations,
+                                                GridLayerType.Objects, 2000);
+            if (itemList == null)
             {
                 return false;
-            }                 
+            }
             return itemList != null;
         }
 
@@ -157,31 +164,31 @@ namespace Cogbot.Actions.Land
             AutoResetEvent are = new AutoResetEvent(false);
             bool eventDead = false;
             EventHandler<TeleportEventArgs> tp = (o, e) =>
-                                                                   {
-                                                                       if (eventDead) return;
-                                                                       switch(e.Status)
-                                                                       {
-                                                                           case TeleportStatus.None:
-                                                                           case TeleportStatus.Start:
-                                                                           case TeleportStatus.Progress:
-                                                                               AddSuccess("status " + e.Status);
-                                                                               break;
-                                                                           case TeleportStatus.Failed:
-                                                                               passfail = false;
-                                                                               are.Set();
-                                                                               break;
-                                                                           case TeleportStatus.Finished:
-                                                                               passfail = true;
-                                                                               are.Set();
-                                                                               break;
-                                                                           case TeleportStatus.Cancelled:
-                                                                               passfail = false;
-                                                                               are.Set();
-                                                                               break;
-                                                                           default:
-                                                                               throw new ArgumentOutOfRangeException();
-                                                                       }
-                                                                   };
+                                                     {
+                                                         if (eventDead) return;
+                                                         switch (e.Status)
+                                                         {
+                                                             case TeleportStatus.None:
+                                                             case TeleportStatus.Start:
+                                                             case TeleportStatus.Progress:
+                                                                 AddSuccess("status " + e.Status);
+                                                                 break;
+                                                             case TeleportStatus.Failed:
+                                                                 passfail = false;
+                                                                 are.Set();
+                                                                 break;
+                                                             case TeleportStatus.Finished:
+                                                                 passfail = true;
+                                                                 are.Set();
+                                                                 break;
+                                                             case TeleportStatus.Cancelled:
+                                                                 passfail = false;
+                                                                 are.Set();
+                                                                 break;
+                                                             default:
+                                                                 throw new ArgumentOutOfRangeException();
+                                                         }
+                                                     };
             try
             {
                 Client.Self.TeleportProgress += tp;
@@ -217,12 +224,13 @@ namespace Cogbot.Actions.Land
 
         /// <summary>A dictionary of all the regions, indexed by region name</summary>
         internal Dictionary<string, GridRegion> Regions = new Dictionary<string, GridRegion>();
+
         /// <summary>A dictionary of all the regions, indexed by region handle</summary>
         internal Dictionary<ulong, GridRegion> RegionsByHandle = new Dictionary<ulong, GridRegion>();
 
         protected void MapBlockReplyHandler(object sender, PacketReceivedEventArgs e)
         {
-            MapBlockReplyPacket map = (MapBlockReplyPacket)e.Packet;
+            MapBlockReplyPacket map = (MapBlockReplyPacket) e.Packet;
 
             foreach (MapBlockReplyPacket.DataBlock block in map.Data)
             {
@@ -234,12 +242,12 @@ namespace Cogbot.Actions.Land
                     region.Y = block.Y;
                     region.Name = Utils.BytesToString(block.Name);
                     // RegionFlags seems to always be zero here?
-                    region.RegionFlags = (RegionFlags)block.RegionFlags;
+                    region.RegionFlags = (RegionFlags) block.RegionFlags;
                     region.WaterHeight = block.WaterHeight;
                     region.Agents = block.Agents;
-                    region.Access = (SimAccess)block.Access;
+                    region.Access = (SimAccess) block.Access;
                     region.MapImageID = block.MapImageID;
-                    region.RegionHandle = Utils.UIntsToLong((uint)(region.X * 256), (uint)(region.Y * 256));
+                    region.RegionHandle = Utils.UIntsToLong((uint) (region.X*256), (uint) (region.Y*256));
 
                     lock (Regions)
                     {

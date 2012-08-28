@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Land
@@ -14,6 +13,10 @@ namespace Cogbot.Actions.Land
         public ParcelDetailsCommand(BotClient testClient)
         {
             Name = "parceldetails";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Displays parcel details from the ParcelTracker dictionary. Usage: parceldetails parcelID";
             Category = CommandCategory.Parcel;
         }
@@ -21,7 +24,7 @@ namespace Cogbot.Actions.Land
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
-                return ShowUsage();// " parceldetails parcelID (use parcelinfo to get ID)";
+                return ShowUsage(); // " parceldetails parcelID (use parcelinfo to get ID)";
 
             int parcelID;
             Parcel parcel;
@@ -33,7 +36,7 @@ namespace Cogbot.Actions.Land
             {
                 // this request will update the parcels dictionary
                 Client.Parcels.RequestParcelProperties(CurSim, parcelID, 0);
-                
+
                 // Use reflection to dynamically get the fields from the Parcel struct
                 Type t = parcel.GetType();
                 FieldInfo[] fields = t.GetFields(BindingFlags.Instance | BindingFlags.Public);
@@ -47,7 +50,11 @@ namespace Cogbot.Actions.Land
             }
             else
             {
-                return Failure(string.Format("Unable to find Parcel {0} in Parcels Dictionary, Did you run parcelinfo to populate the dictionary first?", args[argsUsed]));
+                return
+                    Failure(
+                        string.Format(
+                            "Unable to find Parcel {0} in Parcels Dictionary, Did you run parcelinfo to populate the dictionary first?",
+                            args[argsUsed]));
             }
         }
     }

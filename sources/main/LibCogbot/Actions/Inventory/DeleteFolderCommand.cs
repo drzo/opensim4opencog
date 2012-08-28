@@ -6,7 +6,6 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Inventory.Shell
@@ -19,6 +18,10 @@ namespace Cogbot.Actions.Inventory.Shell
         public DeleteFolderCommand(BotClient testClient)
         {
             Name = "deleteFolder";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Moves a folder to the Trash Folder";
             Category = CommandCategory.Inventory;
         }

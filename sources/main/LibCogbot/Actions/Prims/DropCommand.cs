@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Objects
@@ -12,10 +11,14 @@ namespace Cogbot.Actions.Objects
         public DropCommand(BotClient testClient)
         {
             Name = "drop";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "drops a specified attachment into the world";
             Details = "drop <prim|attachmentPoint> example: /drop LeftHand ";
             Category = CommandCategory.Objects;
-            Parameters = CreateParams("targets", typeof(PrimSpec), "The objects to " + Name);
+            Parameters = CreateParams("targets", typeof (PrimSpec), "The objects to " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -38,8 +41,9 @@ namespace Cogbot.Actions.Objects
                         {
                             if (s.Prim.PrimData.AttachmentPoint == detachFrom)
                             {
-                                AddSuccess(string.Format("[dropping @ {0} Offset: {1}] {2}", prim.PrimData.AttachmentPoint,
-                                                      prim.Position, s));
+                                AddSuccess(string.Format("[dropping @ {0} Offset: {1}] {2}",
+                                                         prim.PrimData.AttachmentPoint,
+                                                         prim.Position, s));
                                 Client.Objects.DropObject(s.GetSimulator(), s.LocalID);
                             }
                         }

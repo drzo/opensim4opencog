@@ -5,9 +5,7 @@ using System.IO;
 using System.Text;
 using System.Net;
 using System.Web;
-
 //using OpenMetaverse; //using libsecondlife;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.WebUtil
@@ -20,7 +18,7 @@ namespace Cogbot.Actions.WebUtil
         /// <param name="url">The url to post to.</param>
         /// <param name="values">The values to post.</param>
         /// <returns>a string containing the result of the post.</returns>
-        static public string DoHttpPost(string url, NameValueCollection values)
+        public static string DoHttpPost(string url, NameValueCollection values)
         {
             StringBuilder postData = new StringBuilder();
             for (int i = 0; i < values.Count; i++)
@@ -60,16 +58,16 @@ namespace Cogbot.Actions.WebUtil
             Name = "HttpPost";
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Post the name/value paires the contents of a URL to return result";
             Details = AddUsage(Name + " url [n1 v1 [n2 v2]]", Description) +
-                    AddExample(Name + " http://localhost:5580/ cmd say args hello",
-                                    "makes the bot say something");
+                      AddExample(Name + " http://localhost:5580/ cmd say args hello",
+                                 "makes the bot say something");
             Parameters = CreateParams("url", typeof (Uri), "url to post to",
-                                                 "name-value", typeof (string), "name value pairs");
-
+                                      "name-value", typeof (string), "name value pairs");
         }
+
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             String url = args[0];
@@ -88,7 +86,7 @@ namespace Cogbot.Actions.WebUtil
         /// <param name="baseRequest">The previously encoded data.</param>
         /// <param name="dataItem">The data to encode.</param>
         /// <returns>A string containing the old data and the previously encoded data.</returns>
-        static private void EncodeAndAddItem(ref StringBuilder baseRequest, string key, string dataItem)
+        private static void EncodeAndAddItem(ref StringBuilder baseRequest, string key, string dataItem)
         {
             if (baseRequest == null)
             {

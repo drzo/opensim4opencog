@@ -3,7 +3,6 @@ using OpenMetaverse;
 using System.Collections.Generic;
 using System.Threading;
 using Cogbot.World;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
@@ -11,13 +10,14 @@ namespace Cogbot.Actions.Appearance
     public class PlayCommand : Command, BotPersonalCommand, FFIComplete
     {
         public static bool NOSEARCH_ANIM = false;
+
         public PlayCommand(BotClient testClient)
         {
             Name = "anim";
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "List or do animation or gesture on Simulator.";
             Details = AddUsage("anim", "just lists anims currently running") +
@@ -26,12 +26,13 @@ namespace Cogbot.Actions.Appearance
 
             //// we dont use sequenceOf here... for ideas
             NamedParam sequenceOf = SequenceOf("doList",
-                                                  OneOf(
-                                                      Required("asset_0-N", typeof(SimAsset), "+/-animuuid"),
-                                                      Required("stopall", typeof(bool), "stops all current anims/played items"),
-                                                      Required("seconds", typeof(int), "how long to pause for")));
+                                               OneOf(
+                                                   Required("asset_0-N", typeof (SimAsset), "+/-animuuid"),
+                                                   Required("stopall", typeof (bool),
+                                                            "stops all current anims/played items"),
+                                                   Required("seconds", typeof (int), "how long to pause for")));
             Category = CommandCategory.Appearance;
-            
+
             AddVersion(CreateParams("dolist", typeof (string[]), "asset play list"), "run the anim list");
             AddVersion(CreateParams(), "just lists anims currently running");
 
@@ -52,7 +53,7 @@ namespace Cogbot.Actions.Appearance
             bool writeInfo = !args.IsFFI;
             if (args.Length < 1)
             {
-                Dictionary<UUID,int> gestures = WorldSystem.TheSimAvatar.GetCurrentAnimDict();
+                Dictionary<UUID, int> gestures = WorldSystem.TheSimAvatar.GetCurrentAnimDict();
                 string alist = String.Empty;
                 foreach (var anim in gestures)
                 {
@@ -64,10 +65,11 @@ namespace Cogbot.Actions.Appearance
                     alist += Environment.NewLine;
                 }
                 if (writeInfo) WriteLine("Currently: {0}", alist);
-                return SuccessOrFailure();// " anim [seconds] HOVER [seconds] 23423423423-4234234234-234234234-23423423  +CLAP -JUMP STAND";           
+                return SuccessOrFailure();
+                    // " anim [seconds] HOVER [seconds] 23423423423-4234234234-234234234-23423423  +CLAP -JUMP STAND";           
             }
             int argStart = 0;
-            
+
             int time = 1300; //should be long enough for most animations
             base.SetWriteLine("message");
             string directive = args[0].ToLower();
@@ -86,13 +88,15 @@ namespace Cogbot.Actions.Appearance
                     {
                         if (ia > 0.0)
                         {
-                            time = (int)(ia * 1000);
+                            time = (int) (ia*1000);
                             Thread.Sleep(time);
                             continue;
                         }
                     }
                 }
-                catch (Exception) { }
+                catch (Exception)
+                {
+                }
                 char c = a.ToCharArray()[0];
                 if (c == '-')
                 {
@@ -103,7 +107,8 @@ namespace Cogbot.Actions.Appearance
                 {
                     mode = 1;
                     a = a.Substring(1);
-                } else
+                }
+                else
                 {
                     mode = 0;
                 }
@@ -126,7 +131,7 @@ namespace Cogbot.Actions.Appearance
 
                 try
                 {
-                    defaultSearch = (AssetType)Enum.Parse(typeof(AssetType), a, true);
+                    defaultSearch = (AssetType) Enum.Parse(typeof (AssetType), a, true);
                     continue;
                 }
                 catch
@@ -142,7 +147,9 @@ namespace Cogbot.Actions.Appearance
                         if (a.Substring(2).Contains("-"))
                             anim = UUIDParse(a);
                     }
-                    catch (Exception) { }
+                    catch (Exception)
+                    {
+                    }
                 }
                 if (anim == UUID.Zero)
                 {
@@ -160,7 +167,7 @@ namespace Cogbot.Actions.Appearance
                 {
                     Client.Self.PlayGesture(asset.AssetID);
                     continue;
-                } 
+                }
                 if (asset is SimSound)
                 {
                     Client.Sound.PlaySound(asset.AssetID);

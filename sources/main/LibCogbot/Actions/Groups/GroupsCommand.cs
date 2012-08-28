@@ -4,24 +4,22 @@ using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Groups
 {
     public class GroupsCommand : Command, BotPersonalCommand
-    {        
+    {
         public GroupsCommand(BotClient testClient)
         {
             Name = "groups";
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
-            Description = "List avatar groups. Usage: groups";
+            Description = "List avatar groups.";
             Category = CommandCategory.Groups;
-            Details = AddUsage(Name, Description);
             Parameters = CreateParams();
         }
 
@@ -31,20 +29,19 @@ namespace Cogbot.Actions.Groups
             return getGroupsString();
         }
 
-        CmdResult getGroupsString()
+        private CmdResult getGroupsString()
         {
             if (null == Client.GroupsCache)
-                    return Failure( "Groups cache failed.");
+                return Failure("Groups cache failed.");
             if (0 == Client.GroupsCache.Count)
-                    return Success("No groups");
+                return Success("No groups");
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("got "+Client.GroupsCache.Count +" groups:");
+            sb.AppendLine("got " + Client.GroupsCache.Count + " groups:");
             foreach (Group group in Client.GroupsCache.Values)
             {
                 sb.AppendLine(group.ID + ", " + group.Name);
-                
             }
-            
+
             return Success(sb.ToString());
         }
     }

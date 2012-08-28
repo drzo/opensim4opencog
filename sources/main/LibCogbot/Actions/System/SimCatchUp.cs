@@ -1,23 +1,26 @@
 using MushDLR223.Utilities;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Land
 {
-    class SimCatchUp : Cogbot.Actions.Command, RegionMasterCommand, AsynchronousCommand
+    internal class SimCatchUp : Cogbot.Actions.Command, RegionMasterCommand, AsynchronousCommand
     {
         public SimCatchUp(BotClient client)
         {
             Name = GetType().Name;
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Catches up the pathfinder. Forces the bot to synch it's model of the sim" +
-                " used for pathfinding with the server. To have this happen constantly set" +
-            " <a href='wiki/Sysvars#DoSimulatorsCatchUp'>DoSimulatorsCatchUp</a> to true";
+                          " used for pathfinding with the server. To have this happen constantly set" +
+                          " <a href='wiki/Sysvars#DoSimulatorsCatchUp'>DoSimulatorsCatchUp</a> to true";
             Details = AddUsage("simcatchup", "Force the pathfinder to update");
             Parameters = CreateParams();
             ResultMap = CreateParams(
-                 "message", typeof(string), "if success was false, the reason why",
-                 "success", typeof(bool), "true if we crouched");
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if we crouched");
             Category = Cogbot.Actions.CommandCategory.Simulator;
         }
 

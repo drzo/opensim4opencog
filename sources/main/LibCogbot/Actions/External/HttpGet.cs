@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net;
 //using OpenMetaverse; //using libsecondlife;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.WebUtil
@@ -22,15 +21,16 @@ namespace Cogbot.Actions.WebUtil
             TheBotClient = Client;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Do an http get.";
             Details = AddUsage(Name + " url", "read the contents of a URL to return result") +
-                    AddExample(Name + " http://localhost:5580/action?cmd=say&args=hello",
-                                    "makes the bot say something");
-            Parameters = CreateParams("url", typeof(Uri), "url to get");
+                      AddExample(Name + " http://localhost:5580/action?cmd=say&args=hello",
+                                 "makes the bot say something");
+            Parameters = CreateParams("url", typeof (Uri), "url to get");
             Category = CommandCategory.Simulator;
         }
+
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             return Success(DoHttpGet(args.str));

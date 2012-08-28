@@ -1,23 +1,22 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using MushDLR223.Utilities;
 using OpenMetaverse; //using libsecondlife;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
 {
     [Obsolete]
-    class ReplaceOutfitCommand : Command, BotPersonalCommand
+    internal class ReplaceOutfitCommand : Command, BotPersonalCommand
     {
         public ReplaceOutfitCommand(BotClient Client)
             : base(Client)
         {
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description =
                 @"<p>Same as right clicking and choosing 'replace outfit' in a normal client.</p>
@@ -39,7 +38,7 @@ namespace Cogbot.Actions.Appearance
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             //AutoResetEvent are = new AutoResetEvent(false);
-           // AppearanceManager.AppearanceUpdatedCallback callback = (Primitive.TextureEntry te) => are.Set();
+            // AppearanceManager.AppearanceUpdatedCallback callback = (Primitive.TextureEntry te) => are.Set();
             try
             {
                 //Client.Appearance.OnAppearanceUpdated += callback;
@@ -58,9 +57,9 @@ namespace Cogbot.Actions.Appearance
                     bake = true;
                     wear = wear.Substring(4).Trim();
                     TheBotClient.wearFolder(wear);
-                   // if (!are.WaitOne(WEARABLE_TIMEOUT * 2))
-                     //   return Success("Timeout wearing " + wear + " " + (bake ? " (baked)" : " (not baked)");
-                   // else
+                    // if (!are.WaitOne(WEARABLE_TIMEOUT * 2))
+                    //   return Success("Timeout wearing " + wear + " " + (bake ? " (baked)" : " (not baked)");
+                    // else
                     return Success("wearing folder: " + wear + " " + (bake ? " (baked)" : " (not baked)"));
                 }
                 try
@@ -77,56 +76,74 @@ namespace Cogbot.Actions.Appearance
                         WriteLine("no folder found attaching item: " + wear);
                     }
                     string lwear = wear.ToLower();
-                    BotInventoryEval searcher = new BotInventoryEval(Client);                          
+                    BotInventoryEval searcher = new BotInventoryEval(Client);
                     InventoryFolder rootFolder = Client.Inventory.Store.RootFolder;
                     if (rootFolder.UUID == UUID.Zero) return Success("Cant get roiot folder yet");
-                    bool found = searcher.findInFolders(rootFolder, (ib)=>
-                                                           {
-                                                               
-                                                               if (ib.Name.ToLower() == lwear)
-                                                               {
-                                                                   if (ib is InventoryItem)
-                                                                   {
-                                                                       Client.Appearance.Attach(ib as InventoryItem, AttachmentPoint.Default);
-                                                                       return true;
-                                                                   }
-                                                                   else
-                                                                   {
-                                                                       var fldr = ib as InventoryFolder;
-                                                                       List<InventoryBase> clientInventoryFolderContents = Client.Inventory.FolderContents(ib.UUID, Client.Self.AgentID, false, true, InventorySortOrder.ByName, 40000);
-                                                                       if (clientInventoryFolderContents == null)
-                                                                           return false;
-                                                                       List<InventoryItem> items = new List<InventoryItem>();
-                                                                       foreach (InventoryBase content in clientInventoryFolderContents)
-                                                                       {
-                                                                           var it = content as InventoryItem;
-                                                                           if (it != null) items.Add(it);
-                                                                       }
-                                                                       if (items.Count > 0)
-                                                                       {
-                                                                           Client.Appearance.ReplaceOutfit(items);
-                                                                           return true;
-                                                                       }
-                                                                   }
-
-                                                               }
-                                                               return false;
-                                                           });
+                    bool found = searcher.findInFolders(rootFolder, (ib) =>
+                                                                        {
+                                                                            if (ib.Name.ToLower() == lwear)
+                                                                            {
+                                                                                if (ib is InventoryItem)
+                                                                                {
+                                                                                    Client.Appearance.Attach(
+                                                                                        ib as InventoryItem,
+                                                                                        AttachmentPoint.Default);
+                                                                                    return true;
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                    var fldr = ib as InventoryFolder;
+                                                                                    List<InventoryBase>
+                                                                                        clientInventoryFolderContents =
+                                                                                            Client.Inventory.
+                                                                                                FolderContents(ib.UUID,
+                                                                                                               Client.
+                                                                                                                   Self.
+                                                                                                                   AgentID,
+                                                                                                               false,
+                                                                                                               true,
+                                                                                                               InventorySortOrder
+                                                                                                                   .
+                                                                                                                   ByName,
+                                                                                                               40000);
+                                                                                    if (clientInventoryFolderContents ==
+                                                                                        null)
+                                                                                        return false;
+                                                                                    List<InventoryItem> items =
+                                                                                        new List<InventoryItem>();
+                                                                                    foreach (
+                                                                                        InventoryBase content in
+                                                                                            clientInventoryFolderContents
+                                                                                        )
+                                                                                    {
+                                                                                        var it =
+                                                                                            content as InventoryItem;
+                                                                                        if (it != null) items.Add(it);
+                                                                                    }
+                                                                                    if (items.Count > 0)
+                                                                                    {
+                                                                                        Client.Appearance.ReplaceOutfit(
+                                                                                            items);
+                                                                                        return true;
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            return false;
+                                                                        });
                     if (found) return Success("attaching " + wear);
                     return Failure("did not find " + wear);
                     //  if (!are.WaitOne(WEARABLE_TIMEOUT * 2))
-                   //     return Success("Timeout wearing " + wear + " " + (bake ? " (baked)" : " (not baked)");
-                   // else
-
+                    //     return Success("Timeout wearing " + wear + " " + (bake ? " (baked)" : " (not baked)");
+                    // else
                 }
                 catch (Exception ex)
                 {
-                    return Failure( "(Invalid outfit (" + ex.Message + ")" + args.str + ".");
+                    return Failure("(Invalid outfit (" + ex.Message + ")" + args.str + ".");
                 }
             }
             finally
             {
-               // Client.Appearance.OnAppearanceUpdated -= callback;
+                // Client.Appearance.OnAppearanceUpdated -= callback;
             }
         }
 

@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{954FB5AD-DBA9-4925-9858-4C6EE07248F9}</ProjectGuid>
+    <ProjectGuid>{F0687F2A-F043-4C99-BBB6-F58244FA49A0}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
@@ -66,7 +66,6 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ICSharpCode.SharpZipLib, Version=0.84.0.0, Culture=neutral, PublicKeyToken=1b03e6acf1164f73" />
     <Reference Include="System">
       <Name>System</Name>
     </Reference>
@@ -111,12 +110,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\main\LibCogbot\Cogbot.Library.csproj">
       <Name>Cogbot.Library</Name>
-      <Project>{0B44ED06-B789-4969-9CEF-3D7F2224D2B5}</Project>
+      <Project>{03609913-851B-4319-A288-24F8EACC92BF}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
       <Name>MushDLR223</Name>
-      <Project>{790F71DA-93B6-4437-A6EB-D1E2C9C880D6}</Project>
+      <Project>{19A1AA71-F91B-4846-9D93-882FB2992048}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
@@ -127,23 +126,21 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
     </Compile>
-    <Compile Include="UI\IPEWrapper.cs" />
-    <Compile Include="UI\WinformREPLTextBox.cs">
-      <SubType>Component</SubType>
+    <Compile Include="UI\IPEWrapper.cs">
     </Compile>
-    <Compile Include="UI\Paths.cs" />
+    <Compile Include="UI\Paths.cs">
+    </Compile>
     <Compile Include="UI\TextWindow.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="UI\TextWindow.Designer.cs">
       <DependentUpon>TextWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\WinformREPL.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="UI\TextWindow.resx">
-      <DependentUpon>TextWindow.cs</DependentUpon>
-    </EmbeddedResource>
+    <Compile Include="UI\WinformREPL.cs">
+    </Compile>
+    <Compile Include="UI\WinformREPLTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

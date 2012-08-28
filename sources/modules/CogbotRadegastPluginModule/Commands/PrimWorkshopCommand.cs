@@ -14,6 +14,10 @@ namespace Cogbot.Actions
         public PrimWorkshopCommand(BotClient client)
         {
             Name = "Prim Workshop";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Runs PrimWorkshop on a prim. Usage: PrimWorkshop [prim]";
             Category = Cogbot.Actions.CommandCategory.Objects;
             Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
@@ -21,7 +25,7 @@ namespace Cogbot.Actions
 
         public override CmdResult ExecuteRequest(CmdRequest args0)
         {
-            var args = args0.tokens;
+            var args = args0.GetProperty("targets");
             if (args.Length == 0)
             {
                 return ShowUsage();

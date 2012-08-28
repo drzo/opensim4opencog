@@ -6,10 +6,11 @@ using System.Threading;
 using System.ComponentModel;
 using System.Xml;
 using System.Xml.Serialization;
+using Cogbot;
+using Cogbot.Actions;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Assets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.SimExport
@@ -97,11 +98,12 @@ namespace Cogbot.Actions.SimExport
                 if (TextItemErrors != 0 || TextItemsFound != 0 || TextItemsTransferred != 0)
                 {
                     sbResult.AppendFormat("\r\n{0} : Inventory walker ( {1} running ) has found {2} items.",
-                                            Name, BoolToNot(InventoryWalkerRunning), TextItemsFound);
-                    sbResult.AppendFormat("\r\n{0} : Server Transfers ( {1} running ) has transferred {2} items with {3} errors.",
-                                            Name, BoolToNot(QueueRunnerRunning), TextItemsTransferred, TextItemErrors);
+                                          Name, BoolToNot(InventoryWalkerRunning), TextItemsFound);
+                    sbResult.AppendFormat(
+                        "\r\n{0} : Server Transfers ( {1} running ) has transferred {2} items with {3} errors.",
+                        Name, BoolToNot(QueueRunnerRunning), TextItemsTransferred, TextItemErrors);
                     sbResult.AppendFormat("\r\n{0} : {1} items in Queue, {2} items requested from server.",
-                                            Name, PendingDownloads.Count, CurrentDownloads.Count);
+                                          Name, PendingDownloads.Count, CurrentDownloads.Count);
                 }
                 return sbResult.ToString();
             }
@@ -116,10 +118,10 @@ namespace Cogbot.Actions.SimExport
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Backup inventory to a folder on your hard drive.";
-            Details = AddUsage(Name + " [to <directory>] | [abort] | [status]", Description);            
+            Details = AddUsage(Name + " [to <directory>] | [abort] | [status]", Description);
         }
 
         #region Implementation of IDisposable
@@ -130,13 +132,13 @@ namespace Cogbot.Actions.SimExport
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            StopBackup();     
+            StopBackup();
         }
 
         #endregion
+
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-
             if (args.Length == 1 && args[0] == "status")
             {
                 return Success(BackgroundBackupStatus);
@@ -147,7 +149,7 @@ namespace Cogbot.Actions.SimExport
             }
             else if (args.Length != 2)
             {
-                return ShowUsage();// " " + Name + " [to <directory>] | [abort] | [status]";
+                return ShowUsage(); // " " + Name + " [to <directory>] | [abort] | [status]";
             }
             else if (BackgroundBackupRunning)
             {
@@ -184,13 +186,13 @@ namespace Cogbot.Actions.SimExport
             return Success(BackgroundBackupStatus);
         }
 
-        void bwQueueRunner_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void bwQueueRunner_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             QueueWorker = null;
             WriteLine(BackgroundBackupStatus);
         }
 
-        void bwQueueRunner_DoWork(object sender, DoWorkEventArgs e)
+        private void bwQueueRunner_DoWork(object sender, DoWorkEventArgs e)
         {
             TextItemErrors = TextItemsTransferred = 0;
 
@@ -239,7 +241,7 @@ namespace Cogbot.Actions.SimExport
             }
         }
 
-        void bwBackup_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void bwBackup_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             WriteLine(Name + ": Inventory walking thread done.");
             BackupWorker = null;
@@ -251,7 +253,7 @@ namespace Cogbot.Actions.SimExport
 
             TextItemsFound = 0;
 
-            args = (string[])e.Argument;
+            args = (string[]) e.Argument;
 
             lock (CurrentDownloads) CurrentDownloads.Clear();
 
@@ -272,7 +274,6 @@ namespace Cogbot.Actions.SimExport
         /// <param name="sPathSoFar">path so far, in the form @"c:\here" -- this needs to be "clean" for the current filesystem</param>
         private void BackupFolder(InventoryNode folder, string sPathSoFar)
         {
-
             // FIXME:
             //Client.Inventory.RequestFolderContents(folder.Data.UUID, Client.Self.AgentID, true, true, false, 
             //    InventorySortOrder.ByName);
@@ -303,7 +304,7 @@ namespace Cogbot.Actions.SimExport
 
                         // create the new qdi
                         QueuedDownloadInfo qdi = new QueuedDownloadInfo(sPath, ii.AssetUUID, iNode.Data.UUID, UUID.Zero,
-                            Client.Self.AgentID, ii.AssetType);
+                                                                        Client.Self.AgentID, ii.AssetType);
 
                         // add it to the queue
                         lock (PendingDownloads)
@@ -336,10 +337,8 @@ namespace Cogbot.Actions.SimExport
             lock (CurrentDownloads)
             {
                 // see if we have this in our transfer list
-                QueuedDownloadInfo r = CurrentDownloads.Find(delegate(QueuedDownloadInfo q)
-                {
-                    return q.AssetID == asset.AssetID;
-                });
+                QueuedDownloadInfo r =
+                    CurrentDownloads.Find(delegate(QueuedDownloadInfo q) { return q.AssetID == asset.AssetID; });
 
                 if (r != null && r.AssetID == asset.AssetID)
                 {
@@ -357,7 +356,7 @@ namespace Cogbot.Actions.SimExport
                     {
                         TextItemErrors++;
                         WriteLine("{0}: Download of asset {1} ({2}) failed with status {3}", Name, r.FileName,
-                            r.AssetID.ToString(), asset.Status.ToString());
+                                  r.AssetID.ToString(), asset.Status.ToString());
                     }
 
                     // remove the entry

@@ -5,7 +5,6 @@ using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using Cogbot.World;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
@@ -15,6 +14,10 @@ namespace Cogbot.Actions.System
         public BotPermsCommand(BotClient testClient)
         {
             Name = "botperms";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Sets the bot use permissions. Usage: botperms name [Base] [Owner] [Group] [Ignore]";
             Category = CommandCategory.Security;
         }
@@ -52,12 +55,11 @@ namespace Cogbot.Actions.System
 
             foreach (var p in worldSystemGetPrimitives)
             {
-
                 BotPermissions perms = TheBotClient.GetSecurityLevel(p.ID, null);
-                if (argsUsed==0)
+                if (argsUsed == 0)
                 {
                     AddSuccess("Perms for " + p + " was " + perms);
-                    continue;    
+                    continue;
                 }
                 AddSuccess("Perms for " + p + " was " + perms + " now setting to " + who);
                 TheBotClient.SetSecurityLevel(p.ID, null, who);

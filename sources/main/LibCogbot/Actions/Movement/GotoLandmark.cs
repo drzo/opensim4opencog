@@ -5,7 +5,6 @@ using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.Packets;
 using PathSystem3D.Navigation;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Movement
@@ -15,16 +14,20 @@ namespace Cogbot.Actions.Movement
         public GotoLandmarkCommand(BotClient testClient)
         {
             Name = "goto_landmark";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Teleports to a Landmark. Usage: goto_landmark [UUID]";
             Category = CommandCategory.Movement;
-            Parameters = CreateParams("position", typeof(AssetLandmark), "the location you wish to " + Name);
+            Parameters = CreateParams("position", typeof (AssetLandmark), "the location you wish to " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
             {
-                return ShowUsage();// " goto_landmark [UUID]";
+                return ShowUsage(); // " goto_landmark [UUID]";
             }
 
             UUID landmark = UUID.Zero;

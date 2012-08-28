@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Inventory.Shell
@@ -11,16 +10,22 @@ namespace Cogbot.Actions.Inventory.Shell
     {
         private InventoryManager Manager;
         private OpenMetaverse.Inventory Inventory;
+
         public ListContentsCommand(BotClient client)
         {
             Name = "ls";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Lists the contents of the current working inventory folder.";
             Category = CommandCategory.Inventory;
         }
+
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length > 1)
-                return ShowUsage();// " ls [-l]";
+                return ShowUsage(); // " ls [-l]";
             bool longDisplay = false;
             if (args.Length > 0 && args[0] == "-l")
                 longDisplay = true;
@@ -83,15 +88,15 @@ namespace Cogbot.Actions.Inventory.Shell
         private static string PermMaskString(PermissionMask mask)
         {
             string str = "";
-            if (((uint)mask | (uint)PermissionMask.Copy) == (uint)PermissionMask.Copy)
+            if (((uint) mask | (uint) PermissionMask.Copy) == (uint) PermissionMask.Copy)
                 str += "C";
             else
                 str += "-";
-            if (((uint)mask | (uint)PermissionMask.Modify) == (uint)PermissionMask.Modify)
+            if (((uint) mask | (uint) PermissionMask.Modify) == (uint) PermissionMask.Modify)
                 str += "M";
             else
                 str += "-";
-            if (((uint)mask | (uint)PermissionMask.Transfer) == (uint)PermissionMask.Transfer)
+            if (((uint) mask | (uint) PermissionMask.Transfer) == (uint) PermissionMask.Transfer)
                 str += "T";
             else
                 str += "-";

@@ -1726,18 +1726,18 @@ namespace Cogbot
         {
             SetIfPresent(DefaultAccount, "FirstName", ClientManagerConfig.arguments["first"]);
             if (ClientManagerConfig.arguments["last"] != null)
-                DefaultAccount.LastName = ClientManagerConfig.arguments["last"];
+                DefaultAccount.LastName = "" + ClientManagerConfig.arguments["last"];
             if (ClientManagerConfig.arguments["pass"] != null)
-                DefaultAccount.Password = ClientManagerConfig.arguments["pass"];
+                DefaultAccount.Password = "" + ClientManagerConfig.arguments["pass"];
             DefaultAccount.GroupCommands = true;
 
             if (ClientManagerConfig.arguments["masterkey"] != null)
-                DefaultAccount.MasterKey = UUID.Parse(ClientManagerConfig.arguments["masterkey"]);
+                DefaultAccount.MasterKey = UUID.Parse("" + ClientManagerConfig.arguments["masterkey"]);
             if (ClientManagerConfig.arguments["master"] != null)
-                DefaultAccount.MasterName = ClientManagerConfig.arguments["master"];
+                DefaultAccount.MasterName = "" + ClientManagerConfig.arguments["master"];
 
             if (ClientManagerConfig.arguments["loginuri"] != null)
-                DefaultAccount.URI = LoginURI = ClientManagerConfig.arguments["loginuri"];
+                DefaultAccount.URI = LoginURI = "" + ClientManagerConfig.arguments["loginuri"];
 
             if (string.IsNullOrEmpty(LoginURI))
                 LoginURI = Settings.AGNI_LOGIN_SERVER;
@@ -1749,49 +1749,47 @@ namespace Cogbot
             if (ClientManagerConfig.arguments["startpos"] != null)
             {
                 char sep = '/';
-                string[] startbits = ClientManagerConfig.arguments["startpos"].Split(sep);
+                string[] startbits = ("" + ClientManagerConfig.arguments["startpos"]).Split(sep);
                 DefaultAccount.Start = NetworkManager.StartLocation(startbits[0], Int32.Parse(startbits[1]),
                                                                     Int32.Parse(startbits[2]), Int32.Parse(startbits[3]));
             }
 
             // this script file is ran after bots are created
-            var botscriptFile = ClientManagerConfig.arguments["botscriptfile"];
-            if (!string.IsNullOrEmpty(botscriptFile))
+            string file;
+            if (ClientManagerConfig.arguments.TryGetValue("botscriptfile", out file))
             {
-                if (!File.Exists(botscriptFile))
+                if (!File.Exists(file))
                 {
-                    Logger.Log(String.Format("File {0} Does not exist", botscriptFile), Helpers.LogLevel.Error);
-                } else
+                    Logger.Log(String.Format("File {0} Does not exist", file), Helpers.LogLevel.Error);
+                }
+                else
                 {
                     AddClientTodo(
                         (bc) =>
-                        bc.ExecuteCommand(String.Format("botscript {0}", botscriptFile), UUID.Zero, GlobalWriteLine, CMDFLAGS.Foregrounded));
-                    
+                        bc.ExecuteCommand(String.Format("botscript {0}", file), UUID.Zero, GlobalWriteLine,
+                                          CMDFLAGS.Foregrounded));
+
                 }
             }
 
             // this script file is ran before bots are created
-            if (ClientManagerConfig.arguments["scriptfile"] != null)
+            if (ClientManagerConfig.arguments.TryGetValue("scriptfile", out file))
             {
-                string scriptFile = String.Empty;
-                scriptFile = ClientManagerConfig.arguments["scriptfile"];
-                if (!File.Exists(scriptFile))
+                if (!File.Exists(file))
                 {
-                    Logger.Log(String.Format("File {0} Does not exist", scriptFile), Helpers.LogLevel.Error);
+                    Logger.Log(String.Format("File {0} Does not exist", file), Helpers.LogLevel.Error);
                     return false;
                 }
-                if (!string.IsNullOrEmpty(scriptFile))
+                if (!string.IsNullOrEmpty(file))
                 {
-                    DoCommandAll(String.Format("script {0}", scriptFile), UUID.Zero, GlobalWriteLine);
+                    DoCommandAll(String.Format("script {0}", file), UUID.Zero, GlobalWriteLine);
                 }
                 // Then Run the ClientManager normally
             }
 
-            if (ClientManagerConfig.arguments["file"] != null)
+            if (ClientManagerConfig.arguments.TryGetValue("file", out file))
             {
                 ClientManagerConfig.DoNotCreateBotClientsFromBotConfig = true;
-                string file = String.Empty;
-                file = ClientManagerConfig.arguments["file"];
                 LoadAcctsFromFile(file);
             }
             else if (ClientManagerConfig.arguments["first"] != null && ClientManagerConfig.arguments["last"] != null &&
@@ -1799,8 +1797,8 @@ namespace Cogbot
             {
                 ClientManagerConfig.DoNotCreateBotClientsFromBotConfig = true;
                 // Taking a single login off the command-line
-                var account = FindOrCreateAccount(ClientManagerConfig.arguments["first"],
-                                                  ClientManagerConfig.arguments["last"]);
+                var account = FindOrCreateAccount("" + ClientManagerConfig.arguments["first"],
+                                                  "" + ClientManagerConfig.arguments["last"]);
             }
             else if (ClientManagerConfig.arguments["help"] != null)
             {

@@ -5,56 +5,51 @@ using Radegast;
 
 namespace Cogbot.Actions.System
 {
-    class Login : Command, BotSystemCommand, SynchronousCommand
+    internal class Login : Command, BotSystemCommand, SynchronousCommand
     {
-
         public Login(BotClient Client)
             : base(Client)
         {
             Name = "Login";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Log into grid";
             Details = AddUsage("login <first name> <last name> <password> [<loginuri>] [<location>]",
-                "log into a grid");
+                               "log into a grid");
             Category = CommandCategory.Security;
             Parameters = CreateParams(
-                "first", typeof(string), "first name of bot",
-                "last" , typeof(string), "last name of bot",
-                "password", typeof(string), "password for bot",
-                Optional("loginuri", typeof(Uri), "login uri for grid"),
-                Optional("location", typeof(string), "one of home,last, or a sim name"));
-
+                "first", typeof (string), "first name of bot",
+                "last", typeof (string), "last name of bot",
+                "pass", typeof (string), "password for bot",
+                Optional("loginuri", typeof (Uri), "login uri for grid"),
+                Optional("location", typeof (string), "one of home,last, or a sim name"));
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-            //base.acceptInput(verb, args);
-            string[] tokens = args.objectPhrase.Split(null);
-
             BotClient Client = TheBotClient;
             if (Client.IsLoggedInAndReady) return Success("Already logged in");
-            //if ((tokens.Length != 1) && (tokens.Length != 3))
-            //{
-            //    return ("Please enter login FirstName LastName and Password to login to the SL");
-            //}
-            //else
             {
-                if (tokens.Length > 0 && !String.IsNullOrEmpty(tokens[0]))
+                string value;
+                if (args.TryGetValue("first", out value))
                 {
-                    Client.BotLoginParams.FirstName = tokens[0];
+                    Client.BotLoginParams.FirstName = value;
                 }
-                if (tokens.Length > 1)
+                if (args.TryGetValue("last", out value))
                 {
-                    Client.BotLoginParams.LastName = tokens[1];
+                    Client.BotLoginParams.LastName = value;
                 }
-                if (tokens.Length > 2)
+                if (args.TryGetValue("pass", out value))
                 {
-                    Client.BotLoginParams.Password = tokens[2];
+                    Client.BotLoginParams.Password = value;
                 }
-                if (tokens.Length > 3)
+                if (args.TryGetValue("loginuri", out value))
                 {
                     Radegast.GridManager gm = new GridManager();
                     gm.LoadGrids();
-                    string url = tokens[3];
+                    string url = value;
                     string find = url.ToLower();
                     foreach (var grid in gm.Grids)
                     {
@@ -65,13 +60,14 @@ namespace Cogbot.Actions.System
                     }
                     Client.BotLoginParams.URI = url;
                 }
-                if (tokens.Length > 4)
+                if (args.TryGetValue("location", out value))
                 {
-                    Client.BotLoginParams.Start = tokens[4];
+                    Client.BotLoginParams.Start = value;
                 }
                 if (!Client.Network.Connected && !Client.Network.LoginMessage.StartsWith("Logging"))
                 {
-                    Client.Settings.LOGIN_SERVER = TheBotClient.BotLoginParams.URI;// ClientManager.SingleInstance.config.simURL; // "http://127.0.0.1:8002/";
+                    Client.Settings.LOGIN_SERVER = TheBotClient.BotLoginParams.URI;
+                        // ClientManager.SingleInstance.config.simURL; // "http://127.0.0.1:8002/";
                     ///                    Client.Network.Login(Client.BotLoginParams.FirstName, Client.BotLoginParams.LastName, Client.BotLoginParams.Password, "OnRez", "UNR");
                     WriteLine("$bot beginning login");
                     Client.Login();

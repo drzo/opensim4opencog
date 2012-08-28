@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Cogbot;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Inventory
@@ -12,9 +11,13 @@ namespace Cogbot.Actions.Inventory
         public CopyCommand(BotClient client)
         {
             Name = "Copy";
-            Description = "Copys from a prim. Usage: Copy [prim]";
+        }
+
+        public override void MakeInfo()
+        {
+            Description = "Copys from a prim.";
             Category = Cogbot.Actions.CommandCategory.Objects;
-            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
+            Parameters = CreateParams("targets", typeof (PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

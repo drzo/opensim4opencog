@@ -777,7 +777,7 @@ namespace Cogbot.World
 
 
 
-        protected bool IsDrivingVehical
+        public bool IsDrivingVehical
         {
             get
             {

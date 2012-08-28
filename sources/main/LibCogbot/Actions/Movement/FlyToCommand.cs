@@ -1,31 +1,34 @@
-﻿using System;
+using System;
 using System.Threading;
 using Cogbot.World;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Movement
 {
-    class FlyToCommand : Command, BotPersonalCommand
+    internal class FlyToCommand : Command, BotPersonalCommand
     {
-
-        Vector3 myPos = new Vector3();
-        Vector2 myPos0 = new Vector2();
-        Vector3 target = new Vector3();
-        Vector2 target0 = new Vector2();
-        float diff, olddiff, saveolddiff;
+        private Vector3 myPos = new Vector3();
+        private Vector2 myPos0 = new Vector2();
+        private Vector3 target = new Vector3();
+        private Vector2 target0 = new Vector2();
+        private float diff, olddiff, saveolddiff;
         private DateTime startTime = DateTime.MinValue;
-        int duration = 10000;
-        EventHandler<TerseObjectUpdateEventArgs> callback; 
+        private int duration = 10000;
+        private EventHandler<TerseObjectUpdateEventArgs> callback;
 
         public FlyToCommand(BotClient testClient)
         {
             TheBotClient = testClient;
 
             Name = "Fly To";
-            Description = "Fly the avatar toward the specified position for a maximum of seconds. Usage: FlyTo x y z [seconds]";
+        }
+
+        public override void MakeInfo()
+        {
+            Description =
+                "Fly the avatar toward the specified position for a maximum of seconds. Usage: FlyTo x y z [seconds]";
             Category = CommandCategory.Movement;
             Parameters = CreateParams("position", typeof (SimPosition), "the location you wish to " + Name);
             callback = new EventHandler<TerseObjectUpdateEventArgs>(Objects_OnObjectUpdated);
@@ -34,12 +37,12 @@ namespace Cogbot.Actions.Movement
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
-                return ShowUsage();// " FlyTo x y z [seconds]";
+                return ShowUsage(); // " FlyTo x y z [seconds]";
             int argsUsed;
             SimPosition position = WorldSystem.GetVector(args, out argsUsed);
-            if (position==null)
+            if (position == null)
             {
-                return ShowUsage();// " FlyTo x y z [seconds]";
+                return ShowUsage(); // " FlyTo x y z [seconds]";
             }
             duration = 30000;
             if (argsUsed < args.Length)
@@ -99,7 +102,7 @@ namespace Cogbot.Actions.Movement
             //ZMovement();
             //Client.Self.Movement.SendUpdate(false);
 
-            return Success(string.Format("flying to {0} in {1} seconds", target.ToString(), duration / 1000));
+            return Success(string.Format("flying to {0} in {1} seconds", target.ToString(), duration/1000));
         }
 
         private void Objects_OnObjectUpdated(object s, TerseObjectUpdateEventArgs e)
@@ -202,11 +205,14 @@ namespace Cogbot.Actions.Movement
 
         private void Debug(string x)
         {
-           // return; /* remove for debugging */
-            WriteLine(x + " {0,3:##0} {1,3:##0} {2,3:##0} diff {3,5:##0.0} olddiff {4,5:##0.0}  At:{5,5} {6,5}  Up:{7,5} {8,5}  v: {9} w: {10}",
-        myPos.X, myPos.Y, myPos.Z, diff, saveolddiff,
-        Client.Self.Movement.AtPos, Client.Self.Movement.AtNeg, Client.Self.Movement.UpPos, Client.Self.Movement.UpNeg,
-        Client.Self.Velocity.ToString(), Client.Self.AngularVelocity.ToString());
+            // return; /* remove for debugging */
+            WriteLine(
+                x +
+                " {0,3:##0} {1,3:##0} {2,3:##0} diff {3,5:##0.0} olddiff {4,5:##0.0}  At:{5,5} {6,5}  Up:{7,5} {8,5}  v: {9} w: {10}",
+                myPos.X, myPos.Y, myPos.Z, diff, saveolddiff,
+                Client.Self.Movement.AtPos, Client.Self.Movement.AtNeg, Client.Self.Movement.UpPos,
+                Client.Self.Movement.UpNeg,
+                Client.Self.Velocity.ToString(), Client.Self.AngularVelocity.ToString());
         }
     }
 }

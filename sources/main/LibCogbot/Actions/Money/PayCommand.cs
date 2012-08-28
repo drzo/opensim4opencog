@@ -3,7 +3,6 @@ using Cogbot;
 using Cogbot.World;
 using OpenMetaverse;
 using Radegast;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Money
@@ -13,10 +12,14 @@ namespace Cogbot.Actions.Money
         public PayCommand(BotClient client)
         {
             Name = "GUIPay";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Pays a prim. Usage: Pay [prim] [amount]";
             Category = CommandCategory.Money;
-            Parameters = CreateParams("target", typeof(PrimSpec), "The target(s) of the " + Name,
-                                      "ammount", typeof(string), "The ammount to pay");
+            Parameters = CreateParams("target", typeof (PrimSpec), "The target(s) of the " + Name,
+                                      "ammount", typeof (string), "The ammount to pay");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

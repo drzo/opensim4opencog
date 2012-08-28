@@ -1,7 +1,6 @@
 using System.Windows.Forms;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Pathfinder
@@ -11,7 +10,12 @@ namespace Cogbot.Actions.Pathfinder
         public WalkToCommand(BotClient client)
         {
             Name = "WalkTo";
-            Description = "Go to the avatar toward the specified position for a maximum of seconds. Usage: WalkTo [prim | [x y]] [dist]";
+        }
+
+        public override void MakeInfo()
+        {
+            Description =
+                "Go to the avatar toward the specified position for a maximum of seconds. Usage: WalkTo [prim | [x y]] [dist]";
             Category = Cogbot.Actions.CommandCategory.Movement;
             Parameters = CreateParams("position", typeof (SimPosition), "the location you wish to " + Name);
         }
@@ -23,7 +27,7 @@ namespace Cogbot.Actions.Pathfinder
             int argsUsed;
             SimPosition simObject = WorldSystem.GetVector(args, out argsUsed);
 
-            if (simObject==null) return Failure("Cannot find " + args.str); 
+            if (simObject == null) return Failure("Cannot find " + args.str);
             if (!simObject.IsRegionAttached)
             {
                 return Failure("Cannot get SimPosition of " + simObject);
@@ -46,7 +50,6 @@ namespace Cogbot.Actions.Pathfinder
 
         private void Goto(Vector3 target, float p)
         {
-
             if (true)
             {
                 uint x, y;
@@ -61,7 +64,7 @@ namespace Cogbot.Actions.Pathfinder
                     if (autoOff)
                     {
                         Client.Self.Movement.TurnToward(target);
-                        Client.Self.AutoPilot((ulong)(x + target.X), (ulong)(y + target.Y), GetSimPosition().Z);
+                        Client.Self.AutoPilot((ulong) (x + target.X), (ulong) (y + target.Y), GetSimPosition().Z);
                         autoOff = false;
                     }
                     cp = new Vector2(GetSimPosition().X, GetSimPosition().Y);

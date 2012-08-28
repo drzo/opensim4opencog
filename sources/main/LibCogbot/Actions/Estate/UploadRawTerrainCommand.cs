@@ -11,7 +11,7 @@ namespace Cogbot.Actions.Estate
 {
     public class UploadRawTerrainCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
-        AutoResetEvent WaitForUploadComplete = new AutoResetEvent(false);
+        private AutoResetEvent WaitForUploadComplete = new AutoResetEvent(false);
 
         public UploadRawTerrainCommand(BotClient testClient)
         {
@@ -19,12 +19,12 @@ namespace Cogbot.Actions.Estate
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Upload a raw terrain file to a simulator.";
             Details = AddUsage(Name + " filename", "upload filename");
             Category = CommandCategory.Simulator;
-            Parameters = CreateParams("filename", typeof(string), "filename to upload");
+            Parameters = CreateParams("filename", typeof (string), "filename to upload");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -32,7 +32,7 @@ namespace Cogbot.Actions.Estate
             string fileName = String.Empty;
 
             if (args.Length != 1)
-                return ShowUsage();// " uploadterrain filename";
+                return ShowUsage(); // " uploadterrain filename";
 
 
             fileName = args[0];
@@ -71,7 +71,7 @@ namespace Cogbot.Actions.Estate
         }
 
 
-        void Assets_UploadProgress(object sender, AssetUploadEventArgs e)
+        private void Assets_UploadProgress(object sender, AssetUploadEventArgs e)
         {
             if (e.Upload.Transferred == e.Upload.Size)
             {
@@ -83,7 +83,5 @@ namespace Cogbot.Actions.Estate
                 DLRConsole.DebugWrite(".");
             }
         }
-
-
     }
 }

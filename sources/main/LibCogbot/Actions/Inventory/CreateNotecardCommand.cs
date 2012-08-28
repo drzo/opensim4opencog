@@ -5,21 +5,29 @@ using System.Text;
 using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Inventory
 {
     public class CreateNotecardCommand : Command, BotPersonalCommand
     {
-        const int NOTECARD_CREATE_TIMEOUT = 1000 * 10;
-        const int NOTECARD_FETCH_TIMEOUT = 1000 * 10;
-        const int INVENTORY_FETCH_TIMEOUT = 1000 * 10;
+        private const int NOTECARD_CREATE_TIMEOUT = 1000*10;
+        private const int NOTECARD_FETCH_TIMEOUT = 1000*10;
+        private const int INVENTORY_FETCH_TIMEOUT = 1000*10;
 
         public CreateNotecardCommand(BotClient testClient)
         {
             Name = "createnotecard";
-            Description = "Creates a notecard from a local text file and optionally embed an inventory item. Usage: createnotecard filename.txt [itemid]";
+        }
+
+        public override void MakeInfo()
+        {
+            Description = "Creates a notecard from a local text file and optionally embed an inventory item.";
+            AddVersion(
+                CreateParams(
+                    "filename", typeof (string), "filename.txt file to read",
+                    Optional("itemid", typeof (InventoryItem), " optionally embed an inventory item")));
+						
             Category = CommandCategory.Inventory;
         }
 
@@ -42,14 +50,20 @@ namespace Cogbot.Actions.Inventory
             }
             else
             {
-                return ShowUsage();// " createnotecard filename.txt";
+                return ShowUsage(); // " createnotecard filename.txt";
             }
 
             if (!File.Exists(filename))
-                return Failure( "File \"" + filename + "\" does not exist");
+                return Failure("File \"" + filename + "\" does not exist");
 
-            try { fileData = File.ReadAllText(filename); }
-            catch (Exception ex) { return Failure("failed to open " + filename + ": " + ex.Message); }
+            try
+            {
+                fileData = File.ReadAllText(filename);
+            }
+            catch (Exception ex)
+            {
+                return Failure("failed to open " + filename + ": " + ex.Message);
+            }
 
             #region Notecard asset data
 
@@ -63,8 +77,8 @@ namespace Cogbot.Actions.Inventory
                 InventoryItem item = FetchItem(embedItemID);
                 if (item != null)
                 {
-                    notecard.EmbeddedItems = new List<InventoryItem> { item };
-                    notecard.BodyText += (char)0xdbc0 + (char)0xdc00;
+                    notecard.EmbeddedItems = new List<InventoryItem> {item};
+                    notecard.BodyText += (char) 0xdbc0 + (char) 0xdc00;
                 }
                 else
                 {
@@ -77,85 +91,105 @@ namespace Cogbot.Actions.Inventory
             #endregion Notecard asset data
 
             Client.Inventory.RequestCreateItem(Client.Inventory.FindFolderForType(AssetType.Notecard),
-                filename, filename + " created by OpenMetaverse BotClient " + DateTime.Now, AssetType.Notecard,
-                UUID.Random(), InventoryType.Notecard, PermissionMask.All,
-                delegate(bool createSuccess, InventoryItem item)
-                {
-                    if (createSuccess)
-                    {
-                        #region Upload an empty notecard asset first
+                                               filename,
+                                               filename + " created by OpenMetaverse BotClient " + DateTime.Now,
+                                               AssetType.Notecard,
+                                               UUID.Random(), InventoryType.Notecard, PermissionMask.All,
+                                               delegate(bool createSuccess, InventoryItem item)
+                                                   {
+                                                       if (createSuccess)
+                                                       {
+                                                           #region Upload an empty notecard asset first
 
-                        AutoResetEvent emptyNoteEvent = new AutoResetEvent(false);
-                        AssetNotecard empty = new AssetNotecard();
-                        empty.BodyText = "\n";
-                        empty.Encode();
+                                                           AutoResetEvent emptyNoteEvent = new AutoResetEvent(false);
+                                                           AssetNotecard empty = new AssetNotecard();
+                                                           empty.BodyText = "\n";
+                                                           empty.Encode();
 
-                        Client.Inventory.RequestUploadNotecardAsset(empty.AssetData, item.UUID,
-                            delegate(bool uploadSuccess, string status, UUID itemID, UUID assetID)
-                            {
-                                notecardItemID = itemID;
-                                notecardAssetID = assetID;
-                                success = uploadSuccess;
-                                message = status ?? "Unknown error uploading notecard asset";
-                                emptyNoteEvent.Set();
-                            });
+                                                           Client.Inventory.RequestUploadNotecardAsset(empty.AssetData,
+                                                                                                       item.UUID,
+                                                                                                       delegate(
+                                                                                                           bool
+                                                                                                           uploadSuccess,
+                                                                                                           string status,
+                                                                                                           UUID itemID,
+                                                                                                           UUID assetID)
+                                                                                                           {
+                                                                                                               notecardItemID
+                                                                                                                   =
+                                                                                                                   itemID;
+                                                                                                               notecardAssetID
+                                                                                                                   =
+                                                                                                                   assetID;
+                                                                                                               success =
+                                                                                                                   uploadSuccess;
+                                                                                                               message =
+                                                                                                                   status ??
+                                                                                                                   "Unknown error uploading notecard asset";
+                                                                                                               emptyNoteEvent
+                                                                                                                   .Set();
+                                                                                                           });
 
-                        emptyNoteEvent.WaitOne(NOTECARD_CREATE_TIMEOUT, false);
+                                                           emptyNoteEvent.WaitOne(NOTECARD_CREATE_TIMEOUT, false);
 
-                        #endregion Upload an empty notecard asset first
+                                                           #endregion Upload an empty notecard asset first
 
-                        if (success)
-                        {
-                            // Upload the actual notecard asset
-                            Client.Inventory.RequestUploadNotecardAsset(notecard.AssetData, item.UUID,
-                                delegate(bool uploadSuccess, string status, UUID itemID, UUID assetID)
-                                {
-                                    notecardItemID = itemID;
-                                    notecardAssetID = assetID;
-                                    finalUploadSuccess = uploadSuccess;
-                                    message = status ?? "Unknown error uploading notecard asset";
-                                    notecardEvent.Set();
-                                });
-                        }
-                        else
-                        {
-                            notecardEvent.Set();
-                        }
-                    }
-                    else
-                    {
-                        message = "Notecard item creation failed";
-                        notecardEvent.Set();
-                    }
-                }
-            );
+                                                           if (success)
+                                                           {
+                                                               // Upload the actual notecard asset
+                                                               Client.Inventory.RequestUploadNotecardAsset(
+                                                                   notecard.AssetData, item.UUID,
+                                                                   delegate(bool uploadSuccess, string status,
+                                                                            UUID itemID, UUID assetID)
+                                                                       {
+                                                                           notecardItemID = itemID;
+                                                                           notecardAssetID = assetID;
+                                                                           finalUploadSuccess = uploadSuccess;
+                                                                           message = status ??
+                                                                                     "Unknown error uploading notecard asset";
+                                                                           notecardEvent.Set();
+                                                                       });
+                                                           }
+                                                           else
+                                                           {
+                                                               notecardEvent.Set();
+                                                           }
+                                                       }
+                                                       else
+                                                       {
+                                                           message = "Notecard item creation failed";
+                                                           notecardEvent.Set();
+                                                       }
+                                                   }
+                );
 
             notecardEvent.WaitOne(NOTECARD_CREATE_TIMEOUT, false);
 
             if (finalUploadSuccess)
             {
-                WriteLine("Notecard successfully created, ItemID " + notecardItemID + " AssetID " + notecardAssetID, Helpers.LogLevel.Info);
+                WriteLine("Notecard successfully created, ItemID " + notecardItemID + " AssetID " + notecardAssetID,
+                          Helpers.LogLevel.Info);
                 return DownloadNotecard(notecardItemID, notecardAssetID);
             }
             else
-                return Failure( "Notecard creation failed: " + message);
+                return Failure("Notecard creation failed: " + message);
         }
 
-        InventoryItem FetchItem(UUID itemID)
+        private InventoryItem FetchItem(UUID itemID)
         {
             InventoryItem fetchItem = null;
             AutoResetEvent fetchItemEvent = new AutoResetEvent(false);
 
             EventHandler<ItemReceivedEventArgs> itemReceivedCallback =
-                (s,e)=>
-                {
-                    var item = e.Item;
-                    if (item.UUID == itemID)
+                (s, e) =>
                     {
-                        fetchItem = item;
-                        fetchItemEvent.Set();
-                    }
-                };
+                        var item = e.Item;
+                        if (item.UUID == itemID)
+                        {
+                            fetchItem = item;
+                            fetchItemEvent.Set();
+                        }
+                    };
 
             Client.Inventory.ItemReceived += itemReceivedCallback;
 
@@ -168,23 +202,24 @@ namespace Cogbot.Actions.Inventory
             return fetchItem;
         }
 
-        CmdResult DownloadNotecard(UUID itemID, UUID assetID)
+        private CmdResult DownloadNotecard(UUID itemID, UUID assetID)
         {
             UUID transferID = UUID.Zero;
             AutoResetEvent assetDownloadEvent = new AutoResetEvent(false);
             byte[] notecardData = null;
             string error = "Timeout";
 
-            Client.Assets.RequestInventoryAsset(assetID, itemID, UUID.Zero, Client.Self.AgentID, AssetType.Notecard, true,
-                                delegate(AssetDownload transfer, Asset asset)
-                                {
-                                    if (transfer.Success)
-                                        notecardData = transfer.AssetData;
-                                    else
-                                        error = transfer.Status.ToString();
-                                    assetDownloadEvent.Set();
-                                }
-            );
+            Client.Assets.RequestInventoryAsset(assetID, itemID, UUID.Zero, Client.Self.AgentID, AssetType.Notecard,
+                                                true,
+                                                delegate(AssetDownload transfer, Asset asset)
+                                                    {
+                                                        if (transfer.Success)
+                                                            notecardData = transfer.AssetData;
+                                                        else
+                                                            error = transfer.Status.ToString();
+                                                        assetDownloadEvent.Set();
+                                                    }
+                );
 
             assetDownloadEvent.WaitOne(NOTECARD_FETCH_TIMEOUT, false);
 

@@ -4,7 +4,6 @@ using System.Text;
 using Cogbot.World;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Movement
@@ -12,6 +11,10 @@ namespace Cogbot.Actions.Movement
     public class StandCommand : Command, BotPersonalCommand
     {
         public StandCommand(BotClient testClient)
+        {
+        }
+
+        public override void MakeInfo()
         {
             Description = "Stand up.  OK to call it if already standing";
             Details = "stand";
@@ -23,7 +26,7 @@ namespace Cogbot.Actions.Movement
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
-	    {
+        {
             SimActor sitter = WorldSystem.TheSimAvatar;
             if (!sitter.IsSitting)
             {
@@ -32,10 +35,11 @@ namespace Cogbot.Actions.Movement
             else
             {
                 sitter.StandUp();
-                AddSuccess("Standing up."); ;
+                AddSuccess("Standing up.");
+                ;
             }
             Client.Self.Stand();
             return SuccessOrFailure();
-	    }
+        }
     }
 }

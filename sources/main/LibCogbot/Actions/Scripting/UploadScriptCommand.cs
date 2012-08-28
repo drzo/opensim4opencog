@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using OpenMetaverse;
-
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Scripting
@@ -21,6 +19,10 @@ namespace Cogbot.Actions.Scripting
         public UploadScriptCommand(BotClient testClient)
         {
             Name = "Upload Script";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Upload a local .lsl file file into your inventory.";
             Category = CommandCategory.Inventory;
         }
@@ -34,7 +36,7 @@ namespace Cogbot.Actions.Scripting
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
-                return ShowUsage();// " uploadscript filename.lsl";
+                return ShowUsage(); // " uploadscript filename.lsl";
 
             string file = String.Empty;
             for (int ct = 0; ct < args.Length; ct++)
@@ -42,7 +44,7 @@ namespace Cogbot.Actions.Scripting
             file = file.TrimEnd();
 
             if (!File.Exists(file))
-                return Failure( String.Format("Filename '{0}' does not exist", file));
+                return Failure(String.Format("Filename '{0}' does not exist", file));
 
             string ret = String.Format("Filename: {0}", file);
 
@@ -53,21 +55,29 @@ namespace Cogbot.Actions.Scripting
                     string body = reader.ReadToEnd();
                     string desc = String.Format("{0} created by OpenMetaverse BotClient {1}", file, DateTime.Now);
                     // create the asset
-                    Client.Inventory.RequestCreateItem(Client.Inventory.FindFolderForType(AssetType.LSLText), file, desc, AssetType.LSLText, UUID.Random(), InventoryType.LSL, PermissionMask.All,
-                    delegate(bool success, InventoryItem item)
-                    {
-                        if (success)
-                            // upload the asset
-                            Client.Inventory.RequestUpdateScriptAgentInventory(EncodeScript(body), item.UUID, true, 
-                                new InventoryManager.ScriptUpdatedCallback(delegate(bool success1, string status, bool itemid, List<string> assetid, UUID itemid1, UUID assetid1)
-                            {
-                                if (success1)
-                                    ret += String.Format(" Script successfully uploaded, ItemID {0} AssetID {1}", itemid, assetid);
-                            }));
-                    });
+                    Client.Inventory.RequestCreateItem(Client.Inventory.FindFolderForType(AssetType.LSLText), file, desc,
+                                                       AssetType.LSLText, UUID.Random(), InventoryType.LSL,
+                                                       PermissionMask.All,
+                                                       delegate(bool success, InventoryItem item)
+                                                           {
+                                                               if (success)
+                                                                   // upload the asset
+                                                                   Client.Inventory.RequestUpdateScriptAgentInventory(
+                                                                       EncodeScript(body), item.UUID, true,
+                                                                       new InventoryManager.ScriptUpdatedCallback(
+                                                                           delegate(bool success1, string status,
+                                                                                    bool itemid, List<string> assetid,
+                                                                                    UUID itemid1, UUID assetid1)
+                                                                               {
+                                                                                   if (success1)
+                                                                                       ret +=
+                                                                                           String.Format(
+                                                                                               " Script successfully uploaded, ItemID {0} AssetID {1}",
+                                                                                               itemid, assetid);
+                                                                               }));
+                                                           });
                 }
                 return Success(ret);
-
             }
             catch (Exception e)
             {
@@ -75,6 +85,7 @@ namespace Cogbot.Actions.Scripting
                 return Failure(String.Format("Error creating script for {0}", ret));
             }
         }
+
         /// <summary>
         /// Encodes the script text for uploading
         /// </summary>
@@ -88,5 +99,4 @@ namespace Cogbot.Actions.Scripting
             return assetData;
         }
     }
-
 }

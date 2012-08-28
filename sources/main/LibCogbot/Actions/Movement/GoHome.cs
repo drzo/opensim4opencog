@@ -9,6 +9,10 @@ namespace Cogbot.Actions.Movement
         public GoHomeCommand(BotClient testClient)
         {
             Name = "gohome";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Teleports home";
             Category = CommandCategory.Movement;
             Parameters = CreateParams();

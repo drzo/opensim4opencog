@@ -24,11 +24,18 @@ namespace Cogbot
         {
             get
             {
-                if (string.IsNullOrEmpty(_masterName) && UUID.Zero != _masterKey)
+                if (string.IsNullOrEmpty(_lastMasterSet) && UUID.Zero != _lastMasterKey)
                 {
-                    MasterName = WorldSystem.GetUserName(_masterKey);
+                    MasterName = "" + _lastMasterKey;
                 }
-                return _masterName;
+                if (_lastMasterSet==null)
+                {
+                    foreach (string s in MasterNames)
+                    {
+                        return s;   
+                    }
+                }
+                return _lastMasterSet;
             }
             set
             {
@@ -40,7 +47,7 @@ namespace Cogbot
                         MasterKey = found;
                         return;
                     }
-                    _masterName = value;
+                    _lastMasterSet = value;
                     SetSecurityLevel(OWNERLEVEL, value, BotPermissions.Owner);
                     found = WorldSystem.GetUserID(value);
                     if (found != UUID.Zero)
@@ -50,47 +57,144 @@ namespace Cogbot
                 }
             }
         }
+        public ICollection<string> MasterNames
+        {
+            get
+            {
+                IEqualityComparer<string> InsensitiveString = new KeyStringComparer();
+                var list = new HashSet<string>(InsensitiveString);
+                lock (SecurityLevelsByName)
+                {
+                    foreach (var kv in SecurityLevelsByName)
+                    {
+                        if ((kv.Value & BotPermissions.Master) != 0)
+                        {
+                            list.Add(kv.Key);
+                        }
+                    }
+                }
+                lock (SecurityLevels)
+                {
+                    foreach (var kv in SecurityLevels)
+                    {
+                        if ((kv.Value & BotPermissions.Master) != 0)
+                        {
+                            string _masterName = WorldSystem.GetUserName(kv.Key) ?? "" + kv.Key;
+                            list.Add(_masterName);
+
+                        }
+                    }
+                }
+                return list;
+            }
+            set
+            {
+                foreach (string v in value)
+                {
+                    if (!string.IsNullOrEmpty(v))
+                    {
+                        UUID found;
+                        if (UUID.TryParse(v, out found))
+                        {
+                            SetSecurityLevel(found, v, BotPermissions.Master);
+                            continue;
+                        }
+                        found = WorldSystem.GetUserID(v);
+                        if (found != UUID.Zero)
+                        {
+                            SetSecurityLevel(found, v, BotPermissions.Master);
+                            continue;
+                        }
+                        SetSecurityLevel(OWNERLEVEL, v, BotPermissions.Master);
+                    }
+                }
+            }
+        }
 
         // permissions "NextOwner" means banned "Wait until they are an owner before doing anything!"
         public Dictionary<UUID, BotPermissions> SecurityLevels = new Dictionary<UUID, BotPermissions>();
         public Dictionary<string, BotPermissions> SecurityLevelsByName = new Dictionary<string, BotPermissions>();
 
-        private UUID _masterKey = UUID.Zero;
+        private UUID _lastMasterKey = UUID.Zero;
         public UUID MasterKey
         {
             get
             {
-                if (UUID.Zero == _masterKey && !string.IsNullOrEmpty(_masterName))
+                if (UUID.Zero == _lastMasterKey && !string.IsNullOrEmpty(_lastMasterSet))
                 {
-                    UUID found = WorldSystem.GetUserID(_masterName);
+                    UUID found = WorldSystem.GetUserID(_lastMasterSet);
                     if (found != UUID.Zero)
                     {
                         MasterKey = found;
                     }
                 }
-                return _masterKey;
+                if (_lastMasterKey == null)
+                {
+                    foreach (var s in MasterKeys)
+                    {
+                        return s;
+                    }
+                }
+                return _lastMasterKey;
             }
             set
             {
                 if (UUID.Zero != value)
                 {
-                    _masterKey = value;
-                    if (string.IsNullOrEmpty(_masterName))
+                    _lastMasterKey = value;
+                    if (string.IsNullOrEmpty(_lastMasterSet))
                     {
                         string maybe = WorldSystem.GetUserName(value);
                         if (!string.IsNullOrEmpty(maybe)) MasterName = maybe;
                     }
-                    lock (SecurityLevels) SecurityLevels[value] = BotPermissions.Owner;
+                    lock (SecurityLevels) SecurityLevels[value] |= BotPermissions.Master;
                 }
             }
         }
-        public bool AllowObjectMaster
+
+        public ICollection<UUID> MasterKeys
         {
             get
             {
-                return _masterKey != UUID.Zero;
+                var list = new HashSet<UUID>();
+                lock (SecurityLevelsByName)
+                {
+                    foreach (var kv in SecurityLevelsByName)
+                    {
+                        if ((kv.Value & BotPermissions.Master) != 0)
+                        {
+                            var _masterName = WorldSystem.GetUserID(kv.Key);
+                            if (_masterName != UUID.Zero) list.Add(_masterName);
+
+                        }
+                    }
+                }
+                lock (SecurityLevels)
+                {
+                    foreach (var kv in SecurityLevels)
+                    {
+                        if ((kv.Value & BotPermissions.Master) != 0)
+                        {
+                            list.Add(kv.Key);
+                        }
+                    }
+                }
+                return list;
+            }
+            set
+            {
+                foreach (UUID found in value)
+                {
+                    if (found != UUID.Zero)
+                    {
+                        string named = WorldSystem.GetUserName(found);
+                        SetSecurityLevel(found, named, BotPermissions.Master);
+                        continue;
+                    }
+                }
             }
         }
+        public bool AllowObjectMaster = true;
 
         public BotPermissions GetSecurityLevel(UUID uuid, string name)
         {
@@ -236,7 +340,7 @@ namespace Cogbot
             BotPermissions perms = GetSecurityLevel(FromAgentID, FromAgentName);
 
             // Received an IM from someone that is authenticated
-            if (Type == ChatType.OwnerSay || FromAgentID == MasterKey || FromAgentName == MasterName)
+            if (Type == ChatType.OwnerSay)
             {
                 perms |= BotPermissions.Owner;
             }
@@ -459,6 +563,8 @@ namespace Cogbot
             }
         }
         public bool AcceptAllInventoryItems = false;
+        private string _lastMasterSet;
+
         public static bool HasPermission(BotPermissions them, BotPermissions testFor)
         {
             if ((them & BotPermissions.Ignore) != 0) return false;
@@ -495,12 +601,15 @@ namespace Cogbot
         ExecuteCode,
         AcceptGroupAndFriendRequests,
         AcceptTeleport,
+        SendDebugTo,
+        IsMaster,
 
         Stranger = ChatWith,
         Group = Friend,
         Friend = AcceptInventory | ChatWith | AcceptGroupAndFriendRequests | AcceptTeleport,
         Trusted = Friend | ExecuteCommands,
-        Owner = Trusted | ExecuteCode,
+        Owner = Trusted | ExecuteCode | IsMaster,
+        Master = Owner | SendDebugTo | IsMaster
     }
 
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
@@ -11,12 +10,16 @@ namespace Cogbot.Actions.System
     public class QuitCommand : Command, SystemApplicationCommand
     {
         public QuitCommand(BotClient testClient)
-		{
-			Name = "quit";
-			Description = "Log all avatars out and shut down";
+        {
+            Name = "quit";
+        }
+
+        public override void MakeInfo()
+        {
+            Description = "Log all avatars out and shut down";
             Details = AddUsage(CreateParams(), "log out all avatars and shut down");
             Category = CommandCategory.BotClient;
-		}
+        }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
@@ -28,11 +31,9 @@ namespace Cogbot.Actions.System
             }
             catch (Exception e0)
             {
-
             }
             ClientManager.Quit();
             return r;
-
         }
     }
 }

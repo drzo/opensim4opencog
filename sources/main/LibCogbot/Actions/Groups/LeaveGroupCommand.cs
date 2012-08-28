@@ -4,14 +4,13 @@ using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Groups
 {
     public class LeaveGroupCommand : Command, BotPersonalCommand
     {
-        ManualResetEvent GroupsEvent = new ManualResetEvent(false);
+        private ManualResetEvent GroupsEvent = new ManualResetEvent(false);
         private bool leftGroup;
 
         public LeaveGroupCommand(BotClient testClient)
@@ -20,13 +19,14 @@ namespace Cogbot.Actions.Groups
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Leave a group.";
             Category = CommandCategory.Groups;
             Details = AddUsage(Name + " group", Description);
-            Parameters = CreateParams("group", typeof(Group), "group you are going to " + Name);
+            Parameters = CreateParams("group", typeof (Group), "group you are going to " + Name);
         }
+
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
@@ -38,7 +38,8 @@ namespace Cogbot.Actions.Groups
             groupName = groupName.Trim();
 
             UUID groupUUID = Client.GroupName2UUID(groupName);
-            if (UUID.Zero != groupUUID) {
+            if (UUID.Zero != groupUUID)
+            {
                 Client.Groups.GroupLeaveReply += Groups_OnGroupLeft;
                 Client.Groups.LeaveGroup(groupUUID);
 
@@ -56,9 +57,10 @@ namespace Cogbot.Actions.Groups
         }
 
 
-        void Groups_OnGroupLeft(object sender, GroupOperationEventArgs e)
+        private void Groups_OnGroupLeft(object sender, GroupOperationEventArgs e)
         {
-            WriteLine(Client.ToString() + (e.Success ? " has left group " : " failed to left group ") + e.GroupID.ToString());
+            WriteLine(Client.ToString() + (e.Success ? " has left group " : " failed to left group ") +
+                      e.GroupID.ToString());
 
             leftGroup = e.Success;
             GroupsEvent.Set();

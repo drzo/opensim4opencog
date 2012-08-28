@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
@@ -15,6 +14,10 @@ namespace Cogbot.Actions.System
         public UptimeCommand(BotClient testClient)
         {
             Name = "uptime";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Shows the login name, login time and length of time logged on.";
             Category = CommandCategory.Simulator;
             Parameters = CreateParams();

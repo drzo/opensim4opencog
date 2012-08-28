@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Objects
@@ -12,27 +11,33 @@ namespace Cogbot.Actions.Objects
         public ObjectInventoryCommand(BotClient testClient)
         {
             Name = "objectinventory";
-            Description = "Retrieves a listing of items inside an object (task inventory). Usage: objectinventory [objectID]";
+        }
+
+        public override void MakeInfo()
+        {
+            Description =
+                "Retrieves a listing of items inside an object (task inventory). Usage: objectinventory [objectID]";
             Category = CommandCategory.Inventory;
-            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
+            Parameters = CreateParams("targets", typeof (PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
-                return ShowUsage();// " objectinventory [objectID]";
+                return ShowUsage(); // " objectinventory [objectID]";
 
             int argsUsed;
-            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
-            if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
+            List<SimObject> PS;
+            if (!args.TryGetValue("targets", out PS) || IsEmpty(PS))
+            {
+                PS = WorldSystem.GetAllSimObjects();
+            } 
             foreach (var found in PS)
             {
-
-
                 uint objectLocalID = found.LocalID;
                 UUID objectID = found.ID;
 
-                List<InventoryBase> items = Client.Inventory.GetTaskInventory(objectID, objectLocalID, 1000 * 30);
+                List<InventoryBase> items = Client.Inventory.GetTaskInventory(objectID, objectLocalID, 1000*30);
 
                 if (items != null)
                 {
@@ -46,7 +51,7 @@ namespace Cogbot.Actions.Objects
                         }
                         else
                         {
-                            InventoryItem item = (InventoryItem)items[i];
+                            InventoryItem item = (InventoryItem) items[i];
                             result += String.Format("[Item] Name: {0} Desc: {1} Type: {2}", item.Name, item.Description,
                                                     item.AssetType) + Environment.NewLine;
                         }

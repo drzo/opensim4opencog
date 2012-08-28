@@ -4,7 +4,6 @@ using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Groups
@@ -14,7 +13,7 @@ namespace Cogbot.Actions.Groups
     /// </summary>
     public class GroupRolesCommand : Command, GridMasterCommand
     {
-            private ManualResetEvent GroupsEvent = new ManualResetEvent(false);
+        private ManualResetEvent GroupsEvent = new ManualResetEvent(false);
         private string GroupName;
         private UUID GroupUUID = UUID.Zero;
         private UUID GroupRequestID = UUID.Zero;
@@ -25,7 +24,7 @@ namespace Cogbot.Actions.Groups
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Dump group roles to console.";
             Category = CommandCategory.Groups;
@@ -43,8 +42,9 @@ namespace Cogbot.Actions.Groups
             GroupName = GroupName.Trim();
 
             GroupUUID = Client.GroupName2UUID(GroupName);
-            if (UUID.Zero != GroupUUID) {
-                Client.Groups.GroupRoleDataReply += Groups_GroupRoles;                
+            if (UUID.Zero != GroupUUID)
+            {
+                Client.Groups.GroupRoleDataReply += Groups_GroupRoles;
                 GroupRequestID = Client.Groups.RequestGroupRoles(GroupUUID);
                 GroupsEvent.WaitOne(30000, false);
                 GroupsEvent.Reset();
@@ -54,10 +54,10 @@ namespace Cogbot.Actions.Groups
             return Failure(Client.ToString() + " doesn't seem to have any roles in the group " + GroupName);
         }
 
-        void Groups_GroupRoles(object sender, GroupRolesDataReplyEventArgs e)
+        private void Groups_GroupRoles(object sender, GroupRolesDataReplyEventArgs e)
         {
             if (e.RequestID == GroupRequestID)
-        {
+            {
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine();
                 sb.AppendFormat("GroupRole: RequestID {0}", e.RequestID).AppendLine();
@@ -65,11 +65,12 @@ namespace Cogbot.Actions.Groups
                 sb.AppendFormat("GroupRole: GroupName {0}", GroupName).AppendLine();
                 if (e.Roles.Count > 0)
                     foreach (KeyValuePair<UUID, GroupRole> role in e.Roles)
-                        sb.AppendFormat("GroupRole: Role {0} {1}|{2}", role.Value.ID, role.Value.Name, role.Value.Title).AppendLine();
+                        sb.AppendFormat("GroupRole: Role {0} {1}|{2}", role.Value.ID, role.Value.Name, role.Value.Title)
+                            .AppendLine();
                 sb.AppendFormat("GroupRole: RoleCount {0}", e.Roles.Count).AppendLine();
                 WriteLine(sb.ToString());
                 GroupsEvent.Set();
-            } 
+            }
         }
     }
 }

@@ -4,7 +4,6 @@ using System.Threading;
 using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Objects
@@ -13,11 +12,11 @@ namespace Cogbot.Actions.Objects
     {
         //    AutoResetEvent GotPermissionsEvent = new AutoResetEvent(false);
         //   UUID SelectedObject = UUID.Zero;
-        Dictionary<UUID, Primitive> Objects = new Dictionary<UUID, Primitive>();
-        PermissionMask[] PermsAdd = new PermissionMask[1 + (int)PermissionWho.All];
-        PermissionMask[] PermsSub = new PermissionMask[1 + (int)PermissionWho.All];
-        bool PermsSent = false;
-        int PermCount = 0;
+        private Dictionary<UUID, Primitive> Objects = new Dictionary<UUID, Primitive>();
+        private PermissionMask[] PermsAdd = new PermissionMask[1 + (int) PermissionWho.All];
+        private PermissionMask[] PermsSub = new PermissionMask[1 + (int) PermissionWho.All];
+        private bool PermsSent = false;
+        private int PermCount = 0;
         private bool skipPerms = false;
         private bool setGroup = false;
 
@@ -27,9 +26,14 @@ namespace Cogbot.Actions.Objects
             //callback = new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
 
             Name = "deed";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Recursively changes all of the permissions for child and task inventory objects.";
             Category = CommandCategory.Security;
-            Details = "Usage: deed prim-spec [A][O][G][E][N] [+/-all] [+/-copy] [+/-mod] [+/-xfer] [task] [group [deed] group-spec] [incr]";
+            Details =
+                "Usage: deed prim-spec [A][O][G][E][N] [+/-all] [+/-copy] [+/-mod] [+/-xfer] [task] [group [deed] group-spec] [incr]";
             // setperms $all A +all who E -all +copy deed group Logicmoo
             // deed Logicmoo $all +all deed
         }
@@ -71,7 +75,6 @@ namespace Cogbot.Actions.Objects
                 bool deed = false;
                 for (int i = argsUsed; i < args.Length; i++)
                 {
-                    
                     bool add = true;
                     bool setPerms = false;
                     string arg = args[i];
@@ -90,8 +93,7 @@ namespace Cogbot.Actions.Objects
 
                     switch (arg.ToLower())
                     {
-
-                        // change owner referall
+                            // change owner referall
                         case "who":
                             who = 0;
                             break;
@@ -116,10 +118,10 @@ namespace Cogbot.Actions.Objects
                             who = PermissionWho.All;
                             break;
 
-                        // change perms for owner
+                            // change perms for owner
                         case "copy":
                             Perms |= PermissionMask.Copy;
-                            setPerms = true;                            
+                            setPerms = true;
                             break;
                         case "mod":
                             Perms |= PermissionMask.Modify;
@@ -141,15 +143,15 @@ namespace Cogbot.Actions.Objects
                             Perms |= PermissionMask.Move;
                             setPerms = true;
                             break;
-                        // dont change perms at all
+                            // dont change perms at all
                         case "noperms":
                             skipPerms = true;
                             break;
-                        // deed (implies will use group)
+                            // deed (implies will use group)
                         case "deed":
                             deed = true;
                             break;
-                        // set object group
+                            // set object group
                         case "group":
                             i++;
                             setGroup = true;
@@ -181,7 +183,7 @@ namespace Cogbot.Actions.Objects
                 foreach (SimObject o in PS)
                 {
                     if (o is SimAvatar) continue;
-                    if (o.RegionHandle!=CurrentSimHandle) continue;
+                    if (o.RegionHandle != CurrentSimHandle) continue;
                     // Find the requested prim
                     Primitive rootPrim = o.Prim;
                     if (rootPrim == null) continue;
@@ -208,10 +210,12 @@ namespace Cogbot.Actions.Objects
                         else
                             WriteLine("Set root prim to " + rootPrim.ID.ToString(), Client);
                     }
-                    
+
                     List<Primitive> childPrims;
                     // Find all of the child objects linked to this root
-                    childPrims = CurrentSim.ObjectsPrimitives.FindAll(delegate(Primitive prim) { return prim.ParentID == rootPrim.LocalID; });
+                    childPrims =
+                        CurrentSim.ObjectsPrimitives.FindAll(
+                            delegate(Primitive prim) { return prim.ParentID == rootPrim.LocalID; });
 
                     // Build a dictionary of primitives for referencing later
                     // Objects[rootPrim.ID] = rootPrim;
@@ -228,23 +232,22 @@ namespace Cogbot.Actions.Objects
                         TaskPrims.AddRange(childPrims);
                         TaskPrims.Add(rootPrim);
                     }
-
                 }
 
                 WriteLine("Using PermissionMask: +" + PermsAdd.ToString() + " -" + PermsSub.ToString(), Client);
 
 
-
                 // Go through each of the three main permissions and enable or disable them
+
                 #region Set Linkset Permissions
+
                 if (oneAtATime)
                 {
-
                     List<uint> smallList = new List<uint>();
                     foreach (var o in Objects.Values)
                     {
                         if (o.OwnerID == Client.Self.AgentID)
-                        //if (o.GroupID!=groupID)
+                            //if (o.GroupID!=groupID)
                         {
                             if (doTaskInv)
                             {
@@ -275,7 +278,6 @@ namespace Cogbot.Actions.Objects
                             SetDeed(CurrentSim, smallList, groupID, deed);
                             localIDs.RemoveRange(0, 50);
                         }
-
                     }
                 }
 
@@ -288,7 +290,7 @@ namespace Cogbot.Actions.Objects
                     {
                         if ((prim.Flags & PrimFlags.InventoryEmpty) == 0)
                         {
-                            List<InventoryBase> items = Client.Inventory.GetTaskInventory(prim.ID, prim.LocalID, 1000 * 10);
+                            List<InventoryBase> items = Client.Inventory.GetTaskInventory(prim.ID, prim.LocalID, 1000*10);
 
                             if (items != null)
                             {
@@ -296,19 +298,28 @@ namespace Cogbot.Actions.Objects
                                 {
                                     if (!(items[i] is InventoryFolder))
                                     {
-                                        InventoryItem item = (InventoryItem)items[i];
+                                        InventoryItem item = (InventoryItem) items[i];
 
                                         // prev and not (W or All)
-                                        item.Permissions.GroupMask &= ~(PermsSub[(int)PermissionWho.Group] | PermsSub[(int)PermissionWho.All]);
-                                        item.Permissions.OwnerMask &= ~(PermsSub[(int)PermissionWho.Owner] | PermsSub[(int)PermissionWho.All]);
-                                        item.Permissions.NextOwnerMask &= ~(PermsSub[(int)PermissionWho.NextOwner] | PermsSub[(int)PermissionWho.All]);
-                                        item.Permissions.EveryoneMask &= ~(PermsSub[(int)PermissionWho.Everyone] | PermsSub[(int)PermissionWho.All]);
+                                        item.Permissions.GroupMask &=
+                                            ~(PermsSub[(int) PermissionWho.Group] | PermsSub[(int) PermissionWho.All]);
+                                        item.Permissions.OwnerMask &=
+                                            ~(PermsSub[(int) PermissionWho.Owner] | PermsSub[(int) PermissionWho.All]);
+                                        item.Permissions.NextOwnerMask &=
+                                            ~(PermsSub[(int) PermissionWho.NextOwner] |
+                                              PermsSub[(int) PermissionWho.All]);
+                                        item.Permissions.EveryoneMask &=
+                                            ~(PermsSub[(int) PermissionWho.Everyone] | PermsSub[(int) PermissionWho.All]);
 
                                         // prev and (W or All)
-                                        item.Permissions.GroupMask |= PermsAdd[(int)PermissionWho.Group] | PermsAdd[(int)PermissionWho.All];
-                                        item.Permissions.OwnerMask |= PermsAdd[(int)PermissionWho.Owner] | PermsAdd[(int)PermissionWho.All];
-                                        item.Permissions.NextOwnerMask |= PermsAdd[(int)PermissionWho.NextOwner] | PermsAdd[(int)PermissionWho.All];
-                                        item.Permissions.EveryoneMask |= PermsAdd[(int)PermissionWho.Everyone] | PermsAdd[(int)PermissionWho.All];
+                                        item.Permissions.GroupMask |= PermsAdd[(int) PermissionWho.Group] |
+                                                                      PermsAdd[(int) PermissionWho.All];
+                                        item.Permissions.OwnerMask |= PermsAdd[(int) PermissionWho.Owner] |
+                                                                      PermsAdd[(int) PermissionWho.All];
+                                        item.Permissions.NextOwnerMask |= PermsAdd[(int) PermissionWho.NextOwner] |
+                                                                          PermsAdd[(int) PermissionWho.All];
+                                        item.Permissions.EveryoneMask |= PermsAdd[(int) PermissionWho.Everyone] |
+                                                                         PermsAdd[(int) PermissionWho.All];
 
                                         Client.Inventory.UpdateTaskInventory(prim.LocalID, item);
                                         ++taskItems;
@@ -318,7 +329,9 @@ namespace Cogbot.Actions.Objects
                         }
                     }
 
-                return Success("Using PermissionMask: +" + PermsAdd.ToString() + " -" + PermsSub.ToString()+ " on " + Objects.Count + " objects and " + taskItems + " inventory items");
+                return
+                    Success("Using PermissionMask: +" + PermsAdd.ToString() + " -" + PermsSub.ToString() + " on " +
+                            Objects.Count + " objects and " + taskItems + " inventory items");
             }
             finally
             {
@@ -328,7 +341,13 @@ namespace Cogbot.Actions.Objects
 
         private void SetDeed(Simulator CurrentSim, List<uint> localIDs, UUID groupID, bool deed)
         {
-            foreach (PermissionWho u in new[] { PermissionWho.All, PermissionWho.Everyone, PermissionWho.Owner, PermissionWho.NextOwner, PermissionWho.Group })
+            foreach (
+                PermissionWho u in
+                    new[]
+                        {
+                            PermissionWho.All, PermissionWho.Everyone, PermissionWho.Owner, PermissionWho.NextOwner,
+                            PermissionWho.Group
+                        })
             {
                 int whoint = (int) u;
                 if (PermsSub[whoint] != PermissionMask.None)
@@ -340,12 +359,11 @@ namespace Cogbot.Actions.Objects
             if (deed) Client.Objects.DeedObjects(CurrentSim, localIDs, groupID);
         }
 
-        private void SetPerms(Simulator CurrentSim, List<uint> localIDs, PermissionWho who, PermissionMask Perms, bool tf)
-        {            
-
+        private void SetPerms(Simulator CurrentSim, List<uint> localIDs, PermissionWho who, PermissionMask Perms,
+                              bool tf)
+        {
             try
             {
-
                 if (!skipPerms)
                 {
                     PermCount = 0;
@@ -399,7 +417,7 @@ namespace Cogbot.Actions.Objects
             }
         }
 
-        void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties properties)
+        private void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties properties)
         {
             if (PermsSent)
             {

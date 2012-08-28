@@ -13,6 +13,10 @@ namespace Cogbot.Actions.System
         public SwipCommand(BotClient testClient)
         {
             Name = "swip";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "runs swi-prolog commands on current sim.";
             Category = CommandCategory.Simulator;
             Parameters = CreateParams(new NamedParam("prologCode", typeof (string), null));

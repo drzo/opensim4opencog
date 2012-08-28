@@ -4,21 +4,24 @@ using System.Collections.Generic;
 using System.Text;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
 {
-    class ParamHelp : Command, SystemApplicationCommand
+    internal class ParamHelp : Command, SystemApplicationCommand
     {
         public ParamHelp(BotClient Client)
             : base(Client)
         {
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Explains predicate and features that are availble for PrimSpecs";
-            AddVersion(CreateParams(Optional("commandMask", typeof(string), "term to search for")), Description);
+            AddVersion(CreateParams(Optional("commandMask", typeof (string), "term to search for")), Description);
             ResultMap = CreateParams(
-                 "message", typeof(string), "if term not found, will be <i>I don't know about ...</i>",
-                 "success", typeof(bool), "true if it found a match");
+                "message", typeof (string), "if term not found, will be <i>I don't know about ...</i>",
+                "success", typeof (bool), "true if it found a match");
             Category = CommandCategory.BotClient;
             Name = "paramhelp";
         }
@@ -37,7 +40,7 @@ namespace Cogbot.Actions.System
                 {
                     all = ClientManager.SingleInstance.AllCommands();
                 }
-                foreach(var cmdinfo in all)
+                foreach (var cmdinfo in all)
                 {
                     if (cmdinfo.Value.Matches(str))
                     {
@@ -46,12 +49,12 @@ namespace Cogbot.Actions.System
                 }
             }
             WriteLine("GroupNames:");
-            foreach(var name  in  WorldSystem.GroupNames)
+            foreach (var name  in  WorldSystem.GroupNames)
             {
-                WriteLine("$" + name);                
+                WriteLine("$" + name);
             }
             WriteLine("Filters:");
-            Type typesearch = typeof(SimObjectImpl);
+            Type typesearch = typeof (SimObjectImpl);
             IEnumerable<FilterMember> filters = WorldSystem.GetFilters(typesearch);
             foreach (FilterMember fmemb in filters)
             {
@@ -74,8 +77,8 @@ namespace Cogbot.Actions.System
         private string typeString(Type type)
         {
             if (type == null) return " ";
-            if (typeof(IConvertible).IsAssignableFrom(type)) return " " + type.Name;
-            if (typeof(IEnumerable).IsAssignableFrom(type)) return " List";
+            if (typeof (IConvertible).IsAssignableFrom(type)) return " " + type.Name;
+            if (typeof (IEnumerable).IsAssignableFrom(type)) return " List";
             return " " + type.Name;
         }
     }

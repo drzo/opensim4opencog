@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Land
@@ -13,6 +12,10 @@ namespace Cogbot.Actions.Land
         public ParcelPrimOwnersCommand(BotClient testClient)
         {
             Name = "primowners";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Displays a list of prim owners and prim counts on a parcel. Usage: primowners parcelID";
             Category = CommandCategory.Parcel;
         }
@@ -20,7 +23,7 @@ namespace Cogbot.Actions.Land
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
-                return ShowUsage();// " primowners parcelID (use parcelinfo to get ID)";
+                return ShowUsage(); // " primowners parcelID (use parcelinfo to get ID)";
 
             int argsUsed;
             Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
@@ -32,15 +35,17 @@ namespace Cogbot.Actions.Land
             {
                 AutoResetEvent wait = new AutoResetEvent(false);
 
-                EventHandler<ParcelObjectOwnersReplyEventArgs> callback = delegate(object sender, ParcelObjectOwnersReplyEventArgs e)
-                {
-                    for (int i = 0; i < e.PrimOwners.Count; i++)
-                    {
-                        result.AppendFormat("Owner: {0} Count: {1}" + Environment.NewLine, e.PrimOwners[i].OwnerID, e.PrimOwners[i].Count);
-                        wait.Set();
-                    }
-                };
-                
+                EventHandler<ParcelObjectOwnersReplyEventArgs> callback =
+                    delegate(object sender, ParcelObjectOwnersReplyEventArgs e)
+                        {
+                            for (int i = 0; i < e.PrimOwners.Count; i++)
+                            {
+                                result.AppendFormat("Owner: {0} Count: {1}" + Environment.NewLine,
+                                                    e.PrimOwners[i].OwnerID, e.PrimOwners[i].Count);
+                                wait.Set();
+                            }
+                        };
+
                 Client.Parcels.ParcelObjectOwnersReply += callback;
                 try
                 {
@@ -49,18 +54,22 @@ namespace Cogbot.Actions.Land
                     {
                         return Failure("Timed out waiting for packet.");
                     }
-
                 }
                 finally
                 {
-                    Client.Parcels.ParcelObjectOwnersReply -= callback;                    
+                    Client.Parcels.ParcelObjectOwnersReply -= callback;
                 }
-                
-                return Success(result.ToString());;
+
+                return Success(result.ToString());
+                ;
             }
             else
             {
-                return Failure(string.Format("Unable to find Parcel {0} in Parcels Dictionary, Did you run parcelinfo to populate the dictionary first?", args[0]));
+                return
+                    Failure(
+                        string.Format(
+                            "Unable to find Parcel {0} in Parcels Dictionary, Did you run parcelinfo to populate the dictionary first?",
+                            args[0]));
             }
         }
     }

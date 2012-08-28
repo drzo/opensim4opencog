@@ -7,7 +7,6 @@ using System.Xml;
 using System.Xml.Serialization;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Inventory.Shell
@@ -20,6 +19,10 @@ namespace Cogbot.Actions.Inventory.Shell
         public InventoryLintCommand(BotClient testClient)
         {
             Name = "ilint";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Prints out inventory.";
             Category = CommandCategory.Inventory;
         }
@@ -37,7 +40,7 @@ namespace Cogbot.Actions.Inventory.Shell
             {
                 found++;
                 var n = node.Value;
-                if (n.Parent==null || n.Parent.Data.Name=="TaskInvHolder")
+                if (n.Parent == null || n.Parent.Data.Name == "TaskInvHolder")
                 {
                     var d = n.Data;
                     items++;
@@ -58,25 +61,25 @@ namespace Cogbot.Actions.Inventory.Shell
                         }
                     }
                 }
-
             }
 
-            return Success("remed=" + remed + " items=" + items + " total=" + found); ;
+            return Success("remed=" + remed + " items=" + items + " total=" + found);
+            ;
         }
 
-        void PrintFolder(InventoryFolder f, OutputDelegate result, int indent)
+        private void PrintFolder(InventoryFolder f, OutputDelegate result, int indent)
         {
             List<InventoryBase> contents = Manager.FolderContents(f.UUID, Client.Self.AgentID,
-                true, true, InventorySortOrder.ByName, 10000);
+                                                                  true, true, InventorySortOrder.ByName, 10000);
 
             if (contents != null)
             {
                 foreach (InventoryBase i in contents)
                 {
-                    result("{0}{1} ({2})\n", new String(' ', indent * 2), i.Name, i.UUID);
+                    result("{0}{1} ({2})\n", new String(' ', indent*2), i.Name, i.UUID);
                     if (i is InventoryFolder)
                     {
-                        InventoryFolder folder = (InventoryFolder)i;
+                        InventoryFolder folder = (InventoryFolder) i;
                         PrintFolder(folder, result, indent + 1);
                     }
                 }

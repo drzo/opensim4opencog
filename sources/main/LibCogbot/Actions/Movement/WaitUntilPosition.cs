@@ -2,23 +2,24 @@ using System;
 using System.Threading;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Movement
 {
-
     public class WaitUntilPosition : Cogbot.Actions.Command, BotPersonalCommand
     {
         public WaitUntilPosition(BotClient client)
         {
             Name = "waitpos";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Block until the robot gets to a certain position for a certain maxwait";
             Category = Cogbot.Actions.CommandCategory.Movement;
             Details = "waitpos seconds <x,y,z>";
             Parameters = CreateParams("seconds", typeof (TimeSpan), typeof (float),
                                       "position", typeof (SimPosition), typeof (Vector3d));
-
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -51,7 +52,7 @@ namespace Cogbot.Actions.Movement
                 // do it antyways
                 gp1.Z = gp2.Z;
                 double cdist = Vector3d.Distance(gp1, gp2);
-                if ( cdist <= maxDistance)
+                if (cdist <= maxDistance)
                 {
                     MadIt = true;
                     break;
@@ -64,7 +65,6 @@ namespace Cogbot.Actions.Movement
             if (MadIt)
             {
                 return Success(string.Format("SUCCESS {0}", str));
-
             }
             else
             {

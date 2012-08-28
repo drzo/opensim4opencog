@@ -2,15 +2,14 @@ using System;
 using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Inventory
 {
     public class TexturesCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
-        Dictionary<UUID, UUID> alreadyRequested = new Dictionary<UUID, UUID>();
-        bool enabled = false;
+        private Dictionary<UUID, UUID> alreadyRequested = new Dictionary<UUID, UUID>();
+        private bool enabled = false;
         private bool registered = false;
 
         public TexturesCommand(BotClient testClient)
@@ -18,15 +17,18 @@ namespace Cogbot.Actions.Inventory
             enabled = testClient.ClientManager.GetTextures;
 
             Name = "textures";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Turns automatic texture downloading on or off. Usage: textures [on/off]";
             Category = CommandCategory.Objects;
-
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
-                return ShowUsage();// " textures [on/off]";
+                return ShowUsage(); // " textures [on/off]";
 
             if (args[0].ToLower() == "on")
             {
@@ -46,11 +48,11 @@ namespace Cogbot.Actions.Inventory
             }
             else
             {
-                return ShowUsage();// " textures [on/off]";
+                return ShowUsage(); // " textures [on/off]";
             }
         }
 
-        void Objects_OnNewAvatar(object sender, AvatarUpdateEventArgs e)
+        private void Objects_OnNewAvatar(object sender, AvatarUpdateEventArgs e)
         {
             Avatar avatar = e.Avatar;
             if (enabled)
@@ -68,7 +70,7 @@ namespace Cogbot.Actions.Inventory
 
                             // Determine if this is a baked outfit texture or a normal texture
                             ImageType type = ImageType.Normal;
-                            AvatarTextureIndex index = (AvatarTextureIndex)i;
+                            AvatarTextureIndex index = (AvatarTextureIndex) i;
                             switch (index)
                             {
                                 case AvatarTextureIndex.EyesBaked:
@@ -87,7 +89,7 @@ namespace Cogbot.Actions.Inventory
             }
         }
 
-        void Objects_OnNewPrim(object sender, PrimEventArgs e)
+        private void Objects_OnNewPrim(object sender, PrimEventArgs e)
         {
             Primitive prim = e.Prim;
 
@@ -115,7 +117,8 @@ namespace Cogbot.Actions.Inventory
             if (state == TextureRequestState.Finished && enabled && alreadyRequested.ContainsKey(asset.AssetID))
             {
                 if (state == TextureRequestState.Finished)
-                    Logger.DebugLog(String.Format("Finished downloading texture {0} ({1} bytes)", asset.AssetID, asset.AssetData.Length));
+                    Logger.DebugLog(String.Format("Finished downloading texture {0} ({1} bytes)", asset.AssetID,
+                                                  asset.AssetData.Length));
                 else
                     Logger.Log("Failed to download texture " + asset.AssetID + ": " + state, Helpers.LogLevel.Warning);
             }

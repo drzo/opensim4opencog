@@ -3,7 +3,6 @@ using Cogbot.World;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 using PathSystem3D.Navigation.Debug;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Pathfinder
@@ -13,6 +12,10 @@ namespace Cogbot.Actions.Pathfinder
         public pfdebug(BotClient client)
         {
             Name = GetType().Name;
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Starts the pathfinder debuger";
             Category = Cogbot.Actions.CommandCategory.Movement;
         }
@@ -38,11 +41,16 @@ namespace Cogbot.Actions.Pathfinder
             return Success("Ran " + Name);
         }
     }
-    class srdebug : Cogbot.Actions.Command, SystemApplicationCommand
+
+    internal class srdebug : Cogbot.Actions.Command, SystemApplicationCommand
     {
         public srdebug(BotClient client)
         {
             Name = GetType().Name;
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Starts the waypoint debuger";
             Category = Cogbot.Actions.CommandCategory.Movement;
         }
@@ -54,12 +62,13 @@ namespace Cogbot.Actions.Pathfinder
             return Success("Ran " + Name);
         }
     }
+
     //class ideal : Cogbot.Actions.Command
     //{
     //    public ideal(BotClient client)
     //    {
     //        Name = GetType().Name;
-    //        Description = "Starts the GUI debugger";
+    //        } override public void MakeInfo() { Description = "Starts the GUI debugger";
     //        Category = Cogbot.Actions.CommandCategory.Movement;
     //    }
 
@@ -109,7 +118,7 @@ namespace Cogbot.Actions.Pathfinder
     //    public srpath(BotClient client)
     //    {
     //        Name = GetType().Name;
-    //        Description = "Show the route to the object";
+    //        } override public void MakeInfo() { Description = "Show the route to the object";
     //        Category = Cogbot.Actions.CommandCategory.Movement;
     //    }
 

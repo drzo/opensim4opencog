@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Pathfinder
@@ -11,17 +10,21 @@ namespace Cogbot.Actions.Pathfinder
         public UnmeshPrim(BotClient client)
         {
             Name = GetType().Name;
-            Description = "Unmeshes all prims and removes collision planes. Usage: UnmeshPrim [prims] ";
+        }
+
+        public override void MakeInfo()
+        {
+            Description = "Unmeshes all prims and removes collision planes.";
             Category = Cogbot.Actions.CommandCategory.Movement;
-            Parameters = CreateParams("targets", typeof(PrimSpec), "The objects to " + Name);
+            Parameters = CreateParams("targets", typeof (PrimSpec), "The objects to " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int argsUsed;
-            ICollection<SimObject> objs = WorldSystem.GetPrimitives(args, out argsUsed);
+            ICollection<SimObject> objs;
             bool rightNow = true;
-            if (argsUsed == 0)
+            if (!args.TryGetValue("targets", out objs))
             {
                 objs = (ICollection<SimObject>) WorldSystem.GetAllSimObjects();
                 rightNow = false;

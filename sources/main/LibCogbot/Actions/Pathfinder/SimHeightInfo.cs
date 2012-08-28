@@ -1,6 +1,5 @@
 using OpenMetaverse;
 using PathSystem3D.Navigation;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Pathfinder
@@ -10,15 +9,19 @@ namespace Cogbot.Actions.Pathfinder
         public simhinfo(BotClient client)
         {
             Name = GetType().Name;
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Calculates the Height (Z) level of walking at point. Usage: simzinfo 120 123 30";
             Category = Cogbot.Actions.CommandCategory.Movement;
-            Parameters = CreateParams("location", typeof(SimPosition), "postion for " + Name);
+            Parameters = CreateParams("pos", typeof (SimPosition), "postion for " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-            int argcount;
-            SimPosition pos = WorldSystem.GetVector(args, out argcount);
+            SimPosition pos;
+            if (!args.TryGetValue("pos", out pos)) pos = TheSimAvatar;
             SimPathStore R = pos.PathStore;
             Vector3 v3 = pos.SimPosition;
             WriteLine("SimZInfo: " + pos + " " + R.GetGroundLevel(v3.X, v3.Y));
@@ -36,15 +39,19 @@ namespace Cogbot.Actions.Pathfinder
         public simzinfo(BotClient client)
         {
             Name = GetType().Name;
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Calculates the Z level of walking at point. Usage: simzinfo 120 123";
             Category = Cogbot.Actions.CommandCategory.Movement;
-            Parameters = CreateParams("location", typeof(SimPosition), "postion for " + Name);
+            Parameters = CreateParams("pos", typeof (SimPosition), "postion for " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-            int argcount;
-            SimPosition pos = WorldSystem.GetVector(args, out argcount);
+            SimPosition pos;
+            if (!args.TryGetValue("pos", out pos)) pos = TheSimAvatar;
             SimPathStore R = pos.PathStore;
             Vector3 v3 = pos.SimPosition;
             WriteLine("SimZInfo: " + pos + " " + R.GetGroundLevel(v3.X, v3.Y));

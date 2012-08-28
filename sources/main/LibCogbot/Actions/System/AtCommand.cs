@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
@@ -13,6 +12,10 @@ namespace Cogbot.Actions.System
         public AtCommand(BotClient testClient)
         {
             Name = "@";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Restrict the following commands to one or all avatars. Usage: @ [firstname lastname]";
             Category = CommandCategory.BotClient;
         }
@@ -20,7 +23,7 @@ namespace Cogbot.Actions.System
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             // This is a dummy command. Calls to it should be intercepted and handled specially
-            return Success("This command should not be executed directly");            
+            return Success("This command should not be executed directly");
         }
     }
 }

@@ -5,7 +5,6 @@ using System.IO;
 using System.Text;
 using System.Net;
 //using OpenMetaverse; //using libsecondlife;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.External
@@ -37,7 +36,7 @@ namespace Cogbot.Actions.External
             TheBotClient = Client;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Do an java jar exec to filename";
             Details = AddUsage(Name + " filename", Description);

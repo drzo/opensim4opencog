@@ -8,5 +8,4 @@ using OpenMetaverse;
 
 namespace Cogbot
 {
-
 }

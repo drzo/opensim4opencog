@@ -4,7 +4,6 @@ using System.IO;
 using System.Text;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.SimExport
@@ -14,9 +13,14 @@ namespace Cogbot.Actions.SimExport
         public ExportParticlesCommand(BotClient testClient)
         {
             Name = "exportparticles";
-            Description = "Reverse engineers a prim with a particle system to an LSL script. Usage: exportscript [prim-uuid]";
+        }
+
+        public override void MakeInfo()
+        {
+            Description =
+                "Reverse engineers a prim with a particle system to an LSL script. Usage: exportscript [prim-uuid]";
             Category = CommandCategory.Objects;
-            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
+            Parameters = CreateParams("targets", typeof (PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -25,9 +29,11 @@ namespace Cogbot.Actions.SimExport
                 return ShowUsage(); // " exportparticles [prim-uuid]";
 
 
-            int argsUsed;
-            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
-            if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
+            List<SimObject> PS;
+            if (!args.TryGetValue("targets", out PS) || IsEmpty(PS))
+            {
+                return Failure("Cannot find objects from " + args.GetString("targets"));
+            }
             foreach (var o in PS)
             {
                 Primitive exportPrim = o.Prim;

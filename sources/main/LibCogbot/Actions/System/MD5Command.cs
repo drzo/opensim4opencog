@@ -1,7 +1,6 @@
 using System;
 using System.Text;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
@@ -14,10 +13,10 @@ namespace Cogbot.Actions.System
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
-            Description = 
-@"Creates an MD5 hash from a given string. The string must be double quoted if it contains blanks.
+            Description =
+                @"Creates an MD5 hash from a given string. The string must be double quoted if it contains blanks.
 Currently the function isn't that useful, since the underlying C# md5 pads short strings to 32 bytes
 producing a different hash than LSL produces";
             AddExample(
@@ -35,10 +34,11 @@ default
 
 prints
 [19:50]  Primitive: 6e130eabfe1f809eb6399796803e0d81
-", "notice the colon in the md5 command, and that the results don't match");
+",
+                "notice the colon in the md5 command, and that the results don't match");
             Parameters = CreateParams(
-                Optional("--padding", typeof(int), "padding SL uses (default) 32.. use 0 for none"),
-                "string", typeof(string), "string to compute md5 hash of");
+                Optional("--padding", typeof (int), "padding SL uses (default) 32.. use 0 for none"),
+                "string", typeof (string), "string to compute md5 hash of");
 
             Category = CommandCategory.Security;
         }
@@ -68,6 +68,5 @@ prints
 
             return "$1$" + digest.ToString();
         }
-
     }
 }

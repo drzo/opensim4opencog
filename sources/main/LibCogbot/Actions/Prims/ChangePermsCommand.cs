@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Objects
@@ -13,7 +12,12 @@ namespace Cogbot.Actions.Objects
         public ChangePermsCommand(BotClient testClient)
         {
             Name = "changeperms";
-            Description = "Recursively changes all of the permissions for child and task inventory objects. Usage prim-uuid [copy] [mod] [xfer]";
+        }
+
+        public override void MakeInfo()
+        {
+            Description =
+                "Recursively changes all of the permissions for child and task inventory objects. Usage prim-uuid [copy] [mod] [xfer]";
             Category = CommandCategory.Security;
         }
 
@@ -28,19 +32,19 @@ namespace Cogbot.Actions.Objects
 
             EventHandler<ObjectPropertiesEventArgs> callback =
                 new EventHandler<ObjectPropertiesEventArgs>((s, e) =>
-                                                               {
-                                                                   if (permsSent)
-                                                                   {
-                                                                       if (objects.ContainsKey(e.Properties.ObjectID))
-                                                                       {
-                                                                           // FIXME: Confirm the current operation against properties.Permissions.NextOwnerMask
+                                                                {
+                                                                    if (permsSent)
+                                                                    {
+                                                                        if (objects.ContainsKey(e.Properties.ObjectID))
+                                                                        {
+                                                                            // FIXME: Confirm the current operation against properties.Permissions.NextOwnerMask
 
-                                                                           ++permCount;
-                                                                           if (permCount >= objects.Count)
-                                                                               GotPermissionsEvent.Set();
-                                                                       }
-                                                                   }
-                                                               });
+                                                                            ++permCount;
+                                                                            if (permCount >= objects.Count)
+                                                                                GotPermissionsEvent.Set();
+                                                                        }
+                                                                    }
+                                                                });
             try
             {
                 Client.Objects.ObjectProperties += callback;
@@ -182,9 +186,10 @@ namespace Cogbot.Actions.Objects
                     }
 
                     AddSuccess("Set permissions to " + perms.ToString() + " on " + localIDs.Count + " objects and " +
-                            taskItems + " inventory items");
-                } 
-            } finally
+                               taskItems + " inventory items");
+                }
+            }
+            finally
             {
                 Client.Objects.ObjectProperties -= callback;
             }

@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
@@ -14,30 +13,31 @@ namespace Cogbot.Actions.System
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description =
                 "Send a command only to one bot.  This is useful when more than one bot is listening to your botcommands on open channel." +
                 "The bot must be logged on from the same Cogbot instance";
-            AddUsage("tobot <avatar> <botcmd>", "Send the command only to avatar");
+            AddUsage("tobot <avatar> <command>", "Send the command only to avatar");
             AddExample("tobot \"Nephrael Rae\" anim KISS", "Make Nephrael Rae play the kiss animation");
             Parameters = CreateParams(
-                "avatar", typeof(AgentSpec), "the avatar to perform the command on",
-                "command", typeof(BotCommand), "the command to perform");
+                "avatar", typeof (AgentSpec), "the avatar to perform the command on",
+                "command", typeof (BotCommand), "the command to perform");
             Category = CommandCategory.BotClient;
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 2) return ShowUsage();
-            BotClient oBotClient = ClientManager.GetBotByName(args[0]);
+            BotClient oBotClient = ClientManager.GetBotByName(args.GetString("avatar"));
             if (oBotClient != TheBotClient) return Success("not for me");
-            string botcmd = String.Join(" ", args, 1, args.Length - 1).Trim();
+            string botcmd = args.GetString("command");
             return
                 Success("tobot " + oBotClient + " " +
                         oBotClient.ExecuteCommand(botcmd, args.CallerAgent, args.Output, args.CmdFlags));
         }
     }
+
     public class AllBotsCommand : Command, SystemApplicationCommand
     {
         public AllBotsCommand(BotClient testClient)
@@ -46,7 +46,7 @@ namespace Cogbot.Actions.System
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description =
                 "Send a command to all bots.  This is useful when more than one bot is listening to your botcommands on open channel." +
@@ -61,7 +61,7 @@ namespace Cogbot.Actions.System
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1) return ShowUsage();
-            string cmd = String.Join(" ", args);
+            string cmd = args.GetString("command");
             //return ClientManager.DoCommandAll()
             // Make an immutable copy of the Clients dictionary to safely iterate over
             int[] completed = {0};
@@ -92,6 +92,5 @@ namespace Cogbot.Actions.System
             }
             return results[0];
         }
-
     }
 }

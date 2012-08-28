@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Inventory.Shell
@@ -15,27 +14,32 @@ namespace Cogbot.Actions.Inventory.Shell
         public ChangeDirectoryCommand(BotClient client)
         {
             Name = "cd";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Changes the current working inventory folder.";
             Category = CommandCategory.Inventory;
         }
+
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             Manager = Client.Inventory;
             Inventory = Client.Inventory.Store;
 
             if (args.Length > 1)
-                return ShowUsage();// " cd [path-to-folder]";
+                return ShowUsage(); // " cd [path-to-folder]";
             string pathStr = "";
             string[] path = null;
             if (args.Length == 0)
             {
-                path = new string[] { "" };
+                path = new string[] {""};
                 // cd without any arguments doesn't do anything.
             }
             else if (args.Length == 1)
             {
                 pathStr = args[0];
-                path = pathStr.Split(new char[] { '/' });
+                path = pathStr.Split(new char[] {'/'});
                 // Use '/' as a path seperator.
             }
             InventoryFolder currentFolder = Client.CurrentDirectory;

@@ -4,12 +4,11 @@ using System.Collections.Generic;
 using System.Text;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Communication
 {
-    class LureCommand : Command, BotPersonalCommand
+    internal class LureCommand : Command, BotPersonalCommand
     {
         public LureCommand(BotClient testClient)
         {
@@ -17,25 +16,27 @@ namespace Cogbot.Actions.Communication
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Send a lure to a user.";
             Category = CommandCategory.Friends;
             Details = AddUsage(Name + " [agent-spec]", "lure agent-spec to our location");
-            Parameters = CreateParams("target", typeof (AgentSpec),
-                                                 "the agent you wish to see " + Name +
-                                                 " (see meets a specified <a href='wiki/BotCommands#AvatarSpec'>Avatar Spec</a>.)");
+            Parameters = CreateParams("targets", typeof (AgentSpec),
+                                      "the agent you wish to see " + Name +
+                                      " (see meets a specified <a href='wiki/BotCommands#AvatarSpec'>Avatar Spec</a>.)");
             ResultMap = CreateParams(
-                "message", typeof(string), "if success was false, the reason why",
-                "success", typeof(bool), "true if command was successful");
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if command was successful");
         }
 
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-            int argsUsed;
-            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
-            if (!IsEmpty(PS))
+            List<SimObject> PS;
+            if (!args.TryGetValue("targets", out PS) || IsEmpty(PS))
+            {
+                return Failure("Cannot find objects from " + args.GetString("targets"));
+            }
             {
                 int nfound = 0;
                 foreach (var prim in PS)
