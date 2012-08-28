@@ -89,7 +89,7 @@ namespace Cogbot
                 return;
             }
             string newDir;
-            if (ClientManagerConfig.arguments.TryGetValueWithout("--main", out newDir, out oArgs))
+            if (ClientManagerConfig.arguments.TryGetValueWithout("--main", out newDir, true, out oArgs))
             {
                 string[] newArgs = oArgs;
                 RunType(newDir, newArgs);

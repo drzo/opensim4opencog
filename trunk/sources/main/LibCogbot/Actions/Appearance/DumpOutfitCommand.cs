@@ -6,21 +6,19 @@ using Cogbot.World;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.Imaging;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
 {
     public class DumpOutfitCommand : Command, BotPersonalCommand, FFIComplete, AsynchronousCommand
     {
-
         public DumpOutfitCommand(BotClient testClient)
         {
             Name = "dumpoutfit";
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Dumps all of the textures from an avatars outfit to the hard drive.";
             Category = CommandCategory.Inventory;
@@ -42,17 +40,16 @@ namespace Cogbot.Actions.Appearance
             {
                 //for (int i = 0; i < Client.Network.Simulators.Count; i++)
                 {
-
-
                     int argsUsed;
-                    List<SimObject> PS; args.TryGetValue("target", out PS);
+                    List<SimObject> PS;
+                    args.TryGetValue("target", out PS);
                     if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
                     List<UUID> OutfitAssets = new List<UUID>();
                     foreach (var O in PS)
                     {
                         Primitive targetAv = O.Prim;
                         StringBuilder output = new StringBuilder("Downloading ");
-                        if (targetAv.Textures==null)
+                        if (targetAv.Textures == null)
                         {
                             Failure("no textures " + targetAv);
                             continue;
@@ -86,22 +83,35 @@ namespace Cogbot.Actions.Appearance
                                                                        {
                                                                            if (state == TextureRequestState.Finished)
                                                                            {
-
                                                                                try
                                                                                {
-                                                                                   string newVariable = assettexture.AssetID + ".jp2";
-                                                                                   File.WriteAllBytes(newVariable, assettexture.AssetData);
-                                                                                   AddSuccess("Wrote JPEG2000 image " + newVariable);
+                                                                                   string newVariable =
+                                                                                       assettexture.AssetID + ".jp2";
+                                                                                   File.WriteAllBytes(newVariable,
+                                                                                                      assettexture.
+                                                                                                          AssetData);
+                                                                                   AddSuccess("Wrote JPEG2000 image " +
+                                                                                              newVariable);
 
                                                                                    ManagedImage imgData;
-                                                                                   if (OpenJPEG.DecodeToImage(assettexture.AssetData, out imgData))
+                                                                                   if (
+                                                                                       OpenJPEG.DecodeToImage(
+                                                                                           assettexture.AssetData,
+                                                                                           out imgData))
                                                                                    {
-                                                                                       byte[] tgaFile = imgData.ExportTGA();
-                                                                                       File.WriteAllBytes(assettexture.AssetID + ".tga", tgaFile);
-                                                                                       AddSuccess("Wrote TGA image " + assettexture.AssetID + ".tga");
-                                                                                   } else
+                                                                                       byte[] tgaFile =
+                                                                                           imgData.ExportTGA();
+                                                                                       File.WriteAllBytes(
+                                                                                           assettexture.AssetID + ".tga",
+                                                                                           tgaFile);
+                                                                                       AddSuccess("Wrote TGA image " +
+                                                                                                  assettexture.AssetID +
+                                                                                                  ".tga");
+                                                                                   }
+                                                                                   else
                                                                                    {
-                                                                                       Failure("Failed decode of " + newVariable);
+                                                                                       Failure("Failed decode of " +
+                                                                                               newVariable);
                                                                                    }
                                                                                }
                                                                                catch (Exception e)
@@ -111,7 +121,8 @@ namespace Cogbot.Actions.Appearance
                                                                            }
                                                                            else
                                                                            {
-                                                                               Failure("Failed to download image " + assettexture.AssetID);
+                                                                               Failure("Failed to download image " +
+                                                                                       assettexture.AssetID);
                                                                            }
 
                                                                            OutfitAssets.Remove(assettexture.AssetID);

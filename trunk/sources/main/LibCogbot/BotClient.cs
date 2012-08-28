@@ -211,7 +211,6 @@ namespace Cogbot
         ///public Dictionary<string, Command> Commands = new Dictionary<string, Command>();
         public bool Running = true;
         public bool GroupCommands = true;
-        private string _masterName = string.Empty;
         public Hashtable PosterBoard = new Hashtable();
 
         public object getPosterBoard(object slot)
@@ -428,7 +427,8 @@ namespace Cogbot
 			RegisterCommand("crouch", new CrouchCommand(this));
 			RegisterCommand("mute", new MuteCommand(this));
 			RegisterCommand("unmute", new UnmuteCommand(this));
-			RegisterCommand("move", new Move(this));
+            RegisterCommand("move", new MoveToCommand(this)); 
+            RegisterCommand("forward", new MoveToCommand(this));
 			RegisterCommand("use", new Use(this));
 			RegisterCommand("eval", new Eval(this));
 			RegisterCommand("wear", new ReplaceOutfitCommand(this));

@@ -29,7 +29,6 @@ using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Agent
@@ -40,7 +39,8 @@ namespace Cogbot.Actions.Agent
         {
             Name = "Who";
         }
-        public void MakeInfo()
+
+        public override void MakeInfo()
         {
             Description = "Lists seen avatars.";
             Category = CommandCategory.Other;

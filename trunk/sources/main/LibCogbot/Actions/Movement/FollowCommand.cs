@@ -6,42 +6,41 @@ using System.Threading;
 using System.Windows.Forms;
 using Cogbot.World;
 using PathSystem3D.Navigation;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Movement
 {
-    class Follow : Command, BotPersonalCommand
+    internal class Follow : Command, BotPersonalCommand
     {
-
-
         public Follow(BotClient Client)
             : base(Client)
         {
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Follow an avatar. This command is modeless.";
             Details = "<p>follow* <avatar name></p>" +
-                    "<p>stop-following <avatar name>\"</p>";
+                      "<p>stop-following <avatar name>\"</p>";
             Category = CommandCategory.Movement;
-            Parameters = CreateParams("avatar", typeof(AgentSpec), "Avatar to follow");
+            Parameters = CreateParams("target", typeof (AgentSpec), "Avatar to follow");
             ResultMap = CreateParams(
-                 "message", typeof(string), "if we could not follow, the reason why",
-                 "success", typeof(bool), "true if we are following");
+                "message", typeof (string), "if we could not follow, the reason why",
+                "success", typeof (bool), "true if we are following");
 
             Name = "Follow*";
         }
 
 
-        public override CmdResult ExecuteRequest(CmdRequest pargs)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
-            string verb = pargs.CmdName;
+            string verb = args.CmdName;
             // base.acceptInput(verb, args);
-            string[] args = pargs.tokens;
             UUID primID = UUID.Zero;
             SimActor TheSimAvatar = this.TheSimAvatar;
             if (verb == "stop-following")
             {
-
-               // SimPosition ap = TheSimAvatar.ApproachPosition;
+                // SimPosition ap = TheSimAvatar.ApproachPosition;
                 if (TheSimAvatar.CurrentAction is MoveToLocation)
                 {
                     TheSimAvatar.CurrentAction = null;
@@ -49,15 +48,12 @@ namespace Cogbot.Actions.Movement
                 TheSimAvatar.SetMoveTarget(null, 10);
                 TheSimAvatar.StopMoving();
             }
-            else if (args.Length > 0)
+            SimPosition position;
+            if (!args.TryGetValue("target", out position))
             {
-
-                string name = pargs.objectPhrase;
-                if (String.IsNullOrEmpty(name.Trim())) name = "avatar 1";
-                int argsUsed;
-                SimPosition position = WorldSystem.GetVector(pargs.tokens, out argsUsed);
-
-                Primitive avatar;
+                return Failure("$bot don't know who " + args.GetString("target") + " is.");
+            }
+            {
                 if (position != null)
                 {
                     String str = "" + Client + " start to follow " + position + ".";
@@ -66,16 +62,10 @@ namespace Cogbot.Actions.Movement
                     TheSimAvatar.CurrentAction = new FollowerAction(TheSimAvatar, position);
                     return Success("$bot started following " + position);
                 }
-                else
-                {
-                    return Failure("$bot don't know who " + name + " is.");
-                }
             }
             {
                 return Success("$bot ApproachPosition: " + TheSimAvatar.CurrentAction);
             }
-
         }
-
     }
 }

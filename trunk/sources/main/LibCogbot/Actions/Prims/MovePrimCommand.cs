@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Cogbot.World;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Objects
@@ -12,15 +11,18 @@ namespace Cogbot.Actions.Objects
         public MovePrimCommand(BotClient client)
         {
             Name = "moveprim";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "move prim to the relative specified position. Usage: moveprim <prim> <position>";
             Category = Cogbot.Actions.CommandCategory.Objects;
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-
             if (args.Length < 2)
-                return ShowUsage();// " moveprim prim [x y [z]]";
+                return ShowUsage(); // " moveprim prim [x y [z]]";
 
             int used;
             List<SimObject> PS = WorldSystem.GetSingleArg(args, out used);

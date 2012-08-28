@@ -1,7 +1,6 @@
 using System;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
@@ -11,10 +10,15 @@ namespace Cogbot.Actions.System
         public ConnectionsCommand(BotClient client)
         {
             Name = GetType().Name;
+        }
+
+        public override void MakeInfo()
+        {
             Description = "shows simulator connections";
-            Details = AddUsage("connections [name]", "if name is present, any simulator whose name includes the string name will be shown");
+            Details = AddUsage("connections [name]",
+                               "if name is present, any simulator whose name includes the string name will be shown");
             Parameters = CreateParams(
-                Optional("name", typeof(string), "substring of region name(s) to show"));
+                Optional("name", typeof (string), "substring of region name(s) to show"));
             Category = CommandCategory.Simulator;
         }
 

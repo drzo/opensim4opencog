@@ -1,29 +1,32 @@
 using System;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Movement
 {
-    class AutoPilotCommand : Command, BotPersonalCommand
+    internal class AutoPilotCommand : Command, BotPersonalCommand
     {
         public AutoPilotCommand(BotClient client)
         {
             Name = "autopilot";
-            Description = "Moves the avatar to the specified global position using simulator autopilot. Usage: autopilot x y z";
+        }
+
+        public override void MakeInfo()
+        {
+            Description =
+                "Moves the avatar to the specified global position using simulator autopilot. Usage: autopilot x y z";
             Category = CommandCategory.Movement;
             Parameters = CreateParams("position", typeof (SimPosition), "the location you wish to " + Name);
-
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int argsUsed;
             if (args.Length < 1)
-                return ShowUsage();// " moveto x y z";
+                return ShowUsage(); // " moveto x y z";
             SimPosition position = WorldSystem.GetVector(args, out argsUsed);
-            if (position==null)
+            if (position == null)
             {
                 return Failure("Coulnd not resolve location: " + args.str);
             }

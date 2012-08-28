@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Objects
@@ -12,9 +11,13 @@ namespace Cogbot.Actions.Objects
         public PrimInfoCommand(BotClient testClient)
         {
             Name = "priminfo";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Dumps information about a specified prim. " + "Usage: priminfo [prim-uuid]";
             Category = CommandCategory.Objects;
-            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
+            Parameters = CreateParams("targets", typeof (PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

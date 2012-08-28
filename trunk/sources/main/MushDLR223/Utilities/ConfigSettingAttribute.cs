@@ -297,6 +297,7 @@ namespace MushDLR223.Utilities
         private string _description;
         public bool IsStatic;
         public bool IsNonValue;
+        public Type ReturnType;
 
         public string Description
         {
@@ -352,6 +353,11 @@ namespace MushDLR223.Utilities
             }
             IsStatic = TestIsStatic(member0);
             UseSingleton = !IsStatic;
+            ReturnType = MemberValueType(member0);
+            if (ReturnType.GetGenericTypeDefinition() == (typeof(ListAsSet<>)))
+            {
+                return;
+            }
         }
 
         public string DebugInfo
@@ -694,7 +700,9 @@ namespace MushDLR223.Utilities
     {
         bool TryGetInstance(Type type, int depth, out object fnd);
     }
-
+    public class TypeConversionAttribute : Attribute
+    {
+    }
     public interface IKeyValuePair<K, V> : IDisposable
     {
         V Value { get; set; }

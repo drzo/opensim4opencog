@@ -16,6 +16,10 @@ namespace Cogbot.Actions.System
         public ShowRadCommand(BotClient testClient)
         {
             Name = "showgui";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Shows the Radegast UI";
             Category = CommandCategory.BotClient;
         }
@@ -23,8 +27,8 @@ namespace Cogbot.Actions.System
 
         public override CmdResult ExecuteRequest(CmdRequest args0)
         {
-            var args = args0.tokens;
-            if (args==null || args.Length==0) args =new []{"show"};
+            var args = args0.GetProperty("position");
+            if (args == null || args.Length == 0) args = new[] { "show" };
             if (PanelGUI == null)
             {
                 if (Client.TheRadegastInstance == null)

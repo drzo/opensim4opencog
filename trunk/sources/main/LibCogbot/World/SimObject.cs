@@ -59,12 +59,10 @@ namespace Cogbot.World
                 }
 
 
-                Vector3 v3 = Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(pos.SimRotation))*
-                             (float) finalDistance;
                 //var vFinalLocation = pos.GlobalPosition;
                 //vFinalLocation.X += v3.X;
                 //vFinalLocation.Y += v3.Y;
-                return new SimOffsetPosition(this, v3);
+                return new SimOffsetPosition(this, new Vector3(0, finalDistance, 0), true);
             }
         }
 

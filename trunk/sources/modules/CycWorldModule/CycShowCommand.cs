@@ -14,7 +14,11 @@ namespace CycWorldModule
             : base(Client)
         {
             Name = "CycShow";
-            Parameters = CreateParams("targets", typeof (PrimSpec), "The targets of " + Name);
+        }
+
+        public override void MakeInfo()
+        {
+            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
         }
         public override CmdResult ExecuteRequest(CmdRequest args)
         {

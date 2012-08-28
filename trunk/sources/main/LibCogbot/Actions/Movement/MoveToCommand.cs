@@ -1,264 +1,111 @@
 using System;
 using System.Threading;
+using Cogbot.Actions.Pathfinder;
 using Cogbot.World;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Movement
 {
-    class MovetoCommand : Command, BotPersonalCommand
+    internal class MoveToCommand : Command, BotPersonalCommand
     {
-        public MovetoCommand(BotClient client)
+        public MoveToCommand(BotClient client)
             : base(client)
         {
-            Name = "moveto";
+            Name = "move";
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
-            Description = "Moves the avatar to the specified global position using robot turnto and walk. Usage: moveto x y z";
+            Description =
+                "Moves the avatar to the specified global position using robot turnto and walk, autopilot or other setting.";
             Category = CommandCategory.Movement;
             AddUsage(Name + " wp5", "move to wp6");
-            Parameters = CreateParams("position", typeof(SimPosition), "the location you wish to " + Name);
+            Parameters = CreateParams(
+                "to", typeof (SimPosition), "the location you wish to " + Name,
+                Optional("dist", typeof (float), "the distance you wish to " + Name),
+                Optional("sproc", typeof (MovementProceedure), "the salient " + Name),
+                Optional("proc", typeof (MovementProceedure), "the simple " + Name));
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-            int argsUsed;
-            if (args.Length < 1)
-                return ShowUsage();// " moveto x y z";
-            if (!Client.IsLoggedInAndReady)
+            return ExecuteRequestProc(args, this);
+        }
+
+        public static CmdResult ExecuteRequestProc(CmdRequest args, Command cmd)
+        {
+            if (!args.ContainsKey("to"))
+                args.SetValue("to", "verb");
+
+            ;
+            if (!cmd.Client.IsLoggedInAndReady)
             {
-                return Failure("Not yet logged in!");
+                return cmd.Failure("Not yet logged in!");
             }
-            string[] argsGetProperty = args.GetProperty("loc");
-            SimPosition position = WorldSystem.GetVector(argsGetProperty, out argsUsed);
+            var TheSimAvatar = cmd.WorldSystem.TheSimAvatar;
+
+            if (TheSimAvatar.IsSitting && !TheSimAvatar.IsDrivingVehical)
+            {
+                cmd.WriteLine("$bot is standing up before moving.");
+                TheSimAvatar.StandUp();
+                // WriteLine("$bot is sitting, Please stand up to move.");
+            }
+            SimPosition position;
+            if (!args.TryGetValue("to", out position))
+            {
+                return cmd.Failure("I don't understand how to move " + args.str);
+            }
             if (position == null)
             {
-                return Failure("Coulnd not resolve location: " + args.str);
+                return cmd.Failure("Coulnd not resolve location: " + args.str);
             }
             if (!position.IsRegionAttached)
             {
-                return Failure("!IsRegionAttached: " + position);
+                return cmd.Failure("!IsRegionAttached: " + position);
             }
-            if (position.SimPosition==Vector3.Zero)
+            if (position.SimPosition == Vector3.Zero)
             {
-                return Failure("SimPosition.Zero: " + position);
+                return cmd.Failure("SimPosition.Zero: " + position);
             }
-            Dispose();
+            Vector3d delta0 = position.GlobalPosition - TheSimAvatar.GlobalPosition;
+            Vector3 delta = new Vector3((float) delta0.X, (float) delta0.Y, (float) delta0.Z);
+
+            float fnd;
+            if (args.TryGetValue("dist", out fnd))
+            {
+                delta.Normalize();
+                delta = delta*fnd;
+                position = new SimOffsetPosition(TheSimAvatar, delta);
+            }
+
+            MovementProceedure proc;
+            bool salientProc = args.TryGetValue("sproc", out proc);
+            if (salientProc)
+            {
+                TheSimAvatar.SalientMovementProceedure = proc;
+            }
+
+            if (args.TryGetValue("proc", out proc))
+            {
+                TheSimAvatar.SimpleMoveToMovementProceedure = proc;
+            }
+
             Vector3d g = position.GlobalPosition;
-            var TheSimAvatar = this.TheSimAvatar;
-            TheSimAvatar.SetClient(TheBotClient);
-            TheSimAvatar.SetMoveTarget(position, position.GetSizeDistance());
-            //Client.Self.AutoPilot(g.X, g.Y, g.Z);
-           // MoveThread = new Thread(MoveProc);
-            return Success(string.Format("SetMoveTarget: {0},{1},{2}", position, g, position.SimPosition));
-        }
-
-        private Thread MoveThread;
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        /// <filterpriority>2</filterpriority>
-
-        public void Dispose()
-        {
-            Client.Self.AutoPilotCancel();
-            /*if (MoveThread == null) return;
-
-            if (MoveThread.IsAlive)
+            TheSimAvatar.SetClient(cmd.TheBotClient);
+            if (salientProc)
             {
-                MoveThread.Abort();
-            }
-            MoveThread = null;
-        */
-        }
-
-        public CmdResult ExecuteOLD(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
-        {
-            Client.Self.IM += OnIM;
-            Results.Clear();
-            int argsUsed;
-            if (args.Length < 1)
-                return ShowUsage();// " moveto x y z";
-            SimPosition position = WorldSystem.GetVector(args, out argsUsed);
-            if (position == null)
-            {
-                return Failure("Coulnd not resolve location: " + args);
-            }
-            Vector3d g = position.GlobalPosition;
-            var TheSimAvatar = this.TheSimAvatar;
-            TheSimAvatar.SetClient(TheBotClient);
-            //TheSimAvatar.SetMoveTarget(position, position.GetSizeDistance());
-            Dispose();
-            Client.Self.AutoPilot(g.X, g.Y, g.Z);
-            Thread.Sleep(TimeSpan.FromSeconds(1));
-            Client.Self.Fly(false);
-            Vector3 gg;
-            SimRegion reg;
-            SimRegion.GetRegionAndLocal(g, out reg, out gg);
-            // MoveThread = new Thread(MoveProc);
-            return Success(string.Format("SetMoveTarget: {0} <{1},{2},{3}>", reg.ToString(), gg.X, gg.Y, gg.Z));
-        }
-
-        private void OnIM(object sender, InstantMessageEventArgs e)
-        {
-            Dispose();
-        }
-        Vector3 myPos = new Vector3();
-        Vector2 myPos0 = new Vector2();
-        Vector3 target = new Vector3();
-        Vector2 target0 = new Vector2();
-        float diff, olddiff, saveolddiff;
-        private DateTime startTime = DateTime.MinValue;
-        int duration = 10000;
-        EventHandler<TerseObjectUpdateEventArgs> callback;
-
-        public CmdResult ExecuteNew(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
-        {
-            EndFlyto();
-            var Movement = Client.Self.Movement;
-            if (args.Length < 1)
-                return ShowUsage();// " FlyTo x y z [seconds]";
-            int argsUsed;
-            SimPosition position = WorldSystem.GetVector(args, out argsUsed);
-            if (position == null)
-            {
-                return ShowUsage();// " FlyTo x y z [seconds]";
-            }
-            duration = 10000;
-            target = position.SimPosition;
-            target0.X = target.X;
-            target0.Y = target.Y;
-
-
-            Client.Objects.TerseObjectUpdate += callback;
-            startTime = DateTime.Now;
-            Movement.ResetControlFlags();
-            Movement.TurnToward(target, true);
-            Movement.AtPos = true;
-            Movement.SendUpdate(true);
-            XYMovement();
-            return Success(string.Format(Name + " to {0} for {1} seconds started", target.ToString(), duration / 1000));
-        }
-
-        private void Objects_OnObjectUpdated(object s, TerseObjectUpdateEventArgs e)
-        {
-            if (e.Update.LocalID == Client.Self.LocalID)
-            {
-                var Movement = Client.Self.Movement;
-
-                if (Movement.AtPos || Movement.AtNeg)
-                {
-                    Movement.TurnToward(target);
-                    Debug("Flyxy ");
-                }
-                else if (Movement.UpPos || Movement.UpNeg)
-                {
-                    Movement.TurnToward(target);
-                    //Movement.SendUpdate(false);
-                    Debug("Fly z ");
-                }
-                else if (Vector3.Distance(target, GetSimPosition()) <= 1.0)
-                {
-                    EndFlyto();
-                    Debug("At Target");
-                }
-            }
-            if (DateTime.Now.Subtract(startTime).TotalMilliseconds > duration)
-            {
-                EndFlyto();
-                Debug("End Flyto");
-                return;
-            }
-            XYMovement();
-            ZMovement();
-        }
-
-        private bool XYMovement()
-        {
-            bool res = false;
-            var Movement = Client.Self.Movement;
-            myPos = GetSimPosition();
-            myPos0.X = myPos.X;
-            myPos0.Y = myPos.Y;
-            diff = Vector2.Distance(target0, myPos0);
-            if (diff < 1)
-            {
-                EndFlyto();
-                return true;
-            }
-            Vector2 vvel = new Vector2(Client.Self.Velocity.X, Client.Self.Velocity.Y);
-            float vel = vvel.Length();
-            if (diff >= 10.0)
-            {
-                Movement.ResetControlFlags();
-                Movement.AtPos = true;
-                Movement.SendUpdate(true);
-                res = true;
-            }
-            else if (diff >= 3 && vel < 5)
-            {
-                Movement.ResetControlFlags();
-                Movement.AtPos = true;
-                Movement.SendUpdate(true);
+                return cmd.Result(string.Format("SalientGoto: {0},{1},{2}", position, g, position.SimPosition),
+                                  TheSimAvatar.SalientGoto(position));
             }
             else
             {
-                Movement.ResetControlFlags();
-                Movement.NudgeAtPos = true;
-                Movement.SendUpdate(true);
+                TheSimAvatar.SetMoveTarget(position, position.GetSizeDistance());
             }
-            saveolddiff = olddiff;
-            olddiff = diff;
-            return res;
+            //Client.Self.AutoPilot(g.X, g.Y, g.Z);
+            // MoveThread = new Thread(MoveProc);
+            return cmd.Success(string.Format("SetMoveTarget: {0},{1},{2}", position, g, position.SimPosition));
         }
-
-        private void ZMovement()
-        {
-            return;
-            var Movement = Client.Self.Movement;
-            Movement.UpPos = false;
-            Movement.UpNeg = false;
-            float diffz = (target.Z - GetSimPosition().Z);
-            if (diffz >= 20.0)
-                Movement.UpPos = true;
-            else if (diffz <= -20.0)
-                Movement.UpNeg = true;
-            else if (diffz >= +5.0 && Client.Self.Velocity.Z < +4.0)
-                Movement.UpPos = true;
-            else if (diffz <= -5.0 && Client.Self.Velocity.Z > -4.0)
-                Movement.UpNeg = true;
-            else if (diffz >= +2.0 && Client.Self.Velocity.Z < +1.0)
-                Movement.UpPos = true;
-            else if (diffz <= -2.0 && Client.Self.Velocity.Z > -1.0)
-                Movement.UpNeg = true;
-        }
-
-        private void EndFlyto()
-        {
-            startTime = DateTime.MinValue;
-            var Movement = Client.Self.Movement;
-            Movement.ResetControlFlags();
-            Movement.SendUpdate(true);
-            Client.Objects.TerseObjectUpdate -= callback;
-        }
-
-        private void Debug(string x)
-        {
-            return; /* remove for debugging */
-            var Movement = Client.Self.Movement;
-            WriteLine(
-                x +
-                " {0,3:##0} {1,3:##0} {2,3:##0} diff {3,5:##0.0} olddiff {4,5:##0.0}  At:{5,5} {6,5}  Up:{7,5} {8,5}  v: {9} w: {10}",
-                myPos.X, myPos.Y, myPos.Z, diff, saveolddiff,
-                Movement.AtPos, Movement.AtNeg, Movement.UpPos,
-                Movement.UpNeg,
-                Client.Self.Velocity.ToString(), Client.Self.AngularVelocity.ToString());
-        }
-
     }
 }

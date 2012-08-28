@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Communication
@@ -16,18 +15,18 @@ namespace Cogbot.Actions.Communication
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = Name + "s something (optionally to channel)";
             Details = AddUsage(Name + " [#channel] something", Description);
             Category = CommandCategory.Communication;
             Parameters =
                 CreateParams(
-                            Optional("channel", typeof(int), "the optional channel in which the message goes out"),
-                            "message", typeof(string), "what you output to the simulator");
+                    Optional("channel", typeof (int), "the optional channel in which the message goes out"),
+                    "message", typeof (string), "what you output to the simulator");
             ResultMap = CreateParams(
-                "message", typeof(string), "if success was false, the reason why",
-                "success", typeof(bool), "true if command was successful");
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if command was successful");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -37,7 +36,7 @@ namespace Cogbot.Actions.Communication
             string message = String.Empty;
             if (args.Length < 1)
             {
-                return ShowUsage();// " whisper (optional channel) whatever";
+                return ShowUsage(); // " whisper (optional channel) whatever";
             }
             else if (args.Length > 1 && (args[0].StartsWith("/") || args[0].StartsWith("#")))
             {

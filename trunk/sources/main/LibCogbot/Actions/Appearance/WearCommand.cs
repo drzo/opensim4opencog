@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
@@ -14,10 +13,11 @@ namespace Cogbot.Actions.Appearance
             Name = "wear";
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Category = CommandCategory.Appearance;
-            Description = @"<p>Same as right clicking and choosing 'replace outfit' in a normal client.</p>
+            Description =
+                @"<p>Same as right clicking and choosing 'replace outfit' in a normal client.</p>
 <p>See <a href='wiki/BotCommands#Inventory'>Inventory</a> for Inventory FormatException</p>
 <p>If the argument is a folder the entire folder is worn (but not items in contained folders).</p>
 <p>Adding 'nobake' doesn't rebake the avatar's textures.</p>";
@@ -29,14 +29,14 @@ namespace Cogbot.Actions.Appearance
                     "Folder of items to wear. See <a href='wiki/BotCommands#Inventory'>Inventory</a> for format.");
 
             ResultMap = CreateParams(
-                 "message", typeof(string), "if success was false, the reason why",
-                 "success", typeof(bool), "true if outfit was worn");
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if outfit was worn");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
-                return ShowUsage();// " wear [outfit name] eg: 'wear /My Outfit/Dance Party";
+                return ShowUsage(); // " wear [outfit name] eg: 'wear /My Outfit/Dance Party";
 
             string target = String.Empty;
             bool bake = true;
@@ -58,7 +58,7 @@ namespace Cogbot.Actions.Appearance
             }
             catch (Exception ex)
             {
-                return Failure( "Invalid outfit (" + ex.Message + ")");
+                return Failure("Invalid outfit (" + ex.Message + ")");
             }
 
             return Success(string.Empty);

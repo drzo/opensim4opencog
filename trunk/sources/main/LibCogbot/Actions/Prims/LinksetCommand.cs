@@ -5,7 +5,6 @@ using Cogbot;
 using Cogbot.World;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Objects
@@ -15,11 +14,14 @@ namespace Cogbot.Actions.Objects
         public LinksetCommand(BotClient client)
         {
             Name = "Linkset";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Takes from a prim. Usage: Take [prim]";
             Category = Cogbot.Actions.CommandCategory.Objects;
             Parameters = CreateParams("root", typeof (PrimSpec), "The root of " + Name,
                                       "childs", typeof (PrimSpec), "The childs of " + Name);
-
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -50,7 +52,6 @@ namespace Cogbot.Actions.Objects
             }
             catch (Exception e)
             {
-
                 return Failure("" + e);
             }
         }

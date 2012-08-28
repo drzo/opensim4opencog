@@ -15,10 +15,16 @@ namespace Cogbot.Actions.Agent
     {
         public PointAtCommand(BotClient client)
         {
+        }
+
+        public override void MakeInfo()
+        {
             Name = "PointAt";
             Description = "PointAts from a prim. Usage: PointAt [prim]";
             Category = Cogbot.Actions.CommandCategory.Objects;
-            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
+            Parameters = CreateParams(
+                Optional("--stop", typeof (bool), "stop previous pointing"),
+                "targets", typeof (PrimSpec), "The targets of " + Name);
         }
 
         ListAsSet<EffectBeamInfo> BeamInfos = new ListAsSet<EffectBeamInfo>();
@@ -38,11 +44,12 @@ namespace Cogbot.Actions.Agent
                 TheSimAvatar.SelectedBeam = !TheSimAvatar.SelectedBeam;
                 return Success("SelectedBeam = " + TheSimAvatar.SelectedBeam);
             }
-            List<SimObject> PS = WorldSystem.GetPrimitives(args, out used);
+            var targets = args.GetProperty("targets");
+            List<SimObject> PS = WorldSystem.GetPrimitives(targets, out used);
             GridClient grc = TheBotClient;
             if (PS.Count==0)
             {
-                SimPosition pos = WorldSystem.GetVector(args, out used);
+                SimPosition pos = WorldSystem.GetVector(targets, out used);
                 if (pos!=null)
                 {
                     EffectBeamInfo info = new EffectBeamInfo(grc);

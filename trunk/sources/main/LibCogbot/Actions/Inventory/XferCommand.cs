@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -8,18 +8,21 @@ using Cogbot.Actions;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using PathSystem3D.Navigation;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.SimExport
 {
     public class XferCommand : Command, GridMasterCommand
     {
-        const int FETCH_ASSET_TIMEOUT = 1000 * 10;
+        private const int FETCH_ASSET_TIMEOUT = 1000*10;
 
         public XferCommand(BotClient testClient)
         {
             Name = "xfer";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Downloads the specified asset using the Xfer system. Usage: xfer [uuid]";
             Category = CommandCategory.Inventory;
             Parameters = CreateParams("position", typeof (SimPosition), "the location you wish to " + Name);
@@ -30,7 +33,7 @@ namespace Cogbot.Actions.SimExport
             UUID assetID = UUID.Zero;
 
             if (args.Length != 1 || !UUID.TryParse(args[0], out assetID))
-                return ShowUsage();// " xfer [uuid]";
+                return ShowUsage(); // " xfer [uuid]";
 
             string filename;
             byte[] assetData = RequestXfer(assetID, AssetType.Object, out filename);
@@ -53,7 +56,7 @@ namespace Cogbot.Actions.SimExport
             }
         }
 
-        byte[] RequestXfer(UUID assetID, AssetType type, out string filename)
+        private byte[] RequestXfer(UUID assetID, AssetType type, out string filename)
         {
             AutoResetEvent xferEvent = new AutoResetEvent(false);
             ulong xferID = 0;
@@ -61,14 +64,14 @@ namespace Cogbot.Actions.SimExport
 
             EventHandler<XferReceivedEventArgs> xferCallback =
                 delegate(object sender, XferReceivedEventArgs e)
-                {
-                    if (e.Xfer.XferID == xferID)
                     {
-                        if (e.Xfer.Success)
-                            data = e.Xfer.AssetData;
-                        xferEvent.Set();
-                    }
-                };
+                        if (e.Xfer.XferID == xferID)
+                        {
+                            if (e.Xfer.Success)
+                                data = e.Xfer.AssetData;
+                            xferEvent.Set();
+                        }
+                    };
 
             Client.Assets.XferReceived += xferCallback;
 

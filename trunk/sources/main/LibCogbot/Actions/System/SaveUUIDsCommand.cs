@@ -5,7 +5,6 @@ using System.Text;
 using Cogbot.World;
 using OpenMetaverse;
 using Cogbot;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Search
@@ -15,10 +14,14 @@ namespace Cogbot.Actions.Search
         public SaveUUIDsCommand(BotClient testClient)
         {
             Name = "Save UUIDs";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Saves resolution of UUID types in a file.";
-            Details = AddUsage("saveuuids <filename>", "create file filename") + 
-                AddExample(
-@"
+            Details = AddUsage("saveuuids <filename>", "create file filename") +
+                      AddExample(
+                          @"
 /saveuuids c:\somepath\somefile.xml  might produce a file like
 
 <assets>
@@ -42,10 +45,11 @@ namespace Cogbot.Actions.Search
   <!--avatar_slowwalk NODATA-->
   <!--avatar_uphillwalk NODATA-->
 </assets>
-", @"makes this file
+",
+                          @"makes this file
 an asset can have more than one name because the name comes from the containing object (inventory or object)
 and could be expressed in more than one location");
-            Parameters = CreateParams("path", typeof(string), "Path to file to save uuids in");
+            Parameters = CreateParams("path", typeof (string), "Path to file to save uuids in");
 
             Category = CommandCategory.BotClient;
         }
@@ -53,7 +57,7 @@ and could be expressed in more than one location");
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             string filename = "AssetMapping3.xml";
-            if (args.Length >0) filename = String.Join(" ", args, 0, args.Length).Trim();
+            if (args.Length > 0) filename = String.Join(" ", args, 0, args.Length).Trim();
             return Success("Done with UUIDs " + SimAssetStore.SaveAssetFile(filename, false));
         }
     }

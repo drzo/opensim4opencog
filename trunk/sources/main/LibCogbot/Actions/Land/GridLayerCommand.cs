@@ -1,16 +1,20 @@
 using System;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Land
 {
     public class GridLayerCommand : Command, GridMasterCommand
     {
-        bool registeredCallback = false;
+        private bool registeredCallback = false;
+
         public GridLayerCommand(BotClient testClient)
         {
             Name = "gridlayer";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Downloads all of the layer chunks for the grid object map";
             Category = CommandCategory.Simulator;
         }
@@ -31,7 +35,7 @@ namespace Cogbot.Actions.Land
         {
             GridLayer layer = e.Layer;
             WriteLine(String.Format("Layer({0}) Bottom: {1} Left: {2} Top: {3} Right: {4}",
-                layer.ImageID.ToString(), layer.Bottom, layer.Left, layer.Top, layer.Right));
+                                    layer.ImageID.ToString(), layer.Bottom, layer.Left, layer.Top, layer.Right));
             //string filename = layer.
             //Client.ExecuteCommand("download " + layer.ImageID.ToString() + " " + AssetType.ImageTGA + " " + filename);
         }

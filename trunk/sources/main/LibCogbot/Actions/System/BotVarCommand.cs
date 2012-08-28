@@ -1,5 +1,3 @@
-
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,7 +6,6 @@ using Cogbot.World;
 using Cogbot.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
@@ -18,11 +15,15 @@ namespace Cogbot.Actions.System
         public BotVarCommand(BotClient client)
         {
             Name = "botvar";
-            Description = 
+        }
+
+        public override void MakeInfo()
+        {
+            Description =
                 "Display bot vars. Bot vars are an interface between botcmd and AIML. " +
                 "For more information on bot vars see <a href='wiki/BotVars'>Bot Vars</a>";
             Details = AddUsage("botvar <varname>", "display a bot var") +
-                AddExample("botvar master", "displays the name of the bot's master");
+                      AddExample("botvar master", "displays the name of the bot's master");
 
             Parameters = CreateParams("varname", typeof (string), "bot var to display");
 

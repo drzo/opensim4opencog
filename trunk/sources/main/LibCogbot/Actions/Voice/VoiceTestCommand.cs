@@ -29,21 +29,20 @@ using System.Collections.Generic;
 using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 using OpenMetaverse.Utilities;
 
 namespace Cogbot.Actions.Voice
 {
-    public class VoiceException: Exception
+    public class VoiceException : Exception
     {
         public bool LoggedIn = false;
 
-        public VoiceException(string msg): base(msg) 
+        public VoiceException(string msg) : base(msg)
         {
         }
 
-        public VoiceException(string msg, bool loggedIn): base(msg) 
+        public VoiceException(string msg, bool loggedIn) : base(msg)
         {
             LoggedIn = loggedIn;
         }
@@ -51,22 +50,27 @@ namespace Cogbot.Actions.Voice
 
     public class VoiceTestCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
-        static AutoResetEvent EventQueueRunningEvent = new AutoResetEvent(false);
-        static AutoResetEvent ProvisionEvent = new AutoResetEvent(false);
-        static AutoResetEvent ParcelVoiceInfoEvent = new AutoResetEvent(false);
-        static string VoiceAccount = String.Empty;
-        static string VoicePassword = String.Empty;
-        static string VoiceRegionName = String.Empty;
-        static int VoiceLocalID = 0;
-        static string VoiceChannelURI = String.Empty;
+        private static AutoResetEvent EventQueueRunningEvent = new AutoResetEvent(false);
+        private static AutoResetEvent ProvisionEvent = new AutoResetEvent(false);
+        private static AutoResetEvent ParcelVoiceInfoEvent = new AutoResetEvent(false);
+        private static string VoiceAccount = String.Empty;
+        private static string VoicePassword = String.Empty;
+        private static string VoiceRegionName = String.Empty;
+        private static int VoiceLocalID = 0;
+        private static string VoiceChannelURI = String.Empty;
 
         public VoiceTestCommand(BotClient testClient)
         {
             Name = "VoiceTest";
-            Description = "VoiceTest [firstname] [lastname] [password] [loginuri]";
-            Category = CommandCategory.Voice;
             TheBotClient = testClient;
         }
+
+        public override void MakeInfo()
+        {
+            Description = "VoiceTest [firstname] [lastname] [password] [loginuri]";
+            Category = CommandCategory.Voice;
+        }
+
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length > 4)
@@ -149,7 +153,7 @@ namespace Cogbot.Actions.Voice
                 if (doLogins)
                 {
                     WriteLine("Waiting for OnEventQueueRunning");
-                    if (!EventQueueRunningEvent.WaitOne(45 * 1000, false))
+                    if (!EventQueueRunningEvent.WaitOne(45*1000, false))
                         throw new VoiceException("EventQueueRunning event did not occur", true);
                     WriteLine("EventQueue running");
                 }
@@ -157,7 +161,7 @@ namespace Cogbot.Actions.Voice
                 WriteLine("Asking the current simulator to create a provisional account...");
                 if (!voice.RequestProvisionAccount())
                     throw new VoiceException("Failed to request a provisional account", true);
-                if (!ProvisionEvent.WaitOne(120 * 1000, false))
+                if (!ProvisionEvent.WaitOne(120*1000, false))
                     throw new VoiceException("Failed to create a provisional account", true);
                 WriteLine("Provisional account created. Username: " + VoiceAccount +
                           ", Password: " + VoicePassword);
@@ -172,7 +176,7 @@ namespace Cogbot.Actions.Voice
 
                 if (!voice.RequestParcelVoiceInfo())
                     throw new Exception("Failed to request parcel voice info");
-                if (!ParcelVoiceInfoEvent.WaitOne(45 * 1000, false))
+                if (!ParcelVoiceInfoEvent.WaitOne(45*1000, false))
                     throw new VoiceException("Failed to obtain parcel info voice", true);
 
 
@@ -191,7 +195,6 @@ namespace Cogbot.Actions.Voice
                 {
                     client.Network.Logout();
                 }
-
             }
             finally
             {
@@ -202,12 +205,12 @@ namespace Cogbot.Actions.Voice
             return Success("voice test complete!");
         }
 
-        static void client_OnEventQueueRunning(object sender, EventQueueRunningEventArgs e)
+        private static void client_OnEventQueueRunning(object sender, EventQueueRunningEventArgs e)
         {
             EventQueueRunningEvent.Set();
         }
 
-        static void voice_OnProvisionAccount(string username, string password)
+        private static void voice_OnProvisionAccount(string username, string password)
         {
             VoiceAccount = username;
             VoicePassword = password;
@@ -215,7 +218,7 @@ namespace Cogbot.Actions.Voice
             ProvisionEvent.Set();
         }
 
-        static void voice_OnParcelVoiceInfo(string regionName, int localID, string channelURI)
+        private static void voice_OnParcelVoiceInfo(string regionName, int localID, string channelURI)
         {
             VoiceRegionName = regionName;
             VoiceLocalID = localID;

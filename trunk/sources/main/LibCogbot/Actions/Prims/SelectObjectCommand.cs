@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Cogbot;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Objects
@@ -12,9 +11,13 @@ namespace Cogbot.Actions.Objects
         public SelectObjectCommand(BotClient client)
         {
             Name = "selectobject";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Re selectobject [re|de] [prim]";
             Category = Cogbot.Actions.CommandCategory.Objects;
-            Parameters = CreateParams("targets", typeof(PrimSpec), "The objects to " + Name);
+            Parameters = CreateParams("targets", typeof (PrimSpec), "The objects to " + Name);
             //client.RegisterCommand("deselect", this);
         }
 
@@ -42,7 +45,7 @@ namespace Cogbot.Actions.Objects
             List<SimObject> PS = WorldSystem.GetPrimitives(args, out used);
             if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
             List<uint> selectobjs = new List<uint>();
-            var fp = PS[0].RegionHandle;           
+            var fp = PS[0].RegionHandle;
             foreach (var P in PS)
             {
                 if (fp != P.RegionHandle)

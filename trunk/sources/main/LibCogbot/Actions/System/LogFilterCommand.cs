@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using MushDLR223.Utilities;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
@@ -12,6 +11,10 @@ namespace Cogbot.Actions.System
         public LogFilterCommand(BotClient testClient)
         {
             Name = "Log";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Filters out console messages";
             /*
                                                          clear,
@@ -27,12 +30,13 @@ namespace Cogbot.Actions.System
             Details = "log ui -simmesh";
             Category = CommandCategory.BotClient;
         }
+
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int start = 0;
             string fname = "UI";
             TextFilter filter = ClientManager.TheUILogFilter;
-            if (args.Length>0)
+            if (args.Length > 0)
             {
                 string sf = args[0].ToLower();
                 if (sf == "filter" || sf == "global")

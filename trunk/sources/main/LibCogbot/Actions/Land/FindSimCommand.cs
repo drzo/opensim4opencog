@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Land
@@ -13,13 +12,17 @@ namespace Cogbot.Actions.Land
         public FindSimCommand(BotClient testClient)
         {
             Name = "findsim";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Searches for a simulator and returns information about it. Usage: findsim [Simulator Name]";
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
-                return ShowUsage();// " findsim [Simulator Name]";
+                return ShowUsage(); // " findsim [Simulator Name]";
 
             // Build the simulator name from the args list
             string simName = string.Empty;

@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using OpenMetaverse;
-
 // the Namespace used for all BotClient commands
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Search
 {
-    class SearchGroupsCommand : Command, GridMasterCommand
+    internal class SearchGroupsCommand : Command, GridMasterCommand
     {
-        AutoResetEvent waitQuery = new AutoResetEvent(false);
-        int resultCount = 0;
+        private AutoResetEvent waitQuery = new AutoResetEvent(false);
+        private int resultCount = 0;
 
         public SearchGroupsCommand(BotClient testClient)
         {
@@ -20,17 +19,17 @@ namespace Cogbot.Actions.Search
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Searches groups.";
             Details = AddUsage(Name + " [search text]", "searches " + Name.Replace("seaches", ""));
             Category = CommandCategory.Groups;
             Parameters =
-                CreateParams("searchText", typeof(string), "what you are searching for");
+                CreateParams("searchText", typeof (string), "what you are searching for");
             ResultMap = CreateParams(
-                "result", typeof(List<string>), "search results",
-                "message", typeof(string), "if success was false, the reason why",
-                "success", typeof(bool), "true if command was successful");
+                "result", typeof (List<string>), "search results",
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if command was successful");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -47,7 +46,7 @@ namespace Cogbot.Actions.Search
             waitQuery.Reset();
 
             Client.Directory.DirGroupsReply += Directory_DirGroups;
-            
+
             // send the request to the directory manager
             Client.Directory.StartGroupSearch(searchText, 0);
 
@@ -61,7 +60,6 @@ namespace Cogbot.Actions.Search
                 {
                     return Failure("Timeout waiting for simulator to respond.");
                 }
-
             }
             finally
             {
@@ -69,7 +67,7 @@ namespace Cogbot.Actions.Search
             }
         }
 
-        void Directory_DirGroups(object sender, DirGroupsReplyEventArgs e)
+        private void Directory_DirGroups(object sender, DirGroupsReplyEventArgs e)
         {
             if (e.MatchedGroups.Count > 0)
             {
@@ -83,6 +81,6 @@ namespace Cogbot.Actions.Search
                 WriteLine("Didn't find any groups that matched your query :(");
             }
             waitQuery.Set();
-        }        
+        }
     }
 }

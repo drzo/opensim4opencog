@@ -18,20 +18,33 @@ namespace PathSystem3D.Navigation
             var reg = PathStore;
             if (reg == null && _late != null && !_late.IsRegionAttached)
             {
-                return "HEADING: " + _late + "(offset " + _lateV3 + ")";
+                return "HEADING: " + _late + "(offset " + GetOffset() + ")";
             }
             var pos = this.SimPosition;
             return (reg == null ? "?" : reg.RegionName) + "/" + pos.X + "/" + pos.Y + "/" + pos.Z + "@" +
                    ZHeading * SimPathStore.RAD2DEG;
         }
 
+
+        public static SimPosition WithOrientation(SimPosition position, Vector3 foreward)
+        {
+            return new SimOffsetPosition(position, foreward, true);
+        }
+
         private readonly SimPosition _late;
         private readonly Vector3 _lateV3;
+        private readonly bool _isRotated;
 
         public SimOffsetPosition(SimPosition pos, Vector3 vector3)
+            : this(pos, vector3, false)
+        {
+        }
+
+        public SimOffsetPosition(SimPosition pos, Vector3 vector3, bool isRotated)
         {
             _late = pos;
             _lateV3 = vector3;
+            _isRotated = isRotated;
         }
 
         public bool IsPassable
@@ -71,7 +84,7 @@ namespace PathSystem3D.Navigation
         {
             get
             {
-                return _late.SimPosition + _lateV3;
+                return _late.SimPosition + GetOffset();
             }
         }
 
@@ -140,6 +153,12 @@ namespace PathSystem3D.Navigation
         }
         public Vector3 GetOffset()
         {
+            if (!_isRotated)
+            {
+                return _lateV3;
+            }
+            if (_late != null) return Vector3.Transform(Vector3.UnitX, Matrix4.CreateFromQuaternion(_late.SimRotation)) * _lateV3;
+            // very bad
             return _lateV3;
         }
     }

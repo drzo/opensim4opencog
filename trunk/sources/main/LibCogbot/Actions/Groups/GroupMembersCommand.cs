@@ -5,7 +5,6 @@ using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Groups
@@ -15,7 +14,7 @@ namespace Cogbot.Actions.Groups
     /// </summary>
     public class GroupMembersCommand : Command, GridMasterCommand
     {
-            private ManualResetEvent GroupsEvent = new ManualResetEvent(false);
+        private ManualResetEvent GroupsEvent = new ManualResetEvent(false);
         private string GroupName;
         private UUID GroupUUID = UUID.Zero;
         private UUID GroupRequestID = UUID.Zero;
@@ -26,12 +25,12 @@ namespace Cogbot.Actions.Groups
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Dump group members to console.";
             Category = CommandCategory.Groups;
             Details = AddUsage(Name + " group", Description);
-            Parameters = CreateParams("group", typeof(Group), "group you are going to see " + Name);
+            Parameters = CreateParams("group", typeof (Group), "group you are going to see " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -45,8 +44,9 @@ namespace Cogbot.Actions.Groups
             GroupName = GroupName.Trim();
 
             GroupUUID = Client.GroupName2UUID(GroupName);
-            if (UUID.Zero != GroupUUID) {
-                Client.Groups.GroupMembersReply += GroupMembersHandler;                
+            if (UUID.Zero != GroupUUID)
+            {
+                Client.Groups.GroupMembersReply += GroupMembersHandler;
                 GroupRequestID = Client.Groups.RequestGroupMembers(GroupUUID);
                 GroupsEvent.WaitOne(30000, false);
                 GroupsEvent.Reset();
@@ -58,7 +58,8 @@ namespace Cogbot.Actions.Groups
 
         private void GroupMembersHandler(object sender, GroupMembersReplyEventArgs e)
         {
-            if (e.RequestID == GroupRequestID) {
+            if (e.RequestID == GroupRequestID)
+            {
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine();
                 sb.AppendFormat("GroupMembers: RequestID {0}", e.RequestID).AppendLine();
@@ -70,7 +71,7 @@ namespace Cogbot.Actions.Groups
                 sb.AppendFormat("GroupMembers: MemberCount {0}", e.Members.Count).AppendLine();
                 WriteLine(sb.ToString());
                 GroupsEvent.Set();
-            } 
+            }
         }
     }
 }

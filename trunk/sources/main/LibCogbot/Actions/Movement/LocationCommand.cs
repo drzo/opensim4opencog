@@ -5,43 +5,38 @@ using Cogbot;
 using Cogbot.World;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
-
 //using libsecondlife;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Movement
 {
-    class LocationCommand : Command, BotSystemCommand, AsynchronousCommand
+    internal class LocationCommand : Command, BotSystemCommand, AsynchronousCommand
     {
         public LocationCommand(BotClient Client)
             : base(Client)
         {
             Name = "Location";
-            //From locate: Description = "Gives the coordinates of where $bot is.";
+            //From locate: } override public void MakeInfo() { Description = "Gives the coordinates of where $bot is.";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Finds out in which direction yourself, an object or a building or a person is.";
             Details = "To find out wher an object, building or a person is, type \"where is [object/person name]\"";
             Details += "\nTo locate the coordinates of yourself, type in \"locate\"";
-            Parameters = CreateParams("position", typeof(SimPosition), "the location you wish to " + Name);
+            Parameters = CreateParams("is", typeof (SimPosition), "the location you wish to " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             SimPosition position;
-            int argUsed;
-
-            if (args["is"].Length != 0)
+            if (!args.TryGetValue("is", out position))
             {
-                position = WorldSystem.GetVector(Parser.ParseArguments(args["is"]), out argUsed);
-            }
-            else
-            {
-                string[] parserParseArguments = Parser.ParseArguments(args.str);
-                position = WorldSystem.GetVector(parserParseArguments, out argUsed);
+                return Failure("I don't understand how to move " + args.str);
             }
 
             {
-                double RAD2DEG = 180 / Math.PI;
+                double RAD2DEG = 180/Math.PI;
                 if (position != null)
                 {
                     //avatar = ((SimAvatar)position).theAvatar;
@@ -50,7 +45,7 @@ namespace Cogbot.Actions.Movement
                     Vector3 forward = new Vector3(1, 0, 0);
                     Vector3d positionVect = position.GlobalPosition;
                     Vector3d offsetG = positionVect - myPos;
-                    Vector3 offset = new Vector3((float)offsetG.X, (float)offsetG.Y, (float)offsetG.Z);
+                    Vector3 offset = new Vector3((float) offsetG.X, (float) offsetG.Y, (float) offsetG.Z);
                     Quaternion newRot2 = Vector3.RotationBetween(forward, offset);
 
                     //Quaternion newRot1 = Vector3d.RotationBetween(positionVect, Client.Self.RelativePosition);
@@ -59,15 +54,15 @@ namespace Cogbot.Actions.Movement
 
                     // Absolute
                     WriteLine(" SimPosition = " + Vector3Str(position.SimPosition));
-                    WriteLine(" SimRotation = {0:0.#}*", WorldObjects.GetZHeading(position.SimRotation) * RAD2DEG);
+                    WriteLine(" SimRotation = {0:0.#}*", WorldObjects.GetZHeading(position.SimRotation)*RAD2DEG);
 
                     // Relative
                     WriteLine(" RelSimPosition = {0} ", Vector3Str(offset));
                     double relAngle = (Math.Atan2(-offset.X, -offset.Y) + Math.PI); // 2P
-                    WriteLine(" RelSimPolar = {0:0.#}*{1:0.0#}", relAngle * RAD2DEG, newDist);
+                    WriteLine(" RelSimPolar = {0:0.#}*{1:0.0#}", relAngle*RAD2DEG, newDist);
 
                     double selfFacing = WorldObjects.GetZHeading(TheSimAvatar.SimRotation);
-                    WriteLine(" SelfFacingPolar = {0:+0.0#;-0.0#}*{1:0.0#}", (relAngle - selfFacing) * RAD2DEG, newDist);
+                    WriteLine(" SelfFacingPolar = {0:+0.0#;-0.0#}*{1:0.0#}", (relAngle - selfFacing)*RAD2DEG, newDist);
 
                     if (false)
                     {
@@ -94,7 +89,7 @@ namespace Cogbot.Actions.Movement
             }
         }
 
-        static string Vector3Str(Vector3 position)
+        private static string Vector3Str(Vector3 position)
         {
             return string.Format("{0:0.0#} {1:0.0#} {2:0.0#}", position.X, position.Y, position.Z);
         }

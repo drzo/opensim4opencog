@@ -4,13 +4,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
+using MushDLR223.Utilities;
 
 namespace MushDLR223.ScriptEngines
 {
     [Flags]
     public enum CMDFLAGS
     {
-        Inherit = 0,
+        None = 0,
+        Inherit = 32,
         /// <summary>
         /// Command *must* to build a return
         /// </summary>
@@ -23,6 +25,10 @@ namespace MushDLR223.ScriptEngines
         /// Force the command to be ran outside of a TaskQueue 
         /// </summary>
         ForceAsync = 4,
+        /// <summary>
+        /// The command to be ran inside of a TaskQueue 
+        /// </summary>
+        SynchronousChannel = 64,
         /// <summary>
         /// Force the command to complete before returning 
         /// </summary>
@@ -44,6 +50,9 @@ namespace MushDLR223.ScriptEngines
         bool InvalidArgs { get; set; }
         bool CompletedSynchronously { get; }
         string Message { get; set; }
+        IEnumerable<string> Keys { get; }
+        object this[string key] { get; }
+        CmdRequest Request { get; }
         string ToPostExecString();
     }
     public class ACmdResult : IAsyncResult, CmdResult
@@ -128,34 +137,49 @@ namespace MushDLR223.ScriptEngines
             return TryGetValue(map, key, out res) && (bool) res;
         }
 
-        public static bool TryGetValue<T>(IDictionary<string, T> map, string name, out T res)
+        public static bool TryGetValue<T>(IDictionary<string, T> map, string key, out T res)
         {
-            if (map.TryGetValue(name, out res)) return true;
-            string nameToLower = name.ToLower();
-            if (nameToLower != name && map.TryGetValue(nameToLower, out res)) return true;
-            var name2 = Parser.ToCamelCase(name);
-            if (name2 != name && map.TryGetValue(name2, out res)) return true;
+            if (map.TryGetValue(key, out res)) return true;
+            string nameToLower = key.ToLower();
+            if (nameToLower != key && map.TryGetValue(nameToLower, out res)) return true;
+            var name2 = Parser.ToCamelCase(key);
+            if (name2 != key && map.TryGetValue(name2, out res)) return true;
             return false;
         }
-        public static object GetValue(IDictionary<string, object> map, string name)
+        public static object GetValue(IDictionary<string, object> map, string key)
         {
             object res;
-            if (TryGetValue(map, name, out res)) return res;
+            if (TryGetValue(map, key, out res)) return res;
             return null;
         }
 
-        protected object this[string name]
+        public IEnumerable<string> Keys
+        {
+            get { lock (SyncRoot) return LockInfo.CopyOf(Results.Keys); }
+        }
+
+        public object this[string key]
         {
             get {
-                lock (SyncRoot) return GetValue(Results, name);
+                lock (SyncRoot) return GetValue(Results, key);
             }
             set
             {
                 lock (SyncRoot)
                 {
-                    Results[Parser.ToCamelCase(name)] = value;
+                    Results[Parser.ToMapKey(key)] = value;
                 }
             }
+        }
+
+        public CmdRequest Request
+        {
+            get { return null; }
+        }
+
+        public string ToPostExecString()
+        {
+            return ToString();
         }
 
         public object SyncRoot
@@ -165,11 +189,11 @@ namespace MushDLR223.ScriptEngines
 
         public static ACmdResult Complete(string verb, string message, bool passFail)
         {
-            return ACmdResult.Complete(verb,  message, passFail);
+            return new ACmdResult(verb,  message, passFail);
         }
         public ACmdResult(string verb, string message, bool passFail)
         {
-            Results = CmdRequest.CreateMap();
+            Results = Parser.CreateMap();
             Results["verb"] = verb;
             Message = message;
             Success = passFail;
@@ -179,8 +203,7 @@ namespace MushDLR223.ScriptEngines
         }
         public override string ToString()
         {
-            if (!Success) return string.Format("ERROR: {0}", Message);
-            return ToPostExecString();
+            return CmdRequest.ToPostExecString(this);
         }
 
         /// <summary>
@@ -204,47 +227,14 @@ namespace MushDLR223.ScriptEngines
             }
         }
 
-        public string ToPostExecString()
-        {
-            string SkipKey = Parser.ToKey("message");
-            StringWriter tw = new StringWriter();
-            foreach (KeyValuePair<string, object> kv in Results)
-            {
-                if (Parser.ToKey(kv.Key) == SkipKey) continue;
-                tw.WriteLine("" + kv.Key + " = " + kv.Value);
-            }
-            return tw.ToString();
-        }
     }
 
     public class CmdRequest : Parser, ParseInfo, CmdResult
     {
         public static string cmdnameProp = "verb";
-        protected object this[string name]
-        {
-            get
-            {
-                lock (SyncRoot)
-                {
-                    return ACmdResult.GetValue(ParamMap, name);
-                }
-            }
-            set
-            {
-                lock (SyncRoot)
-                {
-                    ParamMap[ToKey(name)] = value;
-                }
-            }
-        }
         protected bool thisBool(string key)
         {
             lock (SyncRoot) return ACmdResult.GetBool(ParamMap, key);
-        }
-
-        protected object SyncRoot
-        {
-            get { return ParamMap; }
         }
 
         public CMDFLAGS CmdFlags
@@ -324,6 +314,36 @@ namespace MushDLR223.ScriptEngines
         }
         public object CallerAgent;
         public OutputDelegate Output;
+
+        protected void WriteLine(string s, params object[] args)
+        {
+            if (s == null) return;
+            var message = DLRConsole.SafeFormat(s, args);
+
+            if (!String.IsNullOrEmpty(WriteLineResultName))
+            {
+                AppendResults(WriteLineResultName, message);
+            }
+            if (Output != null && Output != WriteLine) Output(message);
+        }
+        public string WriteLineResultName = "message";
+        protected void AppendResults(string key, string format)
+        {
+            lock (Results)
+            {
+                object obj;
+                if (!Results.TryGetValue(key, out obj))
+                {
+                    Results[key] = format;
+                }
+                else
+                {
+                    string before = "" + obj;
+                    string newstring = before + "\n" + format;
+                    Results[key] = newstring.TrimStart();
+                }
+            }
+        }
 
         private IDictionary<string, object> _results;
         public IDictionary<string, object> Results
@@ -417,6 +437,7 @@ namespace MushDLR223.ScriptEngines
             }
             set
             {
+                IsCompleted = true;
                 this["Success"] = value;
             }
         }
@@ -446,10 +467,24 @@ namespace MushDLR223.ScriptEngines
             }
         }
 
+        public IEnumerable<string> Keys
+        {
+            get { lock (SyncRoot) return LockInfo.CopyOf(Results.Keys); }
+        }
+
+        public CmdRequest Request
+        {
+            get { return this; }
+        }
+
+        public string ToPostExecString()
+        {
+            return ToString();
+        }
+
         public override string ToString()
         {
-            if (!Success) return string.Format("ERROR: {0}", Message);
-            return ToPostExecString();
+            return ToPostExecString(this);
         }
 
         /// <summary>
@@ -473,16 +508,33 @@ namespace MushDLR223.ScriptEngines
             }
         }
 
-        public string ToPostExecString()
+        public static List<String> SkipPostExecKeys = new List<string> ();
+        public static string ToPostExecString(CmdResult res)
         {
-            string SkipKey = Parser.ToKey("message");
-            StringWriter tw = new StringWriter();
-            foreach (KeyValuePair<string, object> kv in Results)
+            if (SkipPostExecKeys.Count==0)
             {
-                if (Parser.ToKey(kv.Key) == SkipKey) continue;
-                tw.WriteLine("" + kv.Key + " = " + kv.Value);
+                SkipPostExecKeys.Add(ToMapKey("Message"));
             }
-            return tw.ToString();
+            StringWriter tw = new StringWriter();
+
+            if (res.IsCompleted) if (!res.Success) tw.WriteLine("ERROR: {0}", res.Message);
+
+            foreach (string key in res.Keys)
+            {
+                if (SkipPostExecKeys.Contains(ToMapKey(key))) continue;
+                tw.WriteLine(" " + key + " = \"" + res[key] + "\"");
+            }
+            string toString = tw.ToString();
+            CmdRequest req = res.Request;
+            if (req != null)
+            {
+
+                if ((req.CmdFlags & CMDFLAGS.IsConsole) != 0)
+                {
+                    toString = toString.Replace("\r", " ").Replace("\n", " ");
+                }
+            }
+            return toString;
         }
 
         public CmdResult Complete(string verb, string message, bool successOrFalse)

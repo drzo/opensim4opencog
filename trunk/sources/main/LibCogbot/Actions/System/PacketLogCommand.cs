@@ -1,6 +1,5 @@
 using System;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
@@ -11,14 +10,19 @@ namespace Cogbot.Actions.System
         public PacketLogCommand(BotClient testClient)
         {
             Name = "packetlog";
-            Description = "Unimplemented. Logs a given number of packets to an xml file. Usage: packetlog 10 tenpackets.xml";
+        }
+
+        public override void MakeInfo()
+        {
+            Description =
+                "Unimplemented. Logs a given number of packets to an xml file. Usage: packetlog 10 tenpackets.xml";
             Category = CommandCategory.BotClient;
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length != 2)
-                return ShowUsage();// " packetlog 10 tenpackets.xml";
+                return ShowUsage(); // " packetlog 10 tenpackets.xml";
 
             return Success("This function is currently unimplemented");
         }

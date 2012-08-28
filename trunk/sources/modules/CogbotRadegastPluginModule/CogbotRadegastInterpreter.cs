@@ -61,7 +61,7 @@ namespace CogbotRadegastPluginModule
             OutputDelegate newOutputDelegate = new OutputDelegate(WriteLine);
             CmdResult result;
             var botClient = BotClient;
-            CMDFLAGS needResult = CMDFLAGS.Inherit;
+            CMDFLAGS needResult = CMDFLAGS.Inherit | CMDFLAGS.IsConsole;
             try
             {
                 if (botClient == null)

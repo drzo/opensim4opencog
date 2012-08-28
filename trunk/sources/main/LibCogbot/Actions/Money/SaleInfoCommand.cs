@@ -2,7 +2,6 @@ using System.Reflection;
 using Cogbot;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Money
@@ -12,6 +11,10 @@ namespace Cogbot.Actions.Money
         public SaleInfoCommand(BotClient client)
         {
             Name = "SaleInfo";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "sets or prints SaleInfo on a prim. Usage: SaleInfo <prim> [amount] [saletype]";
             Category = CommandCategory.Objects;
             Parameters = CreateParams("target", typeof (PrimSpec), "The target(s) of the " + Name,
@@ -56,8 +59,9 @@ namespace Cogbot.Actions.Money
                 //return Failure("Cant determine SaleType: " + strA);
             }
 
-            WriteLine("Setting Ammount={0} SaleType={1} for {2}", saletype, amount, o);            
-            TheBotClient.Objects.SetSaleInfo(WorldSystem.GetSimulator(currentPrim), currentPrim.LocalID, saletype, amount);
+            WriteLine("Setting Ammount={0} SaleType={1} for {2}", saletype, amount, o);
+            TheBotClient.Objects.SetSaleInfo(WorldSystem.GetSimulator(currentPrim), currentPrim.LocalID, saletype,
+                                             amount);
 
             return Success(Name + " on " + o);
         }

@@ -2,19 +2,23 @@ using System;
 using System.Collections.Generic;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Inventory
 {
-    class EventInfoCommand : Command, RegionMasterCommand, AsynchronousCommand
+    internal class EventInfoCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
-
         public EventInfoCommand(BotClient Client)
         {
             Name = "evinfo";
-            Description = "Shows the events that have been associated with an object. See <a href='wiki/SimObjectEvents'>Sim Object Events</a>page for info about events.";
-            Details = @"<p>evinfo &lt;primspec&gt;</p><p>example: evinfo tacosofgod  <i>tacosofgod is a nearby plywood cube</i></p>
+        }
+
+        public override void MakeInfo()
+        {
+            Description =
+                "Shows the events that have been associated with an object. See <a href='wiki/SimObjectEvents'>Sim Object Events</a>page for info about events.";
+            Details =
+                @"<p>evinfo &lt;primspec&gt;</p><p>example: evinfo tacosofgod  <i>tacosofgod is a nearby plywood cube</i></p>
 <pre>
 [09:12] tacosofgod Box 70b5e8ab-3308-4bc6-bbf8-4f313cd7d518 (localID 2036105563)(ch0)(PrimFlagsFalse InventoryEmpty, ObjectOwnerModify)[](!IsPassable)
 [09:12] evinfo: Success: simEventComplete blanks=1 nonblanks=0
@@ -24,9 +28,9 @@ namespace Cogbot.Actions.Inventory
                 "object", typeof (PrimSpec),
                 "The objects whose events we want, as specified in " + Htmlize.WikiBC("Prim Spec"));
             ResultMap = CreateParams(
-                 "events", typeof(List<CogbotEvent>), "List of events that transpired on the objects",
-                 "message", typeof(string), "if success was false, the reason why",
-                 "success", typeof(bool), "true if we got the events");
+                "events", typeof (List<CogbotEvent>), "List of events that transpired on the objects",
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if we got the events");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -49,7 +53,7 @@ namespace Cogbot.Actions.Inventory
                 SimAvatar simAva = WorldSystem.TheSimAvatar;
                 if (simAva != null)
                 {
-                    List<SimObject> objs = ((SimObjectImpl)simAva).GetNearByObjects((double)range, false);
+                    List<SimObject> objs = ((SimObjectImpl) simAva).GetNearByObjects((double) range, false);
                     if (objs.Count > 0)
                     {
                         foreach (SimObject o in objs)

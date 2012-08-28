@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 using OpenMetaverse.Messages.Linden;
 
@@ -14,16 +13,16 @@ namespace Cogbot.Actions.Objects
         public DetachCommand(BotClient testClient)
         {
             Name = "detach";
-            TheBotClient = testClient;
-		}
-
-		override public void MakeInfo()
-		{
-			Description = "detach prims or specified attachment point";
+            TheBotClient = testClient;
+        }
+
+        public override void MakeInfo()
+        {
+            Description = "detach prims or specified attachment point";
             Details = "detach <all|attachmentPoint|prim> Example: /detach prim98922187";
             AddExample("detach [attachments parent $self attachpoint LeftHand]", "detach anything attached to left hand");
             Category = CommandCategory.Objects;
-            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
+            Parameters = CreateParams("targets", typeof (PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -42,7 +41,7 @@ namespace Cogbot.Actions.Objects
                 return Success("detatched all " + ids.Count);
             }
 
-            int	 argsUsed;
+            int argsUsed;
             string[] keyargs = args.GetProperty("targets");
             List<SimObject> PS = WorldSystem.GetPrimitives(keyargs, out argsUsed);
             List<uint> idz = new List<uint>();

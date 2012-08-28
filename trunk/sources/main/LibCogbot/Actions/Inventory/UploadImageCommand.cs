@@ -8,20 +8,23 @@ using System.Drawing;
 using OpenMetaverse;
 using OpenMetaverse.Http;
 using OpenMetaverse.Imaging;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.SimExport
 {
     public class UploadImageCommand : Command, BotPersonalCommand
     {
-        AutoResetEvent UploadCompleteEvent = new AutoResetEvent(false);
-        UUID TextureID = UUID.Zero;
-        DateTime start;
+        private AutoResetEvent UploadCompleteEvent = new AutoResetEvent(false);
+        private UUID TextureID = UUID.Zero;
+        private DateTime start;
 
         public UploadImageCommand(BotClient testClient)
         {
             Name = "uploadimage";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Upload an image to your inventory. Usage: uploadimage [inventoryname] [timeout] [filename]";
             Category = CommandCategory.Inventory;
         }
@@ -33,13 +36,13 @@ namespace Cogbot.Actions.SimExport
             string fileName;
 
             if (args.Length != 3)
-                return ShowUsage();// " uploadimage [inventoryname] [timeout] [filename]";
+                return ShowUsage(); // " uploadimage [inventoryname] [timeout] [filename]";
 
             TextureID = UUID.Zero;
             inventoryName = args[0];
             fileName = args[2];
             if (!UInt32.TryParse(args[1], out timeout))
-                return ShowUsage();// " uploadimage [inventoryname] [timeout] [filename]";
+                return ShowUsage(); // " uploadimage [inventoryname] [timeout] [filename]";
 
             WriteLine("Loading image " + fileName);
             byte[] jpeg2k = LoadImage(fileName);
@@ -49,7 +52,7 @@ namespace Cogbot.Actions.SimExport
             start = DateTime.Now;
             DoUpload(jpeg2k, inventoryName);
 
-            if (UploadCompleteEvent.WaitOne((int)timeout, false))
+            if (UploadCompleteEvent.WaitOne((int) timeout, false))
             {
                 return
                     Success(string.Format("Texture upload {0}: {1}", (TextureID != UUID.Zero) ? "succeeded" : "failed",
@@ -57,7 +60,7 @@ namespace Cogbot.Actions.SimExport
             }
             else
             {
-                return Failure( "Texture upload timed out");
+                return Failure("Texture upload timed out");
             }
         }
 
@@ -68,18 +71,21 @@ namespace Cogbot.Actions.SimExport
                 string name = Path.GetFileNameWithoutExtension(FileName);
 
                 Client.Inventory.RequestCreateItemFromAsset(UploadData, name, "Uploaded with BotClient",
-                    AssetType.Texture, InventoryType.Texture, Client.Inventory.FindFolderForType(AssetType.Texture),
-                    delegate(bool success, string status, UUID itemID, UUID assetID)
-                    {
-                        WriteLine(String.Format(
-                            "RequestCreateItemFromAsset() returned: Success={0}, Status={1}, ItemID={2}, AssetID={3}",
-                            success, status, itemID, assetID));
+                                                            AssetType.Texture, InventoryType.Texture,
+                                                            Client.Inventory.FindFolderForType(AssetType.Texture),
+                                                            delegate(bool success, string status, UUID itemID,
+                                                                     UUID assetID)
+                                                                {
+                                                                    WriteLine(String.Format(
+                                                                                  "RequestCreateItemFromAsset() returned: Success={0}, Status={1}, ItemID={2}, AssetID={3}",
+                                                                                  success, status, itemID, assetID));
 
-                        TextureID = assetID;
-                        WriteLine(String.Format("Upload took {0}", DateTime.Now.Subtract(start)));
-                        UploadCompleteEvent.Set();
-                    }
-                );
+                                                                    TextureID = assetID;
+                                                                    WriteLine(String.Format("Upload took {0}",
+                                                                                            DateTime.Now.Subtract(start)));
+                                                                    UploadCompleteEvent.Set();
+                                                                }
+                    );
             }
         }
 
@@ -97,10 +103,10 @@ namespace Cogbot.Actions.SimExport
                     ManagedImage managedImage;
 
                     // Upload JPEG2000 images untouched
-                    UploadData =  File.ReadAllBytes(fileName);
+                    UploadData = File.ReadAllBytes(fileName);
 
                     OpenJPEG.DecodeToImage(UploadData, out managedImage, out image);
-                    bitmap = (Bitmap)image;
+                    bitmap = (Bitmap) image;
                 }
                 else
                 {
@@ -112,12 +118,12 @@ namespace Cogbot.Actions.SimExport
                     int oldwidth = bitmap.Width;
                     int oldheight = bitmap.Height;
 
-                    if (!IsPowerOfTwo((uint)oldwidth) || !IsPowerOfTwo((uint)oldheight))
+                    if (!IsPowerOfTwo((uint) oldwidth) || !IsPowerOfTwo((uint) oldheight))
                     {
                         Bitmap resized = new Bitmap(256, 256, bitmap.PixelFormat);
                         Graphics graphics = Graphics.FromImage(resized);
 
-                        graphics.SmoothingMode =  Drawing2D.SmoothingMode.HighQuality;
+                        graphics.SmoothingMode = Drawing2D.SmoothingMode.HighQuality;
                         graphics.InterpolationMode =
                             Drawing2D.InterpolationMode.HighQualityBicubic;
                         graphics.DrawImage(bitmap, 0, 0, 256, 256);
@@ -140,7 +146,7 @@ namespace Cogbot.Actions.SimExport
 
                         graphics.SmoothingMode = Drawing2D.SmoothingMode.HighQuality;
                         graphics.InterpolationMode =
-                          Drawing2D.InterpolationMode.HighQualityBicubic;
+                            Drawing2D.InterpolationMode.HighQualityBicubic;
                         graphics.DrawImage(bitmap, 0, 0, newwidth, newheight);
 
                         bitmap.Dispose();

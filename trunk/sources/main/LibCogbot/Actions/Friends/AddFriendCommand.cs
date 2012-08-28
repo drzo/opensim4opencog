@@ -5,7 +5,6 @@ using Cogbot.World;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
-
 // the Namespace used for all BotClient commands
 using MushDLR223.ScriptEngines;
 using UUIDFactory = Cogbot.CogbotHelpers;
@@ -16,7 +15,7 @@ namespace Cogbot.Actions.Friends
     /// Shows a list of friends
     /// </summary>
     public class AddFriendCommand : Command, BotPersonalCommand
-    {        
+    {
         /// <summary>
         /// Constructor for FriendsCommand class
         /// </summary>
@@ -28,12 +27,12 @@ namespace Cogbot.Actions.Friends
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = Name + " from agent-spec.";
             Details = AddUsage(Name + " agent", Description);
             Category = CommandCategory.Friends;
-            Parameters = CreateParams("agent", typeof(UUID), "agent you are going to " + Name);
+            Parameters = CreateParams("agent", typeof (UUID), "agent you are going to " + Name);
         }
 
         /// <summary>
@@ -60,7 +59,7 @@ namespace Cogbot.Actions.Friends
                 if (UUIDFactory.IsNullOrZero(oID)) Failure("cant find " + o + " id ");
                 else Client.Friends.OfferFriendship(oID);
             }
-            return Success("Ran " + Name);           
+            return Success("Ran " + Name);
         }
     }
 }

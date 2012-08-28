@@ -8,7 +8,6 @@ using OpenMetaverse.Packets;
 #if USE_SAFETHREADS
 using Thread = MushDLR223.Utilities.SafeThread;
 #endif
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions
@@ -21,7 +20,7 @@ namespace Cogbot.Actions
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description =
                 "Manipulates and Shows the list of threads and task queue statuses. SL/Opensim is a streaming system." +
@@ -37,11 +36,14 @@ namespace Cogbot.Actions
                        "detroys all previous 'movement' and adds the command the movement queue");
             AddVersion(CreateParams(
                            "taskid", typeof (string), "the task queue this thread will use or 'create' or 'list'",
+                           OptionalFlag("--all", "stop all and queue and thread tasks"),
+                           OptionalFlag("--queue", "queue tasks"),
+                           OptionalFlag("--thread", "thread tasks"),
                            Optional("--wait", typeof (TimeSpan), "blocks until the thread completes"),
-                           Optional("--kill", typeof(bool), "whether to kill or append to previous taskid"),
-                           Optional("--debug", typeof(bool), "turn task debugging on"),
-                           Optional("--nodebug", typeof(bool), "turn task debugging off"),
-                           Rest("command", typeof(string[]), "The command to execute asynchronously")),
+                           Optional("--kill", typeof (bool), "whether to kill or append to previous taskid"),
+                           Optional("--debug", typeof (bool), "turn task debugging on"),
+                           Optional("--nodebug", typeof (bool), "turn task debugging off"),
+                           Rest("command", typeof (string[]), "The command to execute asynchronously")),
                        Description);
             ResultMap = CreateParams(
                 "message", typeof (string), "if the inner command failed, the reason why",
@@ -52,14 +54,24 @@ namespace Cogbot.Actions
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
+            return ExecuteRequestProc(args, this);
+        }
+
+        public static CmdResult ExecuteRequestProc(CmdRequest args, Command thizcmd)
+        {
+            var TheBotClient = thizcmd.TheBotClient;
+            OutputDelegate WriteLine = thizcmd.WriteLine;
+            bool thread = args.IsTrue("--thread");
+            bool queue = args.IsTrue("--queue");
+            bool all = args.IsTrue("--all");
             bool kill = args.IsTrue("--kill");
-            bool asyc = args.IsTrue("--async");
+            bool asyc = args.IsTrue("--async") || thread;
             TimeSpan wait;
             ManualResetEvent mre = null;
             if (args.TryGetValue("--wait", out wait))
             {
                 mre = new ManualResetEvent(false);
-            }            
+            }
             bool newDebug = args.IsTrue("--debug");
             bool changeDebug = newDebug || args.IsTrue("--nodebug");
 
@@ -70,8 +82,6 @@ namespace Cogbot.Actions
             int found = 0;
             if (id == "" || kill || changeDebug)
             {
-                
-                var botCommandThreads = Client.AllTaskQueues();
                 List<string> list = new List<string>();
                 lock (TaskQueueHandler.TaskQueueHandlers)
                 {
@@ -81,15 +91,26 @@ namespace Cogbot.Actions
                     foreach (var queueHandler in atq)
                     {
                         if (!queueHandler.MatchesId(id)) continue;
-                        if (queueHandler.Impl == queueHandler) found++; else n++;
+                        bool isQueue = queueHandler.Impl == queueHandler;
+                        if (isQueue) found++;
+                        else n++;
                         if (changeDebug) queueHandler.DebugQueue = newDebug;
-                        if (queueHandler.Busy)
+                        if (queueHandler.IsAlive)
                         {
                             string str = queueHandler.ToDebugString(true);
                             if (kill)
                             {
+                                if (!all)
+                                {
+                                    if (!isQueue && !thread || isQueue && !queue)
+                                    {
+                                        WriteLine("Not killing " + str);
+                                        continue;
+                                    }
+                                }
                                 queueHandler.Abort();
                                 str = "Killing " + str;
+                                thizcmd.IncrResult("killed", 1);
                             }
 
                             WriteLine(str);
@@ -105,16 +126,18 @@ namespace Cogbot.Actions
                     WriteLine(s);
                 }
             }
-            
+
             if (kill && createFresh)
             {
-                return Failure("Cannot create and kill in the same operation");
+                return thizcmd.Failure("Cannot create and kill in the same operation");
             }
             string[] cmdS;
             args.TryGetValue("command", out cmdS);
+            thizcmd.IncrResult("taskqueues", found);
+            thizcmd.IncrResult("threads", n);
             if (cmdS == null || cmdS.Length == 0)
             {
-                return Success("TaskQueueHandlers: " + found + ", threads: " + n);
+                return thizcmd.Success("TaskQueueHandlers: " + found + ", threads: " + n);
             }
 
             /// task is killed if request.. now making a new one
@@ -133,25 +156,24 @@ namespace Cogbot.Actions
                                    {
                                        try
                                        {
-                                           var res = Client.ExecuteCommand(cmd, args.CallerAgent, args.Output,
-                                                                       flags);
+                                           var res = TheBotClient.ExecuteCommand(cmd, args.CallerAgent, args.Output,
+                                                                                 flags);
                                            if (result != null) result[0] = res;
                                        }
                                        catch (Exception)
-                                       {                                           
+                                       {
                                            throw;
-                                       } 
+                                       }
                                    };
             string message = TheBotClient.CreateTask(id, task, cmd, createFresh, false, mre, WriteLine);
-            Results.Add("taskid", id);
+            thizcmd.SetResult("taskid", id);
             if (mre != null)
             {
-                if (!mre.WaitOne(wait)) return Failure("Timeout: " + message);
-                if (result == null) return Success(message);
-                return result[0] ?? Success(message);
+                if (!mre.WaitOne(wait)) return thizcmd.Failure("Timeout: " + message);
+                if (result == null) return thizcmd.Success(message);
+                return result[0] ?? thizcmd.Success(message);
             }
-            return Success(message);
+            return thizcmd.Success(message);
         }
-
     }
 }

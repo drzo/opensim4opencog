@@ -19,12 +19,18 @@ namespace Cogbot.Actions.SimExport
         public ShowImageCommand(BotClient testClient)
         {
             Name = "ShowImage";
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Shows the specified image. Usage: ShowImage [uuid]";
+            AddVersion(CreateParams("image", typeof (AssetTexture), ""), Description);
             Category = CommandCategory.Inventory;
         }
 
-        public override CmdResult ExecuteRequest(CmdRequest args)
+        public override CmdResult ExecuteRequest(CmdRequest args0)
         {
+            var args = args0.GetProperty("image");
             if (args.Length < 1) return ShowUsage();
             UUID AssetID = UUID.Zero;
             int argsUsed;

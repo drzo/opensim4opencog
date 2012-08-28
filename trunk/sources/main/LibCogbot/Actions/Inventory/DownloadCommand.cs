@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
@@ -6,7 +6,6 @@ using System.Threading;
 using Cogbot;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
-
 using MushDLR223.ScriptEngines;
 using OpenMetaverse.Imaging;
 
@@ -14,10 +13,13 @@ namespace Cogbot.Actions.SimExport
 {
     public class DownloadCommand : Command, GridMasterCommand
     {
-
         public DownloadCommand(BotClient testClient)
         {
             Name = "download";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Downloads the specified asset. Usage: download [uuid] [assetType] [filename]";
             Category = CommandCategory.Inventory;
         }
@@ -27,23 +29,23 @@ namespace Cogbot.Actions.SimExport
             if (args.Length < 2) return ShowUsage();
             AssetType assetType;
 
-            FieldInfo fi = typeof(AssetType).GetField(args[1]);
+            FieldInfo fi = typeof (AssetType).GetField(args[1]);
             if (fi == null)
             {
                 int typeInt;
                 if (int.TryParse(args[1], out typeInt))
                 {
-                    assetType = (AssetType)typeInt;
+                    assetType = (AssetType) typeInt;
                 }
                 else
                 {
-                    WriteLine(typeof(AssetType).GetFields().ToString());
+                    WriteLine(typeof (AssetType).GetFields().ToString());
                     return Failure("Unknown asset type");
                 }
             }
             else
             {
-                assetType = (AssetType)fi.GetValue(null);
+                assetType = (AssetType) fi.GetValue(null);
             }
             //var v = WorldObjects.uuidTypeObject;
             UUID AssetID = UUID.Zero;
@@ -51,29 +53,35 @@ namespace Cogbot.Actions.SimExport
             UUIDTryParse(args, 0, out AssetID, out argsUsed);
             AutoResetEvent DownloadHandle = new AutoResetEvent(false);
             Client.Assets.RequestAsset(AssetID, assetType, true, delegate(AssetDownload transfer, Asset asset)
-            {
-                WriteLine("Status: " + transfer.Status + "  Asset: " + asset);
+                                                                     {
+                                                                         WriteLine("Status: " + transfer.Status +
+                                                                                   "  Asset: " + asset);
 
-                if (transfer.Success) try
-                    {
-                        string filename = String.Format("{0}.{1}", AssetID, assetType.ToString().ToLower());
-                        string decodeType = "none";
-                        if (args.Length > 2)
-                        {
-                            filename = args[2];
-                        }
-                        if (args.Length > 3)
-                        {
-                            decodeType = args[3];
-                        }
-                        DecodeFile(filename, decodeType, asset);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Log(ex.Message, Helpers.LogLevel.Error, ex);
-                    }
-                DownloadHandle.Set();
-            });
+                                                                         if (transfer.Success)
+                                                                             try
+                                                                             {
+                                                                                 string filename =
+                                                                                     String.Format("{0}.{1}", AssetID,
+                                                                                                   assetType.ToString().
+                                                                                                       ToLower());
+                                                                                 string decodeType = "none";
+                                                                                 if (args.Length > 2)
+                                                                                 {
+                                                                                     filename = args[2];
+                                                                                 }
+                                                                                 if (args.Length > 3)
+                                                                                 {
+                                                                                     decodeType = args[3];
+                                                                                 }
+                                                                                 DecodeFile(filename, decodeType, asset);
+                                                                             }
+                                                                             catch (Exception ex)
+                                                                             {
+                                                                                 Logger.Log(ex.Message,
+                                                                                            Helpers.LogLevel.Error, ex);
+                                                                             }
+                                                                         DownloadHandle.Set();
+                                                                     });
             DownloadHandle.WaitOne(30000);
             return Success("Done RequestAsset " + AssetID);
         }
@@ -97,21 +105,23 @@ namespace Cogbot.Actions.SimExport
             }
             if (mi != null)
             {
-                mi.Invoke(this, new object[] { filename, decodeType, asset });
+                mi.Invoke(this, new object[] {filename, decodeType, asset});
             }
             else
             {
                 Decode_none(filename, decodeType, asset);
             }
         }
+
         public void Decode_none(string filename, string decodeType, Asset asset)
         {
             var data = asset.AssetData;
             File.WriteAllBytes(filename, data);
         }
+
         public void Decode_jp2k(string filename, string decodeType, Asset asset)
         {
-            var img = (AssetTexture)asset;
+            var img = (AssetTexture) asset;
             OpenMetaverse.Imaging.ManagedImage imgImage = img.Image;
             if (imgImage == null)
             {
@@ -127,7 +137,6 @@ namespace Cogbot.Actions.SimExport
                 {
                     File.WriteAllBytes(filename, imgImage.ExportRaw());
                 }
-
             }
         }
     }

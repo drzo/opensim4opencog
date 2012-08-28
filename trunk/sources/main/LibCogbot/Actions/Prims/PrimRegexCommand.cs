@@ -1,7 +1,6 @@
 using System;
 using System.Text.RegularExpressions;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Objects
@@ -11,15 +10,19 @@ namespace Cogbot.Actions.Objects
         public PrimRegexCommand(BotClient testClient)
         {
             Name = "primregex";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Find prim by text predicat. " +
-                "Usage: primregex [text predicat] (eg findprim .away.)";
+                          "Usage: primregex [text predicat] (eg findprim .away.)";
             Category = CommandCategory.Objects;
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
-                return ShowUsage();// " primregex [text predicat]";
+                return ShowUsage(); // " primregex [text predicat]";
 
             try
             {
@@ -35,28 +38,39 @@ namespace Cogbot.Actions.Objects
                 Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
                 // Print result
                 Logger.Log(string.Format("Searching prim for [{0}] ({1} prims loaded in simulator)\n", predicatPrim,
-                    CurSim.ObjectsPrimitives.Count), Helpers.LogLevel.Info, Client);
+                                         CurSim.ObjectsPrimitives.Count), Helpers.LogLevel.Info, Client);
 
                 CurSim.ObjectsPrimitives.ForEach(
                     delegate(Primitive prim)
-                    {
-                        if (prim.Text != null && regexPrimName.IsMatch(prim.Text.ToLower()))
                         {
-                            Logger.Log(string.Format("\nNAME={0}\nID = {1}\nFLAGS = {2}\nTEXT = '{3}'\nDESC='{4}", prim.Properties.Name,
-                                prim.ID, prim.Flags.ToString(), prim.Text, prim.Properties.Description), Helpers.LogLevel.Info, Client);
+                            if (prim.Text != null && regexPrimName.IsMatch(prim.Text.ToLower()))
+                            {
+                                Logger.Log(
+                                    string.Format("\nNAME={0}\nID = {1}\nFLAGS = {2}\nTEXT = '{3}'\nDESC='{4}",
+                                                  prim.Properties.Name,
+                                                  prim.ID, prim.Flags.ToString(), prim.Text, prim.Properties.Description),
+                                    Helpers.LogLevel.Info, Client);
+                            }
+                            else if (prim.Properties.Name != null &&
+                                     regexPrimName.IsMatch(prim.Properties.Name.ToLower()))
+                            {
+                                Logger.Log(
+                                    string.Format("\nNAME={0}\nID = {1}\nFLAGS = {2}\nTEXT = '{3}'\nDESC='{4}",
+                                                  prim.Properties.Name,
+                                                  prim.ID, prim.Flags.ToString(), prim.Text,
+                                                  prim.Properties.Description), Helpers.LogLevel.Info, Client);
+                            }
+                            else if (prim.Properties.Description != null &&
+                                     regexPrimName.IsMatch(prim.Properties.Description.ToLower()))
+                            {
+                                Logger.Log(
+                                    string.Format("\nNAME={0}\nID = {1}\nFLAGS = {2}\nTEXT = '{3}'\nDESC='{4}",
+                                                  prim.Properties.Name,
+                                                  prim.ID, prim.Flags.ToString(), prim.Text,
+                                                  prim.Properties.Description), Helpers.LogLevel.Info, Client);
+                            }
                         }
-                        else if (prim.Properties.Name != null && regexPrimName.IsMatch(prim.Properties.Name.ToLower()))
-                        {
-                            Logger.Log(string.Format("\nNAME={0}\nID = {1}\nFLAGS = {2}\nTEXT = '{3}'\nDESC='{4}", prim.Properties.Name,
-                                prim.ID, prim.Flags.ToString(), prim.Text, prim.Properties.Description), Helpers.LogLevel.Info, Client);
-                        }
-                        else if (prim.Properties.Description != null && regexPrimName.IsMatch(prim.Properties.Description.ToLower()))
-                        {
-                            Logger.Log(string.Format("\nNAME={0}\nID = {1}\nFLAGS = {2}\nTEXT = '{3}'\nDESC='{4}", prim.Properties.Name,
-                                prim.ID, prim.Flags.ToString(), prim.Text, prim.Properties.Description), Helpers.LogLevel.Info, Client);
-                        }
-                    }
-                );
+                    );
             }
             catch (Exception e)
             {

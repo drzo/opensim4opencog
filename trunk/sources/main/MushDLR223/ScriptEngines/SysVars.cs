@@ -49,7 +49,10 @@ namespace MushDLR223.ScriptEngines
                     {
                         cs0 = ConfigSettingAttribute.FindConfigSetting(s, true);
                     }
-                    if (!cs0.IsNonValue && !SysVars0.Contains(cs0)) SysVars0.Add(cs0);
+                    if (!cs0.IsNonValue && !SysVars0.Contains(cs0))
+                    {
+                        SysVars0.Add(cs0);
+                    }
                     //  WriteLine("Setting: " + cs0.Description);
                 }
                 var st = t.BaseType;

@@ -23,6 +23,10 @@ namespace TheSimiansModule
         public ParrotCommand(BotClient Client)
         {
             Name = "parrot";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Make a bot parrot all actions by another avatar.";
             Details = "parrot [touch/sit/uses/effects/move/anims/all [off]] Avatar Name";
         }

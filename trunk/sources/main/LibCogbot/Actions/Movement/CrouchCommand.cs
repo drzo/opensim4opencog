@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Movement
@@ -11,23 +10,27 @@ namespace Cogbot.Actions.Movement
         public CrouchCommand(BotClient Client)
             : base(Client)
         {
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Makes the bot crouch. Yup. Crouching. Important stuff";
-            Details = @"<p>crouch  - <i>crouch for 1/2 sec</i></p>
+            Details =
+                @"<p>crouch  - <i>crouch for 1/2 sec</i></p>
 <p>crouch on  - <i>start crouching indefinitely</i></p>
 <p>crouch off - <i>stop crouching</i></p>";
             Name = "Crouch";
             Category = CommandCategory.Movement;
             ParameterVersions = CreateParamVersions(
                 CreateParams(Optional("on", typeof (bool), "begin or stop crouching")));
-               
+
             ResultMap = CreateParams(
-                 "message", typeof(string), "if success was false, the reason why",
-                 "success", typeof(bool), "true if we crouched");
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if we crouched");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-
             string[] tokens = args.tokens;
             //base.acceptInput(verb, args);
             if (tokens.Length == 0)

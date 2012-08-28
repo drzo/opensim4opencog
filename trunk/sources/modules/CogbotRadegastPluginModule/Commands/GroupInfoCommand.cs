@@ -16,6 +16,10 @@ namespace Cogbot.Actions.Groups
         public GroupInfoCommand(BotClient testClient)
         {
             Name = "groupinfo";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Shows the group UI. Usage: groupinfo GroupName";
             Category = CommandCategory.Groups;
             AddVersion(CreateParams("groupid", typeof(Group), "groupid you are going to " + Name),

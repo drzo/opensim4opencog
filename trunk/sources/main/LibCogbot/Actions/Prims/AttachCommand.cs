@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Objects
@@ -12,13 +11,16 @@ namespace Cogbot.Actions.Objects
         public AttachCommand(BotClient testClient)
         {
             Name = "attach";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "attach a prim to specified (or default) attachment point from the world";
             Details = "attach <prim> [attachmentPoint] [rotation] Example: /attach 98922187 RightHand";
             Category = CommandCategory.Objects;
             Parameters = CreateParams("targets", typeof (PrimSpec), "The targets of " + Name,
                                       Optional("attachpoint", typeof (AttachmentPoint), "where to attach to"),
                                       Optional("rotation", typeof (Quaternion), "rotation to attach to"));
-           
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

@@ -14,12 +14,11 @@ using Simulator = OpenMetaverse.Simulator;
 
 namespace Cogbot.Actions
 {
-
     public class PrimSpec : DenotingAnotherType
     {
         public Type ImplementationType
         {
-            get { return typeof(List<SimObject>); }
+            get { return typeof (List<SimObject>); }
         }
     }
 
@@ -27,11 +26,11 @@ namespace Cogbot.Actions
     {
         public Type ImplementationType
         {
-            get { return typeof(List<SimAvatar>); }
+            get { return typeof (List<SimAvatar>); }
         }
     }
 
-    static public class Htmlize
+    public static class Htmlize
     {
         public static string NoEnts(string example)
         {
@@ -39,7 +38,9 @@ namespace Cogbot.Actions
             {
                 ///  return null;
             }
-            return example.Replace("\"", "&qt;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\r\n", "<br>").Replace("\n", "<br>");
+            return
+                example.Replace("\"", "&qt;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\r\n", "<br>").Replace(
+                    "\n", "<br>");
         }
 
         public static string WikiBC(string named)
@@ -66,6 +67,7 @@ namespace Cogbot.Actions
         BotClient,
         Friends,
         Groups,
+        Scripting,
         Other,
         Unknown,
         Search,
@@ -79,6 +81,7 @@ namespace Cogbot.Actions
     public interface FFIComplete : FFIMarker
     {
     }
+
     /// <summary>
     /// Some design work must be done to decide how FFI will construct arguments and what results are returned
     /// Should be bugged if it is needed
@@ -87,6 +90,7 @@ namespace Cogbot.Actions
     public interface FFITODO : FFIMarker
     {
     }
+
     /// <summary>
     /// THe FFI arleady has a better way to call and the command should not be used
     /// Command is still operational via console
@@ -94,12 +98,14 @@ namespace Cogbot.Actions
     public interface FFINOUSE : FFIMarker
     {
     }
+
     /// <summary>
     /// Has some FFI state subclass
     /// </summary>
     public interface FFIMarker
     {
     }
+
     /// <summary>
     /// An interface for commands is only invoked on Region mastering bots
     /// Such as terrain uploads and simulator info (10 bots doing the command at once will create problems)
@@ -108,6 +114,7 @@ namespace Cogbot.Actions
     public interface RegionMasterCommand : BotCommand, SynchronousCommand
     {
     }
+
     /// <summary>
     /// An interface for commands is only invoked on Grid mastering bots
     /// Such as Directory info requests (10 bots doing the command at once will create problems)   
@@ -115,6 +122,7 @@ namespace Cogbot.Actions
     public interface GridMasterCommand : BotCommand
     {
     }
+
     /// <summary>
     /// An interface for commands that do not target any specific bots
     ///  Such as pathsystem maintainance or application commands
@@ -139,36 +147,43 @@ namespace Cogbot.Actions
     public interface BotPersonalCommand : BotCommand, SynchronousCommand
     {
     }
+
     /// <summary>
     /// An interface for commands that have to move thru a single TODO queue
     /// </summary>    
     public interface SynchronousCommand
     {
     }
+
     /// <summary>
     /// An interface for commands that are mainly informational
     /// </summary>    
     public interface AsynchronousCommand
     {
-    }    
+    }
+
     /// <summary>
     /// An interface for commands that require a windowing interface
     /// </summary>    
     public interface GUICommand : AsynchronousCommand
     {
     }
+
     /// <summary>
     /// An interface for commands that are not recreated per call instance
     /// </summary>
     public interface BotStatefullCommand : BotCommand, IDisposable
     {
     }
+
     public interface BotCommand : MushDLR223.ScriptEngines.ScriptedCommand
     {
     }
+
     public class CommandInstance
     {
         public CommandInfo CmdInfo;
+
         public Command MakeInstance(BotClient client)
         {
             if (WithBotClient != null)
@@ -178,26 +193,23 @@ namespace Cogbot.Actions
                     return WithBotClient;
                 }
             }
-            var cmd = (Command)CmdInfo.CmdTypeConstructor.Invoke(new object[] { client });
+            var cmd = (Command) CmdInfo.CmdTypeConstructor.Invoke(new object[] {client});
             cmd.TheBotClient = client;
             WithBotClient = cmd;
             if (CmdInfo.IsStateFul) WithBotClient = cmd;
             return cmd;
         }
+
         public Command WithBotClient;
+
         public bool IsStateFul
         {
-            get
-            {
-                return CmdInfo.IsStateFul;
-            }
+            get { return CmdInfo.IsStateFul; }
         }
+
         public Type CmdType
         {
-            get
-            {
-                return CmdInfo.CmdType;
-            }
+            get { return CmdInfo.CmdType; }
         }
 
         public string Name { get; set; }
@@ -209,22 +221,21 @@ namespace Cogbot.Actions
             Name = CmdInfo.Name;
         }
     }
-    public class CommandInfo: ParseInfo
+
+    public class CommandInfo : ParseInfo
     {
         public static Dictionary<Type, CommandInfo> MadeInfos = new Dictionary<Type, CommandInfo>();
 
         public bool IsStateFul;
         public string Category;
         public string Name { get; set; }
-        public string helpString;  // overview
-        public string usageString;   // after the colon of Usage:
         public bool IsGridClientCommand = false;
 
         public bool IsObsolete
         {
             get
             {
-                if (CmdType.GetCustomAttributes(typeof(ObsoleteAttribute), false) != null) return true;
+                if (CmdType.GetCustomAttributes(typeof (ObsoleteAttribute), false) != null) return true;
                 return false;
             }
         }
@@ -233,20 +244,18 @@ namespace Cogbot.Actions
         /// Introspective Parameters for calling command from code
         /// </summary>
         public List<KeyParams> ParameterVersions { get; set; }
+
         public KeyParams ResultMap { get; set; }
 
         public Type CmdType;
         public ConstructorInfo CmdTypeConstructor;
-        public string Description
-        {
-            get
-            {
-                return helpString;
-            }
-        }
+
+        public string Description { get; set; }
+        public string Details { get; set; }
+
         public String ToPrologString()
         {
-            return "command(" + ToPLAtomStr(Name) + "," + ToPLAtomStr(Description) + "," + ToPLAtomStr(usageString) +
+            return "command(" + ToPLAtomStr(Name) + "," + ToPLAtomStr(Description) + "," + ToPLAtomStr(Details) +
                    "," + ToPLAtomStr(ParameterVersions.ToArray()) + "," + ToPLAtomStr(ResultMap) + ")";
         }
 
@@ -262,30 +271,34 @@ namespace Cogbot.Actions
             return sb.ToString() + "]";
         }
 
-        private string ToPLAtomStr(object name)
+        private string ToPLAtomStr(object key)
         {
-            if (name == null) return "_";
-            if (name is Array) return ToPLAtomStr((Array)name);
-            if (name is String) return ToPLAtomStr((String)name);
-            if (name is Type) return ToPLAtomStr(((Type)name).Name);
-            if (name is NamedParam) return ToPLAtomStr(((NamedParam)name));
-            return ToPLAtomStr("" + name);
+            if (key == null) return "_";
+            if (key is Array) return ToPLAtomStr((Array) key);
+            if (key is String) return ToPLAtomStr((String) key);
+            if (key is Type) return ToPLAtomStr(((Type) key).Name);
+            if (key is NamedParam) return ToPLAtomStr(((NamedParam) key));
+            return ToPLAtomStr("" + key);
         }
-        private string ToPLAtomStr(String name)
+
+        private string ToPLAtomStr(String key)
         {
-            if (name == null) return "_";
-            return "\"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+            if (key == null) return "_";
+            return "\"" + key.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
         }
+
         private string ToPLAtomStr(NamedParam nvc)
         {
             if (nvc == null) return "_";
             return (nvc.IsOptional ? "o" : "p") + "(" + ToPLAtomStr(nvc.Key) + "," + ToPLAtomStr(nvc.Type) + "," +
                    ToPLAtomStr(nvc.Comment) + ")";
         }
+
         public CommandInfo(Command live)
         {
             LoadFromCommand(live);
         }
+
         public void LoadFromCommand(Command live)
         {
             CmdType = live.GetType();
@@ -295,7 +308,7 @@ namespace Cogbot.Actions
             }
             IsStateFul = live.IsStateFull || live is BotStatefullCommand;
             Name = live.Name;
-            usageString = live.Details;
+            Details = live.Details;
             if (ParameterVersions == null) ParameterVersions = live.ParameterVersions;
             else
             {
@@ -304,11 +317,11 @@ namespace Cogbot.Actions
                     if (!ParameterVersions.Contains(v)) ParameterVersions.Add(v);
                 }
             }
-            helpString = live.Description;
+            Description = live.Description;
             Category = "" + live.Category;
             ResultMap = live.ResultMap;
             CmdTypeConstructor = CmdType.GetConstructors()[0];
-            IsGridClientCommand = CmdTypeConstructor.GetParameters()[0].ParameterType == typeof(GridClient);
+            IsGridClientCommand = CmdTypeConstructor.GetParameters()[0].ParameterType == typeof (GridClient);
         }
 
 
@@ -319,8 +332,8 @@ namespace Cogbot.Actions
 
         public Command MakeInstanceCM(BotClient o)
         {
-            var cmd = (Command)CmdTypeConstructor.Invoke(new object[] { o });
-            cmd.TheBotClient = o;            
+            var cmd = (Command) CmdTypeConstructor.Invoke(new object[] {o});
+            cmd.TheBotClient = o;
             return cmd;
         }
 
@@ -348,26 +361,27 @@ namespace Cogbot.Actions
     public abstract partial class Command : IComparable
     {
         private string _taskQueueNameOrNullSet;
+
         public virtual string TaskQueueNameOrNull
         {
             get { return _taskQueueNameOrNullSet ?? (ImpliesSync ? "OneAtATimeQueue" : null); }
             set { _taskQueueNameOrNullSet = value; }
         }
-        public virtual void MakeInfo()
-        {
 
-        }
+        public abstract void MakeInfo();
+
         public CommandInfo GetCmdInfo()
         {
             CommandInfo ci;
             lock (CommandInfo.MadeInfos)
-            {
+            {                
                 if (!CommandInfo.MadeInfos.TryGetValue(GetType(), out ci))
                 {
                     MakeInfo();
                     DefaultResultMap();
                     ci = CommandInfo.MadeInfos[GetType()] = new CommandInfo(this);
                 }
+                infoMade = true;
             }
             return ci;
         }
@@ -375,14 +389,15 @@ namespace Cogbot.Actions
         public bool IsStateFull;
         public CommandCategory Category;
         public string Name { get; set; }
-        protected string helpString;
-        protected string usageString;
+        private string _description;
+        private string _details;
 
-        virtual public string Description
+        public virtual string Description
         {
             get
             {
-                return helpString;
+                if (infoMade) return GetCmdInfo().Description; 
+                return _description;
             }
             set
             {
@@ -390,38 +405,42 @@ namespace Cogbot.Actions
                 int half = value.ToLower().IndexOf("usage");
                 if (half == -1)
                 {
-                    half = value.ToLower().IndexOf("use");
+                    half = value.ToLower().IndexOf("use:");
                 }
                 if (half == -1)
                 {
-                    helpString = value;
+                    _description = value;
                     return;
                 }
-                helpString = value.Substring(0, half).TrimEnd();
+                _description = value.Substring(0, half).TrimEnd();
                 Details = value.Substring(half);
-
             }
         }
 
         public virtual string Details
         {
-            get { return usageString; }
+            get
+            {
+                if (infoMade) return GetCmdInfo().Details;
+                return _details;
+            }
             set
             {
                 value = value.Trim().Replace("Usage:", " ").Replace("usage:", " ").Replace("Use:", " ").Trim();
-                if (string.IsNullOrEmpty(usageString))
+                if (string.IsNullOrEmpty(_details))
                 {
-                    usageString = value + "<br/>";
+                    _details = value + "\n";
                     return;
                 }
-                if (!usageString.Contains(value))
+                if (!_details.Contains(value))
                 {
-                    usageString += value + "<br/>";
+                    _details += value + "\n";
                 }
             }
         }
 
         public List<KeyParams> _parameterVersions;
+
         /// <summary>
         /// Introspective Parameters for calling command from code
         /// </summary>
@@ -429,7 +448,7 @@ namespace Cogbot.Actions
         {
             get
             {
-                if (_parameterVersions == null) 
+                if (_parameterVersions == null)
                 {
                     _parameterVersions = new List<KeyParams>();
                 }
@@ -443,6 +462,7 @@ namespace Cogbot.Actions
                 }
             }
         }
+
         public KeyParams Parameters
         {
             get
@@ -458,12 +478,12 @@ namespace Cogbot.Actions
             }
         }
 
-        private void AddVersion(NamedParam[] value)
+        protected void AddVersion(NamedParam[] value)
         {
             AddVersion(new KeyParams(value));
-
         }
-        private void AddVersion(KeyParams value)
+
+        protected void AddVersion(KeyParams value)
         {
             VersionSelected = value;
             var copy = ParameterVersions;
@@ -483,6 +503,7 @@ namespace Cogbot.Actions
         {
             return ShowUsage(Details);
         }
+
         public virtual CmdResult ShowUsage(string usg)
         {
             CmdResult res = Failure("Usage: //" + usg);
@@ -504,12 +525,12 @@ namespace Cogbot.Actions
             }
         }
 
-        [ThreadStatic]
-        private CmdRequest _currentRequest;
+        [ThreadStatic] private CmdRequest _currentRequest;
         private CmdRequest _lastRequest;
 
 
         private IDictionary<string, object> _results;
+
         public IDictionary<string, object> Results
         {
             get
@@ -535,10 +556,9 @@ namespace Cogbot.Actions
         }
 
 
-
         private OutputDelegate _writeLine;
 
-        protected void WriteLine(string s, params object[] args)
+        public void WriteLine(string s, params object[] args)
         {
             if (s == null) return;
             var message = DLRConsole.SafeFormat(s, args);
@@ -549,6 +569,7 @@ namespace Cogbot.Actions
             }
             LocalWL(message);
         }
+
         public OutputDelegate WriteLineDelegate
         {
             private get
@@ -622,12 +643,11 @@ namespace Cogbot.Actions
         } // constructor
 
 
-
-       /* /// <summary>
+        /* /// <summary>
         /// 
         /// </summary>
-        /// <param name="verb"></param>
-        /// <param name="args"></param>
+        /// <param key="verb"></param>
+        /// <param key="args"></param>
         public virtual CmdResult acceptInput(string verb, Parser args, OutputDelegate writeLine)
         {
             success = failure = 0;
@@ -650,14 +670,8 @@ namespace Cogbot.Actions
 
         public BotClient Client
         {
-            get
-            {
-                return TheBotClient;
-            }
-            set
-            {
-                TheBotClient = value;
-            }
+            get { return TheBotClient; }
+            set { TheBotClient = value; }
         }
 
 
@@ -673,10 +687,7 @@ namespace Cogbot.Actions
                 }
                 return _mClient;
             }
-            set
-            {
-                _mClient = value;
-            }
+            set { _mClient = value; }
         }
 
         public ClientManager ClientManager
@@ -715,8 +726,12 @@ namespace Cogbot.Actions
         }
 
         public abstract CmdResult ExecuteRequest(CmdRequest args);
+
         public CmdResult ExecuteRequestSyn(CmdRequest args)
         {
+            if (_mClient != null) _mClient.CurrentCommand = this;
+            CurrentRequest = args;
+            ApplyFlagsToRequest();
             if (this is BotPersonalCommand)
             {
                 if (!Client.IsLoggedInAndReady)
@@ -740,11 +755,16 @@ namespace Cogbot.Actions
             }
         }
 
+        private void ApplyFlagsToRequest()
+        {
+            if (ImpliesSync) CurrentRequest.CmdFlags |= CMDFLAGS.SynchronousChannel;
+        }
+
         public int CompareTo(object obj)
         {
             if (obj is Command)
             {
-                Command c2 = (Command)obj;
+                Command c2 = (Command) obj;
                 return Category.CompareTo(c2.Category);
             }
             else
@@ -763,7 +783,7 @@ namespace Cogbot.Actions
         {
             UUID uuid = UUID.Zero;
             int argsUsed;
-            if (UUIDTryParse(new[] { p }, 0, out uuid, out argsUsed)) return uuid;
+            if (UUIDTryParse(new[] {p}, 0, out uuid, out argsUsed)) return uuid;
             return UUID.Parse(p);
         }
 
@@ -793,6 +813,7 @@ namespace Cogbot.Actions
             success++;
             return Result(message, true);
         }
+
         public void AddSuccess(string message)
         {
             var Name = "Success";
@@ -803,6 +824,7 @@ namespace Cogbot.Actions
             success++;
             LocalWL(message);
         }
+
         public void LocalWL(string message)
         {
             try
@@ -814,7 +836,6 @@ namespace Cogbot.Actions
             }
             catch (Exception e)
             {
-
             }
             try
             {
@@ -830,7 +851,7 @@ namespace Cogbot.Actions
             }
         }
 
-        protected CmdResult Result(string message, bool tf)
+        public CmdResult Result(string message, bool tf)
         {
             if (!message.ToLower().Contains(Name.ToLower()))
             {
@@ -840,9 +861,11 @@ namespace Cogbot.Actions
             LocalWL(message);
             return cr;
         }
+
         protected CmdResult SuccessOrFailure()
         {
-            var cr = CurrentRequest.Complete(Name, Name + " " + failure + " failures and " + success + " successes", failure == 0);
+            var cr = CurrentRequest.Complete(Name, Name + " " + failure + " failures and " + success + " successes",
+                                             failure == 0);
             LocalWL(cr.ToPostExecString());
             return cr;
         }
@@ -852,7 +875,7 @@ namespace Cogbot.Actions
             return WorldObjects.TryEnumParse(type, names, argStart, out argsUsed, out value);
         }
 
-        static public bool IsEmpty(ICollection enumerable)
+        public static bool IsEmpty(ICollection enumerable)
         {
             return enumerable == null || enumerable.Count == 0;
         }
@@ -864,6 +887,7 @@ namespace Cogbot.Actions
 
         public string WriteLineResultName = "message";
         private KeyParams VersionSelected;
+        private bool infoMade;
 
         public virtual bool ImpliesSync
         {
@@ -879,17 +903,17 @@ namespace Cogbot.Actions
         {
             List<NamedParam> paramsz = new List<NamedParam>();
             int argNum = 1;
-            for (int i = 0; i < paramz.Length; )
+            for (int i = 0; i < paramz.Length;)
             {
                 var o = paramz[i++];
                 if (o is NamedParam)
                 {
-                    paramsz.Add((NamedParam)o);
+                    paramsz.Add((NamedParam) o);
                     continue;
                 }
                 if (o is string)
                 {
-                    string k = (string)o;
+                    string k = (string) o;
                     Type t = paramz[i++] as Type;
                     string comment = "" + paramz[i++];
                     NamedParam namedParam = new NamedParam(k, t);
@@ -913,6 +937,7 @@ namespace Cogbot.Actions
             }
             return list;
         }
+
         protected static List<KeyParams> CreateParamVersions(params KeyParams[] paramz)
         {
             var list = new List<KeyParams>();
@@ -922,32 +947,44 @@ namespace Cogbot.Actions
             }
             return list;
         }
-        protected static NamedParam Optional(string name, Type type, string description)
+
+        protected static NamedParam Optional(string key, Type type, string description)
         {
-            NamedParam namedParam = new NamedParam(name, type);
+            NamedParam namedParam = new NamedParam(key, type);
             namedParam.Comment = description;
             namedParam.IsOptional = true;
+            namedParam.IsFlag = type == typeof (bool);
             return namedParam;
         }
 
-        protected static NamedParam Rest(string name, Type type, string description)
+        protected static NamedParam OptionalFlag(string key, string description)
         {
-            NamedParam namedParam = new NamedParam(name, type);
+            NamedParam namedParam = new NamedParam(key, typeof (bool));
+            namedParam.Comment = description;
+            namedParam.IsOptional = true;
+            namedParam.IsFlag = true;
+            return namedParam;
+        }
+
+
+        protected static NamedParam Rest(string key, Type type, string description)
+        {
+            NamedParam namedParam = new NamedParam(key, type);
             namedParam.Comment = description;
             namedParam.IsRest = true;
             return namedParam;
         }
 
-        protected static NamedParam Required(string name, Type type, string desc)
+        protected static NamedParam Required(string key, Type type, string desc)
         {
-            var o = Optional(name, type, desc);
+            var o = Optional(key, type, desc);
             o.IsOptional = false;
             return o;
         }
 
-        protected static NamedParam SequenceOf(string name, NamedParam param)
+        protected static NamedParam SequenceOf(string key, NamedParam param)
         {
-            NamedParam namedParam = new NamedParam(name, param.Type.MakeArrayType(), param);
+            NamedParam namedParam = new NamedParam(key, param.Type.MakeArrayType(), param);
             namedParam.Comment = "list of " + param.Key;
             namedParam.IsSequence = true;
             return namedParam;
@@ -970,9 +1007,11 @@ namespace Cogbot.Actions
             Details = idea;
             return idea;
         }
+
         protected string AddExample(string typed, string output)
         {
-            string idea = "<p><pre>" + Htmlize.NoEnts(typed) + "</pre><br>Returns<br><pre>" + Htmlize.NoEnts(output) + "</pre></p>";
+            string idea = "<p><pre>" + Htmlize.NoEnts(typed) + "</pre><br>Returns<br><pre>" + Htmlize.NoEnts(output) +
+                          "</pre></p>";
             Details = idea;
             return idea;
         }
@@ -981,6 +1020,7 @@ namespace Cogbot.Actions
         {
             AddUsage(paramSpec, comment);
         }
+
         protected string AddUsage(KeyParams parameters, string description)
         {
             AddVersion(parameters);
@@ -1005,48 +1045,48 @@ namespace Cogbot.Actions
                             "success", typeof (bool), "true if command was successful");
         }
 
-        protected void AppendResults(string name, string format)
+        protected void AppendResults(string key, string format)
         {
+            key = Parser.ToMapKey(key);
             lock (Results)
             {
                 object obj;
-                if (!Results.TryGetValue(name, out obj))
+                if (!Results.TryGetValue(key, out obj))
                 {
-                    Results[name] = format;
+                    Results[key] = format;
                 }
                 else
                 {
                     string before = "" + obj;
                     string newstring = before + "\n" + format;
-                    Results[name] = newstring.TrimStart();
+                    Results[key] = newstring.TrimStart();
                 }
             }
         }
 
-        protected void SetResult(string propname, object item)
+        public void SetResult(string key, object item)
         {
-            propname = Parser.ToKey(propname);
+            key = Parser.ToMapKey(key);
             success++;
-            Results[propname] = item;
+            Results[key] = item;
         }
 
-        protected void AppendList(string propname, IEnumerable items)
+        protected void AppendList(string key, IEnumerable items)
         {
-            propname = Parser.ToKey(propname);
             success++;
             foreach (var c in items)
             {
-                AppendItem(propname, c);
+                AppendItem(key, c);
             }
         }
 
         protected void AppendList<T>(IEnumerable<T> items)
         {
-            string propname = Parser.ToKey(typeof (T).GetType().Name + "s");
+            string key = typeof (T).GetType().Name + "s";
             success++;
             foreach (var c in items)
             {
-                AppendItem(propname, c);
+                AppendItem(key, c);
             }
         }
 
@@ -1055,26 +1095,48 @@ namespace Cogbot.Actions
             AppendItem(item.GetType().Name + "s", item);
         }
 
-        protected void AppendItem(string propname, object item)
+        public void IncrResult<T>(string key, T item)
         {
-            propname = Parser.ToKey(propname);
+            key = Parser.ToMapKey(key);
             success++;
             var dictionary = Results;
-            Type t = GetPropType(propname);
+            lock (dictionary)
+            {
+                object value;
+                if (!dictionary.TryGetValue(key, out value))
+                {
+                    dictionary[key] = item;
+                }
+                else
+                {
+                    dictionary[key] = (T) (object)
+                                          (((decimal) dictionary[key]) + ((decimal) (object) item));
+                }
+            }
+        }
+
+        protected void AppendItem(string key, object item)
+        {
+            key = Parser.ToMapKey(key);
+            success++;
+            var dictionary = Results;
             object value;
             lock (dictionary)
-                if (!dictionary.TryGetValue(propname, out value))
+            {
+                if (!dictionary.TryGetValue(key, out value))
                 {
-                    dictionary[propname] =
+                    Type t = GetPropElementType(key);
+                    dictionary[key] =
                         value =
                         typeof (List<>).MakeGenericType(new[] {t}).GetConstructor(new Type[0]).Invoke(new object[0]);
                 }
-            ((IList) value).Add(item);
+            }
+            lock (value) ((IList) value).Add(item);
         }
 
-        private Type GetPropType(string propname)
+        private Type GetPropElementType(string key)
         {
-            return typeof(object);
+            return typeof (object);
         }
 
         public static string GetTaskID(CmdRequest args, out bool createFresh)
@@ -1090,5 +1152,10 @@ namespace Cogbot.Actions
             return id;
         }
 
+        public object ResultValue(string key)
+        {
+            key = Parser.ToMapKey(key);
+            return Results[key];
+        }
     }
 }

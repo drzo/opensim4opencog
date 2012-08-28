@@ -4,7 +4,6 @@ using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
-
 // the Namespace used for all BotClient commands
 using MushDLR223.ScriptEngines;
 
@@ -14,7 +13,7 @@ namespace Cogbot.Actions.Friends
     /// Shows a list of friends
     /// </summary>
     public class FriendsCommand : Command, BotPersonalCommand, AsynchronousCommand
-    {        
+    {
         /// <summary>
         /// Constructor for FriendsCommand class
         /// </summary>
@@ -26,7 +25,7 @@ namespace Cogbot.Actions.Friends
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "List avatar friends.";
             Details = AddUsage(Name, Description);
@@ -47,7 +46,7 @@ namespace Cogbot.Actions.Friends
             return Success(ListFriends(Client));
         }
 
-        static public String ListFriends(GridClient Client)
+        public static String ListFriends(GridClient Client)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -65,7 +64,7 @@ namespace Cogbot.Actions.Friends
             else
             {
                 // we have no friends :(
-                sb.AppendLine("No Friends");   
+                sb.AppendLine("No Friends");
             }
 
             // return the result

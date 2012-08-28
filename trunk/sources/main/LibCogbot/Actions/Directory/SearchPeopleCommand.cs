@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using OpenMetaverse;
-
 // the Namespace used for all BotClient commands
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Search
 {
-    class SearchPeopleCommand : Command, GridMasterCommand
+    internal class SearchPeopleCommand : Command, GridMasterCommand
     {
-        AutoResetEvent waitQuery = new AutoResetEvent(false);
-        int resultCount = 0;
+        private AutoResetEvent waitQuery = new AutoResetEvent(false);
+        private int resultCount = 0;
 
         public SearchPeopleCommand(BotClient testClient)
         {
@@ -20,17 +19,17 @@ namespace Cogbot.Actions.Search
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Searches for other avatars.";
             Details = AddUsage(Name + " [search text]", "searches " + Name.Replace("seaches", ""));
             Category = CommandCategory.Friends;
             Parameters =
-                CreateParams("searchText", typeof(string), "what you are searching for");
+                CreateParams("searchText", typeof (string), "what you are searching for");
             ResultMap = CreateParams(
-                "result", typeof(List<string>), "search results",
-                "message", typeof(string), "if success was false, the reason why",
-                "success", typeof(bool), "true if command was successful");
+                "result", typeof (List<string>), "search results",
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if command was successful");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -46,7 +45,7 @@ namespace Cogbot.Actions.Search
 
             waitQuery.Reset();
 
-            
+
             Client.Directory.DirPeopleReply += Directory_DirPeople;
 
             // send the request to the directory manager
@@ -62,7 +61,6 @@ namespace Cogbot.Actions.Search
                 {
                     return Failure("Timeout waiting for simulator to respond.");
                 }
-
             }
             finally
             {
@@ -70,13 +68,13 @@ namespace Cogbot.Actions.Search
             }
         }
 
-        void Directory_DirPeople(object sender, DirPeopleReplyEventArgs e)
+        private void Directory_DirPeople(object sender, DirPeopleReplyEventArgs e)
         {
             if (e.MatchedPeople.Count > 0)
             {
                 foreach (DirectoryManager.AgentSearchData agent in e.MatchedPeople)
                 {
-                    WriteLine("{0} {1} ({2})", agent.FirstName, agent.LastName, agent.AgentID);                   
+                    WriteLine("{0} {1} ({2})", agent.FirstName, agent.LastName, agent.AgentID);
                 }
             }
             else

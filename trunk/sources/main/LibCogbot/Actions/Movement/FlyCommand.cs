@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Movement
@@ -11,15 +10,20 @@ namespace Cogbot.Actions.Movement
         public FlyCommand(BotClient testClient)
         {
             Name = "fly";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Makes the avatar fly";
-            AddVersion(CreateParams(Optional("stop", typeof(bool), "if true stops flying")), "start flying unless stop is specified, Bot will fall if not near ground");
-            AddVersion(CreateParams("up", typeof(bool), ""),
+            AddVersion(CreateParams(Optional("stop", typeof (bool), "if true stops flying")),
+                       "start flying unless stop is specified, Bot will fall if not near ground");
+            AddVersion(CreateParams("up", typeof (bool), ""),
                        "increase height by about 50 meters (one second key press), or jump if on ground");
-            AddVersion(CreateParams("down", typeof(bool), ""),
+            AddVersion(CreateParams("down", typeof (bool), ""),
                        "decrease height by about 50 meters (one second key press). Will not auto-land");
             ResultMap = CreateParams(
-                 "message", typeof(string), "if success was false, the reason why",
-                 "success", typeof(bool), "true if we flew");
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if we flew");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -54,7 +58,6 @@ namespace Cogbot.Actions.Movement
                 Client.Self.Fly(true);
                 return Success("now flying");
             }
-
         }
     }
 }

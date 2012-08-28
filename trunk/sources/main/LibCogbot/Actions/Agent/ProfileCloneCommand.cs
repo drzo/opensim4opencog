@@ -27,23 +27,22 @@ using System.Threading;
 using Cogbot.World;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Agent
 {
     public class ProfileCloneCommand : Command, BotPersonalCommand, BotStatefullCommand, FFIComplete
     {
-        Avatar.AvatarProperties Properties;
-        Avatar.Interests Interests;
-        List<UUID> Groups = new List<UUID>();
-        bool ReceivedProperties = false;
-        bool ReceivedInterests = false;
-        bool ReceivedGroups = false;
-        ManualResetEvent ReceivedProfileEvent = new ManualResetEvent(false);
-        UUID targetID = UUID.Zero;
+        private Avatar.AvatarProperties Properties;
+        private Avatar.Interests Interests;
+        private List<UUID> Groups = new List<UUID>();
+        private bool ReceivedProperties = false;
+        private bool ReceivedInterests = false;
+        private bool ReceivedGroups = false;
+        private ManualResetEvent ReceivedProfileEvent = new ManualResetEvent(false);
+        private UUID targetID = UUID.Zero;
 
-        bool registeredCallbacks = false;
+        private bool registeredCallbacks = false;
 
         public ProfileCloneCommand(BotClient testClient)
             : base(testClient)
@@ -51,14 +50,13 @@ namespace Cogbot.Actions.Agent
             Name = "Profile Clone";
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description =
                 "Copies another avatars profile as closely as possible onto your existing profile. WARNING: This command will destroy your existing profile!";
             Category = CommandCategory.Other;
-            AddVersion(CreateParams("agent", typeof(UUID), "agent you are going to " + Name),
+            AddVersion(CreateParams("agent", typeof (UUID), "agent you are going to " + Name),
                        "copies the profile specified by agent's uuid");
-            DefaultResultMap();
         }
 
         #region Implementation of IDisposable
@@ -72,9 +70,12 @@ namespace Cogbot.Actions.Agent
             if (registeredCallbacks)
             {
                 registeredCallbacks = false;
-                Client.Avatars.AvatarInterestsReply -= new EventHandler<AvatarInterestsReplyEventArgs>(Avatars_AvatarInterestsReply);
-                Client.Avatars.AvatarPropertiesReply -= new EventHandler<AvatarPropertiesReplyEventArgs>(Avatars_AvatarPropertiesReply);
-                Client.Avatars.AvatarGroupsReply -= new EventHandler<AvatarGroupsReplyEventArgs>(Avatars_AvatarGroupsReply);
+                Client.Avatars.AvatarInterestsReply -=
+                    new EventHandler<AvatarInterestsReplyEventArgs>(Avatars_AvatarInterestsReply);
+                Client.Avatars.AvatarPropertiesReply -=
+                    new EventHandler<AvatarPropertiesReplyEventArgs>(Avatars_AvatarPropertiesReply);
+                Client.Avatars.AvatarGroupsReply -=
+                    new EventHandler<AvatarGroupsReplyEventArgs>(Avatars_AvatarGroupsReply);
                 Client.Groups.GroupJoinedReply -= new EventHandler<GroupOperationEventArgs>(Groups_OnGroupJoined);
                 Client.Avatars.AvatarPicksReply -= new EventHandler<AvatarPicksReplyEventArgs>(Avatars_AvatarPicksReply);
                 Client.Avatars.PickInfoReply -= new EventHandler<PickInfoReplyEventArgs>(Avatars_PickInfoReply);
@@ -96,9 +97,12 @@ namespace Cogbot.Actions.Agent
             if (!registeredCallbacks)
             {
                 registeredCallbacks = true;
-                Client.Avatars.AvatarInterestsReply += new EventHandler<AvatarInterestsReplyEventArgs>(Avatars_AvatarInterestsReply);
-                Client.Avatars.AvatarPropertiesReply += new EventHandler<AvatarPropertiesReplyEventArgs>(Avatars_AvatarPropertiesReply);
-                Client.Avatars.AvatarGroupsReply += new EventHandler<AvatarGroupsReplyEventArgs>(Avatars_AvatarGroupsReply);
+                Client.Avatars.AvatarInterestsReply +=
+                    new EventHandler<AvatarInterestsReplyEventArgs>(Avatars_AvatarInterestsReply);
+                Client.Avatars.AvatarPropertiesReply +=
+                    new EventHandler<AvatarPropertiesReplyEventArgs>(Avatars_AvatarPropertiesReply);
+                Client.Avatars.AvatarGroupsReply +=
+                    new EventHandler<AvatarGroupsReplyEventArgs>(Avatars_AvatarGroupsReply);
                 Client.Groups.GroupJoinedReply += new EventHandler<GroupOperationEventArgs>(Groups_OnGroupJoined);
                 Client.Avatars.AvatarPicksReply += new EventHandler<AvatarPicksReplyEventArgs>(Avatars_AvatarPicksReply);
                 Client.Avatars.PickInfoReply += new EventHandler<PickInfoReplyEventArgs>(Avatars_PickInfoReply);
@@ -135,27 +139,28 @@ namespace Cogbot.Actions.Agent
             }
 
             return Success("Synchronizing our profile to the profile of " + targetID.ToString());
-        }                           
+        }
 
-        void Groups_OnGroupJoined(object sender, GroupOperationEventArgs e)
+        private void Groups_OnGroupJoined(object sender, GroupOperationEventArgs e)
         {
             WriteLine(Client.ToString() + (e.Success ? " joined " : " failed to join ") +
-                e.GroupID.ToString());
+                      e.GroupID.ToString());
 
             if (e.Success)
             {
                 WriteLine(Client.ToString() + " setting " + e.GroupID.ToString() +
-                    " as the active group");
+                          " as the active group");
                 Client.Groups.ActivateGroup(e.GroupID);
             }
         }
 
-        void Avatars_PickInfoReply(object sender, PickInfoReplyEventArgs e)
+        private void Avatars_PickInfoReply(object sender, PickInfoReplyEventArgs e)
         {
-            Client.Self.PickInfoUpdate(e.PickID, e.Pick.TopPick, e.Pick.ParcelID, e.Pick.Name, e.Pick.PosGlobal, e.Pick.SnapshotID, e.Pick.Desc);
+            Client.Self.PickInfoUpdate(e.PickID, e.Pick.TopPick, e.Pick.ParcelID, e.Pick.Name, e.Pick.PosGlobal,
+                                       e.Pick.SnapshotID, e.Pick.Desc);
         }
 
-        void Avatars_AvatarPicksReply(object sender, AvatarPicksReplyEventArgs e)
+        private void Avatars_AvatarPicksReply(object sender, AvatarPicksReplyEventArgs e)
         {
             if (e.AvatarID != targetID) return;
             foreach (KeyValuePair<UUID, string> kvp in e.Picks)
@@ -171,15 +176,15 @@ namespace Cogbot.Actions.Agent
             }
         }
 
-        void Avatars_AvatarGroupsReply(object sender, AvatarGroupsReplyEventArgs e)
+        private void Avatars_AvatarGroupsReply(object sender, AvatarGroupsReplyEventArgs e)
         {
             if (e.AvatarID != targetID) return;
             lock (ReceivedProfileEvent)
-        {
+            {
                 foreach (AvatarGroup group in e.Groups)
                 {
                     Groups.Add(group.GroupID);
-        }
+                }
 
                 ReceivedGroups = true;
 
@@ -188,7 +193,7 @@ namespace Cogbot.Actions.Agent
             }
         }
 
-        void Avatars_AvatarPropertiesReply(object sender, AvatarPropertiesReplyEventArgs e)
+        private void Avatars_AvatarPropertiesReply(object sender, AvatarPropertiesReplyEventArgs e)
         {
             if (e.AvatarID != targetID) return;
             lock (ReceivedProfileEvent)
@@ -201,7 +206,7 @@ namespace Cogbot.Actions.Agent
             }
         }
 
-        void Avatars_AvatarInterestsReply(object sender, AvatarInterestsReplyEventArgs e)
+        private void Avatars_AvatarInterestsReply(object sender, AvatarInterestsReplyEventArgs e)
         {
             if (e.AvatarID != targetID) return;
             lock (ReceivedProfileEvent)

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Land
@@ -13,6 +12,10 @@ namespace Cogbot.Actions.Land
         public GridMapCommand(BotClient testClient)
         {
             Name = "gridmap";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Downloads all visible information about the grid map";
             Category = CommandCategory.Simulator;
             Parameters = CreateParams();
@@ -24,7 +27,7 @@ namespace Cogbot.Actions.Land
             //    return Success("";
 
             Client.Grid.RequestMainlandSims(GridLayerType.Objects);
-            
+
             return Success("Sent " + Name);
         }
     }

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Pathfinder
@@ -11,9 +10,14 @@ namespace Cogbot.Actions.Pathfinder
         public RemeshPrim(BotClient client)
         {
             Name = GetType().Name;
-            Description = "Reads the sim prims for improving routes then bakes the region (was called srprim). Usage: remeshprim [prims] ";
+        }
+
+        public override void MakeInfo()
+        {
+            Description =
+                "Reads the sim prims for improving routes then bakes the region (was called srprim). Usage: remeshprim [prims] ";
             Category = Cogbot.Actions.CommandCategory.Movement;
-            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
+            Parameters = CreateParams("targets", typeof (PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -44,7 +48,8 @@ namespace Cogbot.Actions.Pathfinder
             if (rightNow)
             {
                 SimRegion.BakeRegions();
-            } else
+            }
+            else
             {
                 Cogbot.WorldPathSystem.MeshingQueue.Enqueue(SimRegion.BakeRegions);
             }

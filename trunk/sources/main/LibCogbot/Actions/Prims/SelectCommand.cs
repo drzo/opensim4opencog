@@ -5,7 +5,6 @@ using Cogbot.Utilities;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Objects
@@ -15,12 +14,16 @@ namespace Cogbot.Actions.Objects
         public SelectCommand(BotClient client)
         {
             Name = "select";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "selects one or more object in world.";
             Details = AddUsage("select +/-[prim0] +/-[prim1] +/-[prim2]", "Selects or deslects prims") +
                       AddUsage("select none", "Clears the select buffer") +
                       AddUsage("select", "Shows the select buffer");
             Category = Cogbot.Actions.CommandCategory.Objects;
-            Parameters = CreateParams("targets", typeof(PrimSpec), "The objects to " + Name);
+            Parameters = CreateParams("targets", typeof (PrimSpec), "The objects to " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest argsI)

@@ -4,34 +4,35 @@ using System.Text;
 using System.Threading;
 using Cogbot.World;
 using OpenMetaverse; //using libsecondlife;
-
 using MushDLR223.ScriptEngines;
 using PathSystem3D.Navigation;
 
 namespace Cogbot.Actions.Movement
 {
-    class Sit : Command, BotPersonalCommand, FFIComplete
+    internal class Sit : Command, BotPersonalCommand, FFIComplete
     {
         public bool sittingOnGround = false;
 
-        bool registeredCallback = false;
+        private bool registeredCallback = false;
+
         public Sit(BotClient Client)
             : base(Client)
         {
             TheBotClient = Client;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Sit on the ground or on an object. Sit with no params sits on the ground.";
-            Details = "<p>sit</p><p>sit on &lt;primspec&gt;</p><p>example: sit   <i>sit on ground</i></p><p>example: sit on chair</p>";
+            Details =
+                "<p>sit</p><p>sit on &lt;primspec&gt;</p><p>example: sit   <i>sit on ground</i></p><p>example: sit on chair</p>";
             AddVersion(CreateParams(
-                           Optional("on", typeof(PrimSpec), "The object to sit on (may use $nearest)"),
-                           Optional("down", typeof(bool), "will use ground sitting")),
+                           Optional("on", typeof (PrimSpec), "The object to sit on (may use $nearest)"),
+                           Optional("down", typeof (bool), "will use ground sitting")),
                        "Sit on Object");
             ResultMap = CreateParams(
-                 "message", typeof(string), "if success was false, the reason why",
-                 "success", typeof(bool), "true if we sat");
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if we sat");
             Category = CommandCategory.Movement;
         }
 
@@ -53,7 +54,6 @@ namespace Cogbot.Actions.Movement
             {
                 if (WorldSystem.TheSimAvatar.SitOn(pos as SimObject)) Success("$bot sat on " + pos);
                 if (!args.IsTrue("down")) return Failure("$bot did not yet sit on " + pos);
-
             }
             else if (pos == null)
             {

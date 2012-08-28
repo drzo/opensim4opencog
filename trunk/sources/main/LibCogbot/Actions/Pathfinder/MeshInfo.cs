@@ -4,30 +4,35 @@ using System.Collections.Generic;
 using Cogbot;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Pathfinder
 {
-    class meshinfo : Cogbot.Actions.Command, SystemApplicationCommand, BotStatefullCommand
+    internal class meshinfo : Cogbot.Actions.Command, SystemApplicationCommand, BotStatefullCommand
     {
         public meshinfo(BotClient client)
         {
             Name = GetType().Name;
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Shows meshinfo";
             Category = Cogbot.Actions.CommandCategory.Movement;
-            Parameters = CreateParams("targets", typeof(PrimSpec), "The targets of " + Name);
+            Parameters = CreateParams("targets", typeof (PrimSpec), "The targets of " + Name);
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int argsUsed;
             if (!WorldPathSystem.MaintainMeshes) return Success("WorldObjects.MaintainMeshes = false for " + Name);
-            IEnumerable<SimObject> objs = WorldSystem.GetPrimitives(args, out argsUsed);
-            if (argsUsed == 0)
+            IEnumerable<SimObject> objs;
+            if (!args.TryGetValue("targets", out objs))
             {
-
                 objs = WorldSystem.GetAllSimObjects();
+            } 
+            //if (argsUsed == 0)
+            {
                 int meshed = 0;
                 int unmeshed = 0;
                 int notNeedBeMEshed = 0;
@@ -59,7 +64,7 @@ namespace Cogbot.Actions.Pathfinder
             }
             foreach (SimObject o in objs)
             {
-                WriteLine("MeshInfo: " + o);              
+                WriteLine("MeshInfo: " + o);
                 WriteLine(o.PathFinding.Mesh.DebugString());
             }
             return Success("Ran " + Name);

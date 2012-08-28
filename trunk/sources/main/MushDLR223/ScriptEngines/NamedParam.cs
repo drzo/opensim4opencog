@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Xml.Serialization;
 using MushDLR223.Utilities;
 using KeyType = System.String;
@@ -13,6 +12,7 @@ namespace MushDLR223.Utilities
     public interface YesAutoLoad
     {
     }
+
     /// <summary>
     /// Ensure the reflection API is not used to load this command
     /// The command is loaded likely byu the plugin 
@@ -26,6 +26,21 @@ namespace MushDLR223.ScriptEngines
 {
     public struct NullType
     {
+        public readonly Object Inst;
+        public MemberInfo Type; // { get; set; }
+
+        public NullType(Object inst, MemberInfo type)
+        {
+            Inst = inst;
+            Type = type;
+        }
+
+        public NullType(Type type)
+        {
+            Inst = null;
+            Type = type;
+        }
+
         public override int GetHashCode()
         {
             return Type.GetHashCode() ^ Inst.GetHashCode();
@@ -40,42 +55,39 @@ namespace MushDLR223.ScriptEngines
         {
             return "(" + Type.Name + ")null";
         }
-
-        public NullType(Object inst, MemberInfo type)
-        {
-            Inst = inst;
-            Type = type;
-        }
-
-        readonly public Object Inst;
-        public MemberInfo Type;// { get; set; }
-
-        public NullType(Type type)
-        {
-            Inst = null;
-            Type = type;
-        }
     }
 
     [XmlType]
     public struct NamedParam
     {
+        private readonly Type _Type;
+        public readonly object[] Choices;
+        private String _key;
+        private object _value;
+        public string Comment;
+        public MemberInfo info;
+        public bool IsFlag;
+        public bool IsOneOf;
+        public bool IsOptional;
+        public bool IsRequired
+        {
+            get { return !IsOptional; }
+            set { IsOptional = !value; }
+        }
+        public bool IsRest;
+        public bool IsSequence;
+        public object memberTarget;
+
         /// <summary>
         /// For building simevent info
         /// </summary>
         /// <param name="k"></param>
         /// <param name="v"></param>
-        public NamedParam(KeyType k, object v)
+        public NamedParam(String k, object v)
+            : this()
         {
-            memberTarget = null;
-            IsRequired = true;
-            IsOneOf = false;
-            IsSequence = false; 
-            IsRest = false;
-            Comment = null;
             _key = ToKey(k);
             _value = v;
-            _Type = null;
             if (v != null)
             {
                 if (v is Type)
@@ -87,13 +99,11 @@ namespace MushDLR223.ScriptEngines
                     _Type = v.GetType();
                 }
             }
-            Choices = null;
-            info = null;
             checkKey(k);
         }
 
         public NamedParam(string k, Type v)
-            : this(k, (object)null)
+            : this(k, (object) null)
         {
             _Type = v;
         }
@@ -104,19 +114,10 @@ namespace MushDLR223.ScriptEngines
         /// <param name="k"></param>
         /// <param name="type"></param>
         /// <param name="v"></param>
-        public NamedParam(KeyType k, Type type, Type v)
-            : this(k, (object)v)
+        public NamedParam(String k, Type type, Type v)
+            : this(k, (object) v)
         {
             _Type = type;
-        }
-
-        private static void checkKey(object o)
-        {
-            return;
-            if (o!=null) if (o.ToString().Contains("offsetU"))
-            {
-                
-            }
         }
 
         /// <summary>
@@ -127,8 +128,8 @@ namespace MushDLR223.ScriptEngines
         /// <param name="k"></param>
         /// <param name="type"></param>
         /// <param name="v"></param>
-        public NamedParam(object target, MemberInfo inf, KeyType k, Type type, object v)
-            : this(k, (object)v)
+        public NamedParam(object target, MemberInfo inf, String k, Type type, object v)
+            : this(k, v)
         {
             memberTarget = target;
             info = inf;
@@ -143,8 +144,8 @@ namespace MushDLR223.ScriptEngines
         /// <param name="type"></param>
         /// <param name="v"></param>
         /// <param name="choices"></param>
-        public NamedParam(KeyType k, Type type, object v, params object[] choices)
-            : this(k, (object)v)
+        public NamedParam(String k, Type type, object v, params object[] choices)
+            : this(k, v)
         {
             _Type = type;
             Choices = choices;
@@ -152,55 +153,6 @@ namespace MushDLR223.ScriptEngines
             checkKey(k);
         }
 
-        private static Type FieldType(MemberInfo field)
-        {
-            if (field is FieldInfo)
-            {
-                return ((FieldInfo)field).FieldType;
-            }
-            if (field is PropertyInfo)
-            {
-                return ((PropertyInfo)field).PropertyType;
-            }
-            if (field is MethodInfo)
-            {
-                MethodInfo mi = (MethodInfo)field;
-                return mi.ReturnType;
-            }
-            if (field is ConstructorInfo)
-            {
-                return ((ConstructorInfo)field).DeclaringType;
-            }
-            throw new IndexOutOfRangeException("" + field);
-        }
-
-        private static string ToKey(string s)
-        {
-            if (s == null) return null;
-            return Intern(s);
-        }
-
-        public KeyValuePair<string, object> Pair
-        {
-            get { return new KeyValuePair<string, object>(_key, _value); }
-        }
-
-
-        private KeyType _key;
-        private object _value;
-        readonly public object[] Choices;
-        public MemberInfo info;
-        private Type _Type;
-        public object memberTarget;
-        public string Comment;
-        public bool IsOptional
-        {
-            get { return !IsRequired; }
-            set { IsRequired = !value; }
-        }
-
-        public bool IsRequired;
-        public bool IsRest;
 
         /// <summary>
         /// Used for constructing Cyc-like functions
@@ -208,13 +160,9 @@ namespace MushDLR223.ScriptEngines
         /// <param name="param"></param>
         /// <param name="o"></param>
         public NamedParam(NamedParam param, object o)
+            : this()
         {
             memberTarget = param.memberTarget;
-            IsRequired = true;
-            IsRest = false;
-            IsOneOf = false;
-            IsSequence = false;
-            Comment = null;
             _Type = param._Type;
             _value = o;
             _key = param._key;
@@ -228,18 +176,16 @@ namespace MushDLR223.ScriptEngines
         /// <param name="type"></param>
         /// <param name="DataType"></param>
         public NamedParam(Type type, Type DataType)
+            : this()
         {
-            memberTarget = null;
-            IsRequired = true;
-            IsOneOf = false;
-            IsSequence = false;
-            IsRest = false;
-            Comment = null;
             _Type = type;
             _value = NullType.GetNullType(DataType);
             _key = _Type.Name;
-            Choices = null;
-            info = null;
+        }
+
+        public KeyValuePair<string, object> Pair
+        {
+            get { return new KeyValuePair<string, object>(_key, _value); }
         }
 
         public Type Type
@@ -249,7 +195,7 @@ namespace MushDLR223.ScriptEngines
                 if (_Type != null) return _Type;
                 if (_value is NullType) return ((NullType) _value).Type.DeclaringType;
                 if (_value != null) return _value.GetType();
-                if (info==null) return null;
+                if (info == null) return null;
                 return info.DeclaringType;
             }
         }
@@ -258,17 +204,14 @@ namespace MushDLR223.ScriptEngines
         {
             get
             {
-                if (info != null) return info.DeclaringType; 
+                if (info != null) return info.DeclaringType;
                 return Type;
             }
         }
 
         public Type DestinationType
         {
-            get
-            {                
-                return Type;
-            }
+            get { return Type; }
         }
 
         [XmlArrayItem]
@@ -282,11 +225,55 @@ namespace MushDLR223.ScriptEngines
         {
             get
             {
-                var val = Value;
+                object val = Value;
                 if (val is NullType) return null;
                 return val;
             }
             set { SetValue(value); }
+        }
+
+        [XmlArrayItem]
+        public string Key
+        {
+            get { return _key; }
+            set { _key = string.Intern(value); }
+        }
+
+        private static void checkKey(object o)
+        {
+            return;
+            if (o != null)
+                if (o.ToString().Contains("offsetU"))
+                {
+                }
+        }
+
+        private static Type FieldType(MemberInfo field)
+        {
+            if (field is FieldInfo)
+            {
+                return ((FieldInfo) field).FieldType;
+            }
+            if (field is PropertyInfo)
+            {
+                return ((PropertyInfo) field).PropertyType;
+            }
+            if (field is MethodInfo)
+            {
+                var mi = (MethodInfo) field;
+                return mi.ReturnType;
+            }
+            if (field is ConstructorInfo)
+            {
+                return (field).DeclaringType;
+            }
+            throw new IndexOutOfRangeException("" + field);
+        }
+
+        private static string ToKey(string s)
+        {
+            if (s == null) return null;
+            return Intern(s);
         }
 
         public void SetValue(object value)
@@ -300,24 +287,13 @@ namespace MushDLR223.ScriptEngines
             SetMemberValue(info, memberTarget, value);
         }
 
-        [XmlArrayItem]
-        public string Key
-        {
-            get { return _key; }
-            set { _key = string.Intern(value); }
-        }
-
-        public bool IsSequence;
-
-        public bool IsOneOf;
-
         public override string ToString()
         {
             if (_key == null) return string.Format("{0}", (_value ?? "NULL"));
             return string.Format("{0}='{1}'", (_key ?? "NULL"), (_value ?? "NULL"));
         }
 
-        public static bool operator ==(NamedParam p1,NamedParam p2)
+        public static bool operator ==(NamedParam p1, NamedParam p2)
         {
             return p1.Equals(p2);
         }
@@ -339,10 +315,9 @@ namespace MushDLR223.ScriptEngines
 
             if (obj == null || GetType() != obj.GetType())
             {
-                return Equals(_value,obj);
+                return Equals(_value, obj);
             }
-            return Equals(_value,((NamedParam) obj)._value);
-
+            return Equals(_value, ((NamedParam) obj)._value);
         }
 
         // override object.GetHashCode
@@ -352,22 +327,22 @@ namespace MushDLR223.ScriptEngines
             return base.GetHashCode();
         }
 
-        static public T[] ToArray<T>(IEnumerable<T> args)
+        public static T[] ToArray<T>(IEnumerable<T> args)
         {
-            if (args is T[]) return (T[])args;
-            if (args is List<T>) return ((List<T>)args).ToArray();
+            if (args is T[]) return (T[]) args;
+            if (args is List<T>) return ((List<T>) args).ToArray();
             return new List<T>(args).ToArray();
         }
 
         public static NamedParam[] ObjectsToParams(IEnumerable paramz)
         {
-            List<NamedParam> Parameters = new List<NamedParam>();
+            var Parameters = new List<NamedParam>();
             int pn = 0;
-            foreach (var v in paramz)
+            foreach (object v in paramz)
             {
                 if (v is NamedParam)
                 {
-                    Parameters.Add((NamedParam)v);
+                    Parameters.Add((NamedParam) v);
                 }
                 else
                 {
@@ -382,69 +357,72 @@ namespace MushDLR223.ScriptEngines
         {
             if (field is FieldInfo)
             {
-                ((FieldInfo)field).SetValue(o, value);
+                ((FieldInfo) field).SetValue(o, value);
                 return;
             }
             if (field is PropertyInfo)
             {
-                MethodInfo setterMethod = ((PropertyInfo)field).GetSetMethod(true);
+                MethodInfo setterMethod = ((PropertyInfo) field).GetSetMethod(true);
                 if (setterMethod == null)
                 {
                     DLRConsole.DebugWriteLine("No setter method on " + field);
                     return;
                 }
-                setterMethod.Invoke(o, new object[] { value });
+                setterMethod.Invoke(o, new[] {value});
                 return;
             }
             if (field is MethodInfo)
             {
-                MethodInfo mi = (MethodInfo)field;
+                var mi = (MethodInfo) field;
                 if (mi.IsStatic)
                 {
-                    mi.Invoke(null, new object[] { o, value });
+                    mi.Invoke(null, new[] {o, value});
                     return;
                 }
-                ((MethodInfo)field).Invoke(o, new object[] { value });
+                ((MethodInfo) field).Invoke(o, new[] {value});
                 return;
             }
             throw new IndexOutOfRangeException("" + field);
             if (field is ConstructorInfo)
             {
-                ((ConstructorInfo)field).Invoke(new object[] { o, value });
+                ((ConstructorInfo) field).Invoke(new[] {o, value});
                 return;
             }
         }
+
         public static NamedParam[] CreateParams(params object[] paramz)
         {
-            List<NamedParam> paramsz = new List<NamedParam>();
+            var paramsz = new List<NamedParam>();
             int argNum = 1;
-            for (int i = 0; i < paramz.Length; )
+            for (int i = 0; i < paramz.Length;)
             {
-                var o = paramz[i++];
+                object o = paramz[i++];
                 if (o is NamedParam)
                 {
-                    paramsz.Add((NamedParam)o);
+                    paramsz.Add((NamedParam) o);
                     continue;
                 }
                 if (o is string)
                 {
-                    string k = (string)o;
-                    Type t = paramz[i++] as Type;
+                    var k = (string) o;
+                    var t = paramz[i++] as Type;
                     string comment = "" + paramz[i++];
-                    NamedParam namedParam = new NamedParam(k, t);
+                    var namedParam = new NamedParam(k, t);
                     namedParam.Comment = comment;
                     paramsz.Add(namedParam);
                 }
             }
             return paramsz.ToArray();
         }
+
         public static NamedParam[][] CreateParamVersions(params NamedParam[][] paramz)
         {
             return paramz;
         }
+
         public static NamedParam Optional(string name, Type type, string description)
         {
-            NamedParam namedParam = new NamedParam(name, type);
+            var namedParam = new NamedParam(name, type);
             namedParam.Comment = Intern(description);
             namedParam.IsOptional = true;
             return namedParam;
@@ -458,11 +436,12 @@ namespace MushDLR223.ScriptEngines
 
         public static NamedParam Rest(string name, Type type, string description)
         {
-            NamedParam namedParam = new NamedParam(name, type);
+            var namedParam = new NamedParam(name, type);
             namedParam.Comment = description;
             namedParam.IsOptional = true;
             return namedParam;
         }
+
         public static string Usage(String cmdname, NamedParam[] parameters, string description)
         {
             throw new NotImplementedException();

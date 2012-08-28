@@ -4,7 +4,6 @@ using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Groups
@@ -17,15 +16,15 @@ namespace Cogbot.Actions.Groups
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "invite an avatar into a group.";
             Category = CommandCategory.Groups;
             Details = AddUsage(Name + " AvatarUUID GroupUUID RoleUUID", Description);
             Parameters = CreateParams(
-                "agent", typeof(Group), "agent you are inviting",
-                "groupUUID", typeof(Group), "group uuid",
-                "roleUUID", typeof(GroupRole), "group role");
+                "agent", typeof (Group), "agent you are inviting",
+                "groupUUID", typeof (Group), "group uuid",
+                "roleUUID", typeof (GroupRole), "group role");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -46,10 +45,10 @@ namespace Cogbot.Actions.Groups
             for (int i = 2; i < args.Length; i++)
                 if (UUID.TryParse(args[i], out role))
                     roles.Add(role);
-                
+
             Client.Groups.Invite(group, roles, avatar);
 
-            return Success("invited "+avatar+" to "+group);
+            return Success("invited " + avatar + " to " + group);
         }
     }
 }

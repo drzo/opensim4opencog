@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Text;
 using System.Threading;
 using Cogbot.World;
+using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
@@ -287,13 +288,51 @@ namespace Cogbot
                 argsUsed = 0;
                 return offset;
             }
-
+            if (start > 0)
+            {
+                tokens = Parser.SplitOff(tokens, start);
+                start = 0;
+            }
             int maxArgs = 0;
             string first = tokens[0];
+            argsUsed = 1;
             if (first == "last")
             {
-                argsUsed = 1;
                 return offset;
+            }
+            if (first.EndsWith("s")) first = first.Substring(0, first.Length - 1);
+            if (first == "forward")
+            {
+                return SimOffsetPosition.WithOrientation(offset, new Vector3(0, 1, 0));
+            }
+            if (first.EndsWith("ward")) first = first.Substring(0, first.Length - 4);
+            if (first == "west")
+            {
+                return new SimOffsetPosition(offset, new Vector3(-1, 0, 0));
+            }
+            if (first == "east")
+            {
+                return new SimOffsetPosition(offset, new Vector3(1, 0, 0));
+            }
+            if (first == "north")
+            {
+                return new SimOffsetPosition(offset, new Vector3(0, 1, 0));
+            }
+            if (first == "south")
+            {
+                return new SimOffsetPosition(offset, new Vector3(0, -1, 0));
+            }
+            if (first == "left")
+            {
+                return SimOffsetPosition.WithOrientation(offset, new Vector3(-1, 0, 0));
+            }
+            if (first == "right")
+            {
+                return SimOffsetPosition.WithOrientation(offset, new Vector3(1, 0, 0));
+            }
+            if (first == "back")
+            {
+                return SimOffsetPosition.WithOrientation(offset, new Vector3(0, -1, 0));
             }
             if (first.Contains("/"))
             {

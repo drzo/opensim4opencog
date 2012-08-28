@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Inventory
@@ -16,6 +15,10 @@ namespace Cogbot.Actions.Inventory
         public EmptyTrashCommand(BotClient testClient)
         {
             Name = "emptytrash";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Empty inventory Trash folder";
             Category = CommandCategory.Inventory;
         }

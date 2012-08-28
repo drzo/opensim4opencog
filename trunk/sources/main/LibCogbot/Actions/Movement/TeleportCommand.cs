@@ -8,40 +8,44 @@ using PathSystem3D.Navigation; //using libsecondlife;
 // older LibOMV
 //using TeleportFlags = OpenMetaverse.AgentManager.TeleportFlags;
 //using TeleportStatus = OpenMetaverse.AgentManager.TeleportStatus;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Agent
 {
 #pragma warning disable 0168
-    class Teleport : Command, BotPersonalCommand
+    internal class Teleport : Command, BotPersonalCommand
     {
-        ManualResetEvent TeleportFinished = new ManualResetEvent(false);
+        private ManualResetEvent TeleportFinished = new ManualResetEvent(false);
 
         public Teleport(BotClient testClient)
             : base(testClient)
         {
             TheBotClient = testClient;
             Category = CommandCategory.Movement;
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Teleport to a location defined by an avatar, object, or position";
-            Details = @"<p>teleport  &lt;location&gt;</p>
+            Details =
+                @"<p>teleport  &lt;location&gt;</p>
 <p>example: teleport Zindra/112.3/114.4/23</p>
 <p>example: teleport Fluffybunny Resident</p>
 <p>example: teleport nth 3 Ship <i>teleports to 3rd nearest object named Ship</i></p>";
-            Parameters = CreateParams("location", typeof(SimPosition),
-                "Location to TP to. Can be an avatar, object, or position. See <a href='wiki/BotCommands#Location'>Locations</a>");
+            Parameters = CreateParams("to", typeof (SimPosition),
+                                      "Location to TP to. Can be an avatar, object, or position. See <a href='wiki/BotCommands#Location'>Locations</a>");
             ResultMap = CreateParams(
-                 "message", typeof(string), "if we could not teleport, the reason why",
-                 "success", typeof(bool), "true if the teleport succeeded");
+                "message", typeof (string), "if we could not teleport, the reason why",
+                "success", typeof (bool), "true if the teleport succeeded");
         }
 
-                                    //string message, TeleportStatus status, TeleportFlags flags
-        public void On_Teleport(object sender,TeleportEventArgs e)
+        //string message, TeleportStatus status, TeleportFlags flags
+        public void On_Teleport(object sender, TeleportEventArgs e)
         {
             BotClient Client = TheBotClient;
             WriteLine(e + " " + e.Status);
             if (e.Status == TeleportStatus.Finished)
-                {                  
+            {
                 Client.Self.TeleportProgress -= On_Teleport;
                 TeleportFinished.Set();
             }
@@ -54,10 +58,10 @@ namespace Cogbot.Actions.Agent
             return Success(verb + " complete");
         }
 
-        void acceptInput0(string verb, Parser parser)
+        private void acceptInput0(string verb, Parser parser)
         {
-            String[] args = parser.tokens;
-            string ToS = parser["to"];
+            String[] args = parser.GetProperty("to");
+            string ToS = Parser.Rejoin(args, 0);
             if (String.IsNullOrEmpty(ToS))
             {
                 ToS = parser.str;
@@ -93,8 +97,8 @@ namespace Cogbot.Actions.Agent
             char[] splitchar = null;
             if (ToS.Contains("/"))
             {
-                splitchar = new char[] { '/' };
-            }           
+                splitchar = new char[] {'/'};
+            }
             string[] tokens = ToS.Split(splitchar);
             if (tokens.Length == 0)
             {
@@ -103,7 +107,7 @@ namespace Cogbot.Actions.Agent
             else
             {
                 Vector3 coords = new Vector3(128, 128, 40);
-                string simName = "";//CurSim.Name;
+                string simName = ""; //CurSim.Name;
 
                 bool ifCoordinates = false;
 
@@ -116,7 +120,9 @@ namespace Cogbot.Actions.Agent
                         coords.Z = float.Parse(tokens[tokens.Length - 1]);
                         ifCoordinates = true;
                     }
-                    catch (Exception e) { }
+                    catch (Exception e)
+                    {
+                    }
                 }
 
                 if (!ifCoordinates)
@@ -145,7 +151,6 @@ namespace Cogbot.Actions.Agent
                     }
                 }
             }
-
         }
     }
 #pragma warning restore 0168

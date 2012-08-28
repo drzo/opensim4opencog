@@ -3,16 +3,19 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
 {
     public class DilationCommand : Command, RegionMasterCommand, AsynchronousCommand
     {
-		public DilationCommand(BotClient testClient)
+        public DilationCommand(BotClient testClient)
         {
             Name = "dilation";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Shows time dilation for current sim.";
             Category = CommandCategory.Simulator;
             Parameters = CreateParams();

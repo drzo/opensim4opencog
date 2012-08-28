@@ -22,6 +22,21 @@ using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace Cogbot.World
 {
+
+    [Flags]
+    public enum MovementProceedure
+    {
+        AutoPilot,
+        /// <summary>
+        /// Use A* Pathfinding to get to object
+        /// </summary>
+        AStar,
+        TurnToAndWalk,
+        FlyTo,
+        Teleport,
+        CogPusher
+    }
+
     public partial class SimAvatarClient : SimMover, SimControllableAvatar
     {
         public override void ThreadJump()
@@ -843,7 +858,7 @@ namespace Cogbot.World
         [ConfigSetting(Description = "When trying to moveto, if you can't move by walking or flying, teleport. If false, fail.")]
         public static bool MoveUseTeleportFallback = true;
         public static bool GotoUseTeleportFallback = !MoveUseTeleportFallback && false;
-        static public MovementProceedure SimpleMoveToMovementProceedure = MovementProceedure.CogPusher;
+        public MovementProceedure SimpleMoveToMovementProceedure = MovementProceedure.CogPusher;
         public MovementProceedure SalientMovementProceedure = MovementProceedure.AStar;
         public bool MovementByFlight
         {

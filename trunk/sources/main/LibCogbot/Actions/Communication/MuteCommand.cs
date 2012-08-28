@@ -3,22 +3,25 @@ using System.Collections.Generic;
 using System.Text;
 using Cogbot.World;
 using OpenMetaverse; //using libsecondlife;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Communication
 {
-    class UnmuteCommand : MuteCommand, FFITODO
+    internal class UnmuteCommand : MuteCommand, FFITODO
     {
         public UnmuteCommand(BotClient Client)
             : base(Client)
+        {
+        }
+
+        public override void MakeInfo()
         {
             Description = "Remove avatars or objects from the mute list";
             Details = "<p>unmute all</p><p>unmute Fluffybunny Resident</p>";
         }
     }
 
-    class MuteCommand : Command, BotPersonalCommand
+    internal class MuteCommand : Command, BotPersonalCommand
     {
         public MuteCommand(BotClient Client)
             : base(Client)
@@ -26,12 +29,12 @@ namespace Cogbot.Actions.Communication
             TheBotClient = Client;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Mute avatars or objects, or display the mute list. unmute unmutes.";
             Details = "<p>mute Fluffybunny Resident</p>" +
-"<p>mute Particles &lt;primspec&gt;  mutes all but a specific element from:</p>" +
-@"<ul>
+                      "<p>mute Particles &lt;primspec&gt;  mutes all but a specific element from:</p>" +
+                      @"<ul>
 <li>Default - mute everything</li>
 <li>TextChat - don't mute text chat</li>
 <li>VoiceChat - don't mute voice</li>
@@ -40,16 +43,16 @@ namespace Cogbot.Actions.Communication
 <li>All - don't mute anything</li>
 </ul>";
             AddVersion(CreateParams(
-                          Optional("show", typeof(bool), "show mutelists"),
-                          Optional("request", typeof(bool), "request mutelists"),
-                          Optional("element", typeof(MuteFlags), "element to not mute"),
-                          "targets", typeof(List<SimObject>), "objects and agents to mute"), Description);
+                           Optional("show", typeof (bool), "show mutelists"),
+                           Optional("request", typeof (bool), "request mutelists"),
+                           Optional("element", typeof (MuteFlags), "element to not mute"),
+                           "targets", typeof (List<SimObject>), "objects and agents to mute"), Description);
             ResultMap = CreateParams(
-                "message", typeof(string), "if success was false, the reason why",
-                "muted", typeof(List<SimObject>), "list of muteds",
-                "ummuted", typeof(List<SimObject>), "list of unmuteds",
-                "success", typeof(bool), "true if we muted the object");
-         }
+                "message", typeof (string), "if success was false, the reason why",
+                "muted", typeof (List<SimObject>), "list of muteds",
+                "ummuted", typeof (List<SimObject>), "list of unmuteds",
+                "success", typeof (bool), "true if we muted the object");
+        }
 
         public override CmdResult ExecuteRequest(CmdRequest pargs)
         {
@@ -105,14 +108,14 @@ namespace Cogbot.Actions.Communication
             object value;
             MuteFlags mf = MuteFlags.All;
             int argsUsed;
-            if (TryEnumParse(typeof(MuteFlags), args, 0, out argsUsed, out value))
+            if (TryEnumParse(typeof (MuteFlags), args, 0, out argsUsed, out value))
             {
-                mf = (MuteFlags)value;
+                mf = (MuteFlags) value;
             }
             if (!unmute)
             {
                 // invert the flags 
-                mf = (MuteFlags)((int)MuteFlags.All - (int)mf);
+                mf = (MuteFlags) ((int) MuteFlags.All - (int) mf);
             }
             // if flags found
             if (argsUsed > 0)
@@ -132,11 +135,12 @@ namespace Cogbot.Actions.Communication
                     {
                         mt = MuteType.Resident;
                     }
-                    if (mf == MuteFlags.All) chat.RemoveMuteListEntry(id, null); else chat.UpdateMuteListEntry(mt, id, null, mf);
-                    
+                    if (mf == MuteFlags.All) chat.RemoveMuteListEntry(id, null);
+                    else chat.UpdateMuteListEntry(mt, id, null, mf);
+
                     nfound++;
                     AddSuccess(verb + " " + muteName + " " + prim + " " + id + ".");
-                }                
+                }
                 if (nfound > 0)
                 {
                     chat.RequestMuteList();

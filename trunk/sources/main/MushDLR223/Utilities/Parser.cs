@@ -21,55 +21,61 @@ namespace MushDLR223.ScriptEngines
             return TryGetValue(map, key, out res) && (bool)res;
         }
 
-        public static bool TryGetValue<T>(IDictionary<string, T> map, string name, out T res)
+        public static bool TryGetValue<T>(IDictionary<string, T> map, string key, out T res)
         {
-            if (map.TryGetValue(name, out res)) return true;
-            string nameToLower = name.ToLower();
-            if (nameToLower != name && map.TryGetValue(nameToLower, out res)) return true;
-            var name2 = ToCamelCase(name);
-            if (name2 != name && map.TryGetValue(name2, out res)) return true;
+            key = key.Trim("-+= :\"'".ToCharArray());
+            if (map.TryGetValue(key, out res)) return true;
+            string nameToLower = key.ToLower();
+            if (nameToLower != key && map.TryGetValue(nameToLower, out res)) return true;
+            var name2 = ToCamelCase(key);
+            if (name2 != key && map.TryGetValue(name2, out res)) return true;
             return false;
         }
-        public static object GetValue(IDictionary<string, object> map, string name)
+        public static object GetValue(IDictionary<string, object> map, string key)
         {
             object res;
-            if (TryGetValue(map, name, out res)) return res;
+            if (TryGetValue(map, key, out res)) return res;
             return null;
         }
 
         static readonly Dictionary<string, string> CamelCache = new Dictionary<string, string>();
         static readonly Dictionary<string, string> PrologCache = new Dictionary<string, string>();
-        public static string ToCase(string name, Dictionary<string, string> cache, Func<string, string> toCase)
+        public static string ToCase(string key, Dictionary<string, string> cache, Func<string, string> toCase)
         {
             lock (cache)
             {
                 string camel;
-                if (cache.TryGetValue(name, out camel))
+                if (cache.TryGetValue(key, out camel))
                 {
                     return camel;
                 }
-                camel = toCase(name);
-                cache[name] = camel;
+                camel = toCase(key);
+                cache[key] = camel;
                 return camel;
             }
         }
-        public static string ToCamelCase(string name)
+        public static string ToMapKey(string key)
         {
-            return ToCase(name, CamelCache, ToCamelCase0);
+            key = key.Trim("-+= :\"'".ToCharArray());
+            return ToCamelCase(key);
         }
-        public static string ToCamelCase0(string name)
+        public static string ToCamelCase(string key)
+        {
+            return ToCase(key, CamelCache, ToCamelCase0);
+        }
+        public static string ToCamelCase0(string key)
         {
 
-            if (name.Contains("-"))
+            if (key.Contains("-"))
             {
                 // LISPY
-                name = name.ToLower();
+                key = key.ToLower();
             }
-            char[] camelToCharArray = name.ToCharArray();
+            char[] camelToCharArray = key.ToCharArray();
             var ch = camelToCharArray[0];
             if (Char.IsUpper(ch))
             {
-                return name;
+                return key;
             }
             StringBuilder sb = new StringBuilder(camelToCharArray.Length);
             sb.Append(Char.ToUpper(ch));
@@ -89,9 +95,9 @@ namespace MushDLR223.ScriptEngines
             }
             return sb.ToString();
         }
-        public static string ToPrologCase(string name)
+        public static string ToPrologCase(string key)
         {
-            return ToCase(name, PrologCache, ToPrologCase0);
+            return ToCase(key, PrologCache, ToPrologCase0);
         }
         public static string ToPrologCase0(string pn)
         {
@@ -154,25 +160,43 @@ namespace MushDLR223.ScriptEngines
             return new Dictionary<string, object>();
         }
 
-        public string[] GetProperty(string loc)
+        public string[] GetProperty(string key)
         {
             string[] args;
-            if (GetAfter(loc, out args)) return args;
-            return tokens;
+            object obj;
+            object value = this[key];
+            if (value is string[])
+            {
+                return (string[]) value;
+            }
+            if (value is string)
+            {
+                return ParseArguments((string) value);
+            }
+            int at;
+            int len;
+            int keyLen;
+            Type gpt = null;
+            int valueLen = ValueLen(key, gpt);
+            if (TryGetValueInt(key, gpt, out value, out at, out len, out keyLen))
+            {
+                return GetRange(at + keyLen, valueLen);
+            } 
+            return new string[0];
+            //return tokens;
         }
 
         const int MISSING = -1;
         protected int StartArg;
 
-        public T GetValue<T>(string Param)
+        public T GetValue<T>(string key)
         {
-            Param = ToKey(Param);
-            return (T)ParamMap[Param];
+            return (T) ChangeType(GetValue(ParamMap, key), typeof (T));
         }
-        public void SetValue<T>(string Param, T value)
+
+        public void SetValue<T>(string key, T value)
         {
-            Param = ToKey(Param);
-            ParamMap[Param] = value;
+            this[key] = value;
         }
 
         public static string[] ParseArguments(string str)
@@ -328,10 +352,9 @@ namespace MushDLR223.ScriptEngines
             return s;
         }
 
-        readonly string[] preps = { "of", "to", "in", "for", "with", "as", "by", "at", "from", "on", "is" };
+        //readonly string[] preps = { "of", "to", "in", "for", "with", "as", "by", "at", "from", "on", "is" };
 
         public IDictionary<string, object> ParamMap;
-        public string objectPhrase;
         public string str;
         public string[] tokens;
 
@@ -348,26 +371,37 @@ namespace MushDLR223.ScriptEngines
             get { return tokens[i]; }
         }
 
-        virtual public string this[string Param]
+        virtual public object SyncRoot
         {
             get
             {
-                Param = ToKey(Param);
-                object obj;
-                if (!ParamMap.TryGetValue(Param, out obj) || ReferenceEquals(null, obj))
+                return (object)ParamMap ?? this;
+            }
+        }
+        virtual public object this[string key]
+        {
+            get
+            {
+                lock (SyncRoot)
                 {
-                    
-                    return null;
+                    return GetValue(ParamMap, key);
                 }
-                return obj.ToString();
             }
             set
             {
-                Param = ToKey(Param);
-                ParamMap[Param] = value;
+                lock (SyncRoot)
+                {
+                    ParamMap[ToMapKey(key)] = value;
+                }
             }
         }
-
+        virtual public string GetString(string key)
+        {
+            EnsurePreParsed();
+            var v = this[key];
+            if (v != null) return "" + v;
+            return Rejoin(GetProperty(key), 0);
+        }
         public Parser(string[] Args)
             : this(Args, Args == null ? null : Rejoin(Args, 0))
         {
@@ -395,22 +429,24 @@ namespace MushDLR223.ScriptEngines
             str = _str;
             tokens = tokes;
             ParamMap = new Dictionary<string, object>(); // new NameValueCollection();
-            objectPhrase = "";
 
             if (tokens != null || tokes.Length > 0)
             {
                 PrepTokens();
             }
         }
-
+        bool prepedTokens;            
         private void PrepTokens()
         {
+            if (tokens == null || tokens.Length == 0) return;
+            if (prepedTokens) return;
+            prepedTokens = true;            
             string currentPrep = "";
             // sometimes ParseArgumetns throw exception
 
             bool firstTok = true;
 
-            string lastPrep = null;
+            string lastKey = null;
             for (int i = 0; i < tokens.Length; ++i)
             {
                 string prep = tokens[i];
@@ -432,30 +468,30 @@ namespace MushDLR223.ScriptEngines
                     if (lastChar == '-')
                     {
                         prep = prep.Substring(0, lenM1);
-                        Add(ToKey(prep), "False");
+                        Add(prep, "False");
                         continue;
                     }
                     if (lastChar == '+')
                     {
                         prep = prep.Substring(0, lenM1);
-                        Add(ToKey(prep), "True");
+                        Add(prep, "True");
                         continue;
                     }
 
                     if (prep.StartsWith("--"))
                     {
-                        Add(ToKey(prep), "True");
-                        lastPrep = ToKey(prep);
+                        Add(prep, "True");
+                        lastKey = prep;
                         continue;
                     }
                     else
                     {
-                        if (lastPrep != null)
+                        if (lastKey != null)
                         {
-                            Add(lastPrep, prep);
+                            Add(lastKey, prep);
                         }
                     }
-                    lastPrep = null;
+                    lastKey = null;
                 }
 
 
@@ -471,9 +507,9 @@ namespace MushDLR223.ScriptEngines
                     }
                 }
 
-                if (Array.IndexOf(preps, prep) >= 0 || prep.StartsWith("-"))
+                if (prep.StartsWith("-"))
                 {
-                    currentPrep = ToKey(prep);
+                    currentPrep = prep;
                     firstTok = true;
                 }
 
@@ -481,26 +517,24 @@ namespace MushDLR223.ScriptEngines
                 {
                     if (currentPrep == "")
                     {
-                        if (!firstTok)
-                            objectPhrase += " ";
-                        objectPhrase += prep;
-                        firstTok = false;
                     }
                     else
                     {
-                        EnsurePrepKey(currentPrep);
-                        if (!firstTok)
-                            ParamMap[currentPrep] += " ";
-                        ParamMap[currentPrep] += prep;
+
+                        EnsurePrepKeyAsString(currentPrep);
+                        if (!firstTok) 
+                            SetValue(currentPrep, GetString(currentPrep) + " " + prep);
+                        else
+                            SetValue(currentPrep, prep);
                         firstTok = false;
                     }
                 }
             }       
         }
 
-        private void EnsurePrepKey(string prep)
+        private void EnsurePrepKeyAsString(string key)
         {
-            if (!ParamMap.ContainsKey(prep)) ParamMap[prep] = String.Empty;
+            if (!ParamMap.ContainsKey(ToMapKey(key))) ParamMap[ToMapKey(key)] = "";
         }
 
         public static Parser ParseArgs(string args)
@@ -536,11 +570,11 @@ namespace MushDLR223.ScriptEngines
             return Parser.ParseArguments(command);
         }
 
-        private bool ContainsKey(string k)
+        public bool ContainsKey(string key)
         {
             int keyLen;
-            if (ParamMap.ContainsKey(k)) return true;
-            return IndexOf(k, false, out keyLen) != MISSING;
+            if (ParamMap.ContainsKey(ToMapKey(key))) return true;
+            return IndexOf(key, false, out keyLen) != MISSING;
         }
 
         private void AddTrue(string ks)
@@ -555,31 +589,37 @@ namespace MushDLR223.ScriptEngines
             if (IsFalseString(v)) return false;
             return true;
         }
-        private bool IsFalseString(string v)
+        private static bool IsFalseString(string v)
         {
-            if (String.IsNullOrEmpty(v)) return false;
+            if (v == null) return false;
+            if (v == "")
+            {
+                return true;
+            }
             v = v.ToLower();
-            if (v == "no" || v == "false" || v == "nil" || v.StartsWith("-")) return true;
+            if (v.StartsWith("no") || v == "false" || v == "nil" || v.StartsWith("-")) return true;
             return false;
         }
 
-        private void Add(string k, string v)
+        private void Add(string key, string v)
         {
-            k = ToKey(k);
-            ParamMap[k] = v;
+            this[key] = v;
         }
 
-        public static string ToKey(string k)
+        public static string ToKey(string key)
         {
-            k = k.Trim("-+= :\"'".ToCharArray()).Replace(" ", "_").ToLower();
-            return k;
+            key = key.Trim("-+= :\"'".ToCharArray()).Replace(" ", "_");
+            return ToCamelCase(key);
+            return key.ToLower();
         }
 
         public bool IsTrue(string key)
         {
             if (ContainsKey(key))
             {
-                if (!IsTrueString(this[key])) return false;
+                object value = this[key];
+                if (value is bool) return (bool) value;
+                if (!IsTrueString("" + value)) return false;
                 return true;
             }
             return false;
@@ -588,8 +628,7 @@ namespace MushDLR223.ScriptEngines
         public bool ContainsFlag(string key)
         {
             EnsurePreParsed();
-            key = ToKey(key);
-            if (ParamMap.ContainsKey(key)) return true;
+            if (ParamMap.ContainsKey(ToMapKey(key))) return true;
             int keyLen;
             return IndexOf(key, true, out keyLen) != MISSING && keyLen > 0;
         }
@@ -614,30 +653,36 @@ namespace MushDLR223.ScriptEngines
             }
             keyLen = 0;
             if (KeysRequired) return MISSING;
+            return GetIndex(key, requireKey);
+        }
+
+        private int GetIndex(string key, bool requireKey)
+        {
             int index = 0;
+            int optionalOrdinal = 0;
             EnsureVersionSelected();
             foreach (var param in VersionSelected.Parameters)
             {
                 if (index >= tokens.Length) return MISSING;
                 if (param.IsOptional)
                 {
-                    if (ToKey(tokens[index]) != key)
+                    if (!param.IsFlag) optionalOrdinal++;
+                    if (requireKey && ToKey(tokens[index]) != key)
                     {
                         continue;
+                    }
+                    if (optionalOrdinal > 1)
+                    {
+                        return MISSING;
                     }
                 }
                 if (ToKey(param.Key) == key)
                 {
-                    if (key == "command")
-                    {
-
-                    }
                     return index;
                 }
                 index++;
             }
             return MISSING;
-
         }
 
 
@@ -664,6 +709,7 @@ namespace MushDLR223.ScriptEngines
         private bool preparseStarted = false;
         private void EnsurePreParsed()
         {
+            PrepTokens();
             if (!EnsureVersionSelected()) return;
             if (preparseStarted) return;
             preparseStarted = true;
@@ -684,7 +730,7 @@ namespace MushDLR223.ScriptEngines
             foreach (NamedParam p in VersionSelected.Parameters)
             {
                 if (!p.IsOptional) continue;
-                string key = ToKey(p.Key);
+                string key = p.Key;
                 int keyLen;
                 int i = IndexOf(key, false, out keyLen);
                 if (i == MISSING)
@@ -696,12 +742,12 @@ namespace MushDLR223.ScriptEngines
                 len = LenCheck(startAt, len);
                 if (len == 0 && keyLen > 0)
                 {
-                    ParamMap[key] = IsTrueString(tokens[i]);
+                    this[key] = IsTrueString(tokens[i]);
                 }
                 else
                 {
-                    string[] arg = new List<string>(tokens).GetRange(startAt, len).ToArray();
-                    ParamMap[key] = ChangeType(arg, p.Type);
+                    string[] arg = GetRange(startAt, len);
+                    this[key] = ChangeType(arg, p.Type);
                 }
                 count++;
                 tokens = GetWithoutIndex(i, keyLen + len);
@@ -806,8 +852,14 @@ namespace MushDLR223.ScriptEngines
 
         public bool GetBoolean(string key, ref bool value)
         {
-            string v = this[key];
-            if (v == null) return false;
+            var v0 = this[key];
+            if (v0 == null) return false;
+            if (v0 is bool)
+            {
+                value = (bool) v0;
+                return true;
+            }
+            var v = "" + v0;
             if (IsFalseString(v))
             {
                 value = false;
@@ -850,20 +902,31 @@ namespace MushDLR223.ScriptEngines
         {
             return ScriptManager.ChangeType(value, t);
         }
-
         public bool TryGetValue<T>(string key, out T value)
+        {
+            object obj;
+            if (!TryGetValueOfType(key, typeof (T), out obj))
+            {
+                value = default(T);
+                return false;
+            }
+            value = ChangeType<T>(obj);
+            return true;
+        }
+
+        public bool TryGetValueOfType(string key, Type t, out object value)
         {
             EnsurePreParsed();
             object obj;
-            if (ParamMap.TryGetValue(key, out obj))
+            if (ParamMap.TryGetValue(ToMapKey(key), out obj))
             {
-                value = (T) obj;
+                value = ChangeType(obj, t);
                 return true;
             }
             int len;
             int at;
             int keyLen;
-            if (TryGetValueInt<T>(key, out value, out at, out len, out keyLen))
+            if (TryGetValueInt(key, t, out value, out at, out len, out keyLen))
             {
                 return true;
             }
@@ -878,14 +941,14 @@ namespace MushDLR223.ScriptEngines
                 return false;
             }
             len = LenCheck(StartArg, len);
-            value = ChangeType<T>(GetRange(StartArg, len));
+            value = ChangeType(GetRange(StartArg, len), t);
             StartArg += len;
             return true;
         }
 
         private string[] GetRange(int start, int len)
         {
-            if (len < 0) len = LenCheck(StartArg, len);
+            if (len < 0) len = LenCheck(start, len);
             return new List<string>(tokens).GetRange(start, len).ToArray();
         }
 
@@ -894,8 +957,10 @@ namespace MushDLR223.ScriptEngines
             int len;
             int at;
             int keyLen;
-            if (TryGetValueInt(key, out value, out at, out len, out keyLen))
+            object obj;
+            if (TryGetValueInt(key, typeof(T), out obj, out at, out len, out keyLen))
             {
+                value = ChangeType<T>(obj);
                 KeysRequired = true;
                 return true;
             }
@@ -909,45 +974,47 @@ namespace MushDLR223.ScriptEngines
             return true;
         }
 
-        public bool TryGetValueWithout<T>(string key, out T value, out string[] strings)
+        public bool TryGetValueWithout<T>(string key, out T value, bool modify, out string[] argsWithout)
         {
             int len;
             int at;
             int keyLen;
-            if (!TryGetValueInt(key, out value, out at, out len, out keyLen))
+            object obj;
+            if (!TryGetValueInt(key, typeof(T), out obj, out at, out len, out keyLen))
             {
-                strings = tokens;
+                argsWithout = tokens;
+                value = default(T);
                 return false;
             }
             else
             {
-                ModArgs = strings = GetWithoutIndex(at, len + keyLen);
+                value = ChangeType<T>(obj);
+                argsWithout = GetWithoutIndex(at, len + keyLen);
+                if (modify) tokens = argsWithout;
                 return true;
             }
         }
 
-        public bool TryGetValueInt<T>(string key, out T value, out int found, out int len, out int keyLen)
+        private bool TryGetValueInt(string key, Type t, out object value, out int found, out int len, out int keyLen)
         {
             EnsurePreParsed();
             key = ToKey(key);
             object ovalue;
             found = IndexOf(key, false, out keyLen);
-            len = ValueLen(key, typeof(T));
-            if (ParamMap.TryGetValue(key, out ovalue))
+            len = ValueLen(key, t);
+            if (ParamMap.TryGetValue(key, out value))
             {
-                value = ChangeType<T>(ovalue);
                 return true;
             }
             if (found == MISSING)
             {
-                value = default(T);
+                value = null;
                 len = 0;
                 return false;
             }
             int startAt = found + keyLen;
             len = LenCheck(startAt, len);
-            string[] after = new List<string>(tokens).GetRange(startAt, len).ToArray();
-            value = ChangeType<T>(after);
+            value = GetRange(startAt, len);
             return true;
         }
 
@@ -969,6 +1036,7 @@ namespace MushDLR223.ScriptEngines
 
         private NamedParam GetParm(string key)
         {
+            key = ToKey(key);
             if (VersionSelected == null) return default(NamedParam);
             foreach (var param in VersionSelected.Parameters)
             {
@@ -1095,7 +1163,7 @@ namespace MushDLR223.ScriptEngines
                     continue;
                 }
                 if (argCurrent >= tokenLen) return;
-                string key = ToKey(param.Key);
+                string key = param.Key;
 
                 if (param.IsOptional)
                 {
@@ -1104,15 +1172,15 @@ namespace MushDLR223.ScriptEngines
                     {
                         if (wasBool)
                         {
-                            ParamMap[key] = false;
+                            this[key] = false;
                             continue;
                         }
-                        ParamMap[key] = null;
+                        this[key] = null;
                         continue;
                     }
                     if (wasBool)
                     {
-                        ParamMap[key] = true;
+                        this[key] = true;
                         argCurrent++;
                         continue;
                     }
@@ -1121,7 +1189,7 @@ namespace MushDLR223.ScriptEngines
                 int argsUsed;
                 object value = ParseArg(param, param.Type, tokens, argsStart, out argsUsed);
                 argCurrent += argsUsed;
-                ParamMap[key] = value;
+                this[key] = value;
             }
         }
 
@@ -1194,9 +1262,9 @@ namespace MushDLR223.ScriptEngines
         /// Indicates whether the current object is equal to another object of the same type.
         /// </summary>
         /// <returns>
-        /// true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
+        /// true if the current object is equal to the <paramref key="other"/> parameter; otherwise, false.
         /// </returns>
-        /// <param name="other">An object to compare with this object.
+        /// <param key="other">An object to compare with this object.
         ///                 </param>
         public bool Equals(KeyParams other)
         {
@@ -1209,8 +1277,8 @@ namespace MushDLR223.ScriptEngines
         /// <returns>
         /// true if the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>; otherwise, false.
         /// </returns>
-        /// <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:System.Object"/>. 
-        ///                 </param><exception cref="T:System.NullReferenceException">The <paramref name="obj"/> parameter is null.
+        /// <param key="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:System.Object"/>. 
+        ///                 </param><exception cref="T:System.NullReferenceException">The <paramref key="obj"/> parameter is null.
         ///                 </exception><filterpriority>2</filterpriority>
         public override bool Equals(object obj)
         {
@@ -1236,5 +1304,40 @@ namespace MushDLR223.ScriptEngines
     public interface ParseInfo
     {
         List<KeyParams> ParameterVersions { get; }
+    }
+
+    public class KeyStringComparer : IEqualityComparer<string>
+    {
+        #region Implementation of IEqualityComparer<string>
+
+        /// <summary>
+        /// Determines whether the specified objects are equal.
+        /// </summary>
+        /// <returns>
+        /// true if the specified objects are equal; otherwise, false.
+        /// </returns>
+        /// <param name="x">The first object of type <paramref name="T"/> to compare.
+        ///                 </param><param name="y">The second object of type <paramref name="T"/> to compare.
+        ///                 </param>
+        public bool Equals(string x, string y)
+        {
+            return Parser.ToMapKey(x) == Parser.ToMapKey(y);
+        }
+
+        /// <summary>
+        /// Returns a hash code for the specified object.
+        /// </summary>
+        /// <returns>
+        /// A hash code for the specified object.
+        /// </returns>
+        /// <param name="obj">The <see cref="T:System.Object"/> for which a hash code is to be returned.
+        ///                 </param><exception cref="T:System.ArgumentNullException">The type of <paramref name="obj"/> is a reference type and <paramref name="obj"/> is null.
+        ///                 </exception>
+        public int GetHashCode(string obj)
+        {
+            return Parser.ToMapKey(obj).GetHashCode();
+        }
+
+        #endregion
     }
 }

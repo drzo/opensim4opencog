@@ -2,14 +2,13 @@ using System;
 using Cogbot;
 using Cogbot.Actions;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
 {
     public class ShowEffectsCommand : Command, RegionMasterCommand, BotStatefullCommand, AsynchronousCommand
     {
-        bool ShowEffects = false;
+        private bool ShowEffects = false;
 
         public ShowEffectsCommand(BotClient testClient)
             : base(testClient)
@@ -18,7 +17,7 @@ namespace Cogbot.Actions.System
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Prints out information for every viewer effect that is received. Usage: showeffects [on/off]";
             Details = AddUsage("showeffects on", "Turn on effect listing");
@@ -41,39 +40,39 @@ namespace Cogbot.Actions.System
 /showeffects off",
                 "turn effects on, see some, turn off");
             ParameterVersions = CreateParamVersions(
-                CreateParams("on", typeof(bool), "turn on listing"),
-                CreateParams("off", typeof(bool), "turn off listing"));
+                CreateParams("on", typeof (bool), "turn on listing"),
+                CreateParams("off", typeof (bool), "turn off listing"));
             ResultMap = CreateParams(
-                "message", typeof(string), "if success was false, the reason why",
-                "success", typeof(bool), "true if we showed effects");
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if we showed effects");
             Category = CommandCategory.Other;
         }
 
-        void Avatars_ViewerEffectLookAt(object sender, ViewerEffectLookAtEventArgs e)
+        private void Avatars_ViewerEffectLookAt(object sender, ViewerEffectLookAtEventArgs e)
         {
             if (ShowEffects)
                 WriteLine(
-                "ViewerEffect [LookAt]: SourceID: {0} TargetID: {1} TargetPos: {2} Type: {3} Duration: {4} ID: {5}",
-                e.SourceID.ToString(), e.TargetID.ToString(), e.TargetPosition, e.LookType, e.Duration,
-                e.EffectID.ToString());
+                    "ViewerEffect [LookAt]: SourceID: {0} TargetID: {1} TargetPos: {2} Type: {3} Duration: {4} ID: {5}",
+                    e.SourceID.ToString(), e.TargetID.ToString(), e.TargetPosition, e.LookType, e.Duration,
+                    e.EffectID.ToString());
         }
 
-        void Avatars_ViewerEffectPointAt(object sender, ViewerEffectPointAtEventArgs e)
+        private void Avatars_ViewerEffectPointAt(object sender, ViewerEffectPointAtEventArgs e)
         {
             if (ShowEffects)
                 WriteLine(
-                "ViewerEffect [PointAt]: SourceID: {0} TargetID: {1} TargetPos: {2} Type: {3} Duration: {4} ID: {5}",
-                e.SourceID.ToString(), e.TargetID.ToString(), e.TargetPosition, e.PointType, e.Duration,
-                e.EffectID.ToString());
+                    "ViewerEffect [PointAt]: SourceID: {0} TargetID: {1} TargetPos: {2} Type: {3} Duration: {4} ID: {5}",
+                    e.SourceID.ToString(), e.TargetID.ToString(), e.TargetPosition, e.PointType, e.Duration,
+                    e.EffectID.ToString());
         }
 
-        void Avatars_ViewerEffect(object sender, ViewerEffectEventArgs e)
+        private void Avatars_ViewerEffect(object sender, ViewerEffectEventArgs e)
         {
             if (ShowEffects)
                 WriteLine(
-                "ViewerEffect [{0}]: SourceID: {1} TargetID: {2} TargetPos: {3} Duration: {4} ID: {5}",
-                e.Type, e.SourceID.ToString(), e.TargetID.ToString(), e.TargetPosition, e.Duration,
-                e.EffectID.ToString());
+                    "ViewerEffect [{0}]: SourceID: {1} TargetID: {2} TargetPos: {3} Duration: {4} ID: {5}",
+                    e.Type, e.SourceID.ToString(), e.TargetID.ToString(), e.TargetPosition, e.Duration,
+                    e.EffectID.ToString());
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -88,8 +87,10 @@ namespace Cogbot.Actions.System
                 if (args[0] == "on")
                 {
                     Client.Avatars.ViewerEffect += new EventHandler<ViewerEffectEventArgs>(Avatars_ViewerEffect);
-                    Client.Avatars.ViewerEffectPointAt += new EventHandler<ViewerEffectPointAtEventArgs>(Avatars_ViewerEffectPointAt);
-                    Client.Avatars.ViewerEffectLookAt += new EventHandler<ViewerEffectLookAtEventArgs>(Avatars_ViewerEffectLookAt);
+                    Client.Avatars.ViewerEffectPointAt +=
+                        new EventHandler<ViewerEffectPointAtEventArgs>(Avatars_ViewerEffectPointAt);
+                    Client.Avatars.ViewerEffectLookAt +=
+                        new EventHandler<ViewerEffectLookAtEventArgs>(Avatars_ViewerEffectLookAt);
                     ShowEffects = true;
                     return Success("Viewer effects will be shown on the console");
                 }
@@ -102,7 +103,7 @@ namespace Cogbot.Actions.System
             else
             {
                 return ShowUsage();
-        }
+            }
         }
 
         #region Implementation of IDisposable
@@ -114,8 +115,10 @@ namespace Cogbot.Actions.System
         public void Dispose()
         {
             Client.Avatars.ViewerEffect -= new EventHandler<ViewerEffectEventArgs>(Avatars_ViewerEffect);
-            Client.Avatars.ViewerEffectPointAt -= new EventHandler<ViewerEffectPointAtEventArgs>(Avatars_ViewerEffectPointAt);
-            Client.Avatars.ViewerEffectLookAt -= new EventHandler<ViewerEffectLookAtEventArgs>(Avatars_ViewerEffectLookAt);            
+            Client.Avatars.ViewerEffectPointAt -=
+                new EventHandler<ViewerEffectPointAtEventArgs>(Avatars_ViewerEffectPointAt);
+            Client.Avatars.ViewerEffectLookAt -=
+                new EventHandler<ViewerEffectLookAtEventArgs>(Avatars_ViewerEffectLookAt);
         }
 
         #endregion

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Cogbot.World;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Appearance
@@ -15,17 +14,17 @@ namespace Cogbot.Actions.Appearance
             Name = "attachments";
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Prints a list of the currently known agent attachments or on another avatar";
             Details = AddUsage(Name + " [agent-spec]", "no prim-spec then use $self");
             Category = CommandCategory.Appearance;
             Parameters = CreateParams(Optional("targets", typeof (AgentSpec), "the agents you wish to see " + Name));
             ResultMap = CreateParams(
-                "message", typeof(string), "if success was false, the reason why",
-                "list", typeof(SimObject), "attachments found",
-                "count", typeof(int), "attachments counts",
-                "success", typeof(bool), "true if command was successful");
+                "message", typeof (string), "if success was false, the reason why",
+                "list", typeof (SimObject), "attachments found",
+                "count", typeof (int), "attachments counts",
+                "success", typeof (bool), "true if command was successful");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

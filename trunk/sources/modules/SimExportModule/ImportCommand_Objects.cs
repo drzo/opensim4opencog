@@ -895,13 +895,15 @@ namespace SimExportModule
                         SimObject O = WorldObjects.GetSimObjectFromUUID(idp);
                         if (O == null)
                         {
-                            if (idp.ExternalData != null)
-                            {
-                                Failure("MISOBJ: ExternalData " + idp.ExternalData + " " + idp);
-                            } else
-                            {
-                                Failure("MISOBJ: " + idp);
-                            }
+                            /*                            if (idp.ExternalData != null)
+                                                        {
+                                                            Failure("MISOBJ: ExternalData " + idp.ExternalData + " " + idp);
+                                                        } else
+                                                        {
+                                                            Failure("MISOBJ: " + idp);
+ 
+                                                        }
+                             * */
                             continue;
                         }
                         parent = GetFromWorld(arglist, idp, O);

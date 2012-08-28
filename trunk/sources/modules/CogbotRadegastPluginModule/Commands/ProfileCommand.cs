@@ -16,6 +16,10 @@ namespace Cogbot.Actions.Agent
         {
 
             Name = "Profile";
+        }
+
+        override public void MakeInfo()
+        {
             Description = "Shows the Avatars profile in a UI component. Usage: profile <avatar>";
             Category = CommandCategory.Friends;
             AddVersion(CreateParams("agent", typeof(SimAvatar), "agent you are going to " + Name),

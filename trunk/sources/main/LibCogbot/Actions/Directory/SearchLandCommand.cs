@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using OpenMetaverse;
-
 // the Namespace used for all BotClient commands
 using MushDLR223.ScriptEngines;
 
@@ -27,24 +26,24 @@ namespace Cogbot.Actions.Search
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Searches for land for sale. for usage information type: searchland";
             Category = CommandCategory.Search;
             Details = AddUsage(Name + " [type] [max price] [min size]",
-                                  "\twhere [type] is one of: mainland, auction, estate, all\n" +
-                                  "\tif [max price] or [min size] are 0 that parameter will be ignored") +
-                    AddUsage(Name + " mainland 0 512",
-                                  "shows the lowest priced mainland that is larger than 512/m2");
+                               "\twhere [type] is one of: mainland, auction, estate, all\n" +
+                               "\tif [max price] or [min size] are 0 that parameter will be ignored") +
+                      AddUsage(Name + " mainland 0 512",
+                               "shows the lowest priced mainland that is larger than 512/m2");
             Parameters =
                 CreateParams(
                     "searchText", typeof (DirectoryManager.SearchTypeFlags), "search type flags",
                     "maxPrice", typeof (int), "max price",
                     "minSize", typeof (int), "min size");
             ResultMap = CreateParams(
-                "result", typeof(List<string>), "search results",
-                "message", typeof(string), "if success was false, the reason why",
-                "success", typeof(bool), "true if command was successful");
+                "result", typeof (List<string>), "search results",
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if command was successful");
         }
 
         /// <summary>
@@ -77,8 +76,11 @@ namespace Cogbot.Actions.Search
                 return ShowUsage();
 
             // initialize some default flags we'll use in the search
-            DirectoryManager.DirFindFlags queryFlags = DirectoryManager.DirFindFlags.SortAsc | DirectoryManager.DirFindFlags.PerMeterSort
-                | DirectoryManager.DirFindFlags.IncludeAdult | DirectoryManager.DirFindFlags.IncludePG | DirectoryManager.DirFindFlags.IncludeMature;
+            DirectoryManager.DirFindFlags queryFlags = DirectoryManager.DirFindFlags.SortAsc |
+                                                       DirectoryManager.DirFindFlags.PerMeterSort
+                                                       | DirectoryManager.DirFindFlags.IncludeAdult |
+                                                       DirectoryManager.DirFindFlags.IncludePG |
+                                                       DirectoryManager.DirFindFlags.IncludeMature;
 
             // validate the parameters passed
             if (int.TryParse(args[1], out maxPrice) && int.TryParse(args[2], out minSize))
@@ -123,7 +125,6 @@ namespace Cogbot.Actions.Search
         /// <param name="e"></param>
         private void Directory_DirLand(object sender, DirLandReplyEventArgs e)
         {
-
             foreach (DirectoryManager.DirectoryParcel searchResult in e.DirParcels)
             {
                 // add the results to the StringBuilder object that contains the results

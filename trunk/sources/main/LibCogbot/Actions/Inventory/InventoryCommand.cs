@@ -7,7 +7,6 @@ using System.Xml;
 using System.Xml.Serialization;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Inventory.Shell
@@ -20,6 +19,10 @@ namespace Cogbot.Actions.Inventory.Shell
         public InventoryCommand(BotClient testClient)
         {
             Name = "i";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Prints out inventory.";
             Category = CommandCategory.Inventory;
         }
@@ -34,22 +37,23 @@ namespace Cogbot.Actions.Inventory.Shell
             InventoryFolder rootFolder = Inventory.RootFolder;
             PrintFolder(rootFolder, result, 0);
 
-            return Success(result.ToString());;
+            return Success(result.ToString());
+            ;
         }
 
-        void PrintFolder(InventoryFolder f, StringBuilder result, int indent)
+        private void PrintFolder(InventoryFolder f, StringBuilder result, int indent)
         {
             List<InventoryBase> contents = Manager.FolderContents(f.UUID, Client.Self.AgentID,
-                true, true, InventorySortOrder.ByName, 10000);
+                                                                  true, true, InventorySortOrder.ByName, 10000);
 
             if (contents != null)
             {
                 foreach (InventoryBase i in contents)
                 {
-                    result.AppendFormat("{0}{1} ({2})\n", new String(' ', indent * 2), i.Name, i.UUID);
+                    result.AppendFormat("{0}{1} ({2})\n", new String(' ', indent*2), i.Name, i.UUID);
                     if (i is InventoryFolder)
                     {
-                        InventoryFolder folder = (InventoryFolder)i;
+                        InventoryFolder folder = (InventoryFolder) i;
                         PrintFolder(folder, result, indent + 1);
                     }
                 }

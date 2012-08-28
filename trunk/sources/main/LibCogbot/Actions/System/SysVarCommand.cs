@@ -10,52 +10,57 @@ using Cogbot.Utilities;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
 {
     public class SysVarCommand : Cogbot.Actions.Command, BotSystemCommand
     {
-        public SysVarCommand(BotClient client): base(client)
+        public SysVarCommand(BotClient client) : base(client)
         {
             Name = "sysvar";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Manipulates system variables." +
                           " These are global settings that affect Cogbot." +
                           "Many SysVars contain the word 'Maintain' (eg MaintainSounds). Generally this means" +
                           "Cogbot won't make a special request from the server to get information about this sort of thing" +
                           "and will provide information about it only if available" +
                           "For booleans anything but no or false (case insensitive) is true.";
-            AddVersion(CreateParams(Optional("save", typeof(string), "filename.xml to save to"),
-                                    Optional("load", typeof(string), "filename.xml to load from")),
+            AddVersion(CreateParams(Optional("save", typeof (string), "filename.xml to save to"),
+                                    Optional("load", typeof (string), "filename.xml to load from")),
                        "List all Sysvars and their settings");
             AddVersion(CreateParams(
                            "key", typeof (string), "substring to match sysvar names",
-                           Optional("value", typeof(object), "value to set")),
+                           Optional("value", typeof (object), "value to set")),
                        "Show sysvars matching key if value is supplied it tried to set those values");
 
             Details = AddExample("sysvar CanUseSit True", "allow the bot to sit on things") +
                       AddExample("sysvar CanUseSit no", "don't allow the bot to sit on things") +
                       AddExample("sysvar Maintain false",
-                              "set every sysvar that contains Maintain in it's name to false") +
+                                 "set every sysvar that contains Maintain in it's name to false") +
                       AddExample("sysvar MaintainEffectsDistance 8.0",
-                              "set the maximum distance to notice effects to 8.0");
+                                 "set the maximum distance to notice effects to 8.0");
 
 
             Category = CommandCategory.BotClient;
         }
 
-        public string SysVarHtml()
+        public void SysVarHtml(OutputDelegate writeIt)
         {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("<table><tr><th>Variable Name</th><th>current value</th><th>Description</th></tr>");
+            writeIt("<table><tr><th>Variable Name</th><th>current value</th><th>Description</th></tr>");
             foreach (var sv in GetSysVars())
             {
-                IKeyValuePair<string,object> svv = sv;
-                sb.AppendLine(string.Format("<tr name=\"{0}\" id='{0}'><td>{0}</td><td>{1}</td><td>{2}</td></tr>", Htmlize.NoEnts(svv.Key), Htmlize.NoEnts("" + svv.Value), Htmlize.NoEnts(svv.Comments)));
+                IKeyValuePair<string, object> svv = sv;
+                var t = (svv.Value ?? svv.Key).GetType().Name;
+                var t2 = svv.DebugInfo;
+                writeIt(string.Format("<tr name=\"{0}\" id='{0}'><td>{0}</td><td>{1}</td><td>{2}</td></tr>",
+                                            Htmlize.NoEnts(svv.Key), Htmlize.NoEnts("" + svv.Value),
+                                            Htmlize.NoEnts(svv.Comments)));
             }
-            sb.AppendLine("</table>");
-            return sb.ToString();
+            writeIt("</table>");
         }
 
         public int LoadSysVarHtml(Stream content)
@@ -105,7 +110,28 @@ namespace Cogbot.Actions.System
             string filename;
             if (args.TryGetValue("save", out filename))
             {
-                File.WriteAllText(filename,SysVarHtml());
+                FileStream w = null;
+                try
+                {
+                    w = File.OpenWrite(filename);
+                    StreamWriter sw = new StreamWriter(w);
+                    SysVarHtml((s, args0) =>
+                                   {
+                                       try
+                                       {
+                                           sw.WriteLine(DLRConsole.SafeFormat(s, args0));
+                                       }
+                                       catch (Exception)
+                                       { 
+                                           return;
+                                       }
+                                   });
+                }
+                finally
+                {
+                    if (w != null) w.Close();
+                    ;   
+                }
                 return Success("Wrote " + filename);
             }
             if (args.TryGetValue("load", out filename))
@@ -115,7 +141,9 @@ namespace Cogbot.Actions.System
             }
             if (args.ContainsFlag("htmldoc"))
             {
-                return Success(SysVarHtml());
+                StringBuilder sw = new StringBuilder(1024*900);
+                SysVarHtml((s, ags) => sw.AppendFormat(s, ags));
+                return Success(sw.ToString());
             }
 
             bool exactMatch = args.ContainsFlag("--exact");
@@ -145,21 +173,21 @@ namespace Cogbot.Actions.System
                 }
             }
             string value;
-            if (!args.TryGetValueOr("value", 1,  out value))
+            if (!args.TryGetValueOr("value", 1, out value))
             {
-                return Success("Found sysvars: " + found);             
+                return Success("Found sysvars: " + found);
             }
             int changed = 0;
-            foreach(var one in setThese)
+            foreach (var one in setThese)
             {
                 try
                 {
                     one.Value = value;
                     AddSuccess("Set sysvar: " + one.Key + " to " + one.Value);
                     changed++;
-                } catch(Exception e)
+                }
+                catch (Exception e)
                 {
-                    
                 }
             }
             return Success("set vars = " + changed);

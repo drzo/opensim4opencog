@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Land
@@ -13,6 +12,10 @@ namespace Cogbot.Actions.Land
         public ReturnObjectsOwnedCommand(BotClient testClient)
         {
             Name = "ReturnObjectsOwned";
+        }
+
+        public override void MakeInfo()
+        {
             Description = "Returns all prims with a specific owner. Usage: ReturnObjectsOwned [sim] parcelID Owner";
             Category = CommandCategory.Parcel;
         }
@@ -20,7 +23,8 @@ namespace Cogbot.Actions.Land
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 2)
-                return ShowUsage();// " selectobjects parcelID OwnerUUID (use parcelinfo to get ID, use parcelprimowners to get ownerUUID)";
+                return ShowUsage();
+                    // " selectobjects parcelID OwnerUUID (use parcelinfo to get ID, use parcelprimowners to get ownerUUID)";
             int argsUsed;
             Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
             int parcelID;
@@ -29,14 +33,19 @@ namespace Cogbot.Actions.Land
             int counter = 0;
             StringBuilder result = new StringBuilder();
             // test argument that is is a valid integer, then verify we have that parcel data stored in the dictionary
-            if (Int32.TryParse(args[argsUsed], out parcelID) && UUIDTryParse(args, argsUsed + 1, out ownerUUID, out argsUsed))
+            if (Int32.TryParse(args[argsUsed], out parcelID) &&
+                UUIDTryParse(args, argsUsed + 1, out ownerUUID, out argsUsed))
             {
-                Client.Parcels.ReturnObjects(CurSim, parcelID, ObjectReturnType.Owner, new List<UUID> { ownerUUID });
+                Client.Parcels.ReturnObjects(CurSim, parcelID, ObjectReturnType.Owner, new List<UUID> {ownerUUID});
                 return Success("returning parcel=" + parcelID + " sim=" + CurSim + " user=" + ownerUUID);
             }
             else
             {
-                return Failure(string.Format("Unable to find Parcel {0} in Parcels Dictionary, Did you run parcelinfo to populate the dictionary first?", args[0]));
+                return
+                    Failure(
+                        string.Format(
+                            "Unable to find Parcel {0} in Parcels Dictionary, Did you run parcelinfo to populate the dictionary first?",
+                            args[0]));
             }
         }
     }

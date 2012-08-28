@@ -18,6 +18,10 @@ namespace TheSimiansModule
             {
                 Client.DisplayNotificationInChat("SimBot: make sure you set SimObjectImpl:AffordinancesGuessSimObjectTypes = true;");
             }
+        }
+
+        public override void MakeInfo()
+        {
             Name = "simbot";
             Description = "Start World type AI.";
             Details = "simbot [on|start|stop|off|think|needs|info|load]";

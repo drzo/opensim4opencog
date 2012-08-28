@@ -2,12 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
-
 using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions
 {
-    class Logout : Command, BotSystemCommand
+    internal class Logout : Command, BotSystemCommand
     {
         public Logout(BotClient Client)
             : base(Client)
@@ -15,7 +14,7 @@ namespace Cogbot.Actions
             Name = "Logout";
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = "Logout from grid";
             AddVersion(CreateParams(), "logout the targeted bot");
@@ -32,6 +31,5 @@ namespace Cogbot.Actions
             }
             return Success("Was Logged out " + Client);
         }
-
     }
 }

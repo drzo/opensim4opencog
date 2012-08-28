@@ -5,7 +5,6 @@ using Cogbot.World;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
-
 // the Namespace used for all BotClient commands
 using MushDLR223.ScriptEngines;
 
@@ -15,7 +14,7 @@ namespace Cogbot.Actions.Friends
     /// Shows a list of friends
     /// </summary>
     public class RemoveFriendCommand : Command, BotPersonalCommand
-    {        
+    {
         /// <summary>
         /// Constructor for FriendsCommand class
         /// </summary>
@@ -27,12 +26,12 @@ namespace Cogbot.Actions.Friends
             TheBotClient = testClient;
         }
 
-        override public void MakeInfo()
+        public override void MakeInfo()
         {
             Description = Name + " from agent-spec.";
             Details = AddUsage(Name + " agent", Description);
             Category = CommandCategory.Friends;
-            Parameters = CreateParams("agent", typeof(UUID), "agent you are going to " + Name);
+            Parameters = CreateParams("agent", typeof (UUID), "agent you are going to " + Name);
         }
 
         /// <summary>
@@ -55,9 +54,9 @@ namespace Cogbot.Actions.Friends
                     continue;
                 }
                 WriteLine("TerminateFriendship: " + o);
-                Client.Friends.TerminateFriendship(o.ID);                
+                Client.Friends.TerminateFriendship(o.ID);
             }
-            return Success("Ran " + Name);           
+            return Success("Ran " + Name);
         }
     }
 }
