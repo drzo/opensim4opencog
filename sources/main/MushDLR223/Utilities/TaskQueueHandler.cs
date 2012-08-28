@@ -27,6 +27,7 @@ namespace MushDLR223.Utilities
         string ToDebugString(bool b);
         void Enqueue(ThreadStart thread);
         bool MatchesId(string id);
+        void Resume();
     }
     public class AAbortable : Abortable
     {
@@ -52,6 +53,18 @@ namespace MushDLR223.Utilities
             if (thread != null) thread.Abort();
             if (OnDeath != null) OnDeath(this);
         }
+
+        public void Resume()
+        {
+            if (tq != null) tq.Start();
+            if (thread != null)
+            {
+                {
+                    thread.Resume();
+                }
+            }
+        }
+
         public string Name
         {
             get
@@ -154,8 +167,13 @@ namespace MushDLR223.Utilities
 
         public void Enqueue(ThreadStart task)
         {
-            if (tq != null) tq.Enqueue(task);
+            if (tq != null)
+            {
+                tq.Enqueue(task);
+                return;
+            }
             throw new NotImplementedException();
+            thread = new Thread(task);
         }
 
         #region Implementation of IOwned
@@ -210,6 +228,11 @@ namespace MushDLR223.Utilities
         public bool MatchesId(string id)
         {
             return TaskQueueHandler.MatchesIdExtracted(id, Name);
+        }
+
+        public void Resume()
+        {
+            Start();
         }
 
         public static readonly OutputDelegate errOutput = DLRConsole.SYSTEM_ERR_WRITELINE;
