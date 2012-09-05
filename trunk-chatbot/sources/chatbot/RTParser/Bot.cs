@@ -1138,7 +1138,7 @@ namespace RTParser
             bool prev = isAcceptingUserInput;
             try
             {
-                isAcceptingUserInput = false;
+                //isAcceptingUserInput = false;
                 RelationMetaProps = new SettingsDictionary("chat.relationprops", this, null);
                 RegisterDictionary("meta", RelationMetaProps);
                 RegisterDictionary("metaprops", RelationMetaProps);
@@ -2211,7 +2211,7 @@ The AIMLbot program.
             bool printIt = false;
             lock (LoggedWords)
             {
-                printIt = LoggedWords.writeDebugLine(DLRConsole.DebugWriteLine, message, args);
+                printIt = LoggedWords.writeDebugLine(DLRConsole.SystemWriteLine, message, args);
             }
             //
             {
@@ -2276,7 +2276,30 @@ The AIMLbot program.
         }
 
         private List<string> _RuntimeDirectories;
-        public ICollectionRequester ObjectRequester;
+        ICollectionRequester _objr;
+        private readonly List<Action> PostObjectRequesterSet = new List<Action>();
+        public ICollectionRequester ObjectRequester
+        {
+            get
+            {
+                return _objr;
+            }
+            set
+            {
+                _objr = value;
+                if (value != null)
+                {
+                   lock(PostObjectRequesterSet)
+                   {
+                       foreach (var set in PostObjectRequesterSet)
+                       {
+                           set();
+                       }
+                       PostObjectRequesterSet.Clear();
+                   }
+                }
+            }
+        }
 
         #region Overrides of QuerySettings
 

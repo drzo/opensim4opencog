@@ -323,7 +323,7 @@ namespace RTParser
             writeLine(Environment.NewLine);
             writeLine("Botname: " + myName);
             writeLine(Environment.NewLine);
-            myBot.isAcceptingUserInput = false;
+            //myBot.isAcceptingUserInput = false;
             writeLine("-----------------------------------------------------------------");
             myBot.SetName(myName);
 

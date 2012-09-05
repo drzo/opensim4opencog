@@ -99,6 +99,12 @@ namespace RTParser
 
         private void ExternalIntern(string name, object value)
         {
+            if (_objr == null)
+            {
+                lock (PostObjectRequesterSet)
+                    PostObjectRequesterSet.Add(() => ScriptManager.AddSetting(ObjectRequester, BotID, name, value));
+                return;
+            }
             ScriptManager.AddSetting(ObjectRequester, BotID, name, value);
         }
 
