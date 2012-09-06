@@ -1731,6 +1731,36 @@ The AltAIMLbot program.
             myBehaviors.defineBehavior(name, BehaveXML);
         }
 #endregion
+
+        public SettingsDictionary GetDictionary(string type0)
+        {
+            if (type0 == "bot") return GlobalSettings;
+            if (type0 == "preds") return DefaultPredicates;
+            return GetUser(type0).Predicates;
+        }
+
+    private User GetUser(string type0)
+        {
+            lock (UsersByID)
+            {
+
+                User user;
+                if (UsersByID.TryGetValue(type0.ToLower(), out user))
+                {
+                    return user;
+                }
+                return new User(type0, this);
+            }
+        }
+
+    private readonly Dictionary<string, User> UsersByID = new Dictionary<string, User>();
+    public void AddUser(string id, User user)
+    {
+            lock (UsersByID)
+            {
+                UsersByID[id.ToLower()] = user;
+            }
+    }
     }
     public class myConst
     {

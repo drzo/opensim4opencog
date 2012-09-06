@@ -1,6 +1,7 @@
 using System;
 using System.Xml;
 using System.Text;
+using AltAIMLbot.Utils;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
@@ -40,14 +41,10 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "bot")
             {
-                if (this.templateNode.Attributes.Count == 1)
-                {
-                    if (this.templateNode.Attributes[0].Name.ToLower() == "name")
-                    {
-                        string key = this.templateNode.Attributes["name"].Value;
-                        return (string)this.bot.GlobalSettings.grabSetting(key);
-                    }
-                }
+                string name = GetAttribValue("name,var", null);
+                string type0 = GetAttribValue("type,dict", "bot");
+                SettingsDictionary dict = request.GetDictionary(type0) ?? bot.GlobalSettings;
+                return dict.grabSetting(name);
             }
             return string.Empty;
         }

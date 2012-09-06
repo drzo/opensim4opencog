@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Xml;
+using MushDLR223.Utilities;
 
 namespace AltAIMLbot.Utils 
 {
@@ -83,6 +84,15 @@ namespace AltAIMLbot.Utils
             XmlDocument temp = new XmlDocument();
             temp.LoadXml(outerXML);
             return temp.FirstChild;
+        }
+
+        public string GetAttribValue(string attributeName, string otherwise)
+        {
+            return GetAttribValue(templateNode, attributeName, otherwise);
+        }
+        public static string GetAttribValue(XmlNode templateNode, string attributeName, string otherwise)
+        {
+            return StaticXMLUtils.GetAttribValue(templateNode, attributeName, () => otherwise, null);
         }
         #endregion
     }

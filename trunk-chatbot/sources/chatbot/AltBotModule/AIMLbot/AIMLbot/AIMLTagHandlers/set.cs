@@ -1,6 +1,7 @@
 using System;
 using System.Xml;
 using System.Text;
+using AltAIMLbot.Utils;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
@@ -46,25 +47,19 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "set")
             {
-                if (this.bot.GlobalSettings.Count > 0)
+                string name = GetAttribValue("name,var", null);
+                string type0 = GetAttribValue("type,dict", "user");
+                SettingsDictionary dict = request.GetDictionary(type0) ?? this.user.Predicates;
+                string settingValue = templateNode.InnerText;
+                if (settingValue.Length > 0)
                 {
-                    if (this.templateNode.Attributes.Count == 1)
-                    {
-                        if (this.templateNode.Attributes[0].Name.ToLower() == "name")
-                        {
-                            if (this.templateNode.InnerText.Length > 0)
-                            {
-                                this.user.Predicates.addSetting(this.templateNode.Attributes[0].Value, this.templateNode.InnerText);
-                                return this.user.Predicates.grabSetting(this.templateNode.Attributes[0].Value);
-                            }
-                            else
-                            {
-                                // remove the predicate
-                                this.user.Predicates.removeSetting(this.templateNode.Attributes[0].Value);
-                                return string.Empty;
-                            }
-                        }
-                    }
+                    dict.addSetting(name, settingValue);
+                    return dict.grabSetting(name);
+
+                }
+                else
+                {
+                    dict.removeSetting(name);
                 }
             }
             return string.Empty;

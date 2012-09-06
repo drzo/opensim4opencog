@@ -18,7 +18,7 @@ namespace AltAIMLbot
 
         public static string startUpPath = null;
         public static Servitor ourServitor = null;
-        public static string serverRoot = "http://localhost:8123/";
+        public static string serverRoot = "http://CogbotServer:8123/";
         public static int serverPort = 8123;
         public static string kpfile = @".\wikilink\phraseScore";
         public static string wsfile = @".\wikilink\count.phrase.sense.txt";

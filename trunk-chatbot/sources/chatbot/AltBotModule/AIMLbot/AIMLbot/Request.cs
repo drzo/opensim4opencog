@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using AltAIMLbot.Utils;
 
 namespace AltAIMLbot
 {
@@ -229,5 +230,10 @@ namespace AltAIMLbot
             get { return (Request)this; }
         }
 
+        public SettingsDictionary GetDictionary(string type0)
+        {
+            if (type0 == "user") type0 = user.UserID;
+            return bot.GetDictionary(type0);
+        }
     }
 }

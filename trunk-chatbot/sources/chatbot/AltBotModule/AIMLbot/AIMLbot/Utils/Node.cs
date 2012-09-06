@@ -42,7 +42,7 @@ namespace AltAIMLbot.Utils
         /// <summary>
         /// The template (if any) associated with this node
         /// </summary>
-        public string template = string.Empty;
+        public List<OutputTemplate> templates;
 
         /// <summary>
         /// The score (if any) associated with this node
@@ -52,7 +52,7 @@ namespace AltAIMLbot.Utils
         /// <summary>
         /// The AIML source for the category that defines the template
         /// </summary>
-        public string filename = string.Empty;
+        //public string filename = string.Empty;
 
         /// <summary>
         /// The word that identifies this node to it's parent node
@@ -77,14 +77,22 @@ namespace AltAIMLbot.Utils
         {
             if (template.Length == 0)
             {
-                throw new XmlException("The category with a pattern: " + path + " found in file: " + filename + " has an empty template tag. ABORTING");
+                string warn = "The category with a pattern: " + path + " found in file: " + filename +
+                              " has an empty template tag.";
+                if (true)
+                {
+                    // give @warn
+                }
+                else
+                {
+                    throw new XmlException(warn + " ABORTING");
+                }
             }
 
             // check we're not at the leaf node
             if (path.Trim().Length == 0)
             {
-                this.template = template;
-                this.filename = filename;
+                this.AddTemplate(template, filename);
                 this.score = score;
                 return;
             }
@@ -107,7 +115,7 @@ namespace AltAIMLbot.Utils
             double newScore = score;
             double newScale = scale /4;
             double indexv = 1.0;
-            if ((firstWord == "<THAT>") || (firstWord == "<TOPIC>") || (firstWord == "<STATE>") || (firstWord == "<PATTERN>"))
+            if (IsSectionHeader(firstWord))
             {
                 // multiply by a significant amount for the big seperators
                 newScale = newScale/10;
@@ -126,7 +134,7 @@ namespace AltAIMLbot.Utils
             {
                 Node childNode = this.children[firstWord];
 
-                childNode.addCategory(newPath, template, filename,newScore,newScale);
+                childNode.addCategory(newPath, template, filename, newScore, newScale);
             }
             else
             {
@@ -160,8 +168,7 @@ namespace AltAIMLbot.Utils
             // check we're not at the leaf node
             if (path.Trim().Length == 0)
             {
-                myNode.template = template;
-                myNode.filename = filename;
+                myNode.AddTemplate(template, filename);
                 myNode.score = score;
                 pathDB.saveNode(absPath, myNode);
                 return;
@@ -186,7 +193,7 @@ namespace AltAIMLbot.Utils
             double newScore = score;
             double newScale = scale / 4;
             double indexv = 1.0;
-            if ((firstWord == "<THAT>") || (firstWord == "<TOPIC>") || (firstWord == "<STATE>") || (firstWord == "<PATTERN>"))
+            if (IsSectionHeader(firstWord))
             {
                 // multiply by a significant amount for the big seperators
                 newScale = newScale / 10;
@@ -225,10 +232,22 @@ namespace AltAIMLbot.Utils
 
         }
 
+        public void AddTemplate(string template, string filename1)
+        {
+            if (string.IsNullOrEmpty(template))
+            {
+                templates = null;
+                return;                
+            }
+            if (templates == null) templates = new List<OutputTemplate>();
+            templates.Insert(0, new OutputTemplate() {Template = template, filename = filename1});
+        }
+
         public void collectPaths(string inpath, List<string> collector)
         {
             string curWord = this.word;
             string ourPath = inpath + " " + curWord;
+            var template = FirstTemplate();
             if ((template != null) && (template.Length >1))
             {
                 // a leaf node
@@ -249,10 +268,24 @@ namespace AltAIMLbot.Utils
             }
 
         }
+
+        public string FirstTemplate()
+        {
+            if (templates == null || templates.Count == 0) return string.Empty;
+            string temp = templates[0].Template;
+            return "<template>" + temp + "</template>";
+        }
+        public string FirstFilename()
+        {
+            if (templates == null) return string.Empty;
+            return templates[0].filename;
+        }
+
         public void collectFullPaths(string inpath, List<string> collector)
         {
             string curWord = this.word;
             string ourPath = inpath + " " + curWord;
+            var template = FirstTemplate();
             if ((template != null) && (template.Length > 1))
             {
                 var encoded = HttpUtility.HtmlEncode(ourPath.Trim());
@@ -272,6 +305,7 @@ namespace AltAIMLbot.Utils
             string ourPath = inpath + " " + curWord;
             if (targetPath.StartsWith(ourPath.Trim()))
             {
+                var template = FirstTemplate();
                 if ((template != null) && (template.Length > 1))
                 {
                     var encoded = HttpUtility.HtmlEncode(ourPath.Trim());
@@ -306,7 +340,7 @@ namespace AltAIMLbot.Utils
                 string firstWord = Normalize.MakeCaseInsensitive.TransformInput(word);
                 double indexv = 1.0;
                 scale = scale / 4;
-                if ((firstWord == "<THAT>") || (firstWord == "<TOPIC>") || (firstWord == "<STATE>") || (firstWord == "<PATTERN>"))
+                if (IsSectionHeader(firstWord))
                 {
                     // multiply by a significant amount for the big seperators
                     scale = scale / 10;
@@ -321,6 +355,12 @@ namespace AltAIMLbot.Utils
             }
             return score;
         }
+
+        private static bool IsSectionHeader(string firstWord)
+        {
+            return (firstWord == "<THAT>") || (firstWord == "<TOPIC>") || (firstWord == "<STATE>") || (firstWord == "<PATTERN>");
+        }
+
         /// <summary>
         /// Navigates this node (and recusively into child nodes) for a match to the path passed as an argument
         /// and returns the score associated with the node
@@ -496,7 +536,7 @@ namespace AltAIMLbot.Utils
                     this.storeWildCard(path, wildcard);
                 }
                 query.TemplatePath = "";
-                return this.template;
+                return this.FirstTemplate();
             }
 
             // if we've matched all the words in the input sentence and this is the end
@@ -504,7 +544,7 @@ namespace AltAIMLbot.Utils
             if (path.Length == 0)
             {
                 query.TemplatePath = "";
-                return this.template;
+                return this.FirstTemplate();
             }
 
             // otherwise split the input into it's component words
@@ -543,14 +583,8 @@ namespace AltAIMLbot.Utils
                                 // added due to this match being the end of the line
                                 newWildcard.Remove(0, newWildcard.Length);
                                 break;
-                            case MatchState.That:
-                                query.ThatStar.Add(newWildcard.ToString());
-                                break;
-                            case MatchState.Topic:
-                                query.TopicStar.Add(newWildcard.ToString());
-                                break;
-                            case MatchState.State:
-                                query.StateStar.Add(newWildcard.ToString());
+                            default:
+                                GetStarCollector(query, matchstate).Add(newWildcard.ToString());
                                 break;
                         }
                     }
@@ -568,23 +602,7 @@ namespace AltAIMLbot.Utils
                 // with a "backwards" path: "topic <topic> that <that> user input"
                 // the "classic" path looks like this: "user input <that> that <topic> topic"
                 // but having it backwards is more efficient for searching purposes
-                MatchState newMatchstate = matchstate;
-                if (firstWord == "<THAT>")
-                {
-                    newMatchstate = MatchState.That;
-                }
-                else if (firstWord == "<TOPIC>")
-                {
-                    newMatchstate = MatchState.Topic;
-                }
-                else if (firstWord == "<STATE>")
-                {
-                    newMatchstate = MatchState.State;
-                }
-                else if (firstWord == "<PATTERN>")
-                {
-                    newMatchstate = MatchState.UserInput;
-                }
+                MatchState newMatchstate = GetNewMatchstate(firstWord, matchstate);
 
                 Node childNode = (Node)this.children[firstWord];
                 // move down into the identified branch of the GraphMaster structure using the new
@@ -598,24 +616,11 @@ namespace AltAIMLbot.Utils
                     {
                         // capture and push the star content appropriate to the matchstate if it exists
                         // and then clear it for subsequent wildcards
-                        switch (matchstate)
+                        List<string> getStarCollector = GetStarCollector(query, matchstate);
+                        if (getStarCollector != null)
                         {
-                            case MatchState.UserInput:
-                                query.InputStar.Add(newWildcard.ToString());
-                                newWildcard.Remove(0, newWildcard.Length);
-                                break;
-                            case MatchState.That:
-                                query.ThatStar.Add(newWildcard.ToString());
-                                newWildcard.Remove(0, newWildcard.Length);
-                                break;
-                            case MatchState.Topic:
-                                query.TopicStar.Add(newWildcard.ToString());
-                                newWildcard.Remove(0, newWildcard.Length);
-                                break;
-                            case MatchState.State:
-                                query.StateStar.Add(newWildcard.ToString());
-                                newWildcard.Remove(0, newWildcard.Length);
-                                break;
+                            getStarCollector.Add(newWildcard.ToString());
+                            newWildcard.Remove(0, newWildcard.Length);
                         }
                     }
                     query.TemplatePath = firstWord +" " + query.TemplatePath;
@@ -633,8 +638,7 @@ namespace AltAIMLbot.Utils
                 {
                     if (isWildPattern (s))
                     {
-                        string wildSense = s.Replace("*", "");
-                        if( matchesWildSense(wildSense ,firstWord,request ))
+                        if( matchesWildSense(s ,firstWord,request ))
                         {
                           // Treat like matching a wildcard
 
@@ -659,14 +663,8 @@ namespace AltAIMLbot.Utils
                                             // added due to this match being the end of the line
                                             newWildcard.Remove(0, newWildcard.Length);
                                             break;
-                                        case MatchState.That:
-                                            query.ThatStar.Add(newWildcard.ToString());
-                                            break;
-                                        case MatchState.Topic:
-                                            query.TopicStar.Add(newWildcard.ToString());
-                                            break;
-                                        case MatchState.State:
-                                            query.StateStar.Add(newWildcard.ToString());
+                                        default:
+                                            GetStarCollector(query, matchstate).Add(newWildcard.ToString());
                                             break;
                                     }
                                 }
@@ -704,14 +702,8 @@ namespace AltAIMLbot.Utils
                                 // added due to this match being the end of the line
                                 newWildcard.Remove(0, newWildcard.Length);
                                 break;
-                            case MatchState.That:
-                                query.ThatStar.Add(newWildcard.ToString());
-                                break;
-                            case MatchState.Topic:
-                                query.TopicStar.Add(newWildcard.ToString());
-                                break;
-                            case MatchState.State:
-                                query.StateStar.Add(newWildcard.ToString());
+                            default:
+                                GetStarCollector(query, matchstate).Add(newWildcard.ToString());
                                 break;
                         }
                     }
@@ -740,8 +732,7 @@ namespace AltAIMLbot.Utils
                 {
                     if (isWildPattern(s))
                     {
-                        string wildSense = s.Replace("*", "");
-                        if (matchesWildSense(wildSense, multiWord, request))
+                        if (matchesWildSense(s, multiWord, request))
                         {
                             // We found one so treat like the expanding multi-word "*" case
                             this.storeWildCard(splitPath[0], wildcard);
@@ -771,6 +762,28 @@ namespace AltAIMLbot.Utils
             wildcard = new StringBuilder();
             query.TemplatePath = "";
             return string.Empty;
+        }
+
+        private MatchState GetNewMatchstate(string firstWord, MatchState matchstate)
+        {
+            MatchState newMatchstate = matchstate;
+            if (firstWord == "<THAT>")
+            {
+                newMatchstate = MatchState.That;
+            }
+            else if (firstWord == "<TOPIC>")
+            {
+                newMatchstate = MatchState.Topic;
+            }
+            else if (firstWord == "<STATE>")
+            {
+                newMatchstate = MatchState.State;
+            }
+            else if (firstWord == "<PATTERN>")
+            {
+                newMatchstate = MatchState.UserInput;
+            }
+            return newMatchstate;
         }
 
         /// <summary>
@@ -807,7 +820,7 @@ namespace AltAIMLbot.Utils
                     this.storeWildCard(path, wildcard);
                 }
                 query.TemplatePath = "";
-                return this.template;
+                return this.FirstTemplate();
             }
 
             // if we've matched all the words in the input sentence and this is the end
@@ -815,7 +828,7 @@ namespace AltAIMLbot.Utils
             if (path.Length == 0)
             {
                 query.TemplatePath = "";
-                return this.template;
+                return this.FirstTemplate();
             }
 
             // otherwise split the input into it's component words
@@ -882,23 +895,7 @@ namespace AltAIMLbot.Utils
                 // with a "backwards" path: "topic <topic> that <that> user input"
                 // the "classic" path looks like this: "user input <that> that <topic> topic"
                 // but having it backwards is more efficient for searching purposes
-                MatchState newMatchstate = matchstate;
-                if (firstWord == "<THAT>")
-                {
-                    newMatchstate = MatchState.That;
-                }
-                else if (firstWord == "<TOPIC>")
-                {
-                    newMatchstate = MatchState.Topic;
-                }
-                else if (firstWord == "<STATE>")
-                {
-                    newMatchstate = MatchState.State;
-                }
-                else if (firstWord == "<PATTERN>")
-                {
-                    newMatchstate = MatchState.UserInput;
-                }
+                MatchState newMatchstate = GetNewMatchstate(firstWord, matchstate);
 
                 //Node childNode = (Node)this.children[firstWord];
                 Node childNode = fetchChild(absPath, firstWord, pathDB);
@@ -915,25 +912,9 @@ namespace AltAIMLbot.Utils
                     {
                         // capture and push the star content appropriate to the matchstate if it exists
                         // and then clear it for subsequent wildcards
-                        switch (matchstate)
-                        {
-                            case MatchState.UserInput:
-                                query.InputStar.Add(newWildcard.ToString());
-                                newWildcard.Remove(0, newWildcard.Length);
-                                break;
-                            case MatchState.That:
-                                query.ThatStar.Add(newWildcard.ToString());
-                                newWildcard.Remove(0, newWildcard.Length);
-                                break;
-                            case MatchState.Topic:
-                                query.TopicStar.Add(newWildcard.ToString());
-                                newWildcard.Remove(0, newWildcard.Length);
-                                break;
-                            case MatchState.State:
-                                query.StateStar.Add(newWildcard.ToString());
-                                newWildcard.Remove(0, newWildcard.Length);
-                                break;
-                        }
+                        List<string> StarCollector = GetStarCollector(query, matchstate);
+                        StarCollector.Add(newWildcard.ToString());
+                        newWildcard.Remove(0, newWildcard.Length);
                     }
                     query.TemplatePath = firstWord + " " + query.TemplatePath;
                     return result;
@@ -949,11 +930,10 @@ namespace AltAIMLbot.Utils
                 {
                     if (isWildPattern(s))
                     {
-                        string wildSense = s.Replace("*", "");
-                        if (matchesWildSense(wildSense, firstWord, request))
+                        if (matchesWildSense(s, firstWord, request))
                         {
                             // Treat like matching a wildcard
-                             Console.WriteLine ("A matchesWildSense({0},{1},{2})==true",wildSense, firstWord, request);
+                             Console.WriteLine ("A matchesWildSense({0},{1},{2})==true",s, firstWord, request);
                             // o.k. look for the path in the child node denoted by "*"
                             //Node childNode = (Node)this.children[s];
                             Node childNode = fetchChild(absPath, s, pathDB);
@@ -1061,10 +1041,9 @@ namespace AltAIMLbot.Utils
                 {
                     if (isWildPattern(s))
                     {
-                        string wildSense = s.Replace("*", "");
-                        if (matchesWildSense(wildSense, multiWord, request))
+                        if (matchesWildSense(s, multiWord, request))
                         {
-                            Console.WriteLine("B matchesWildSense({0},{1},{2})==true", wildSense, multiWord, request);
+                            Console.WriteLine("B matchesWildSense({0},{1},{2})==true", s, multiWord, request);
                             // We found one so treat like the expanding multi-word "*" case
                             this.storeWildCard(splitPath[0], wildcard);
 
@@ -1095,10 +1074,31 @@ namespace AltAIMLbot.Utils
             return string.Empty;
         }
 
+        private List<string> GetStarCollector(SubQuery query, MatchState matchstate)
+        {
+            List<string> StarCollector = null;
+            switch (matchstate)
+            {
+                case MatchState.UserInput:
+                    StarCollector = query.InputStar;
+                    break;
+                case MatchState.That:
+                    StarCollector = query.ThatStar;
+                    break;
+                case MatchState.Topic:
+                    StarCollector = query.TopicStar;
+                    break;
+                case MatchState.State:
+                    StarCollector = query.StateStar;
+                    break;
+            }
+            return StarCollector;
+        }
+
         public Node fetchChild(string myPath, string childWord, ExternDB pathDB)
         {
             string childPath = (myPath + " " + childWord).Trim();
-            Node childNode = pathDB.fetchNode(childPath,true);
+            Node childNode = pathDB.fetchNode(childPath, true);
             childNode.word = childWord;
             return childNode;
         }
@@ -1116,12 +1116,13 @@ namespace AltAIMLbot.Utils
             return false;
         }
 
-        bool isWildPattern(string s)
+        static bool isWildPattern(string s)
         {
             bool v = (s.StartsWith("*")) && (s.Length > 1);
             return v;
         }
-        bool matchesWildSense(string sense, string queryWord,Request request)
+
+        static bool matchesWildSense(string sense, string queryWord,Request request)
         {
             if (sense.Length == 0) return false;
             AltBot contextBot = request.bot;
@@ -1326,6 +1327,12 @@ namespace AltAIMLbot.Utils
         #endregion
 
         #endregion
+    }
+
+    public class OutputTemplate
+    {
+        public string Template;
+        public string filename;
     }
 
     public class ExternDB
@@ -1592,8 +1599,10 @@ namespace AltAIMLbot.Utils
                 myNode.childmax = 0;
 
                 scoredb[pslice].Get(absPath, out scoreStr);
-                templatedb[pslice].Get(absPath, out myNode.template);
-                filenamedb[pslice].Get(absPath, out  myNode.filename);
+                string t, f;
+                templatedb[pslice].Get(absPath, out t);
+                filenamedb[pslice].Get(absPath, out f);
+                myNode.AddTemplate(t,f);
                 //worddb.Get(absPath, out  myNode.word);
                 childcntdb[pslice].Get(absPath, out cntStr);
                 if (absPath.Length == 0)
@@ -1681,10 +1690,7 @@ namespace AltAIMLbot.Utils
                 //}
                 myNode.childrenStr = childrenStr;
 
-                if (myNode.template == null) myNode.template = "";
-                if (myNode.filename == null) myNode.filename = "";
-                if (myNode.word == null) myNode.word = "";
-                //if (myNode.childrenStr == null) myNode.childrenStr = "";
+                PrepNode(myNode);
 
                 //Save to local if it's needed
                 if ((trunk) || (myNode.childnum > 8))
@@ -1737,10 +1743,7 @@ namespace AltAIMLbot.Utils
 
                 // We are a writable node, in the trunk or flushing
 
-                if (myNode.template == null) myNode.template = "";
-                if (myNode.filename == null) myNode.filename = "";
-                if (myNode.word == null) myNode.word = "";
-                if (myNode.childrenStr == null) myNode.childrenStr = "";
+                PrepNode(myNode);
 
                 string childrenStr = "";
                 //foreach (string c in myNode.children.Keys)
@@ -1823,8 +1826,10 @@ namespace AltAIMLbot.Utils
                 {
                     trunk = trunk;
                 }
-                if (myNode.template.Length > 0) templatedb[pslice].Set(absPath, myNode.template);
-                if (myNode.filename.Length > 0) filenamedb[pslice].Set(absPath, myNode.filename);
+                var template = myNode.FirstTemplate();
+                if (template.Length > 0) templatedb[pslice].Set(absPath, template);
+                var filename = myNode.FirstFilename();
+                if (filename.Length > 0) filenamedb[pslice].Set(absPath, filename);
                 //if (myNode.word.Length > 0) worddb.Set(absPath, myNode.word);
                 if (myNode.score != 1.0) scoredb[pslice].Set(absPath, myNode.score.ToString());
                 //if (myNode.childnum > 0) 
@@ -1848,6 +1853,14 @@ namespace AltAIMLbot.Utils
                 
                 Console.WriteLine(e.StackTrace);
             }
+        }
+
+        private void PrepNode(Node myNode)
+        {
+            //if (myNode.template == null) myNode.template = "";
+            //if (myNode.filename == null) myNode.filename = "";
+            if (myNode.word == null) myNode.word = "";
+            if (myNode.childrenStr == null) myNode.childrenStr = "";
         }
     }
 }

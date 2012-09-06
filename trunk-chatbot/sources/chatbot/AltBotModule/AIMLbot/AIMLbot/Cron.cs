@@ -43,6 +43,8 @@ namespace AltAIMLbot
         [NonSerialized ]
         public AltBot myBot;
 
+        public static bool SuspendCrons;
+
         public Cron(AltBot deBot)
         { 
             myBot = deBot;
@@ -86,7 +88,7 @@ namespace AltAIMLbot
                     {
                         //Thread.Sleep(30000); // half a minute
                         Thread.Sleep(500); // half a second
-
+                        if (Cron.SuspendCrons) continue;
                         if (myBot.isAcceptingUserInput)
                         {
                             if ((!myBot.inCritical) && (!myBot.blockCron ))

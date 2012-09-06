@@ -48,8 +48,11 @@ namespace AltAIMLbot
         public  AltBot curBot;
         public  User curUser;
         public  Thread tmTalkThread = null;
+        public bool tmTalkEnabled = true;
         public  Thread tmFSMThread = null;
+        public bool tmFSMEnabled = true;
         public  Thread tmBehaveThread = null;
+        public bool tmBehaveEnabled = true;
 
         public  Thread myCronThread = null;
         public  string lastAIMLInstance = "";
@@ -134,7 +137,7 @@ namespace AltAIMLbot
             User myUser = new User(UserID, myBot);
 
             curUser = myUser;
-            myBot.isAcceptingUserInput = false;
+            //myBot.isAcceptingUserInput = false;
             myBot.inCritical = initialCritical;
 
             Console.WriteLine("Servitor startMtalkWatcher");
@@ -198,8 +201,12 @@ namespace AltAIMLbot
 
         public string respondToChat(string input)
         {
+            return respondToChat(input, tmBehaveEnabled);
+        }
+        public string respondToChat(string input, bool doHaviours)
+        {
             // Try the event first
-            if (curBot.myBehaviors.hasEventHandler("onchat"))
+            if (doHaviours && curBot.myBehaviors.hasEventHandler("onchat"))
             {
                 Console.WriteLine(" ************ FOUND ONCHAT ************");
                 curUser.Predicates.updateSetting("lastinput", input);
@@ -224,7 +231,7 @@ namespace AltAIMLbot
                 return curBot.lastBehaviorChatOutput;
             }
             // else try the named behavior
-            if (curBot.myBehaviors.definedBehavior("chatRoot"))
+            if (doHaviours && curBot.myBehaviors.definedBehavior("chatRoot"))
             {
                 curUser.Predicates.updateSetting("lastinput", input);
                 //curBot.lastBehaviorChatInput = input;
@@ -391,6 +398,7 @@ namespace AltAIMLbot
             while (true)
             {
                 Thread.Sleep(interval);
+                if (!tmFSMEnabled) continue;
                 try
                 {
                     if ((curBot.myFSMS != null) && (curBot.isAcceptingUserInput))
@@ -438,6 +446,7 @@ namespace AltAIMLbot
             while (true)
             {
                 Thread.Sleep(interval);
+                if (!tmBehaveEnabled) continue;
                 try
                 {
                     
@@ -509,7 +518,7 @@ namespace AltAIMLbot
                         {
                             Console.WriteLine("loadAIMLFromFiles: " + curAIMLClass);
                             Console.WriteLine("loadAIMLFromFiles: " + curAIMLInstance);
-                            curBot.isAcceptingUserInput = false;
+                            //curBot.isAcceptingUserInput = false;
                             //myCronThread.Abort(); //.Suspend();
                             //tmFSMThread.Abort(); //.Suspend();
                             //tmBehaveThread.Abort(); //.Suspend();
@@ -565,7 +574,7 @@ namespace AltAIMLbot
                 Thread.Sleep(interval);
                 updateTime();
                 // Tick the microThreader
-                if (myScheduler != null)
+                if (myScheduler != null && tmTalkEnabled)
                 {
                     myScheduler.Run();
                 }

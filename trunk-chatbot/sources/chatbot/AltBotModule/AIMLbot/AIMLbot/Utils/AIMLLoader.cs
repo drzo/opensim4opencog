@@ -69,7 +69,8 @@ namespace AltAIMLbot.Utils
             }
             else
             {
-                throw new FileNotFoundException("The directory specified as the path to the AIML files (" + path + ") cannot be found by the AIMLLoader object. Please make sure the directory where you think the AIML files are to be found is the same as the directory specified in the settings file.");
+                if (false) throw new FileNotFoundException("The directory specified as the path to the AIML files (" + path + ") cannot be found by the AIMLLoader object. Please make sure the directory where you think the AIML files are to be found is the same as the directory specified in the settings file.");
+                loadAIMLFile(path);
             }
         }
 
@@ -508,24 +509,24 @@ namespace AltAIMLbot.Utils
             }
             if (object.Equals(null, template))
             {
-                throw new XmlException("Missing template tag in the node with pattern: " + pattern.InnerText + " found in " + filename);
+                if (false) throw new XmlException("Missing template tag in the node with pattern: " + pattern.InnerText + " found in " + filename);
             }
+            string templateXML = InnerTextOrXML(template) ?? "";
 
-            string categoryPath = this.generatePath(node, topicName,stateNamePre,stateNamePost, false);
-
+            string categoryPath = this.generatePath(node, topicName, stateNamePre, stateNamePost, false);
             // o.k., add the processed AIML to the GraphMaster structure
             if (categoryPath.Length > 0)
             {
                 try
                 {
                     //this.bot.Graphmaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
-                    if(this.bot.rapStoreDirectory !=null)
+                    if (this.bot.rapStoreDirectory != null)
                     {
-                    Node.addCategoryDB("",categoryPath, template.OuterXml, filename, 1, 1, "", extDB);
+                        Node.addCategoryDB("", categoryPath, templateXML, filename, 1, 1, "", extDB);
                     }
                     else
                     {
-                        ourGraphMaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
+                        ourGraphMaster.addCategory(categoryPath, templateXML, filename, 1, 1);
                     }
                     // keep count of the number of categories that have been processed
                     this.bot.Size++;
@@ -558,22 +559,20 @@ namespace AltAIMLbot.Utils
             XmlNode pattern = this.FindNode("pattern", node);
             XmlNode that = this.FindNode("that", node);
 
-            string patternText;
-            string thatText = "*";
+            string patternText = InnerTextOrXML(pattern) ?? "";
+            string thatText = InnerTextOrXML(that) ?? "*";
+            return this.generatePath(patternText, thatText, topicName,stateNamePre,stateNamePost, isUserInput);
+        }
+
+        private static string InnerTextOrXML(XmlNode pattern)
+        {
             if (object.Equals(null, pattern))
             {
-                patternText = string.Empty;
+                return null;
             }
-            else
-            {
-                patternText = pattern.InnerText;
-            }
-            if (!object.Equals(null, that))
-            {
-                thatText = that.InnerText;
-            }
-
-            return this.generatePath(patternText, thatText, topicName,stateNamePre,stateNamePost, isUserInput);
+            var xo = pattern.InnerXml;
+            if (xo.Contains("<")) return xo;
+            return pattern.InnerText;
         }
 
         /// <summary>

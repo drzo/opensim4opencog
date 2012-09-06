@@ -1,7 +1,9 @@
 using System;
 using System.Xml;
 using System.Text;
-
+using AltAIMLbot.Utils;
+using MushDLR223.Utilities;
+using Unifiable = System.String;
 namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
@@ -45,16 +47,10 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "get")
             {
-                if (this.bot.GlobalSettings.Count > 0)
-                {
-                    if (this.templateNode.Attributes.Count == 1)
-                    {
-                        if (this.templateNode.Attributes[0].Name.ToLower() == "name")
-                        {
-                            return this.user.Predicates.grabSetting(this.templateNode.Attributes[0].Value);
-                        }
-                    }
-                }
+                string name = GetAttribValue("name,var", null);
+                string type0 = GetAttribValue("type,dict", "user");
+                SettingsDictionary dict = request.GetDictionary(type0) ?? this.user.Predicates;
+                return dict.grabSetting(name);
             }
             return string.Empty;
         }

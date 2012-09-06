@@ -38,18 +38,7 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "srai")
             {
-                string graphName = "*";
-                try
-                {
-                    if (this.templateNode.Attributes["graph"] != null)
-                    {
-                        graphName = this.templateNode.Attributes["graph"].Value;
-                    }
-                }
-                catch (Exception e)
-                {
-                    graphName = "*";
-                }
+                string graphName = GetAttribValue("graph", "*");
 
                 if (this.request.depth < this.request.depthMax)
                 {
@@ -57,16 +46,8 @@ namespace AltAIMLbot.AIMLTagHandlers
                     {
                         if (this.templateNode.Attributes.Count > 0)
                         {
-                            string myTopic = "";
-                            string myState = "";
-                            if (this.templateNode.Attributes["topic"] != null)
-                            {
-                                myTopic = this.templateNode.Attributes["topic"].Value;
-                            }
-                            if (this.templateNode.Attributes["state"] != null)
-                            {
-                                myState = this.templateNode.Attributes["state"].Value;
-                            }
+                            string myTopic = GetAttribValue("topic", "");
+                            string myState = GetAttribValue("state", "");
                             if ((myTopic.Length > 0) || (myState.Length > 0))
                             {
                                 // Extended SRAI with explicit topic and state attributes

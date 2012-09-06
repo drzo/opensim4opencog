@@ -105,6 +105,7 @@ namespace AltAIMLbot
         /// <param name="bot">the bot the user is connected to</param>
 		public User(string UserID, AltAIMLbot.AltBot bot)
 		{
+            bot.AddUser(UserID, this);
             if (UserID.Length > 0)
             {
                 this.id = UserID;
