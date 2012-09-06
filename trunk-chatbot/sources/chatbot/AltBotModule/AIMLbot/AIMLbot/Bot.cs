@@ -864,7 +864,7 @@ namespace AltAIMLbot
         /// <returns>the result to be output to the user</returns>
         public Result Chat(string rawInput, string UserGUID)
         {
-            Request request = new Request(rawInput, new User(UserGUID, this), this);
+            Request request = new Request(rawInput, GetUser(UserGUID), this);
             return this.Chat(request);
         }
 

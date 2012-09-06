@@ -34,5 +34,20 @@ namespace AltAIMLbot.Utils
         {
             root.addCategory(path, template, filename, score, scale);
         }
+
+        public void DisableFilename(string filename)
+        {
+            root.WithFilename(filename, false, false);
+        }
+        
+        public void EnableFilename(string filename)
+        {
+            root.WithFilename(filename, false, true);
+        }
+
+        public void UnloadFilename(string filename)
+        {
+            root.WithFilename(filename, true, false);
+        }
     }
 }

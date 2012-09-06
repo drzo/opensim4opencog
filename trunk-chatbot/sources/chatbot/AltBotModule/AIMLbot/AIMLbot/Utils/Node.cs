@@ -7,6 +7,7 @@ using System.Web;
 using System.IO;
 using LAIR.ResourceAPIs.WordNet;
 using LAIR.Collections.Generic;
+using MushDLR223.Utilities;
 using RaptorDB;
 using System.Linq;
 
@@ -272,13 +273,25 @@ namespace AltAIMLbot.Utils
         public string FirstTemplate()
         {
             if (templates == null || templates.Count == 0) return string.Empty;
-            string temp = templates[0].Template;
-            return "<template>" + temp + "</template>";
+            foreach (OutputTemplate list in templates)
+            {
+                if (list.disable) continue;
+                string temp = templates[0].Template;
+                if (temp.Length > 0) return "<template>" + temp + "</template>";
+            }
+            return string.Empty;
         }
+
+
         public string FirstFilename()
         {
-            if (templates == null) return string.Empty;
-            return templates[0].filename;
+            if (templates == null || templates.Count == 0) return string.Empty;
+            foreach (OutputTemplate list in templates)
+            {
+                if (list.disable) continue;
+                return list.filename;
+            }
+            return string.Empty;
         }
 
         public void collectFullPaths(string inpath, List<string> collector)
@@ -1327,12 +1340,44 @@ namespace AltAIMLbot.Utils
         #endregion
 
         #endregion
+
+        public void WithFilename(string filename, bool remove, bool enable)
+        {
+            if (children != null)
+                foreach (var c in children.Values)
+                {
+                    c.WithFilename(filename, remove, enable);
+                }
+            if (templates != null && templates.Count > 0)
+            {
+                foreach (OutputTemplate list in LockInfo.CopyOf(templates))
+                {
+                    if (list.IsFile(filename))
+                    {
+                        if (remove)
+                        {
+                            templates.Remove(list);
+                        }
+                        else
+                        {
+                            list.disable = !enable;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public class OutputTemplate
     {
         public string Template;
+        public bool disable;
         public string filename;
+
+        public bool IsFile(string s)
+        {
+            return filename.ToLower().Contains(s);
+        }
     }
 
     public class ExternDB
