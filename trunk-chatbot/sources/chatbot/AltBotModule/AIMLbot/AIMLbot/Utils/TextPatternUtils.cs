@@ -307,7 +307,7 @@ namespace AltAIMLbot.Utils
             //}
         }
 
-        private static bool IsWildCard(object unifiable)
+        public static bool IsWildCard(object unifiable)
         {
             throw new NotImplementedException();
         }

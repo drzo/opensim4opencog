@@ -4,7 +4,8 @@ using System.Xml;
 using System.IO;
 using System.Text;
 using System.Threading;
- 
+using MushDLR223.Utilities;
+
 
 namespace AltAIMLbot.Utils
 {
@@ -21,6 +22,8 @@ namespace AltAIMLbot.Utils
         private AltAIMLbot.AltBot bot;
         public string graphName="*";
         ExternDB extDB = null;
+        public static bool SeekOutAndRepair = false;
+
         #endregion
 
         /// <summary>
@@ -195,13 +198,18 @@ namespace AltAIMLbot.Utils
                 // Get a list of the nodes that are children of the <aiml> tag
                 // these nodes should only be either <topic> or <category>
                 // the <topic> nodes will contain more <category> nodes
-                XmlNodeList rootChildren = doc.DocumentElement.ChildNodes;
+                loadAIMLFromXML(doc.DocumentElement, filename);
+            }
+        }
+
+        public void loadAIMLFromXML(XmlNode doc, string filename)
+        {
+            {
+                XmlNodeList rootChildren = doc.ChildNodes;
 
                 // find the name of the graph or set to default "*"
-                string graphName = "*";
-                if ((doc.Attributes != null) && (doc.Attributes.Count == 1) && (doc.Attributes[0].Name == "graph"))
+                string graphName = StaticXMLUtils.GetAttribValue(doc, "graph,name", "*");                              
                 {
-                    graphName = doc.Attributes["name"].Value;
                     this.graphName = graphName;
                 }
                 if (this.bot.rapStoreDirectory != null)
@@ -414,15 +422,8 @@ namespace AltAIMLbot.Utils
         /// <param name="filename">the file from which this category was taken</param>
         private void processSer(XmlNode node, string filename)
         {
-            GraphMaster ourGraphMaster;
-            if (this.bot.Graphs.ContainsKey(this.graphName))
-            {
-                ourGraphMaster = this.bot.Graphs[this.graphName];
-            }
-            else
-            {
-                ourGraphMaster = this.bot.Graphmaster;
-            }
+            GraphMaster ourGraphMaster = this.bot.GetGraph(this.graphName) ?? this.bot.Graphmaster;
+
             XmlNode template = this.FindNode("template", node);
             string categoryPath = "";
             
@@ -493,15 +494,7 @@ namespace AltAIMLbot.Utils
             XmlNode pattern = this.FindNode("pattern", node);
             XmlNode template = this.FindNode("template", node);
 
-            GraphMaster ourGraphMaster;
-            if (this.bot.Graphs.ContainsKey(this.graphName ))
-            {
-                ourGraphMaster = this.bot.Graphs[this.graphName];
-            }
-            else
-            {
-                ourGraphMaster = this.bot.Graphmaster;
-            }
+            GraphMaster ourGraphMaster = this.bot.GetGraph(this.graphName) ?? this.bot.Graphmaster;
 
             if (object.Equals(null, pattern))
             {

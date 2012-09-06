@@ -52,7 +52,7 @@ namespace AltAIMLbot.Normalize
         {
             string marker = ApplySubstitutions.getMarker(5);
             string result = target;
-            foreach (string pattern in dictionary.SettingNames)
+            foreach (string pattern in dictionary.SettingNames0)
             {
                 string p2 = ApplySubstitutions.makeRegexSafe(pattern);
                 //string match = "\\b"+@p2.Trim().Replace(" ","\\s*")+"\\b";

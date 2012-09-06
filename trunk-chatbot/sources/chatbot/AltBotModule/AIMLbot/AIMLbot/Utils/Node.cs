@@ -793,7 +793,7 @@ namespace AltAIMLbot.Utils
             }
             else if (firstWord == "<PATTERN>")
             {
-                newMatchstate = MatchState.UserInput;
+                newMatchstate = MatchState.Pattern;
             }
             return newMatchstate;
         }
@@ -1030,7 +1030,7 @@ namespace AltAIMLbot.Utils
                 // capture and push the star content appropriate to the current matchstate
                 switch (matchstate)
                 {
-                    case MatchState.UserInput:
+                    case MatchState.Pattern:
                         GetStarCollector(query, matchstate).Add(newWildcard.ToString());
                         // added due to this match being the end of the line
                         newWildcard.Remove(0, newWildcard.Length);
@@ -1047,21 +1047,7 @@ namespace AltAIMLbot.Utils
         private List<string> GetStarCollector(SubQuery query, MatchState matchstate)
         {
             List<string> StarCollector = null;
-            switch (matchstate)
-            {
-                case MatchState.UserInput:
-                    StarCollector = query.InputStar;
-                    break;
-                case MatchState.That:
-                    StarCollector = query.ThatStar;
-                    break;
-                case MatchState.Topic:
-                    StarCollector = query.TopicStar;
-                    break;
-                case MatchState.State:
-                    StarCollector = query.StateStar;
-                    break;
-            }
+            StarCollector = query.GetStars(matchstate.ToString());
             return StarCollector;
         }
 

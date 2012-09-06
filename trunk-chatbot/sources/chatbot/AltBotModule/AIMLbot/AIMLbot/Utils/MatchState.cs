@@ -10,7 +10,7 @@ namespace AltAIMLbot.Utils
     /// </summary>
     public enum MatchState
     {
-        UserInput,
+        Pattern,
         That,
         Topic,
         State

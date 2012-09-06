@@ -16,6 +16,9 @@ using Aima.Core.Logic.Propositional.Algorithms;
 using Aima.Core.Logic.Propositional.Parsing;
 using Aima.Core.Logic.Propositional.Parsing.AST;
 using LAIR.ResourceAPIs.WordNet;
+using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
+using MushDLR223.Virtualization;
 
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
@@ -87,6 +90,14 @@ namespace AltAIMLbot
         /// A dictionary object that looks after all the settings associated with this bot
         /// </summary>
         public SettingsDictionary GlobalSettings;
+
+        public ISettingsDictionary AllUserPreds
+        {
+            get
+            {
+                return DefaultPredicates;
+            }
+        }
 
         /// <summary>
         /// A dictionary of all the gender based substitutions used by this bot
@@ -478,7 +489,16 @@ namespace AltAIMLbot
             AIMLLoader loader = new AIMLLoader(this);
             loader.loadAIMLFromXML(newAIML, filename);
         }
-
+        /// <summary>
+        /// Allows the bot to load a new XML version of some AIML
+        /// </summary>
+        /// <param name="newAIML">The XML document containing the AIML</param>
+        /// <param name="filename">The originator of the XML document</param>
+        public void loadAIMLFromXML(XmlNode newAIML, string filename)
+        {
+            AIMLLoader loader = new AIMLLoader(this);
+            loader.loadAIMLFromXML(newAIML, filename);
+        }
         public void logText(string msg)
         {
 
@@ -503,12 +523,12 @@ namespace AltAIMLbot
         {
             this.myCron = new Cron(this);
 
-            this.GlobalSettings = new SettingsDictionary(this);
-            this.GenderSubstitutions = new SettingsDictionary(this);
-            this.Person2Substitutions = new SettingsDictionary(this);
-            this.PersonSubstitutions = new SettingsDictionary(this);
-            this.InputSubstitutions = new SettingsDictionary(this);
-            this.DefaultPredicates = new SettingsDictionary(this);
+            this.GlobalSettings = new SettingsDictionary("bot", this);
+            this.GenderSubstitutions = new SettingsDictionary("substituions.gender", this);
+            this.Person2Substitutions = new SettingsDictionary("substituions.person2", this);
+            this.PersonSubstitutions = new SettingsDictionary("substituions.person", this);
+            this.InputSubstitutions = new SettingsDictionary("substituions.input", this);
+            this.DefaultPredicates = new SettingsDictionary("allusers",this);
             this.CustomTags = new Dictionary<string, TagHandler>();
             this.Graphmaster = new GraphMaster();
             this.Graphs = new Dictionary<string, AltAIMLbot.Utils.GraphMaster>();
@@ -720,8 +740,9 @@ namespace AltAIMLbot
         /// Log files have the form of yyyyMMdd.log.
         /// </summary>
         /// <param name="message">The message to log</param>
-        public void writeToLog(string message)
+        public void writeToLog(string message, params object[] args)
         {
+            message = DLRConsole.SafeFormat(message, args);
             Console.WriteLine("Log:" + message);
 
             this.LastLogMessage = message;
@@ -880,17 +901,10 @@ namespace AltAIMLbot
         /// <returns>the result to be output to the user</returns>
         public Result Chat(Request request,string graphID)
         {
-                GraphMaster ourGraphMaster;
-                if (Graphs.ContainsKey(graphID))
-                {
-                    ourGraphMaster = Graphs[graphID];
-                }
-                else
-                {
-                    ourGraphMaster = Graphmaster;
-                }
+            GraphMaster ourGraphMaster = this.GetGraph(graphID) ?? Graphmaster;
+            request.CurrentGraph = ourGraphMaster;
 
-                Result result = new Result(request.user, this, request);
+            Result result = new Result(request.user, this, request);
 
             lock (ExternDB.mylock)
             {
@@ -980,15 +994,15 @@ namespace AltAIMLbot
                     // grab the templates for the various sentences from the graphmaster
                     foreach (string path in result.NormalizedPaths)
                     {
-                        Utils.SubQuery query = new SubQuery(path);
+                        Utils.SubQuery query = new SubQuery(path, request);
                         if (chatDB == null)
                         {
-                            query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
+                            query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.Pattern, new StringBuilder());
                         }
                         else
                         {
                             Node dbGraphMaster = chatDB.fetchNode("", true);
-                            query.Template = dbGraphMaster.evaluateDB(path, query, request, MatchState.UserInput, new StringBuilder(), "", chatDB);
+                            query.Template = dbGraphMaster.evaluateDB(path, query, request, MatchState.Pattern, new StringBuilder(), "", chatDB);
                         }
                         //query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                         //query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
@@ -1056,7 +1070,7 @@ namespace AltAIMLbot
         {
             User imaginaryUser = new User("internal",this);
             Request request = new Request("", imaginaryUser, this);
-            Utils.SubQuery query = new SubQuery("");
+            Utils.SubQuery query = new SubQuery("", request);
             Result result = new Result(request.user, this, request);
  
             string outputSentence = this.processNode(templateNode, query, request, result, request.user);
@@ -1071,7 +1085,7 @@ namespace AltAIMLbot
         /// <param name="result">the result to be sent to the user</param>
         /// <param name="user">the user who originated the request</param>
         /// <returns>the output string</returns>
-        private string processNode(XmlNode node, SubQuery query, Request request, Result result, User user)
+        public string processNode(XmlNode node, SubQuery query, Request request, Result result, User user)
         {
             // check for timeout (to avoid infinite loops)
             if (request.StartedOn.AddMilliseconds(request.bot.TimeOut) < DateTime.Now)
@@ -1100,179 +1114,8 @@ namespace AltAIMLbot
             }
             else
             {
-                AIMLTagHandler tagHandler = null;
-                tagHandler = this.getBespokeTags(user, query, request, result, node);
-                if (object.Equals(null, tagHandler))
-                {
-                    //Console.WriteLine("  -- Process :" + tagName);
-                    switch (tagName)
-                    {
-                        case "bot":
-                            tagHandler = new AIMLTagHandlers.bot(this, user, query, request, result, node);
-                            break;
-                        case "condition":
-                            tagHandler = new AIMLTagHandlers.condition(this, user, query, request, result, node);
-                            break;
-                        case "date":
-                            tagHandler = new AIMLTagHandlers.date(this, user, query, request, result, node);
-                            break;
-                        case "formal":
-                            tagHandler = new AIMLTagHandlers.formal(this, user, query, request, result, node);
-                            break;
-                        case "gender":
-                            tagHandler = new AIMLTagHandlers.gender(this, user, query, request, result, node);
-                            break;
-                        case "get":
-                            tagHandler = new AIMLTagHandlers.get(this, user, query, request, result, node);
-                            break;
-                        case "gossip":
-                            tagHandler = new AIMLTagHandlers.gossip(this, user, query, request, result, node);
-                            break;
-                        case "id":
-                            tagHandler = new AIMLTagHandlers.id(this, user, query, request, result, node);
-                            break;
-                        case "input":
-                            tagHandler = new AIMLTagHandlers.input(this, user, query, request, result, node);
-                            break;
-                        case "javascript":
-                            tagHandler = new AIMLTagHandlers.javascript(this, user, query, request, result, node);
-                            break;
-                        case "learn":
-                            tagHandler = new AIMLTagHandlers.learn(this, user, query, request, result, node);
-                            break;
-                        case "lowercase":
-                            tagHandler = new AIMLTagHandlers.lowercase(this, user, query, request, result, node);
-                            break;
-                        case "person":
-                            tagHandler = new AIMLTagHandlers.person(this, user, query, request, result, node);
-                            break;
-                        case "person2":
-                            tagHandler = new AIMLTagHandlers.person2(this, user, query, request, result, node);
-                            break;
-                        case "random":
-                            tagHandler = new AIMLTagHandlers.random(this, user, query, request, result, node);
-                            break;
-                        case "sentence":
-                            tagHandler = new AIMLTagHandlers.sentence(this, user, query, request, result, node);
-                            break;
-                        case "set":
-                            tagHandler = new AIMLTagHandlers.set(this, user, query, request, result, node);
-                            break;
-                        case "size":
-                            tagHandler = new AIMLTagHandlers.size(this, user, query, request, result, node);
-                            break;
-                        case "sr":
-                            tagHandler = new AIMLTagHandlers.sr(this, user, query, request, result, node);
-                            break;
-                        case "srai":
-                            tagHandler = new AIMLTagHandlers.srai(this, user, query, request, result, node);
-                            break;
-                        case "star":
-                            tagHandler = new AIMLTagHandlers.star(this, user, query, request, result, node);
-                            break;
-                        case "system":
-                            tagHandler = new AIMLTagHandlers.system(this, user, query, request, result, node);
-                            break;
-                        case "that":
-                            tagHandler = new AIMLTagHandlers.that(this, user, query, request, result, node);
-                            break;
-                        case "thatstar":
-                            tagHandler = new AIMLTagHandlers.thatstar(this, user, query, request, result, node);
-                            break;
-                        case "think":
-                            tagHandler = new AIMLTagHandlers.think(this, user, query, request, result, node);
-                            break;
-                        case "topicstar":
-                            tagHandler = new AIMLTagHandlers.topicstar(this, user, query, request, result, node);
-                            break;
-                        case "uppercase":
-                            tagHandler = new AIMLTagHandlers.uppercase(this, user, query, request, result, node);
-                            break;
-                        case "version":
-                            tagHandler = new AIMLTagHandlers.version(this, user, query, request, result, node);
-                            break;
 
-
-                        case "push":
-                            tagHandler = new AIMLTagHandlers.push(this, user, query, request, result, node);
-                            break;
-                        case "pop":
-                            tagHandler = new AIMLTagHandlers.pop(this, user, query, request, result, node);
-                            break;
-                        case "postcache":
-                            tagHandler = new AIMLTagHandlers.postcache(this, user, query, request, result, node);
-                            break;
-                        case "refserver":
-                            tagHandler = new AIMLTagHandlers.refserver(this, user, query, request, result, node);
-                            break;
-                        case "pannouserver":
-                            tagHandler = new AIMLTagHandlers.pannouserver(this, user, query, request, result, node);
-                            break;
-                        case "trueknowledgeserver":
-                            tagHandler = new AIMLTagHandlers.trueknowledgeserver(this, user, query, request, result, node);
-                            break;
-                        case "wolframserver":
-                            tagHandler = new AIMLTagHandlers.wolframserver(this, user, query, request, result, node);
-                            break;
-                        case "filterqa":
-                            tagHandler = new AIMLTagHandlers.filterqa(this, user, query, request, result, node);
-                            break;
-                        case "summerize":
-                            tagHandler = new AIMLTagHandlers.summerize(this, user, query, request, result, node);
-                            break;
-
-                        case "inject":
-                            tagHandler = new AIMLTagHandlers.inject(this, user, query, request, result, node);
-                            break;
-                        case "chemsys":
-                            tagHandler = new AIMLTagHandlers.chemsys(this, user, query, request, result, node);
-                            break;
-                        case "nop":
-                            tagHandler = new AIMLTagHandlers.nop(this, user, query, request, result, node);
-                            break;
-                        case "scxml":
-                            tagHandler = new AIMLTagHandlers.scxml(this, user, query, request, result, node);
-                            break;
-                        case "btxml":
-                            tagHandler = new AIMLTagHandlers.btxml(this, user, query, request, result, node);
-                            break;
-                        case "say":
-                            tagHandler = new AIMLTagHandlers.say(this, user, query, request, result, node);
-                            break;
-                        case "sapi":
-                            tagHandler = new AIMLTagHandlers.sapi(this, user, query, request, result, node);
-                            break;
-                        case "satisfied":
-                            tagHandler = new AIMLTagHandlers.satisfied(this, user, query, request, result, node);
-                            break;
-                        case "behavior":
-                            tagHandler = new AIMLTagHandlers.behavior(this, user, query, request, result, node);
-                            break;
-                        case "rbehavior":
-                            tagHandler = new AIMLTagHandlers.rbehavior(this, user, query, request, result, node);
-                            break;
-                        case "rndint":
-                            tagHandler = new AIMLTagHandlers.rndint(this, user, query, request, result, node);
-                            break;
-                        case "rnddbl":
-                            tagHandler = new AIMLTagHandlers.rnddbl(this, user, query, request, result, node);
-                            break;
-                        case "crontag":
-                            tagHandler = new AIMLTagHandlers.crontag(this, user, query, request, result, node);
-                            break;
-                        case "subaiml":
-                            tagHandler = new AIMLTagHandlers.subaiml(this, user, query, request, result, node);
-                            break;
-                        case "template":
-                        case "li":
-                            tagHandler = new AIMLTagHandlers.format(this, user, query, request, result, node, null);
-                            break;
-
-                        default:
-                            tagHandler = null;
-                            break;
-                    }
-                }
+                AIMLTagHandler tagHandler = GetTagHandler(node, query, request, result, user, false);
                 if (object.Equals(null, tagHandler))
                 {
                     string debug = node.OuterXml;
@@ -1355,7 +1198,251 @@ namespace AltAIMLbot
             }
         }
 
-        /// <summary>
+        private AIMLTagHandler GetTagHandler(XmlNode node, SubQuery query, Request request, Result result, User user, bool liText)
+        {
+            AIMLTagHandler tagHandler = this.getBespokeTags(user, query, request, result, node);
+            string nodeNameLower = node.Name.ToLower();
+            if (object.Equals(null, tagHandler))
+            {
+                //Console.WriteLine("  -- Process :" + tagName);
+                { switch (nodeNameLower)
+                {
+                    case "bot":
+                        return new AIMLTagHandlers.bot(this, user, query, request, result, node);
+                        
+                    case "condition":
+                        return new AIMLTagHandlers.condition(this, user, query, request, result, node);
+                        
+                    case "date":
+                        return new AIMLTagHandlers.date(this, user, query, request, result, node);
+                        
+                    case "formal":
+                        return new AIMLTagHandlers.formal(this, user, query, request, result, node);
+                        
+                    case "gender":
+                        return new AIMLTagHandlers.gender(this, user, query, request, result, node);
+                        
+                    case "get":
+                        return new AIMLTagHandlers.get(this, user, query, request, result, node);
+                        
+                    case "gossip":
+                        return new AIMLTagHandlers.gossip(this, user, query, request, result, node);
+                        
+                    case "id":
+                        return new AIMLTagHandlers.id(this, user, query, request, result, node);
+                        
+                    case "input":
+                        return new AIMLTagHandlers.input(this, user, query, request, result, node);
+                        
+                    case "javascript":
+                        return new AIMLTagHandlers.javascript(this, user, query, request, result, node);
+                        
+                    case "learn":
+                        return new AIMLTagHandlers.learn(this, user, query, request, result, node);
+                        
+                    case "lowercase":
+                        return new AIMLTagHandlers.lowercase(this, user, query, request, result, node);
+                        
+                    case "person":
+                        return new AIMLTagHandlers.person(this, user, query, request, result, node);
+                        
+                    case "person2":
+                        return new AIMLTagHandlers.person2(this, user, query, request, result, node);
+                        
+                    case "random":
+                        return new AIMLTagHandlers.random(this, user, query, request, result, node);
+                        
+                    case "sentence":
+                        return new AIMLTagHandlers.sentence(this, user, query, request, result, node);
+                        
+                    case "set":
+                        return new AIMLTagHandlers.set(this, user, query, request, result, node);
+                        
+                    case "size":
+                        return new AIMLTagHandlers.size(this, user, query, request, result, node);
+                        
+                    case "sr":
+                        return new AIMLTagHandlers.sr(this, user, query, request, result, node);
+                        
+                    case "srai":
+                        return new AIMLTagHandlers.srai(this, user, query, request, result, node);
+                        
+                    case "star":
+                        return new AIMLTagHandlers.star(this, user, query, request, result, node);
+                        
+                    case "system":
+                        return new AIMLTagHandlers.system(this, user, query, request, result, node);
+                        
+                    case "that":
+                        return new AIMLTagHandlers.that(this, user, query, request, result, node);
+                        
+                    case "thatstar":
+                        return new AIMLTagHandlers.thatstar(this, user, query, request, result, node);
+                        
+                    case "think":
+                        return new AIMLTagHandlers.think(this, user, query, request, result, node);
+                        
+                    case "topicstar":
+                        return new AIMLTagHandlers.topicstar(this, user, query, request, result, node);
+                        
+                    case "uppercase":
+                        return new AIMLTagHandlers.uppercase(this, user, query, request, result, node);
+                        
+                    case "version":
+                    case "name":
+                        return new AIMLTagHandlers.botsetting(this, user, query, request, result, node, nodeNameLower);
+                        
+
+
+                    case "push":
+                        return new AIMLTagHandlers.push(this, user, query, request, result, node);
+                        
+                    case "pop":
+                        return new AIMLTagHandlers.pop(this, user, query, request, result, node);
+                        
+                    case "postcache":
+                        return new AIMLTagHandlers.postcache(this, user, query, request, result, node);
+                        
+                    case "refserver":
+                        return new AIMLTagHandlers.refserver(this, user, query, request, result, node);
+                        
+                    case "pannouserver":
+                        return new AIMLTagHandlers.pannouserver(this, user, query, request, result, node);
+                        
+                    case "trueknowledgeserver":
+                        return new AIMLTagHandlers.trueknowledgeserver(this, user, query, request, result, node);
+                        
+                    case "wolframserver":
+                        return new AIMLTagHandlers.wolframserver(this, user, query, request, result, node);
+                        
+                    case "filterqa":
+                        return new AIMLTagHandlers.filterqa(this, user, query, request, result, node);
+                        
+                    case "summerize":
+                        return new AIMLTagHandlers.summerize(this, user, query, request, result, node);
+                        
+
+                    case "inject":
+                        return new AIMLTagHandlers.inject(this, user, query, request, result, node);
+                        
+                    case "chemsys":
+                        return new AIMLTagHandlers.chemsys(this, user, query, request, result, node);
+                        
+                    case "nop":
+                        return new AIMLTagHandlers.nop(this, user, query, request, result, node);
+                        
+                    case "scxml":
+                        return new AIMLTagHandlers.scxml(this, user, query, request, result, node);
+                        
+                    case "btxml":
+                        return new AIMLTagHandlers.btxml(this, user, query, request, result, node);
+                        
+                    case "say":
+                        return new AIMLTagHandlers.say(this, user, query, request, result, node);
+                        
+                    case "sapi":
+                        return new AIMLTagHandlers.sapi(this, user, query, request, result, node);
+                        
+                    case "satisfied":
+                        return new AIMLTagHandlers.satisfied(this, user, query, request, result, node);
+                        
+                    case "behavior":
+                        return new AIMLTagHandlers.behavior(this, user, query, request, result, node);
+                        
+                    case "rbehavior":
+                        return new AIMLTagHandlers.rbehavior(this, user, query, request, result, node);
+                        
+                    case "rndint":
+                        return new AIMLTagHandlers.rndint(this, user, query, request, result, node);
+                        
+                    case "rnddbl":
+                        return new AIMLTagHandlers.rnddbl(this, user, query, request, result, node);
+                        
+                    case "crontag":
+                        return new AIMLTagHandlers.crontag(this, user, query, request, result, node);
+                        
+                    case "subaiml":
+                        return new AIMLTagHandlers.subaiml(this, user, query, request, result, node);
+                        
+                    case "template":
+                    case "li":
+                        return new AIMLTagHandlers.format(this, user, query, request, result, node, null);
+                        
+                    case "#text":
+                        if (!liText) return null;
+                        return new verbatum(node.InnerText, this, user, query, request, result, node);
+                        
+                    case "#comment_unused":
+                        return new verbatum(node.OuterXml, this, user, query, request, result, node);
+                    case "br":
+                        return new verbatum("\n", this, user, query, request, result, node);
+                    case "pre":
+                        return new verbatum(StaticXMLUtils.InnerXmlText(node), this, user, query, request, result, node);
+                    case "p":
+                        return new verbatum("\n\n", this, user, query, request, result, node);
+                    case "meta":
+                        return new verbatum(node.OuterXml, this, user, query, request, result, node);
+                    default:
+                        break;
+                        
+                }}
+            }
+            if (tagHandler != null) return tagHandler;
+            if (StaticXMLUtils.IsHtmlTag(node.Name))
+            {
+                return new recursiveVerbatum(node, this, user, query, request, result, node, true);
+            }
+            if (tagHandler == null)
+            {
+                // "bot", "favorite", "fav" 
+                foreach (KeyValuePair<string, string> prefix in new[]
+                                                                    {
+                                                                        new KeyValuePair<string, string>("get_", "get"),
+                                                                        new KeyValuePair<string, string>("set_", "set"),
+                                                                        new KeyValuePair<string, string>("bot_", "bot"),
+                                                                        new KeyValuePair<string, string>("favorite_", "bot"), 
+                                                                        new KeyValuePair<string, string>("favorite", "bot"),
+                                                                        new KeyValuePair<string, string>("fav_", "bot"),
+                                                                        new KeyValuePair<string, string>("fav", "bot"),
+                                                                                                                       
+                                                                        new KeyValuePair<string, string>("get", "get"),
+                                                                        new KeyValuePair<string, string>("set", "set"),
+                                                                        new KeyValuePair<string, string>("bot", "bot"),
+                                                                    })
+                {
+                    if (nodeNameLower.StartsWith(prefix.Key) && node.Name.Length > prefix.Key.Length)
+                    {
+                        string name = node.Name.Substring(prefix.Key.Length);
+                        XmlNode pn = node.ParentNode;
+                        LineInfoElementImpl newnode = StaticXMLUtils.CopyNode(prefix.Value, node, false);
+                        XmlAttributeLineInfo atr = (XmlAttributeLineInfo)newnode.OwnerDocument.CreateAttribute("name");
+                        atr.ReadOnly = false;
+                        atr.Value = name;
+                        newnode.Attributes.Append(atr);
+                        if (node.Name.ToLower() != newnode.Name.ToLower())
+                        {
+                            writeToLog("AIMLLOADER: converted " + node.OuterXml + " -> " + newnode.OuterXml);
+                            return GetTagHandler(newnode, query, request, result, user, liText);
+                        }
+                        writeToLog("AIMLLOADER: ! convert " + node.OuterXml + " -> " + newnode.OuterXml);
+                    }
+                }
+            }
+            if (tagHandler != null) return tagHandler;
+            if (nodeNameLower == "name")
+            {
+                return new bot(this, user, query, request, result, node);
+            }
+            if (nodeNameLower == "#comment")
+            {
+                return null;
+            }
+            tagHandler = new lazyClosure(this, user, query, request, result, node);
+            writeToLog("AIMLLOADER:  lazyClosure: " + node.OuterXml);
+            return tagHandler;
+        }
+
+    /// <summary>
         /// Searches the CustomTag collection and processes the AIML if an appropriate tag handler is found
         /// </summary>
         /// <param name="user">the user who originated the request</param>
@@ -1760,12 +1847,6 @@ The AltAIMLbot program.
         }
 #endregion
 
-        public SettingsDictionary GetDictionary(string type0)
-        {
-            if (type0 == "bot") return GlobalSettings;
-            if (type0 == "preds") return DefaultPredicates;
-            return GetUser(type0).Predicates;
-        }
 
     private User GetUser(string type0)
         {
@@ -1782,12 +1863,253 @@ The AltAIMLbot program.
         }
 
     private readonly Dictionary<string, User> UsersByID = new Dictionary<string, User>();
+    /// <summary>
+    /// A weak name/value association list of what has happened in dialog  
+    /// </summary>
+    public SettingsDictionary HeardPredicates;
+
+    /// <summary>
+    /// A name+prop/value association list of things like  look.set-return, look.format-whword,
+    /// look.format-assert, look.format-query, look.format-etc,
+    /// </summary>
+    public SettingsDictionary RelationMetaProps;
+
+    public SettingsDictionary GetRelationMetaProps()
+    {
+        return RelationMetaProps;
+    }
+    /// <summary>
+    /// When a tag has no name like <icecream/> it is transformed to <bot name="icecream"></bot>
+    /// </summary>
+    public static bool UnknownTagsAreBotVars = true;
+
+    /// <summary>
+    ///  Substitution blocks for graphmasters
+    /// </summary>
+    public Dictionary<string, ISettingsDictionary> AllDictionaries = new Dictionary<string, ISettingsDictionary>();
+    public ICollectionRequester ObjectRequester;
+
     public void AddUser(string id, User user)
     {
             lock (UsersByID)
             {
                 UsersByID[id.ToLower()] = user;
             }
+    }
+
+    public GraphMaster GetGraph(string graphName)
+    {
+        GraphMaster ourGraphMaster;
+        if (Graphs.TryGetValue(graphName, out ourGraphMaster))
+        {
+            return ourGraphMaster;
+        }
+        return null;
+    }
+
+    public ISettingsDictionary GetDictionary(string name)
+    {
+        var idict = GetDictionary0(name);
+        if (idict != null) return idict;
+        var rtpbotobjCol = ScriptManager.ResolveToObject(this, name);
+        if (rtpbotobjCol == null || rtpbotobjCol.Count == 0)
+        {
+            return null;
+        }
+        //if (tr)
+        foreach (object o in rtpbotobjCol)
+        {
+            ParentProvider pp = o as ParentProvider;
+            ISettingsDictionary pi = o as ISettingsDictionary;
+            User pu = o as User;
+            if (pp != null)
+            {
+                pi = pp();
+            }
+            if (pi != null)
+            {
+                return pi;
+            }
+            if (pu != null)
+            {
+                return pu.Predicates;
+            }
+        }
+        return null;
+    }
+
+    public ISettingsDictionary GetDictionary0(string named)
+    {
+        Func<ISettingsDictionary, SettingsDictionary> SDCAST = SettingsDictionary.ToSettingsDictionary;
+        //dict = FindDict(type, query, dict);
+        if (named == null) return null;
+        string key = named.ToLower().Trim();
+        if (key == "") return null;
+        lock (AllDictionaries)
+        {
+            ISettingsDictionary dict;
+            if (AllDictionaries.TryGetValue(key, out dict))
+            {
+                return dict;
+            }
+        }
+        if (key == "predicates")
+        {
+            return SDCAST(this.AllUserPreds);
+        }
+        // try to use a global blackboard predicate
+        var gUser = AllUserPreds;
+        if (key == "globalpreds") return SDCAST(gUser);
+        if (key == "allusers") return SDCAST(AllUserPreds);
+        var path = named.Split(new[] { '.' });
+        if (path.Length == 1)
+        {
+            User user = GetUser(key);
+            if (user != null) return user.Predicates;
+        }
+        else
+        {
+            if (path[0] == "bot" || path[0] == "users" || path[0] == "char" || path[0] == "nl")
+            {
+                ISettingsDictionary f = GetDictionary(string.Join(".", path, 1, path.Length - 1));
+                if (f != null) return SDCAST(f);
+            }
+            if (path[0] == "substitutions")
+            {
+                ISettingsDictionary f = GetDictionary(string.Join(".", path, 1, path.Length - 1), "substitutions",
+                                                      true);
+                if (f != null) return SDCAST(f);
+            }
+            else
+            {
+                ISettingsDictionary f = GetDictionary(path[0]);
+                if (f != null)
+                {
+                    SettingsDictionary sd = SDCAST(f);
+                    ParentProvider pp = sd.FindDictionary(string.Join(".", path, 1, path.Length - 1), null);
+                    if (pp != null)
+                    {
+                        ISettingsDictionary pi = pp();
+                        if (pi != null) return SDCAST(pi);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public ISettingsDictionary GetDictionary(string named, string type, bool createIfMissing)
+    {
+        lock (AllDictionaries)
+        {
+            string key = (type + "." + named).ToLower();
+            ISettingsDictionary dict;
+            if (!AllDictionaries.TryGetValue(key, out dict))
+            {
+                ISettingsDictionary sdict = GetDictionary(named);
+                if (sdict != null) return sdict;
+                if (createIfMissing)
+                {
+                    dict = AllDictionaries[key] = AllDictionaries[named] = new SettingsDictionary(named, this, null);
+                    /*User user = ExemplarUser ?? BotAsUser;
+                    Request r = //user.CurrentRequest ??
+                                user.CreateRequest(
+                                    "@echo <!-- loadDictionary '" + named + "' from '" + type + "' -->", Unifiable.EnglishNothing, BotAsUser);*/
+                    loadDictionary(dict, named, type, null);
+                }
+            }
+            return dict;
+        }
+    }
+
+    private void loadDictionary(ISettingsDictionary dictionary, string path, string type, Request r0)
+    {
+        //User user = LastUser ?? ExemplarUser ?? BotAsUser;
+        /*Request r = r0 ??
+            //user.CurrentRequest ??
+                    user.CreateRequest(
+                        "@echo <!-- loadDictionary '" + dictionary + "' from '" + type + "' -->", Unifiable.EnglishNothing,
+                        BotAsUser);*/
+        int loaded = 0;
+        foreach (string p in GetSearchRoots(r0))
+        {
+            foreach (string s0 in new[] { "", type, type + "s", })
+            {
+                foreach (string s1 in new[] { "", "." + type, ".xml", ".subst", ".properties", })
+                {
+                    string named = HostSystem.Combine(p, path + s0 + s1);
+                    if (HostSystem.FileExists(named))
+                    {
+                        try
+                        {
+                            SettingsDictionary.loadSettings(dictionary, named, true, false, r0);
+                            loaded++;
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            writeToLog("ERROR {0}", e);
+                            //continue;
+                            throw;
+                        }
+                    }
+                }
+            }
+            if (loaded > 0) return;
+        }
+        if (loaded == 0)
+        {
+            writeToLog("WARNING: Cannot find " + path + " for " + type);
+        }
+    }
+
+    private IEnumerable<string> GetSearchRoots(object o)
+    {
+        return new string[] {".", "aiml"};
+    }
+
+    public void RegisterDictionary(ISettingsDictionary dict)
+    {
+        RegisterDictionary(dict.NameSpace, dict);
+    }
+    public void RegisterDictionary(string named, ISettingsDictionary dict)
+    {
+        named = named.ToLower().Trim().Replace("  ", " ");
+        string key = named.Replace(" ", "_");
+        RegisterDictionary(named, dict, true);
+    }
+    private TimeSpan MaxWaitTryEnter = TimeSpan.FromSeconds(10);
+
+    public void RegisterDictionary(string key, ISettingsDictionary dict, bool always)
+    {
+        Action needsExit = LockInfo.MonitorTryEnter("RegisterDictionary " + key, AllDictionaries, MaxWaitTryEnter);
+        try
+        {
+            var path = key.Split(new[] { '.' });
+            if (always || !AllDictionaries.ContainsKey(key)) AllDictionaries[key] = dict;
+            if (path.Length > 1)
+            {
+                if (path[0] == "bot" || path[0] == "users" || path[0] == "char" || path[0] == "nl")
+                {
+                    string join = string.Join(".", path, 1, path.Length - 1);
+                    RegisterDictionary(join, dict, false);
+                }
+            }
+        }
+        finally
+        {
+            needsExit();
+        }
+    }
+    public static void writeDebugLine(string s)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string SystemExecute(string name, object o, Request request
+        )
+    {
+        throw new NotImplementedException();
     }
     }
     public class myConst

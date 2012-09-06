@@ -108,6 +108,7 @@ namespace AltAIMLbot
             this.StartedOn = DateTime.Now;
             this.depth = 0;
             this.depthMax = 128;
+            TargetSettings = user.Predicates;
         }
         public TimeSpan _Durration = TimeSpan.Zero;
         /// <summary>
@@ -129,6 +130,9 @@ namespace AltAIMLbot
         }
         public DateTime TimesOutAt { get; set; }
         public string _WhyRequestComplete;
+        public GraphMaster CurrentGraph;
+        public SettingsDictionary TargetSettings;
+
         public string WhyResultComplete
         {
             get
@@ -233,7 +237,26 @@ namespace AltAIMLbot
         public SettingsDictionary GetDictionary(string type0)
         {
             if (type0 == "user") type0 = user.UserID;
-            return bot.GetDictionary(type0);
+            return (SettingsDictionary)bot.GetDictionary(type0);
+        }
+
+        public GraphMaster GetGraph(string name)
+        {
+            if ((name == null || name == "*") && CurrentGraph != null)
+            {
+                return CurrentGraph;
+            }
+            return bot.GetGraph(name) ?? bot.Graphmaster;
+        }
+
+        public SettingsDictionary GetSubstitutions(string named, bool createIfMissing)
+        {
+            return (SettingsDictionary)TargetBot.GetDictionary(named, "substitutions", createIfMissing);
+        }
+
+        public void writeToLog(string s, params object[] args)
+        {
+            TargetBot.writeToLog(s, args);
         }
     }
 }

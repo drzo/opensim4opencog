@@ -1,16 +1,20 @@
 using System;
+using System.Runtime.Serialization;
 using System.Xml;
 using System.Text;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
-    /// The version element tells the AIML interpreter that it should substitute the version number
-    /// of the AIML interpreter.
+    /// The formal element tells the AIML interpreter to render the contents of the element 
+    /// such that the first letter of each word is in uppercase, as defined (if defined) by 
+    /// the locale indicated by the specified language (if specified). This is similar to methods 
+    /// that are sometimes called "Title Case". 
     /// 
-    /// The version element does not have any content. 
+    /// If no character in this string has a different uppercase version, based on the Unicode 
+    /// standard, then the original string is returned.
     /// </summary>
-    public class version : AltAIMLbot.Utils.AIMLTagHandler
+    public class verbatum : AltAIMLbot.Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -21,7 +25,8 @@ namespace AltAIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public version(AltAIMLbot.AltBot bot,
+        public verbatum( string exactly,
+                        AltAIMLbot.AltBot bot,
                         AltAIMLbot.User user,
                         AltAIMLbot.Utils.SubQuery query,
                         AltAIMLbot.Request request,
@@ -29,15 +34,15 @@ namespace AltAIMLbot.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
+            isRecursive = false;
+            Text = exactly;
         }
+
+        private readonly string Text;
 
         protected override string ProcessChange()
         {
-            if (this.TemplateNodeName == "version")
-            {
-                return this.bot.GlobalSettings.grabSetting("version");
-            }
-            return string.Empty;
+            return Text;
         }
     }
 }

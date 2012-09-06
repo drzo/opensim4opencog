@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using AltAIMLbot.Utils;
+using MushDLR223.ScriptEngines;
 
 namespace AltAIMLbot
 {
@@ -110,7 +112,7 @@ namespace AltAIMLbot
             {
                 this.id = UserID;
                 this.bot = bot;
-                this.Predicates = new AltAIMLbot.Utils.SettingsDictionary(this.bot);
+                this.Predicates = new AltAIMLbot.Utils.SettingsDictionary(UserID, this.bot, null);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
                 this.Predicates.bbPrefix = "user";
                 this.Predicates.addSetting("topic", "*");

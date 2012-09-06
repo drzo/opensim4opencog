@@ -11,7 +11,7 @@ namespace AltAIMLbot.Utils
     /// settings.
     /// </summary>
     [Serializable]
-    public class SettingsDictionary
+    public class ASettingsDictionary
     {
         #region Attributes
 
@@ -87,7 +87,7 @@ namespace AltAIMLbot.Utils
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot for whom this is a settings dictionary</param>
-        public SettingsDictionary(AltAIMLbot.AltBot bot)
+        public ASettingsDictionary(AltAIMLbot.AltBot bot)
         {
             this.bot = bot;
          }
@@ -359,10 +359,10 @@ namespace AltAIMLbot.Utils
         }
 
         /// <summary>
-        /// Copies the values in the current object into the SettingsDictionary passed as the target
+        /// Copies the values in the current object into the ASettingsDictionary passed as the target
         /// </summary>
-        /// <param name="target">The target to recieve the values from this SettingsDictionary</param>
-        public void Clone(SettingsDictionary target)
+        /// <param name="target">The target to recieve the values from this ASettingsDictionary</param>
+        public void Clone(ASettingsDictionary target)
         {
             foreach (string key in this.orderedKeys)
             {

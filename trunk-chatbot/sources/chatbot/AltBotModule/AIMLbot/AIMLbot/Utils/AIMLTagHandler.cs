@@ -173,5 +173,60 @@ namespace AltAIMLbot.Utils
 
         private string innerTextOverride = null;
         #endregion
+        internal static string GetNameOfDict(SubQuery query, string dictName, XmlNode templateNode, out ISettingsDictionary dict)
+        {
+            string type = TextPatternUtils.ToLower(dictName);
+            //ISettingsDictionary udict = query.GetDictionary(type, templateNode, dict);
+            while (templateNode != null)
+            {
+                string type0 = TextPatternUtils.GetAttribValue(templateNode, "type,dict", null);
+                if (type0 != null)
+                {
+                    type = type0;
+                    break;
+                }
+                string uname = TextPatternUtils.GetAttribValue(templateNode, "user", null);
+                if (uname != null)
+                {
+                    type0 = TextPatternUtils.GetNamedType("user", uname);
+
+                    if (type0 != null)
+                    {
+                        type = type0;
+                        break;
+                    }
+                }
+                string bname = TextPatternUtils.GetAttribValue(templateNode, "bot", null);
+                if (bname != null)
+                {
+                    type0 = TextPatternUtils.GetNamedType("bot", bname);
+                    if (type0 != null)
+                    {
+                        type = type0;
+                        break;
+                    }
+                }
+                dict = query.Request.GetDictionary(templateNode.LocalName);
+                if (dict != null)
+                {
+                    type = dict.NameSpace;
+                    break;
+                }
+                templateNode = templateNode.ParentNode;
+            }
+            if (type == null) type = dictName;
+            bool preferBotOverUser = (type == "bot");
+
+            if (preferBotOverUser)
+            {
+                dict = query.Request.Responder.Predicates;
+            }
+            else
+            {
+                dict = query.Request.GetDictionary(type);
+            }
+            if (dict == null) dict = query.Request.TargetSettings;
+            return type ?? dict.NameSpace;
+        }
     }
 }
