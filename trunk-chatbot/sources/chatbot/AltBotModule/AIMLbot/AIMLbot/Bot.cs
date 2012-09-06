@@ -129,7 +129,7 @@ namespace AltAIMLbot
         /// An List<> containing the tokens used to split the input into sentences during the 
         /// normalization process
         /// </summary>
-        public List<string> Splitters = new List<string>();
+        static public List<string> Splitters = new List<string>();
 
         /// <summary>
         /// A buffer to hold log messages to be written out to the log file when a max size is reached
@@ -370,13 +370,13 @@ namespace AltAIMLbot
         /// <summary>
         /// The default "brain" of the bot
         /// </summary>
-        public AltAIMLbot.Utils.Node Graphmaster;
+        public AltAIMLbot.Utils.GraphMaster Graphmaster;
 
         /// <summary>
         /// The named "brains" of the bot
         /// default graphmaster should be listed under "*"
         /// </summary>
-        public Dictionary<string, AltAIMLbot.Utils.Node> Graphs;
+        public Dictionary<string, AltAIMLbot.Utils.GraphMaster> Graphs;
 
         /// <summary>
         /// If set to false the input from AIML files will undergo the same normalization process that
@@ -510,8 +510,8 @@ namespace AltAIMLbot
             this.InputSubstitutions = new SettingsDictionary(this);
             this.DefaultPredicates = new SettingsDictionary(this);
             this.CustomTags = new Dictionary<string, TagHandler>();
-            this.Graphmaster = new AltAIMLbot.Utils.Node();
-            this.Graphs = new Dictionary<string, AltAIMLbot.Utils.Node>();
+            this.Graphmaster = new GraphMaster();
+            this.Graphs = new Dictionary<string, AltAIMLbot.Utils.GraphMaster>();
             this.Graphs.Add("*", this.Graphmaster);
         }
 
@@ -690,19 +690,19 @@ namespace AltAIMLbot
                             if ((myNode.Name == "item") & (myNode.Attributes.Count == 1))
                             {
                                 string value = myNode.Attributes["value"].Value;
-                                this.Splitters.Add(value);
+                                Splitters.Add(value);
                             }
                         }
                     }
                 }
             }
-            if (this.Splitters.Count == 0)
+            if (Splitters.Count == 0)
             {
                 // we don't have any splitters, so lets make do with these...
-                this.Splitters.Add(".");
-                this.Splitters.Add("!");
-                this.Splitters.Add("?");
-                this.Splitters.Add(";");
+                Splitters.Add(".");
+                Splitters.Add("!");
+                Splitters.Add("?");
+                Splitters.Add(";");
             }
         }
         #endregion
@@ -880,7 +880,7 @@ namespace AltAIMLbot
         /// <returns>the result to be output to the user</returns>
         public Result Chat(Request request,string graphID)
         {
-                Node ourGraphMaster;
+                GraphMaster ourGraphMaster;
                 if (Graphs.ContainsKey(graphID))
                 {
                     ourGraphMaster = Graphs[graphID];
@@ -1416,10 +1416,10 @@ namespace AltAIMLbot
         {
             FileStream loadFile = File.OpenRead(path);
             BinaryFormatter bf = new BinaryFormatter();
-            this.Graphmaster = (AltAIMLbot.Utils.Node)bf.Deserialize(loadFile);
+            this.Graphmaster = (AltAIMLbot.Utils.GraphMaster)bf.Deserialize(loadFile);
             this.myCron = (Cron)bf.Deserialize(loadFile);
             this.myRandMem = (RandomMemory)bf.Deserialize(loadFile);
-            this.Graphs = (Dictionary<string, AltAIMLbot.Utils.Node>)bf.Deserialize(loadFile);
+            this.Graphs = (Dictionary<string, AltAIMLbot.Utils.GraphMaster>)bf.Deserialize(loadFile);
             //this.myBehaviors = (BehaviorSet)bf.Deserialize(loadFile);
 
             loadFile.Close();

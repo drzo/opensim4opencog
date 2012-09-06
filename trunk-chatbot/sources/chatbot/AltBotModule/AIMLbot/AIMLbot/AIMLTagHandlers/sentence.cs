@@ -48,7 +48,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     for (int i = 0; i < letters.Length; i++)
                     {
                         string letterAsString = Convert.ToString(letters[i]);
-                        if (this.bot.Splitters.Contains(letterAsString))
+                        if (AltBot.Splitters.Contains(letterAsString))
                         {
                             doChange = true;
                         }

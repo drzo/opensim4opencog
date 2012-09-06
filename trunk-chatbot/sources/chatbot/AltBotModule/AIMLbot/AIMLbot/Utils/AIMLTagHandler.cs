@@ -90,10 +90,11 @@ namespace AltAIMLbot.Utils
         {
             return GetAttribValue(templateNode, attributeName, otherwise);
         }
-        public static string GetAttribValue(XmlNode templateNode, string attributeName, string otherwise)
+        public static T GetAttribValue<T>(XmlNode templateNode, string attribName, T defaultIfEmpty) where T : IConvertible
         {
-            return StaticXMLUtils.GetAttribValue(templateNode, attributeName, () => otherwise, null);
+            return StaticXMLUtils.GetAttribValue(templateNode, attribName, () => (defaultIfEmpty), null);
         }
+
         #endregion
     }
 }

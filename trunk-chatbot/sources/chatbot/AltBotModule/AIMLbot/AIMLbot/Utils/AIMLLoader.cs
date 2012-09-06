@@ -414,7 +414,7 @@ namespace AltAIMLbot.Utils
         /// <param name="filename">the file from which this category was taken</param>
         private void processSer(XmlNode node, string filename)
         {
-            Node ourGraphMaster;
+            GraphMaster ourGraphMaster;
             if (this.bot.Graphs.ContainsKey(this.graphName))
             {
                 ourGraphMaster = this.bot.Graphs[this.graphName];
@@ -493,7 +493,7 @@ namespace AltAIMLbot.Utils
             XmlNode pattern = this.FindNode("pattern", node);
             XmlNode template = this.FindNode("template", node);
 
-            Node ourGraphMaster;
+            GraphMaster ourGraphMaster;
             if (this.bot.Graphs.ContainsKey(this.graphName ))
             {
                 ourGraphMaster = this.bot.Graphs[this.graphName];

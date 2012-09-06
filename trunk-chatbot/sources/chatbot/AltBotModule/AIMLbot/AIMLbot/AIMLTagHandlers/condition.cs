@@ -6,6 +6,7 @@ using Aima.Core.Logic.Propositional.Algorithms;
 using Aima.Core.Logic.Propositional.Parsing;
 using Aima.Core.Logic.Propositional.Parsing.AST;
 using Aima.Core.Logic.Propositional.Visitors;
+using Unifiable = System.String;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
@@ -116,8 +117,27 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             this.isRecursive = false;
         }
+        protected int maxTrueConditions = 1;
+        protected int currentTrueConditions = 0;
+        protected override Unifiable ProcessChange()
+        {
+            int maxConditions = GetAttribValue<int>(templateNode, "count", 1);
+            this.maxTrueConditions = maxConditions;
 
-        protected override string ProcessChange()
+            return ProcessChangeOld();
+            /*
+            var nodes = SelectNodes(templateNode.ChildNodes);
+            currentTrueConditions = 0;
+            var vv = OutputFromNodes(nodes, (node) => (currentTrueConditions++ < maxTrueConditions));
+            if (!IsNullOrEmpty(vv))
+            {
+                RecurseResult = vv;
+                return vv;
+            }
+            return vv;
+             * */
+        }
+        protected string ProcessChangeOld()
         {
             if (this.templateNode.Name.ToLower() == "condition")
             {

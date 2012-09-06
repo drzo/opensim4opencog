@@ -212,7 +212,7 @@ namespace AltAIMLbot
         /// <returns>True if ends with an appropriate sentence splitter</returns>
         private bool checkEndsAsSentence(string sentence)
         {
-            foreach (string splitter in this.bot.Splitters)
+            foreach (string splitter in AltBot.Splitters)
             {
                 if (sentence.Trim().EndsWith(splitter))
                 {

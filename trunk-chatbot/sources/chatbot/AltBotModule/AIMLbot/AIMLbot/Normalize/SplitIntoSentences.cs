@@ -59,7 +59,7 @@ namespace AltAIMLbot.Normalize
         /// <returns>An array of strings representing the constituent "sentences"</returns>
         public string[] Transform()
         {
-            string[] tokens = (string[])this.bot.Splitters.ToArray();
+            string[] tokens = (string[])AltBot.Splitters.ToArray();
             string[] rawResult = this.inputString.Split(tokens, System.StringSplitOptions.RemoveEmptyEntries);
             List<string> tidyResult = new List<string>();
             foreach (string rawSentence in rawResult)
