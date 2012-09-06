@@ -13,7 +13,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// If no character in this string has a different uppercase version, based on the Unicode 
     /// standard, then the original string is returned.
     /// </summary>
-    public class formal : AltAIMLbot.Utils.AIMLTagHandler
+    public class format : AltAIMLbot.Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -24,38 +24,36 @@ namespace AltAIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public formal(AltAIMLbot.AltBot bot,
+        public format(AltAIMLbot.AltBot bot,
                         AltAIMLbot.User user,
                         AltAIMLbot.Utils.SubQuery query,
                         AltAIMLbot.Request request,
                         AltAIMLbot.Result result,
-                        XmlNode templateNode)
+                        XmlNode templateNode, Func<string, string> formatter)
             : base(bot, user, query, request, result, templateNode)
         {
+            isRecursive = true;
+            Formatter = formatter;
         }
+
+        private readonly Func<string, string> Formatter;
 
         protected override string ProcessChange()
         {
-            if (this.TemplateNodeName == "formal")
+            if (Formatter == null) return TemplateNodeInnerText;
+            StringBuilder result = new StringBuilder();
+            if (this.TemplateNodeHasText)
             {
-                StringBuilder result = new StringBuilder();
-                if (this.TemplateNodeHasText)
+                bool needSpace = true;
+                string[] words = this.TemplateNodeInnerText.Split();
+                foreach (string word in words)
                 {
-                    string[] words = this.TemplateNodeInnerText.ToLower().Split();
-                    foreach (string word in words)
-                    {
-                        string newWord = word.Substring(0, 1);
-                        newWord = newWord.ToUpper();
-                        if (word.Length > 1)
-                        {
-                            newWord += word.Substring(1);
-                        }
-                        result.Append(newWord + " ");
-                    }
+                    string newWord = Formatter(word);
+                    if (needSpace) result.Append(" "); else needSpace = true;
+                    result.Append(newWord);                    
                 }
-                return result.ToString().Trim();
             }
-            return string.Empty;
+            return " " + result.ToString();
         }
     }
 }

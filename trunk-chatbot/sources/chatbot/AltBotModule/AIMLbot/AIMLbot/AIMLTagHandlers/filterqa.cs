@@ -42,30 +42,30 @@ namespace AltAIMLbot.AIMLTagHandlers
 
             string sepToken ="ANSEP";
             try { 
-                if (this.templateNode.Attributes["sep"] !=null)
-                    sepToken = this.templateNode.Attributes["sep"].Value; }
+                if (TemplateNodeAttributes["sep"] !=null)
+                    sepToken = TemplateNodeAttributes["sep"].Value; }
             catch (Exception e) { }
 
             string onFail = null;
             try
             {
-                if (this.templateNode.Attributes["onfail"] != null)
-                    onFail = this.templateNode.Attributes["onfail"].Value; }
+                if (TemplateNodeAttributes["onfail"] != null)
+                    onFail = TemplateNodeAttributes["onfail"].Value; }
             catch (Exception e) { }
 
             string onSuccess = null;
             try {
-                if (this.templateNode.Attributes["onsuccess"] != null)
-                    onSuccess = this.templateNode.Attributes["onsuccess"].Value;
+                if (TemplateNodeAttributes["onsuccess"] != null)
+                    onSuccess = TemplateNodeAttributes["onsuccess"].Value;
             }
             catch (Exception e) { }
 
-            if (this.templateNode.Name.ToLower() == "filterqa")
+            if (this.TemplateNodeName == "filterqa")
             {
-                if (this.templateNode.InnerText.Length > 0)
+                if (this.TemplateNodeHasText)
                 {
 
-                    string message = this.templateNode.InnerText;
+                    string message = this.TemplateNodeInnerText;
                     string valid = "";
                     string errorMessage = "";
                     string failMessage = "";

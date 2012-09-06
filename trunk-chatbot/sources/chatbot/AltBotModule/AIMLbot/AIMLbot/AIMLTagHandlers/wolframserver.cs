@@ -42,15 +42,15 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override String ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "wolframserver")
+            if (this.TemplateNodeName == "wolframserver")
             {
                 string webAns = "Sorry, I don't understand.";
                 // Simply push the filled in tag contents onto the stack
                 try
                 {
-                    String templateNodeInnerValue = this.templateNode.InnerText;
-                    string myUrl = this.templateNode.Attributes["url"].Value;
-                    string myAppID = this.templateNode.Attributes["appid"].Value;
+                    String templateNodeInnerValue = this.TemplateNodeInnerText;
+                    string myUrl = TemplateNodeAttributes["url"].Value;
+                    string myAppID = TemplateNodeAttributes["appid"].Value;
                     if (myUrl == null) { myUrl = bot.GlobalSettings.grabSetting("wolframserverurl"); }
                     if (myAppID == null) { myAppID = bot.GlobalSettings.grabSetting("wolframserverappid"); }
 

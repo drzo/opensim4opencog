@@ -47,13 +47,13 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "inject")
+            if (this.TemplateNodeName == "inject")
             {
                 // Simply push the filled in tag contents onto the queue
                 try
                 {
-                    string queueName = this.templateNode.Attributes["chem"].Value;// GetAttribValue("chem", null);
-                    string templateNodeInnerValue = this.templateNode.InnerText;
+                    string queueName = GetAttribValue("chem", null);
+                    string templateNodeInnerValue = this.TemplateNodeInnerText;
                     //this.user.bot.myChemistry.addChemical(queueName, double.Parse((string)templateNodeInnerValue), "aiml");
                     //this.user.bot.myChemistry.tick_chemistry(false);
                     this.user.bot.realChem.addChemical(queueName, double.Parse((string)templateNodeInnerValue), "aiml");

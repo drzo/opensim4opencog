@@ -38,7 +38,7 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override String ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "pop")
+            if (this.TemplateNodeName == "pop")
             {
                 // If there is a conversation memo then pop it
                 // otherwise take the tag content as a srai (to trip say a random reply)
@@ -53,9 +53,9 @@ namespace AltAIMLbot.AIMLTagHandlers
                     else
                     {
                         // preforms a <srai> if there is nothing to pop
-                        if (this.templateNode.InnerText.Length > 0)
+                        if (this.TemplateNodeHasText)
                         {
-                            Request subRequest = new Request(this.templateNode.InnerText, this.user, this.bot);
+                            Request subRequest = new Request(this.TemplateNodeInnerText, this.user, this.bot);
                             subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
                             Result subQuery = this.bot.Chat(subRequest);
                             this.request.hasTimedOut = subRequest.hasTimedOut;

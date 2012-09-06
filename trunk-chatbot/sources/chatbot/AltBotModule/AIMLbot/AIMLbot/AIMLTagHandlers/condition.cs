@@ -121,11 +121,10 @@ namespace AltAIMLbot.AIMLTagHandlers
         protected int currentTrueConditions = 0;
         protected override Unifiable ProcessChange()
         {
-            int maxConditions = GetAttribValue<int>(templateNode, "count", 1);
-            this.maxTrueConditions = maxConditions;
-
             return ProcessChangeOld();
             /*
+            int maxConditions = GetAttribValue<int>(templateNode, "count", 1);
+            this.maxTrueConditions = maxConditions;            
             var nodes = SelectNodes(templateNode.ChildNodes);
             currentTrueConditions = 0;
             var vv = OutputFromNodes(nodes, (node) => (currentTrueConditions++ < maxTrueConditions));
@@ -139,31 +138,31 @@ namespace AltAIMLbot.AIMLTagHandlers
         }
         protected string ProcessChangeOld()
         {
-            if (this.templateNode.Name.ToLower() == "condition")
+            if (this.TemplateNodeName == "condition")
             {
                 // heuristically work out the type of condition being processed
 
-                if (this.templateNode.Attributes.Count == 2) // block
+                if (TemplateNodeAttributes.Count == 2) // block
                 {
                     string name = "";
                     string value = "";
 
-                    if (this.templateNode.Attributes[0].Name == "name")
+                    if (TemplateNodeAttributes[0].Name == "name")
                     {
-                        name = this.templateNode.Attributes[0].Value;
+                        name = TemplateNodeAttributes[0].Value;
                     }
-                    else if (this.templateNode.Attributes[0].Name == "value")
+                    else if (TemplateNodeAttributes[0].Name == "value")
                     {
-                        value = this.templateNode.Attributes[0].Value;
+                        value = TemplateNodeAttributes[0].Value;
                     }
 
-                    if (this.templateNode.Attributes[1].Name == "name")
+                    if (TemplateNodeAttributes[1].Name == "name")
                     {
-                        name = this.templateNode.Attributes[1].Value;
+                        name = TemplateNodeAttributes[1].Value;
                     }
-                    else if (this.templateNode.Attributes[1].Name == "value")
+                    else if (TemplateNodeAttributes[1].Name == "value")
                     {
-                        value = this.templateNode.Attributes[1].Value;
+                        value = TemplateNodeAttributes[1].Value;
                     }
 
                     if ((name.Length > 0) & (value.Length > 0))
@@ -172,15 +171,15 @@ namespace AltAIMLbot.AIMLTagHandlers
                         Regex matcher = new Regex(value.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
                         if (matcher.IsMatch(actualValue))
                         {
-                            return this.templateNode.InnerXml;
+                            return this.TemplateNodeInnerXml;
                         }
                     }
                 }
-                else if (this.templateNode.Attributes.Count == 1) // single predicate
+                else if (TemplateNodeAttributes.Count == 1) // single predicate
                 {
-                    if (this.templateNode.Attributes[0].Name == "name")
+                    if (TemplateNodeAttributes[0].Name == "name")
                     {
-                        string name = this.templateNode.Attributes[0].Value;
+                        string name = TemplateNodeAttributes[0].Value;
                         foreach (XmlNode childLINode in this.templateNode.ChildNodes)
                         {
                             if (childLINode.Name.ToLower() == "li")
@@ -205,7 +204,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                         }
                     }
                 }
-                else if (this.templateNode.Attributes.Count == 0) // multi-predicate
+                else if (TemplateNodeAttributes.Count == 0) // multi-predicate
                 {
                     foreach (XmlNode childLINode in this.templateNode.ChildNodes)
                     {

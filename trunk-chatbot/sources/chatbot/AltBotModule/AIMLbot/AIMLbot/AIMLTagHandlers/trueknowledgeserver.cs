@@ -42,16 +42,16 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override String ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "trueknowledgeserver")
+            if (this.TemplateNodeName == "trueknowledgeserver")
             {
                 string webAns = "Sorry, I don't understand.";
                 // Simply push the filled in tag contents onto the stack
                 try
                 {
-                    String templateNodeInnerValue = this.templateNode.InnerText;
-                    string myUrl = this.templateNode.Attributes["url"].Value;
-                    string myUser = this.templateNode.Attributes["apiuser"].Value;
-                    string myPass = this.templateNode.Attributes["apipass"].Value;
+                    String templateNodeInnerValue = this.TemplateNodeInnerText;
+                    string myUrl = TemplateNodeAttributes["url"].Value;
+                    string myUser = TemplateNodeAttributes["apiuser"].Value;
+                    string myPass = TemplateNodeAttributes["apipass"].Value;
                     if (myUrl == null) { myUrl = bot.GlobalSettings.grabSetting("trueknowledgeserverurl"); }
                     if (myUser == null) { myUser = bot.GlobalSettings.grabSetting("trueknowledgeserveruser"); }
                     if (myPass == null) { myPass = bot.GlobalSettings.grabSetting("trueknowledgeserverpass"); }

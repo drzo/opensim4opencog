@@ -33,7 +33,7 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            return string.Empty;
+            return " , ";// string.Empty;
         }
     }
 }

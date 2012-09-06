@@ -124,10 +124,10 @@ namespace RoboKindChat
                     // Load the AIML then save the binary
                     //servitor.curBot.loadAIMLFromFiles(@"C:\RD4541\Acore\RealBot\RealBot2\RealBot2\RealBot2\bin\Debug\aiml\kotoko_irata");
                     servitor.curBot.rapStoreDirectory = null;
-                    servitor.curBot.loadAIMLFromFiles(@"./aiml/chomskyAIML");
+                    //servitor.curBot.loadAIMLFromFiles(@"./aiml/chomskyAIML");
                     servitor.curBot.loadAIMLFromFiles(@"./aiml/kotoko_irata");
                     servitor.curBot.loadAIMLFromFiles(@"./aiml/justine_degurl");
-                    servitor.curBot.loadAIMLFromFile(@"./aiml/special/blackjack.aiml");
+                    //servitor.curBot.loadAIMLFromFile(@"./aiml/special/blackjack.aiml");
                     //servitor.curBot.loadAIMLFromFiles(@"./aiml/guest_gurl");
                     // servitor.saveToBinaryFile(servitorbin);
                     servitor.skiploading = true;

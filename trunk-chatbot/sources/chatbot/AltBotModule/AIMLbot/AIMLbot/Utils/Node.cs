@@ -1,7 +1,10 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Xml;
 using System.Web;
 using System.IO;
@@ -10,6 +13,7 @@ using LAIR.Collections.Generic;
 using MushDLR223.Utilities;
 using RaptorDB;
 using System.Linq;
+using Unifiable = System.String;
 
 namespace AltAIMLbot.Utils
 {
@@ -24,7 +28,19 @@ namespace AltAIMLbot.Utils
         /// <summary>
         /// Contains the child nodes of this node
         /// </summary>
-        public Dictionary<string, Node> children = new Dictionary<string, Node>();
+        public Dictionary<string, Node> children
+        {
+            get
+            {
+                if (_c0 == null)
+                {
+                    _c0 = new Dictionary<string, Node>(2);
+                }
+                return _c0;
+            }
+        }
+        public Node Parent;
+        private Dictionary<string, Node> _c0;
 
         public string childrenStr = null;
         public int childnum = 0;
@@ -36,10 +52,41 @@ namespace AltAIMLbot.Utils
         {
             get
             {
+                if (_c0 == null) return 0;
                 return this.children.Count;
             }
         }
-
+        public static IEnumerable EmptyKeys = new string[0];
+        public IEnumerable ChildKeys
+        {
+            get
+            {
+                if (NumberOfChildNodes == 0) return EmptyKeys;
+                return children.Keys;
+            }
+        }
+        public static IEnumerable<Node> EmptyNodes = new Node[0];
+        public IEnumerable<Node> ChildNodes
+        {
+            get
+            {
+                if (NumberOfChildNodes == 0) return EmptyNodes;
+                return children.Values;
+            }
+        }
+        public bool ContainsChildKey(string s)
+        {
+            if (NumberOfChildNodes == 0) return false;
+            return children.ContainsKey(s);
+        }
+        public Node ChildNode(string s)
+        {
+            if (NumberOfChildNodes == 0)
+            {
+                return null;
+            }
+            return children[s];
+        }
         /// <summary>
         /// The template (if any) associated with this node
         /// </summary>
@@ -131,9 +178,9 @@ namespace AltAIMLbot.Utils
             // o.k. check we don't already have a child with the key from this sentence
             // if we do then pass the handling of this sentence down the branch to the 
             // child nodemapper otherwise the child nodemapper doesn't yet exist, so create a new one
-            if (this.children.ContainsKey(firstWord))
+            if (this.ContainsChildKey(firstWord))
             {
-                Node childNode = this.children[firstWord];
+                Node childNode = this.ChildNode(firstWord);
 
                 childNode.addCategory(newPath, template, filename, newScore, newScale);
             }
@@ -145,6 +192,7 @@ namespace AltAIMLbot.Utils
                 lock (children)
                 {
                     this.children.Add(childNode.word, childNode);
+                    childNode.Parent = this;
                 }
             }
         }
@@ -209,11 +257,11 @@ namespace AltAIMLbot.Utils
             // o.k. check we don't already have a child with the key from this sentence
             // if we do then pass the handling of this sentence down the branch to the 
             // child nodemapper otherwise the child nodemapper doesn't yet exist, so create a new one
-            //if (myNode.children.ContainsKey(firstWord))
-            if ((myNode.children.ContainsKey(firstWord))
+            //if (myNode.ContainsChildKey(firstWord))
+            if ((myNode.ContainsChildKey(firstWord))
                 ||( myNode.dbContainsNode(newdAbsPath, pathDB)) )
             {
-                //Node childNode = myNode.children[firstWord];
+                //Node childNode = myNode.this.ChildNode(firstWord);
 
                 addCategoryDB(firstWord, newPath, template, filename, newScore, newScale, newdAbsPath, pathDB);
             }
@@ -262,9 +310,8 @@ namespace AltAIMLbot.Utils
 
                 }
             }
-            foreach (string childWord in children.Keys)
+            foreach (Node childNode in ChildNodes)
             {
-                Node childNode = children[childWord];
                 childNode.collectPaths(ourPath, collector);
             }
 
@@ -305,9 +352,8 @@ namespace AltAIMLbot.Utils
                 string serTemplate = String.Format("<ser path=\"{0}\"> {1} </ser>", encoded, template);
                 collector.Add(serTemplate);
             }
-            foreach (string childWord in children.Keys)
+            foreach (var childNode in ChildNodes)
             {
-                Node childNode = children[childWord];
                 childNode.collectFullPaths(ourPath, collector);
             }
 
@@ -325,9 +371,8 @@ namespace AltAIMLbot.Utils
                     string serTemplate = String.Format("<ser path=\"{0}\"> {1} </ser>", encoded, template);
                     collector.Add(serTemplate);
                 }
-                foreach (string childWord in children.Keys)
+                foreach (Node childNode in ChildNodes)
                 {
-                    Node childNode = children[childWord];
                     childNode.searchFullPaths(targetPath,ourPath, collector);
                 }
             }
@@ -398,7 +443,7 @@ namespace AltAIMLbot.Utils
 
             // check if this is the end of a branch in the GraphMaster 
             // return the cCategory for this node
-            if (this.children.Count==0)
+            if (this.NumberOfChildNodes==0)
             {
                 if (path.Length > 0)
                 {
@@ -427,9 +472,9 @@ namespace AltAIMLbot.Utils
 
             // first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
-            if (this.children.ContainsKey("_"))
+            if (this.ContainsChildKey("_"))
             {
-                Node childNode = (Node)this.children["_"];
+                Node childNode = this.ChildNode("_");
 
                 // add the next word to the wildcard match 
                 //StringBuilder newWildcard = new StringBuilder();
@@ -449,7 +494,7 @@ namespace AltAIMLbot.Utils
             // second option - the nodemapper may have contained a "_" child, but led to no match
             // or it didn't contain a "_" child at all. So get the child nodemapper from this 
             // nodemapper that matches the first word of the input sentence.
-            if (this.children.ContainsKey(firstWord))
+            if (this.ContainsChildKey(firstWord))
             {
                 // process the matchstate - this might not make sense but the matchstate is working
                 // with a "backwards" path: "topic <topic> that <that> user input"
@@ -466,7 +511,7 @@ namespace AltAIMLbot.Utils
                     newMatchstate = MatchState.Topic;
                 }
                 */
-                Node childNode = (Node)this.children[firstWord];
+                Node childNode = this.ChildNode(firstWord);
                 // move down into the identified branch of the GraphMaster structure using the new
                 // matchstate
                 //StringBuilder newWildcard = new StringBuilder();
@@ -481,10 +526,10 @@ namespace AltAIMLbot.Utils
             // third option - the input part of the path might have been matched so far but hasn't
             // returned a match, so check to see it contains the "*" wildcard. "*" comes last in
             // precedence in the AIML alphabet.
-            if (this.children.ContainsKey("*"))
+            if (this.ContainsChildKey("*"))
             {
                 // o.k. look for the path in the child node denoted by "*"
-                Node childNode = (Node)this.children["*"];
+                Node childNode = this.ChildNode("*");
 
                 // add the next word to the wildcard match 
                 //StringBuilder newWildcard = new StringBuilder();
@@ -540,7 +585,7 @@ namespace AltAIMLbot.Utils
 
             // check if this is the end of a branch in the GraphMaster 
             // return the cCategory for this node
-            if (this.children.Count==0)
+            if (this.NumberOfChildNodes==0)
             {
                 if (path.Length > 0)
                 {
@@ -571,9 +616,9 @@ namespace AltAIMLbot.Utils
 
             // first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
-            if (this.children.ContainsKey("_"))
+            if (this.ContainsChildKey("_"))
             {
-                Node childNode = (Node)this.children["_"];
+                Node childNode = this.ChildNode("_");
 
                 // add the next word to the wildcard match 
                 StringBuilder newWildcard = new StringBuilder();
@@ -586,21 +631,8 @@ namespace AltAIMLbot.Utils
                 // the result
                 if (result.Length>0)
                 {
-                    if (newWildcard.Length > 0)
-                    {
-                        // capture and push the star content appropriate to the current matchstate
-                        switch (matchstate)
-                        {
-                            case MatchState.UserInput:
-                                query.InputStar.Add(newWildcard.ToString());
-                                // added due to this match being the end of the line
-                                newWildcard.Remove(0, newWildcard.Length);
-                                break;
-                            default:
-                                GetStarCollector(query, matchstate).Add(newWildcard.ToString());
-                                break;
-                        }
-                    }
+                    // capture and push the star content appropriate to the matchstate if it exists and clear afterward
+                    AcceptWildcard(query, newWildcard, matchstate);
                     query.TemplatePath = "_ " + query.TemplatePath;
                     return result;
                 }
@@ -609,7 +641,7 @@ namespace AltAIMLbot.Utils
             // second option - the nodemapper may have contained a "_" child, but led to no match
             // or it didn't contain a "_" child at all. So get the child nodemapper from this 
             // nodemapper that matches the first word of the input sentence.
-            if (this.children.ContainsKey(firstWord))
+            if (this.ContainsChildKey(firstWord))
             {
                 // process the matchstate - this might not make sense but the matchstate is working
                 // with a "backwards" path: "topic <topic> that <that> user input"
@@ -617,7 +649,7 @@ namespace AltAIMLbot.Utils
                 // but having it backwards is more efficient for searching purposes
                 MatchState newMatchstate = GetNewMatchstate(firstWord, matchstate);
 
-                Node childNode = (Node)this.children[firstWord];
+                Node childNode = this.ChildNode(firstWord);
                 // move down into the identified branch of the GraphMaster structure using the new
                 // matchstate
                 StringBuilder newWildcard = new StringBuilder();
@@ -625,18 +657,9 @@ namespace AltAIMLbot.Utils
                 // and if we get a result from the child return it
                 if (result.Length > 0)
                 {
-                    if (newWildcard.Length > 0)
-                    {
-                        // capture and push the star content appropriate to the matchstate if it exists
-                        // and then clear it for subsequent wildcards
-                        List<string> getStarCollector = GetStarCollector(query, matchstate);
-                        if (getStarCollector != null)
-                        {
-                            getStarCollector.Add(newWildcard.ToString());
-                            newWildcard.Remove(0, newWildcard.Length);
-                        }
-                    }
-                    query.TemplatePath = firstWord +" " + query.TemplatePath;
+                    // capture and push the star content appropriate to the matchstate if it exists and clear afterward
+                    AcceptWildcard(query, newWildcard, matchstate);
+                    query.TemplatePath = firstWord + " " + query.TemplatePath;
                     return result;
                 }
             }
@@ -647,8 +670,9 @@ namespace AltAIMLbot.Utils
             bool isSemantic = isWildPattern(this.word);
             if (hasSemantic)
             {
-                foreach (string s in this.children.Keys)
+                foreach (var sn in this.children)
                 {
+                    string s = sn.Key;
                     if (isWildPattern (s))
                     {
                         if( matchesWildSense(s ,firstWord,request ))
@@ -656,7 +680,7 @@ namespace AltAIMLbot.Utils
                           // Treat like matching a wildcard
 
                             // o.k. look for the path in the child node denoted by "*"
-                            Node childNode = (Node)this.children[s];
+                            Node childNode = sn.Value;
 
                             // add the next word to the wildcard match 
                             StringBuilder newWildcard = new StringBuilder();
@@ -666,21 +690,8 @@ namespace AltAIMLbot.Utils
                             // and if we get a result from the branch process and return it
                             if (result.Length > 0)
                             {
-                                if (newWildcard.Length > 0)
-                                {
-                                    // capture and push the star content appropriate to the current matchstate
-                                    switch (matchstate)
-                                    {
-                                        case MatchState.UserInput:
-                                            query.InputStar.Add(newWildcard.ToString());
-                                            // added due to this match being the end of the line
-                                            newWildcard.Remove(0, newWildcard.Length);
-                                            break;
-                                        default:
-                                            GetStarCollector(query, matchstate).Add(newWildcard.ToString());
-                                            break;
-                                    }
-                                }
+                                // capture and push the star content appropriate to the matchstate if it exists and clear afterward
+                                AcceptWildcard(query, newWildcard, matchstate);
                                 query.TemplatePath = s+" " + query.TemplatePath;
                                 return result;
                             }
@@ -692,10 +703,10 @@ namespace AltAIMLbot.Utils
             // third option - the input part of the path might have been matched so far but hasn't
             // returned a match, so check to see it contains the "*" wildcard. "*" comes last in
             // precedence in the AIML alphabet.
-            if (this.children.ContainsKey("*"))
+            if (this.ContainsChildKey("*"))
             {
                 // o.k. look for the path in the child node denoted by "*"
-                Node childNode = (Node)this.children["*"];
+                Node childNode = this.ChildNode("*");
 
                 // add the next word to the wildcard match 
                 StringBuilder newWildcard = new StringBuilder();
@@ -705,21 +716,8 @@ namespace AltAIMLbot.Utils
                 // and if we get a result from the branch process and return it
                 if (result.Length > 0)
                 {
-                    if (newWildcard.Length > 0)
-                    {
-                        // capture and push the star content appropriate to the current matchstate
-                        switch (matchstate)
-                        {
-                            case MatchState.UserInput:
-                                query.InputStar.Add(newWildcard.ToString());
-                                // added due to this match being the end of the line
-                                newWildcard.Remove(0, newWildcard.Length);
-                                break;
-                            default:
-                                GetStarCollector(query, matchstate).Add(newWildcard.ToString());
-                                break;
-                        }
-                    }
+                    // capture and push the star content appropriate to the matchstate if it exists and clear afterward
+                    AcceptWildcard(query, newWildcard, matchstate);
                     query.TemplatePath = "* " + query.TemplatePath;
                     return result;
                 }
@@ -741,7 +739,7 @@ namespace AltAIMLbot.Utils
                     multiWord += splitPath[0];
                 }
                 //Scan children for matching semantic pattern
-                foreach (string s in this.children.Keys)
+                foreach (string s in this.ChildKeys)
                 {
                     if (isWildPattern(s))
                     {
@@ -777,8 +775,9 @@ namespace AltAIMLbot.Utils
             return string.Empty;
         }
 
-        private MatchState GetNewMatchstate(string firstWord, MatchState matchstate)
+        private static MatchState GetNewMatchstate(string firstWord, MatchState matchstate)
         {
+            firstWord = firstWord.ToUpper();
             MatchState newMatchstate = matchstate;
             if (firstWord == "<THAT>")
             {
@@ -824,7 +823,7 @@ namespace AltAIMLbot.Utils
 
             // check if this is the end of a branch in the GraphMaster 
             // return the cCategory for this node
-            if (this.children.Count == 0)
+            if (this.NumberOfChildNodes == 0)
             {
                 if (path.Length > 0)
                 {
@@ -856,9 +855,9 @@ namespace AltAIMLbot.Utils
 
             // first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
-            if (this.children.ContainsKey("_"))
+            if (this.ContainsChildKey("_"))
             {
-                //Node childNode = (Node)this.children["_"];
+                //Node childNode = this.ChildNode("_"];
                 Node childNode = fetchChild(absPath, "_", pathDB);
                 nextPath = (absPath + " " + "_").Trim();
 
@@ -873,27 +872,8 @@ namespace AltAIMLbot.Utils
                 // the result
                 if (result.Length > 0)
                 {
-                    if (newWildcard.Length > 0)
-                    {
-                        // capture and push the star content appropriate to the current matchstate
-                        switch (matchstate)
-                        {
-                            case MatchState.UserInput:
-                                query.InputStar.Add(newWildcard.ToString());
-                                // added due to this match being the end of the line
-                                newWildcard.Remove(0, newWildcard.Length);
-                                break;
-                            case MatchState.That:
-                                query.ThatStar.Add(newWildcard.ToString());
-                                break;
-                            case MatchState.Topic:
-                                query.TopicStar.Add(newWildcard.ToString());
-                                break;
-                            case MatchState.State:
-                                query.StateStar.Add(newWildcard.ToString());
-                                break;
-                        }
-                    }
+                    // capture and push the star content appropriate to the matchstate if it exists
+                    AcceptWildcard(query, newWildcard, matchstate);
                     query.TemplatePath = "_ " + query.TemplatePath;
                     return result;
                 }
@@ -902,7 +882,7 @@ namespace AltAIMLbot.Utils
             // second option - the nodemapper may have contained a "_" child, but led to no match
             // or it didn't contain a "_" child at all. So get the child nodemapper from this 
             // nodemapper that matches the first word of the input sentence.
-            if (this.children.ContainsKey(firstWord))
+            if (this.ContainsChildKey(firstWord))
             {
                 // process the matchstate - this might not make sense but the matchstate is working
                 // with a "backwards" path: "topic <topic> that <that> user input"
@@ -910,7 +890,7 @@ namespace AltAIMLbot.Utils
                 // but having it backwards is more efficient for searching purposes
                 MatchState newMatchstate = GetNewMatchstate(firstWord, matchstate);
 
-                //Node childNode = (Node)this.children[firstWord];
+                //Node childNode = this.ChildNode(firstWord];
                 Node childNode = fetchChild(absPath, firstWord, pathDB);
                 nextPath = (absPath + " " + firstWord).Trim();
 
@@ -921,14 +901,8 @@ namespace AltAIMLbot.Utils
                 // and if we get a result from the child return it
                 if (result.Length > 0)
                 {
-                    if (newWildcard.Length > 0)
-                    {
-                        // capture and push the star content appropriate to the matchstate if it exists
-                        // and then clear it for subsequent wildcards
-                        List<string> StarCollector = GetStarCollector(query, matchstate);
-                        StarCollector.Add(newWildcard.ToString());
-                        newWildcard.Remove(0, newWildcard.Length);
-                    }
+                    // capture and push the star content appropriate to the matchstate if it exists and clear afterward
+                    AcceptWildcard(query, newWildcard, matchstate);
                     query.TemplatePath = firstWord + " " + query.TemplatePath;
                     return result;
                 }
@@ -939,7 +913,7 @@ namespace AltAIMLbot.Utils
             bool isSemantic = isWildPattern(this.word);
             if (hasSemantic)
             {
-                foreach (string s in this.children.Keys)
+                foreach (string s in this.ChildKeys)
                 {
                     if (isWildPattern(s))
                     {
@@ -948,7 +922,7 @@ namespace AltAIMLbot.Utils
                             // Treat like matching a wildcard
                              Console.WriteLine ("A matchesWildSense({0},{1},{2})==true",s, firstWord, request);
                             // o.k. look for the path in the child node denoted by "*"
-                            //Node childNode = (Node)this.children[s];
+                            //Node childNode = this.ChildNode(s);
                             Node childNode = fetchChild(absPath, s, pathDB);
                             nextPath = (absPath + " " + s).Trim();
 
@@ -961,27 +935,8 @@ namespace AltAIMLbot.Utils
                             // and if we get a result from the branch process and return it
                             if (result.Length > 0)
                             {
-                                if (newWildcard.Length > 0)
-                                {
-                                    // capture and push the star content appropriate to the current matchstate
-                                    switch (matchstate)
-                                    {
-                                        case MatchState.UserInput:
-                                            query.InputStar.Add(newWildcard.ToString());
-                                            // added due to this match being the end of the line
-                                            newWildcard.Remove(0, newWildcard.Length);
-                                            break;
-                                        case MatchState.That:
-                                            query.ThatStar.Add(newWildcard.ToString());
-                                            break;
-                                        case MatchState.Topic:
-                                            query.TopicStar.Add(newWildcard.ToString());
-                                            break;
-                                        case MatchState.State:
-                                            query.StateStar.Add(newWildcard.ToString());
-                                            break;
-                                    }
-                                }
+                                // capture and push the star content appropriate to the matchstate if it exists and clear afterward
+                                AcceptWildcard(query, newWildcard, matchstate);
                                 query.TemplatePath = s + " " + query.TemplatePath;
                                 return result;
                             }
@@ -994,10 +949,10 @@ namespace AltAIMLbot.Utils
             // third option - the input part of the path might have been matched so far but hasn't
             // returned a match, so check to see it contains the "*" wildcard. "*" comes last in
             // precedence in the AIML alphabet.
-            if (this.children.ContainsKey("*"))
+            if (this.ContainsChildKey("*"))
             {
                 // o.k. look for the path in the child node denoted by "*"
-                //Node childNode = (Node)this.children["*"];
+                //Node childNode = this.ChildNode("*"];
                 Node childNode = fetchChild(absPath, "*", pathDB);
                 nextPath = (absPath + " " + "*").Trim();
 
@@ -1009,27 +964,8 @@ namespace AltAIMLbot.Utils
                 // and if we get a result from the branch process and return it
                 if (result.Length > 0)
                 {
-                    if (newWildcard.Length > 0)
-                    {
-                        // capture and push the star content appropriate to the current matchstate
-                        switch (matchstate)
-                        {
-                            case MatchState.UserInput:
-                                query.InputStar.Add(newWildcard.ToString());
-                                // added due to this match being the end of the line
-                                newWildcard.Remove(0, newWildcard.Length);
-                                break;
-                            case MatchState.That:
-                                query.ThatStar.Add(newWildcard.ToString());
-                                break;
-                            case MatchState.Topic:
-                                query.TopicStar.Add(newWildcard.ToString());
-                                break;
-                            case MatchState.State:
-                                query.StateStar.Add(newWildcard.ToString());
-                                break;
-                        }
-                    }
+                    // capture and push the star content appropriate to the matchstate if it exists
+                    AcceptWildcard(query, newWildcard, matchstate);
                     query.TemplatePath = "* " + query.TemplatePath;
                     return result;
                 }
@@ -1050,7 +986,7 @@ namespace AltAIMLbot.Utils
                     multiWord += splitPath[0];
                 }
                 //Scan children for matching semantic pattern
-                foreach (string s in this.children.Keys)
+                foreach (string s in this.ChildKeys)
                 {
                     if (isWildPattern(s))
                     {
@@ -1085,6 +1021,27 @@ namespace AltAIMLbot.Utils
             wildcard = new StringBuilder();
             query.TemplatePath = "";
             return string.Empty;
+        }
+
+        private void AcceptWildcard(SubQuery query, StringBuilder newWildcard, MatchState matchstate)
+        {
+            if (newWildcard.Length > 0)
+            {
+                // capture and push the star content appropriate to the current matchstate
+                switch (matchstate)
+                {
+                    case MatchState.UserInput:
+                        GetStarCollector(query, matchstate).Add(newWildcard.ToString());
+                        // added due to this match being the end of the line
+                        newWildcard.Remove(0, newWildcard.Length);
+                        break;
+                    default:
+                        GetStarCollector(query, matchstate).Add(newWildcard.ToString());
+                        // @todo is this right?
+                        newWildcard.Remove(0, newWildcard.Length);
+                        break;
+                }
+            }
         }
 
         private List<string> GetStarCollector(SubQuery query, MatchState matchstate)
@@ -1131,12 +1088,20 @@ namespace AltAIMLbot.Utils
 
         static bool isWildPattern(string s)
         {
-            bool v = (s.StartsWith("*")) && (s.Length > 1);
+            if (!(s.Length > 1)) return false;
+            char c = s[0];
+            bool v = (c == '*' || c == '~');
+            if (!v)
+            {
+                return false;
+            }
             return v;
         }
 
         static bool matchesWildSense(string sense, string queryWord,Request request)
         {
+            // always clip off the first "*";
+            sense = sense.Substring(1);
             if (sense.Length == 0) return false;
             AltBot contextBot = request.bot;
 
@@ -1309,12 +1274,13 @@ namespace AltAIMLbot.Utils
             {
                 childmax++;
                 children.Add(childWord, nd);
+                nd.Parent = this;
                 childrenStr += "(" + childWord + ")";
                 if (fullChildSet) return;
-                if ((childnum + children.Count) != childmax)
+                if ((childnum + NumberOfChildNodes) != childmax)
                 {
-                    Console.WriteLine("WARNING : {0} myNode.childnum({1}) + myNode.children.Count({2}) != myNode.childmax({3})", "IN addChild", childnum, children.Count, childmax);
-                    if ((childnum + children.Count) > childmax) childmax = (childnum + children.Count);
+                    Console.WriteLine("WARNING : {0} myNode.childnum({1}) + myNode.NumberOfChildNodes({2}) != myNode.childmax({3})", "IN addChild", childnum, NumberOfChildNodes, childmax);
+                    if ((childnum + NumberOfChildNodes) > childmax) childmax = (childnum + NumberOfChildNodes);
                 }
             }
         }
@@ -1344,7 +1310,7 @@ namespace AltAIMLbot.Utils
         public void WithFilename(string filename, bool remove, bool enable)
         {
             if (children != null)
-                foreach (var c in children.Values)
+                foreach (var c in ChildNodes)
                 {
                     c.WithFilename(filename, remove, enable);
                 }
@@ -1366,6 +1332,174 @@ namespace AltAIMLbot.Utils
                 }
             }
         }
+#if UNUSED
+    /// <summary>
+    /// The AIML source for the category that defines the template
+    /// </summary>
+        private string filename = Unifiable.Empty;
+#endif
+        //private XmlNode GuardText;
+
+        public override string ToString()
+        {
+            return GetPath();
+        }
+
+        public string GetPath()
+        {
+            var p = Parent;
+            if (p == null)
+            {
+                return word;
+            }
+            StringBuilder sb = new StringBuilder(word);
+            sb.Insert(0, " ");
+            sb.Insert(0, p.word);
+            p = p.Parent;
+            while (p != null)
+            {
+                sb.Insert(0, " ");
+                sb.Insert(0, p.word);
+                p = p.Parent;
+            }
+            return sb.ToString();
+        }
+
+
+        public bool Equals(Node other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return false;
+            if (!Equals(other.word, this.word)) return false;
+            //if (!Equals(other.Graph, Graph)) return false;
+            if (!Equals(other.Parent, Parent)) return false;
+            throw new AbandonedMutexException("ERROR optimally this should be imposible");
+            return true;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((Parent != null ? Parent.GetHashCode() : 0) * 397) ^ (word != null ? word.GetHashCode() : 0);
+            }
+        }
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof(Node)) return false;
+            return Equals((Node)obj);
+        }
+        #region IComparable<Node> Members
+
+        public int CompareTo(Node that)
+        {
+            return CompareNodes(this, that);
+        }
+        public static int CompareNodes(Node thiz, Node that)
+        {
+            if (thiz.Equals(that)) return 0;
+            var thispath = thiz.ToPath();
+            var thatpath = that.ToPath();
+            int cmp = ComparePaths(thiz, that, thispath, thatpath);
+            if (cmp == 0) return 0;
+            return cmp;
+        }
+
+        static int ComparePaths(Node thiz, Node that, IList<Unifiable> thispath, IList<Unifiable> thatpath)
+        {
+#if USE_COMPARE_CACHE
+            double a1 = thiz._variance;
+            double b1 = that._variance;
+#else
+            double a1 = 0;
+            double b1 = 0;
+#endif
+            int diff0 = a1.CompareTo(b1);
+            if (diff0 != 0)
+            {
+                return -diff0;
+            }
+            int cmpthis = thispath.Count;
+            int cmpthat = thatpath.Count;
+
+            //smaller of the two
+            if (cmpthis < cmpthat) cmpthis = cmpthat;
+            //if (cmpthis == cmpthat)
+            //{
+            // double strictnessThis = 0;
+            //  double detailThat = 0;
+            for (int i = 0; i < cmpthis; i++)
+            {
+                Unifiable thatpath1 = thatpath[i];
+                Unifiable thispath1 = thispath[i];
+                int diff = thispath1.CompareTo(thatpath1);
+                if (diff != 0) return diff;
+                a1 -= Strictness(thatpath1);
+                b1 -= Strictness(thispath1);
+            }
+            if (a1 == b1)
+            {
+                return ReferenceCompare(thiz, that);
+            }
+            return a1.CompareTo(b1);
+            //}
+            //   return cmpthis.CompareTo(cmpthat);
+        }
+        public static int ReferenceCompare(Object thiz, Object other)
+        {
+            if (ReferenceEquals(thiz, other)) return 0;
+            int cmpthis = RuntimeHelpers.GetHashCode(thiz);
+            int cmpthat = RuntimeHelpers.GetHashCode(other);
+            if (cmpthis == cmpthat)
+            {
+                throw new InvalidCastException(thiz + " == " + other);
+            }
+            return cmpthis.CompareTo(cmpthat);
+        }
+#if USE_COMPARE_CACHE
+        public IList<Unifiable> _ToPath;
+        public double _variance;
+#endif
+        public IList<Unifiable> ToPath()
+        {
+#if USE_COMPARE_CACHE
+#else
+            IList<Unifiable> _ToPath = null;
+            double _variance = double.NaN;
+#endif
+            _ToPath = null;
+            if (_ToPath != null) return _ToPath;
+            _variance = Strictness(word);
+
+            var p = Parent;
+            if (p == null)
+            {
+                return (_ToPath = new[] { word });
+            }
+            var sb = new List<Unifiable> { word };
+            var pword = p.word;
+            sb.Add(pword);
+            _variance += Strictness(pword);
+            p = p.Parent;
+            while (p != null)
+            {
+                pword = p.word;
+                sb.Add(pword);
+                _variance += Strictness(pword);
+                p = p.Parent;
+            }
+            return (_ToPath = sb.ToArray());
+        }
+
+        static double Strictness(string pword)
+        {
+            return pword.Length;
+        }
+
+        #endregion
     }
 
     public class OutputTemplate
@@ -1702,7 +1836,7 @@ namespace AltAIMLbot.Utils
                                 }
                             }
 
-                            if ((childtxt != null) && (!myNode.children.ContainsKey(childtxt)))
+                            if ((childtxt != null) && (!myNode.ContainsChildKey(childtxt)))
                             {
                                 //myNode.childrenList.Add(childtxt);
 
@@ -1729,7 +1863,7 @@ namespace AltAIMLbot.Utils
                     }
                 }
                 string childrenStr = "";
-                //foreach (string c in myNode.children.Keys)
+                //foreach (string c in myNode.ChildKeys)
                 //{
                 //    childrenStr += "(" + c + ")";
                 //}
@@ -1791,23 +1925,23 @@ namespace AltAIMLbot.Utils
                 PrepNode(myNode);
 
                 string childrenStr = "";
-                //foreach (string c in myNode.children.Keys)
+                //foreach (string c in myNode.ChildKeys)
                // {
                 //    childrenStr += "(" + c + ")";
                 //}
 
 
                // if ((childrenStr != myNode.childrenStr) && 
-                if ((myNode.childnum + myNode.children.Count) != myNode.childmax )
+                if ((myNode.childnum + myNode.NumberOfChildNodes) != myNode.childmax )
                 {
-                    logText(String.Format("WARNING : {0} myNode.childnum({1}) + myNode.children.Count({2}) != myNode.childmax({3})", absPath, myNode.childnum, myNode.children.Count, myNode.childmax));
-                    if ((myNode.childnum + myNode.children.Count) > myNode.childmax) myNode.childmax = (myNode.childnum + myNode.children.Count);
+                    logText(String.Format("WARNING : {0} myNode.childnum({1}) + myNode.NumberOfChildNodes({2}) != myNode.childmax({3})", absPath, myNode.childnum, myNode.NumberOfChildNodes, myNode.childmax));
+                    if ((myNode.childnum + myNode.NumberOfChildNodes) > myNode.childmax) myNode.childmax = (myNode.childnum + myNode.NumberOfChildNodes);
                 }
-                if (myNode.children.Count  > 0)
+                if (myNode.NumberOfChildNodes  > 0)
                 {
                     int offset = myNode.childnum;
                     if (myNode.fullChildSet) offset = 0;
-                    for (int i = 0; i < myNode.children.Count; i++)
+                    for (int i = 0; i < myNode.NumberOfChildNodes; i++)
                     {
                         int trueindex = i + offset;
                         string childkey = absPath + "#" + trueindex.ToString();
@@ -1862,8 +1996,8 @@ namespace AltAIMLbot.Utils
                         }
                     }
                 }
-                //myNode.childnum += myNode.children.Count;
-                myNode.childmax = myNode.childnum + myNode.children.Count; 
+                //myNode.childnum += myNode.NumberOfChildNodes;
+                myNode.childmax = myNode.childnum + myNode.NumberOfChildNodes; 
 
                 //myNode.childrenStr = childrenStr;
 

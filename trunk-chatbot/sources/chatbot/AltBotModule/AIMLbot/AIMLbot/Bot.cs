@@ -9,7 +9,7 @@ using System.Text;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Reflection;
 using System.Net.Mail;
-
+using AltAIMLbot.AIMLTagHandlers;
 using AltAIMLbot.Utils;
 using DcBus;
 using Aima.Core.Logic.Propositional.Algorithms;
@@ -1085,7 +1085,7 @@ namespace AltAIMLbot
             string tagName = node.Name.ToLower();
             myBehaviors.logNode("AIML", node);
 
-            if (tagName == "template")
+            if (tagName == "template" || tagName == "li")
             {
                 StringBuilder templateResult = new StringBuilder();
                 if (node.HasChildNodes)
@@ -1263,6 +1263,10 @@ namespace AltAIMLbot
                         case "subaiml":
                             tagHandler = new AIMLTagHandlers.subaiml(this, user, query, request, result, node);
                             break;
+                        case "template":
+                        case "li":
+                            tagHandler = new AIMLTagHandlers.format(this, user, query, request, result, node, null);
+                            break;
 
                         default:
                             tagHandler = null;
@@ -1271,6 +1275,9 @@ namespace AltAIMLbot
                 }
                 if (object.Equals(null, tagHandler))
                 {
+                    string debug = node.OuterXml;
+                    if (node.NodeType == XmlNodeType.Text) return node.InnerText;
+                    if (node.NodeType == XmlNodeType.Comment) return " , ";
                     Console.WriteLine(" -- Result0 {0} : {1}", tagName, node.InnerText);
                     return node.InnerText;
                 }
@@ -1287,15 +1294,36 @@ namespace AltAIMLbot
                                 {
                                     try
                                     {
-                                        childNode.InnerXml = this.processNode(childNode, query, request, result, user);
+                                        string value = this.processNode(childNode, query, request, result, user);
+                                        string debug = childNode.OuterXml;
+                                        if (value.Contains("<"))
+                                        {
+                                            childNode.InnerXml = value;
+                                        }
+                                        else
+                                        {
+                                            childNode.InnerXml = value;
+                                        }
                                     }
-                                    catch(Exception e)
+                                    catch (Exception e)
                                     {
                                         Console.WriteLine("AIML processNode ERR {0}: {1}", tagName, e.Message);
                                         Console.WriteLine("AIML processNode OuterXML: {0}", node.OuterXml);
                                         childNode.InnerXml = childNode.InnerText;
                                     }
                                 }
+                            }
+                        }
+                        else
+                        {
+                            if (tagHandler.isNonAtomic)
+                            {
+                                string debug = node.OuterXml;
+                                // atomic tag?!
+                                XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
+                                star recursiveStar = new star(this, user, query, request, result, starNode);
+                                var TemplateNodeInnerText0 = recursiveStar.Transform();
+                                node.InnerXml = TemplateNodeInnerText0;
                             }
                         }
                         string tresult = tagHandler.Transform();

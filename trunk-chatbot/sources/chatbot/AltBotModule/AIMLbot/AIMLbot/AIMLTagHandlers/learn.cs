@@ -32,13 +32,13 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "learn")
+            if (this.TemplateNodeName == "learn")
             {
                 // currently only AIML files in the local filesystem can be referenced
                 // ToDo: Network HTTP and web service based learning
-                if (this.templateNode.InnerText.Length > 0)
+                if (this.TemplateNodeHasText)
                 {
-                    string path = this.templateNode.InnerText;
+                    string path = this.TemplateNodeInnerText;
                     FileInfo fi = new FileInfo(path);
                     if (fi.Exists)
                     {

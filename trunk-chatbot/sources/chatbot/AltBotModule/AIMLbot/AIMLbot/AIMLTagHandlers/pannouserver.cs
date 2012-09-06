@@ -58,28 +58,28 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override String ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "pannouserver")
+            if (this.TemplateNodeName == "pannouserver")
             {
                 string webAns = "Sorry, I don't understand.";
                 // Simply push the filled in tag contents onto the stack
                 try
                 {
-                    String templateNodeInnerValue = this.templateNode.InnerText;
-                    string myUrl = this.templateNode.Attributes["url"].Value;
-                    string myLogin = this.templateNode.Attributes["login"].Value;
-                    string myKey = this.templateNode.Attributes["key"].Value;
+                    String templateNodeInnerValue = this.TemplateNodeInnerText;
+                    string myUrl = TemplateNodeAttributes["url"].Value;
+                    string myLogin = TemplateNodeAttributes["login"].Value;
+                    string myKey = TemplateNodeAttributes["key"].Value;
 
                     string onFail = null;
                     try {
-                        if (this.templateNode.Attributes["onfail"] != null)
-                            onFail = this.templateNode.Attributes["onfail"].Value;
+                        if (TemplateNodeAttributes["onfail"] != null)
+                            onFail = TemplateNodeAttributes["onfail"].Value;
                     }
                     catch(Exception e) { }
 
                     string onSuccess = null;
                     try {
-                        if (this.templateNode.Attributes["onsuccess"] != null)
-                            onSuccess = this.templateNode.Attributes["onsuccess"].Value;
+                        if (TemplateNodeAttributes["onsuccess"] != null)
+                            onSuccess = TemplateNodeAttributes["onsuccess"].Value;
                     }
                     catch (Exception e) { }
 

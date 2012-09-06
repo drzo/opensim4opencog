@@ -39,13 +39,13 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override String ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "postcache")
+            if (this.TemplateNodeName == "postcache")
             {
                 // Simply push the filled in tag contents onto the queue
                 try
                 {
-                    String queueName = this.templateNode.Attributes["key"].Value;
-                    String templateNodeInnerValue = this.templateNode.InnerText;
+                    String queueName = TemplateNodeAttributes["key"].Value;
+                    String templateNodeInnerValue = this.TemplateNodeInnerText;
                     Console.WriteLine("PostCache [{0}] = {1}", queueName, templateNodeInnerValue);
                     this.user.bot.myChemistry.m_cBus.setHash(queueName, (string)templateNodeInnerValue);
                 }

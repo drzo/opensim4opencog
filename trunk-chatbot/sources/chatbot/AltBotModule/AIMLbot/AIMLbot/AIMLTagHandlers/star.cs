@@ -38,32 +38,33 @@ namespace AltAIMLbot.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
+            isRecursive = false;
         }
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "star")
+            if (this.TemplateNodeName == "star")
             {
                 if (this.query.InputStar.Count > 0)
                 {
-                    if (this.templateNode.Attributes.Count == 0)
+                    if (TemplateNodeAttributes.Count == 0)
                     {
                         // return the first (latest) star in the List<>
                         //return (string)this.query.InputStar[0];
                         return (string)this.query.InputStar[this.query.InputStar.Count-1];
                     }
-                    else if (this.templateNode.Attributes.Count == 1)
+                    else if (TemplateNodeAttributes.Count == 1)
                     {
-                        if (this.templateNode.Attributes[0].Name.ToLower() == "index")
+                        if (TemplateNodeAttributes[0].Name.ToLower() == "index")
                         {
                             try
                             {
-                                int index = Convert.ToInt32(this.templateNode.Attributes[0].Value);
+                                int index = Convert.ToInt32(TemplateNodeAttributes[0].Value);
                                 index--;
                                 if ((index >= 0) & (index < this.query.InputStar.Count))
                                 {
                                     //return (string)this.query.InputStar[index];
-                                    return (string)this.query.InputStar[this.query.InputStar.Count-index-1];
+                                    return (string) this.query.InputStar[this.query.InputStar.Count - index - 1];
                                 }
                                 else
                                 {

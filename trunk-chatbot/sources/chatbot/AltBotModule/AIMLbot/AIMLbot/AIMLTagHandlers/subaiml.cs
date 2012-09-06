@@ -41,7 +41,7 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "subaiml")
+            if (this.TemplateNodeName == "subaiml")
             {
                 // 
                 try

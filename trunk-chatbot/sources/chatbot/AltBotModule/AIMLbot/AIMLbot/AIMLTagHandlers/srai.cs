@@ -36,15 +36,15 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "srai")
+            if (this.TemplateNodeName == "srai")
             {
                 string graphName = GetAttribValue("graph", "*");
 
                 if (this.request.depth < this.request.depthMax)
                 {
-                    if (this.templateNode.InnerText.Length > 0)
+                    if (this.TemplateNodeHasText)
                     {
-                        if (this.templateNode.Attributes.Count > 0)
+                        if (TemplateNodeAttributes.Count > 0)
                         {
                             string myTopic = GetAttribValue("topic", "");
                             string myState = GetAttribValue("state", "");
@@ -61,30 +61,36 @@ namespace AltAIMLbot.AIMLTagHandlers
                                 // insert the args
                                 this.user.Predicates.updateSetting("topic", myTopic);
                                 this.user.Predicates.updateSetting("state", myState);
-                                // make the call
-                                Request subRequest0 = new Request(this.templateNode.InnerText, this.user, this.bot);
-                                subRequest0.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
-                                subRequest0.depth = this.request.depth + 1;
-                                Result subQuery0 = this.bot.Chat(subRequest0, graphName);
-                                this.request.hasTimedOut = subRequest0.hasTimedOut;
-                                // restore this level values
-                                this.user.Predicates.updateSetting("topic", localTopic);
-                                this.user.Predicates.updateSetting("state", localState);
-                                Console.WriteLine(" --- SRAI: RETURNA [{0}]", subQuery0.Output);
-
-                                return subQuery0.Output;
+                                // make the call           
+                                try
+                                {
+                                    Request subRequest0 = new Request(this.TemplateNodeInnerText, this.user, this.bot);
+                                    subRequest0.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
+                                    subRequest0.depth = this.request.depth + 1;
+                                    Result subResult0 = this.bot.Chat(subRequest0, graphName);
+                                    this.request.hasTimedOut = subRequest0.hasTimedOut;
+                                    Console.WriteLine(" --- SRAI: RETURNA [{0}]", subResult0.Output);
+                                    return subResult0.Output;
+                                }
+                                finally
+                                {
+                                    // restore this level values
+                                    this.user.Predicates.updateSetting("topic", localTopic);
+                                    this.user.Predicates.updateSetting("state", localState);
+                                    
+                                }
                             }
                         }
                         //else
                         //{
                         // Plain old SRAI
-                        Request subRequest = new Request(this.templateNode.InnerText, this.user, this.bot);
+                        Request subRequest = new Request(this.TemplateNodeInnerText, this.user, this.bot);
                         subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
                         subRequest.depth = this.request.depth + 1;
-                        Result subQuery = this.bot.Chat(subRequest, graphName);
+                        Result subResult = this.bot.Chat(subRequest, graphName);
                         this.request.hasTimedOut = subRequest.hasTimedOut;
-                        Console.WriteLine(" --- SRAI: RETURNB [{0}]", subQuery.Output);
-                        return subQuery.Output;
+                        Console.WriteLine(" --- SRAI: RETURNB [{0}]", subResult.Output);
+                        return subResult.Output;
                         //}
                     }
                 }

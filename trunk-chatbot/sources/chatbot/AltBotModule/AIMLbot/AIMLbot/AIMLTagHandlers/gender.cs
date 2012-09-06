@@ -48,27 +48,18 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "gender")
+            if (this.TemplateNodeName == "gender")
             {
-                if (this.templateNode.InnerText.Length > 0)
+                if (this.TemplateNodeHasText)
                 {
                     // non atomic version of the node
-                    return AltAIMLbot.Normalize.ApplySubstitutions.Substitute(this.bot, this.bot.GenderSubstitutions, this.templateNode.InnerText);
+                    return AltAIMLbot.Normalize.ApplySubstitutions.Substitute(this.bot, this.bot.GenderSubstitutions, this.TemplateNodeInnerText);
                 }
                 else
                 {
                     // atomic version of the node
-                    XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
-                    star recursiveStar = new star(this.bot, this.user, this.query, this.request, this.result, starNode);
-                    this.templateNode.InnerText = recursiveStar.Transform();
-                    if (this.templateNode.InnerText.Length > 0)
-                    {
-                        return this.ProcessChange();
-                    }
-                    else
-                    {
-                        return string.Empty;
-                    }
+                    // calls ProcessChange() one more time and should not get here again
+                    return RecurseStar();
                 }
             }
             return string.Empty;

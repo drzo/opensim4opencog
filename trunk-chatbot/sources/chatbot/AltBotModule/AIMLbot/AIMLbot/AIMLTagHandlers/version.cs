@@ -33,7 +33,7 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "version")
+            if (this.TemplateNodeName == "version")
             {
                 return this.bot.GlobalSettings.grabSetting("version");
             }

@@ -35,9 +35,9 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "uppercase")
+            if (this.TemplateNodeName == "uppercase")
             {
-                return this.templateNode.InnerText.ToUpper(this.bot.Locale);
+                return this.TemplateNodeInnerText.ToUpper(this.bot.Locale);
             }
             return string.Empty;
         }

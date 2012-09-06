@@ -38,7 +38,7 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override String ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "sapi")
+            if (this.TemplateNodeName == "sapi")
             {
                 // If there is a conversation memo then pop it
                 // otherwise take the tag content as a srai (to trip say a random reply)
@@ -48,7 +48,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     string message = "";
                     if (this.user.bot.saySapi)
                     {
-                         message = this.templateNode.OuterXml;
+                         message = this.TemplateNodeOuterXml;
                          message = message.Replace(@"<sapi>", "");
                          message = message.Replace(@"</sapi>", "");
                          message = message.Replace("<", "&lt;");
@@ -56,7 +56,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     }
                     else
                     {
-                        message = this.templateNode.InnerText;
+                        message = this.TemplateNodeInnerText;
                     }
                     return message;
 

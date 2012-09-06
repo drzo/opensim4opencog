@@ -40,12 +40,12 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "chemsys")
+            if (this.TemplateNodeName == "chemsys")
             {
                 // Simply push the filled in tag contents onto the stack
                 try
                 {
-                    String templateNodeInnerValue = this.templateNode.InnerText;
+                    String templateNodeInnerValue = this.TemplateNodeInnerText;
                     this.user.bot.realChem.interepretCmdList ((string)templateNodeInnerValue);
                 }
                 catch

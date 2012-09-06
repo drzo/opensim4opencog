@@ -45,15 +45,16 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "set")
+            if (this.TemplateNodeName == "set")
             {
                 string name = GetAttribValue("name,var", null);
                 string type0 = GetAttribValue("type,dict", "user");
                 SettingsDictionary dict = request.GetDictionary(type0) ?? this.user.Predicates;
-                string settingValue = templateNode.InnerText;
+                string settingValue = TemplateNodeInnerText;
                 if (settingValue.Length > 0)
                 {
                     dict.addSetting(name, settingValue);
+                    bot.writeToLog("SET " + name + "=" + settingValue);
                     return dict.grabSetting(name);
 
                 }

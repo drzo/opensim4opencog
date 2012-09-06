@@ -41,18 +41,18 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "rbehavior")
+            if (this.TemplateNodeName == "rbehavior")
             {
                 // Simply pass the contents to the defineBehavior
                 try
                 {
-                    String templateNodeTotalValue = this.templateNode.OuterXml;
+                    String templateNodeTotalValue = this.TemplateNodeOuterXml;
                     String myName = "root";
                     try
                     {
-                        if (this.templateNode.Attributes["id"] != null)
+                        if (TemplateNodeAttributes["id"] != null)
                         {
-                            myName = this.templateNode.Attributes["id"].Value;
+                            myName = TemplateNodeAttributes["id"].Value;
                         }
                     }
                     catch

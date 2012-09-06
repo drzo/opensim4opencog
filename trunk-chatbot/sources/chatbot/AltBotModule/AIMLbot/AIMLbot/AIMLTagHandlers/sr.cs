@@ -34,13 +34,13 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "sr")
+            if (this.TemplateNodeName == "sr")
             {
                 XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
                 star recursiveStar = new star(this.bot, this.user, this.query, this.request, this.result, starNode);
                 string starContent = recursiveStar.Transform();
 
-                XmlNode sraiNode = AltAIMLbot.Utils.AIMLTagHandler.getNode("<srai>"+starContent+"</srai>");
+                XmlNode sraiNode = AltAIMLbot.Utils.AIMLTagHandler.getNode("<srai>" + starContent + "</srai>");
                 srai sraiHandler = new srai(this.bot, this.user, this.query, this.request, this.result, sraiNode);
                 return sraiHandler.Transform();
             }

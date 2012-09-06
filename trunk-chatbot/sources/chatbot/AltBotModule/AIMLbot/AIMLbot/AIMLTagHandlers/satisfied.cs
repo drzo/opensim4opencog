@@ -47,12 +47,12 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "satisfied")
+            if (this.TemplateNodeName == "satisfied")
             {
                 // Simply push the filled in tag contents onto the queue
                 try
                 {
-                    string driveName = this.templateNode.Attributes["drive"].Value;// GetAttribValue("chem", null);
+                    string driveName = TemplateNodeAttributes["drive"].Value;// GetAttribValue("chem", null);
                     this.user.bot.myBehaviors.satisfyDrive(driveName);
                     return String.Format("Satisfied drive {0}. ", driveName);
                 }

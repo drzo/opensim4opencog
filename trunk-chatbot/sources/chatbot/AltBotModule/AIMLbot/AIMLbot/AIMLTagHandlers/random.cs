@@ -34,7 +34,7 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "random")
+            if (this.TemplateNodeName == "random")
             {
                 if (this.templateNode.HasChildNodes)
                 {

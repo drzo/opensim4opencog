@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Xml;
+using AltAIMLbot.AIMLTagHandlers;
 using MushDLR223.Utilities;
 
 namespace AltAIMLbot.Utils 
@@ -32,7 +33,7 @@ namespace AltAIMLbot.Utils
             this.request = request;
             this.result = result;
             this.templateNode = templateNode;
-            this.templateNode.Attributes.RemoveNamedItem("xmlns");
+            TemplateNodeAttributes.RemoveNamedItem("xmlns");
         }
 
         /// <summary>
@@ -46,6 +47,11 @@ namespace AltAIMLbot.Utils
         /// A flag to denote if inner tags are to be processed recursively before processing this tag
         /// </summary>
         public bool isRecursive = true;
+
+        /// <summary>
+        /// A flag to denote if inner tags are to be processed recursively before processing this tag
+        /// </summary>
+        public bool isNonAtomic = true;
 
         /// <summary>
         /// A representation of the user who made the request
@@ -88,13 +94,84 @@ namespace AltAIMLbot.Utils
 
         public string GetAttribValue(string attributeName, string otherwise)
         {
+            return GetAttribValue<string>(attributeName, otherwise);
+        }
+        public T GetAttribValue<T>(string attributeName, T otherwise) where T : IConvertible
+        {
             return GetAttribValue(templateNode, attributeName, otherwise);
         }
+        public T GetAttribValue<T>(string attribName, Func<T> defaultIfEmpty) where T : IConvertible
+        {
+            return StaticXMLUtils.GetAttribValue(templateNode, attribName, defaultIfEmpty, null);
+        }
+
         public static T GetAttribValue<T>(XmlNode templateNode, string attribName, T defaultIfEmpty) where T : IConvertible
         {
             return StaticXMLUtils.GetAttribValue(templateNode, attribName, () => (defaultIfEmpty), null);
         }
+        protected string TemplateNodeName
+        {
+            get { return templateNode.Name.ToLower(); }
+        }
+        protected XmlAttributeCollection TemplateNodeAttributes
+        {
+            get { return templateNode.Attributes; }
+        }
+        
+        protected bool TemplateNodeHasText
+        {
+            get { return TemplateNodeInnerText.Length > 0; }
+        }
+        protected string RecurseStar()
+        {
+            XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
+            star recursiveStar = new star(this.bot, this.user, this.query, this.request, this.result, starNode);
+            this.TemplateNodeInnerText0 = recursiveStar.Transform();
+            if (this.TemplateNodeHasText)
+            {
+                return this.ProcessChange();
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
+        protected string TemplateNodeInnerXml
+        {
+            get { return templateNode.InnerXml; }
+        }
 
+        protected string TemplateNodeOuterXml
+        {
+            get { return templateNode.OuterXml; }
+        }
+        protected string TemplateNodeInnerText
+        {
+            get
+            {
+                var ret = TemplateNodeInnerText0;
+                if (TemplateNodeInnerXml.Contains("<") && innerTextOverride == null && !TemplateNodeInnerXml.Contains("star>"))
+                {
+                   // throw new NotSupportedException("Template Node XML");
+                }
+                return ret;
+            }
+        }
+        protected string TemplateNodeInnerText0
+        {
+            get
+            {
+                if (innerTextOverride != null) return innerTextOverride;
+                return templateNode.InnerText;
+            }
+            set
+            {
+                innerTextOverride = value;
+                templateNode.InnerText = value;
+            }
+        }
+
+        private string innerTextOverride = null;
         #endregion
     }
 }

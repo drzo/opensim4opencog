@@ -29,16 +29,16 @@ namespace AltAIMLbot.AIMLTagHandlers
         protected override string ProcessChange()
         {
             string msg = string.Empty ;
-            if (this.templateNode.Name.ToLower() == "summerize")
+            if (this.TemplateNodeName == "summerize")
             {
-                if (this.templateNode.InnerText.Length > 0)
+                if (this.TemplateNodeHasText)
                 {
                     // non atomic version of the node
-                    msg = this.templateNode.InnerText;
+                    msg = this.TemplateNodeInnerText;
                     int limit = 256;
-                    if (this.templateNode.Attributes["max"] != null)
+                    if (TemplateNodeAttributes["max"] != null)
                     {
-                        string rx = this.templateNode.Attributes["max"].Value;
+                        string rx = TemplateNodeAttributes["max"].Value;
 
                         limit = int.Parse(rx);
                     }

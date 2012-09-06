@@ -40,13 +40,13 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override String ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "refserver")
+            if (this.TemplateNodeName == "refserver")
             {
                 // Simply push the filled in tag contents onto the stack
                 try
                 {
-                    String templateNodeInnerValue = this.templateNode.InnerText;
-                    string myUrl = this.templateNode.Attributes["url"].Value;
+                    String templateNodeInnerValue = this.TemplateNodeInnerText;
+                    string myUrl = TemplateNodeAttributes["url"].Value;
                     if (myUrl == null) { myUrl = bot.GlobalSettings.grabSetting("refserverurl"); }
 
 

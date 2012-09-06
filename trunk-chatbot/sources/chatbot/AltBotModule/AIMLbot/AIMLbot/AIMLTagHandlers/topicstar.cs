@@ -37,9 +37,9 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "topicstar")
+            if (this.TemplateNodeName == "topicstar")
             {
-                if (this.templateNode.Attributes.Count == 0)
+                if (TemplateNodeAttributes.Count == 0)
                 {
                     if (this.query.TopicStar.Count > 0)
                     {
@@ -50,15 +50,15 @@ namespace AltAIMLbot.AIMLTagHandlers
                         this.bot.writeToLog("ERROR! An out of bounds index to topicstar was encountered when processing the input: " + this.request.rawInput);
                     }
                 }
-                else if (this.templateNode.Attributes.Count == 1)
+                else if (TemplateNodeAttributes.Count == 1)
                 {
-                    if (this.templateNode.Attributes[0].Name.ToLower() == "index")
+                    if (TemplateNodeAttributes[0].Name.ToLower() == "index")
                     {
-                        if (this.templateNode.Attributes[0].Value.Length > 0)
+                        if (TemplateNodeAttributes[0].Value.Length > 0)
                         {
                             try
                             {
-                                int result = Convert.ToInt32(this.templateNode.Attributes[0].Value.Trim());
+                                int result = Convert.ToInt32(TemplateNodeAttributes[0].Value.Trim());
                                 if (this.query.TopicStar.Count > 0)
                                 {
                                     if (result > 0)
@@ -67,7 +67,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                                     }
                                     else
                                     {
-                                        this.bot.writeToLog("ERROR! An input tag with a badly formed index (" + this.templateNode.Attributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
+                                        this.bot.writeToLog("ERROR! An input tag with a badly formed index (" + TemplateNodeAttributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
                                     }
                                 }
                                 else
@@ -77,7 +77,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                             }
                             catch
                             {
-                                this.bot.writeToLog("ERROR! A thatstar tag with a badly formed index (" + this.templateNode.Attributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
+                                this.bot.writeToLog("ERROR! A thatstar tag with a badly formed index (" + TemplateNodeAttributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
                             }
                         }
                     }

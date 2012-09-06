@@ -41,13 +41,14 @@ namespace AltAIMLbot.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
+            isNonAtomic = false;
         }
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "get")
+            if (this.TemplateNodeName == "get")
             {
-                string name = GetAttribValue("name,var", null);
+                string name = GetAttribValue("name,var", () => TemplateNodeInnerText);
                 string type0 = GetAttribValue("type,dict", "user");
                 SettingsDictionary dict = request.GetDictionary(type0) ?? this.user.Predicates;
                 return dict.grabSetting(name);

@@ -48,16 +48,16 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "say")
+            if (this.TemplateNodeName == "say")
             {
                 // Simply push the filled in tag contents onto the queue
                 try
                 {
-                    if (this.templateNode.InnerText.Length > 0)
+                    if (this.TemplateNodeHasText)
                     {
                         // non atomic version of the node
-                        string message = this.templateNode.InnerText;
-                        //if (bot.saySapi) message = this.templateNode.InnerXml;
+                        string message = this.TemplateNodeInnerText;
+                        //if (bot.saySapi) message = this.TemplateNodeInnerXml;
                         Console.WriteLine("  SayA msg1:{0}", message);
                         //if (message.Length > 0) this.user.bot.sayProcessor(message);
                         this.bot.setBBHash("TTSText", message);
@@ -79,8 +79,8 @@ namespace AltAIMLbot.AIMLTagHandlers
                     }
                     else
                     {
-                        string message = this.templateNode.InnerXml; //.InnerText;
-                        string message2 = this.templateNode.InnerText;
+                        string message = this.TemplateNodeInnerXml; //.InnerText;
+                        string message2 = this.TemplateNodeInnerText;
                         Console.WriteLine("  SayB msg1:{0}", message);
                         Console.WriteLine("  SayB msg2:{0}", message2);
                         //if (message.Length > 0) this.user.bot.sayProcessor(message);

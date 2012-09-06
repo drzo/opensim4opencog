@@ -38,22 +38,9 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override String ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "rndint")
+            if (this.TemplateNodeName == "rndint")
             {
-                int range = int.MaxValue ;
-
-                if (this.templateNode.Attributes.Count > 0)
-                {
-                    try
-                    {
-                       string rx = this.templateNode.Attributes["max"].Value;
-                       range = int.Parse(rx);
-                    }
-                    catch
-                    {
-                    }
-                }
-
+                int range = GetAttribValue("max", int.MaxValue);
                 Random R = new Random();
                 int RV = R.Next(range);
                 return RV.ToString();

@@ -38,17 +38,17 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override String ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "rnddbl")
+            if (this.TemplateNodeName == "rnddbl")
             {
                 double range = 1 ;
 
-                if (this.templateNode.Attributes.Count > 0)
+                if (TemplateNodeAttributes.Count > 0)
                 {
                     try
                     {
-                        if (this.templateNode.Attributes["max"] != null)
+                        if (TemplateNodeAttributes["max"] != null)
                         {
-                            string rx = this.templateNode.Attributes["max"].Value;
+                            string rx = TemplateNodeAttributes["max"].Value;
                             range = double.Parse(rx);
                         }
                     }

@@ -48,12 +48,12 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "btxml")
+            if (this.TemplateNodeName == "btxml")
             {
                 // Simply feed the tag contents to the behavior system
                 try
                 {
-                    //string templateNodeInnerValue = this.templateNode.InnerText;
+                    //string templateNodeInnerValue = this.TemplateNodeInnerText;
                     //this.bot.myBehaviors.runBTXML(templateNodeInnerValue);
                     this.bot.myBehaviors.runBTXML(templateNode);
                 }

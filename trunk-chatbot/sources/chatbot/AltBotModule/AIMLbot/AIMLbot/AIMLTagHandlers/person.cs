@@ -48,20 +48,18 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "person")
+            if (this.TemplateNodeName == "person")
             {
-                if (this.templateNode.InnerText.Length > 0)
+                if (this.TemplateNodeHasText)
                 {
                     // non atomic version of the node
-                    return AltAIMLbot.Normalize.ApplySubstitutions.Substitute(this.bot, this.bot.PersonSubstitutions, this.templateNode.InnerText);
+                    return AltAIMLbot.Normalize.ApplySubstitutions.Substitute(this.bot, this.bot.PersonSubstitutions, this.TemplateNodeInnerText);
                 }
                 else
                 {
                     // atomic version of the node
-                    XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
-                    star recursiveStar = new star(this.bot, this.user, this.query, this.request, this.result, starNode);
-                    this.templateNode.InnerText = recursiveStar.Transform();
-                    if (this.templateNode.InnerText.Length > 0)
+                    RecurseStar();
+                    if (this.TemplateNodeHasText)
                     {
                         return this.ProcessChange();
                     }
@@ -73,5 +71,6 @@ namespace AltAIMLbot.AIMLTagHandlers
             }
             return string.Empty;
         }
+
     }
 }

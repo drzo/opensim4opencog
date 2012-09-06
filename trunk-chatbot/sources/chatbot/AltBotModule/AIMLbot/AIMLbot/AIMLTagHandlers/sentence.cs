@@ -38,12 +38,12 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if(this.templateNode.Name.ToLower()=="sentence")
+            if(this.TemplateNodeName=="sentence")
             {
-                if (this.templateNode.InnerText.Length > 0)
+                if (this.TemplateNodeHasText)
                 {
                     StringBuilder result = new StringBuilder();
-                    char[] letters = this.templateNode.InnerText.Trim().ToCharArray();
+                    char[] letters = this.TemplateNodeInnerText.Trim().ToCharArray();
                     bool doChange = true;
                     for (int i = 0; i < letters.Length; i++)
                     {
@@ -77,17 +77,8 @@ namespace AltAIMLbot.AIMLTagHandlers
                 else
                 {
                     // atomic version of the node
-                    XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
-                    star recursiveStar = new star(this.bot, this.user, this.query, this.request, this.result, starNode);
-                    this.templateNode.InnerText = recursiveStar.Transform();
-                    if (this.templateNode.InnerText.Length > 0)
-                    {
-                        return this.ProcessChange();
-                    }
-                    else
-                    {
-                        return string.Empty;
-                    }
+                    // calls ProcessChange() one more time and should not get here again
+                    return RecurseStar();
                 }
             }
 

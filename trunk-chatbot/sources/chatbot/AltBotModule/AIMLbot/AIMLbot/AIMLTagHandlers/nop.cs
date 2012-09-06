@@ -38,7 +38,7 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override String ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "nop")
+            if (this.TemplateNodeName == "nop")
             {
 
             }

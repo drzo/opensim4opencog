@@ -41,17 +41,13 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "scxml")
+            if (this.TemplateNodeName == "scxml")
             {
                 // Simply push the filled in tag contents onto the stack
                 try
                 {
-                    String templateNodeTotalValue = this.templateNode.OuterXml;
-                    String myName = "root";
-                    if (this.templateNode.Attributes["name"] != null)
-                    {
-                        myName = this.templateNode.Attributes["name"].Value;
-                    }
+                    String templateNodeTotalValue = this.TemplateNodeOuterXml;
+                    String myName = GetAttribValue("name", "root");
                     this.user.bot.defineFSM((string)myName, (string)templateNodeTotalValue);
                 }
                 catch

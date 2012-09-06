@@ -46,16 +46,16 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "crontag")
+            if (this.TemplateNodeName == "crontag")
             {
                 // Simply push the filled in tag contents onto the queue
                 try
                 {
-                    String templateInnerValue = this.templateNode.InnerXml;
+                    String templateInnerValue = this.TemplateNodeInnerXml;
                     String myTimeSpec = "* * * * * *";
                     try
                     {
-                        myTimeSpec = this.templateNode.Attributes["timeline"].Value;
+                        myTimeSpec = TemplateNodeAttributes["timeline"].Value;
                     }
                     catch(Exception)
                     {
@@ -65,7 +65,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     String myBehavior = "root";
                     try
                     {
-                        myBehavior = this.templateNode.Attributes["id"].Value;
+                        myBehavior = TemplateNodeAttributes["id"].Value;
                     }
                     catch (Exception)
                     {
@@ -74,9 +74,9 @@ namespace AltAIMLbot.AIMLTagHandlers
                     String myTimeMode = "absolute";
                     try
                     {
-                        if (this.templateNode.Attributes["mode"] != null)
+                        if (TemplateNodeAttributes["mode"] != null)
                         {
-                            myTimeMode = this.templateNode.Attributes["mode"].Value;
+                            myTimeMode = TemplateNodeAttributes["mode"].Value;
                         }
                     }
                     catch (Exception)
