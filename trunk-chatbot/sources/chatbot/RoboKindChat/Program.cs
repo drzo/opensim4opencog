@@ -148,6 +148,7 @@ namespace RoboKindChat
         static void Main(string[] args)
         {
             TheRoboKindAvroQPIDModule = new RoboKindAvroQPIDModuleMain();
+            TheRoboKindAvroQPIDModule.Spy();
             startServitor();
             servitor.tmFSMEnabled = false;
             servitor.tmBehaveEnabled = false;
