@@ -17,7 +17,6 @@ namespace Cogbot.Actions.System
         {
             Description = "Sets the current bot for subsequent botcmd REPL commands.";
             Details =
-                AddUsage("setbot <none|<name>>", "Sets the bot by user name") +
                 AddExample(
                     @"
 ... log on two bots, Ima Bot and Another Bot
@@ -30,6 +29,7 @@ namespace Cogbot.Actions.System
 ",
                     "first one bot, then a different one, chats");
             Parameters = CreateParams("bot", typeof (AgentSpec), "name of bot");
+            AddUsage("setbot <none|<name>>", "Sets the bot by user name");
             Category = CommandCategory.BotClient;
         }
 

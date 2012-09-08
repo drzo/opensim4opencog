@@ -48,14 +48,14 @@ namespace Cogbot.Actions.System
             Category = CommandCategory.BotClient;
         }
 
-        public void SysVarHtml(OutputDelegate writeIt)
+        public void SysVarHtml(OutputDelegate writeIt, bool noReadOnly)
         {
             writeIt("<table><tr><th>Variable Name</th><th>current value</th><th>Description</th></tr>");
             foreach (var sv in GetSysVars())
             {
                 IKeyValuePair<string, object> svv = sv;
                 var t = (svv.Value ?? svv.Key).GetType().Name;
-                var t2 = svv.DebugInfo;
+                if (noReadOnly && svv.IsReadOnly) continue;
                 writeIt(string.Format("<tr name=\"{0}\" id='{0}'><td>{0}</td><td>{1}</td><td>{2}</td></tr>",
                                             Htmlize.NoEnts(svv.Key), Htmlize.NoEnts("" + svv.Value),
                                             Htmlize.NoEnts(svv.Comments)));
@@ -125,7 +125,7 @@ namespace Cogbot.Actions.System
                                        { 
                                            return;
                                        }
-                                   });
+                                   }, true);
                 }
                 finally
                 {
@@ -142,7 +142,7 @@ namespace Cogbot.Actions.System
             if (args.ContainsFlag("htmldoc"))
             {
                 StringBuilder sw = new StringBuilder(1024*900);
-                SysVarHtml((s, ags) => sw.AppendFormat(s, ags));
+                SysVarHtml((s, ags) => sw.AppendFormat(s, ags), false);
                 return Success(sw.ToString());
             }
 

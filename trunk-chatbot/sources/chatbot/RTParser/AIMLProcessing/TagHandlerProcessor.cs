@@ -403,7 +403,7 @@ namespace RTParser
                     {
                         string name = node.Name.Substring(prefix.Key.Length);
                         XmlNode pn = node.ParentNode;
-                        LineInfoElementImpl newnode = CopyNode(prefix.Value, node, false);
+                        LineInfoElementImpl newnode = StaticXMLUtils.CopyNode(prefix.Value, node, false);
                         XmlAttributeLineInfo atr = (XmlAttributeLineInfo)newnode.OwnerDocument.CreateAttribute("name");
                         atr.ReadOnly = false;
                         atr.Value = name;

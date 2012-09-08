@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cogbot.World;
 using OpenMetaverse;
+using MushDLR223.ScriptEngines;
 
 namespace Cogbot
 {

@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{47775ECD-C2C2-47FB-870D-D1B3F2FDE3C2}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{8489EDDE-009B-4C5C-8EDC-22DE483AAF94}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RoboKindChat</RootNamespace>
-    <AssemblyName>RoboKindChat</AssemblyName>
+    <RootNamespace>RoboKindAvroQPID</RootNamespace>
+    <AssemblyName>RoboKindAvroQPIDLibrary</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -18,10 +18,10 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\..\bin\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;VISUAL_STUDIO</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
+    <DocumentationFile>ClassifierModule.XML</DocumentationFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -33,30 +33,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\bin\log4net.dll</HintPath>
-    </Reference>
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="Newtonsoft.Json, Version=3.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL" />
     <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
-      <Project>{19A1AA71-F91B-4846-9D93-882FB2992048}</Project>
+      <Project>{5EC8E3B9-57B8-4D8C-B9CE-C64D53D15D37}</Project>
       <Name>MushDLR223</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\qpid-avro-cs\avro-src-1.7.0\lang\csharp\src\apache\main\Avro.main.csproj">
@@ -87,22 +71,11 @@
       <Project>{1465B0EE-6452-42A6-AB73-B2F9EABEEE75}</Project>
       <Name>Qpid.Sasl</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\RoboKindAvroQPID.csproj">
-      <Project>{8489EDDE-009B-4C5C-8EDC-22DE483AAF94}</Project>
-      <Name>RoboKindAvroQPID</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\AltBotModule\AIMLbot\AIMLbot\AltAIMLbot.csproj">
-      <Project>{1B0D3922-C6FB-47C0-A688-2773C002955A}</Project>
-      <Name>AltAIMLbot</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\LAIR.ResourceAPIs\WordNet\WordNet\LAIR.ResourceAPIs.WordNet.csproj">
-      <Project>{84F11AF8-D72B-47D3-A087-9B428E593332}</Project>
-      <Name>LAIR.ResourceAPIs.WordNet</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RaptorDB\RaptorDB.csproj">
-      <Project>{10A8E1BB-F7E9-4EE5-8A56-3832A451C1EB}</Project>
-      <Name>RaptorDB</Name>
-    </ProjectReference>
+
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="RoboKindAvroQPIDModule.cs" />
+    <Compile Include="RoboKindConnectorQPID.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

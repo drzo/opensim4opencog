@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cogbot.Actions;
 using Cogbot.World;
+using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.Packets;

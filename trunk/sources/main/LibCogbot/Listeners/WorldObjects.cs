@@ -1,6 +1,7 @@
 #undef COGBOT_LIBOMV
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using Cogbot.World;
 using MushDLR223.ScriptEngines;
@@ -11,20 +12,6 @@ using System.Configuration;
 namespace Cogbot
 {
     public delegate float SimObjectHeuristic(SimObject prim);
-    public class NamedPrefixThing
-    {
-        public string prefix;
-        public Func<string> getNamed;
-        public NamedPrefixThing(string named, Func<string> client)
-        {
-            prefix = named;
-            getNamed = client;
-        }
-        public override string ToString()
-        {
-            return prefix + " " + getNamed();
-        }
-    }
 
     public partial class WorldObjects : AllEvents, ContextualSingleton
     {
@@ -38,7 +25,7 @@ namespace Cogbot
         [ConfigSetting(Description = "Bot is allowed to sit on things. Some things do obnoxious stuff like TP when sat on.")]
         public bool CanUseSit = true;
 
-        [ConfigSetting(ReadOnly=true, SkipSaveOnExit = true, Description = "If true the bot repeatedly reloads the scene to try to catch missing updates. GridMaster will turn this on/off only if it needed")]
+        [ConfigSetting(IsReadOnly=true, SkipSaveOnExit = true, Description = "If true the bot repeatedly reloads the scene to try to catch missing updates. GridMaster will turn this on/off only if it needed")]
         public static bool RegionMasterSimulatorsCatchUps = false;
 
         [ConfigSetting(Description = "if true, downloads animations")]
@@ -95,7 +82,7 @@ namespace Cogbot
         [ConfigSetting(Description = "False since currently broken this is where FromTaskIDs are guessed as to being object or Avatars")]
         public static bool DiscoverTaskUUIDs = false;
 
-        [ConfigSetting(ReadOnly = true, Description="if false the robot overlords escape their 3 law programming and rampage and Cogbot dies horribly")]
+        [ConfigSetting(IsReadOnly = true, Description="if false the robot overlords escape their 3 law programming and rampage and Cogbot dies horribly")]
         public static bool UseNewEventSystem = true;
         
         [ConfigSetting(Description="Send all object events. If set false the sim object event system is disabled.")]
@@ -722,14 +709,22 @@ namespace Cogbot
         public static void RegisterUUIDMaybe(UUID id, object type)
         {
             object before;
-            if (UUIDTypeObjectTryGetValue(id, out before)) return;
+            if (UUIDTypeObjectTryGetValue(id, out before) && GoodRegistration(before)) return;
             lock (UUIDTypeObjectLock)
             {
-                if (!UUIDTypeObjectTryGetValue(id, out before))
+                if (!UUIDTypeObjectTryGetValue(id, out before) && !GoodRegistration(before))
                 {
                     UUIDTypeObjectSetValue(id, type);
                 }
             }
+        }
+
+        private static bool GoodRegistration(object before)
+        {
+            if (before is MemberInfo) return false;
+            if (before is Type) return false;
+            if (before is string) return false;
+            return before != null;
         }
 
         public static void RegisterUUID(UUID id, object type)

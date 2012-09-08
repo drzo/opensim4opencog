@@ -198,6 +198,11 @@ namespace MushDLR223.ScriptEngines
             get { return Key + " = " + Value; }
         }
 
+        public bool IsReadOnly
+        {
+            get { throw new NotImplementedException(); }
+        }
+
         #endregion
 
         #region Implementation of IDisposable

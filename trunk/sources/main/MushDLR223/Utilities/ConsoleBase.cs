@@ -1665,6 +1665,7 @@ namespace MushDLR223.Utilities
         }
         private static void SystemWriteLine00(string format)
         {
+            var Outputs = DLRConsole.Outputs;
             if (IsOnMonoUnix || Outputs.Count == 0)
             {
                 CALL_SYSTEM_ERR_WRITELINE(format);
@@ -1672,7 +1673,6 @@ namespace MushDLR223.Utilities
             }
             format = GetFormat(format).TrimEnd();
             PauseIfTraced(format);
-            SystemConsole.WriteLine(format);
             foreach (TextWriter o in Outputs)
             {
                 try
@@ -1692,6 +1692,7 @@ namespace MushDLR223.Utilities
             if (!TheGlobalLogFilter.ShouldPrint(format))
             {
                 CALL_SYSTEM_ERR_WRITELINE(format);
+                return;
             }
             if (String.IsNullOrEmpty(format)) return;
             SystemWriteLine00(format);

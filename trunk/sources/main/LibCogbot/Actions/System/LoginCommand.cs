@@ -16,9 +16,6 @@ namespace Cogbot.Actions.System
         public override void MakeInfo()
         {
             Description = "Log into grid";
-            Details = AddUsage("login <first name> <last name> <password> [<loginuri>] [<location>]",
-                               "log into a grid");
-            Category = CommandCategory.Security;
             Parameters = CreateParams(
                 "first", typeof (string), "first name of bot",
                 "last", typeof (string), "last name of bot",

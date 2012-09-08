@@ -17,10 +17,9 @@ namespace Cogbot.Actions.System
         {
             Description =
                 "Print help on everything, or help on a topic string. The full help text is searched for the string.";
-            Details = AddUsage("help", "shows the overview of all commands") +
-                      AddUsage("help moveto", "shows overvierw and usage/examples on the moveto command");
-            Parameters = CreateParams(
-                Optional("topic", typeof (string), "Optional text to search for."));
+            AddExample("help", "shows the overview of all commands");
+            AddExample("help moveto", "shows overvierw and usage/examples on the moveto command");
+            Parameters = CreateParams(Optional("topic", typeof (string), "Optional text to search for."));
 
             ResultMap = CreateParams(
                 "message", typeof (string), "if success was false, the reason why",

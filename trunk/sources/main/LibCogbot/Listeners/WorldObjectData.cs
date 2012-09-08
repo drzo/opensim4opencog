@@ -8,6 +8,7 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Drawing;
 using System.Collections;
+using MushDLR223.ScriptEngines;
 
 namespace Cogbot
 {
