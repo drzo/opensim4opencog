@@ -72,8 +72,8 @@ namespace Cogbot
     public class ClientManager : IDisposable,ScriptExecutorGetter
     {
 
-        public static readonly TaskQueueHandler OneAtATimeQueue = new TaskQueueHandler(null, "ClientManager.OneAtATime", new TimeSpan(0, 0, 0, 0, 10), true, false);
-        public static readonly TaskQueueHandler PostAutoExec = new TaskQueueHandler(null, "ClientManager.PostAutoExec", new TimeSpan(0, 0, 0, 0, 10), false, false);
+        public static TaskQueueHandler OneAtATimeQueue;
+        public static TaskQueueHandler PostAutoExec;
         public static object SingleInstanceLock = new object();
         public static event Action<BotClient> BotClientCreated;
 
@@ -193,17 +193,23 @@ namespace Cogbot
                 }
                 SingleInstance = this;
             }
+            if (!ClientManager.SingleInstance.ProcessCommandArgs())
+            {
+                ConsoleApp.Usage();
+            }
             DLRConsole.AddOutput(new OutputDelegateWriter(VeryRealWriteLine));
             var col = DLRConsole.TransparentCallers;
             lock (col)
             {
                 col.Add(typeof(BotClient));
                 col.Add(typeof(ClientManager));
-                col.Add(typeof(Cogbot.SimEventMulticastPipeline));
+                col.Add(typeof(SimEventMulticastPipeline));
                 col.Add(typeof(Cogbot.SimEventTextSubscriber));
                 col.Add(typeof(DotLisp.CLSMember));
             }
-
+            OneAtATimeQueue = new TaskQueueHandler(null, "ClientManager.OneAtATime", new TimeSpan(0, 0, 0, 0, 10), true, false);
+            PostAutoExec = new TaskQueueHandler(null, "ClientManager.PostAutoExec", new TimeSpan(0, 0, 0, 0, 10), false,
+                                                false);
             LoadConfigFile(ClientManagerConfig.arguments.GetValue("botconfig", "botconfig.xml"));
             foreach (var arg in ClientManagerConfig.arguments.ParamMap)
             {
@@ -241,6 +247,7 @@ namespace Cogbot
             }         
             foreach (XmlNode info in root.ChildNodes)
             {
+                if (info.NodeType != XmlNodeType.Element) continue;
                 string key = Parser.ToKey(info.Name);
                 string value =
                     info.InnerXml.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&quote;", "\"").Replace("&amp;",

@@ -17,7 +17,7 @@ namespace Cogbot
 {
     public class ConsoleApp
     {
-        private static void Usage()
+        public static void Usage()
         {
             DLRConsole.SystemWriteLine("Usage: " + Environment.NewLine +
                     "cogbot.exe --first firstname --last lastname --pass password [--loginuri=\"uri\"] [--startpos \"sim/x/y/z\"] [--master \"master name\"] [--masterkey \"master uuid\"] [--gettextures] [--scriptfile \"filename\"] [--nogui]");
@@ -250,11 +250,6 @@ namespace Cogbot
             {
                 ClientManager.MainThread = Thread.CurrentThread;
             }
-
-            if (!ClientManager.SingleInstance.ProcessCommandArgs())
-            {
-                Usage();
-            }
             return args;
         }
 
@@ -405,7 +400,8 @@ namespace Cogbot
             // Read command line options
             Radegast.CommandLine CommandLine = MainProgram.CommandLine = new Radegast.CommandLine();
             CommandLineParser parser = new CommandLineParser(new CommandLineParserSettings(DLRConsole.Out));
-            if (!parser.ParseArguments(args, CommandLine))
+            TextWriter tw = new StringWriter();
+            if (!parser.ParseArguments(args, CommandLine, tw))
             {
                 //  Environment.Exit(1);
             }

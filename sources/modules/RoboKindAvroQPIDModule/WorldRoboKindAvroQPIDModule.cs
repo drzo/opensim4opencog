@@ -1,20 +1,21 @@
-﻿using System;
-using System.Collections;
+using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using System.Threading;
 using Apache.Qpid.Messaging;
-using Avro;
-using Avro.Generic;
-using Avro.Specific;
+using Cogbot;
+using Cogbot;
+using Cogbot.World;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
+using OpenMetaverse;
+using RoboKindChat;
 
-namespace RoboKindChat
+namespace RoboKindAvroQPIDModule
 {
-    public class RoboKindAvroQPIDModuleMain : YesAutoLoad, IDisposable
+    public class WorldRoboKindAvroQPIDModuleMain : WorldObjectsModule, YesAutoLoad, SimEventSubscriber
     {
+        public BotClient botClient;
 
         public static string RK_QPID_URI = "amqp://guest:guest@default/test?brokerlist='tcp://localhost:5672'";
 
@@ -28,6 +29,12 @@ namespace RoboKindChat
         public static string ROBOKIND_RESPONSE_ROUTING_KEY = "response";
 
 
+        public WorldRoboKindAvroQPIDModuleMain(BotClient _parent)
+            : base(_parent)
+        {
+            botClient = _parent;
+        }
+
         readonly List<object> cogbotSendersToNotSendToCogbot = new List<object>();
 
         public static bool DISABLE_AVRO = false;
@@ -35,13 +42,14 @@ namespace RoboKindChat
         private IMessageConsumer RK_listener;
         private RoboKindConnectorQPID RK_publisher;
 
+
         public bool LogEventFromCogbot(object sender, CogbotEvent evt)
         {
             if (DISABLE_AVRO) return true;
             EnsureStarted();
             if (evt.Sender == this) return false;
             if (!IsQPIDRunning) return false;
-            if (!cogbotSendersToNotSendToCogbot.Contains(sender)) cogbotSendersToNotSendToCogbot.Add(sender);          
+            if (!cogbotSendersToNotSendToCogbot.Contains(sender)) cogbotSendersToNotSendToCogbot.Add(sender);   
             string ss = evt.ToEventString();
             var im = RK_publisher.CreateTextMessage(ss);
             int num = 0;
@@ -64,6 +72,11 @@ namespace RoboKindChat
                 }
                 im.Headers.SetString(sKey, "" + s.Value);
             }
+            im.Headers.SetString("verb", "" + evt.Verb);
+            im.Headers.SetBoolean("personal", evt.IsPersonal != null);
+            im.Headers.SetString("evstatus", "" + evt.EventStatus);
+            im.Timestamp = evt.Time.ToFileTime();
+            im.Type = "" + evt.EventType1;
             RK_publisher.SendMessage(COGBOT_EVENT_ROUTING_KEY, im);
             return false;
         }
@@ -82,7 +95,7 @@ namespace RoboKindChat
                 return false;
             }
             evt.Sender = sender ?? evt.Sender;
-            //@todo client.SendPipelineEvent(evt);
+            botClient.SendPipelineEvent(evt);
             return true;
         }
 
@@ -94,14 +107,14 @@ namespace RoboKindChat
             LogEventFromCogbot(evt.Sender, evt);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             EventsEnabled = false;
             if (RK_listener != null)
             {
-                RK_listener.Close();
                 RK_listener.OnMessage -= AvroReceived;
                 RK_listener.Dispose();
+                RK_listener = null;
             }
             if (RK_publisher != null)
             {
@@ -112,30 +125,32 @@ namespace RoboKindChat
 
         public bool EventsEnabled { get; set; }
 
+        public override string GetModuleName()
+        {
+            return this.GetType().Namespace;
+        }
+
+        public override void StartupListener()
+        {
+            EnsureStarted();
+        }
 
         private bool EnsuredStarted = false;
         private void EnsureStarted()
         {
             if (DISABLE_AVRO) return;
             if (EnsuredStarted) return;
-            EnsuredStarted = true;
-            try
-            {
-                EnsureLoginToQIPD();
-                //@todo client.EachSimEvent += SendEachSimEvent;
-                //@todo client.AddBotMessageSubscriber(this);
-                EventsEnabled = true;
-            }
-            catch (Exception)
-            {
-                EnsuredStarted = false;
-            }
+            EnsuredStarted = true;           
+            EnsureLoginToQIPD();
+            botClient.EachSimEvent += SendEachSimEvent;
+            botClient.AddBotMessageSubscriber(this);
+            EventsEnabled = true;
         }
 
         private void EnsureLoginToQIPD()
         {
             if (RK_listener != null) return;
-            var uri = RoboKindAvroQPIDModuleMain.RK_QPID_URI;
+            var uri = RK_QPID_URI;
             try
             {
                 LoginToQPID(uri);
@@ -163,8 +178,7 @@ namespace RoboKindChat
             try
             {
                 RK_publisher = new RoboKindConnectorQPID(uri);
-                RK_publisher.GetPublisher(COGBOT_EVENT_ROUTING_KEY, null);
-                RK_listener = RK_publisher.CreateListener(COGBOT_CONTROL_ROUTING_KEY, ExchangeNameDefaults.DIRECT,
+                RK_listener = RK_publisher.CreateListener(COGBOT_CONTROL_ROUTING_KEY, ExchangeNameDefaults.TOPIC,
                                                           AvroReceived);
             }
             catch (Exception e)
@@ -195,83 +209,14 @@ namespace RoboKindChat
 
         private CogbotEvent MsgToCogEvent(object sender, IMessage msg)
         {
-            var evt = ACogbotEvent.CreateEvent(sender, SimEventType.Once, msg.Type, SimEventType.UNKNOWN | SimEventType.PERSONAL | SimEventType.DATA_UPDATE);
-            List<NamedParam> from = ScriptManager.GetMemberValues("", msg);
-            foreach (var f in from)
-            {
-                if (f.Type != typeof(byte[])) evt.AddParam(f.Key, f.Value);
-            } 
             if (msg is IBytesMessage)
             {
-                IBytesMessage ibm = (IBytesMessage)msg;
-                var actual = RK_publisher.DecodeMessage(ibm);
-                foreach(var f in ScriptManager.GetMemberValues("", actual))
-                {
-                    if (f.Type != typeof(byte[])) evt.AddParam(f.Key, f.Value);                         
-                }
-            }
-            DLRConsole.DebugWriteLine("msg=" + evt);
-            return evt;
-        }
+                IBytesMessage ibm = (IBytesMessage) msg;
+                byte[] bytes = new byte[ibm.BodyLength];
 
-
-        public void Spy()
-        {
-            EnsureStarted();
-            /*RK_publisher.CreateListener("speechRecEvent", ExchangeNameDefaults.DIRECT, (o) => Eveything(o, "direct"));
-            RK_publisher.CreateListener("#", ExchangeNameDefaults.DIRECT, (o) => Eveything(o, "#direct"));
-            RK_publisher.CreateListener("speechRecEvent", ExchangeNameDefaults.TOPIC, (o) => Eveything(o, "topic"));
-            RK_publisher.CreateListener("#", ExchangeNameDefaults.TOPIC, (o) => Eveything(o, "#topic"));*/
-            RK_publisher.CreateListener("#", "speechRecEvent", (o) => Eveything(o, "#speechRecEvent"));
-            //RK_publisher.CreateListener("speechRecEvent", "speechRecEvent", (o) => Eveything(o, "speechRecEvent"));
-            //RK_publisher.CreateListener("speechRecEvent", "", (o) => Eveything(o, "blank"));
-            Console.WriteLine("spying on AQM");
-            while (true)
-            {
-                System.Console.Error.Flush();
-                System.Console.ReadLine();
             }
-        }
-
-        private void Eveything(IMessage msg, string type)
-        {
-            try
-            {
-                Dictionary<string, object> map = RK_publisher.DecodeMessage(msg);
-                foreach (KeyValuePair<string, object> o in map)
-                {
-                    Console.WriteLine(o.Key + "=" + ToStr(o.Value));
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(type + "=" + msg);
-            }           
-            System.Console.Out.Flush();
-        }
-
-        private string ToStr(object value)
-        {
-            if (value == null) return "<NULL>";
-            if (value is IConvertible) return "" + value;
-            if (value is IEnumerable)
-            {
-                string ars = " [ ";
-                bool needsSep = false;
-                foreach (object c in (IEnumerable)value)
-                {
-                    if (needsSep) ars += ","; else needsSep = true;
-                    ars += ToStr(c);
-                }
-                return ars + " ] ";                
-            }
-            var t1 = value as KeyValuePair<string, object>?;
-            if (t1.HasValue)
-            {
-                var o = t1.Value;
-                return o.Key + "=" + ToStr(o.Value);
-            }
-            return "" + value;
+            DLRConsole.DebugWriteLine("msg=" + msg);
+            return ACogbotEvent.CreateEvent(sender, SimEventType.Once, msg.Type, SimEventType.UNKNOWN | SimEventType.PERSONAL | SimEventType.DATA_UPDATE);
         }
     }
 }

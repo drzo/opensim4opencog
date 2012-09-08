@@ -236,13 +236,8 @@ namespace MushDLR223.ScriptEngines
                     }
                     else
                     {
-                        trimmed = current.Trim();
-                        if (trimmed.StartsWith("\"") && trimmed.EndsWith("\""))
-                        {
-                            trimmed = trimmed.Remove(0, 1);
-                            trimmed = trimmed.Remove(trimmed.Length - 1);
-                            trimmed = trimmed.Trim();
-                        }
+
+                        trimmed = RemoveQuotes(current);
                         if (trimmed.Length > 0)
                             list.Add(trimmed);
                         current = String.Empty;
@@ -269,19 +264,26 @@ namespace MushDLR223.ScriptEngines
                 }
             }
 
-            trimmed = current.Trim();
-
-            if (trimmed.StartsWith("\"") && trimmed.EndsWith("\""))
-            {
-                trimmed = trimmed.Remove(0, 1);
-                trimmed = trimmed.Remove(trimmed.Length - 1);
-                trimmed = trimmed.Trim();
-            }
+            trimmed = RemoveQuotes(current);
 
             if (trimmed.Length > 0)
                 list.Add(trimmed);
 
             return list.ToArray();
+        }
+
+        private static string RemoveQuotes(string trimmed)
+        {
+            trimmed = trimmed.Trim();
+            if (trimmed.StartsWith("\"") && trimmed.EndsWith("\""))
+            {
+                return trimmed.Substring(1, trimmed.Length - 2);
+            }
+            if (trimmed.StartsWith("'") && trimmed.EndsWith("'"))
+            {
+                return trimmed.Substring(1, trimmed.Length - 2);
+            }
+            return trimmed;
         }
 
         public static char[] needSpacesArround = "+[]!".ToCharArray();
@@ -495,7 +497,7 @@ namespace MushDLR223.ScriptEngines
                 }
 
 
-                if (prep.Contains(splitter))
+                if (prep.Contains(splitter) && prep.StartsWith("-"))
                 {
                     string[] args2 = prep.Split(splitter.ToCharArray(), StringSplitOptions.None);
                     if (args2.Length > 1)
@@ -1002,12 +1004,12 @@ namespace MushDLR223.ScriptEngines
             object ovalue;
             found = IndexOf(key, false, out keyLen);
             len = ValueLen(key, t);
-            if (ParamMap.TryGetValue(key, out value))
-            {
-                return true;
-            }
             if (found == MISSING)
             {
+                if (ParamMap.TryGetValue(key, out value))
+                {
+                    return true;
+                }
                 value = null;
                 len = 0;
                 return false;

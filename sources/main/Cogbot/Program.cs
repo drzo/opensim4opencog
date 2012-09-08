@@ -142,7 +142,8 @@ namespace Cogbot
             {
                 return t;
             }
-            foreach (var an in assem.GetReferencedAssemblies())
+            var many = assem.GetReferencedAssemblies();
+            foreach (var an in many)
             {
                 var asem = Assembly.Load(an);
                 t = asem.GetType(c, false, false) ?? asem.GetType(c, false, true);

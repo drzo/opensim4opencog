@@ -1117,7 +1117,9 @@ namespace Cogbot
             }
             if (FilterSpecAttribute.IsAssignableFrom(typeof(UUID), type))
             {
-                return AsSimObject(o).ID;
+                SimObject nullCheck = AsSimObject(o);
+                if (nullCheck == null) return null;
+                return nullCheck.ID;
             }
             if (o is IConvertible)
             {
@@ -1134,18 +1136,18 @@ namespace Cogbot
             }
             return ConfigSettingAttribute.FindValueOfType(o, type, 2);
         }
-        public object ChangeType0(string[] args, out int argsUsed, Type arg2)
+        public object ChangeType0(string[] args, out int argsUsed, Type to)
         {
             if (args.Length == 0)
             {
                 argsUsed = 0;
                 return null;
             }
-            if (typeof(SimObject).IsAssignableFrom(arg2))
+            if (typeof(SimObject).IsAssignableFrom(to))
             {
                 return GetSimObjectS(args, out argsUsed);
             }
-            if (typeof(UUID).IsAssignableFrom(arg2))
+            if (typeof(UUID).IsAssignableFrom(to))
             {
                 argsUsed = 1;
                 UUID fnd = GetUserID(args[0]);
@@ -1155,21 +1157,21 @@ namespace Cogbot
                 }
                 return fnd;
             }
-            if (typeof(string) == arg2)
+            if (typeof(string) == to)
             {
                 argsUsed = 1;
                 return args[0];
             }
-            if (arg2.IsEnum)
+            if (to.IsEnum)
             {
                 object val;
-                if (TryEnumParse(arg2, args, 0, out argsUsed, out val))
+                if (TryEnumParse(to, args, 0, out argsUsed, out val))
                 {
                     return val;
                 }
             }
             argsUsed = 1;
-            return Convert.ChangeType(args[0], arg2);
+            return Convert.ChangeType(args[0], to);
         }
     }
 

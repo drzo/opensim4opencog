@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Xml.Serialization;
 using MushDLR223.Utilities;
 using Exception=System.Exception;
 using Thread = System.Threading.Thread;
@@ -121,6 +122,11 @@ namespace MushDLR223.ScriptEngines
                     }
                 }
             }
+            if (value == null) return null;
+            if (type == typeof(string))
+            {
+                if (value is string[]) return Parser.Rejoin((string[])value, 0);
+            }
             return null;// Convert.ChangeType(value, type);
         }
 
@@ -132,14 +138,135 @@ namespace MushDLR223.ScriptEngines
         private static readonly List<TypeChanger> TypeChangers = new List<TypeChanger>();
         public delegate object TypeChanger(object value, Type to, out bool converted);
 
+        static readonly Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>> PropForTypes = new Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>>();
+
+        private static KeyValuePair<List<PropertyInfo>, List<FieldInfo>> GetPropsForTypes(Type t)
+        {
+            KeyValuePair<List<PropertyInfo>, List<FieldInfo>> kv;
+
+            if (PropForTypes.TryGetValue(t, out kv)) return kv;
+
+            lock (PropForTypes)
+            {
+                if (!PropForTypes.TryGetValue(t, out kv))
+                {
+                    kv = new KeyValuePair<List<PropertyInfo>, List<FieldInfo>>(new List<PropertyInfo>(),
+                                                                               new List<FieldInfo>());
+                    var ta = t.GetCustomAttributes(typeof(XmlTypeAttribute), false);
+                    bool specialXMLType = false;
+                    if (ta != null && ta.Length > 0)
+                    {
+                        XmlTypeAttribute xta = (XmlTypeAttribute)ta[0];
+                        specialXMLType = true;
+                    }
+                    HashSet<string> lowerProps = new HashSet<string>();
+                    BindingFlags flags = BindingFlags.Instance | BindingFlags.Public; //BindingFlags.NonPublic
+                    foreach (
+                        PropertyInfo o in t.GetProperties(flags))
+                    {
+                        if (o.CanRead)
+                        {
+
+                            if (o.Name.StartsWith("_")) continue;
+                            if (o.DeclaringType == typeof(Object)) continue;
+                            if (!lowerProps.Add(o.Name.ToLower())) continue;
+                            if (o.GetIndexParameters().Length > 0)
+                            {
+                                continue;
+                            }
+                            if (specialXMLType)
+                            {
+                                var use = o.GetCustomAttributes(typeof(XmlArrayItemAttribute), false);
+                                if (use == null || use.Length < 1) continue;
+                            }
+                            kv.Key.Add(o);
+
+                        }
+                    }
+                    foreach (FieldInfo o in t.GetFields(flags))
+                    {
+                        if (o.Name.StartsWith("_")) continue;
+                        if (o.DeclaringType == typeof(Object)) continue;
+                        if (!lowerProps.Add(o.Name.ToLower())) continue;
+                        if (specialXMLType)
+                        {
+                            var use = o.GetCustomAttributes(typeof(XmlArrayItemAttribute), false);
+                            if (use == null || use.Length < 1) continue;
+                        }
+                        kv.Value.Add(o);
+                    }
+                }
+                return kv;
+            }
+        }
+        public static List<NamedParam> GetMemberValues(string prefix, Object properties)
+        {
+            return GetMemberValues(prefix, properties, null);
+        }
+        public static List<NamedParam> GetMemberValues(string prefix, Object properties, Action<MemberInfo, object> GetUUIDType)
+        {
+            List<NamedParam> dict = new List<NamedParam>();
+            if (properties == null)
+            {
+                return dict;
+            }
+            Type t = properties.GetType();
+            KeyValuePair<List<PropertyInfo>, List<FieldInfo>> vvv = GetPropsForTypes(t);
+            HashSet<string> lowerProps = new HashSet<string>();
+            BindingFlags flags = BindingFlags.Instance | BindingFlags.Public; //BindingFlags.NonPublic
+            foreach (
+                PropertyInfo o in vvv.Key)
+            {
+                {
+                    try
+                    {
+                        var v = o.GetValue(properties, null);
+                        if (v == null)
+                        {
+                            v = new NullType(properties, o);
+                        }
+                        if (GetUUIDType != null) GetUUIDType(o, v);
+                        dict.Add(new NamedParam(properties, o, prefix + o.Name, o.PropertyType, v));
+                    }
+                    catch (Exception e)
+                    {
+                        DLRConsole.DebugWriteLine("" + e);
+                    }
+                }
+            }
+            foreach (FieldInfo o in vvv.Value)
+            {
+                try
+                {
+                    var v = o.GetValue(properties);
+                    if (v == null)
+                    {
+                        v = new NullType(properties, o);
+                    }
+                    if (GetUUIDType != null) GetUUIDType(o, v);
+                    dict.Add(new NamedParam(properties, o, prefix + o.Name, o.FieldType, v));
+                }
+                catch (Exception e)
+                {
+                    DLRConsole.DebugWriteLine("" + e);
+                }
+            }
+            return dict;
+        }
     }
-
-    public class SysVarsDict : IDictionary<string, object>
+    public class SysVarsDict : BackDict
     {
-        private List<IKeyValuePair<string, object>> ListKeyValue;
-        private IDictionary<string, object> Backup;
+        public SysVarsDict(List<IKeyValuePair<string, object>> pairs, IDictionary<string, object> backIfNotSysvar)
+            : base(pairs, backIfNotSysvar)
+        {
 
-        public SysVarsDict(List<IKeyValuePair<string, object>> pairs, IDictionary<string, object> backup)
+        }
+    }
+    public class BackDict : IDictionary<string, object>
+    {
+        protected List<IKeyValuePair<string, object>> ListKeyValue;
+        private IDictionary<string, object> Backup;
+        public BackDict(List<IKeyValuePair<string, object>> pairs, IDictionary<string, object> backup)
         {
             ListKeyValue = pairs;
             this.Backup = backup;
@@ -533,6 +660,11 @@ namespace MushDLR223.ScriptEngines
         public string DebugInfo
         {
             get { return Key + " = " + Value; }
+        }
+
+        public bool IsReadOnly
+        {
+            get { return true || Backup == null; }
         }
 
         public KVBacked(string key, IDictionary<string, object> backup)

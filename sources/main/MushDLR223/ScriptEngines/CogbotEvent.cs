@@ -3,14 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Xml.Serialization;
-using Cogbot;
-using Cogbot.ScriptEngines;
-using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using OpenMetaverse;
-using PathSystem3D.Navigation;
 
-namespace Cogbot.World
+namespace MushDLR223.ScriptEngines
 {
     [Flags]
     public enum SimEventType
@@ -39,7 +34,7 @@ namespace Cogbot.World
     {
     }
 
-    public interface CogbotEvent : BotMentalAspect
+    public interface CogbotEvent
     {
         string Verb { get; }
         NamedParam[] Parameters { get; }
@@ -61,7 +56,6 @@ namespace Cogbot.World
         string[] ParameterNames();
         object Sender { get; set; }
     }
-
     [XmlType(TypeName = "simObjectEvt")]
     public class ACogbotEvent : EventArgs, CogbotEvent
     {
@@ -73,14 +67,10 @@ namespace Cogbot.World
                 return Sender;
             }
         }
-        public UUID ID
-        {
-            get { throw new NotImplementedException("BotMentalAspect.ID " + this); }
-        }
 
         public ICollection<NamedParam> GetInfoMap()
         {
-            return WorldObjects.GetMemberValues("", this);
+            return ScriptManager.GetMemberValues("", this, null);
         }
 
         private static long serialCount = DateTime.UtcNow.Ticks;
@@ -126,61 +116,6 @@ namespace Cogbot.World
             return os;
         }
 
-        public BotAction GetAction()
-        {
-            switch (EventType1)
-            {
-                //case SimEventType.SIT:
-                //    {
-
-                //        new BotObjectAction((SimActor)Parameters[0], GetSimObjectUsage());
-                //        break;
-                //    }
-                //case SimEventType.TOUCH:
-                //    {
-
-                //        new BotObjectAction((SimActor)Parameters[0], GetSimObjectUsage());
-                //        break;
-                //    }
-                //case SimEventType.ANIM:
-                //    {
-
-                //        new BotObjectAction((SimActor)Parameters[0], GetSimObjectUsage());
-                //        break;
-                //    }
-                //case SimEventType.SOCIAL:
-                //    {
-
-                //        new BotObjectAction((SimActor)Parameters[0], GetSimObjectUsage());
-                //        break;
-                //    }
-                //case SimEventType.EFFECT:
-                //    {
-                //        new BotObjectAction((SimActor)Parameters[0], GetHeading());
-                //        break;
-                //    }
-                //case SimEventType.MOVEMENT:
-                //    {
-
-                //        new BotObjectAction((SimActor)Parameters[0], GetHeading());
-                //        break;
-                //    }
-                default:
-                    {
-                        break;
-                    }
-            }
-            return null;
-        }
-
-        private SimObjectUsage GetHeading()
-        {
-            //            return (SimObjectUsage)GetTypeParam(typeof(SimHeading), 0);
-            foreach (var o in Parameters)
-                if (o.Value is SimObjectUsage) return (SimObjectUsage)o.Value;
-            return null;
-        }
-
         public object GetTypeParam(Type t, int after)
         {
             for (int i = after; i < Parameters.Length; i++)
@@ -189,11 +124,6 @@ namespace Cogbot.World
                 if (t.IsInstanceOfType(o.Value)) return o.Value;
             }
             return null;
-        }
-
-        private SimObjectUsage GetSimObjectUsage()
-        {
-            return new SimObjectUsage(SimTypeSystem.FindObjectUse(Verb), (SimObject)Parameters[1].Value);
         }
 
         [XmlArrayItem]
@@ -289,16 +219,17 @@ namespace Cogbot.World
             {
                 ToEventString();
             }
+            string ParamString = "";
+            foreach (NamedParam param in Parameters)
+            {
+                ParamString += param + " ";
+            }
             return string.Format("{0}: {1} {2}",
                                  EventID,
-                                 ScriptEngines.ScriptEventListener.argsListString(Parameters),
+                                 ParamString,
                                  Serial);
         }
 
-        public FirstOrderTerm GetTerm()
-        {
-            throw new NotImplementedException();
-        }
 
         public int GetArity()
         {
@@ -396,10 +327,6 @@ namespace Cogbot.World
             for (int i = 0; i < len; i++)
             {
                 var o = Parameters[i];
-                if (o.Value is Vector3)
-                {
-                    //DLRConsole.WriteLine("Got v3 in {0}", this);
-                }
                 object key = o;
 
                 while (key is NamedParam)
@@ -469,18 +396,23 @@ namespace Cogbot.World
         }
 
         private string _EVETSTRING;
-        public string ToEventString()
+        virtual public string ToEventString()
         {
             if (_EVETSTRING != null) return _EVETSTRING;
             _EVETSTRING = string.Format("{0}: {1}", Verb, Serial);
             foreach (var c in Parameters)
             {
                 object cValue = c.Value;
+                /*
+                 
                 if (cValue is SimHeading) continue;
                 if (cValue is Vector3) continue;
                 if (cValue is Vector3d) continue;
                 if (cValue is ValueType) continue;
                 _EVETSTRING += " " + ScriptEventListener.argString(cValue);
+
+                 */
+                _EVETSTRING += " " + c;
             }
             return _EVETSTRING;
         }

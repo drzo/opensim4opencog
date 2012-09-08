@@ -200,7 +200,7 @@ namespace MushDLR223.Utilities
                 _singleton = value;
             }
         }
-        public bool ReadOnly { get; set; }
+        public bool IsReadOnly { get; set; }
         public bool SkipSaveOnExit
         {
             set { VSkipSaveOnExit = value; }
@@ -349,7 +349,7 @@ namespace MushDLR223.Utilities
             {
                 // cant restore?
                 // SkipSaveOnExit = true;
-                ReadOnly = true;
+                IsReadOnly = true;
             }
             IsStatic = TestIsStatic(member0);
             UseSingleton = !IsStatic;
@@ -380,7 +380,7 @@ namespace MushDLR223.Utilities
             {
                 string comments = "";
                 if (SkipSaveOnExit) comments += " SkipSavedOnExit";
-                if (ReadOnly) comments += " ReadOnly";
+                if (IsReadOnly) comments += " ReadOnly";
                 if (!IsStatic) comments += " Virtual";
                 if (!string.IsNullOrEmpty(_description)) comments += " " + _description;
                 return comments;
@@ -417,7 +417,7 @@ namespace MushDLR223.Utilities
                 return "(unknown)";
             }
             set {
-                if (ReadOnly)
+                if (IsReadOnly)
                 {
                     if (Value == value) return;
                     throw new InvalidOperationException("ReadOnly cannot set " + ToString() + " to " + value);
@@ -569,7 +569,7 @@ namespace MushDLR223.Utilities
                                 return false;
                             }
                         }
-                        if (readOnly) notFromStringOK = true;
+                        //if (readOnly) notFromStringOK = true;
                         if (notFromStringOK || IsSettableType(inf.FieldType))
                         {
                             if (inf.DeclaringType.IsValueType)
@@ -591,7 +591,7 @@ namespace MushDLR223.Utilities
                         && (notPublicOK || m.IsPublic) && inf.CanRead && (notWriteableOK || inf.CanWrite))
                     {
                         bool readOnly = !inf.CanWrite;
-                        if (readOnly) notFromStringOK = true;
+                        //if (readOnly) notFromStringOK = true;
                         if (notFromStringOK || IsSettableType(inf.PropertyType))
                         {
                             if (inf.DeclaringType.IsValueType)
@@ -709,5 +709,6 @@ namespace MushDLR223.Utilities
         K Key { get; }
         K Comments { get; }
         string DebugInfo { get; }
+        bool IsReadOnly { get; }
     }
 }

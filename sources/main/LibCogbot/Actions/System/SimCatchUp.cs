@@ -13,14 +13,10 @@ namespace Cogbot.Actions.Land
 
         public override void MakeInfo()
         {
-            Description = "Catches up the pathfinder. Forces the bot to synch it's model of the sim" +
-                          " used for pathfinding with the server. To have this happen constantly set" +
-                          " <a href='wiki/Sysvars#DoSimulatorsCatchUp'>DoSimulatorsCatchUp</a> to true";
-            Details = AddUsage("simcatchup", "Force the pathfinder to update");
-            Parameters = CreateParams();
-            ResultMap = CreateParams(
-                "message", typeof (string), "if success was false, the reason why",
-                "success", typeof (bool), "true if we crouched");
+            Description = "Force the pathfinder to update";
+            AddVersion(CreateParams(), "Catches up the pathfinder. Forces the bot to synch it's model of the sim" +
+                                       " used for pathfinding with the server. To have this happen constantly set" +
+                                       " <a href='wiki/Sysvars#DoSimulatorsCatchUp'>DoSimulatorsCatchUp</a> to true");
             Category = Cogbot.Actions.CommandCategory.Simulator;
         }
 

@@ -26,9 +26,9 @@ using Apache.Qpid.Messaging;
 
 namespace Apache.Qpid.Client.Message
 {
-   internal class QpidHeaders : IHeaders
+   public class QpidHeaders : IHeaders
    {
-      private FieldTable _headers;
+      public FieldTable _headers;
 
       public QpidHeaders(FieldTable headers)
       {

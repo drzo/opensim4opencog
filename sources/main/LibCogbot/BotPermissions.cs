@@ -311,6 +311,7 @@ namespace Cogbot
         private void Self_OnInstantMessage(object sender, InstantMessageEventArgs e)
         {
             InstantMessage im = e.IM;
+            WorldObjects.GetMemberValues("", im);
             ChatType Type = ChatType.Normal;
             switch (im.Dialog)
             {
