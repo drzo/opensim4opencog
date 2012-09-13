@@ -155,7 +155,7 @@ namespace RoboKindAvroQPID
 
 
             connection.Start();
-            EnsuleSchemesLoaded();
+            EnsureSchemasLoaded();
             //Console.WriteLine("Sending messages and waiting for reports...");
         }
 
@@ -669,7 +669,7 @@ namespace RoboKindAvroQPID
         private Schema SchemeFor(string type)
         {
             var Loaded = RoboKindConnectorQPID.Loaded.Values;
-            lock (Loaded) EnsuleSchemesLoaded();
+            lock (Loaded) EnsureSchemasLoaded();
             type = type.Substring(type.IndexOf('/') + 1);
             foreach (Schema loaded in Loaded)
             {
@@ -690,14 +690,14 @@ namespace RoboKindAvroQPID
 
         static Dictionary<string, Schema> Loaded = new Dictionary<string, Schema>();
         static Dictionary<string,Protocol> Protos = new Dictionary<string,Protocol>();
-        private void EnsuleSchemesLoaded()
+        private void EnsureSchemasLoaded()
         {
             if (Loaded.Count > 0) return;
             string startAt = @"C:\development\opensim4opencog\HR\apollomind\avro\interpreter";
 
             LoadAvroFiles(startAt, false);
             LoadAvroFiles("./avro/", true);
-            SaveOutProtocals();
+            //SaveOutProtocals();
         }
 
         private void SaveOutProtocals()
@@ -716,8 +716,9 @@ namespace RoboKindAvroQPID
                 cg.AddSchema(s);
             }
             cg.GenerateCode();
-            Directory.CreateDirectory("myTestWrite");
-            cg.WriteTypes("myTestWrite");
+            string at = @"..\sources\modules\RoboKindAvroQPIDModule\";
+            Directory.CreateDirectory(at);
+            cg.WriteTypes(at);
         }
 
         private void SaveOutScheme(Protocol protocol, Schema schema)

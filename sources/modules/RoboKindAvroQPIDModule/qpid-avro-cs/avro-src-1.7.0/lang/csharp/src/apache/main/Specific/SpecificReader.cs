@@ -260,7 +260,7 @@ namespace Avro.Specific
         protected virtual string getTargetType(Schema schema)
         {
             bool nEnum = false;
-            string type = Avro.CodeGen.getType(schema, false, ref nEnum);
+            string type = Avro.CodeGen.getType(schema, false, ref nEnum, false);
             if (schema.Tag == Schema.Type.Array)
             {
                 type = type.Remove(0, 6);              // remove IList<

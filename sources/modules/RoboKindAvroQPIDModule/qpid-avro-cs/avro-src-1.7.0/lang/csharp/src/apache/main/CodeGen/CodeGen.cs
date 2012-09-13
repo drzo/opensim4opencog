@@ -28,7 +28,7 @@ namespace Avro
     public class CodeGen
     {
 
-        public static bool DoJava = true;
+        public static bool DoJava = false;
 
         /// <summary>
         /// Object that contains all the generated types
@@ -335,18 +335,19 @@ namespace Avro
 
             // declare the class
             var ctd = new CodeTypeDeclaration(CodeGenUtil.Instance.Mangle(recordSchema.Name));
+
+            //@todo implments
             if (DoJava)
             {
-                var interf = processRecordInterface(schema);
-                //@todo implments
                 ctd.BaseTypes.Add(SystemObjectStr);
                 ctd.BaseTypes.Add("SpecificRecord");
-                ctd.BaseTypes.Add(interf.Name);
             }
             else
             {
                 ctd.BaseTypes.Add("ISpecificRecord");
             }
+            var interf = processRecordInterface(schema);
+            ctd.BaseTypes.Add(interf.Name);
             ctd.Attributes = MemberAttributes.Public;
             ctd.IsClass = true;
             ctd.IsPartial = true;
@@ -358,15 +359,15 @@ namespace Avro
             cmmGet.Name = ToLangCase("Get", !DoJava);
             cmmGet.Attributes = MemberAttributes.Public;
             cmmGet.ReturnType = new CodeTypeReference(SystemObjectStr);
-            cmmGet.Parameters.Add(new CodeParameterDeclarationExpression(typeof(int), "fieldPos"));
+            cmmGet.Parameters.Add(new CodeParameterDeclarationExpression(typeof (int), "fieldPos"));
             StringBuilder getFieldStmt = new StringBuilder("switch (fieldPos)\n\t\t\t{\n");
 
             // declare Put() to be used by the Reader classes
             var cmmPut = new CodeMemberMethod();
             cmmPut.Name = ToLangCase("Put", !DoJava);
             cmmPut.Attributes = MemberAttributes.Public;
-            cmmPut.ReturnType = new CodeTypeReference(typeof(void));
-            cmmPut.Parameters.Add(new CodeParameterDeclarationExpression(typeof(int), "fieldPos"));
+            cmmPut.ReturnType = new CodeTypeReference(typeof (void));
+            cmmPut.Parameters.Add(new CodeParameterDeclarationExpression(typeof (int), "fieldPos"));
             cmmPut.Parameters.Add(new CodeParameterDeclarationExpression(SystemObjectStr, "fieldValue"));
             var putFieldStmt = new StringBuilder("switch (fieldPos)\n\t\t\t{\n");
             HashSet<CodeTypeReference> feildRefs = new HashSet<CodeTypeReference>();
@@ -374,7 +375,7 @@ namespace Avro
             {
                 // Determine type of field
                 bool nullibleEnum = false;
-                string baseType = getType(field.Schema, false, ref nullibleEnum);
+                string baseType = getType(field.Schema, false, ref nullibleEnum, false);
                 var ctrfield = new CodeTypeReference(baseType);
 
                 // Create field
@@ -426,7 +427,7 @@ namespace Avro
                 var castType = baseType;
                 if (DoJava)
                 {
-                    castType = getType(field.Schema, true, ref nullibleEnum);
+                    castType = getType(field.Schema, true, ref nullibleEnum, false);
                 }
                 if (nullibleEnum)
                 {
@@ -434,8 +435,8 @@ namespace Avro
                     putFieldStmt.Append(baseType);
                     putFieldStmt.Append(")null : (");
 
-                    string type = baseType.Remove(0, 16);  // remove System.Nullable<
-                    type = type.Remove(type.Length - 1);   // remove >
+                    string type = baseType.Remove(0, 16); // remove System.Nullable<
+                    type = type.Remove(type.Length - 1); // remove >
 
                     putFieldStmt.Append(type);
                     putFieldStmt.Append(")fieldValue; break;\n");
@@ -449,14 +450,16 @@ namespace Avro
             }
 
             // end switch block for Get()
-            getFieldStmt.Append("\t\t\tdefault: throw new AvroRuntimeException(\"Bad index \" + fieldPos + \" in Get()\");\n\t\t\t}");
+            getFieldStmt.Append(
+                "\t\t\tdefault: throw new AvroRuntimeException(\"Bad index \" + fieldPos + \" in Get()\");\n\t\t\t}");
             var cseGet = new CodeSnippetExpression(getFieldStmt.ToString());
             string cs = cseGet.Value;
             cmmGet.Statements.Add(cseGet);
             ctd.Members.Add(cmmGet);
 
             // end switch block for Put()
-            putFieldStmt.Append("\t\t\tdefault: throw new AvroRuntimeException(\"Bad index \" + fieldPos + \" in Put()\");\n\t\t\t}");
+            putFieldStmt.Append(
+                "\t\t\tdefault: throw new AvroRuntimeException(\"Bad index \" + fieldPos + \" in Put()\");\n\t\t\t}");
             var csePut = new CodeSnippetExpression(putFieldStmt.ToString());
             cmmPut.Statements.Add(csePut);
             ctd.Members.Add(cmmPut);
@@ -490,10 +493,7 @@ namespace Avro
             recordSchemaName = recordSchemaName.Substring(0, recordSchemaName.Length - "Record".Length);
             // declare the class
             var ctd = new CodeTypeDeclaration(CodeGenUtil.Instance.Mangle(recordSchemaName));
-            if (DoJava)
-            {
-                ctd.BaseTypes.Add("SpecificRecord");
-            }
+
             ctd.Attributes = MemberAttributes.Public;
             ctd.IsInterface = true;
 
@@ -503,7 +503,7 @@ namespace Avro
             {
                 // Determine type of field
                 bool nullibleEnum = false;
-                string baseType = getType(field.Schema, false, ref nullibleEnum);
+                string baseType = getType(field.Schema, false, ref nullibleEnum, false);
                 var ctrfield = new CodeTypeReference(baseType);
 
                 // Process field documentation if it exist and add to the field
@@ -542,7 +542,7 @@ namespace Avro
                 return;
             }
             var property = new CodeMemberProperty();
-            property.Attributes = MemberAttributes.Public | MemberAttributes.Final;
+            if (!isInterface) property.Attributes = MemberAttributes.Public | MemberAttributes.Final;
             property.Name = mangledName;
             property.Type = ctrfield;
             property.HasGet = true;
@@ -605,7 +605,7 @@ namespace Avro
             }
         }
 
-        internal static string getTypeJava(Schema schema, bool nullible, ref bool nullibleEnum)
+        internal static string getTypeJava(Schema schema, bool nullible, ref bool nullibleEnum, bool forUnion)
         {
             switch (schema.Tag)
             {
@@ -656,13 +656,13 @@ namespace Avro
                     if (null == arraySchema)
                         throw new CodeGenException("Unable to cast schema into an array schema");
 
-                    return "" + getType(arraySchema.ItemSchema, false, ref nullibleEnum) + "[]";
+                    return "" + getType(arraySchema.ItemSchema, false, ref nullibleEnum, forUnion) + "[]";
 
                 case Schema.Type.Map:
                     var mapSchema = schema as MapSchema;
                     if (null == mapSchema)
                         throw new CodeGenException("Unable to cast schema into a map schema");
-                    return "IDictionary<string," + getType(mapSchema.ValueSchema, false, ref nullibleEnum) + ">";
+                    return "IDictionary<string," + getType(mapSchema.ValueSchema, false, ref nullibleEnum, forUnion) + ">";
 
                 case Schema.Type.Union:
                     var unionSchema = schema as UnionSchema;
@@ -672,7 +672,7 @@ namespace Avro
                     if (null == nullibleType)
                         return SystemObjectStr;
                     else
-                        return getType(nullibleType, true, ref nullibleEnum);
+                        return getType(nullibleType, true, ref nullibleEnum, true);
             }
             throw new CodeGenException("Unable to generate CodeTypeReference for " + schema.Name + " type " + schema.Tag);
         }
@@ -682,9 +682,13 @@ namespace Avro
         /// <param name="schema">schema</param>
         /// <param name="nullible">flag to indicate union with null</param>
         /// <returns></returns>
-        internal static string getType(Schema schema, bool nullible, ref bool nullibleEnum)        
+        internal static string getType(Schema schema, bool nullible, ref bool nullibleEnum, bool forUnion)        
         {
-            if (DoJava) return getTypeJava(schema, nullible,ref nullibleEnum);
+            if (DoJava) return getTypeJava(schema, nullible,ref nullibleEnum, forUnion);
+            if (!forUnion && nullible)
+            {
+                nullible = false;
+            }
             switch (schema.Tag)
             {
                 case Schema.Type.Null:
@@ -734,13 +738,13 @@ namespace Avro
                     if (null == arraySchema)
                         throw new CodeGenException("Unable to cast schema into an array schema");
 
-                    return "IList<" + getType(arraySchema.ItemSchema, false, ref nullibleEnum) + ">";
+                    return "IList<" + getType(arraySchema.ItemSchema, false, ref nullibleEnum, forUnion) + ">";
 
                 case Schema.Type.Map:
                     var mapSchema = schema as MapSchema;
                     if (null == mapSchema)
                         throw new CodeGenException("Unable to cast schema into a map schema");
-                    return "IDictionary<string," + getType(mapSchema.ValueSchema, false, ref nullibleEnum) + ">";
+                    return "IDictionary<string," + getType(mapSchema.ValueSchema, false, ref nullibleEnum, forUnion) + ">";
 
                 case Schema.Type.Union:
                     var unionSchema = schema as UnionSchema;
@@ -750,7 +754,7 @@ namespace Avro
                     if (null == nullibleType)
                         return SystemObjectStr;
                     else
-                        return getType(nullibleType, true, ref nullibleEnum);
+                        return getType(nullibleType, true, ref nullibleEnum, true);
             }
             throw new CodeGenException("Unable to generate CodeTypeReference for " + schema.Name + " type " + schema.Tag);
         }
