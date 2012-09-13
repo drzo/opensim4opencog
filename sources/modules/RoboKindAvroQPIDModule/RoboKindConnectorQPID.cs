@@ -36,7 +36,7 @@ using Apache.Qpid.Client.Qms;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 
-namespace RoboKindChat
+namespace RoboKindAvroQPID
 {
     public class RoboKindConnectorQPID
     {
@@ -44,16 +44,60 @@ namespace RoboKindChat
         /// <summary>
         /// Set up a queue to listen for reports on.
         /// </summary>
-        public IMessageConsumer CreateListener(string name, string exchangeNameDefaults, MessageReceivedDelegate handler)
+        public IMessageConsumer CreateQListener(string routingKey, string exchangeNameDefaults, MessageReceivedDelegate handler)
         {
             string responseQueueName = channel.GenerateUniqueName();
             channel.DeclareQueue(responseQueueName, false, true, true);
             // Set this listener up to listen for reports on the response queue.
-            channel.Bind(responseQueueName, exchangeNameDefaults, name);
+            channel.Bind(responseQueueName, exchangeNameDefaults, routingKey);
             //channel.Bind(responseQueueName, "<<default>>", RESPONSE_ROUTING_KEY);
             IMessageConsumer consumer = channel.CreateConsumerBuilder(responseQueueName).Create();
             consumer.OnMessage += new MessageReceivedDelegate(handler);
             return consumer;
+        }
+        /// <summary>
+        /// Set up a queue to listen for reports on.
+        /// </summary>
+        public IMessageConsumer CreateListener(string queueName, string routingKey, string exchangeNameDefaults, 
+            bool isDurable, bool isExclusive, MessageReceivedDelegate handler)
+        {
+            if (queueName == null)
+            {
+                queueName = GenerateUniqueQueue();
+            } else
+            {
+                bool autoDelete = !isDurable;
+                EnsureQueue(queueName, isDurable, isExclusive, autoDelete);
+            }
+            // Set this listener up to listen for reports on the response queue.
+            try
+            {
+                channel.Bind(queueName, exchangeNameDefaults, routingKey);
+                //channel.Bind(responseQueueName, "<<default>>", RESPONSE_ROUTING_KEY);
+                IMessageConsumer consumer = channel.CreateConsumerBuilder(queueName).WithExclusive(isExclusive).Create();
+                consumer.OnMessage += new MessageReceivedDelegate(handler);
+                return consumer;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public string GenerateUniqueQueue()
+        {
+            string queueName = channel.GenerateUniqueName();
+            bool isDurable = false;
+            bool isExclusive = true;
+            bool autoDelete = true;
+            channel.DeclareQueue(queueName, isDurable, isExclusive, autoDelete);
+            return queueName;
+        }
+
+        private bool EnsureQueue(string queueName, bool isDurable, bool isExclusive, bool autoDelete)
+        {
+            channel.DeclareQueue(queueName, isDurable, isExclusive, autoDelete);
+            return true;
         }
 
         private static ILog log = LogManager.GetLogger(typeof(RoboKindConnectorQPID));
@@ -72,14 +116,20 @@ namespace RoboKindChat
 
         /// <summary> Holds the connection to listen on. </summary>
         private IConnection connection;
+        public IConnection Connection
+        {
+            get { return connection; }
+        }
+        public IChannel Channel
+        {
+            get { return channel; }
+        }
 
         /// <summary> Holds the channel for all test messages.</summary>
         private IChannel channel;
 
         /// <summary> Holds the producer to send test messages on. </summary>
         private Dictionary<string, IMessagePublisher> Publishers = new Dictionary<string, IMessagePublisher>();
-
-        private string TopicDefault;
 
         /// <summary>
         /// Creates a topic publisher that will send the specifed number of messages and expect the specifed number of report back from test
@@ -105,6 +155,7 @@ namespace RoboKindChat
 
 
             connection.Start();
+            EnsuleSchemesLoaded();
             //Console.WriteLine("Sending messages and waiting for reports...");
         }
 
@@ -189,7 +240,7 @@ namespace RoboKindChat
 
             // Send the report request.
             IMessage reportRequestMessage = channel.CreateTextMessage("Report request message.");
-            reportRequestMessage.Headers["TYPE"] = RoboKindAvroQPIDModuleMain.REPORT_REQUEST;
+            reportRequestMessage.Headers["TYPE"] = RoboKindEventModule.REPORT_TEST;
 
             reportRequestMessage.Headers.SetBoolean("BOOLEAN", false);
             //reportRequestMessage.Headers.SetByte("BYTE", 5);
@@ -240,11 +291,11 @@ namespace RoboKindChat
         public static void Main0(String[] argv)
         {
             // Create an instance of this publisher with the command line parameters.
-            RoboKindConnectorQPID publisher = new RoboKindConnectorQPID(RoboKindAvroQPIDModuleMain.RK_QPID_URI);
+            RoboKindConnectorQPID publisher = new RoboKindConnectorQPID(RoboKindEventModule.RK_QPID_URI);
             //, RoboKindAvroQPIDModuleMain.COGBOT_CONTROL_ROUTING_KEY
 
             // Publish the test messages.
-            publisher.SendTestMessage(RoboKindAvroQPIDModuleMain.REPORT_REQUEST, "DoTest");
+            publisher.SendTestMessage(RoboKindEventModule.REPORT_TEST, "DoTest");
         }
         /// <summary> Stops the message consumers and closes the connection. </summary>
         public void Shutdown()
@@ -323,7 +374,7 @@ namespace RoboKindChat
         public static void Main0L(String[] argv)
         {
             // Create an instance of this listener with the command line parameters.
-            var rkl = new RoboKindConnectorQPID(RoboKindAvroQPIDModuleMain.RK_QPID_URI);
+            var rkl = new RoboKindConnectorQPID(RoboKindEventModule.RK_QPID_URI);
             //rkl.
 
             Console.WriteLine("Waiting for messages...");
@@ -415,7 +466,7 @@ namespace RoboKindChat
         /// <returns><tt>true</tt> if it is a report request control message, <tt>false</tt> otherwise.</returns>
         private bool IsForCogbot(IMessage m) 
         {
-            bool result = CheckTextField(m, "TYPE", RoboKindAvroQPIDModuleMain.REPORT_REQUEST);
+            bool result = CheckTextField(m, "TYPE", RoboKindEventModule.REPORT_TEST);
 
             //LogDebug("isReport = " + result);
 
@@ -617,6 +668,7 @@ namespace RoboKindChat
 
         private Schema SchemeFor(string type)
         {
+            var Loaded = RoboKindConnectorQPID.Loaded.Values;
             lock (Loaded) EnsuleSchemesLoaded();
             type = type.Substring(type.IndexOf('/') + 1);
             foreach (Schema loaded in Loaded)
@@ -636,16 +688,110 @@ namespace RoboKindChat
             return null;
         }
 
-        static List<Schema> Loaded = new List<Schema>();
+        static Dictionary<string, Schema> Loaded = new Dictionary<string, Schema>();
+        static Dictionary<string,Protocol> Protos = new Dictionary<string,Protocol>();
         private void EnsuleSchemesLoaded()
         {
             if (Loaded.Count > 0) return;
-            foreach (var file in Directory.GetFiles("./avro/", "*.json"))
+            string startAt = @"C:\development\opensim4opencog\HR\apollomind\avro\interpreter";
+
+            LoadAvroFiles(startAt, false);
+            LoadAvroFiles("./avro/", true);
+            SaveOutProtocals();
+        }
+
+        private void SaveOutProtocals()
+        {
+            CodeGen cg = new CodeGen();
+            foreach (Protocol loaded in Protos.Values)
+            {
+                cg.AddProtocol(loaded);
+                foreach (var s in  loaded.Types)
+                {
+                    cg.AddSchema(s);
+                }
+            }
+            foreach (var s in Loaded.Values)
+            {
+                cg.AddSchema(s);
+            }
+            cg.GenerateCode();
+            Directory.CreateDirectory("myTestWrite");
+            cg.WriteTypes("myTestWrite");
+        }
+
+        private void SaveOutScheme(Protocol protocol, Schema schema)
+        {
+            protocol = protocol ?? findProtocall(Protos.Values, schema);
+            RecordSchema rs = schema as RecordSchema;
+            if (rs != null)
+            {
+                string filename = "avro/" + (rs.Namespace ?? ".") + "/" + rs.Name + rs + "." + ".cs";
+                //var fw = File.OpenWrite();
+                TextWriter tw = new StringWriter();
+                SaveOutSchemeR(protocol, rs, tw);
+                var fc = tw.ToString();
+                File.WriteAllText(filename, fc);
+                return;
+            }
+        }
+
+        private void SaveOutSchemeR(Protocol protocol, RecordSchema schema, TextWriter tw)
+        {
+            protocol = protocol ?? findProtocall(Protos.Values, schema);
+            foreach (Field field in schema)
+            {
+            }
+        }
+
+        private Protocol findProtocall(IEnumerable<Protocol> protocols, Schema schema)
+        {
+            throw new NotImplementedException();
+        }
+        
+        private void LoadAvroFiles(string startAt, bool subdirs)
+        {
+            LoadAvroFiles(startAt, subdirs, false, true);
+            LoadAvroFiles(startAt, subdirs, true, false);            
+        }
+
+        private void LoadAvroFiles(string startAt, bool subdirs, bool loadJson, bool loadavrp)
+        {
+            if (loadavrp) foreach (var file in Directory.GetFiles(startAt, "*.avpr"))
+            {
+                string text = File.ReadAllText(file);
+                //var s = Schema.Parse(text);
+                var  p = Protocol.Parse(text);
+                string pName = p.Name;
+                if (Protos.ContainsKey(pName))
+                {
+                    continue;
+                }
+                Protos.Add(pName, p);
+                foreach (var s in p.Types)
+                {
+                    AddScheme(s);
+                }
+            }
+            if (loadJson) foreach (var file in Directory.GetFiles(startAt, "*.json"))
             {
                 string text = File.ReadAllText(file);
                 var s = Schema.Parse(text);
-                Loaded.Add(s);
+                AddScheme(s);
             }
+            if (subdirs)
+            {
+                foreach (var dir in Directory.GetDirectories(startAt))
+                {
+                    LoadAvroFiles(dir, subdirs, loadJson, loadavrp);
+                }
+            }
+        }
+
+        private void AddScheme(Schema s)
+        {
+            if (Loaded.ContainsKey(s.Name)) return;
+            Loaded.Add(s.Name,s);
         }
 
         public void GetMemberValues(string prefix, Object properties, Dictionary<string, object> dict, List<Object> exceptFor)

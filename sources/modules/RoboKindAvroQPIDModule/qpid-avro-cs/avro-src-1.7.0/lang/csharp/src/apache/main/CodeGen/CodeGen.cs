@@ -27,6 +27,9 @@ namespace Avro
 {
     public class CodeGen
     {
+
+        public static bool DoJava = true;
+
         /// <summary>
         /// Object that contains all the generated types
         /// </summary>
@@ -257,7 +260,7 @@ namespace Avro
             ctd.BaseTypes.Add("SpecificFixed");
 
             // create static schema field
-            createSchemaField(schema, ctd, true);
+            createSchemaField(schema, ctd, true, false);
 
             // Add Size field
             string sizefname = "fixedSize";
@@ -332,30 +335,41 @@ namespace Avro
 
             // declare the class
             var ctd = new CodeTypeDeclaration(CodeGenUtil.Instance.Mangle(recordSchema.Name));
-            ctd.BaseTypes.Add("ISpecificRecord");
+            if (DoJava)
+            {
+                var interf = processRecordInterface(schema);
+                //@todo implments
+                ctd.BaseTypes.Add(SystemObjectStr);
+                ctd.BaseTypes.Add("SpecificRecord");
+                ctd.BaseTypes.Add(interf.Name);
+            }
+            else
+            {
+                ctd.BaseTypes.Add("ISpecificRecord");
+            }
             ctd.Attributes = MemberAttributes.Public;
             ctd.IsClass = true;
             ctd.IsPartial = true;
 
-            createSchemaField(schema, ctd, false);
+            createSchemaField(schema, ctd, false, false);
 
             // declare Get() to be used by the Writer classes
             var cmmGet = new CodeMemberMethod();
-            cmmGet.Name = "Get";
+            cmmGet.Name = ToLangCase("Get", !DoJava);
             cmmGet.Attributes = MemberAttributes.Public;
-            cmmGet.ReturnType = new CodeTypeReference("System.Object");
+            cmmGet.ReturnType = new CodeTypeReference(SystemObjectStr);
             cmmGet.Parameters.Add(new CodeParameterDeclarationExpression(typeof(int), "fieldPos"));
             StringBuilder getFieldStmt = new StringBuilder("switch (fieldPos)\n\t\t\t{\n");
 
             // declare Put() to be used by the Reader classes
             var cmmPut = new CodeMemberMethod();
-            cmmPut.Name = "Put";
+            cmmPut.Name = ToLangCase("Put", !DoJava);
             cmmPut.Attributes = MemberAttributes.Public;
             cmmPut.ReturnType = new CodeTypeReference(typeof(void));
             cmmPut.Parameters.Add(new CodeParameterDeclarationExpression(typeof(int), "fieldPos"));
-            cmmPut.Parameters.Add(new CodeParameterDeclarationExpression("System.Object", "fieldValue"));
+            cmmPut.Parameters.Add(new CodeParameterDeclarationExpression(SystemObjectStr, "fieldValue"));
             var putFieldStmt = new StringBuilder("switch (fieldPos)\n\t\t\t{\n");
-
+            HashSet<CodeTypeReference> feildRefs = new HashSet<CodeTypeReference>();
             foreach (Field field in recordSchema.Fields)
             {
                 // Determine type of field
@@ -365,6 +379,7 @@ namespace Avro
 
                 // Create field
                 string privFieldName = string.Concat("_", field.Name);
+                if (DoJava) privFieldName = "m" + privFieldName;
                 var codeField = new CodeMemberField(ctrfield, privFieldName);
                 codeField.Attributes = MemberAttributes.Private;
 
@@ -385,31 +400,34 @@ namespace Avro
                 var mangledName = CodeGenUtil.Instance.Mangle(field.Name);
 
                 // Create field property with get and set methods
-                var property = new CodeMemberProperty();
-                property.Attributes = MemberAttributes.Public | MemberAttributes.Final;
-                property.Name = mangledName;
-                property.Type = ctrfield;
-                property.GetStatements.Add(new CodeMethodReturnStatement(fieldRef));
-                property.SetStatements.Add(new CodeAssignStatement(fieldRef, new CodePropertySetValueReferenceExpression()));
-                if (null != propertyComment)
-                    property.Comments.Add(propertyComment);
+                AddProperty(ctd, ctrfield, propertyComment, mangledName, fieldRef, false);
 
-                // Add field property to class
-                ctd.Members.Add(property);
+                string getsetName = mangledName;
+                if (DoJava) getsetName = privFieldName;
 
                 // add to Get()
                 getFieldStmt.Append("\t\t\tcase ");
                 getFieldStmt.Append(field.Pos);
                 getFieldStmt.Append(": return this.");
-                getFieldStmt.Append(mangledName);
+                getFieldStmt.Append(getsetName);
                 getFieldStmt.Append(";\n");
 
                 // add to Put()
                 putFieldStmt.Append("\t\t\tcase ");
                 putFieldStmt.Append(field.Pos);
                 putFieldStmt.Append(": this.");
-                putFieldStmt.Append(mangledName);
+                putFieldStmt.Append(getsetName);
 
+                feildRefs.Add(ctrfield);
+                if (baseType.EndsWith("long"))
+                {
+
+                }
+                var castType = baseType;
+                if (DoJava)
+                {
+                    castType = getType(field.Schema, true, ref nullibleEnum);
+                }
                 if (nullibleEnum)
                 {
                     putFieldStmt.Append(" = fieldValue == null ? (");
@@ -425,7 +443,7 @@ namespace Avro
                 else
                 {
                     putFieldStmt.Append(" = (");
-                    putFieldStmt.Append(baseType);
+                    putFieldStmt.Append(castType);
                     putFieldStmt.Append(")fieldValue; break;\n");
                 }
             }
@@ -433,6 +451,7 @@ namespace Avro
             // end switch block for Get()
             getFieldStmt.Append("\t\t\tdefault: throw new AvroRuntimeException(\"Bad index \" + fieldPos + \" in Get()\");\n\t\t\t}");
             var cseGet = new CodeSnippetExpression(getFieldStmt.ToString());
+            string cs = cseGet.Value;
             cmmGet.Statements.Add(cseGet);
             ctd.Members.Add(cmmGet);
 
@@ -448,22 +467,228 @@ namespace Avro
             CodeNamespace codens = addNamespace(nspace);
 
             codens.Types.Add(ctd);
+            foreach (CodeTypeReference reference in feildRefs)
+            {
+                //codens.Types.Add(reference);
+            }
 
             return ctd;
         }
 
+        /// <summary>
+        /// Creates an interface declaration
+        /// </summary>
+        /// <param name="schema">record schema</param>
+        /// <param name="ns">namespace</param>
+        /// <returns></returns>
+        protected virtual CodeTypeDeclaration processRecordInterface(Schema schema)
+        {
+            RecordSchema recordSchema = schema as RecordSchema;
+            if (null == recordSchema) throw new CodeGenException("Unable to cast schema into a record");
+
+            string recordSchemaName = recordSchema.Name;
+            recordSchemaName = recordSchemaName.Substring(0, recordSchemaName.Length - "Record".Length);
+            // declare the class
+            var ctd = new CodeTypeDeclaration(CodeGenUtil.Instance.Mangle(recordSchemaName));
+            if (DoJava)
+            {
+                ctd.BaseTypes.Add("SpecificRecord");
+            }
+            ctd.Attributes = MemberAttributes.Public;
+            ctd.IsInterface = true;
+
+            createSchemaField(schema, ctd, false, true);
+
+            foreach (Field field in recordSchema.Fields)
+            {
+                // Determine type of field
+                bool nullibleEnum = false;
+                string baseType = getType(field.Schema, false, ref nullibleEnum);
+                var ctrfield = new CodeTypeReference(baseType);
+
+                // Process field documentation if it exist and add to the field
+                CodeCommentStatement propertyComment = null;
+                if (!string.IsNullOrEmpty(field.Documentation))
+                {
+                    propertyComment = createDocComment(field.Documentation);
+                }
+
+                // Create reference to the field - this.fieldname
+                CodeFieldReferenceExpression fieldRef = null;
+                var mangledName = CodeGenUtil.Instance.Mangle(field.Name);
+
+                // Create field property with get and set methods
+                AddProperty(ctd, ctrfield, propertyComment, mangledName, fieldRef, true);
+            }
+
+
+            string nspace = recordSchema.Namespace;
+            if (string.IsNullOrEmpty(nspace))
+                throw new CodeGenException("Namespace required for record schema " + recordSchema.Name);
+            CodeNamespace codens = addNamespace(nspace);
+
+            codens.Types.Add(ctd);
+
+            return ctd;
+        }
+
+        private void AddProperty(CodeTypeDeclaration ctd, CodeTypeReference ctrfield, CodeCommentStatement propertyComment, string mangledName,
+            CodeFieldReferenceExpression fieldRef, bool isInterface)
+        {
+
+            if (DoJava)
+            {
+                AddPropertyJava(ctd, ctrfield, propertyComment, mangledName, fieldRef, isInterface);
+                return;
+            }
+            var property = new CodeMemberProperty();
+            property.Attributes = MemberAttributes.Public | MemberAttributes.Final;
+            property.Name = mangledName;
+            property.Type = ctrfield;
+            property.HasGet = true;
+            if (isInterface)
+            {
+                property.HasSet = false;
+            }
+            else
+            {
+                property.GetStatements.Add(new CodeMethodReturnStatement(fieldRef));
+                property.SetStatements.Add(new CodeAssignStatement(fieldRef,
+                                                                   new CodePropertySetValueReferenceExpression()));
+            }
+            if (null != propertyComment)
+                property.Comments.Add(propertyComment);
+            // Add field property to class
+            ctd.Members.Add(property);
+        }
+
+        private void AddPropertyJava(CodeTypeDeclaration ctd, CodeTypeReference ctrfield, CodeCommentStatement propertyComment, string mangledName,
+            CodeFieldReferenceExpression fieldRef, bool isInterface)
+        {
+            var property = new CodeMemberMethod();
+            mangledName = ToLangCase(mangledName, true);
+            property.Attributes = MemberAttributes.Public | MemberAttributes.Final;
+            property.Name = "get" + mangledName;
+            property.ReturnType = ctrfield;
+            if (!isInterface) property.Statements.Add(new CodeMethodReturnStatement(fieldRef));
+            if (null != propertyComment)
+                property.Comments.Add(propertyComment);
+            // Add field property to class
+            ctd.Members.Add(property);
+            
+            if (isInterface) return;
+
+            property = new CodeMemberMethod();
+            property.Attributes = MemberAttributes.Public | MemberAttributes.Final;
+            property.Name = "set" + mangledName;
+            property.Parameters.Add(new CodeParameterDeclarationExpression(ctrfield, "value"));
+            property.Statements.Add(new CodeAssignStatement(fieldRef,
+                                                            new CodePropertySetValueReferenceExpression()));
+            if (null != propertyComment)
+                property.Comments.Add(propertyComment);
+            // Add field property to class
+            ctd.Members.Add(property);
+        }
+
+        private string ToLangCase(string mangledName, bool ucaseIt)
+        {
+            if (ucaseIt) return mangledName.Substring(0, 1).ToUpper() + mangledName.Substring(1);
+            return mangledName.Substring(0, 1).ToLower() + mangledName.Substring(1);
+        }
+
+        public static string SystemObjectStr
+        {
+            get
+            {
+                if (DoJava) return "java.lang.Object";
+                return "System.Object";
+            }
+        }
+
+        internal static string getTypeJava(Schema schema, bool nullible, ref bool nullibleEnum)
+        {
+            switch (schema.Tag)
+            {
+                case Schema.Type.Null:
+                    return "Object";
+                case Schema.Type.Boolean:
+                    if (nullible) return "Boolean";
+                    else return "boolean";
+                case Schema.Type.Int:
+                    if (nullible) return "Integer";
+                    else return "int";
+                case Schema.Type.Long:
+                    if (nullible) return "Long";
+                    else return "long";
+                case Schema.Type.Float:
+                    if (nullible) return "Float";
+                    else return "float";
+                case Schema.Type.Double:
+                    if (nullible) return "Double";
+                    else return "double";
+
+                case Schema.Type.Bytes:
+                    return "int[]";
+                case Schema.Type.String:
+                    return "String";
+
+                case Schema.Type.Enumeration:
+                    var namedSchema = schema as NamedSchema;
+                    if (null == namedSchema)
+                        throw new CodeGenException("Unable to cast schema into a named schema");
+                    if (nullible)
+                    {
+                        nullibleEnum = true;
+                        return "System.Nullable<" + CodeGenUtil.Instance.Mangle(namedSchema.Fullname) + ">";
+                    }
+                    else return CodeGenUtil.Instance.Mangle(namedSchema.Fullname);
+
+                case Schema.Type.Fixed:
+                case Schema.Type.Record:
+                case Schema.Type.Error:
+                    namedSchema = schema as NamedSchema;
+                    if (null == namedSchema)
+                        throw new CodeGenException("Unable to cast schema into a named schema");
+                    return CodeGenUtil.Instance.Mangle(namedSchema.Fullname);
+
+                case Schema.Type.Array:
+                    var arraySchema = schema as ArraySchema;
+                    if (null == arraySchema)
+                        throw new CodeGenException("Unable to cast schema into an array schema");
+
+                    return "" + getType(arraySchema.ItemSchema, false, ref nullibleEnum) + "[]";
+
+                case Schema.Type.Map:
+                    var mapSchema = schema as MapSchema;
+                    if (null == mapSchema)
+                        throw new CodeGenException("Unable to cast schema into a map schema");
+                    return "IDictionary<string," + getType(mapSchema.ValueSchema, false, ref nullibleEnum) + ">";
+
+                case Schema.Type.Union:
+                    var unionSchema = schema as UnionSchema;
+                    if (null == unionSchema)
+                        throw new CodeGenException("Unable to cast schema into a union schema");
+                    Schema nullibleType = getNullableType(unionSchema);
+                    if (null == nullibleType)
+                        return SystemObjectStr;
+                    else
+                        return getType(nullibleType, true, ref nullibleEnum);
+            }
+            throw new CodeGenException("Unable to generate CodeTypeReference for " + schema.Name + " type " + schema.Tag);
+        }
         /// <summary>
         /// Gets the string representation of the schema's data type 
         /// </summary>
         /// <param name="schema">schema</param>
         /// <param name="nullible">flag to indicate union with null</param>
         /// <returns></returns>
-        internal static string getType(Schema schema, bool nullible, ref bool nullibleEnum)
+        internal static string getType(Schema schema, bool nullible, ref bool nullibleEnum)        
         {
+            if (DoJava) return getTypeJava(schema, nullible,ref nullibleEnum);
             switch (schema.Tag)
             {
                 case Schema.Type.Null:
-                    return "System.Object";
+                    return SystemObjectStr;
                 case Schema.Type.Boolean:
                     if (nullible) return "System.Nullable<bool>";
                     else return typeof(bool).ToString();
@@ -523,7 +748,7 @@ namespace Avro
                         throw new CodeGenException("Unable to cast schema into a union schema");
                     Schema nullibleType = getNullableType(unionSchema);
                     if (null == nullibleType)
-                        return CodeGenUtil.Object;
+                        return SystemObjectStr;
                     else
                         return getType(nullibleType, true, ref nullibleEnum);
             }
@@ -559,8 +784,13 @@ namespace Avro
         /// </summary>
         /// <param name="schema">schema</param>
         /// <param name="ctd">CodeTypeDeclaration for the class</param>
-        protected virtual void createSchemaField(Schema schema, CodeTypeDeclaration ctd, bool overrideFlag)
+        protected virtual void createSchemaField(Schema schema, CodeTypeDeclaration ctd, bool overrideFlag, bool isInterface)
         {
+            if (DoJava)
+            {
+                createSchemaJavaField(schema, ctd, overrideFlag, isInterface);
+                return;
+            }
             // create schema field 
             var ctrfield = new CodeTypeReference("Schema");
             string schemaFname = "_SCHEMA";
@@ -584,7 +814,48 @@ namespace Avro
             property.GetStatements.Add(new CodeMethodReturnStatement(new CodeTypeReferenceExpression(ctd.Name + "." + schemaFname)));
             ctd.Members.Add(property);
         }
+        protected virtual void createSchemaJavaField(Schema schema, CodeTypeDeclaration ctd, bool overrideFlag, bool isInterface)
+        {
+            // create schema field 
+            var ctrfield = new CodeTypeReference("org.apache.avro.Schema");
 
+            string schemaFname = "SCHEMA$";
+            var codeField = new CodeMemberField(ctrfield, schemaFname);
+            codeField.Attributes = MemberAttributes.Public | MemberAttributes.Static | MemberAttributes.Final;
+            if (isInterface)
+            {
+                codeField.Attributes = MemberAttributes.Public | MemberAttributes.Final | MemberAttributes.Const;
+            }
+            // create function call Schema.Parse(json)
+            var cpe = new CodePrimitiveExpression(schema.ToString());
+            var cmie = new CodeMethodInvokeExpression(
+                new CodeMethodReferenceExpression(new CodeTypeReferenceExpression(ctrfield), "parse"),
+                new CodeExpression[] { cpe });
+            codeField.InitExpression = cmie;
+            ctd.Members.Add(codeField);
+
+            if (isInterface)
+            {
+                return;
+            }
+            // create property to get static schema field
+            var property = new CodeMemberMethod();
+            property.Attributes = MemberAttributes.Public;
+            if (overrideFlag) property.Attributes |= MemberAttributes.Override;
+            property.Name = "getSchema";
+            property.ReturnType = ctrfield;
+            property.Statements.Add(new CodeMethodReturnStatement(new CodeTypeReferenceExpression(ctd.Name + "." + schemaFname)));
+            ctd.Members.Add(property);
+
+            // create property to get ther record type
+            property = new CodeMemberMethod();
+            property.Attributes = MemberAttributes.Public;
+            if (overrideFlag) property.Attributes |= MemberAttributes.Override;
+            property.Name = "getRecord";
+            property.ReturnType = new CodeTypeReference(ctd.Name);
+            property.Statements.Add(new CodeMethodReturnStatement(new CodeThisReferenceExpression()));
+            ctd.Members.Add(property);
+        }
         /// <summary>
         /// Creates an XML documentation for the given comment
         /// </summary>
@@ -621,7 +892,7 @@ namespace Avro
         /// <param name="outputdir">name of directory to write to</param>
         public virtual void WriteTypes(string outputdir)
         {
-            var cscp = new CSharpCodeProvider();
+            CodeDomProvider cscp = DoJava ? (CodeDomProvider)new Microsoft.VJSharp.VJSharpCodeProvider() : new CSharpCodeProvider();
 
             var opts = new CodeGeneratorOptions();
             opts.BracingStyle = "C";
@@ -645,7 +916,7 @@ namespace Avro
                 for (int j = 0; j < types.Count; j++)
                 {
                     var ctd = types[j];
-                    string file = dir + "\\" + CodeGenUtil.Instance.UnMangle(ctd.Name) + ".cs";
+                    string file = dir + "\\" + CodeGenUtil.Instance.UnMangle(ctd.Name) + (DoJava ? ".java" : ".cs");
                     using (var writer = new StreamWriter(file, false))
                     {
                         new_ns.Types.Add(ctd);

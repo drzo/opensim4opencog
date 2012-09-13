@@ -1,12 +1,13 @@
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{9081E245-7421-41E0-8399-31FE42160F69}</ProjectGuid>
+    <ProjectGuid>{19A1AA71-F91B-4846-9D93-882FB2992048}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ApplicationIcon></ApplicationIcon>
+    <ApplicationIcon>
+    </ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
     <AssemblyName>MushDLR223</AssemblyName>
@@ -16,9 +17,11 @@
     <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder></AppDesignerFolder>
+    <AppDesignerFolder>
+    </AppDesignerFolder>
     <RootNamespace>MushDLR223</RootNamespace>
-    <StartupObject></StartupObject>
+    <StartupObject>
+    </StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
   </PropertyGroup>
@@ -29,7 +32,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile></DocumentationFile>
+    <DocumentationFile>MushDLR223.XML</DocumentationFile>
     <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
@@ -40,7 +43,7 @@
     <WarningLevel>3</WarningLevel>
     <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
-    <PlatformTarget>anycpu</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -49,7 +52,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile></DocumentationFile>
+    <DocumentationFile>MushDLR223.XML</DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
@@ -60,62 +63,69 @@
     <WarningLevel>3</WarningLevel>
     <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
-    <PlatformTarget>anycpu</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System">
-        <Name>System</Name>
+      <Name>System</Name>
     </Reference>
     <Reference Include="System.Core">
-        <Name>System.Core</Name>
+      <Name>System.Core</Name>
     </Reference>
     <Reference Include="System.Data">
-        <Name>System.Data</Name>
+      <Name>System.Data</Name>
     </Reference>
     <Reference Include="System.Xml">
-        <Name>System.Xml</Name>
+      <Name>System.Xml</Name>
     </Reference>
     <Reference Include="System.Web">
-        <Name>System.Web</Name>
+      <Name>System.Web</Name>
     </Reference>
     <Reference Include="System.Drawing">
-        <Name>System.Drawing</Name>
+      <Name>System.Drawing</Name>
     </Reference>
     <Reference Include="System.Windows.Forms">
-        <Name>System.Windows.Forms</Name>
+      <Name>System.Windows.Forms</Name>
     </Reference>
     <Reference Include="System.Data">
-        <Name>System.Data</Name>
+      <Name>System.Data</Name>
     </Reference>
     <Reference Include="log4net.dll">
-        <Name>log4net.dll</Name>
+      <Name>log4net.dll</Name>
+      <HintPath>..\..\..\bin\log4net.dll</HintPath>
     </Reference>
     <Reference Include="HttpServer.dll">
-        <Name>HttpServer.dll</Name>
+      <Name>HttpServer.dll</Name>
+      <HintPath>..\..\..\bin\HttpServer.dll</HintPath>
     </Reference>
     <Reference Include="System">
-        <Name>System</Name>
+      <Name>System</Name>
     </Reference>
     <Reference Include="Microsoft.JScript">
-        <Name>Microsoft.JScript</Name>
+      <Name>Microsoft.JScript</Name>
     </Reference>
     <Reference Include="Microsoft.Vsa">
-        <Name>Microsoft.Vsa</Name>
+      <Name>Microsoft.Vsa</Name>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\external\DotLisp\DotLisp.csproj">
       <Name>DotLisp</Name>
-      <Project>{13ACC166-26CE-486B-B4BC-09AC34D0E45D}</Project>
+      <Project>{F1CF395A-6C0C-41EB-BD60-B7AF224822CA}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ScriptEngines\ClojureInterpreter.cs">
     </Compile>
+    <Compile Include="ScriptEngines\CmdResult.cs">
+    </Compile>
     <Compile Include="ScriptEngines\CommonScriptInterpreter.cs">
     </Compile>
     <Compile Include="ScriptEngines\DotLispInterpreter.cs">
+    </Compile>
+    <Compile Include="ScriptEngines\EventPipelines.cs" />
+    <Compile Include="ScriptEngines\GlobalScriptVars.cs">
     </Compile>
     <Compile Include="ScriptEngines\ICollectionProvider.cs">
     </Compile>
@@ -123,9 +133,16 @@
     </Compile>
     <Compile Include="ScriptEngines\LispInterpreter.cs">
     </Compile>
+    <Compile Include="ScriptEngines\MixinSubObjects.cs">
+    </Compile>
+    <Compile Include="ScriptEngines\NamedParam.cs">
+    </Compile>
+    <Compile Include="ScriptEngines\CogbotEvent.cs" />
     <Compile Include="ScriptEngines\ScriptInterpreter.cs">
     </Compile>
     <Compile Include="ScriptEngines\ScriptManager.cs">
+    </Compile>
+    <Compile Include="ScriptEngines\SysVars.cs">
     </Compile>
     <Compile Include="Utilities\CancellableThreadPool.cs">
     </Compile>

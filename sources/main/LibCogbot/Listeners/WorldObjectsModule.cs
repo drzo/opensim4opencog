@@ -24,5 +24,14 @@ namespace Cogbot
         {
             return WorldSystem.GetSimObject(prim);
         }
+
+        /// <summary>
+        ///  Name registered in the BotClient.registrationTypes collection
+        /// </summary>
+        /// <returns></returns>
+        public override string GetModuleName()
+        {
+            return GetType().Name;
+        }
     }
 }

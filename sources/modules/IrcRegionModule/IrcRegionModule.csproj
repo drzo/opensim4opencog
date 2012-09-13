@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{F4AE735A-8FC0-4AB2-8580-67A958ACBF55}</ProjectGuid>
+    <ProjectGuid>{91B74BB1-0E14-458A-B19C-BE1555B64E89}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -29,7 +29,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile></DocumentationFile>
+    <DocumentationFile>IrcRegionModule.XML</DocumentationFile>
     <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
@@ -40,7 +40,7 @@
     <WarningLevel>3</WarningLevel>
     <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
-    <PlatformTarget>anycpu</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -49,7 +49,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile></DocumentationFile>
+    <DocumentationFile>IrcRegionModule.XML</DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
@@ -60,38 +60,48 @@
     <WarningLevel>3</WarningLevel>
     <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
-    <PlatformTarget>anycpu</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System.Data">
-        <Name>System.Data</Name>
-    </Reference>
     <Reference Include="log4net">
         <Name>log4net</Name>
+      <HintPath>..\..\..\bin\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Meebey.SmartIrc4net">
-        <Name>Meebey.SmartIrc4net</Name>
+    <Reference Include="System">
+        <Name>System</Name>
+    </Reference>
+    <Reference Include="System.Core">
+        <Name>System.Core</Name>
+    </Reference>
+    <Reference Include="System.Configuration">
+        <Name>System.Configuration</Name>
+    </Reference>
+    <Reference Include="System.Runtime.Remoting">
+        <Name>System.Runtime.Remoting</Name>
+    </Reference>
+    <Reference Include="System.Data">
+        <Name>System.Data</Name>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\main\LibCogbot\Cogbot.Library.csproj">
       <Name>Cogbot.Library</Name>
-      <Project>{83E8C7CD-1E75-43B4-9573-1814CF4AD42D}</Project>
+      <Project>{03609913-851B-4319-A288-24F8EACC92BF}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
       <Name>MushDLR223</Name>
-      <Project>{5DA4D380-A233-48CD-B5D5-A734A8CFEF6A}</Project>
+      <Project>{19A1AA71-F91B-4846-9D93-882FB2992048}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj">
       <Name>OpenMetaverse</Name>
-      <Project>{2E815AEF-3541-41A2-B603-368D716854F7}</Project>
+      <Project>{601B256A-C322-4972-B7C4-6275A7D75194}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverseTypes\OpenMetaverseTypes.csproj">
       <Name>OpenMetaverseTypes</Name>
-      <Project>{64FF2AA7-73A0-4760-B55E-06345A8B2EE2}</Project>
+      <Project>{0DD176BF-E3AB-470F-924C-AA8FEFFFF38F}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
@@ -101,6 +111,52 @@
     <Compile Include="IrcCommand.cs">
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
+    </Compile>
+    <Compile Include="smartirc4net\Consts.cs">
+    </Compile>
+    <Compile Include="smartirc4net\EventArgs.cs">
+    </Compile>
+    <Compile Include="smartirc4net\Exceptions.cs">
+    </Compile>
+    <Compile Include="smartirc4net\Logger.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\BanInfo.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\Channel.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\ChannelInfo.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\ChannelUser.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\Delegates.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\EventArgs.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\IrcClient.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\IrcMessageData.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\IrcUser.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\NonRfcChannel.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\NonRfcChannelUser.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\WhoInfo.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcCommands\IrcCommands.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcCommands\Rfc2812.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcConnection\Delegates.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcConnection\EventArgs.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcConnection\IrcConnection.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcConnection\IrcProperties.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcConnection\IrcTcpClient.cs">
     </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
