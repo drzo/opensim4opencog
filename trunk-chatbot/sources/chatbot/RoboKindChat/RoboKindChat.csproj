@@ -59,34 +59,6 @@
       <Project>{19A1AA71-F91B-4846-9D93-882FB2992048}</Project>
       <Name>MushDLR223</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\qpid-avro-cs\avro-src-1.7.0\lang\csharp\src\apache\main\Avro.main.csproj">
-      <Project>{A0A5CA3C-F58C-4D07-98B0-2C7B62AB20F0}</Project>
-      <Name>Avro.main</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\qpid-avro-cs\dotnet\Qpid.Buffer\Qpid.Buffer.csproj">
-      <Project>{44384DF2-B0A4-4580-BDBC-EE4BAA87D995}</Project>
-      <Name>Qpid.Buffer</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\qpid-avro-cs\dotnet\Qpid.Client\Qpid.Client.csproj">
-      <Project>{68987C05-3768-452C-A6FC-6BA1D372852F}</Project>
-      <Name>Qpid.Client</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\qpid-avro-cs\dotnet\Qpid.Codec\Qpid.Codec.csproj">
-      <Project>{22D0D0C2-77AF-4DE3-B456-7FF3893F9F88}</Project>
-      <Name>Qpid.Codec</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\qpid-avro-cs\dotnet\Qpid.Common\Qpid.Common.csproj">
-      <Project>{77064C42-24D2-4CEB-9EA2-0EF481A43205}</Project>
-      <Name>Qpid.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\qpid-avro-cs\dotnet\Qpid.Messaging\Qpid.Messaging.csproj">
-      <Project>{6688F826-C58E-4C1B-AA1F-22AFAB4B7D07}</Project>
-      <Name>Qpid.Messaging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\qpid-avro-cs\dotnet\Qpid.Sasl\Qpid.Sasl.csproj">
-      <Project>{1465B0EE-6452-42A6-AB73-B2F9EABEEE75}</Project>
-      <Name>Qpid.Sasl</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\RoboKindAvroQPID.csproj">
       <Project>{8489EDDE-009B-4C5C-8EDC-22DE483AAF94}</Project>
       <Name>RoboKindAvroQPID</Name>

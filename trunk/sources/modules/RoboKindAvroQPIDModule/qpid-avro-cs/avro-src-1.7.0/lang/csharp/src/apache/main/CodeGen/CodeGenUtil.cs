@@ -34,18 +34,43 @@ namespace Avro
         public CodeNamespaceImport[] NamespaceImports { get; private set; }
         public CodeCommentStatement FileComment { get; private set; }
         public HashSet<string> ReservedKeywords { get; private set; }
-        private const char At = '@';
+        private char At
+        {
+            get { return '@'; }
+        }
+        private char At2
+        {
+            get { return '@'; }
+        }
         private const char Dot = '.';
-        public const string Object = "System.Object";
+        public string Object
+        {
+            get { return CodeGen.SystemObjectStr; }
+        }
 
         private CodeGenUtil()
         {
-            NamespaceImports = new CodeNamespaceImport[] {
-                new CodeNamespaceImport("System"),
-                new CodeNamespaceImport("System.Collections.Generic"),
-                new CodeNamespaceImport("System.Text"),
-                new CodeNamespaceImport("Avro"),
-                new CodeNamespaceImport("Avro.Specific") };
+            if (CodeGen.DoJava)
+            {
+                NamespaceImports = new CodeNamespaceImport[]
+                                       {
+                                           new CodeNamespaceImport("java.util"),
+                                           new CodeNamespaceImport("org.apache.avro"),
+                                           new CodeNamespaceImport("org.apache.avro.specific"),
+                                       };
+            }
+            else
+            {
+                NamespaceImports = new CodeNamespaceImport[]
+                                       {
+                                           new CodeNamespaceImport("System"),
+                                           new CodeNamespaceImport("System.Collections.Generic"),
+                                           new CodeNamespaceImport("System.Text"),
+                                           new CodeNamespaceImport("Avro"),
+                                           new CodeNamespaceImport("Avro.Specific")
+                                       };
+            }
+
 
             FileComment = new CodeCommentStatement(
 @"------------------------------------------------------------------------------
@@ -66,6 +91,10 @@ namespace Avro
                 "readonly", "ref", "return", "sbyte", "sealed", "short", "sizeof", "stackalloc", "static",
                 "string", "struct", "switch", "this", "throw", "true", "try", "typeof", "uint", "ulong",
                 "unchecked", "unsafe", "ushort", "using", "virtual", "void", "volatile", "while", "value", "partial" };
+            if (CodeGen.DoJava)
+            {
+                ReservedKeywords.Remove("long");
+            }
         }
 
         /// <summary>
@@ -97,7 +126,7 @@ namespace Avro
         {
             var builder = new StringBuilder(name.Length);
             for (int i = 0; i < name.Length; ++i)
-                if (name[i] != At)
+                if (name[i] != At2)
                     builder.Append(name[i]);
             return builder.ToString();
         }

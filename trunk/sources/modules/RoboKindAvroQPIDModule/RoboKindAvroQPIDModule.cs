@@ -11,17 +11,19 @@ using Avro.Specific;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 
-namespace RoboKindChat
+namespace RoboKindAvroQPID
 {
-    public class RoboKindAvroQPIDModuleMain : YesAutoLoad, IDisposable
+    public class RoboKindEventModule : YesAutoLoad, IDisposable
     {
 
         public static string RK_QPID_URI = "amqp://guest:guest@default/test?brokerlist='tcp://localhost:5672'";
 
-        /// <summary> Holds the routing key for the topic to receive test messages on. </summary>
+        /// <summary> Holds the routing key for cogbot management messages. </summary>
         public static string COGBOT_CONTROL_ROUTING_KEY = "cogbot_control";
+        /// <summary> Holds the main queue for cogbot management messages. </summary>
+        public static string COGBOT_CONTROL_QUEUE_KEY = "cogbot_control";
 
-        /// <summary> Holds the routing key for the topic to receive test messages on. </summary>
+        /// <summary> Holds the routing key for events. </summary>
         public static string COGBOT_EVENT_ROUTING_KEY = "cogbot_event";
 
         /// <summary> Holds the routing key for the queue to send reports to. </summary>
@@ -31,9 +33,13 @@ namespace RoboKindChat
         readonly List<object> cogbotSendersToNotSendToCogbot = new List<object>();
 
         public static bool DISABLE_AVRO = false;
-        public static string REPORT_REQUEST = "REPORT_REQUEST";
+        public static string REPORT_TEST = "REPORT_REQUEST";
         private IMessageConsumer RK_listener;
         private RoboKindConnectorQPID RK_publisher;
+        protected bool IsQPIDRunning
+        {
+            get { return RK_listener != null && RK_publisher != null; }
+        }
 
         public bool LogEventFromCogbot(object sender, CogbotEvent evt)
         {
@@ -41,7 +47,7 @@ namespace RoboKindChat
             EnsureStarted();
             if (evt.Sender == this) return false;
             if (!IsQPIDRunning) return false;
-            if (!cogbotSendersToNotSendToCogbot.Contains(sender)) cogbotSendersToNotSendToCogbot.Add(sender);          
+            if (!cogbotSendersToNotSendToCogbot.Contains(sender)) cogbotSendersToNotSendToCogbot.Add(sender);
             string ss = evt.ToEventString();
             var im = RK_publisher.CreateTextMessage(ss);
             int num = 0;
@@ -64,14 +70,15 @@ namespace RoboKindChat
                 }
                 im.Headers.SetString(sKey, "" + s.Value);
             }
-            RK_publisher.SendMessage(COGBOT_EVENT_ROUTING_KEY, im);
+            im.Headers.SetString("verb", "" + evt.Verb);
+            im.Headers.SetBoolean("personal", evt.IsPersonal != null);
+            im.Headers.SetString("evstatus", "" + evt.EventStatus);
+            im.Timestamp = evt.Time.ToFileTime();
+            im.Type = "" + evt.EventType1;
+            RK_publisher.SendMessage(RoboKindEventModule.COGBOT_EVENT_ROUTING_KEY, im);
             return false;
         }
 
-        protected bool IsQPIDRunning
-        {
-            get { return RK_listener != null && RK_publisher != null; }
-        }
 
         public bool LogEventFromRoboKind(object sender, CogbotEvent evt)
         {
@@ -126,8 +133,9 @@ namespace RoboKindChat
                 //@todo client.AddBotMessageSubscriber(this);
                 EventsEnabled = true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                System.Console.WriteLine("ERROR: " + e);
                 EnsuredStarted = false;
             }
         }
@@ -135,7 +143,7 @@ namespace RoboKindChat
         private void EnsureLoginToQIPD()
         {
             if (RK_listener != null) return;
-            var uri = RoboKindAvroQPIDModuleMain.RK_QPID_URI;
+            var uri = RoboKindEventModule.RK_QPID_URI;
             try
             {
                 LoginToQPID(uri);
@@ -154,7 +162,7 @@ namespace RoboKindChat
             }
         }
 
-        private void LoginToQPID(string uri)
+        public void LoginToQPID(string uri)
         {
             if (RK_listener != null)
             {
@@ -163,8 +171,8 @@ namespace RoboKindChat
             try
             {
                 RK_publisher = new RoboKindConnectorQPID(uri);
-                RK_publisher.GetPublisher(COGBOT_EVENT_ROUTING_KEY, null);
-                RK_listener = RK_publisher.CreateListener(COGBOT_CONTROL_ROUTING_KEY, ExchangeNameDefaults.DIRECT,
+                RK_listener = RK_publisher.CreateListener(COGBOT_CONTROL_QUEUE_KEY,
+                    COGBOT_CONTROL_ROUTING_KEY, ExchangeNameDefaults.TOPIC, true, false,
                                                           AvroReceived);
             }
             catch (Exception e)
@@ -222,7 +230,19 @@ namespace RoboKindChat
             RK_publisher.CreateListener("#", ExchangeNameDefaults.DIRECT, (o) => Eveything(o, "#direct"));
             RK_publisher.CreateListener("speechRecEvent", ExchangeNameDefaults.TOPIC, (o) => Eveything(o, "topic"));
             RK_publisher.CreateListener("#", ExchangeNameDefaults.TOPIC, (o) => Eveything(o, "#topic"));*/
-            RK_publisher.CreateListener("#", "speechRecEvent", (o) => Eveything(o, "#speechRecEvent"));
+            RK_publisher.CreateListener(null, "#", "speechRecEvent", true, false, (o) => Eveything(o, "#speechRecEvent"));
+
+            SpyQueue("test-ping");
+            SpyQueue("test-queue");
+            SpyQueue("ping");
+            SpyQueue("queue");
+
+            /*
+             *             CreateSpy("speechCommand", false);
+            CreateSpy("speechEvent", false);
+            CreateSpy("interpreterInstanceCheck", false);
+
+             * */
             //RK_publisher.CreateListener("speechRecEvent", "speechRecEvent", (o) => Eveything(o, "speechRecEvent"));
             //RK_publisher.CreateListener("speechRecEvent", "", (o) => Eveything(o, "blank"));
             Console.WriteLine("spying on AQM");
@@ -231,6 +251,25 @@ namespace RoboKindChat
                 System.Console.Error.Flush();
                 System.Console.ReadLine();
             }
+        }
+
+        private void SpyQueue(string s)
+        {
+            RK_publisher.Channel.CreateConsumerBuilder(s).Create().OnMessage += (msg) => Eveything(msg, "Spy Queue " + s);
+        }
+
+        private void CreateSpy(string name, bool hash)
+        {
+            //RK_publisher.CreateListener("", name, (o) => Eveything(o, "Just" + name));
+            CreateSpy(name, "", "*");
+            CreateSpy(null, name, "");
+           /// RK_publisher.CreateListener(name, ExchangeNameDefaults.DIRECT, (o) => Eveything(o, "direct_" + name));
+        }
+        private void CreateSpy(string queueName, string routingKey, string exchangeName)
+        {
+            RK_publisher.CreateListener(
+                queueName, routingKey, exchangeName, true, false,
+                (o) => Eveything(o, string.Format("Q:R:E='{0}:{1}:{2}'", queueName, routingKey, exchangeName)));
         }
 
         private void Eveything(IMessage msg, string type)

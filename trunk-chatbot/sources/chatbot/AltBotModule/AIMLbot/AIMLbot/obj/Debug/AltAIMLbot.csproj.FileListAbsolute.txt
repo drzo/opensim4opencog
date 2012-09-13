@@ -27,3 +27,9 @@ C:\dev\Cogbot2012-04-20\bin\AltAIMLbot.dll
 C:\dev\Cogbot2012-04-20\bin\AltAIMLbot.pdb
 C:\dev\Cogbot2012-04-20\sources\chatbot\AltBotModule\AIMLbot\AIMLbot\obj\Debug\AltAIMLbot.dll
 C:\dev\Cogbot2012-04-20\sources\chatbot\AltBotModule\AIMLbot\AIMLbot\obj\Debug\AltAIMLbot.pdb
+C:\development\opensim4opencog\current\sources\chatbot\AltBotModule\AIMLbot\AIMLbot\obj\Debug\ResolveAssemblyReference.cache
+C:\development\opensim4opencog\current\bin\AltAIMLbot.dll
+C:\development\opensim4opencog\current\bin\AltAIMLbot.pdb
+C:\development\opensim4opencog\current\bin\AltAIMLbot.XML
+C:\development\opensim4opencog\current\sources\chatbot\AltBotModule\AIMLbot\AIMLbot\obj\Debug\AltAIMLbot.dll
+C:\development\opensim4opencog\current\sources\chatbot\AltBotModule\AIMLbot\AIMLbot\obj\Debug\AltAIMLbot.pdb

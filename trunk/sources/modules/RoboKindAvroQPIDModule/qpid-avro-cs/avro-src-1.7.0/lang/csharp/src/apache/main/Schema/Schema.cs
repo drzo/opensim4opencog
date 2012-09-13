@@ -58,7 +58,7 @@ namespace Avro
         /// <summary>
         /// Additional JSON attributes apart from those defined in the AVRO spec
         /// </summary>
-        internal PropertyMap Props { get; private set; }
+        public PropertyMap Props { get; private set; }
 
         /// <summary>
         /// Constructor for schema class

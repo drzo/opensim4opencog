@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{835BABDA-BC19-4053-9BB8-9C8C5F949796}</ProjectGuid>
+    <ProjectGuid>{6680621A-896E-47C6-BA83-1EF07EF188B3}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -88,7 +88,7 @@
   <ItemGroup>
     <ProjectReference Include="..\GenericSets\src\Iesi.Collections.Generic\Iesi.Collections.Generic.csproj">
       <Name>Iesi.Collections.Generic</Name>
-      <Project>{B2B9B913-67A9-4CB2-9A31-8C8372C21BDD}</Project>
+      <Project>{5B23BE6C-6BB3-4CFC-BC62-E292D85CA2DB}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>

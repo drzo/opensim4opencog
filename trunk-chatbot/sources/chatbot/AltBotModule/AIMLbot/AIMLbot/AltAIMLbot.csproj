@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{5AFE6982-20A6-4992-965B-A98193CF8DDA}</ProjectGuid>
+    <ProjectGuid>{1B0D3922-C6FB-47C0-A688-2773C002955A}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
@@ -66,7 +66,6 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="LAIR.Collections, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="System">
       <Name>System</Name>
     </Reference>
@@ -100,38 +99,48 @@
       <Name>Enyim.Caching.dll</Name>
       <HintPath>..\..\..\..\..\bin\Enyim.Caching.dll</HintPath>
     </Reference>
+    <Reference Include="LAIR.Collections">
+      <Name>LAIR.Collections</Name>
+      <HintPath>..\..\..\..\..\bin\LAIR.Collections.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\WordNet\WordNet\LAIR.ResourceAPIs.WordNet.csproj">
-      <Project>{1C0249DB-9D1A-4E9A-8F49-5AA9B4244F63}</Project>
-      <Name>LAIR.ResourceAPIs.WordNet</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\RaptorDB\RaptorDB.csproj">
-      <Project>{45F6BE30-989A-4749-B6A0-69099C8661F4}</Project>
-      <Name>RaptorDB</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Aima.NET\Aima.NET.csproj">
       <Name>Aima.NET</Name>
-      <Project>{835BABDA-BC19-4053-9BB8-9C8C5F949796}</Project>
+      <Project>{6680621A-896E-47C6-BA83-1EF07EF188B3}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\main\MushDLR223\MushDLR223.csproj">
       <Name>MushDLR223</Name>
-      <Project>{051653B0-9AA4-4F6A-83DE-FD70FBA2BC61}</Project>
+      <Project>{19A1AA71-F91B-4846-9D93-882FB2992048}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\GenericSets\src\Iesi.Collections.Generic\Iesi.Collections.Generic.csproj">
       <Name>Iesi.Collections.Generic</Name>
-      <Project>{B2B9B913-67A9-4CB2-9A31-8C8372C21BDD}</Project>
+      <Project>{5B23BE6C-6BB3-4CFC-BC62-E292D85CA2DB}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Lucene\src\Lucene.Net\Lucene.Net.csproj">
       <Name>Lucene.Net</Name>
-      <Project>{A9969E15-B044-45C8-BE5E-79165B823C05}</Project>
+      <Project>{3FF4F31C-6305-4E60-9D9A-BD9FA51D8B5C}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\WordNet\WordNet\LAIR.ResourceAPIs.WordNet.csproj">
+      <Name>LAIR.ResourceAPIs.WordNet</Name>
+      <Project>{84F11AF8-D72B-47D3-A087-9B428E593332}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\RaptorDB\RaptorDB.csproj">
+      <Name>RaptorDB</Name>
+      <Project>{10A8E1BB-F7E9-4EE5-8A56-3832A451C1EB}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AIMLTagHandlers\lazyClosure.cs" />
+    <Compile Include="AIMLTagHandlers\recursiveVerbatum.cs" />
+    <Compile Include="AIMLTagHandlers\verbatum.cs" />
+    <Compile Include="AIMLTagHandlers\format.cs" />
     <Compile Include="BayesClassifier.cs">
     </Compile>
     <Compile Include="BehaviorTree.cs">
@@ -142,6 +151,9 @@
     </Compile>
     <Compile Include="MicroThreader.cs">
     </Compile>
+    <Compile Include="PorterStemmer.cs">
+    </Compile>
+    <Compile Include="ServitorProgram.cs" />
     <Compile Include="Qchem.cs">
     </Compile>
     <Compile Include="Qfsm.cs">
@@ -156,10 +168,26 @@
     </Compile>
     <Compile Include="User.cs">
     </Compile>
+    <Compile Include="Utils\GraphMaster.cs" />
+    <Compile Include="Utils\StaticAIMLUtils.cs" />
+    <Compile Include="Utils\TextPatternUtils.cs" />
+    <Compile Include="Variables\CollectionProperty.cs" />
+    <Compile Include="Variables\GetSetDictionary.cs" />
+    <Compile Include="Variables\GetSetProperty.cs" />
+    <Compile Include="Variables\NamedValuesFromSettings.cs" />
+    <Compile Include="Variables\ObjectPropertyDictionary.cs" />
+    <Compile Include="Variables\PrefixProvider.cs" />
+    <Compile Include="Variables\ProvidedSettingsDictionary.cs" />
+    <Compile Include="Variables\SettingsDictionary.cs" />
+    <Compile Include="Variables\StaticAIMLUtils.cs" />
     <Compile Include="WebScriptExecutor.cs">
     </Compile>
     <Compile Include="WebServitor.cs">
     </Compile>
+    <Compile Include="XmlGraph\PrintOptions.cs" />
+    <Compile Include="XmlGraph\TestCaseRunner.cs" />
+    <Compile Include="XmlGraph\XmlNodeEval.cs" />
+    <Compile Include="XmlGraph\XmlNodeEvaluator.cs" />
     <Compile Include="YBtrees.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\behavior.cs">
@@ -260,7 +288,7 @@
     </Compile>
     <Compile Include="AIMLTagHandlers\uppercase.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\version.cs">
+    <Compile Include="AIMLTagHandlers\botsetting.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\wolframserver.cs">
     </Compile>
@@ -290,8 +318,7 @@
     </Compile>
     <Compile Include="Utils\RandomMemory.cs">
     </Compile>
-    <Compile Include="Utils\SettingsDictionary.cs">
-    </Compile>
+    <Compile Include="Utils\SettingsDictionary.cs" />
     <Compile Include="Utils\SubQuery.cs">
     </Compile>
     <Compile Include="Utils\TagHandler.cs">

@@ -103,6 +103,8 @@ namespace Apache.Qpid.Client
         /// </summary>
         private long _nextProducerId;
 
+        public static AmqChannel DefaultInstance;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="AmqChannel"/> class.
         /// </summary>
@@ -145,11 +147,13 @@ namespace Apache.Qpid.Client
                 _queue = new FlowControlQueue(_defaultPrefetchHighMark, _defaultPrefetchHighMark,
                                               null, null);
             }
+            DefaultInstance = this;
         }
 
         private AmqChannel()
         {
             _messageFactoryRegistry = MessageFactoryRegistry.NewDefaultRegistry();
+            DefaultInstance = this;
         }
 
         /// <summary>
@@ -228,7 +232,7 @@ namespace Apache.Qpid.Client
         /// <param name="exchangeClass">Class of the exchange, from <see cref="ExchangeClassConstants"/></param>
         public void DeclareExchange(String exchangeName, String exchangeClass)
         {
-            _logger.Debug(string.Format("DeclareExchange vame={0} exchangeClass={1}", exchangeName, exchangeClass));
+            _logger.Debug(string.Format("DeclareExchange name={0} exchangeClass={1}", exchangeName, exchangeClass));
 
             DeclareExchange(_channelId, 0, exchangeName, exchangeClass, false, false, false, false, true, null);
         }
@@ -1019,13 +1023,21 @@ namespace Apache.Qpid.Client
                                                                     isAutoDelete, true, null));
         }
 
+        static public void StaticDeclareExchange(string exchangeName,
+                             string exchangeClass, bool passive, bool durable,
+                             bool autoDelete, bool xinternal, bool noWait, FieldTable args)
+        {
+            DefaultInstance.DeclareExchange(DefaultInstance._channelId, 0, exchangeName, exchangeClass, passive, durable, autoDelete,
+                                            xinternal, noWait, args);
+        }
+
         // AMQP-level method.
         private void DeclareExchange(ushort channelId, ushort ticket, string exchangeName, 
                                      string exchangeClass, bool passive, bool durable, 
                                      bool autoDelete, bool xinternal, bool noWait, FieldTable args)
         {
             _logger.Debug(String.Format("DeclareExchange channelId={0} exchangeName={1} exchangeClass={2}",
-                                        _channelId, exchangeName, exchangeClass));
+                                        channelId, exchangeName, exchangeClass));
 
             AMQFrame declareExchange = ExchangeDeclareBody.CreateAMQFrame(channelId, ticket, exchangeName, exchangeClass, passive, 
                                                                           durable, autoDelete, xinternal, noWait, args);

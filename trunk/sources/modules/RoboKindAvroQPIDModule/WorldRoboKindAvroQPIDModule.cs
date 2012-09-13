@@ -9,214 +9,50 @@ using Cogbot.World;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
-using RoboKindChat;
+using RoboKindAvroQPID;
 
-namespace RoboKindAvroQPIDModule
+namespace WorldRoboKindAvroQPIDModule
 {
     public class WorldRoboKindAvroQPIDModuleMain : WorldObjectsModule, YesAutoLoad, SimEventSubscriber
     {
         public BotClient botClient;
-
-        public static string RK_QPID_URI = "amqp://guest:guest@default/test?brokerlist='tcp://localhost:5672'";
-
-        /// <summary> Holds the routing key for the topic to receive test messages on. </summary>
-        public static string COGBOT_CONTROL_ROUTING_KEY = "cogbot_control";
-
-        /// <summary> Holds the routing key for the topic to receive test messages on. </summary>
-        public static string COGBOT_EVENT_ROUTING_KEY = "cogbot_event";
-
-        /// <summary> Holds the routing key for the queue to send reports to. </summary>
-        public static string ROBOKIND_RESPONSE_ROUTING_KEY = "response";
+        private RoboKindEventModule qpid;
 
 
         public WorldRoboKindAvroQPIDModuleMain(BotClient _parent)
             : base(_parent)
         {
             botClient = _parent;
+            qpid = new RoboKindEventModule();
         }
 
-        readonly List<object> cogbotSendersToNotSendToCogbot = new List<object>();
+        #region Overrides of AListener
 
-        public static bool DISABLE_AVRO = false;
-        public static string REPORT_REQUEST = "REPORT_REQUEST";
-        private IMessageConsumer RK_listener;
-        private RoboKindConnectorQPID RK_publisher;
-
-
-        public bool LogEventFromCogbot(object sender, CogbotEvent evt)
+        public override void StartupListener()
         {
-            if (DISABLE_AVRO) return true;
-            EnsureStarted();
-            if (evt.Sender == this) return false;
-            if (!IsQPIDRunning) return false;
-            if (!cogbotSendersToNotSendToCogbot.Contains(sender)) cogbotSendersToNotSendToCogbot.Add(sender);   
-            string ss = evt.ToEventString();
-            var im = RK_publisher.CreateTextMessage(ss);
-            int num = 0;
-            foreach (var s in evt.Parameters)
-            {
-                string sKey = s.Key;
-                if (!im.Headers.Contains(sKey))
-                {
-                    num = 0;
-                }
-                else
-                {
-                    num++;
-                    sKey = sKey + "_" + num;
-                    while (im.Headers.Contains(sKey))
-                    {
-                        num++;
-                        sKey = s.Key + "_" + num;
-                    }
-                }
-                im.Headers.SetString(sKey, "" + s.Value);
-            }
-            im.Headers.SetString("verb", "" + evt.Verb);
-            im.Headers.SetBoolean("personal", evt.IsPersonal != null);
-            im.Headers.SetString("evstatus", "" + evt.EventStatus);
-            im.Timestamp = evt.Time.ToFileTime();
-            im.Type = "" + evt.EventType1;
-            RK_publisher.SendMessage(COGBOT_EVENT_ROUTING_KEY, im);
-            return false;
-        }
-
-        protected bool IsQPIDRunning
-        {
-            get { return RK_listener != null && RK_publisher != null; }
-        }
-
-        public bool LogEventFromRoboKind(object sender, CogbotEvent evt)
-        {
-            if (DISABLE_AVRO) return false;
-            EnsureStarted();
-            if (cogbotSendersToNotSendToCogbot.Contains(sender))
-            {
-                return false;
-            }
-            evt.Sender = sender ?? evt.Sender;
-            botClient.SendPipelineEvent(evt);
-            return true;
+            throw new NotImplementedException();
         }
 
         public void OnEvent(CogbotEvent evt)
         {
-            if (DISABLE_AVRO) return;
-            EnsureStarted();
-            if (evt.IsEventType(SimEventType.DATA_UPDATE)) return;
-            LogEventFromCogbot(evt.Sender, evt);
+            qpid.OnEvent(evt);
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
         public override void Dispose()
         {
-            EventsEnabled = false;
-            if (RK_listener != null)
-            {
-                RK_listener.OnMessage -= AvroReceived;
-                RK_listener.Dispose();
-                RK_listener = null;
-            }
-            if (RK_publisher != null)
-            {
-                RK_publisher.Shutdown();
-            }
-            RK_publisher = null;
+            qpid.Dispose();
         }
 
-        public bool EventsEnabled { get; set; }
-
-        public override string GetModuleName()
+        public bool EventsEnabled
         {
-            return this.GetType().Namespace;
+            get { return qpid.EventsEnabled; }
+            set { qpid.EventsEnabled = value; }
         }
 
-        public override void StartupListener()
-        {
-            EnsureStarted();
-        }
-
-        private bool EnsuredStarted = false;
-        private void EnsureStarted()
-        {
-            if (DISABLE_AVRO) return;
-            if (EnsuredStarted) return;
-            EnsuredStarted = true;           
-            EnsureLoginToQIPD();
-            botClient.EachSimEvent += SendEachSimEvent;
-            botClient.AddBotMessageSubscriber(this);
-            EventsEnabled = true;
-        }
-
-        private void EnsureLoginToQIPD()
-        {
-            if (RK_listener != null) return;
-            var uri = RK_QPID_URI;
-            try
-            {
-                LoginToQPID(uri);
-            }
-            catch (Exception e)
-            {
-                System.Diagnostics.Process proc = new System.Diagnostics.Process(); // Declare New Process
-                proc.StartInfo.FileName = @"QPIDServer\StartQPID.bat";
-                proc.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Minimized;
-                proc.StartInfo.CreateNoWindow = false;
-                proc.StartInfo.ErrorDialog = true;
-                //proc.StartInfo.Domain = AppDomain.CurrentDomain.Id;
-                proc.Start();
-                Thread.Sleep(10000);
-                LoginToQPID(uri);
-            }
-        }
-
-        private void LoginToQPID(string uri)
-        {
-            if (RK_listener != null)
-            {
-                RK_listener.OnMessage -= AvroReceived;
-            }
-            try
-            {
-                RK_publisher = new RoboKindConnectorQPID(uri);
-                RK_listener = RK_publisher.CreateListener(COGBOT_CONTROL_ROUTING_KEY, ExchangeNameDefaults.TOPIC,
-                                                          AvroReceived);
-            }
-            catch (Exception e)
-            {
-                RK_listener = null;
-                RK_publisher = null;
-                throw e;
-            }
-        }
-
-        private void SendEachSimEvent(object sender, EventArgs e)
-        {
-            if (!IsQPIDRunning || !EventsEnabled) return;
-            if (e is CogbotEvent)
-            {
-                CogbotEvent cbe = (CogbotEvent)e;
-                OnEvent(cbe);
-                return;
-            }
-        }
-
-        private void AvroReceived(IMessage msg)
-        {
-            if (DISABLE_AVRO) return;
-            EnsureStarted();
-            LogEventFromRoboKind(this, MsgToCogEvent(this, msg));
-        }
-
-        private CogbotEvent MsgToCogEvent(object sender, IMessage msg)
-        {
-            if (msg is IBytesMessage)
-            {
-                IBytesMessage ibm = (IBytesMessage) msg;
-                byte[] bytes = new byte[ibm.BodyLength];
-
-            }
-            DLRConsole.DebugWriteLine("msg=" + msg);
-            return ACogbotEvent.CreateEvent(sender, SimEventType.Once, msg.Type, SimEventType.UNKNOWN | SimEventType.PERSONAL | SimEventType.DATA_UPDATE);
-        }
+        #endregion
     }
 }
