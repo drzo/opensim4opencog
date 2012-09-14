@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
+using RTParser.Utils;
 
 namespace AltAIMLbot.Normalize
 {
@@ -60,6 +61,10 @@ namespace AltAIMLbot.Normalize
         public string[] Transform()
         {
             string[] tokens = (string[])AltBot.Splitters.ToArray();
+            if (true)
+            {
+                return StaticAIMLUtils.SentenceBreaker(inputString, TrimEndTokens).ToArray();
+            }
             string[] rawResult = this.inputString.Split(tokens, System.StringSplitOptions.RemoveEmptyEntries);
             List<string> tidyResult = new List<string>();
             foreach (string rawSentence in rawResult)
@@ -71,6 +76,21 @@ namespace AltAIMLbot.Normalize
                 }
             }
             return (string[])tidyResult.ToArray();
+        }
+
+        private string TrimEndTokens(string s)
+        {
+            string[] tokens = (string[])AltBot.Splitters.ToArray();
+            s = s.TrimEnd();
+            foreach (string t0 in tokens)
+            {
+                string t = t0.TrimEnd();
+                if (s.EndsWith(t))
+                {
+                    s = s.Substring(0, s.Length - t.Length);
+                }
+            }
+            return s;
         }
     }
 }

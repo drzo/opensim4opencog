@@ -905,6 +905,7 @@ namespace AltAIMLbot
             request.CurrentGraph = ourGraphMaster;
 
             Result result = new Result(request.user, this, request);
+            bool saveResult = false;
 
             lock (ExternDB.mylock)
             {
@@ -1023,7 +1024,10 @@ namespace AltAIMLbot
                             //chatDB = null;
                         }
                     }
-
+                    if (result.SubQueries.Count == 0)
+                    {
+                        Console.WriteLine("DEBUG: MISSING SubQueries");
+                    }
                     // process the templates into appropriate output
                     foreach (SubQuery query in result.SubQueries)
                     {
@@ -1035,7 +1039,12 @@ namespace AltAIMLbot
                                 string outputSentence = this.processNode(templateNode, query, request, result, request.user);
                                 if (outputSentence.Length > 0)
                                 {
-                                    result.OutputSentences.Add(outputSentence);
+                                    result.AddOutputSentences(outputSentence);
+                                    saveResult = true;
+                                }
+                                else
+                                {
+                                    result.resultCount++;
                                 }
                             }
                             catch (Exception e)
@@ -1050,14 +1059,22 @@ namespace AltAIMLbot
                             }
                         }
                     }
+                    if (result.resultCount == 0)
+                    {
+                        Console.WriteLine("DEBUG: MISSING resultCount");
+                    }
                 }
                 else
                 {
-                    result.OutputSentences.Add(this.NotAcceptingUserInputMessage);
+                    result.AddOutputSentences(this.NotAcceptingUserInputMessage);
                 }
 
                 // populate the Result object
                 result.Duration = DateTime.Now - request.StartedOn;
+                if (!saveResult)
+                {
+                    return result;
+                }
                 request.user.addResult(result);
             }
             return result;
@@ -1138,6 +1155,11 @@ namespace AltAIMLbot
                                     try
                                     {
                                         string value = this.processNode(childNode, query, request, result, user);
+                                        if (value == null)
+                                        {
+                                            value = this.processNode(childNode, query, request, result, user);
+                                            value = String.Empty;
+                                        }
                                         string debug = childNode.OuterXml;
                                         if (value.Contains("<"))
                                         {

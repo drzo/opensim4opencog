@@ -47,8 +47,15 @@ namespace AltAIMLbot
         {
             get
             {
-                return this.Predicates.grabSetting("topic");
+                return GetValueOr("topic", "*");
             }
+        }
+
+        private string GetValueOr(string varname, string or)
+        {
+            var t = this.Predicates.grabSetting(varname);
+            if (string.IsNullOrEmpty(t)) return or;
+            return t;
         }
 
         /// <summary>
@@ -58,7 +65,7 @@ namespace AltAIMLbot
         {
             get
             {
-                return this.Predicates.grabSetting("state");
+                return GetValueOr("state", "*");
             }
         }
 
@@ -134,14 +141,13 @@ namespace AltAIMLbot
             {
                 return blackBoardThat;
             }
-            if (this.Results.Count > 0)
+            foreach (Result result in Results)
             {
-                return ((Result)Results[0]).RawOutput;
+                string s = result.LastSentence;
+                if (!string.IsNullOrEmpty(s)) return s;
             }
-            else
-            {
-                return "*";
-            }
+            return "*";
+            
         }
 
         /// <summary>
@@ -185,9 +191,10 @@ namespace AltAIMLbot
             if ((n >= 0) & (n < this.Results.Count))
             {
                 Result historicResult = (Result)this.Results[n];
-                if ((sentence >= 0) & (sentence < historicResult.OutputSentences.Count))
+                int count = historicResult.OutputSentences.Count;
+                if ((sentence >= 0) & (sentence < count))
                 {
-                    return (string)historicResult.OutputSentences[sentence];
+                    return (string) historicResult.OutputSentences[count - sentence - 1];
                 }
             }
             return string.Empty;

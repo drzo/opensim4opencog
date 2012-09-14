@@ -912,7 +912,7 @@ namespace RTParser
             return temp;
         }
 
-        public Unifiable CleanupCyc(string text)
+        static public Unifiable CleanupCyc(string text)
         {
             if (text == null) return null;
             if (text == "")
@@ -922,12 +922,12 @@ namespace RTParser
             text = Trim(text);
             if (text == "")
             {
-                writeToLog(" had white string ");
+                writeDebugLine(" had white string ");
                 return "";
             }
-            if (TheCyc != null)
+            if (TheCycS != null)
             {
-                text = TheCyc.CycCleanupCyc(text);
+                text = TheCycS.CycCleanupCyc(text);
             }
             return Trim(CleanNops(text.Replace("#$", " ").Replace(think.THINKYTAG," ").Replace("  ", " ")));
         }

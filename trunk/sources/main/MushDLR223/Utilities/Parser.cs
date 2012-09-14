@@ -61,6 +61,7 @@ namespace MushDLR223.ScriptEngines
         }
         public static string ToCamelCase(string key)
         {
+            if (string.IsNullOrEmpty(key)) return key;
             return ToCase(key, CamelCache, ToCamelCase0);
         }
         public static string ToCamelCase0(string key)

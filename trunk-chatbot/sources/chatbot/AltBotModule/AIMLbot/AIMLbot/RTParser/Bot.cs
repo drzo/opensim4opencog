@@ -966,7 +966,10 @@ namespace RTParser
             testCaseRunner = new TestCaseRunner(null);
             XmlNodeEvaluators.Add(testCaseRunner);
 
-            if (TheCyc == null) TheCyc = new CycDatabase(this);
+            if (TheCycS == null)
+            {
+                TheCycS = new CycDatabase(this);
+            }
             CycAccess v = TheCyc.GetCycAccess;
 
 
@@ -1744,7 +1747,14 @@ The AIMLbot program.
 
         public static Dictionary<string, GraphMaster> GraphsByName = new Dictionary<string, GraphMaster>();
         public Dictionary<string, GraphMaster> LocalGraphsByName = new Dictionary<string, GraphMaster>();
-        public CycDatabase TheCyc;
+        public static CycDatabase TheCycS;
+        public CycDatabase TheCyc
+        {
+            get
+            {
+                return TheCycS;
+            }
+        }
         public NatLangDb TheNLKB;
         public bool UseInlineThat = true;
 

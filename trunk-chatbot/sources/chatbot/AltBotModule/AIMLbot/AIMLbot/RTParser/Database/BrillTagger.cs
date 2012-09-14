@@ -1,5 +1,11 @@
 // Direct port to c# by Troy Simpson from Steven Abbott's VB.Net version.
 
+#if false
+#if !(_MonoCS__)
+#define VBLIKE
+#endif
+#endif
+
 using System;
 using System.IO;
 using System.Collections;
@@ -37,6 +43,7 @@ using System.Collections.Specialized;
 
 namespace RTParser.Database.NLP
 {
+#if VBLIKE
     public static class ebString
     {
         public static bool vbLike(string compstr, string pattstr)
@@ -45,9 +52,11 @@ namespace RTParser.Database.NLP
         }
 
     }
+#endif
 
     public class BrillTagJob
     {
+
         //private StringCollection TheNBest = new StringCollection();
         public StringCollection TheWords = new StringCollection();
         public StringCollection TheTags = new StringCollection();
@@ -85,6 +94,14 @@ namespace RTParser.Database.NLP
     /// </summary>
     public class BrillTagger
     {
+        private bool vbLike(string a1, string a2)
+        {
+#if VBLIKE
+            return ebString.vbLike(a1, a2);
+#endif
+            throw new NotImplementedException("vbLike");
+        }
+
         public static string StartupPath = Environment.CurrentDirectory;
         
         static private Hashtable Lexicon = new Hashtable();
@@ -253,14 +270,14 @@ namespace RTParser.Database.NLP
             // it will get changed to JJ if it contains a 'd' (e.g. 2nd) or a 't' (e.g. 31st)
             for (i = 0; (i <= tagger.LastWord); i++)
             {
-                if (ebString.vbLike(TheWords[i].Substring(0, 1), "[a-zA-Z\']"))
+                if (vbLike(TheWords[i].Substring(0, 1), "[a-zA-Z\']"))
                 {
                     if (Lexicon.ContainsKey(TheWords[i]))
                     {
                         s = ((string[])(Lexicon[TheWords[i]]));
                         TheTags.Add(s[0]);
                     }
-                    else if (ebString.vbLike(TheWords[i].Substring(0, 1), "[a-z]"))
+                    else if (vbLike(TheWords[i].Substring(0, 1), "[a-z]"))
                     {
                         TheTags.Add("NN");
                     }
@@ -273,7 +290,7 @@ namespace RTParser.Database.NLP
                         TheTags.Add("NNP");
                     }
                 }
-                else if (ebString.vbLike(TheWords[i].Substring(0, 1), "[0-9]"))
+                else if (vbLike(TheWords[i].Substring(0, 1), "[0-9]"))
                 {
                     // TDMS 18 Nov 2005 - changed unknown words to noun, which duplicates
                     // functionality of the original Brill Tagger.  Numbers were being

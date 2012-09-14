@@ -3,6 +3,7 @@ using System.Text;
 using System.Xml;
 using AltAIMLbot.AIMLTagHandlers;
 using MushDLR223.Utilities;
+using TextPatternUtils = RTParser.Utils.TextPatternUtils;
 
 namespace AltAIMLbot.Utils 
 {

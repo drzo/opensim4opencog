@@ -5,6 +5,7 @@ using System.Xml;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using Unifiable = System.String;
+using TextPatternUtils = RTParser.Utils.TextPatternUtils;
 namespace AltAIMLbot.Utils
 {
     internal class TestCaseRunner : XmlNodeEvaluatorImpl

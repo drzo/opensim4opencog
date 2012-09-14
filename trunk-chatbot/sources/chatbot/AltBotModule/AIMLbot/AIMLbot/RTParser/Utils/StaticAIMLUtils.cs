@@ -7,9 +7,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
+using AltAIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser.Database;
+using RTParser.Normalize;
 using RTParser.Variables;
 
 namespace RTParser.Utils
@@ -948,8 +950,67 @@ namespace RTParser.Utils
             return ForOutputTemplate(patternSide);
         }
 
-        /*
-        public string ToEnglish(string sentenceIn, ISettingsDictionary OutputSubstitutions)
+        public static List<string> SentenceBreaker(string sentence, Func<string,string> post)
+        {
+            var OutputSentences = new List<string>();
+            sentence = StaticAIMLUtils.ReplacePairs(sentence, "<br>", "<br/>", "<p>", "<p/>", "</p>", "<p/>", "<br/>",
+                                                    "\n", "<p/>", "\n");
+            foreach (var s00 in sentence.Split('\n', '\r'))
+            {
+                var s0 = s00;
+                while (s0.Trim().Length > 0)
+                {
+                    s0= StaticAIMLUtils.Trim(s0).Trim(' ', ',', '-', ' ', ' ');
+                    if (string.IsNullOrEmpty(s0)) continue;
+                    bool usedBreaker = false;
+                    foreach (string c in AltBot.Splitters)
+                    {
+                        int ia = (s0 + " ").IndexOf(c + " ");
+                        if (ia > 1)
+                        {
+                            string s = s0.Substring(0, ia + 1);
+                            s = CleanToEnglish(s);
+                            if (!string.IsNullOrEmpty(s))
+                            {
+                                if (post != null)
+                                {
+                                    s = post(s);
+                                }
+                                OutputSentences.Add(s);                                
+                            }
+                            usedBreaker = true;
+                            s0 = s0.Substring(ia + 1);
+                        }
+                        if (usedBreaker) break;
+                    }
+                    if (usedBreaker)
+                    {
+                        continue;
+                    }
+                    string s1 = CleanToEnglish(s0);
+                    if (string.IsNullOrEmpty(s1)) continue;
+                    if (post != null)
+                    {
+                        s1 = post(s1);
+                    }
+                    OutputSentences.Add(s1);
+                    s0 = "";
+                    continue;
+                }
+            }
+            return OutputSentences;
+        }
+
+        private static string CleanToEnglish(string s0)
+        {
+            string sent2 = StaticAIMLUtils.ForOutputTemplate(s0);
+            var s = StaticAIMLUtils.ToEnglish(sent2, null);
+            s = StaticAIMLUtils.Trim(s).Trim(' ', ',', '-', ' ', ' ');
+            return s;
+        }
+
+
+        static public string ToEnglish(string sentenceIn, ISettingsDictionary OutputSubstitutions)
         {
             var writeToLog = (OutputDelegate)null;
             if (sentenceIn == null)
@@ -972,7 +1033,7 @@ namespace RTParser.Utils
             {
                 writeToLog("SUBTS: " + sentenceIn + " -> " + sentence);
             }
-            sentence = CleanupCyc(sentence);
+            sentence = RTPBot.CleanupCyc(sentence);
             sentence = ApplySubstitutions.Substitute(OutputSubstitutions, sentence);
             return sentence.Trim();
         }
@@ -983,7 +1044,7 @@ namespace RTParser.Utils
             string patternSide =
                 VisibleRendering(getNode("<template>" + sentenceIn + "</template>").ChildNodes, PatternSideRendering);
             return ForOutputTemplate(patternSide);
-        }*/
+        }
 
         public static int ReferenceCompare(Object thiz, Object other)
         {

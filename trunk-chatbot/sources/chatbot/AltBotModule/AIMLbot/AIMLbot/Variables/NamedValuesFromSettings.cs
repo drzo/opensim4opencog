@@ -5,6 +5,7 @@ using System.Text;
 using System.Xml;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
+using TextPatternUtils = RTParser.Utils.TextPatternUtils;
 using Unifiable = System.String;
 namespace AltAIMLbot.Utils
 {

@@ -67,6 +67,7 @@ namespace AltAIMLbot
         public string _rapStoreDirectory;
         public int _rapStoreSlices;
         public int _rapStoreTrunkLevel;
+        public static Servitor LastServitor;
 
         public string rapStoreDirectory
         {
@@ -93,10 +94,12 @@ namespace AltAIMLbot
 
         public Servitor(string UserID, sayProcessorDelegate outputDelegate)
         {
+            Servitor.LastServitor = this;
             Start(UserID, outputDelegate);
         }
         public Servitor(string UserID, sayProcessorDelegate outputDelegate, bool skipLoading, bool skippersonalitycheck, bool initialcritical)
         {
+            Servitor.LastServitor = this;
             skiploading = skipLoading;
             skipPersonalityCheck = skippersonalitycheck;
             initialCritical = initialcritical;
@@ -105,6 +108,7 @@ namespace AltAIMLbot
 
         public void Start(string UserID,sayProcessorDelegate outputDelegate)
         {
+            Servitor.LastServitor = this;
             Console.WriteLine("RealBot operating in :" + Environment.CurrentDirectory);
             Console.WriteLine("       ProcessorCount:" + Environment.ProcessorCount);
             Console.WriteLine("             UserName:" + Environment.UserName);

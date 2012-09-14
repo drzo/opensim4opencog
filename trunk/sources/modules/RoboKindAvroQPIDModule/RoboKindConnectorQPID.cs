@@ -27,6 +27,7 @@ using System.Threading;
 using System.Xml.Serialization;
 using Apache.Qpid.Client;
 using Apache.Qpid.Client.Message;
+using Apache.Qpid.Framing;
 using Avro;
 using Avro.Generic;
 using Avro.Specific;
@@ -35,6 +36,7 @@ using Apache.Qpid.Messaging;
 using Apache.Qpid.Client.Qms;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
+using Apache.Qpid.Buffer;
 
 namespace RoboKindAvroQPID
 {
@@ -46,7 +48,9 @@ namespace RoboKindAvroQPID
         /// </summary>
         public IMessageConsumer CreateQListener(string routingKey, string exchangeNameDefaults, MessageReceivedDelegate handler)
         {
-            string responseQueueName = channel.GenerateUniqueName();
+            string responseQueueName = null;
+            return CreateListener(responseQueueName, routingKey, exchangeNameDefaults, ToExchangeClass(exchangeNameDefaults), false, true, true, handler);
+            responseQueueName = responseQueueName ?? channel.GenerateUniqueName();
             channel.DeclareQueue(responseQueueName, false, true, true);
             // Set this listener up to listen for reports on the response queue.
             channel.Bind(responseQueueName, exchangeNameDefaults, routingKey);
@@ -55,24 +59,37 @@ namespace RoboKindAvroQPID
             consumer.OnMessage += new MessageReceivedDelegate(handler);
             return consumer;
         }
+
+        private string ToExchangeClass(string defaults)
+        {
+            if (!string.IsNullOrEmpty(defaults))
+            {
+                defaults = defaults.ToLower();
+                if (defaults.Contains("topic")) return ExchangeClassConstants.TOPIC;
+                return ExchangeClassConstants.DIRECT;
+            }
+            return ExchangeClassConstants.TOPIC;
+        }
+
         /// <summary>
         /// Set up a queue to listen for reports on.
         /// </summary>
-        public IMessageConsumer CreateListener(string queueName, string routingKey, string exchangeNameDefaults, 
-            bool isDurable, bool isExclusive, MessageReceivedDelegate handler)
+        public IMessageConsumer CreateListener(string queueName, string routingKey, string exchangeName, string exchangeClass, 
+            bool isDurable, bool isExclusive, bool autoDelete, MessageReceivedDelegate handler)
         {
+            exchangeClass = exchangeClass ?? ToExchangeClass(exchangeName);
+            EnsureExchange(exchangeName, exchangeClass);
             if (queueName == null)
             {
                 queueName = GenerateUniqueQueue();
             } else
             {
-                bool autoDelete = !isDurable;
                 EnsureQueue(queueName, isDurable, isExclusive, autoDelete);
             }
             // Set this listener up to listen for reports on the response queue.
             try
             {
-                channel.Bind(queueName, exchangeNameDefaults, routingKey);
+                channel.Bind(queueName, exchangeName, routingKey);
                 //channel.Bind(responseQueueName, "<<default>>", RESPONSE_ROUTING_KEY);
                 IMessageConsumer consumer = channel.CreateConsumerBuilder(queueName).WithExclusive(isExclusive).Create();
                 consumer.OnMessage += new MessageReceivedDelegate(handler);
@@ -83,6 +100,18 @@ namespace RoboKindAvroQPID
                 return null;
             }
         }
+
+        private void EnsureExchange(string exchangeName, string exchangeClass)
+        {
+            if (true)
+            {
+                return;
+                channel.DeclareExchange(exchangeName,exchangeClass);
+                return;
+            }
+            AmqChannel.StaticDeclareExchange(exchangeName, exchangeClass, false, true, false, false, true, null);
+        }
+
 
         public string GenerateUniqueQueue()
         {
@@ -96,7 +125,7 @@ namespace RoboKindAvroQPID
 
         private bool EnsureQueue(string queueName, bool isDurable, bool isExclusive, bool autoDelete)
         {
-            channel.DeclareQueue(queueName, isDurable, isExclusive, autoDelete);
+            AmqChannel.DefaultInstance.DoQueueDeclare(queueName, isDurable, isExclusive, autoDelete, null, false);
             return true;
         }
 
@@ -516,27 +545,50 @@ namespace RoboKindAvroQPID
         {
             return DecodeMessage(message, new Dictionary<string, object>());
         }
-        public Dictionary<string, object> DecodeMessage(IMessage message, Dictionary<string, object> dict)
+        public void InitTypeFilters()
         {
             if (ForSubTypes.Count == 0)
             {
-                ForSubTypes.Add(typeof(ValueType));
-                ForSubTypes.Add(typeof(IConvertible));
+                ForSubTypes.Add(typeof (ValueType));
+                ForSubTypes.Add(typeof (IConvertible));
             }
             if (ExceptForSubTypes.Count == 0)
             {
-                ExceptForSubTypes.Add(typeof(Array));
-                ExceptForSubTypes.Add(typeof(byte[]));
+                //ExceptForSubTypes.Add(typeof(Array));
+                //ExceptForSubTypes.Add(typeof(byte[]));
+                ExceptForSubTypes.AddRange(new[]
+                                               {
+                                                   typeof (byte[]),
+                                                   typeof (ByteBuffer),
+                                               });
             }
+        }
+
+        public Dictionary<string, object> DecodeMessage(IMessage message, Dictionary<string, object> dict)
+        {
             var messageHeaders = message.Headers as QpidHeaders;
-            var exceptObjects = new List<object>() {message, messageHeaders};
+            var bm = message as AbstractQmsMessage;
+            var exceptObjects = new List<object>() { message, messageHeaders };
+
+            if (bm != null) exceptObjects.Add(bm.ContentHeaderProperties);
+
             GetMemberValues("Message_", message, dict, exceptObjects);
+            if (bm != null)
+            {
+                Apache.Qpid.Framing.BasicContentHeaderProperties props = bm.ContentHeaderProperties;
+                Apache.Qpid.Framing.FieldTable propsHeaders = props.Headers;
+                exceptObjects.Add(propsHeaders);
+                var dict2 = propsHeaders.AsDictionary();
+                exceptObjects.Add(dict2);
+                GetMemberValues("Message_", props, dict, exceptObjects);
+                GetMemberValues("Header_", dict2, dict, exceptObjects);
+            }
             if (messageHeaders!=null)
             {
                 var hdrs = messageHeaders._headers;
                 foreach (System.Collections.DictionaryEntry hdr in hdrs)
                 {
-                    dict["Header_" + hdr.Key] = hdr.Value;
+                    AddValue(JoinedName("Header_", "" + hdr.Key), hdr.Value, dict);
                 }
             }
             if (message is ITextMessage)
@@ -545,6 +597,11 @@ namespace RoboKindAvroQPID
             }
             string valuePrefix = "Value_";                            
             var o = DecodeMessage((IBytesMessage)message);
+            if (o is IConvertible)
+            {
+                dict[JoinedName(valuePrefix, "Value")] = o;
+                return dict;
+            }
             if (o is GenericRecord)
             {
                 GenericRecord gr = (GenericRecord)o;
@@ -553,23 +610,20 @@ namespace RoboKindAvroQPID
                 contents["Scheme"] = gr.Schema.Name;
                 o = contents;
             }
-            if (o is IConvertible)
-            {
-                dict[valuePrefix + "Value"] = o;
-            }
-            bool neededDecode;
             if (o is IDictionary<string, object>)
             {
                 foreach (var kv in (IDictionary<string, object>)o)
                 {
-                    dict[valuePrefix + kv.Key] = DecodeValue(valuePrefix + kv.Key + "_", kv.Value, out neededDecode);
+                    string joinedName = JoinedName(valuePrefix, kv.Key);
+                    AddValue(joinedName, kv.Value, dict);
                 }
             }
             else if (o is IDictionary)
             {
                 foreach (DictionaryEntry kv in (IDictionary)o)
                 {
-                    dict[valuePrefix + kv.Key] = DecodeValue(valuePrefix + kv.Key + "_", kv.Value, out neededDecode);
+                    string joinedName = JoinedName(valuePrefix, "" + kv.Key);
+                    AddValue(joinedName, kv.Value, dict);
                 }
             }
             else
@@ -579,17 +633,57 @@ namespace RoboKindAvroQPID
             return dict;
         }
 
+        private object DeRef(object o)
+        {
+            bool neededDecode;
+            var o2 = DecodeValue("", o, out neededDecode);
+            if (!neededDecode) return o;
+            return o2;
+        }
+
         private object DecodeValue(string valuePrefix, object o, out bool neededDecode)
         {
             neededDecode = false;
             if (o is IConvertible) return o;
+            if (o is NullType)
+            {
+                neededDecode = true;
+                return null;
+            }
             bool needed0;
+            if (o is AMQTypedValue)
+            {
+                var tv = (AMQTypedValue)o;
+                var tvv = tv.Value;
+                if (tvv == null)
+                {
+                    return tv;
+                }
+                neededDecode = true;
+                return DecodeValue(valuePrefix, tvv, out needed0);
+            }
+            if (o is GenericRecord)
+            {
+                neededDecode = true;
+                GenericRecord gr = (GenericRecord)o;
+                IDictionary<string, object> contents = gr.GetContents();
+                contents["SchemeNS"] = gr.Schema.Namespace;
+                contents["Scheme"] = gr.Schema.Name;
+                return DecodeValue(valuePrefix, contents, out needed0);
+            }
+            if (o is FieldTable)
+            {
+                neededDecode = true;
+                var contents =((FieldTable)o).AsDictionary();
+                return DecodeValue(valuePrefix, contents, out needed0);               
+            }
             if (o is IDictionary<string, object>)
             {
                 IDictionary<string, object> dict = new Dictionary<string, object>();
-                foreach (var kv in (IDictionary<string, object>) o)
+                foreach (var kv in (IDictionary<string, object>)o)
                 {
-                    dict[valuePrefix + kv.Key] = DecodeValue(valuePrefix + kv.Key + "_", kv.Value, out needed0);
+                    string joinedName = JoinedName(valuePrefix, "" + kv.Key);
+                    AddValue(joinedName, DecodeValue(joinedName + "_", kv.Value, out needed0), dict);
                     if (needed0) neededDecode = true;
                 }
                 if (!neededDecode)
@@ -601,9 +695,10 @@ namespace RoboKindAvroQPID
             if (o is IDictionary)
             {
                 IDictionary<string, object> dict = new Dictionary<string, object>();
-                foreach (DictionaryEntry kv in (IDictionary) o)
+                foreach (DictionaryEntry kv in (IDictionary)o)
                 {
-                    dict[valuePrefix + kv.Key] = DecodeValue(valuePrefix + kv.Key + "_", kv.Value, out needed0);
+                    string joinedName = JoinedName(valuePrefix, "" + kv.Key);
+                    AddValue(joinedName, DecodeValue(joinedName + "_", kv.Value, out needed0), dict);
                     if (needed0) neededDecode = true;
                 }
                 if (!neededDecode)
@@ -611,15 +706,6 @@ namespace RoboKindAvroQPID
                     return o;
                 }
                 return dict;
-            }
-            if (o is GenericRecord)
-            {
-                neededDecode = true;
-                GenericRecord gr = (GenericRecord) o;
-                IDictionary<string, object> contents = gr.GetContents();
-                contents["SchemeNS"] = gr.Schema.Namespace;
-                contents["Scheme"] = gr.Schema.Name;
-                return DecodeValue(valuePrefix, contents, out needed0);
             }
             if (o is IEnumerable)
             {
@@ -636,8 +722,11 @@ namespace RoboKindAvroQPID
                 if (o is Array) return obj.ToArray();
                 return obj;
             }
+            string t = o.GetType().Name;
             return o;
         }
+
+
 
         private object DecodeMessage(IBytesMessage msg)
         {
@@ -671,17 +760,50 @@ namespace RoboKindAvroQPID
             var Loaded = RoboKindConnectorQPID.Loaded.Values;
             lock (Loaded) EnsureSchemasLoaded();
             type = type.Substring(type.IndexOf('/') + 1);
-            foreach (Schema loaded in Loaded)
+            lock(Loaded)
+            {
+                var s = SchemeFor00(type, Loaded);
+                if (s != null) return s;
+                if (type.Contains("-"))
+                {
+                    return SchemeFor(type.Replace("-", ""));
+                }
+                Console.WriteLine("Cant find type: " + type);
+                foreach (Schema schema in Loaded)
+                {
+                    Console.WriteLine(schema.Name);
+                }
+                return null;
+            }
+        }
+
+        private static Schema SchemeFor00(string type, IEnumerable<Schema> candidates)
+        {
+            type = type.Substring(type.IndexOf('/') + 1);
+            var s = SchemeFor0(type, candidates);
+            if (s != null) return s;
+            string suffix = "Record";
+            if (!type.EndsWith(suffix))
+            {
+                type = type + suffix;
+            }
+            else
+            {
+                type = type.Substring(0, type.Length - suffix.Length);
+            }
+            s = SchemeFor0(type, candidates);
+            if (s != null) return s;
+            return null;
+        }
+
+        private static Schema SchemeFor0(string type, IEnumerable<Schema> candidates)
+        {
+            foreach (Schema loaded in candidates)
             {
                 if (loaded.Name == type) return loaded;
             }
             type = type.ToLower();
-            foreach (Schema loaded in Loaded)
-            {
-                if (loaded.Name.ToLower() == type) return loaded;
-            }
-            type = type + "record";
-            foreach (Schema loaded in Loaded)
+            foreach (Schema loaded in candidates)
             {
                 if (loaded.Name.ToLower() == type) return loaded;
             }
@@ -801,6 +923,26 @@ namespace RoboKindAvroQPID
             {
                 return;
             }
+            var o0 = properties;
+            bool neededDecode;
+            if (o0 is IDictionary<string, object>)
+            {
+                foreach (var kv in (IDictionary<string, object>)o0)
+                {
+                    string joinedName = JoinedName(prefix, kv.Key);
+                    AddValue(joinedName, DecodeValue(joinedName + "_", kv.Value, out neededDecode), dict);
+                }
+                return;
+            }
+            else if (o0 is IDictionary)
+            {
+                foreach (DictionaryEntry kv in (IDictionary) o0)
+                {
+                    string joinedName = JoinedName(prefix, "" + kv.Key);
+                    AddValue(joinedName, kv.Value, dict);
+                }
+                return;
+            }
             Type t = properties.GetType();
             KeyValuePair<List<PropertyInfo>, List<FieldInfo>> vvv = GetPropsForTypes(t);
             List<string> lowerProps = new List<string>();
@@ -819,7 +961,7 @@ namespace RoboKindAvroQPID
                     pt = v.GetType();
                     if (!IsOKType(pt)) continue;
                     if (exceptFor.Contains(v)) continue;
-                    dict[prefix + o.Name] = v;
+                    AddValue(JoinedName(prefix, o.Name), v, dict);
                 }
                 catch (Exception e)
                 {
@@ -839,7 +981,7 @@ namespace RoboKindAvroQPID
                     }
                     if (!IsOKType(pt)) continue;
                     if (exceptFor.Contains(v)) continue;
-                    dict[prefix + o.Name] = v;
+                    AddValue(JoinedName(prefix, o.Name), v, dict);
                 }
                 catch (Exception e)
                 {
@@ -848,8 +990,87 @@ namespace RoboKindAvroQPID
             }
         }
 
+        private void AddValue(object key, object value, IDictionary dict)
+        {
+
+            var valuePrefix = "" + key;
+            if (value is IDictionary<string, object>)
+            {
+                foreach (var kv in (IDictionary<string, object>)value)
+                {
+                    string joinedName = JoinedName(valuePrefix, kv.Key);
+                    AddValue(joinedName, kv.Value, dict);
+                }
+                return;
+            }
+            if (value is IDictionary)
+            {
+                foreach (DictionaryEntry kv in (IDictionary)value)
+                {
+                    string joinedName = JoinedName(valuePrefix, "" + kv.Key);
+                    AddValue(joinedName, kv.Value, dict);
+                }
+                return;
+            }
+
+            bool neededDecode;
+            var o2 = DecodeValue(valuePrefix + "_", value, out neededDecode);
+            if (neededDecode)
+            {
+                value = o2;
+            }
+            dict[key] = value;
+        }
+
+        private void AddValue(string key, object value, IDictionary<string, object> dict)
+        {
+
+            var valuePrefix = "" + key;
+            if (value is IDictionary<string, object>)
+            {
+                foreach (var kv in (IDictionary<string, object>)value)
+                {
+                    string joinedName = JoinedName(valuePrefix, kv.Key);
+                    AddValue(joinedName, kv.Value, dict);
+                }
+                return;
+            }
+            if (value is IDictionary)
+            {
+                foreach (DictionaryEntry kv in (IDictionary)value)
+                {
+                    string joinedName = JoinedName(valuePrefix, "" + kv.Key);
+                    AddValue(joinedName, kv.Value, dict);
+                }
+                return;
+            }
+
+            bool neededDecode;
+            var o2 = DecodeValue(valuePrefix + "_", value, out neededDecode);
+            if (neededDecode)
+            {
+                value = o2;
+            }
+            dict[key] = value;
+        }
+
+        private string JoinedName(string prefix, string word)
+        {
+            prefix = prefix ?? "";
+            word = word ?? "";
+            prefix = MushDLR223.ScriptEngines.Parser.ToMapKey(prefix.Trim('_'));
+            word = MushDLR223.ScriptEngines.Parser.ToMapKey(word.Trim('_'));
+            if (prefix == word || string.IsNullOrEmpty(prefix))
+            {
+                return word;
+            }
+            if (!string.IsNullOrEmpty(word)) return prefix + "_" + word;
+            return prefix;
+        }
+
         private bool IsOKType(Type pt)
         {
+            InitTypeFilters();
             if (IsSubType(ForSubTypes, pt)) return true;
             if (IsSubType(ExceptForSubTypes, pt)) return false;
             return true;

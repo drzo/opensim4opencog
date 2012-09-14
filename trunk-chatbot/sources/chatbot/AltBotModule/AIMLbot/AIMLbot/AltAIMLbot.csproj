@@ -24,6 +24,21 @@
     </StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -66,6 +81,10 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="IKVM.OpenJDK.Core, Version=7.1.4532.2, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.JScript" />
+    <Reference Include="Microsoft.Vsa" />
+    <Reference Include="OpenCyc, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="System">
       <Name>System</Name>
     </Reference>
@@ -153,6 +172,213 @@
     </Compile>
     <Compile Include="PorterStemmer.cs">
     </Compile>
+    <Compile Include="RTParser\AIMLbot.cs" />
+    <Compile Include="RTParser\AIMLProcessing\CustomTagLoading.cs" />
+    <Compile Include="RTParser\AIMLProcessing\TagHandlerProcessor.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\aiml.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\aimlexec.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\and.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\bind.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\bot.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\category.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\condition.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\cycassert.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\cyccondition.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\cycphrase.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\cycquery.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\cycrandom.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\cycretract.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\cycsystem.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\cycterm.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\date.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\dbdelete.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\dbload.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\dbpush.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\dbquery.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\dbupdate.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\dependentmachine.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\evidencestate.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\evidence_assoc.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\evidence_pattern.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\formal.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\format.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\gender.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\get.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\gossip.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\guard.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\guardstar.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\id.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\input.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\inputreq.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\isa.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\javascript.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\lazyClosure.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\learn.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\lex.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\lexis.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\lexset.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\liif.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\lowercase.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\markov.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\msm.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\optional.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\or.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\peekstack.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\person.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\person2.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\pop.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\process_msm.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\push.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\random.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\recursiveVerbatum.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\regex.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\response_topic.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\root.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\sentence.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\set.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\setevidence.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\setstate.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\size.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\soundcode.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\space.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\sr.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\srai.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\srai_legacy.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\star.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\state.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\substitute.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\system.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\template.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\that.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\thatstar.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\think.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\topic.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\topicstar.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\transition.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\tscore.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\uppercase.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\verbatum.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\version.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\when.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\xml.cs" />
+    <Compile Include="RTParser\AIMLTagHandlers\xmlattribute.cs" />
+    <Compile Include="RTParser\Bot.cs" />
+    <Compile Include="RTParser\BotConsole.cs" />
+    <Compile Include="RTParser\BotInterpreters.cs" />
+    <Compile Include="RTParser\ChatDialog.cs" />
+    <Compile Include="RTParser\ConversationCondition.cs" />
+    <Compile Include="RTParser\Conversation\ConversationLog.cs" />
+    <Compile Include="RTParser\Conversation\InteractionResult.cs" />
+    <Compile Include="RTParser\Conversation\SituationInConversation.cs" />
+    <Compile Include="RTParser\Conversation\UserConversationScope.cs" />
+    <Compile Include="RTParser\Conversation\Utterance.cs" />
+    <Compile Include="RTParser\CycNLTagHandlers\NumberTemplate.cs" />
+    <Compile Include="RTParser\CycNLTagHandlers\OptionalOne.cs" />
+    <Compile Include="RTParser\Database\AskDotComFactiodEngine.cs" />
+    <Compile Include="RTParser\Database\BrillTagger.cs" />
+    <Compile Include="RTParser\Database\CycDatabase.cs" />
+    <Compile Include="RTParser\Database\GoogleTranslator.cs" />
+    <Compile Include="RTParser\Database\IDocSearch.cs" />
+    <Compile Include="RTParser\Database\IEnglishFactiodEngine.cs" />
+    <Compile Include="RTParser\Database\IEntityFilter.cs" />
+    <Compile Include="RTParser\Database\ITripleStore.cs" />
+    <Compile Include="RTParser\Database\MyLuceneIndexer.cs" />
+    <Compile Include="RTParser\Database\NamedValuesFromSettings.cs" />
+    <Compile Include="RTParser\Database\NatLangDb.cs" />
+    <Compile Include="RTParser\Database\TripleStoreFromEnglish.cs" />
+    <Compile Include="RTParser\Database\TrueKnowledgeFactiodEngine.cs" />
+    <Compile Include="RTParser\Database\WebGetFactiodEngine.cs" />
+    <Compile Include="RTParser\Database\WikiAnswersFactoidEngine.cs" />
+    <Compile Include="RTParser\GUI\RealTimeBotConsole.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RTParser\GUI\RealTimeBotConsole.Designer.cs">
+      <DependentUpon>RealTimeBotConsole.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RTParser\JoinedTextBuffer.cs" />
+    <Compile Include="RTParser\LegacyBot.cs" />
+    <Compile Include="RTParser\Normalize\ApplySubstitutions.cs" />
+    <Compile Include="RTParser\Normalize\MakeCaseInsensitive.cs" />
+    <Compile Include="RTParser\Normalize\SplitIntoSentences.cs" />
+    <Compile Include="RTParser\Normalize\StripIllegalCharacters.cs" />
+    <Compile Include="RTParser\Prolog\Builtins.cs" />
+    <Compile Include="RTParser\Prolog\CSProlog.cs" />
+    <Compile Include="RTParser\Prolog\Engine.cs" />
+    <Compile Include="RTParser\Prolog\Ext.cs" />
+    <Compile Include="RTParser\Prolog\IO.cs" />
+    <Compile Include="RTParser\Prolog\Main.cs" />
+    <Compile Include="RTParser\Prolog\Operator.cs" />
+    <Compile Include="RTParser\Prolog\Persistent.cs" />
+    <Compile Include="RTParser\Prolog\PL.cs" />
+    <Compile Include="RTParser\Prolog\PredDescr.cs" />
+    <Compile Include="RTParser\Prolog\PredStorage.cs" />
+    <Compile Include="RTParser\Prolog\PrologConsole.cs" />
+    <Compile Include="RTParser\Prolog\SimpleDOMParser.cs" />
+    <Compile Include="RTParser\Prolog\Term.cs" />
+    <Compile Include="RTParser\Prolog\TermNodeList.cs" />
+    <Compile Include="RTParser\Prolog\TermSet.cs" />
+    <Compile Include="RTParser\Prolog\Utils.cs" />
+    <Compile Include="RTParser\Proof.cs" />
+    <Compile Include="RTParser\Request.cs" />
+    <Compile Include="RTParser\RequestSettings.cs" />
+    <Compile Include="RTParser\Result.cs" />
+    <Compile Include="RTParser\SelfLearning.cs" />
+    <Compile Include="RTParser\SideEffectStage.cs" />
+    <Compile Include="RTParser\TemplateResult.cs" />
+    <Compile Include="RTParser\Unify\BestUnifiable.cs" />
+    <Compile Include="RTParser\Unify\EmptyUnifiable.cs" />
+    <Compile Include="RTParser\Unify\StringAppendableUnifiableImpl.cs" />
+    <Compile Include="RTParser\Unify\StringUnifiable.cs" />
+    <Compile Include="RTParser\Unify\TextPatternUtils.cs" />
+    <Compile Include="RTParser\Unify\Unifiable.cs" />
+    <Compile Include="RTParser\User.cs" />
+    <Compile Include="RTParser\UserDuringProcessing.cs" />
+    <Compile Include="RTParser\UserManager.cs" />
+    <Compile Include="RTParser\Utils\AIMLFormatingTagHandler.cs" />
+    <Compile Include="RTParser\Utils\AIMLLoader.cs" />
+    <Compile Include="RTParser\Utils\AIMLTagHandler.cs" />
+    <Compile Include="RTParser\Utils\AIMLTagHandlerUtils.cs" />
+    <Compile Include="RTParser\Utils\AIMLTagHandlerUtils_legacy.cs" />
+    <Compile Include="RTParser\Utils\AIMLTagHandler_legacy.cs" />
+    <Compile Include="RTParser\Utils\CategoryInfo.cs" />
+    <Compile Include="RTParser\Utils\CustomTag.cs" />
+    <Compile Include="RTParser\Utils\Gender.cs" />
+    <Compile Include="RTParser\Utils\GraphLinkInfo.cs" />
+    <Compile Include="RTParser\Utils\GraphMaster.cs" />
+    <Compile Include="RTParser\Utils\GraphQuery.cs" />
+    <Compile Include="RTParser\Utils\GuardInfo.cs" />
+    <Compile Include="RTParser\Utils\LoaderOptions.cs" />
+    <Compile Include="RTParser\Utils\LoadingTagHandler.cs" />
+    <Compile Include="RTParser\Utils\MatchInfo.cs" />
+    <Compile Include="RTParser\Utils\MatchState.cs" />
+    <Compile Include="RTParser\Utils\Node.cs" />
+    <Compile Include="RTParser\Utils\Node_legacy.cs" />
+    <Compile Include="RTParser\Utils\OutputInfo.cs" />
+    <Compile Include="RTParser\Utils\PatternInfo.cs" />
+    <Compile Include="RTParser\Utils\QueryList.cs" />
+    <Compile Include="RTParser\Utils\ResponseInfo.cs" />
+    <Compile Include="RTParser\Utils\ResultCache.cs" />
+    <Compile Include="RTParser\Utils\StaticAIMLUtils.cs" />
+    <Compile Include="RTParser\Utils\SubQuery.cs" />
+    <Compile Include="RTParser\Utils\TagHandler.cs" />
+    <Compile Include="RTParser\Utils\TemplateInfo.cs" />
+    <Compile Include="RTParser\Utils\TestCaseRunner.cs" />
+    <Compile Include="RTParser\Utils\TextTransformer.cs" />
+    <Compile Include="RTParser\Utils\ThatInfo.cs" />
+    <Compile Include="RTParser\Utils\TopicInfo.cs" />
+    <Compile Include="RTParser\Utils\UndoStack.cs" />
+    <Compile Include="RTParser\Utils\UnifibleTagHandler.cs" />
+    <Compile Include="RTParser\Variables\CollectionProperty.cs" />
+    <Compile Include="RTParser\Variables\GetSetDictionary.cs" />
+    <Compile Include="RTParser\Variables\GetSetProperty.cs" />
+    <Compile Include="RTParser\Variables\ObjectPropertyDictionary.cs" />
+    <Compile Include="RTParser\Variables\PrefixProvider.cs" />
+    <Compile Include="RTParser\Variables\ProvidedSettingsDictionary.cs" />
+    <Compile Include="RTParser\Variables\SettingsDictionary.cs" />
+    <Compile Include="RTParser\WebScriptExecutor.cs" />
+    <Compile Include="RTParser\XmlGraph\PrintOptions.cs" />
+    <Compile Include="RTParser\XmlGraph\XmlNodeEval.cs" />
+    <Compile Include="RTParser\XmlGraph\XmlNodeEvaluator.cs" />
     <Compile Include="ServitorProgram.cs" />
     <Compile Include="Qchem.cs">
     </Compile>
@@ -325,6 +551,69 @@
     </Compile>
     <Compile Include="Utils\TextTransformer.cs">
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="RTParser\AIMLbot.csproj" />
+    <Content Include="RTParser\AIMLbot.csproj.user" />
+    <Content Include="RTParser\AIMLBot.XML" />
+    <Content Include="RTParser\obj\Debug\AIMLbot.csproj.FileListAbsolute.txt" />
+    <Content Include="RTParser\obj\Debug\AIMLbot.dll" />
+    <Content Include="RTParser\obj\Debug\AIMLbot.pdb" />
+    <Content Include="RTParser\obj\Debug\Refactor\AIMLbot.dll" />
+    <Content Include="RTParser\Prolog\csc_options.inc" />
+    <Content Include="RTParser\Prolog\CSProlog.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="RTParser\AIMLbot.vpj" />
+    <None Include="RTParser\ChatDialog.cs.bak" />
+    <None Include="RTParser\obj\Debug\DesignTimeResolveAssemblyReferencesInput.cache" />
+    <None Include="RTParser\obj\Debug\ResolveAssemblyReference.cache" />
+    <None Include="RTParser\Prolog\PL.grm" />
+    <None Include="RTParser\Prolog\SetName.bat" />
+    <None Include="RTParser\User.cs.bak" />
+    <None Include="RTParser\Utils\UndoStack.cs.bak" />
+    <None Include="RTParser\Variables\SettingsDictionary.cs.bak" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="RTParser\GUI\RealTimeBotConsole.resx">
+      <DependentUpon>RealTimeBotConsole.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="RTParser\obj\Debug\TempPE\" />
+    <Folder Include="RTParser\obj\Release\TempPE\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

@@ -12,7 +12,7 @@ using Lucene.Net.Store;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-
+using TextPatternUtils = RTParser.Utils.TextPatternUtils;
 
 using Unifiable = System.String;
 namespace AltAIMLbot.Utils
@@ -1763,6 +1763,10 @@ namespace AltAIMLbot.Utils
                 name = TransformName(name);
                 var setting = grabSetting0(name);
                 setting = TransformValueOut(setting);
+                if (setting == null && Servitor.LastServitor.skiploading)
+                {
+                    return null;
+                }
                 return setting;
             }
             catch (Exception e)

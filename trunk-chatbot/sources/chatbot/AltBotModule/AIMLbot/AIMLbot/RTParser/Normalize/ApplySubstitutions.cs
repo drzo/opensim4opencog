@@ -54,6 +54,7 @@ namespace RTParser.Normalize
         /// <returns>The processed Unifiable</returns>
         public static string Substitute(ISettingsDictionary dictionary, string target)
         {
+            if (dictionary == null) return target;
             string marker = ApplySubstitutions.getMarker(5);
             string markerSP = ApplySubstitutions.getMarker(3);
             string result = " " + Unifiable.ToVMString(target) + " ";

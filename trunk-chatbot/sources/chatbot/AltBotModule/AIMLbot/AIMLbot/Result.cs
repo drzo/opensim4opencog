@@ -5,6 +5,7 @@ using System.Xml;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using AltAIMLbot.Utils;
+using RTParser.Utils;
 
 namespace AltAIMLbot
 {
@@ -69,6 +70,10 @@ namespace AltAIMLbot
                     }
                     else
                     {
+                        if (resultCount > 0)
+                        {
+                            return string.Empty;
+                        }
                         StringBuilder paths = new StringBuilder();
                         foreach (string pattern in this.NormalizedPaths)
                         {
@@ -202,7 +207,7 @@ namespace AltAIMLbot
         /// <returns>The raw output from the bot</returns>
         public override string ToString()
         {
-            return this.Output;
+            return this.RawOutput;
         }
 
         /// <summary>
@@ -241,6 +246,22 @@ namespace AltAIMLbot
             // set { request.Requester = value; }
         }
         private string userSetResultComplete;
+        public int resultCount;
+
+        public string LastSentence
+        {
+            get
+            {
+                string last = "";
+                foreach (string s in OutputSentences)
+                {
+                    if (s.EndsWith("?")) return s;
+                    last = s;
+                }
+                return last;
+            }
+        }
+
         public string WhyResultComplete
         {
             get
@@ -489,5 +510,19 @@ namespace AltAIMLbot
         //public RTParser.Variables.ISettingsDictionary RequesterChanges { get { throw new NotImplementedException(); } }
         //public RTParser.Variables.ISettingsDictionary ResponderChanges { get { throw new NotImplementedException(); } }
 
+        public void AddOutputSentences(string sentence)
+        {
+            this.resultCount++;
+            List<string> sents = StaticAIMLUtils.SentenceBreaker(sentence, null);
+            if (sents.Count == 0 && sentence==" , ")
+            {
+                OutputSentences.Add(sentence);
+                return;
+            }
+            foreach (var s in sents)
+            {
+                OutputSentences.Add(s);
+            }
+        }
     }
 }
