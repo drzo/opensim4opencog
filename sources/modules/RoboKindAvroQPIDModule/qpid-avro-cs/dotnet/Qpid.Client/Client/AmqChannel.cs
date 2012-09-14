@@ -1007,10 +1007,14 @@ namespace Apache.Qpid.Client
 
         private void DoQueueDeclare(string queueName, bool isDurable, bool isExclusive, bool isAutoDelete, IFieldTable args)
         {
+            DoQueueDeclare(queueName, isDurable, isExclusive, isAutoDelete, args, false);
+        }
+        public void DoQueueDeclare(string queueName, bool isDurable, bool isExclusive, bool isAutoDelete, IFieldTable args, bool isPassive)
+        {
             _logger.Debug(string.Format("DeclareQueue name={0} durable={1} exclusive={2}, auto-delete={3}",
                                         queueName, isDurable, isExclusive, isAutoDelete));
 
-            AMQFrame queueDeclare = QueueDeclareBody.CreateAMQFrame(_channelId, 0, queueName, false, isDurable, isExclusive,
+            AMQFrame queueDeclare = QueueDeclareBody.CreateAMQFrame(_channelId, 0, queueName, isPassive, isDurable, isExclusive,
                                                                     isAutoDelete, false, (FieldTable) args);
 
 

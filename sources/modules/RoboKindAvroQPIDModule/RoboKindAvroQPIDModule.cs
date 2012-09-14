@@ -19,9 +19,11 @@ namespace RoboKindAvroQPID
         public static string RK_QPID_URI = "amqp://guest:guest@default/test?brokerlist='tcp://localhost:5672'";
 
         /// <summary> Holds the routing key for cogbot management messages. </summary>
-        public static string COGBOT_CONTROL_ROUTING_KEY = "cogbot_control";
+        public static string COGBOT_CONTROL_ROUTING_KEY = "cogbot_control_route";
         /// <summary> Holds the main queue for cogbot management messages. </summary>
-        public static string COGBOT_CONTROL_QUEUE_KEY = "cogbot_control";
+        public static string COGBOT_CONTROL_QUEUE_KEY = "cogbot_control_queue";
+        /// <summary> Holds the main queue for cogbot management messages. </summary>
+        public static string COGBOT_CONTROL_EXCHANGE_KEY = "amq.topic";
 
         /// <summary> Holds the routing key for events. </summary>
         public static string COGBOT_EVENT_ROUTING_KEY = "cogbot_event";
@@ -171,8 +173,11 @@ namespace RoboKindAvroQPID
             try
             {
                 RK_publisher = new RoboKindConnectorQPID(uri);
-                RK_listener = RK_publisher.CreateListener(COGBOT_CONTROL_QUEUE_KEY,
-                    COGBOT_CONTROL_ROUTING_KEY, ExchangeNameDefaults.TOPIC, true, false,
+                RK_listener = RK_publisher.CreateListener(
+                    COGBOT_CONTROL_QUEUE_KEY, 
+                    COGBOT_CONTROL_ROUTING_KEY,
+                    COGBOT_CONTROL_EXCHANGE_KEY,
+                     ExchangeNameDefaults.TOPIC, true, false, false,
                                                           AvroReceived);
             }
             catch (Exception e)
@@ -230,12 +235,23 @@ namespace RoboKindAvroQPID
             RK_publisher.CreateListener("#", ExchangeNameDefaults.DIRECT, (o) => Eveything(o, "#direct"));
             RK_publisher.CreateListener("speechRecEvent", ExchangeNameDefaults.TOPIC, (o) => Eveything(o, "topic"));
             RK_publisher.CreateListener("#", ExchangeNameDefaults.TOPIC, (o) => Eveything(o, "#topic"));*/
-            RK_publisher.CreateListener(null, "#", "speechRecEvent", true, false, (o) => Eveything(o, "#speechRecEvent"));
-
+            
+            CreateHashSpy("speechRecEvent");
+            CreateHashSpy("animPrompt");
+            //CreateHashSpy("");
+            //CreateHashSpy("speechCommand");
+            //CreateHashSpy("interpreterInstanceCheck");
+            //CreateHashSpy("speechRequest");
+           // CreateSpy(null, "speechRequest", "speechRequest");
+            /*
+            
             SpyQueue("test-ping");
             SpyQueue("test-queue");
             SpyQueue("ping");
             SpyQueue("queue");
+            SpyQueue("speechRequest");
+            SpyQueue("");
+            SpyQueue("speechCommand");*/
 
             /*
              *             CreateSpy("speechCommand", false);
@@ -246,16 +262,28 @@ namespace RoboKindAvroQPID
             //RK_publisher.CreateListener("speechRecEvent", "speechRecEvent", (o) => Eveything(o, "speechRecEvent"));
             //RK_publisher.CreateListener("speechRecEvent", "", (o) => Eveything(o, "blank"));
             Console.WriteLine("spying on AQM");
+        }
+
+        public void Block()
+        {
             while (true)
             {
                 System.Console.Error.Flush();
-                System.Console.ReadLine();
+                string s = System.Console.ReadLine();
+                if (s == "next") return;               
             }
+        }
+
+        private void CreateHashSpy(string speechRecEvent)
+        {
+            RK_publisher.CreateListener(null, "#", speechRecEvent, "", true, false, false, (o) => Eveything(o, "#" + speechRecEvent));            
         }
 
         private void SpyQueue(string s)
         {
-            RK_publisher.Channel.CreateConsumerBuilder(s).Create().OnMessage += (msg) => Eveything(msg, "Spy Queue " + s);
+           RK_publisher.Channel.CreateConsumerBuilder(s).Create().OnMessage += (msg) => Eveything(msg, "Spy Queue " + s);
+           // CreateSpy(null, "", s);
+           // CreateSpy(null, s, "amq.topic");
         }
 
         private void CreateSpy(string name, bool hash)
@@ -268,12 +296,22 @@ namespace RoboKindAvroQPID
         private void CreateSpy(string queueName, string routingKey, string exchangeName)
         {
             RK_publisher.CreateListener(
-                queueName, routingKey, exchangeName, true, false,
-                (o) => Eveything(o, string.Format("Q:R:E='{0}:{1}:{2}'", queueName, routingKey, exchangeName)));
+                queueName, routingKey, exchangeName, ExchangeClassConstants.DIRECT, true, false, false,
+                (o) => Eveything(o, string.Format("Q:R:E='{0}:{1}:{2}'", queueName ?? "!", routingKey ?? "!", exchangeName ?? "!")));
         }
 
         private void Eveything(IMessage msg, string type)
         {
+            lock(GetType())
+            {
+                Eveything0(msg,type);
+            }
+        }
+        private void Eveything0(IMessage msg, string type)
+        {
+            Console.WriteLine("---------------------------------------");
+            Console.WriteLine("TYPE: " + type + "=" + msg.GetType());
+            Console.WriteLine("---------------------------------------");
             try
             {
                 Dictionary<string, object> map = RK_publisher.DecodeMessage(msg);
@@ -285,7 +323,8 @@ namespace RoboKindAvroQPID
             catch (Exception e)
             {
                 Console.WriteLine(type + "=" + msg);
-            }           
+            }
+            Console.WriteLine("---------------------------------------");
             System.Console.Out.Flush();
         }
 
