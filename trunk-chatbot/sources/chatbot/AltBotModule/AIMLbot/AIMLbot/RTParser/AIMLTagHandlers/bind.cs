@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Xml;
 using System.Text;
 using RTParser.Utils;
@@ -53,7 +53,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                     catch (Exception e)
                     {
-                        Proc.writeToLog(e);
+                        bot.writeToLog(e);
                         writeToLogWarn("" + e);
                     }
                 }

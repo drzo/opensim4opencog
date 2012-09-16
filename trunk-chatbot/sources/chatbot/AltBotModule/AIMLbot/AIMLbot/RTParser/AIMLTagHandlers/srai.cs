@@ -189,8 +189,8 @@ namespace RTParser.AIMLTagHandlers
             if (RecurseResultValid) return RecurseResult;
             if (CheckNode("srai"))
             {
-                bool chatTraced = Proc.chatTrace;
-                Proc.chatTrace = false;
+                bool chatTraced = bot.chatTrace;
+                bot.chatTrace = false;
                 try
                 {
                     var templateNodeInnerValue = Recurse();
@@ -256,7 +256,7 @@ namespace RTParser.AIMLTagHandlers
                 }
                 finally
                 {
-                    Proc.chatTrace = chatTraced;
+                    bot.chatTrace = chatTraced;
                 }
             }
             return Unifiable.Empty;

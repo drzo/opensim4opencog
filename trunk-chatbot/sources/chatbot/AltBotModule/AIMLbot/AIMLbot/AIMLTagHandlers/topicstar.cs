@@ -14,7 +14,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// The topicstar element does not have any content. 
     /// </summary>
-    public class topicstar : AltAIMLbot.Utils.AIMLTagHandler
+    public class topicstar : star
     {
         /// <summary>
         /// Ctor
@@ -39,49 +39,7 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             if (this.TemplateNodeName == "topicstar")
             {
-                if (TemplateNodeAttributes.Count == 0)
-                {
-                    if (this.query.TopicStar.Count > 0)
-                    {
-                        return (string)this.query.TopicStar[0];
-                    }
-                    else
-                    {
-                        this.bot.writeToLog("ERROR! An out of bounds index to topicstar was encountered when processing the input: " + this.request.rawInput);
-                    }
-                }
-                else if (TemplateNodeAttributes.Count == 1)
-                {
-                    if (TemplateNodeAttributes[0].Name.ToLower() == "index")
-                    {
-                        if (TemplateNodeAttributes[0].Value.Length > 0)
-                        {
-                            try
-                            {
-                                int result = Convert.ToInt32(TemplateNodeAttributes[0].Value.Trim());
-                                if (this.query.TopicStar.Count > 0)
-                                {
-                                    if (result > 0)
-                                    {
-                                        return (string)this.query.TopicStar[result - 1];
-                                    }
-                                    else
-                                    {
-                                        this.bot.writeToLog("ERROR! An input tag with a badly formed index (" + TemplateNodeAttributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
-                                    }
-                                }
-                                else
-                                {
-                                    this.bot.writeToLog("ERROR! An out of bounds index to topicstar was encountered when processing the input: " + this.request.rawInput);
-                                }
-                            }
-                            catch
-                            {
-                                this.bot.writeToLog("ERROR! A thatstar tag with a badly formed index (" + TemplateNodeAttributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
-                            }
-                        }
-                    }
-                }
+                return GetStar("topic");
             }
             return string.Empty;
         }

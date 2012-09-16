@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Xml;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -135,7 +135,7 @@ namespace RTParser.AIMLTagHandlers
             //var recurseResult1 = RecurseProcess();
             if (s == null)
             {
-                Proc.TraceTest("NULL in FIIF " + ToString(), () =>
+                bot.TraceTest("NULL in FIIF " + ToString(), () =>
                                                                  {
                                                                      s = RecurseReal(templateNode, true);
                                                                  });

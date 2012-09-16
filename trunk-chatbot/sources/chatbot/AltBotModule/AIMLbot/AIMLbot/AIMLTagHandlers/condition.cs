@@ -6,6 +6,7 @@ using Aima.Core.Logic.Propositional.Algorithms;
 using Aima.Core.Logic.Propositional.Parsing;
 using Aima.Core.Logic.Propositional.Parsing.AST;
 using Aima.Core.Logic.Propositional.Visitors;
+using AltAIMLbot.Utils;
 using Unifiable = System.String;
 
 namespace AltAIMLbot.AIMLTagHandlers
@@ -121,159 +122,107 @@ namespace AltAIMLbot.AIMLTagHandlers
         protected int currentTrueConditions = 0;
         protected override Unifiable ProcessChange()
         {
-            return ProcessChangeOld();
-            /*
-            int maxConditions = GetAttribValue<int>(templateNode, "count", 1);
-            this.maxTrueConditions = maxConditions;            
-            var nodes = SelectNodes(templateNode.ChildNodes);
-            currentTrueConditions = 0;
-            var vv = OutputFromNodes(nodes, (node) => (currentTrueConditions++ < maxTrueConditions));
-            if (!IsNullOrEmpty(vv))
-            {
-                RecurseResult = vv;
-                return vv;
-            }
-            return vv;
-             * */
-        }
-        protected string ProcessChangeOld()
-        {
             if (this.TemplateNodeName == "condition")
             {
                 // heuristically work out the type of condition being processed
+                string name = GetAttribValue("name,var", null);
+                string conditionValue = GetAttribValue("value", null);
 
-                if (TemplateNodeAttributes.Count == 2) // block
+
+                string type = GetAttribValue("type,dict", null);
+                SettingsDictionary dict = type == null ? null : request.GetDictionary(type);
+
+                // old style name=value test
+                if (name != null && conditionValue != null)
                 {
-                    string name = "";
-                    string value = "";
-
-                    if (TemplateNodeAttributes[0].Name == "name")
+                    dict = dict ?? request.TargetSettings;
+                    string actualValue = dict.grabSetting(name);
+                    if (IsPredMatch(conditionValue, actualValue))
                     {
-                        name = TemplateNodeAttributes[0].Value;
+                        return this.TemplateNodeInnerXml;
                     }
-                    else if (TemplateNodeAttributes[0].Name == "value")
-                    {
-                        value = TemplateNodeAttributes[0].Value;
-                    }
-
-                    if (TemplateNodeAttributes[1].Name == "name")
-                    {
-                        name = TemplateNodeAttributes[1].Value;
-                    }
-                    else if (TemplateNodeAttributes[1].Name == "value")
-                    {
-                        value = TemplateNodeAttributes[1].Value;
-                    }
-
-                    if ((name.Length > 0) & (value.Length > 0))
-                    {
-                        string actualValue = this.user.Predicates.grabSetting(name);
-                        Regex matcher = new Regex(value.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
-                        if (matcher.IsMatch(actualValue))
-                        {
-                            return this.TemplateNodeInnerXml;
-                        }
-                    }
+                    return string.Empty;
                 }
-                else if (TemplateNodeAttributes.Count == 1) // single predicate
-                {
-                    if (TemplateNodeAttributes[0].Name == "name")
-                    {
-                        string name = TemplateNodeAttributes[0].Value;
-                        foreach (XmlNode childLINode in this.templateNode.ChildNodes)
-                        {
-                            if (childLINode.Name.ToLower() == "li")
-                            {
-                                if (childLINode.Attributes.Count == 1)
-                                {
-                                    if (childLINode.Attributes[0].Name.ToLower() == "value")
-                                    {
-                                        string actualValue = this.user.Predicates.grabSetting(name);
-                                        Regex matcher = new Regex(childLINode.Attributes[0].Value.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
-                                        if (matcher.IsMatch(actualValue))
-                                        {
-                                            return childLINode.InnerXml;
-                                        }
-                                    }
-                                }
-                                else if (childLINode.Attributes.Count == 0)
-                                {
-                                    return childLINode.InnerXml;
-                                }
-                            }
-                        }
-                    }
-                }
-                else if (TemplateNodeAttributes.Count == 0) // multi-predicate
-                {
-                    foreach (XmlNode childLINode in this.templateNode.ChildNodes)
-                    {
-                        if (childLINode.Name.ToLower() == "li")
-                        {
-                            if (childLINode.Attributes.Count == 2)
-                            {
-                                string name = "";
-                                string value = "";
-                                if (childLINode.Attributes[0].Name == "name")
-                                {
-                                    name = childLINode.Attributes[0].Value;
-                                }
-                                else if (childLINode.Attributes[0].Name == "value")
-                                {
-                                    value = childLINode.Attributes[0].Value;
-                                }
 
-                                if (childLINode.Attributes[1].Name == "name")
-                                {
-                                    name = childLINode.Attributes[1].Value;
-                                }
-                                else if (childLINode.Attributes[1].Name == "value")
-                                {
-                                    value = childLINode.Attributes[1].Value;
-                                }
 
-                                if ((name.Length > 0) & (value.Length > 0))
-                                {
-                                    string actualValue = this.user.Predicates.grabSetting(name);
-                                    Regex matcher = new Regex(value.Replace(" ", "\\s").Replace("*","[\\sA-Z0-9]+"), RegexOptions.IgnoreCase);
-                                    if (matcher.IsMatch(actualValue))
-                                    {
-                                        return childLINode.InnerXml;
-                                    }
-                                }
+                // multi-predicate
+                foreach (XmlNode childLINode in this.templateNode.ChildNodes)
+                {
+                    if (childLINode.Name.ToLower() == "li")
+                    {
+                        // check the PEParser query for trueness
+                        string isTrueQuery = GetAttribValue<string>(childLINode, "istrue", null);
+                        if (isTrueQuery != null)
+                        {
+                            bool valid = false;
+                            Sentence sen = (Sentence) new PEParser().Parse(isTrueQuery);
+                            try
+                            {
+                                valid = bot.myActiveModel.IsTrue(sen);
                             }
-                            else if (childLINode.Attributes.Count == 0)
+                            catch
+                            {
+                                valid = false;
+                            }
+                            if (valid)
                             {
                                 return childLINode.InnerXml;
                             }
-                            else if (childLINode.Attributes.Count == 1)
-                            {
-                                string query = "";
-                                bool valid = false;
-                                if (childLINode.Attributes[0].Name == "istrue")
-                                {
-                                    query = childLINode.Attributes[0].Value;
-                                    Sentence sen = (Sentence)new PEParser().Parse(query);
-                                    try
-                                    {
-                                        valid = bot.myActiveModel.IsTrue(sen);
-                                    }
-                                    catch
-                                    {
-                                        valid = false;
-                                    }
-                                    if (valid)
-                                    {
-                                        return childLINode.InnerXml;
-                                    }
+                            continue;
+                        }
 
-                                }
+                        // check for the <li> name and value
+                        string cvalue = GetAttribValue<string>(childLINode, "value", null);
+                        string cname = GetAttribValue<string>(childLINode, "name,var", null);
+                        // if <li> name=""  pretend it doesnt exist
+                        if (cname != null && cname.Trim() == "") cname = null;
+
+                        // the fallthru (ussually the last <li> element)
+                        if (cname == null && cvalue == null)
+                        {
+                            return childLINode.InnerXml;
+                        }
+
+                        // compare <condition> name to <li> value
+                        if (cname == null && cvalue != null)
+                        {
+                            string ctype = GetAttribValue("type,dict", null);
+                            SettingsDictionary cdict = (ctype == null ? dict : request.GetDictionary(ctype)) ??
+                                                       request.TargetSettings;
+                            conditionValue = conditionValue ?? cdict.grabSetting(name) ?? String.Empty;
+                            if (IsPredMatch(cvalue, conditionValue))
+                            {
+                                return childLINode.InnerXml;
                             }
+                            continue;
+                        }
+
+                        // compare <li> name to <li> value
+                        if (cname != null && cvalue != null)
+                        {
+                            string ctype = GetAttribValue("type,dict", null);
+                            SettingsDictionary cdict = (ctype == null ? dict : request.GetDictionary(ctype)) ??
+                                                       request.TargetSettings;
+                            string actualValue = cdict.grabSetting(cname);
+                            if (IsPredMatch(cvalue, actualValue))
+                            {
+                                return childLINode.InnerXml;
+                            }
+                            continue;
                         }
                     }
                 }
             }
             return string.Empty;
+        }
+
+        private bool IsPredMatch(string value, string actualValue)
+        {
+            value = "AAA " + value + " ZZZ";
+            actualValue = "AAA " + actualValue + " ZZZ";
+            Regex matcher = new Regex(value.Replace(" ", "\\s").Replace("*", "[\\sA-Z0-9]+"),
+                                      RegexOptions.IgnoreCase);
+            return matcher.IsMatch(actualValue);
         }
     }
 }

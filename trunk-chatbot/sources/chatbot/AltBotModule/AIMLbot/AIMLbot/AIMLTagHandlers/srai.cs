@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Xml;
 using System.Text;
 
@@ -46,22 +47,18 @@ namespace AltAIMLbot.AIMLTagHandlers
                     {
                         if (TemplateNodeAttributes.Count > 0)
                         {
-                            string myTopic = GetAttribValue("topic", "");
-                            string myState = GetAttribValue("state", "");
-                            if ((myTopic.Length > 0) || (myState.Length > 0))
+                            // Extended SRAI with explicit topic and state attributes
+                            Dictionary<string, string> savedVars = new Dictionary<string, string>();
+                            foreach (XmlAttribute attribute in TemplateNodeAttributes)
                             {
-                                // Extended SRAI with explicit topic and state attributes
-
+                                string name = attribute.Name;
+                                string newValue = attribute.Value;
                                 // remember this level
-                                string localTopic = this.user.Topic;
-                                string localState = this.user.State;
-                                // pass through anything not specified
-                                if (myTopic.Length == 0) { myTopic = localTopic; }
-                                if (myState.Length == 0) { myState = localState; }
+                                savedVars[name] = this.user.Predicates.grabSetting(name);
                                 // insert the args
-                                this.user.Predicates.updateSetting("topic", myTopic);
-                                this.user.Predicates.updateSetting("state", myState);
-                                // make the call           
+                                this.user.Predicates.updateSetting(name, newValue);
+                            }
+                            {        
                                 try
                                 {
                                     Request subRequest0 = new Request(this.TemplateNodeInnerText, this.user, this.bot);
@@ -75,9 +72,10 @@ namespace AltAIMLbot.AIMLTagHandlers
                                 finally
                                 {
                                     // restore this level values
-                                    this.user.Predicates.updateSetting("topic", localTopic);
-                                    this.user.Predicates.updateSetting("state", localState);
-                                    
+                                    foreach (var savedVar in savedVars)
+                                    {
+                                        this.user.Predicates.updateSetting(savedVar.Key, savedVar.Value);    
+                                    }                                    
                                 }
                             }
                         }

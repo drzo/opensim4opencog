@@ -54,7 +54,7 @@ namespace RTParser.AIMLTagHandlers
                     return FAIL;
                 }
                 Unifiable term;
-                if (Proc.TheCyc.Lookup(r, filter, out term, query))
+                if (bot.TheCyc.Lookup(r, filter, out term, query))
                 {
                     s = term.AsString();
                     if (s.Length < 2)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime;
 using System.Text;
 using System.Xml;
@@ -157,7 +157,7 @@ namespace RTParser.AIMLTagHandlers
                 var newresult = request.CreateResult(subRequest);
                 //subRequest.CurrentResult = newresult;
                 user.SuspendAddResultToUser = true;
-                subResult = (Result) this.Proc.ChatWithRequest(subRequest);
+                subResult = (Result) this.bot.ChatWithRequest(subRequest);
                 // subResult = this.Proc.Chat(subRequest, request.Graph);
             }
             finally

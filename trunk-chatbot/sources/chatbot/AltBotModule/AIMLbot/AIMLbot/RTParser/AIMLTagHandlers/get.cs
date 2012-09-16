@@ -101,7 +101,7 @@ namespace RTParser.AIMLTagHandlers
                         return 1.0f;
                     }
                     // trace the next line to see why
-                    Proc.TraceTest("NULL from success?!",
+                    bot.TraceTest("NULL from success?!",
                                    () => GetActualValue(name, typeof (bot) == GetType() ? "bot" : "get", out succeed));
                     return 1.0f;
                 }
@@ -143,7 +143,7 @@ namespace RTParser.AIMLTagHandlers
                         return defaultVal;
                     }
                     // trace the next line to see why
-                    Proc.TraceTest("!IsValue(" + Unifiable.DescribeUnifiable(v) + ") from success?!",
+                    bot.TraceTest("!IsValue(" + Unifiable.DescribeUnifiable(v) + ") from success?!",
                                    () => GetActualValue(name, typeof (bot) == GetType() ? "bot" : "get", out succeed));
                     return v;
                 }

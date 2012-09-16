@@ -34,7 +34,7 @@ namespace AltAIMLbot.Utils
             this.request = request;
             this.result = result;
             this.templateNode = templateNode;
-            TemplateNodeAttributes.RemoveNamedItem("xmlns");
+            if (templateNode is XmlElement) TemplateNodeAttributes.RemoveNamedItem("xmlns");
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace AltAIMLbot.Utils
         /// <summary>
         /// A flag to denote if inner tags are to be processed recursively before processing this tag
         /// </summary>
-        public bool isNonAtomic = true;
+        public bool isStarWhenChildless = false;
 
         /// <summary>
         /// A representation of the user who made the request
@@ -89,6 +89,7 @@ namespace AltAIMLbot.Utils
         public static XmlNode getNode(string outerXML)
         {
             XmlDocument temp = new XmlDocument();
+            temp.PreserveWhitespace = true;
             temp.LoadXml(outerXML);
             return temp.FirstChild;
         }
@@ -123,20 +124,27 @@ namespace AltAIMLbot.Utils
         {
             get { return TemplateNodeInnerText.Length > 0; }
         }
+
         protected string RecurseStar()
         {
-            XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
-            star recursiveStar = new star(this.bot, this.user, this.query, this.request, this.result, starNode);
-            this.TemplateNodeInnerText0 = recursiveStar.Transform();
+            this.TemplateNodeInnerText0 = GetStarContent();
             if (this.TemplateNodeHasText)
             {
-                return this.ProcessChange();
+                return this.Transform();
             }
             else
             {
                 return string.Empty;
             }
         }
+
+        public string GetStarContent()
+        {
+            XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
+            star recursiveStar = new star(this.bot, this.user, this.query, this.request, this.result, starNode);
+            return recursiveStar.Transform();
+        }
+
         protected string TemplateNodeInnerXml
         {
             get { return templateNode.InnerXml; }
@@ -150,10 +158,18 @@ namespace AltAIMLbot.Utils
         {
             get
             {
+                if (innerTextOverride != null) return innerTextOverride;
                 var ret = TemplateNodeInnerText0;
-                if (TemplateNodeInnerXml.Contains("<") && innerTextOverride == null && !TemplateNodeInnerXml.Contains("star>"))
+
+                if (TemplateNodeInnerXml.Contains("<") && innerTextOverride == null)
                 {
-                   // throw new NotSupportedException("Template Node XML");
+                    if (templateNode.HasChildNodes && isRecursive)
+                    {
+                        // recursively check
+                        var outp = bot.GetOutputSentence(null, templateNode, query, request, result, user, false);
+                        return outp;
+                    }
+                    throw new NotSupportedException("Template Node XML");
                 }
                 return ret;
             }
@@ -170,6 +186,11 @@ namespace AltAIMLbot.Utils
                 innerTextOverride = value;
                 templateNode.InnerText = value;
             }
+        }
+
+        public virtual bool isVerbatum
+        {
+            get { return false; }
         }
 
         private string innerTextOverride = null;
@@ -228,6 +249,27 @@ namespace AltAIMLbot.Utils
             }
             if (dict == null) dict = query.Request.TargetSettings;
             return type ?? dict.NameSpace;
+        }
+
+        protected void writeToLogError(string s)
+        {
+            writeToLog("Error! " + s);
+        }
+        protected void writeToLog(string s)
+        {
+            this.bot.writeToLog("" + s + " in " + templateNode.OuterXml);
+        }
+        protected bool CheckNode(string s)
+        {
+            return s.Contains(TemplateNodeName);
+        }
+        public override string ToString()
+        {
+            if (templateNode.OuterXml!=inputString)
+            {
+                return base.ToString() + " => " + templateNode.OuterXml;
+            }
+            return GetType().Name + ": " + templateNode.OuterXml;
         }
     }
 }

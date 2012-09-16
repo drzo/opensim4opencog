@@ -126,7 +126,7 @@ namespace RTParser.AIMLTagHandlers
                 String graphName = GetAttribValue("graph", null);
                 if (graphName != null)
                 {
-                    g = Proc.GetGraph(graphName, g0);
+                    g = bot.GetGraph(graphName, g0);
                     if (g != null) request.Graph = g;
                 }
                 Unifiable path = GetAttribValue("filename,uri,file,url,dir,path,pathname,directory", null);
@@ -186,7 +186,7 @@ namespace RTParser.AIMLTagHandlers
                         }
                         catch (Exception e2)
                         {
-                            Proc.writeToLog(e2);
+                            bot.writeToLog(e2);
                             writeToLogWarn("ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: {0} error {1}", path, e2);
                         }
 

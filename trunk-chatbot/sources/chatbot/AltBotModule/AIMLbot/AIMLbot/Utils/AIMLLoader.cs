@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using MushDLR223.Utilities;
+using RTParser.Utils;
 
 
 namespace AltAIMLbot.Utils
@@ -20,9 +21,13 @@ namespace AltAIMLbot.Utils
         /// The bot whose brain is being processed
         /// </summary>
         private AltAIMLbot.AltBot bot;
-        public string graphName="*";
+        private string graphName = "*";
+        private string topicName = "*";
+        private string stateNamePre = "*";
+        private string stateNamePost = "*";
+        private string currentThat = "*";
         ExternDB extDB = null;
-        public static bool SeekOutAndRepair = false;
+        private static bool SeekOutAndRepair = false;
 
         #endregion
 
@@ -37,13 +42,6 @@ namespace AltAIMLbot.Utils
 
         #region Methods
 
-        /// <summary>
-        /// Loads the AIML from files found in the bot's AIMLpath into the bot's brain
-        /// </summary>
-        public void loadAIML()
-        {
-            this.loadAIML(this.bot.PathToAIML);
-        }
 
         /// <summary>
         /// Loads the AIML from files found in the path
@@ -102,7 +100,7 @@ namespace AltAIMLbot.Utils
                     }
                 }
                 XmlTextReader reader = new XmlTextReader(filename);
-                XmlDocument doc = new XmlDocument();
+                XmlDocumentLineInfo doc = new XmlDocumentLineInfo(filename, true);
                 try
                 {
                     // load the document
@@ -177,8 +175,9 @@ namespace AltAIMLbot.Utils
         /// </summary>
         /// <param name="doc">The XML document containing the AIML</param>
         /// <param name="filename">Where the XML document originated</param>
-        public void loadAIMLFromXML(XmlDocument doc, string filename)
+        private void loadAIMLFromXMLDoc(XmlDocument doc, string filename)
         {
+            doc.DocumentElement.Attributes.RemoveNamedItem("xmlns");          
             lock (ExternDB.mylock)
             {
 
@@ -204,14 +203,13 @@ namespace AltAIMLbot.Utils
 
         public void loadAIMLFromXML(XmlNode doc, string filename)
         {
+            if (doc is XmlDocument)
             {
-                XmlNodeList rootChildren = doc.ChildNodes;
-
-                // find the name of the graph or set to default "*"
-                string graphName = StaticXMLUtils.GetAttribValue(doc, "graph,name", "*");                              
-                {
-                    this.graphName = graphName;
-                }
+                loadAIMLFromXMLDoc((XmlDocument) doc, filename);
+                return;
+            }
+            {
+                    
                 if (this.bot.rapStoreDirectory != null)
                 {
                     if ((filename.Contains("\\") || filename.Contains("/")) && (extDB.wasLoaded(filename)))
@@ -229,53 +227,128 @@ namespace AltAIMLbot.Utils
                         extDB.OpenAll();
                     }
                 }
-                // process each of these child nodes
-                foreach (XmlNode currentNode in rootChildren)
-                {
-                    if (currentNode.Name == "ser")
-                    {
-                        processSer(currentNode, filename);
-                        continue;
-                    }
-                    if (currentNode.Name == "topic")
-                    {
-                        this.processTopic(currentNode, filename);
-                    }
-                    if (currentNode.Name == "state")
-                    {
-                        this.processState(currentNode, filename);
-                    }
-                    else if (currentNode.Name == "category")
-                    {
-                        this.processCategory(currentNode, filename);
-                    }
-                    if ((currentNode.Name == "behavior") || (currentNode.Name == "rbehavior"))
-                    {
-                        processImmediate(currentNode, filename);
-                    }
-                    if (currentNode.Name == "crontag")
-                    {
-                        processImmediate(currentNode, filename);
-                    }
-                    if (currentNode.Name == "scxml")
-                    {
-                        processImmediate(currentNode, filename);
-                    }
-                    if (currentNode.Name == "task")
-                    {
-                        processImmediate(currentNode, filename);
-                    }
-                    if (currentNode.Name == "subaiml")
-                    {
-                        processImmediate(currentNode, filename);
-                    }
-                }
-
+                cleanXMLNS(doc);
+                LoadBXML(doc, filename);
                 if (this.bot.rapStoreDirectory != null)
                 {
                     extDB.rememberLoaded(filename);
                     extDB.Close();
                     extDB = null;
+                }
+            }
+        }
+
+        private void LoadBXML(XmlNode doc, string filename)
+        {
+            bool didIt = processBXML(doc, filename);
+            if (didIt) return;
+            processAiml(doc, filename);
+        }
+
+        private void processAiml(XmlNode doc, string filename)
+        {
+            XmlNodeList rootChildren = doc.ChildNodes;
+            // find the name of the graph or set to default "*"
+            string oldGraph = graphName;
+            graphName = StaticXMLUtils.GetAttribValue(doc, "graph", this.graphName);
+            // process each of these child nodes
+            foreach (XmlNode currentNode in rootChildren)
+            {
+               if (!processBXML(currentNode, filename))
+               {
+                   processImmediate(currentNode, filename);
+               }
+            }
+            graphName = oldGraph;
+        }
+
+        private bool processBXML(XmlNode thisNode, string filename)
+        {
+            if (thisNode is XmlComment) return true;
+            string named = thisNode.Name.ToLower();
+            if (named == "ser")
+            {
+                processSer(thisNode, filename);
+                return true;
+            }
+            if (named == "aiml")
+            {
+                processAiml(thisNode, filename);
+                return true;
+            }
+            if (named == "topic")
+            {
+                this.processTopic(thisNode, filename);
+                return true;
+            }
+            if (named == "state")
+            {
+                this.processState(thisNode, filename);
+                return true;
+            }
+            else if (named == "category")
+            {
+                this.processCategory(thisNode, filename);
+                return true;
+            }
+            if ((named == "behavior") || (named == "rbehavior"))
+            {
+                processImmediate(thisNode, filename);
+                return true;
+            }
+            if (named == "crontag")
+            {
+                processImmediate(thisNode, filename);
+                return true;
+            }
+            if (named == "scxml")
+            {
+                processImmediate(thisNode, filename);
+                return true;
+            }
+            if (named == "task")
+            {
+                processImmediate(thisNode, filename);
+                return true;
+            }
+            if (named == "subaiml")
+            {
+                processImmediate(thisNode, filename);
+                return true;
+
+            }
+            return false;
+        }
+
+        private static void cleanXMLNS(XmlNode node)
+        {
+            if (!(node is XmlElement)) return;
+            XmlAttributeCollection attribs = node.Attributes;
+            if (attribs != null && attribs.Count > 0)
+            {
+                var remove = new List<string>();
+                foreach (XmlAttribute attrib in attribs)
+                {
+                    if (attrib.Name.StartsWith("xmlns")) remove.Add(attrib.Name);
+                }
+                foreach (var r in remove)
+                {
+                    node.Attributes.RemoveNamedItem(r);
+                }
+            }
+            var cns = node.ChildNodes;
+            if (cns.Count > 0)
+            {
+                foreach (XmlNode xmlNode in cns)
+                {
+                    if (xmlNode is XmlElement)
+                    {
+                        if (xmlNode == node)
+                        {
+                            continue;
+                        }
+                        cleanXMLNS(xmlNode);
+                    }
                 }
             }
         }
@@ -307,52 +380,51 @@ namespace AltAIMLbot.Utils
         /// <param name="filename">the file from which this node is taken</param>
         private void processTopic(XmlNode node, string filename)
         {
-            // find the name of the topic or set to default "*"
-            string topicName="*";
-            string stateNamePre = "*";
-            string stateNamePost = "*";
-            if ((node.Attributes.Count == 1) && (node.Attributes[0].Name == "name"))
-            {
-                topicName = node.Attributes["name"].Value;
-            }
+            withAttributes(node, ref topicName, () =>
+                                                processChildren(node, filename));
+        }
+
+        private void withAttributes(XmlNode node, ref string defaultElement, Action action)
+        {
+            string preTopic = topicName;
+            string preRef = defaultElement;
+            string preStateNamePre = stateNamePre;
+            string preStateNamePost = stateNamePost;
+            string preThat = currentThat;
+            string preGraph = graphName;
             foreach (XmlAttribute Attrib in node.Attributes)
             {
-                if (Attrib.Name == "name") { topicName = node.Attributes["name"].Value; }
+                if (Attrib.Name == "name") { defaultElement = node.Attributes["name"].Value; }
                 if (Attrib.Name == "state") { stateNamePre = node.Attributes["state"].Value; }
                 if (Attrib.Name == "topic") { topicName = node.Attributes["topic"].Value; }
+                if (Attrib.Name == "graph") { graphName = node.Attributes["graph"].Value; }
+                if (Attrib.Name == "that") { currentThat = node.Attributes["that"].Value; }
                 if (Attrib.Name == "prestate") { stateNamePre = node.Attributes["prestate"].Value; }
                 if (Attrib.Name == "poststate") { stateNamePost = node.Attributes["poststate"].Value; }
             }
+            try
+            {
+                action();
+            }
+            finally
+            {
+                topicName = preTopic;
+                stateNamePre = preStateNamePre;
+                stateNamePost = preStateNamePost;
+                graphName = preGraph;
+                currentThat = preThat;
+                defaultElement = preRef;
+            }
+        }
+
+        private void processChildren(XmlNode node, string filename)
+        {
             // process all the category nodes
             foreach (XmlNode thisNode in node.ChildNodes)
             {
-                if (thisNode.Name == "category")
-                {
-                    processCategory(thisNode, topicName, stateNamePre, stateNamePost, filename);
-                }
-                if ((thisNode.Name == "behavior")||(thisNode.Name == "rbehavior"))
+                if (!processBXML(thisNode, filename))
                 {
                     processImmediate(thisNode, filename);
-                }
-                if (thisNode.Name == "crontag")
-                {
-                    processImmediate(thisNode, filename);
-                }
-                if (thisNode.Name == "scxml")
-                {
-                    processImmediate(thisNode, filename);
-                }
-                if (thisNode.Name == "task")
-                {
-                    processImmediate(thisNode, filename);
-                }
-                if (thisNode.Name == "subaiml")
-                {
-                    processImmediate(thisNode, filename);
-                }
-                if (thisNode.Name == "ser")
-                {
-                    processSer(thisNode, filename);
                 }
             }
         }
@@ -365,55 +437,8 @@ namespace AltAIMLbot.Utils
         /// <param name="filename">the file from which this node is taken</param>
         private void processState(XmlNode node, string filename)
         {
-            // find the name of the topic or set to default "*"
-            string stateNamePre = "*";
-            string stateNamePost = "*";
-            string topicName = "*";
-            if ((node.Attributes.Count == 1) && (node.Attributes[0].Name == "name"))
-            {
-                stateNamePre = node.Attributes["name"].Value;
-            }
-            foreach (XmlAttribute Attrib in node.Attributes)
-            {
-                if (Attrib.Name == "name") { stateNamePre = node.Attributes["name"].Value; }
-                if (Attrib.Name == "state") { stateNamePre = node.Attributes["state"].Value; }
-                if (Attrib.Name == "topic") { topicName = node.Attributes["topic"].Value; }
-                if (Attrib.Name == "prestate") { stateNamePre = node.Attributes["prestate"].Value; }
-                if (Attrib.Name == "poststate") { stateNamePost = node.Attributes["poststate"].Value; }
-            }
-
-            // process all the category nodes
-            foreach (XmlNode thisNode in node.ChildNodes)
-            {
-                if (thisNode.Name == "category")
-                {
-                    processCategory(thisNode, topicName, stateNamePre,stateNamePost, filename);
-                }
-                if ((thisNode.Name == "behavior")||(thisNode.Name == "rbehavior"))
-                {
-                    processImmediate(thisNode, filename);
-                }
-                if (thisNode.Name == "crontag")
-                {
-                    processImmediate(thisNode, filename);
-                }
-                if (thisNode.Name == "scxml")
-                {
-                    processImmediate(thisNode, filename);
-                }
-                if (thisNode.Name == "task")
-                {
-                    processImmediate(thisNode, filename);
-                }
-                if (thisNode.Name == "subaiml")
-                {
-                    processImmediate(thisNode, filename);
-                }
-                if (thisNode.Name == "ser")
-                {
-                    processSer(thisNode, filename);
-                }
-            }
+            withAttributes(node, ref stateNamePre, () =>
+                                                processChildren(node, filename));
         }
         /// <summary>
         /// Adds a preprocessed path and content to the  graphmaster structure
@@ -477,7 +502,20 @@ namespace AltAIMLbot.Utils
         /// <param name="filename">the file from which this category was taken</param>
         private void processCategory(XmlNode node, string filename)
         {
-            this.processCategory(node, "*","*","*", filename);
+            this.processCategory(node, topicName, stateNamePre, stateNamePost, filename);
+        }
+
+
+        private void CategoryCheck(XmlNode node, string filename)
+        {
+            if (object.Equals(null, FindNode("pattern", node)))
+            {
+                throw new XmlException("Missing pattern tag in a node found in " + filename + " from " + node.OuterXml);
+            }
+            if (object.Equals(null, this.FindNode("template", node)))
+            {
+                if (false) throw new XmlException("Missing template tag in the node with pattern: " + node.OuterXml + " found in " + filename);
+            }
         }
 
         /// <summary>
@@ -491,25 +529,16 @@ namespace AltAIMLbot.Utils
         private void processCategory(XmlNode node, string topicName, string stateNamePre, string stateNamePost, string filename)
         {
             // reference and check the required nodes
-            XmlNode pattern = this.FindNode("pattern", node);
-            XmlNode template = this.FindNode("template", node);
+            CategoryCheck(node, filename);
 
-            GraphMaster ourGraphMaster = this.bot.GetGraph(this.graphName) ?? this.bot.Graphmaster;
-
-            if (object.Equals(null, pattern))
-            {
-                throw new XmlException("Missing pattern tag in a node found in " + filename);
-            }
-            if (object.Equals(null, template))
-            {
-                if (false) throw new XmlException("Missing template tag in the node with pattern: " + pattern.InnerText + " found in " + filename);
-            }
-            string templateXML = InnerTextOrXML(template) ?? "";
-
-            string categoryPath = this.generatePath(node, topicName, stateNamePre, stateNamePost, false);
+            var categoryPaths = this.generatePaths(node, topicName, stateNamePre, stateNamePost, false);
             // o.k., add the processed AIML to the GraphMaster structure
-            if (categoryPath.Length > 0)
+            int found = 0;
+            foreach (KeyValuePair<string, string> pair in categoryPaths)
             {
+                found++;
+                var categoryPath = pair.Key;
+                var templateXML = pair.Value;
                 try
                 {
                     //this.bot.Graphmaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
@@ -519,20 +548,27 @@ namespace AltAIMLbot.Utils
                     }
                     else
                     {
+                        GraphMaster ourGraphMaster = this.bot.GetGraph(this.graphName) ?? this.bot.Graphmaster;
                         ourGraphMaster.addCategory(categoryPath, templateXML, filename, 1, 1);
                     }
                     // keep count of the number of categories that have been processed
                     this.bot.Size++;
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
-                    this.bot.writeToLog("ERROR! Failed to load a new category into the graphmaster where the path = " + categoryPath + " and template = " + template.OuterXml + " produced by a category in the file: " + filename+ "because "+e.Message+ " "+e.StackTrace);
+                    this.bot.writeToLog("ERROR! Failed to load a new category into the graphmaster where the path = " +
+                                        categoryPath + " and template = " + templateXML +
+                                        " produced by a category in the file: " + filename + "because " + e.Message +
+                                        " " + e.StackTrace);
 
                 }
             }
-            else
+            if (found == 0)
             {
-                this.bot.writeToLog("WARNING! Attempted to load a new category with an empty pattern where the path = " + categoryPath + " and template = " + template.OuterXml + " produced by a category in the file: " + filename);
+                this.bot.writeToLog(
+                    "WARNING! Attempted to load a new category with an empty pattern: " +
+                    node.OuterXml + " produced by a category in the file: " +
+                    filename);
             }
         }
 
@@ -546,15 +582,31 @@ namespace AltAIMLbot.Utils
         /// <param name="isUserInput">marks the path to be created as originating from user input - so
         /// normalize out the * and _ wildcards used by AIML</param>
         /// <returns>The appropriately processed path</returns>
-        public string generatePath(XmlNode node, string topicName,string stateNamePre,string stateNamePost, bool isUserInput)
+        private List<KeyValuePair<string, string>> generatePaths(XmlNode node, string topicName, string stateNamePre, string stateNamePost, bool isUserInput)
         {
+            var lretval = new List<KeyValuePair<string, string>>();
             // get the nodes that we need
-            XmlNode pattern = this.FindNode("pattern", node);
-            XmlNode that = this.FindNode("that", node);
+            var patterns = StaticXMLUtils.FindNodes("pattern", node);            
+            var thats = StaticXMLUtils.FindNodes("that", node);
+            var templates = StaticXMLUtils.FindNodes("template", node);
+            if (thats.Count == 0) thats = new List<XmlNode>() {StaticAIMLUtils.XmlStar};
 
-            string patternText = InnerTextOrXML(pattern) ?? "";
-            string thatText = InnerTextOrXML(that) ?? "*";
-            return this.generatePath(patternText, thatText, topicName,stateNamePre,stateNamePost, isUserInput);
+            foreach (XmlNode template in templates)
+            {
+                string templateXML = InnerTextOrXML(template) ?? "";
+                foreach (var that in thats)
+                {
+                    string thatText = InnerTextOrXML(that) ?? currentThat;
+                    foreach (var pattern in patterns)
+                    {
+                        string patternText = InnerTextOrXML(pattern) ?? "";
+                        string categoryPath = generatePath(patternText, thatText, topicName, stateNamePre, stateNamePost,
+                                                           isUserInput);
+                        lretval.Add(new KeyValuePair<string, string>(categoryPath, templateXML));
+                    }
+                }
+            }
+            return lretval;
         }
 
         private static string InnerTextOrXML(XmlNode pattern)
@@ -696,7 +748,7 @@ namespace AltAIMLbot.Utils
         /// <param name="isUserInput">True if the string being normalized is part of the user input path - 
         /// flags that we need to normalize out * and _ chars</param>
         /// <returns>The normalized string</returns>
-        public string Normalize(string input, bool isUserInput)
+        private string Normalize(string input, bool isUserInput)
         {
             StringBuilder result = new StringBuilder();
 

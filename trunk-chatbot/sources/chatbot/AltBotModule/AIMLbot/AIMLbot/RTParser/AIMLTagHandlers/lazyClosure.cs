@@ -163,10 +163,10 @@ namespace RTParser.AIMLTagHandlers
 
             if (RTPBot.UnknownTagsAreBotVars)
             {
-                var v = Proc.GlobalSettings.grabSetting(currentNodeName);
+                var v = bot.GlobalSettings.grabSetting(currentNodeName);
                 if (!Unifiable.IsIncomplete(v)) return v;
             }
-            var vs = Proc.EvalAiml(templateNode, request, request.writeToLog);
+            var vs = bot.EvalAiml(templateNode, request, request.writeToLog);
             StringBuilder sb = new StringBuilder();
             int writeThrus = 0;
             int total = 0;

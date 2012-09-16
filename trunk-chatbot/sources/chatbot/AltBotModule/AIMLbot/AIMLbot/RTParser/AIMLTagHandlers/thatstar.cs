@@ -43,7 +43,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if(templateNode.ParentNode.Name=="srai")
             {
-                var vv = RTParser.Normalize.ApplySubstitutions.Substitute(this.Proc.Person2Substitutions, unifiable);
+                var vv = RTParser.Normalize.ApplySubstitutions.Substitute(this.bot.Person2Substitutions, unifiable);
                 return vv;
             }
             return unifiable;

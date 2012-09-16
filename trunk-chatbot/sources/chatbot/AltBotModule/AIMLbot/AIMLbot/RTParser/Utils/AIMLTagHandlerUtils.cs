@@ -114,7 +114,7 @@ namespace RTParser.Utils
                 writeToLogWarn("BAD " + unifiable, objs);
                 return;
             }
-            this.Proc.writeToLog("AIMLTRACE: " + unifiable + DLRConsole.NoFormatDirectives(" in " + GetType().Name + "  " + LineNumberTextInfo()), objs);
+            this.bot.writeToLog("AIMLTRACE: " + unifiable + DLRConsole.NoFormatDirectives(" in " + GetType().Name + "  " + LineNumberTextInfo()), objs);
         }
 
         #region Implementation of IXmlLineInfo

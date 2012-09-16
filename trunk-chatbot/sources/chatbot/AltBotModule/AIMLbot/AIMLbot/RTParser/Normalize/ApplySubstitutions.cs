@@ -41,7 +41,7 @@ namespace RTParser.Normalize
         protected override Unifiable ProcessChange()
         {
             if (inputString != null) return inputString;
-            return ApplySubstitutions.Substitute(this.Proc.InputSubstitutions, this.inputString);
+            return ApplySubstitutions.Substitute(this.bot.InputSubstitutions, this.inputString);
         }
 
         /// <summary>

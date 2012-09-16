@@ -289,6 +289,10 @@ namespace AltAIMLbot.Utils
                 return;                
             }
             if (templates == null) templates = new List<OutputTemplate>();
+            if (template.Contains("xmlns"))
+            {
+                
+            }
             templates.Insert(0, new OutputTemplate() {Template = template, filename = filename1});
         }
 
@@ -573,7 +577,7 @@ namespace AltAIMLbot.Utils
         public string evaluate(string path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard)
         {
             // check for timeout
-            if (request.StartedOn.AddMilliseconds(request.bot.TimeOut) < DateTime.Now)
+            if (request.MayTimeOut && request.StartedOn.AddMilliseconds(request.bot.TimeOut) < DateTime.Now)
             {
                 request.bot.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" + request.rawInput + "\"");
                 request.hasTimedOut = true;

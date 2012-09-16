@@ -13,6 +13,12 @@ namespace AltAIMLbot.Utils
     /// </summary>
     abstract public class TextTransformer
     {
+
+        public override string ToString()
+        {
+            return GetType().Name + ": " + inputString;
+        }
+
         #region Attributes
         /// <summary>
         /// Instance of the input string
@@ -87,7 +93,7 @@ namespace AltAIMLbot.Utils
         /// Do a transformation on the string found in the InputString attribute
         /// </summary>
         /// <returns>The resulting transformed string</returns>
-        public string Transform()
+        virtual public string Transform()
         {
             if (this.inputString.Length > 0)
             {

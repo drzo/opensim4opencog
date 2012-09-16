@@ -34,7 +34,7 @@ namespace RTParser.AIMLTagHandlers
             if (!finalResult.IsValid)
             {
                 var v = Recurse();
-                var r  = this.Proc.SystemExecute(v, GetAttribValue("lang", "bot"), request);
+                var r  = this.bot.SystemExecute(v, GetAttribValue("lang", "bot"), request);
                 if (Unifiable.IsFalse(r))
                 {
                     //finalResult = r;

@@ -13,7 +13,8 @@ namespace MushDLR223.Utilities
     public class XmlDocumentLineInfo : XmlDocument, XmlSourceInfo, IDisposable, IHasFilename
     {
         private static readonly ICollection<string> MustFormat = new HashSet<string>();
-        private static readonly ICollection<string> MustNotFormat = new HashSet<string>();
+        private static readonly List<string> MustNotFormat = new List<string>();
+        private static readonly ICollection<string> MustPreserveWhitespace = new HashSet<string>();
 
         private static readonly string[][] PredefinedNamespaces =
             {
@@ -85,8 +86,10 @@ namespace MushDLR223.Utilities
                 MustFormat.Add("pattern");
                 MustFormat.Add("that");
                 MustNotFormat.Add("category");
-                MustNotFormat.Add("template");
-                MustNotFormat.Add("regex");
+                MustPreserveWhitespace.Add("template");
+                MustPreserveWhitespace.Add("regex");
+                MustNotFormat.AddRange(MustPreserveWhitespace);
+                MustPreserveWhitespace.Add("pre");
             }
         }
 
@@ -523,7 +526,11 @@ namespace MushDLR223.Utilities
             {
                 if (reader is IXmlLineInfo)
                 {
-                    LineTracker = (IXmlLineInfo) reader;
+                    LineTracker = (IXmlLineInfo)reader;
+                }
+                else
+                {
+
                 }
                 if (!reader.EOF)
                 {
@@ -1006,9 +1013,12 @@ namespace MushDLR223.Utilities
 
         public override XmlWhitespace CreateWhitespace(string text)
         {
+            string nospaceWhites = text.Replace(" ", "").Replace("\t", "");
             //return new XmlWhitespace(text, this);
-            if (text != " ")
+            if (nospaceWhites.Length > 0)
             {
+                nospaceWhites = nospaceWhites.Replace("\r", "\n").Replace("\n\n", "\n");
+                return base.CreateWhitespace(Intern(nospaceWhites));
                 //writeToLog("WHITE='" + text + "'");
             }
             return base.CreateWhitespace(Intern(" "));
@@ -1037,7 +1047,7 @@ namespace MushDLR223.Utilities
                     MustSpaceWildcards = true;
                 if (MustNotFormat.Contains(localName))
                     MustSpaceWildcards = false;
-
+                PreserveWhitespace = MustPreserveWhitespace.Contains(localName);                
                 // prevNodeType = currentNodeType;
                 currentNodeType = localName;
                 elem = new LineInfoElementImpl(prefix, localName, namespaceURI, this);
@@ -1085,6 +1095,10 @@ namespace MushDLR223.Utilities
         public static XmlReader CreateXmlTextReader(XmlTextReader xmlTextReader)
         {
             return XmlReader.Create(xmlTextReader, DefaultSettings);
+        }
+        public static XmlReader CreateXmlTextReader(string uri)
+        {
+            return XmlReader.Create(uri, DefaultSettings);
         }
 
         public static XmlReader CreateXmlTextReader(TextReader tr)

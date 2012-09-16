@@ -35,7 +35,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (CheckNode("version,getversion"))
             {
-                return this.Proc.GlobalSettings.grabSetting("version");
+                return this.bot.GlobalSettings.grabSetting("version");
             }
             return Unifiable.Empty;
         }

@@ -30,7 +30,7 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            this.bot.writeToLog("The system tag is not implemented in this bot");
+            writeToLog("The system tag is not implemented in this bot");
             return TemplateNodeInnerText;
             return string.Empty;
         }

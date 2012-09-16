@@ -45,45 +45,42 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             if (this.TemplateNodeName == "star")
             {
-                if (this.query.InputStar.Count > 0)
+                return GetStar("pattern");
+            }
+            return string.Empty;
+        }
+
+        protected string GetStar(string starname)
+        {
+            int index = GetAttribValue("index", () => 1);
+            try
+            {
+                var starValues = query.GetStars(starname);
+                int valuesCount = starValues.Count;
+                if (valuesCount >= index)
                 {
-                    if (TemplateNodeAttributes.Count == 0)
+                    if (index > 0)
                     {
-                        // return the first (latest) star in the List<>
-                        //return (string)this.query.InputStar[0];
-                        return (string)this.query.InputStar[this.query.InputStar.Count-1];
+                        return starValues[index - 1];
                     }
-                    else if (TemplateNodeAttributes.Count == 1)
+                    else
                     {
-                        if (TemplateNodeAttributes[0].Name.ToLower() == "index")
-                        {
-                            try
-                            {
-                                int index = Convert.ToInt32(TemplateNodeAttributes[0].Value);
-                                index--;
-                                if ((index >= 0) & (index < this.query.InputStar.Count))
-                                {
-                                    //return (string)this.query.InputStar[index];
-                                    return (string) this.query.InputStar[this.query.InputStar.Count - index - 1];
-                                }
-                                else
-                                {
-                                    this.bot.writeToLog("InputStar out of bounds reference caused by input: " + this.request.rawInput);
-                                }
-                            }
-                            catch
-                            {
-                                this.bot.writeToLog("Index set to non-integer value whilst processing star tag in response to the input: " + this.request.rawInput);
-                            }
-                        }
+                        writeToLogError("An " + starname + " tag with a badly formed index (" + index +
+                                        ") was encountered processing the input: " + this.request.rawInput);
                     }
                 }
                 else
                 {
-                    this.bot.writeToLog("A star tag tried to reference an empty InputStar collection when processing the input: "+this.request.rawInput);
+                    writeToLogError("An out of bounds index (" + index + ") to " + starname + " count=" + valuesCount +
+                                    " was encountered when processing the input: " + this.request.rawInput);
                 }
             }
-            return string.Empty;
+            catch (Exception e)
+            {
+                writeToLogError("A thatstar tag with a badly formed index (" + index +
+                                ") was encountered processing the input: " + this.request.rawInput + " caused " + e);
+            }
+            return null;
         }
     }
 }

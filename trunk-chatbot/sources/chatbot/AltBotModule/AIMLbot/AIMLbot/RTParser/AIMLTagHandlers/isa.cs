@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Xml;
 using System.Text;
 using RTParser.Utils;
@@ -33,7 +33,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (templateNode.NodeType == XmlNodeType.Text)
             {
-                return Proc.TheCyc.IsaFilter(with, templateNode.InnerText) ? ISA_TRUE : ISA_FALSE;
+                return bot.TheCyc.IsaFilter(with, templateNode.InnerText) ? ISA_TRUE : ISA_FALSE;
             }
             if (templateNode.HasChildNodes)
             {
@@ -43,7 +43,7 @@ namespace RTParser.AIMLTagHandlers
                     try
                     {
                         Unifiable processChildNode = ProcessChildNode(childNode);
-                        if (!Proc.TheCyc.IsaFilter(with, processChildNode)) return ISA_FALSE;
+                        if (!bot.TheCyc.IsaFilter(with, processChildNode)) return ISA_FALSE;
                         SetWith(childNode, with);
                     }
                     catch (Exception e)

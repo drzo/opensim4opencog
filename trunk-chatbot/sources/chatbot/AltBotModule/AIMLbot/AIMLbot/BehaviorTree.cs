@@ -757,6 +757,7 @@ namespace AltAIMLbot
         public void logText(string msg)
         {
             if (bot == null) return;
+            if (SkipLog) return;
             lock (bot.loglock)
             {
                 try
@@ -811,6 +812,8 @@ namespace AltAIMLbot
         /// A general stack to remember things to activate later
         /// </summary>
         public SemiStringStackQueue behaviorStack = new SemiStringStackQueue();
+
+        public bool SkipLog;
 
         public void pushUniqueToStack(string evnt)
         {

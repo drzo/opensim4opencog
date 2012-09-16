@@ -22,7 +22,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// The input element does not have any content. 
     /// </summary>
-    public class input : AltAIMLbot.Utils.AIMLTagHandler
+    public class input : AIMLConstraintTagHandler
     {
         /// <summary>
         /// Ctor
@@ -39,61 +39,16 @@ namespace AltAIMLbot.AIMLTagHandlers
                         AltAIMLbot.Request request,
                         AltAIMLbot.Result result,
                         XmlNode templateNode)
-            : base(bot, user, query, request, result, templateNode)
+            : base(bot, user, query, request, result, templateNode,1)
         {
         }
-
         protected override string ProcessChange()
         {
-            if (this.TemplateNodeName == "input")
+            if (CheckNode("input,justthat,beforethat,request"))
             {
-                if (TemplateNodeAttributes.Count == 0)
-                {
-                    return this.user.getResultSentence();
-                }
-                else if (TemplateNodeAttributes.Count == 1)
-                {
-                    if (TemplateNodeAttributes[0].Name.ToLower() == "index")
-                    {
-                        if (TemplateNodeAttributes[0].Value.Length > 0)
-                        {
-                            try
-                            {
-                                // see if there is a split
-                                string[] dimensions = TemplateNodeAttributes[0].Value.Split(",".ToCharArray());
-                                if (dimensions.Length == 2)
-                                {
-                                    int result = Convert.ToInt32(dimensions[0].Trim());
-                                    int sentence = Convert.ToInt32(dimensions[1].Trim());
-                                    if ((result > 0) & (sentence > 0))
-                                    {
-                                        return this.user.getResultSentence(result - 1, sentence - 1);
-                                    }
-                                    else
-                                    {
-                                        this.bot.writeToLog("ERROR! An input tag with a badly formed index (" + TemplateNodeAttributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
-                                    }
-                                }
-                                else
-                                {
-                                    int result = Convert.ToInt32(TemplateNodeAttributes[0].Value.Trim());
-                                    if (result > 0)
-                                    {
-                                        return this.user.getResultSentence(result - 1);
-                                    }
-                                    else
-                                    {
-                                        this.bot.writeToLog("ERROR! An input tag with a badly formed index (" + TemplateNodeAttributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                this.bot.writeToLog("ERROR! An input tag with a badly formed index (" + TemplateNodeAttributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
-                            }
-                        }
-                    }
-                }
+                var at1 = GetAttribValue("index", null);
+                return GetIndexes(at1, request.Responder, (a, b, u) => this.user.getInputSentence(a, b),
+                                   (str, args) => localError(at1, str));
             }
             return string.Empty;
         }

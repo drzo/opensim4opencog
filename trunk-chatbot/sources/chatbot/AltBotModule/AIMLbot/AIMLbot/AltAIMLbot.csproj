@@ -405,7 +405,6 @@
     <Compile Include="Variables\PrefixProvider.cs" />
     <Compile Include="Variables\ProvidedSettingsDictionary.cs" />
     <Compile Include="Variables\SettingsDictionary.cs" />
-    <Compile Include="Variables\StaticAIMLUtils.cs" />
     <Compile Include="WebScriptExecutor.cs">
     </Compile>
     <Compile Include="WebServitor.cs">

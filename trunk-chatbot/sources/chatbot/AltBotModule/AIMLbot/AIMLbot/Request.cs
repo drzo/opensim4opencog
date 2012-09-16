@@ -132,6 +132,7 @@ namespace AltAIMLbot
         public string _WhyRequestComplete;
         public GraphMaster CurrentGraph;
         public SettingsDictionary TargetSettings;
+        public bool MayTimeOut;
 
         public string WhyResultComplete
         {

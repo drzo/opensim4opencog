@@ -38,7 +38,10 @@ namespace AltAIMLbot.AIMLTagHandlers
             //RecurseResult = data;
             isRecursive = isRecurse;
         }
-
+        public override bool isVerbatum
+        {
+            get { return true; }
+        }
         readonly XmlNode data;
         protected override string ProcessChange()
         {

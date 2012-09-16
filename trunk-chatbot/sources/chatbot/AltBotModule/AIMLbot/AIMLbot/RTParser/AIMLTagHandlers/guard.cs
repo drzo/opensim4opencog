@@ -52,7 +52,7 @@ namespace RTParser.AIMLTagHandlers
                 templateNodeInnerText = Recurse();
                 if (!IsNullOrEmpty(templateNodeInnerText))
                 {
-                    Unifiable res = this.Proc.SystemExecute(templateNodeInnerText, language, request);
+                    Unifiable res = this.bot.SystemExecute(templateNodeInnerText, language, request);
                     if (!Unifiable.IsNullOrEmpty(res)) return res;
                 }
             }

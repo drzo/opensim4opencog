@@ -955,17 +955,26 @@ namespace RTParser.Utils
             var OutputSentences = new List<string>();
             sentence = StaticAIMLUtils.ReplacePairs(sentence, "<br>", "<br/>", "<p>", "<p/>", "</p>", "<p/>", "<br/>",
                                                     "\n", "<p/>", "\n");
+            var sp = new HashSet<string>();
+            sp.Add(".");
+            sp.Add("!");
+            sp.Add("?");
+            foreach (var splitter in AltBot.Splitters)
+            {
+                sp.Add(splitter);
+            }
             foreach (var s00 in sentence.Split('\n', '\r'))
             {
                 var s0 = s00;
                 while (s0.Trim().Length > 0)
                 {
-                    s0= StaticAIMLUtils.Trim(s0).Trim(' ', ',', '-', ' ', ' ');
+                    s0= StaticAIMLUtils.Trim(s0).Trim(' ', ',', '-', ' ', '.');
                     if (string.IsNullOrEmpty(s0)) continue;
                     bool usedBreaker = false;
-                    foreach (string c in AltBot.Splitters)
+                    foreach (string c in sp)
                     {
-                        int ia = (s0 + " ").IndexOf(c + " ");
+                        String NeedAfter = "";
+                        int ia = (s0 + NeedAfter).IndexOf(c + NeedAfter);
                         if (ia > 1)
                         {
                             string s = s0.Substring(0, ia + 1);
@@ -976,7 +985,7 @@ namespace RTParser.Utils
                                 {
                                     s = post(s);
                                 }
-                                OutputSentences.Add(s);                                
+                                if (!string.IsNullOrEmpty(s)) OutputSentences.Add(s);                                
                             }
                             usedBreaker = true;
                             s0 = s0.Substring(ia + 1);
@@ -993,7 +1002,7 @@ namespace RTParser.Utils
                     {
                         s1 = post(s1);
                     }
-                    OutputSentences.Add(s1);
+                    if (!string.IsNullOrEmpty(s1)) OutputSentences.Add(s1);
                     s0 = "";
                     continue;
                 }

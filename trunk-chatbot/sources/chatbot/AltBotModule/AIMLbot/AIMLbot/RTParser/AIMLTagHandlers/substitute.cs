@@ -139,7 +139,7 @@ namespace RTParser.Utils
             {
                 return dict;
             }
-            return Proc.PersonSubstitutions;
+            return bot.PersonSubstitutions;
         }
     }
 }

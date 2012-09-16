@@ -22,7 +22,8 @@ namespace RoboKindChat
             _theChatProg.SetForegrounded(true);
             //_theChatProg.LoadDataset("justine_degurl");
             //_theChatProg.LoadDataset("kotoko_irata");
-            _theChatProg.LoadDataset("special/blackjack.aiml");
+            //_theChatProg.LoadDataset("special/blackjack.aiml");
+            _theChatProg.LoadDataset("test_suite/ProgramD/AIML.aiml");
             _theChatProg.RunMain((s) => Console.Write(s), () =>
                                                               {
                                                                   Console.Write("You: ");

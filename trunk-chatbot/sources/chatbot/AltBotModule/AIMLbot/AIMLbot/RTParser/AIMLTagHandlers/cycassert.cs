@@ -36,7 +36,7 @@ namespace RTParser.AIMLTagHandlers
                 string sent = templateNodeInnerText = Recurse();
                 if (IsValue(sent))
                 {
-                    string mt = TheCyc.Cyclify(GetAttribValue("mt", Proc.GetUserMt(user, query)));
+                    string mt = TheCyc.Cyclify(GetAttribValue("mt", bot.GetUserMt(user, query)));
                     return this.TheCyc.EvalSubL(
                         SafeFormat("(eval (subseq `(cyc-assert '{0} {1} ) 0 3) )", sent, mt), null);
                 }

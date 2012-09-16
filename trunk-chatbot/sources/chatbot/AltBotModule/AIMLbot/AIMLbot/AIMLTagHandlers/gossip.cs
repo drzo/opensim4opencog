@@ -40,7 +40,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 // gossip is merely logged by the bot and written to log files
                 if (this.TemplateNodeHasText)
                 {
-                    this.bot.writeToLog("GOSSIP from user: "+this.user.UserID+", '"+this.TemplateNodeInnerText+"'");
+                    writeToLog("GOSSIP from user: " + this.user.UserID + ", '" + this.TemplateNodeInnerText + "'");
                 }
             }
             return string.Empty;

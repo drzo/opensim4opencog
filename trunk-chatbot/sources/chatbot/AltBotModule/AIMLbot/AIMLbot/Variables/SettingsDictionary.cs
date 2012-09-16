@@ -1906,7 +1906,7 @@ namespace AltAIMLbot.Utils
                 string bbKey = bbPrefix + normalizedName.ToLower();
                 string bbValue = this.bot.myChemistry.m_cBus.getHash(bbKey);
                 //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
-                if (bbValue.Length > 0)
+                if (bbValue.Length > 0 && false)
                 {
                     // update local value
                     if (this.orderedKeys.Contains(normalizedName))

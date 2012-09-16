@@ -56,7 +56,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 return dict;
         }
-            return Proc.PersonSubstitutions;
+            return bot.PersonSubstitutions;
     }
 }
 }

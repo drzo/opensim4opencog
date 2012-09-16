@@ -24,7 +24,7 @@ namespace RTParser.Normalize
             {
                 if (newVariable.StartsWith("TAG-")) return inputString;
             }
-            return this.Proc.Strippers.Replace(this.inputString, " ");
+            return this.bot.Strippers.Replace(this.inputString, " ");
         }
     }
 }

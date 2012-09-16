@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using AltAIMLbot.Utils;
@@ -144,7 +145,11 @@ namespace AltAIMLbot
             foreach (Result result in Results)
             {
                 string s = result.LastSentence;
-                if (!string.IsNullOrEmpty(s)) return s;
+                s = s.TrimStart(" .,".ToCharArray());
+                if (!string.IsNullOrEmpty(s))
+                {
+                    return s;
+                }
             }
             return "*";
             
@@ -156,7 +161,7 @@ namespace AltAIMLbot
         /// <returns>the first sentence of the last output from the bot</returns>
         public string getThat()
         {
-            return this.getThat(0,0);
+            return this.getThat(0, 0);
         }
 
         /// <summary>
@@ -188,14 +193,10 @@ namespace AltAIMLbot
         /// <returns>the sentence numbered by "sentence" of the output "n" steps ago from the bot</returns>
         public string getThat(int n, int sentence)
         {
-            if ((n >= 0) & (n < this.Results.Count))
+            Result historicResult = GetResult(n);
+            if (historicResult!=null)
             {
-                Result historicResult = (Result)this.Results[n];
-                int count = historicResult.OutputSentences.Count;
-                if ((sentence >= 0) & (sentence < count))
-                {
-                    return (string) historicResult.OutputSentences[count - sentence - 1];
-                }
+                return historicResult.GetOutputSentence(sentence);
             }
             return string.Empty;
         }
@@ -214,9 +215,9 @@ namespace AltAIMLbot
         /// Returns the first sentence of the last output from the bot
         /// </summary>
         /// <returns>the first sentence of the last output from the bot</returns>
-        public string getResultSentence()
+        public string getInputSentence()
         {
-            return this.getResultSentence(0, 0);
+            return this.getInputSentence(0, 0);
         }
 
         /// <summary>
@@ -224,9 +225,9 @@ namespace AltAIMLbot
         /// </summary>
         /// <param name="n">the number of steps back to go</param>
         /// <returns>the first sentence from the output from the bot "n" steps ago</returns>
-        public string getResultSentence(int n)
+        public string getInputSentence(int n)
         {
-            return this.getResultSentence(n, 0);
+            return this.getInputSentence(n, 0);
         }
 
         /// <summary>
@@ -235,15 +236,12 @@ namespace AltAIMLbot
         /// <param name="n">the number of steps back to go</param>
         /// <param name="sentence">the sentence number to return</param>
         /// <returns>the identified sentence number from the output from the bot "n" steps ago</returns>
-        public string getResultSentence(int n, int sentence)
+        public string getInputSentence(int n, int sentence)
         {
-            if ((n >= 0) & (n < this.Results.Count))
+            Result historicResult = GetResult(n);
+            if (historicResult != null)
             {
-                Result historicResult = (Result)this.Results[n];
-                if ((sentence >= 0) & (sentence < historicResult.InputSentences.Count))
-                {
-                    return (string)historicResult.InputSentences[sentence];
-                }
+                return historicResult.GetInputSentence(sentence);
             }
             return string.Empty;
         }
@@ -295,5 +293,22 @@ namespace AltAIMLbot
             this.Results[n]= desiredResult;
         }
         #endregion
+
+        public IEnumerable<string> getThats()
+        {
+            return new[] { getLastBotOutput() };
+        }
+        public IEnumerable<string> getTopics()
+        {
+            return new[] {Topic};
+        }
+        public IEnumerable<string> getPreStates()
+        {
+            return new[] { State };
+        }
+        public IEnumerable<string> getPostStates()
+        {
+            return new[] { State };
+        }
     }
 }

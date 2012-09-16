@@ -1,4 +1,4 @@
-Ôªøusing System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -26,7 +26,7 @@ namespace RTParser.Database
 
         public CycDatabase TheCyc
         {
-            get { return Proc.TheCyc; }
+            get { return bot.TheCyc; }
         }
 
         #region Overrides of TextTransformer
@@ -299,7 +299,7 @@ namespace RTParser.Database
                 return true;
 
             term = EvalSubL(String.Format("(car (fi-complete \"{0}\"))", nqtext), null);
-            // Followed by asking Cyc to guess at the word using (fi-complete \‚Äù%s\‚Äù)
+            // Followed by asking Cyc to guess at the word using (fi-complete \î%s\î)
             if (Unifiable.IsTrue(term))
             {
                 if (IsaFilter(term, filter))
@@ -323,7 +323,7 @@ namespace RTParser.Database
                     return true;
                 }
             }
-            // and if that fails returns a Unifiable of using #$\‚Äù%s\‚Äù
+            // and if that fails returns a Unifiable of using #$\î%s\î
             term = string.Format("#${0}", text);
             return false;
         }

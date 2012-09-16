@@ -44,6 +44,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
+            isStarWhenChildless = true;
         }
 
         protected override string ProcessChange()
@@ -58,15 +59,8 @@ namespace AltAIMLbot.AIMLTagHandlers
                 else
                 {
                     // atomic version of the node
-                    RecurseStar();
-                    if (this.TemplateNodeHasText)
-                    {
-                        return this.ProcessChange();
-                    }
-                    else
-                    {
-                        return string.Empty;
-                    }
+                    // calls ProcessChange() one more time and should not get here again
+                    return RecurseStar();
                 }
             }
             return string.Empty;

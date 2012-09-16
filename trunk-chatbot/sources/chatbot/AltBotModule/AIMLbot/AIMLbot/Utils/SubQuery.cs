@@ -89,6 +89,8 @@ namespace AltAIMLbot.Utils
 
         public List<string> GetStars(string s)
         {
+            s = s.ToLower();
+            if (s == "input") s = "pattern";
             return Stars[s.ToLower()];
         }
 

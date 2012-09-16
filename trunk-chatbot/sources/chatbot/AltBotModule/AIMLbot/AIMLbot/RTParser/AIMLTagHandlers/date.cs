@@ -35,7 +35,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "date")
             {
-                return RTPBot.Now.ToString(this.Proc.Locale);
+                return RTPBot.Now.ToString(this.bot.Locale);
             }
             return Unifiable.Empty;
         }

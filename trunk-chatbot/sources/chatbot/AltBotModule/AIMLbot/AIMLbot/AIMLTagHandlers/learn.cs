@@ -50,7 +50,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                         }
                         catch
                         {
-                            this.bot.writeToLog("ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: " + path);
+                            writeToLogError("Attempted (but failed) to <learn> some new AIML from the following URI: " + path);
                         }
                     }
                 }

@@ -37,7 +37,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (CheckNode("lowercase"))
             {
-                return templateNodeInnerText.ToValue(query).ToLower(this.Proc.Locale);
+                return templateNodeInnerText.ToValue(query).ToLower(this.bot.Locale);
             }
             return Unifiable.Empty;
         }

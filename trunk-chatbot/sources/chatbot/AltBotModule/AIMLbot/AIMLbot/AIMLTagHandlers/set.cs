@@ -41,6 +41,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
+            isStarWhenChildless = false;
         }
 
         protected override string ProcessChange()
@@ -51,16 +52,21 @@ namespace AltAIMLbot.AIMLTagHandlers
                 string type0 = GetAttribValue("type,dict", "user");
                 SettingsDictionary dict = request.GetDictionary(type0) ?? this.user.Predicates;
                 string settingValue = TemplateNodeInnerText;
+                this.bot.IsTraced(name);
                 if (settingValue.Length > 0)
                 {
                     dict.addSetting(name, settingValue);
-                    bot.writeToLog("SET " + name + "=" + settingValue);
+                    if (name != "coins") bot.writeToLog("SET " + name + "=" + settingValue);
                     return dict.grabSetting(name);
 
                 }
                 else
                 {
-                    dict.removeSetting(name);
+                    //dict.removeSetting(name);
+                    dict.updateSetting(name, "");
+                    bot.writeToLog("SET " + name + "=<BLANK>");
+                    string res = dict.grabSetting(name);
+                    return " , ";
                 }
             }
             return string.Empty;

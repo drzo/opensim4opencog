@@ -56,7 +56,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                     catch (Exception e)
                     {
-                        Proc.writeToLog(e);
+                        bot.writeToLog(e);
                         writeToLogWarn("" + e);
                     }
                 }

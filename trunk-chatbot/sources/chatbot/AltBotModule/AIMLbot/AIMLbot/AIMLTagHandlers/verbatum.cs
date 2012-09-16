@@ -37,7 +37,10 @@ namespace AltAIMLbot.AIMLTagHandlers
             isRecursive = false;
             Text = exactly;
         }
-
+        public override bool isVerbatum
+        {
+            get { return true; }
+        }
         private readonly string Text;
 
         protected override string ProcessChange()

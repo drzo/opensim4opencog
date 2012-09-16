@@ -67,7 +67,7 @@ namespace RTParser.Utils
                     newCustomTag.request = request;
                     newCustomTag.result = result;
                     newCustomTag.templateNode = node;
-                    newCustomTag.Proc = bot;
+                    newCustomTag.bot = bot;
                     newCustomTag.user = user;
                     return newCustomTag;
                 }

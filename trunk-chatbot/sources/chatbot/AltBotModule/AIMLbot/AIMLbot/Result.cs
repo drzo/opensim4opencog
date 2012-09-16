@@ -234,9 +234,24 @@ namespace AltAIMLbot
         }
 
         public  void FreeResult(){}
-        
-        public  object GetInputSentence(int sentence)
-        { throw new NotImplementedException(); }
+
+        static public T GetSentence<T>(IList<T> outputSentences, int sentence)
+        {
+            int count = outputSentences.Count;
+            if ((sentence >= 0) & (sentence < count))
+            {
+                return outputSentences[count - sentence - 1];
+            }
+            return default(T);
+        }
+        public string GetInputSentence(int sentence)
+        {
+            return GetSentence(InputSentences, sentence);
+        }
+        public string GetOutputSentence(int sentence)
+        {
+            return GetSentence(OutputSentences, sentence);
+        }
 
         public virtual Result result { get { return this; } }
 
@@ -514,13 +529,17 @@ namespace AltAIMLbot
         {
             this.resultCount++;
             List<string> sents = StaticAIMLUtils.SentenceBreaker(sentence, null);
-            if (sents.Count == 0 && sentence==" , ")
+            if (sents.Count == 0 && sentence == " , ")
             {
-                OutputSentences.Add(sentence);
+                if (resultCount == 1) OutputSentences.Add(sentence);
                 return;
             }
             foreach (var s in sents)
             {
+                if (s.Contains(". "))
+                {
+                    
+                }
                 OutputSentences.Add(s);
             }
         }

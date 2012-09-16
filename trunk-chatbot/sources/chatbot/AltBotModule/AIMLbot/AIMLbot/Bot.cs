@@ -457,13 +457,14 @@ namespace AltAIMLbot
 
         /// <summary>
         /// Loads AIML from .aiml files into the graphmaster "brain" of the bot
+        /// Loads the AIML from files found in the bot's AIMLpath into the bot's brain
         /// </summary>
         public void loadAIMLFromFiles()
         {
             AIMLLoader loader = new AIMLLoader(this);
-            loader.loadAIML();
+            loader.loadAIML(PathToAIML);
         }
-
+    
         /// <summary>
         /// Loads AIML from .aiml at dirPath files into the graphmaster "brain" of the bot
         /// </summary>
@@ -484,7 +485,7 @@ namespace AltAIMLbot
         /// </summary>
         /// <param name="newAIML">The XML document containing the AIML</param>
         /// <param name="filename">The originator of the XML document</param>
-        public void loadAIMLFromXML(XmlDocument newAIML, string filename)
+        public void loadAIMLFromXML_Unused(XmlDocument newAIML, string filename)
         {
             AIMLLoader loader = new AIMLLoader(this);
             loader.loadAIMLFromXML(newAIML, filename);
@@ -614,7 +615,7 @@ namespace AltAIMLbot
             }
             if (!this.GlobalSettings.containsSettingCalled("timeout"))
             {
-                this.GlobalSettings.addSetting("timeout", "2000");
+                this.GlobalSettings.addSetting("timeout", "200000");
             }
             if (!this.GlobalSettings.containsSettingCalled("timeoutmessage"))
             {
@@ -701,7 +702,7 @@ namespace AltAIMLbot
                 // <?xml version="1.0" encoding="utf-8" ?> 
                 // followed by a <root> tag with children of the form:
                 // <item value="value"/>
-                if (splittersXmlDoc.ChildNodes.Count == 2)
+                //if (splittersXmlDoc.ChildNodes.Count == 2)
                 {
                     if (splittersXmlDoc.LastChild.HasChildNodes)
                     {
@@ -899,12 +900,13 @@ namespace AltAIMLbot
         /// </summary>
         /// <param name="request">the request from the user</param>
         /// <returns>the result to be output to the user</returns>
-        public Result Chat(Request request,string graphID)
+        public Result Chat(Request request, string graphID)
         {
             GraphMaster ourGraphMaster = this.GetGraph(graphID) ?? Graphmaster;
             request.CurrentGraph = ourGraphMaster;
 
-            Result result = new Result(request.user, this, request);
+            User user = request.user;
+            Result result = new Result(user, this, request);
             bool saveResult = false;
 
             lock (ExternDB.mylock)
@@ -933,16 +935,17 @@ namespace AltAIMLbot
                             chatDB.OpenAll();
                         }
                     }
-                    if (request.user.Qstate.Count == 0)
+                    if (user.Qstate.Count == 0)
                     {
                         Console.WriteLine("DEBUG:Using Normal Search");
                         // Standard operation
                         foreach (string sentence in rawSentences)
                         {
                             result.InputSentences.Add(sentence);
-                            string path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.user.Topic, request.user.State, request.user.State, true);
-                            result.NormalizedPaths.Add(path);
-                            Console.WriteLine("DEBUG: path = " + path);
+                            List<string> paths = gatherPaths(user, sentence, user.getPreStates(), user.getPostStates(),
+                                                             loader);
+                            SortPaths(paths, ourGraphMaster.getPathScore);
+                            result.NormalizedPaths = paths;
                         }
                     }
                     else
@@ -963,15 +966,19 @@ namespace AltAIMLbot
                             string bestpath = "";
                             string beststate = "";
                             double bestv = -1;
-                            foreach (string nstate in request.user.Qstate.Keys)
+                            foreach (string nstate in user.Qstate.Keys)
                             {
-                                string path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.user.Topic, nstate, nstate, true);
+                                var states = new[] {nstate};
+                                List<string> paths = gatherPaths(user, sentence, states, states, loader);                                
+                                SortPaths(paths, ourGraphMaster.getPathScore);
+
+                                string path = paths[0];
                                 //double statev = this.Graphmaster.getPathScore(path);
                                 double statev = ourGraphMaster.getPathScore(path);
 
                                 if (statev == bestv)
                                 {
-                                    if (request.user.Qstate[nstate] > request.user.Qstate[beststate])
+                                    if (user.Qstate[nstate] > user.Qstate[beststate])
                                     {
                                         bestpath = path;
                                         beststate = nstate;
@@ -985,7 +992,10 @@ namespace AltAIMLbot
                                     bestv = statev;
                                 }
                             }
-                            result.NormalizedPaths.Add(bestpath);
+                            if (!result.NormalizedPaths.Contains(bestpath))
+                            {
+                                result.NormalizedPaths.Add(bestpath);
+                            }
                             Console.WriteLine("DEBUG: path = " + bestpath);
                         }
 
@@ -1008,7 +1018,8 @@ namespace AltAIMLbot
                         //query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                         //query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                         Console.WriteLine("DEBUG: TemplatePath = " + query.TemplatePath);
-                        Console.WriteLine("DEBUG: Template = " + query.Template);
+                        if (query.Template.Length < 120) Console.WriteLine("DEBUG: Template = " + query.Template);
+                        myBehaviors.SkipLog = true;
                         myBehaviors.logText("CHAT QueryPath:" + path);
                         myBehaviors.logText("CHAT TemplatePath:" + query.TemplatePath);
                         myBehaviors.logText("CHAT Template:\n" + query.Template);
@@ -1035,8 +1046,8 @@ namespace AltAIMLbot
                         {
                             try
                             {
-                                XmlNode templateNode = AIMLTagHandler.getNode(query.Template);
-                                string outputSentence = this.processNode(templateNode, query, request, result, request.user);
+                                string outputSentence = GetOutputSentence(query.Template, null, query, request, result,
+                                                                          user, true);
                                 if (outputSentence.Length > 0)
                                 {
                                     result.AddOutputSentences(outputSentence);
@@ -1075,22 +1086,59 @@ namespace AltAIMLbot
                 {
                     return result;
                 }
-                request.user.addResult(result);
+                user.addResult(result);
             }
             return result;
         }
 
+
+    private static void SortPaths(List<string> paths, Func<string, double> func)
+        {
+            paths.Sort((s1, s2) =>
+                           {
+                               var diff =  func(s1).CompareTo(func(s2));
+                               if (diff != 0) return diff;
+                               diff = s1.Length.CompareTo(s2.Length);
+                               if (diff != 0) return diff;
+                               return s1.CompareTo(s2);
+                           });
+        }
+
+        private static List<string> gatherPaths(User user, string sentence,IEnumerable<string> usergetPreStates, IEnumerable<string> usergetPostStates, AIMLLoader loader)
+        {
+            List<string> normalizedPaths = new List<string>();
+            foreach (var that in user.getThats())
+            {
+                foreach (var topic in user.getTopics())
+                {
+                    foreach (var prestates in usergetPreStates)
+                    {
+                        foreach (var poststates in usergetPostStates)
+                        {
+                            string path = loader.generatePath(sentence, that, topic, prestates, poststates, true);
+                            if (!normalizedPaths.Contains(path))
+                            {
+                                normalizedPaths.Add(path);
+                            }
+                            Console.WriteLine("DEBUG: path = " + path);
+                        }
+                    }
+                }
+            }
+            return normalizedPaths;
+        }
+    
         /// <summary>
         /// given an template side XML, try evaluating it
         /// </summary>       
         public void evalTemplateNode(XmlNode templateNode)
         {
-            User imaginaryUser = new User("internal",this);
-            Request request = new Request("", imaginaryUser, this);
-            Utils.SubQuery query = new SubQuery("", request);
+            User imaginaryUser = new User("evalTemplateNode User", this);
+            Request request = new Request("evalTemplateNode Request", imaginaryUser, this);
+            Utils.SubQuery query = new SubQuery("evalTemplateNode SubQuery", request);
             Result result = new Result(request.user, this, request);
  
-            string outputSentence = this.processNode(templateNode, query, request, result, request.user);
+            string outputSentence = this.processNode(templateNode, query, request, result, request.user, true);
        
         }
         /// <summary>
@@ -1102,10 +1150,10 @@ namespace AltAIMLbot
         /// <param name="result">the result to be sent to the user</param>
         /// <param name="user">the user who originated the request</param>
         /// <returns>the output string</returns>
-        public string processNode(XmlNode node, SubQuery query, Request request, Result result, User user)
+        public string processNode(XmlNode node, SubQuery query, Request request, Result result, User user, bool allowProcess)
         {
             // check for timeout (to avoid infinite loops)
-            if (request.StartedOn.AddMilliseconds(request.bot.TimeOut) < DateTime.Now)
+            if (request.MayTimeOut && request.StartedOn.AddMilliseconds(request.bot.TimeOut) < DateTime.Now)
             {
                 request.bot.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" + request.rawInput + "\" processing template: \""+query.Template+"\"");
                 request.hasTimedOut = true;
@@ -1118,16 +1166,8 @@ namespace AltAIMLbot
 
             if (tagName == "template" || tagName == "li")
             {
-                StringBuilder templateResult = new StringBuilder();
-                if (node.HasChildNodes)
-                {
-                    // recursively check
-                    foreach (XmlNode childNode in node.ChildNodes)
-                    {
-                        templateResult.Append(this.processNode(childNode, query, request, result, user));
-                    }
-                }
-                return templateResult.ToString();
+                string pt = GetOutputSentence(null, node, query, request, result, user, allowProcess);
+                return pt;
             }
             else
             {
@@ -1137,6 +1177,7 @@ namespace AltAIMLbot
                 {
                     string debug = node.OuterXml;
                     if (node.NodeType == XmlNodeType.Text) return node.InnerText;
+                    if (node.NodeType == XmlNodeType.Whitespace) return node.InnerText;
                     if (node.NodeType == XmlNodeType.Comment) return " , ";
                     Console.WriteLine(" -- Result0 {0} : {1}", tagName, node.InnerText);
                     return node.InnerText;
@@ -1150,17 +1191,21 @@ namespace AltAIMLbot
                             // recursively check
                             foreach (XmlNode childNode in node.ChildNodes)
                             {
-                                if (childNode.NodeType != XmlNodeType.Text)
+                                if (childNode.NodeType == XmlNodeType.Element)
                                 {
                                     try
                                     {
-                                        string value = this.processNode(childNode, query, request, result, user);
+                                        string value = this.processNode(childNode, query, request, result, user, allowProcess);
                                         if (value == null)
                                         {
-                                            value = this.processNode(childNode, query, request, result, user);
+                                            value = this.processNode(childNode, query, request, result, user, allowProcess);
                                             value = String.Empty;
                                         }
                                         string debug = childNode.OuterXml;
+                                        if (!allowProcess)
+                                        {
+                                            continue;
+                                        }
                                         if (value.Contains("<"))
                                         {
                                             childNode.InnerXml = value;
@@ -1178,49 +1223,96 @@ namespace AltAIMLbot
                                     }
                                 }
                             }
+                            string resultNodeInnerXML2 = tagHandler.Transform();
+                            string resultNodeInnerXML3 = resultNodeInnerXML2.ToString();
                         }
                         else
                         {
-                            if (tagHandler.isNonAtomic)
+                            if (tagHandler.isStarWhenChildless)
                             {
                                 string debug = node.OuterXml;
                                 // atomic tag?!
-                                XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
-                                star recursiveStar = new star(this, user, query, request, result, starNode);
-                                var TemplateNodeInnerText0 = recursiveStar.Transform();
+                                var TemplateNodeInnerText0 = tagHandler.GetStarContent();
                                 node.InnerXml = TemplateNodeInnerText0;
                             }
                         }
-                        string tresult = tagHandler.Transform();
-                        Console.WriteLine(" -- Result1 {0} : {1}", tagName, tresult);
-                        return tresult;
                     }
-                    else
+                    //else
                     {
                         string resultNodeInnerXML = tagHandler.Transform();
-                        XmlNode resultNode = AIMLTagHandler.getNode("<node>" + resultNodeInnerXML + "</node>");
-                        if (resultNode.HasChildNodes)
+
+                        //Console.WriteLine(" -- Result1 {0} : {1}", tagName, resultNodeInnerXML);
+                        if (resultNodeInnerXML == null)
                         {
-                            StringBuilder recursiveResult = new StringBuilder();
-                            // recursively check
-                            foreach (XmlNode childNode in resultNode.ChildNodes)
-                            {
-                                recursiveResult.Append(this.processNode(childNode, query, request, result, user));
-                            }
-                            Console.WriteLine(" -- Result2 {0} : {1}", tagName, recursiveResult.ToString());
-                            return recursiveResult.ToString();
+                            return string.Empty;
                         }
-                        else
+                        if (resultNodeInnerXML.Trim() == "")
                         {
-                            //Console.WriteLine(" -- Result3 {0} : {1}", tagName, resultNode.InnerXml);
-                            return resultNode.InnerXml;
+                            return string.Empty;
                         }
+                        if (tagHandler.isVerbatum)
+                        {
+                            return resultNodeInnerXML;
+                        }
+                        if (!StaticXMLUtils.ContainsXml(resultNodeInnerXML))
+                        {
+                            return resultNodeInnerXML;
+                        }
+                        string recursiveResult = GetOutputSentence(resultNodeInnerXML, null, query, request, result, user, allowProcess);
+                        Console.WriteLine(" -- Result2 {0} : {1}", tagName, recursiveResult.ToString());
+                        if (tagName=="random")
+                        {
+                            
+                        }
+                        return recursiveResult;
                     }
                 }
             }
         }
 
-        private AIMLTagHandler GetTagHandler(XmlNode node, SubQuery query, Request request, Result result, User user, bool liText)
+        public string GetOutputSentence(string template, XmlNode resultNode, SubQuery query, Request request, Result result, User user, bool allowProcess)
+        {
+            if (template == null) template = resultNode.OuterXml;
+            if (!StaticXMLUtils.ContainsXml(template))
+            {
+                return template;
+            }
+            resultNode = resultNode ?? AIMLTagHandler.getNode("<node>" + template + "</node>");
+            if (resultNode.HasChildNodes)
+            {
+                StringBuilder recursiveResult = new StringBuilder();
+                // recursively check
+                bool needSpace = false;
+                string sep = " ";
+                string lastResult = "";
+                foreach (XmlNode childNode in resultNode.ChildNodes)
+                {
+                    string oneChildString;
+                    oneChildString = this.processNode(childNode, query, request, result, user, allowProcess);
+                    if (string.IsNullOrEmpty(oneChildString))
+                    {
+                        continue;
+                    }
+                    if (needSpace)
+                    {
+                        if (!lastResult.EndsWith(sep)) recursiveResult.Append(sep);
+                    }
+                    else needSpace = true;
+                    lastResult = oneChildString;
+                    recursiveResult.Append(oneChildString);
+                }
+                var resultString = recursiveResult.ToString();
+                if (resultString.Length > 4) resultString = resultString.Replace(" , ", " ");
+                return resultString;
+            }
+            else
+            {
+                //Console.WriteLine(" -- Result3 {0} : {1}", tagName, resultNode.InnerXml);
+                return resultNode.InnerXml;
+            }
+        }
+
+    private AIMLTagHandler GetTagHandler(XmlNode node, SubQuery query, Request request, Result result, User user, bool liText)
         {
             AIMLTagHandler tagHandler = this.getBespokeTags(user, query, request, result, node);
             string nodeNameLower = node.Name.ToLower();
@@ -1389,19 +1481,23 @@ namespace AltAIMLbot
                     case "template":
                     case "li":
                         return new AIMLTagHandlers.format(this, user, query, request, result, node, null);
-                        
+
+                    case "#whitespace":
                     case "#text":
                         if (!liText) return null;
-                        return new verbatum(node.InnerText, this, user, query, request, result, node);
+                        return new verbatum(node.Value, this, user, query, request, result, node);
                         
                     case "#comment_unused":
                         return new verbatum(node.OuterXml, this, user, query, request, result, node);
                     case "br":
-                        return new verbatum("\n", this, user, query, request, result, node);
+                        return new verbatum("<br/>", this, user, query, request, result, node);
                     case "pre":
                         return new verbatum(StaticXMLUtils.InnerXmlText(node), this, user, query, request, result, node);
                     case "p":
-                        return new verbatum("\n\n", this, user, query, request, result, node);
+                    case "rverbatum":
+                        return new recursiveVerbatum(node, this, user, query, request, result, node, true);
+                    case "verbatum":
+                        return new recursiveVerbatum(node, this, user, query, request, result, node, false);
                     case "meta":
                         return new verbatum(node.OuterXml, this, user, query, request, result, node);
                     default:
@@ -2132,6 +2228,15 @@ The AltAIMLbot program.
         )
     {
         throw new NotImplementedException();
+    }
+
+    public bool IsTraced(string name)
+    {
+        if ("dealerhand playerhand".Contains(name))
+        {
+            return true;
+        }
+        return false;
     }
     }
     public class myConst
