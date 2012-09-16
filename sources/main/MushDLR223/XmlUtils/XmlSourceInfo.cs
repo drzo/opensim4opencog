@@ -448,6 +448,8 @@ namespace MushDLR223.Utilities
                     }
                     else
                     {
+                        if (node.NodeType == XmlNodeType.Whitespace) continue;
+                        if (node.NodeType == XmlNodeType.Comment) continue;
                         if (!node.IsReadOnly && !value)
                         {
                             writeToLog("Non Readonly Child is not a AIMLXmlInfo: " + node);
@@ -758,7 +760,7 @@ namespace MushDLR223.Utilities
 
         internal void writeToLog(string s)
         {
-          //  XmlDocumentLineInfo.DebugWriteLine(s + " on XML node: '" + this + "'");
+           XmlDocumentLineInfo.DebugWriteLine(s + " on XML node: '" + this + "'");
         }
 
         public static void unsetReadonly(LineInfoElementImpl node)
