@@ -61,7 +61,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 {
                     if (index > 0)
                     {
-                        return starValues[index - 1];
+                        return starValues[valuesCount - index];
                     }
                     else
                     {
