@@ -27,7 +27,7 @@ namespace hillpeople2d
 
          private Tile(String name) {
                this.name = name;
-               bm = new Bitmap("..\\..\\img\\" + name + ".png");
+               bm = new Bitmap("..\\..\\..\\img\\" + name + ".png");
          }
 
          public static Tile getTile(String name){
