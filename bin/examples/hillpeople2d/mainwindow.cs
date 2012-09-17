@@ -14,7 +14,7 @@ namespace hillpeople2d
     {
         private const int BOTAREA_WIDTH = 124;
 
-        private static Cursor grabber = new Cursor("..\\..\\grabber.cur");
+        private static Cursor grabber = new Cursor("..\\..\\..\\grabber.cur");
         private System.Drawing.Bitmap world_map;
         private System.Drawing.Bitmap nav_map;
 
@@ -22,8 +22,8 @@ namespace hillpeople2d
 
         public mainwindow()
         {
-            world_map = new Bitmap("..\\..\\rsrc\\worldmap.bmp");
-            nav_map = new Bitmap("..\\..\\rsrc\\navmap.png");
+            world_map = new Bitmap("..\\..\\..\\rsrc\\worldmap.bmp");
+            nav_map = new Bitmap("..\\..\\..\\rsrc\\navmap.png");
             tm = new TileManager(world_map);
 
             InitializeComponent();

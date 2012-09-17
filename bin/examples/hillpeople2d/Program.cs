@@ -15,6 +15,7 @@ namespace hillpeople2d
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            Console.WriteLine(Environment.CurrentDirectory.ToString());
             Application.Run(new mainwindow());
         }
     }
