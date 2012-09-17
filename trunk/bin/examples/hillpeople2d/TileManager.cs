@@ -140,8 +140,8 @@ namespace hillpeople2d
         public const int V_CELL_OFFSET_X = 64;
         public const int V_CELL_OFFSET_Y = 37;
 
-        private int origin_x = 0;
-        private int origin_y = 0;
+        private int origin_x = -14275;
+        private int origin_y = 1135;
 
         public void draw(Graphics g)
         {
