@@ -32,6 +32,10 @@ namespace AltAIMLbot.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
         }
+        public override bool isFormatter
+        {
+            get { return true; }
+        }
 
         protected override string ProcessChange()
         {

@@ -1,17 +1,12 @@
 using System;
 using System.Xml;
 using System.Text;
+using RTParser.Utils;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
-    /// The formal element tells the AIML interpreter to render the contents of the element 
-    /// such that the first letter of each word is in uppercase, as defined (if defined) by 
-    /// the locale indicated by the specified language (if specified). This is similar to methods 
-    /// that are sometimes called "Title Case". 
-    /// 
-    /// If no character in this string has a different uppercase version, based on the Unicode 
-    /// standard, then the original string is returned.
+    /// The format element tells the AIML interpreter to render the contents of the element 
     /// </summary>
     public class format : AltAIMLbot.Utils.AIMLTagHandler
     {
@@ -37,15 +32,18 @@ namespace AltAIMLbot.AIMLTagHandlers
         }
 
         private readonly Func<string, string> Formatter;
-
+        public override bool isFormatter
+        {
+            get { return true; }
+        }
         protected override string ProcessChange()
         {
             if (Formatter == null) return TemplateNodeInnerText;
             StringBuilder result = new StringBuilder();
             if (this.TemplateNodeHasText)
             {
-                bool needSpace = true;
-                string[] words = this.TemplateNodeInnerText.Split();
+                bool needSpace = false;
+                string[] words = this.TemplateNodeInnerText.Split(' ');
                 foreach (string word in words)
                 {
                     string newWord = Formatter(word);

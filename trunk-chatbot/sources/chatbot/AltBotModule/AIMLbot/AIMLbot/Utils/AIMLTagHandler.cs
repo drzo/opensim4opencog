@@ -192,6 +192,10 @@ namespace AltAIMLbot.Utils
         {
             get { return false; }
         }
+        public override bool isFormatter
+        {
+            get { return false; }
+        }
 
         private string innerTextOverride = null;
         #endregion

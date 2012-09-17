@@ -46,6 +46,12 @@ namespace AltAIMLbot.Utils
         {
             get{return this.Transform();}
         }
+
+        public virtual bool isFormatter
+        {
+            get { return true; }
+        }
+
         #endregion
 
         /// <summary>
