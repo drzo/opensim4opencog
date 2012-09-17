@@ -81,34 +81,103 @@ namespace hillpeople2d
             {
                 for (int x = 0; x < SIZE_X; x++)
                 {
-                    board[x, y] = new TileArea("field");
+                    board[x, y] = new TileArea("grass");
                 }
             }
         }
 
-        public const int CELL_OFFSET_X = 64;
-        public const int CELL_OFFSET_Y = -37;
+        private static Dictionary<Color, String> mapkey =
+            new Dictionary<Color, string>()
+            {
+                {Color.Red, "fire"},
+                {Color.Yellow, "seating"},  //TODO
+                {Color.Green, "grass"},
+                {Color.Cyan, "hut"},
+                {Color.Blue, "river"}, //TODO
+                {Color.White, "mountain"},
+                {Color.FromArgb(0,166,81), "forest"},
+                {Color.FromArgb(46,49,146), "creek"} //TODO
+
+            };
+
+        private String color_to_tile_type(Color c)
+        {
+            String winner = "grass";
+            float dist = 1000.0f;
+
+            foreach (KeyValuePair<Color, string> kvp in mapkey)
+            {
+                float adist = (kvp.Key.R - c.R) * (kvp.Key.R - c.R) +
+                              (kvp.Key.G - c.G) * (kvp.Key.G - c.G) +
+                              (kvp.Key.B - c.B) * (kvp.Key.B - c.B);
+                if (adist < dist)
+                {
+                    winner = kvp.Value;
+                    dist = adist;
+                    if (adist == 0) return winner; // shortcircuit for efficiency
+                }
+            }
+
+            return winner;
+        }
+
+        public TileManager(Bitmap world_map)
+        {
+            for (int y = 0; y < SIZE_Y; y++)
+            {
+                for (int x = 0; x < SIZE_X; x++)
+                {
+                    Color c = world_map.GetPixel(x, y);
+                    String tile_name = color_to_tile_type(c);
+
+                    board[x, y] = new TileArea(tile_name);
+                }
+            }
+        }
+
+        public const int U_CELL_OFFSET_X = 64;
+        public const int U_CELL_OFFSET_Y = -37;
+        public const int V_CELL_OFFSET_X = 64;
+        public const int V_CELL_OFFSET_Y = 37;
+
+        private int origin_x = 0;
+        private int origin_y = 0;
 
         public void draw(Graphics g)
         {
-            int sx = 0;
-            int sy = 0;
-            int rx = 0;
-            int ry = 0;
-
-            for (int y = 0; y < SIZE_Y; y++)
+            for (int v = 0; v < SIZE_Y; v++)
             {
-                sx = rx;
-                sy = ry;
-                for (int x = 0; x < SIZE_X; x++)
+                for (int u = SIZE_X - 1; u >= 0; u--)
                 {
-                    board[x, y].draw(g, sx, sy);
-                    sx += CELL_OFFSET_X;
-                    sy += CELL_OFFSET_Y;
+                    int x = origin_x + u * U_CELL_OFFSET_X + v * V_CELL_OFFSET_X;
+                    int y = origin_y + u * U_CELL_OFFSET_Y + v * V_CELL_OFFSET_Y;
+
+                    board[u, v].draw(g, x, y);
+            //        if( x >=0 && x <= 512 && y >= 0 && y <= 512)
+            //            g.DrawString("(" + u + ","+ v + ")", SystemFonts.DefaultFont, Brushes.Black, x + 120, y - 30);
                 }
-                rx += CELL_OFFSET_X;
-                ry -= CELL_OFFSET_Y; // note cleverness warning
             }             
+        }
+
+        internal void offsetOrigin(int x, int y)
+        {
+            origin_x += x;
+            origin_y += y;
+        }
+
+        // return origin - might not be on the interior of the data set
+        internal Point getOrigin()
+        {
+            return new Point(
+                origin_x,
+                origin_y
+                );
+        }
+
+        internal void setOrigin(int x, int y)
+        {
+            origin_x = x;
+            origin_y = y;
         }
     }
 }

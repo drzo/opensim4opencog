@@ -35,13 +35,15 @@ file name.
 var destFolder, sourceFolder, files, fileType, sourceDoc, targetFile, pngExportOpts;
  
 // Select the source folder.
-sourceFolder = Folder.selectDialog( 'Select the folder with Illustrator files you want to convert to PNG', '~' );
+// sourceFolder = Folder.selectDialog( 'Select the folder with Illustrator files you want to convert to PNG', '~' );
+ sourceFolder = new Folder('C:\\development\\cogbot\\bin\\examples\\hillpeople2d\\imagesrc\\');
  
 // If a valid folder is selected
 if ( sourceFolder != null )
 {
     files = new Array();
-    fileType = prompt( 'Select type of Illustrator files to you want to process. Eg: *.ai', ' ' );
+    // fileType = prompt( 'Select type of Illustrator files to you want to process. Eg: *.ai', ' ' );
+    fileType = '*.ai';
     
     // Get all files matching the pattern
     files = sourceFolder.getFiles( fileType );
@@ -49,7 +51,8 @@ if ( sourceFolder != null )
     if ( files.length > 0 )
     {
         // Get the destination to save the files
-        destFolder = Folder.selectDialog( 'Select the folder where you want to save the converted PNG files.', '~' );
+    //    destFolder = Folder.selectDialog( 'Select the folder where you want to save the converted PNG files.', '~' );
+    destFolder = new Folder('C:\\development\\cogbot\\bin\\examples\\hillpeople2d\\img\\');
         for ( i = 0; i < files.length; i++ )
         {
             sourceDoc = app.open(files[i]); // returns the document object
@@ -124,7 +127,7 @@ function getPNGOptions()
     // for a description of these properties.
     // Add more properties here if you like
     pngExportOpts.antiAliasing = true;
-    pngExportOpts.artBoardClipping = false;
+    pngExportOpts.artBoardClipping = true;
     //pngExportOpts.horizontalScale = 100.0;
     //pngExportOpts.matte = true;
     //pngExportOpts.matteColor = 0, 0, 0;
