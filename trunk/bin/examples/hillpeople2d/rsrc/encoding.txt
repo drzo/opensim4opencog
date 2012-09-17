@@ -1,0 +1,7 @@
+1 255,255,0 seating
+2 0,255,0  grass
+3 0,255,255  hut
+4 0,0,255 impassable river
+6 255,255,255  mountain
+18 0,166,81 tree
+19 46,49,146 fordable creek/fishing
