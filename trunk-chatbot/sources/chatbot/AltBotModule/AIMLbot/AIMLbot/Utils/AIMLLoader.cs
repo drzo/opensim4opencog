@@ -528,6 +528,15 @@ namespace AltAIMLbot.Utils
         /// <param name="filename">the file from which this category was taken</param>
         private void processCategory(XmlNode node, string topicName, string stateNamePre, string stateNamePost, string filename)
         {
+            if (node is IXmlLineInfo)
+            {
+                var li  = ((IXmlLineInfo) node).LineNumber;
+                if (li != 0)
+                {
+                    filename += ":" + li;
+                }
+            }
+
             // reference and check the required nodes
             CategoryCheck(node, filename);
 
