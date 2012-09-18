@@ -339,6 +339,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="RTParser\Utils\TextPatternUtils.cs" />
+    <Compile Include="Unused\MatchInfo.cs" />
     <Compile Include="User.cs" />
     <Compile Include="RTParser\UserDuringProcessing.cs" />
     <Compile Include="RTParser\UserManager.cs" />
@@ -357,7 +358,7 @@
     <Compile Include="RTParser\Utils\GuardInfo.cs" />
     <Compile Include="RTParser\Utils\LoaderOptions.cs" />
     <Compile Include="AIMLProcessing\LoadingTagHandler.cs" />
-    <Compile Include="RTParser\Utils\MatchState.cs" />
+    <Compile Include="Unused\MatchState.cs" />
     <Compile Include="RTParser\Utils\Node.cs" />
     <Compile Include="Unused\Node_legacy.cs" />
     <Compile Include="Unused\OutputInfo.cs" />
@@ -365,14 +366,14 @@
     <Compile Include="RTParser\Utils\QueryList.cs" />
     <Compile Include="Unused\ResponseInfo.cs" />
     <Compile Include="RTParser\Utils\ResultCache.cs" />
-    <Compile Include="RTParser\Utils\StaticAIMLUtils.cs" />
+    <Compile Include="AIMLProcessing\StaticAIMLUtils.cs" />
     <Compile Include="Utils\SubQuery.cs" />
     <Compile Include="RTParser\Utils\TagHandler.cs" />
     <Compile Include="GraphInfo\TemplateInfo.cs" />
     <Compile Include="RTParser\Utils\TestCaseRunner.cs" />
     <Compile Include="RTParser\Utils\TextTransformer.cs" />
     <Compile Include="Unused\ThatInfo.cs" />
-    <Compile Include="RTParser\Utils\TopicInfo.cs" />
+    <Compile Include="Unused\TopicInfo.cs" />
     <Compile Include="RTParser\Utils\UndoStack.cs" />
     <Compile Include="RTParser\Utils\UnifibleTagHandler.cs" />
     <Compile Include="Variables\CollectionProperty.cs" />
