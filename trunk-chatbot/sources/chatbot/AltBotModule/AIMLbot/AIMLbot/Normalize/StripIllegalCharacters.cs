@@ -1,26 +1,30 @@
 using System;
 using System.Text.RegularExpressions;
 using System.Text;
-using RTParser;
 
-namespace AltAIMLbot.Normalize
+namespace RTParser.Normalize
 {
     /// <summary>
-    /// Strips any illegal characters found within the input string. Illegal characters are referenced from
+    /// Strips any illegal characters found within the input Unifiable. Illegal characters are referenced from
     /// the bot's Strippers regex that is defined in the setup XML file.
     /// </summary>
-    public class StripIllegalCharacters : AltAIMLbot.Utils.TextTransformer
+    public class StripIllegalCharacters : RTParser.Utils.TextTransformer
     {
-        public StripIllegalCharacters(AltBot bot, string inputString) : base(bot, inputString)
+        public StripIllegalCharacters(RTParser.AltBot bot, Unifiable inputString) : base(bot, null, inputString)
         { }
 
-        public StripIllegalCharacters(AltBot bot)
+        public StripIllegalCharacters(RTParser.AltBot bot)
             : base(bot) 
         { }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
-            return this.bot.Strippers.Replace(this.inputString, " ");
+            string newVariable = ((string)InputStringUU);
+            if (newVariable != null)
+            {
+                if (newVariable.StartsWith("TAG-")) return InputStringUU;
+            }
+            return this.Proc.Strippers.Replace(this.InputStringUU, " ");
         }
     }
 }

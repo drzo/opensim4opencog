@@ -16,11 +16,11 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="bot">The bot this transformer is a part of</param>
         /// <param name="inputString">The input Unifiable to be transformed</param>
-        public TextTransformer(AltBot bot, Unifiable inputString)
+        public TextTransformer(AltBot bot,string instr, Unifiable inputString)
         {
             this.Proc = bot;
-            this.inputStringU = inputString;
-            initialString = inputString.AsString();
+            this.InputStringUU = inputString ?? instr;
+            initialString = instr ?? InputStringUU.AsString();
         }
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace RTParser.Utils
         public TextTransformer(AltBot bot)
         {
             this.Proc = bot;
-            this.inputStringU = Unifiable.Empty;
+            this.InputStringUU = Unifiable.Empty;
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace RTParser.Utils
         public TextTransformer()
         {
             this.Proc = null;
-            this.inputStringU = Unifiable.Empty;
+            this.InputStringUU = Unifiable.Empty;
         }
 
         public virtual float CallCanUnify(Unifiable with)
@@ -52,19 +52,19 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="input">The Unifiable to be transformed</param>
         /// <returns>The resulting output</returns>
-        public string Transform(string input)
+        public string TransformU(string input)
         {
-            this.inputStringU = Unifiable.MakeUnifiableFromString(input, false);
-            return this.Transform();
+            this.InputStringUU = Unifiable.MakeUnifiableFromString(input, false);
+            return this.TransformU();
         }
 
         /// <summary>
         /// Do a transformation on the Unifiable found in the InputString attribute
         /// </summary>
         /// <returns>The resulting transformed Unifiable</returns>
-        public virtual string Transform()
+        public virtual Unifiable TransformU()
         {
-            if (!IsNullOrEmpty(this.inputStringU))
+            if (!IsNullOrEmpty(this.InputStringUU))
             {
                 return this.ProcessAimlChange();
             }
@@ -76,18 +76,18 @@ namespace RTParser.Utils
 
         public virtual Unifiable ProcessAimlChange()
         {
-            return ProcessChange();
+            return ProcessChangeU();
         }
 
         /// <summary>
         /// The method that does the actual processing of the text.
         /// </summary>
         /// <returns>The resulting processed text</returns>
-        protected abstract Unifiable ProcessChange();
+        protected abstract Unifiable ProcessChangeU();
 
         public virtual Unifiable CompleteProcessU()
         {
-            return inputStringU;
+            return InputStringUU;
         }
 
         #region Attributes
@@ -97,7 +97,7 @@ namespace RTParser.Utils
         /// <summary>
         /// Instance of the input Unifiable
         /// </summary>
-        protected Unifiable inputStringU;
+        protected Unifiable InputStringUU;
 
         /// <summary>
         /// The Proc that this transformation is connected with
@@ -109,16 +109,16 @@ namespace RTParser.Utils
         /// </summary>
         public Unifiable InputStringU
         {
-            get { return this.inputStringU; }
-            set { this.inputStringU = value; }
+            get { return this.InputStringUU; }
+            set { this.InputStringUU = value; }
         }
 
         /// <summary>
         /// The transformed Unifiable
         /// </summary>
-        public Unifiable OutputString
+        public Unifiable OutputStringU
         {
-            get { return this.Transform(); }
+            get { return this.TransformU(); }
         }
 
         #endregion

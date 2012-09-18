@@ -23,6 +23,7 @@ using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using RTParser;
 using RTParser.AIMLTagHandlers;
+using RTParser.Normalize;
 using RTParser.Utils;
 using RTParser.Variables;
 using AIMLLoader=AltAIMLbot.Utils.AIMLLoader;
@@ -1011,8 +1012,8 @@ namespace RTParser
 
                     // Normalize the input
                     AIMLLoader loader = new AIMLLoader(this);
-                    AltAIMLbot.Normalize.SplitIntoSentences splitter = new AltAIMLbot.Normalize.SplitIntoSentences(this);
-                    string[] rawSentences = splitter.Transform(request.rawInput);
+                    SplitIntoSentences splitter = new SplitIntoSentences(null, request.rawInput);
+                    string[] rawSentences = splitter.Transform();
 
 
                     if (rapStoreDirectory != null)
@@ -1200,11 +1201,14 @@ namespace RTParser
                            });
         }
 
-        private static List<string> gatherPaths(AltAIMLbot.User user, string sentence,IEnumerable<string> usergetPreStates, IEnumerable<string> usergetPostStates, AIMLLoader loader)
+        private static List<string> gatherPaths(User user, string sentence,IEnumerable<string> usergetPreStates, IEnumerable<string> usergetPostStates, AIMLLoader loader)
         {
             List<string> normalizedPaths = new List<string>();
+            int maxThats = 2;
+            int thats = 0;
             foreach (var that in user.getThats())
             {
+                if (thats++ >= maxThats) break;
                 foreach (var topic in user.getTopics())
                 {
                     foreach (var prestates in usergetPreStates)

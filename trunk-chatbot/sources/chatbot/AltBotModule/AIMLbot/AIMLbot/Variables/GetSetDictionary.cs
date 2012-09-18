@@ -2,9 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using MushDLR223.ScriptEngines;
+using RTParser.Variables;
 
-using Unifiable = System.String;
-namespace AltAIMLbot.Utils
+namespace RTParser.Variables
 {
     internal class GetSetDictionary : ISettingsDictionary
     {
@@ -70,7 +70,7 @@ namespace AltAIMLbot.Utils
         {
             if (containsLocalCalled(name))
             {
-                return (propGet()).ToString();
+                return Unifiable.Create(propGet());
             }
             return Unifiable.Empty;
         }

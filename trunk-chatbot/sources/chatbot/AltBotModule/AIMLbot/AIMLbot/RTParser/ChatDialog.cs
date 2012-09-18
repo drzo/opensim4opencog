@@ -19,7 +19,6 @@ using RTParser.Normalize;
 using RTParser.Utils;
 using RTParser.Variables;
 using AIMLLoader=RTParser.Utils.AIMLLoader;
-using AIMLTagHandler=RTParser.Utils.AIMLTagHandler;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 using PatternInfo = RTParser.Unifiable;
@@ -1083,7 +1082,7 @@ namespace RTParser
                     {
                         s.Query = query;
                         // Start each the same
-                        var lastHandler = ProcessQueryTemplate(request, s.Query, s, result, request.LastHandler,
+                        var lastHandler = ProcessQueryTemplate(request, s.Query, s, result, request.LastHandlerU,
                                                                ref solutions,
                                                                out hasMoreSolutions);
                         if (result.IsComplete)
@@ -1103,9 +1102,9 @@ namespace RTParser
             return solutions;
         }
 
-        private AIMLTagHandler ProcessQueryTemplate(Request request, SubQuery query, TemplateInfo s, Result result, AIMLTagHandler lastHandler, ref int solutions, out bool hasMoreSolutions)
+        private AIMLTagHandlerU ProcessQueryTemplate(Request request, SubQuery query, TemplateInfo s, Result result, AIMLTagHandlerU lastHandlerU, ref int solutions, out bool hasMoreSolutions)
         {
-            AIMLTagHandler childHandler = null;
+            AIMLTagHandlerU childHandlerU = null;
             request.TopLevelScore = 1.0;
             hasMoreSolutions = false;
             try
@@ -1116,11 +1115,11 @@ namespace RTParser
                 bool createdOutput;
                 bool templateSucceeded;
                 XmlNode sOutput = s.ClonedOutput;
-                childHandler = TagHandling.proccessResponse(query, request, result, sOutput, s.Guard, out createdOutput,
-                                               out templateSucceeded, lastHandler, s, false, false);
+                childHandlerU = TagHandling.proccessResponse(query, request, result, sOutput, s.Guard, out createdOutput,
+                                               out templateSucceeded, lastHandlerU, s, false, false);
                 solutions++;
-                query.CurrentTagHandler = childHandler;
-                request.LastHandler = lastHandler;
+                query.CurrentTagHandlerU = childHandlerU;
+                request.LastHandlerU = lastHandlerU;
                 if (templateSucceeded)
                 {
                     result.TemplatesSucceeded++;
@@ -1141,11 +1140,11 @@ namespace RTParser
                         if (request.IsComplete(result))
                         {
                             hasMoreSolutions = false;
-                            return lastHandler;
+                            return lastHandlerU;
                         }
                     }
                 }
-                return childHandler;
+                return childHandlerU;
             }
             catch (ChatSignal e)
             {
@@ -1162,7 +1161,7 @@ namespace RTParser
                            request.rawInput + " with the template: \"" + s + "\"");
                 hasMoreSolutions = false;
             }
-            return childHandler;
+            return childHandlerU;
         }
 
         public void writeChatTrace(string message, params object[] args)
@@ -1287,9 +1286,9 @@ namespace RTParser
                 copyChild = false;
             }
             var lastHandler = TagHandling.proccessResponse(query, request, result, templateNode, sGuard, out createdOutput, out templateSucceeded,
-                             (AIMLTagHandler)null, templateInfo, copyChild, false); //not sure if should copy parent
+                             (AIMLTagHandlerU)null, templateInfo, copyChild, false); //not sure if should copy parent
             if (doUndos) query.UndoAll();
-            request.LastHandler = lastHandler;
+            request.LastHandlerU = lastHandler;
             return result;
         }
 

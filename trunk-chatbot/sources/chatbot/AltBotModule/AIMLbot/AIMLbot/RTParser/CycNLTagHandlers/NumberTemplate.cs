@@ -46,7 +46,7 @@ namespace RTParser.CycNLTagHandlers
             return ISA_FALSE;
         }
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             return "" + _val;
         }

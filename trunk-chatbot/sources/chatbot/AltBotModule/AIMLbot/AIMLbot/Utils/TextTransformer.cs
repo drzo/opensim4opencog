@@ -122,5 +122,7 @@ namespace AltAIMLbot.Utils
         /// </summary>
         /// <returns>The resulting processed text</returns>
         protected abstract string ProcessChange();
+
+
     }
 }

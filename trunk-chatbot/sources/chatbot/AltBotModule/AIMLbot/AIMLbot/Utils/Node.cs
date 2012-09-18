@@ -15,6 +15,7 @@ using MushDLR223.Utilities;
 using RaptorDB;
 using System.Linq;
 using RTParser;
+using RTParser.Normalize;
 using Unifiable = System.String;
 
 namespace AltAIMLbot.Utils
@@ -154,7 +155,7 @@ namespace AltAIMLbot.Utils
             string[] words = path.Trim().Split(" ".ToCharArray());
 
             // get the first word (to form the key for the child nodemapper)
-            string firstWord = Normalize.MakeCaseInsensitive.TransformInput(words[0]);
+            string firstWord = MakeCaseInsensitive.TransformInput(words[0]);
 
             // concatenate the rest of the sentence into a suffix (to act as the
             // path argument in the child nodemapper)
@@ -233,7 +234,7 @@ namespace AltAIMLbot.Utils
             string[] words = path.Trim().Split(" ".ToCharArray());
 
             // get the first word (to form the key for the child nodemapper)
-            string firstWord = Normalize.MakeCaseInsensitive.TransformInput(words[0]);
+            string firstWord = MakeCaseInsensitive.TransformInput(words[0]);
 
             // concatenate the rest of the sentence into a suffix (to act as the
             // path argument in the child nodemapper)
@@ -401,7 +402,7 @@ namespace AltAIMLbot.Utils
             foreach (string word in words)
             {
                 // get the first word (to form the key for the child nodemapper)
-                string firstWord = Normalize.MakeCaseInsensitive.TransformInput(word);
+                string firstWord = MakeCaseInsensitive.TransformInput(word);
                 double indexv = 1.0;
                 scale = scale / 4;
                 if (IsSectionHeader(firstWord))
@@ -471,7 +472,7 @@ namespace AltAIMLbot.Utils
             string[] splitPath = path.Split(" \r\n\t".ToCharArray());
 
             // get the first word of the sentence
-            string firstWord = Normalize.MakeCaseInsensitive.TransformInput(splitPath[0]);
+            string firstWord = MakeCaseInsensitive.TransformInput(splitPath[0]);
 
             // and concatenate the rest of the input into a new path for child nodes
             string newPath = path.Substring(firstWord.Length, path.Length - firstWord.Length);
@@ -615,7 +616,7 @@ namespace AltAIMLbot.Utils
             string[] splitPath = path.Split(" \r\n\t".ToCharArray());
 
             // get the first word of the sentence
-            string firstWord = Normalize.MakeCaseInsensitive.TransformInput(splitPath[0]);
+            string firstWord = MakeCaseInsensitive.TransformInput(splitPath[0]);
 
             // and concatenate the rest of the input into a new path for child nodes
             string newPath = path.Substring(firstWord.Length, path.Length - firstWord.Length);
@@ -857,7 +858,7 @@ namespace AltAIMLbot.Utils
             string[] splitPath = path.Split(" \r\n\t".ToCharArray());
 
             // get the first word of the sentence
-            string firstWord = Normalize.MakeCaseInsensitive.TransformInput(splitPath[0]);
+            string firstWord = MakeCaseInsensitive.TransformInput(splitPath[0]);
             string nextPath = (absPath + " " + firstWord).Trim();
 
             // and concatenate the rest of the input into a new path for child nodes

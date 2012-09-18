@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using AltAIMLbot.Utils;
 using AltAIMLParser;
 using RTParser.Utils;
-using AIMLTagHandler=RTParser.Utils.AIMLTagHandler;
 
 namespace RTParser
 {
@@ -24,7 +23,7 @@ namespace RTParser
         public bool TemplateSucceeded;
         public bool CreatedOutput;
         public string TemplateOutput;
-        public AIMLTagHandler TagHandler;
+        public AIMLTagHandlerU TagHandlerU;
         public SubQuery SubQuery;
         public TemplateInfo TemplateInfo;
         public AIMLbot.MasterResult result;

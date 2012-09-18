@@ -1,8 +1,6 @@
 using System;
 
-using Unifiable = System.String;
-namespace AltAIMLbot.Utils
-
+namespace RTParser.Variables
 {
     public delegate Unifiable GetUnifiable();
     //public delegate void SetUnifiable(Unifiable unifiable);
@@ -20,7 +18,7 @@ namespace AltAIMLbot.Utils
 
         public void SetValue(object oldValue, object newValue, object unused)
         {
-            setter.Invoke("" + newValue);
+            setter.Invoke(Unifiable.Create(newValue));
         }
 
         public object GetValue(object oldValue, object unused)

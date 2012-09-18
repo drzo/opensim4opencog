@@ -3,6 +3,7 @@ using System.Xml;
 using System.Text;
 using AltAIMLParser;
 using RTParser;
+using RTParser.Normalize;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
@@ -56,7 +57,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 if (this.TemplateNodeHasText)
                 {
                     // non atomic version of the node
-                    return Normalize.ApplySubstitutions.Substitute(this.bot, this.bot.PersonSubstitutions, this.TemplateNodeInnerText);
+                    return ApplySubstitutions.Substitute(this.bot.PersonSubstitutions, this.TemplateNodeInnerText);
                 }
                 else
                 {

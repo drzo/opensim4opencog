@@ -69,7 +69,7 @@ namespace RTParser
 
             bool stopProcessing = false;
             if (control != null) control.AbortOrInteruptedRaised += (ctl, ex) => { stopProcessing = true; };
-            var sentences = v.Transform();
+            var sentences = v.TransformU();
             for (int i = 0; i < sentences.Length; i++)
             {
                 Unifiable sentence = sentences[i];

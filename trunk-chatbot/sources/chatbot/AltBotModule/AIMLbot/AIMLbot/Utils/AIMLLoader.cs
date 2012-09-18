@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using MushDLR223.Utilities;
 using RTParser;
+using RTParser.Normalize;
 using RTParser.Utils;
 
 
@@ -763,10 +764,10 @@ namespace AltAIMLbot.Utils
             StringBuilder result = new StringBuilder();
 
             // objects for normalization of the input
-            Normalize.ApplySubstitutions substitutor = new AltAIMLbot.Normalize.ApplySubstitutions(this.bot);
-            Normalize.StripIllegalCharacters stripper = new AltAIMLbot.Normalize.StripIllegalCharacters(this.bot);
+            ApplySubstitutions substitutor = new ApplySubstitutions(this.bot);
+            StripIllegalCharacters stripper = new StripIllegalCharacters(this.bot);
 
-            string substitutedInput = substitutor.Transform(input);
+            string substitutedInput = substitutor.TransformU(input);
             // split the pattern into it's component words
             string[] substitutedWords = substitutedInput.Split(" \r\n\t".ToCharArray());
 
@@ -776,7 +777,7 @@ namespace AltAIMLbot.Utils
                 string normalizedWord;
                 if (isUserInput)
                 {
-                    normalizedWord = stripper.Transform(word);
+                    normalizedWord = stripper.TransformU(word);
                 }
                 else
                 {
@@ -786,7 +787,7 @@ namespace AltAIMLbot.Utils
                     }
                     else
                     {
-                        normalizedWord = stripper.Transform(word);
+                        normalizedWord = stripper.TransformU(word);
                     }
                 }
                 result.Append(normalizedWord.Trim() + " ");

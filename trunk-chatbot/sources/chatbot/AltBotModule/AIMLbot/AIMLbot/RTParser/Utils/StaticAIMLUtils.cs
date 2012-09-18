@@ -955,8 +955,10 @@ namespace RTParser.Utils
         public static List<string> SentenceBreaker(string sentence, Func<string,string> post)
         {
             var OutputSentences = new List<string>();
-            sentence = StaticAIMLUtils.ReplacePairs(sentence, "<br>", "<br/>", "<p>", "<p/>", "</p>", "<p/>", "<br/>",
-                                                    "\n", "<p/>", "\n");
+            sentence = StaticAIMLUtils.ReplacePairs(sentence, " />", "/>", " >", ">",
+                                                    "<br>", "<br/>", "<p>", "<p/>", "</p>", "<p/>",
+                                                    "<br/>", "\n", "<p/>", "\n",
+                                                    "\r", "\n").Replace("\n", " \n ");
             var sp = new HashSet<string>();
             sp.Add(".");
             sp.Add("!");
@@ -975,8 +977,25 @@ namespace RTParser.Utils
                     bool usedBreaker = false;
                     foreach (string c in sp)
                     {
-                        String NeedAfter = "";
+                        String NeedAfter = " ";
                         int ia = (s0 + NeedAfter).IndexOf(c + NeedAfter);
+                        if (ia == -1) continue;
+                        if (s0.Length > ia + 3)
+                        {
+                            string twochars = s0.Substring(ia, 2);
+                            if (twochars == ".x")
+                            {
+                                continue;
+                            }
+                            if (twochars == "!-")
+                            {
+                                continue;
+                            }
+                            if (twochars == ": ")
+                            {
+                                continue;
+                            }
+                        }                        
                         if (ia > 1)
                         {
                             string s = s0.Substring(0, ia + 1);
@@ -992,14 +1011,14 @@ namespace RTParser.Utils
                             usedBreaker = true;
                             s0 = s0.Substring(ia + 1);
                         }
-                        if (usedBreaker) break;
+                        //if (usedBreaker) break;
                     }
                     if (usedBreaker)
                     {
                         continue;
                     }
                     string s1 = CleanToEnglish(s0);
-                    if (string.IsNullOrEmpty(s1)) continue;
+                    //if (string.IsNullOrEmpty(s1) && !s1.Contains("<")) continue;
                     if (post != null)
                     {
                         s1 = post(s1);

@@ -56,7 +56,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 if (this.TemplateNodeHasText)
                 {
                     // non atomic version of the node
-                    return Normalize.ApplySubstitutions.Substitute(this.bot, this.bot.GenderSubstitutions, this.TemplateNodeInnerText);
+                    return RTParser.Normalize.ApplySubstitutions.Substitute(this.bot.GenderSubstitutions, this.TemplateNodeInnerText);
                 }
                 else
                 {

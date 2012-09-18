@@ -9,7 +9,7 @@ using AltAIMLParser;
 
 namespace RTParser.Utils
 {
-    public abstract class UnifibleTagHandler : AIMLTagHandler
+    public abstract class UnifibleTagHandler : AIMLTagHandlerU
     {
         internal const float AND_FALSE = 1;
         internal const float AND_TRUE = 0;
@@ -168,7 +168,7 @@ namespace RTParser.Utils
 
         protected Unifiable[] MEMBER = null;
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (MEMBER != null && MEMBER.Length > 0) return MEMBER[0];
             var v1 = ComputeInner();
@@ -214,7 +214,7 @@ namespace RTParser.Utils
                 {
                     throw new Exception("This is inside iteself!");
                 }
-                AIMLTagHandler part = GetChildTagHandler(childNode);
+                AIMLTagHandlerU part = GetChildTagHandler(childNode);
                 partCallCanUnify = part.CallCanUnify(with);
             }
             return partCallCanUnify;

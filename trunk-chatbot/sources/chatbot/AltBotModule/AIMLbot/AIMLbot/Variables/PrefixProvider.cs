@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using MushDLR223.ScriptEngines;
 
-using Unifiable = System.String;
-namespace AltAIMLbot.Utils
-
+namespace RTParser.Variables
 {
     internal class PrefixProvider : ISettingsDictionary
     {

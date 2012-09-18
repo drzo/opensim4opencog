@@ -245,7 +245,7 @@ namespace RTParser
 
         public void InternType(Type t)
         {
-            if (!typeof (AIMLTagHandler).IsAssignableFrom(t)) return;
+            if (!typeof (AIMLTagHandlerU).IsAssignableFrom(t)) return;
             TagHandlerProcessor.AddTagHandler(t);
         }
 

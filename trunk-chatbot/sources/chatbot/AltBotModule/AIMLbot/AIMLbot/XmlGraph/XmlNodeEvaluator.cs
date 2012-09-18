@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Xml;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 
-namespace AltAIMLbot.Utils
+namespace RTParser.Utils
 {
 
     public interface XmlNodeEvaluator
@@ -12,23 +13,8 @@ namespace AltAIMLbot.Utils
         IEnumerable<XmlNodeEval> GetEvaluators(XmlNode node);
     }
 
-    abstract public class XmlNodeEvaluatorImpl : XmlNodeEvaluator
+    abstract public class XmlNodeEvaluatorImpl : StaticAIMLUtils , XmlNodeEvaluator
     {
-
-        static public IEnumerable<XmlNodeEval> Get1Evaluators(XmlNode node)
-        {
-            var nodes = new List<XmlNodeEval>();
-            foreach (XmlNodeEvaluator xmlNodeEvaluator in XmlNodeEvaluators)
-            {
-                var nodeE = xmlNodeEvaluator.GetEvaluators(node);
-                nodes.AddRange(nodeE);
-            }
-            return nodes;
-        }
-
-        public static readonly List<XmlNodeEvaluator> XmlNodeEvaluators = new List<XmlNodeEvaluator>();
-        private TestCaseRunner testCaseRunner;
-
         public readonly static IEnumerable<XmlNodeEval> NO_XmlNodeEval = new XmlNodeEval[0];
         public readonly static IEnumerable<XmlNode> NO_XmlNode = new XmlNode[0];
 

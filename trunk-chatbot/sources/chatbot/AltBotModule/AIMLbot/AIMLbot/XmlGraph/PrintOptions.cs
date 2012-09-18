@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml;
-using AltAIMLbot;
+using AltAIMLParser;
 
-namespace AltAIMLbot.Utils
+namespace RTParser.Utils
 {
     public class PrintOptions
     {

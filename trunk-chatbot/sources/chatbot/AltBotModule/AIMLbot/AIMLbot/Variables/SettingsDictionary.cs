@@ -1,4 +1,3 @@
-//#if false
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,15 +7,19 @@ using System.Threading;
 using System.Xml;
 using System.IO;
 using System.Xml.Serialization;
-using AltAIMLbot.Normalize;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using Lucene.Net.Store;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using TextPatternUtils = RTParser.Utils.TextPatternUtils;
+using RTParser;
+using RTParser.Database;
+using RTParser.Normalize;
+using RTParser.Utils;
 
-using Unifiable = System.String;
-namespace AltAIMLbot.Utils
+namespace RTParser.Variables
 {
     public delegate ISettingsDictionary ParentProvider();
     public interface ISettingsDictionary : ITraceable, ITreeable
@@ -89,7 +92,11 @@ namespace AltAIMLbot.Utils
         /// <summary>
         /// The bot this dictionary is associated with (only for writting log)
         /// </summary>
-       // protected AltBot bot;
+        protected AltBot bot;
+        protected AltBot rbot
+        {
+            get { return bot; }
+        }
 
         private string theNameSpace;
         public bool TrimKeys = true;
@@ -126,7 +133,7 @@ namespace AltAIMLbot.Utils
         ///                 </param>
         public bool Contains(KeyValuePair<string, Unifiable> item)
         {
-            return IsStringMatch(grabSetting(item.Key), item.Value);
+            return Unifiable.IsStringMatch(grabSetting(item.Key), item.Value);
         }
 
         /// <summary>
@@ -152,6 +159,22 @@ namespace AltAIMLbot.Utils
             }
         }
 
+        public void CopyFrom(SettingsDictionary from, bool localOnly, bool existingOnly)
+        {
+            foreach(string key in from.Keys)
+            {
+                if (existingOnly && !containsSettingCalled(key))
+                {
+                    continue;
+                }
+                if (localOnly && !containsLocalCalled(key))
+                {
+                    continue;
+                }
+                addSetting(key, from.grabSettingNoDebug(key));
+            }
+        }
+
         /// <summary>
         /// Removes the first occurrence of a specific object from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
         /// </summary>
@@ -168,7 +191,7 @@ namespace AltAIMLbot.Utils
                 if (IsKeyMatch(item.Key, hash))
                 {
                     var v = grabSetting(hash);
-                    if (IsStringMatch(v, item.Value))
+                    if (Unifiable.IsStringMatch(v, item.Value))
                     {
                         return removeSetting(hash);
                     }
@@ -177,15 +200,10 @@ namespace AltAIMLbot.Utils
             return false;
         }
 
-        static private bool IsStringMatch(string s, string value)
-        {
-            throw new NotImplementedException();
-        }
-
         private static bool IsKeyMatch(string key, string hash)
         {
             if (key == null) return true;
-            return IsStringMatch(key, hash);
+            return Unifiable.IsStringMatch(key, hash);
         }
 
         /// <summary>
@@ -213,7 +231,11 @@ namespace AltAIMLbot.Utils
         public string NameSpace
         {
             get { return theNameSpace; }
-            set { theNameSpace = value; }
+            set
+            {
+                AddName(value);
+                theNameSpace = value;
+            }
         }
 
         public bool IsTraced { get; set; }
@@ -392,59 +414,23 @@ namespace AltAIMLbot.Utils
         }
 
         #endregion
-        /// <summary>
-        /// Returns the value of a setting given the name of the setting
-        /// </summary>
-        /// <param name="name">the name of the setting whose value we're interested in</param>
-        /// <returns>the value of the setting</returns>
-        public string grabSetting(string name, bool useBlackboad)
-        {
-            string normalizedName = MakeCaseInsensitive.TransformInput(name);
-            // check blackboard
-            if (useBlackboad)
-            {
-                if ((bbPrefix != null) && (this.bot.myChemistry != null))
-                {
-                    string bbKey = bbPrefix + normalizedName.ToLower();
-                    string bbValue = this.bot.myChemistry.m_cBus.getHash(bbKey);
-                    //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
-                    if (bbValue.Length > 0)
-                    {
-                        // update local value
-                        if (this.orderedKeys.Contains(normalizedName))
-                        {
-                            this.removeFromHash(normalizedName);
-                            this.settingsHash.Add(normalizedName, bbValue);
-                        }
-                        return bbValue;
-                    }
 
-                    //Console.WriteLine("*** grabSetting use internal: {0}",name);
-                }
-            }
-            return grabSetting0(name);
-        }
-        /// <summary>
-        /// Ctor
-        /// </summary>
-        /// <param name="bot">The bot for whom this is a settings dictionary</param>
         public SettingsDictionary(String name, AltBot bot)
             : this(name, bot, null)
         {
 
         }
 
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        /// <param name="bot">The bot for whom this is a settings dictionary</param>
         public SettingsDictionary(String name, AltBot bot, ParentProvider parent)
         {
-            ObjectRequester = bot.ObjectRequester;
-            theNameSpace = ScriptManager.ToKey(name);
+            this.bot = bot;
+            theNameSpace = ScriptManager.ToKey(name).ToLower();
             IsSubsts = name.Contains("subst");
             TrimKeys = !name.Contains("subst");
-            this.bot = bot;
-            if (!IsSubsts)
-            {
-                if (bot.RelationMetaProps != null) this.InsertMetaProvider(bot.GetRelationMetaProps);
-            }
             IsTraced = true;
             bot.RegisterDictionary(name, this);
             if (parent != null) _fallbacks.Add(parent);
@@ -457,9 +443,17 @@ namespace AltAIMLbot.Utils
             IsTraced = false;
             AddSettingToCollection(null, pp, _fallbacks);
             AddSettingToCollection(null, pp, _listeners);
+            if (!IsSubsts)
+            {
+                this.InsertMetaProvider(bot.GetRelationMetaProps);
+            }
         }
 
         #region Methods
+        public void loadSettings(string pathToSettings)
+        {
+            loadSettings(pathToSettings, SettingsPolicy.Default, null);
+        }
         /// <summary>
         /// Loads bespoke settings into the class from the file referenced in pathToSettings.
         /// 
@@ -474,8 +468,40 @@ namespace AltAIMLbot.Utils
         /// <param name="pathToSettings">The file containing the settings</param>
         public void loadSettings(string pathToSettings, Request request)
         {
-            pathToSettings = HostSystem.ResolveToExistingPath(pathToSettings);
-            OutputDelegate writeToLog = request.writeToLog;
+            loadSettings(pathToSettings, SettingsPolicy.Default, request);   
+        }
+        public void loadSettings(string pathToSettings, SettingsPolicy settingsPolicy, Request request)
+        {
+            if (pathToSettings == null) return;
+            AddMonitorPath(pathToSettings, settingsPolicy);
+            loadSettingsNow(pathToSettings, settingsPolicy, request);
+        }
+        public void loadSettingsFromPrefix(string prefixToSettings, SettingsPolicy settingsPolicy, Request request)
+        {
+            lock (MonitorPaths)
+            {
+                foreach (var path in MonitorPaths)
+                {
+                    string pathToSettings = HostSystem.Combine(prefixToSettings, path.Key);
+                    try
+                    {
+                        loadSettingsNow(pathToSettings, path.Value, request);
+                    }
+                    catch (FileNotFoundException fnf)
+                    {
+
+                    }
+                }
+            }
+        }
+
+         public void loadSettingsNow(string pathToSettings,  SettingsPolicy settingsPolicy, Request request)
+        {
+            if (request == null)
+                request = bot.GetBotRequest("<!-- Loads Config to " + this + " from: '" + pathToSettings + "' -->"); 
+             pathToSettings = HostSystem.ResolveToExistingPath(pathToSettings);
+             OutputDelegate writeToLog = this.writeToLog;
+             if (request != null) writeToLog = request.writeToLog;
             if (pathToSettings == null) return;
             lock (orderedKeyLock)
             {
@@ -491,12 +517,12 @@ namespace AltAIMLbot.Utils
                             xmlDoc.Load(stream);
                             HostSystem.Close(stream);
                             IsIdentityReadOnly = false;
-                            this.loadSettings(xmlDoc, request);
-                        }/*
+                            loadSettingNode(this, xmlDoc, settingsPolicy,  request);
+                        }
                         catch (ChatSignal e)
                         {
                             throw;
-                        }*/
+                        }
                         catch (Exception e)
                         {
                             writeToLog("ERROR loadSettings '{1}'\n {0} ", e, pathToSettings);
@@ -521,10 +547,11 @@ namespace AltAIMLbot.Utils
             }
         }
 
-        static public void loadSettings(ISettingsDictionary dict0, string pathToSettings,
-            bool overwriteExisting, bool onlyIfUnknown, Request request)
+        public static void loadSettingsNow(ISettingsDictionary dict0, string prefix, string pathToSettings0,
+            SettingsPolicy settingsPolicy, Request request)
         {
-            if (pathToSettings == null) return;
+            string pathToSettings = HostSystem.Combine(prefix, pathToSettings0);
+            if (pathToSettings0 == null) return;
             SettingsDictionary dict = ToSettingsDictionary(dict0);
             OutputDelegate writeToLog = dict.writeToLog;
             // or else
@@ -539,7 +566,7 @@ namespace AltAIMLbot.Utils
                     {
                         foreach (string s in HostSystem.GetFiles(pathToSettings, "*.xml"))
                         {
-                            loadSettings(dict, s, overwriteExisting, onlyIfUnknown, request);
+                            loadSettingsNow(dict, null, s, settingsPolicy, request);
                         }
                         return;
                     }
@@ -556,7 +583,7 @@ namespace AltAIMLbot.Utils
                         var stream = HostSystem.GetStream(pathToSettings);
                         xmlDoc.Load(stream);
                         HostSystem.Close(stream);
-                        loadSettingNode(dict, xmlDoc, overwriteExisting, onlyIfUnknown, request);
+                        loadSettingNode(dict, xmlDoc, settingsPolicy,  request);
                         writeToLog("Loaded Settings found in: " + pathToSettings);
                         if (dict.fromFile == null) dict.fromFile = pathToSettings;
                     }
@@ -581,7 +608,7 @@ namespace AltAIMLbot.Utils
             if (!message.Contains(nameSpace)) message += " in " + nameSpace;
             if (!tol.Contains("dictlog")) message = "DICTLOG: " + message;
             if (bot != null) bot.writeToLog(message);
-            else bot.writeToLog(message);
+            else AltBot.writeDebugLine(message);
         }
 
         /// <summary>
@@ -596,7 +623,7 @@ namespace AltAIMLbot.Utils
         /// <item name="name" value="value"/>
         /// </summary>
         /// <param name="settingsAsXML">The settings as an XML document</param>
-        public void loadSettings(XmlDocument settingsAsXML, Request request)
+        public void loadSettingsNotUsed(XmlDocument settingsAsXML, Request request)
         {
             lock (orderedKeyLock)
             {
@@ -604,12 +631,12 @@ namespace AltAIMLbot.Utils
                 {
                     writeToLog("ERROR no doc element in " + settingsAsXML);
                 }
-                loadSettingNode(this, settingsAsXML.Attributes, true, false, request);
-                loadSettingNode(this, settingsAsXML.DocumentElement, true, false, request);
+                loadSettingNode(this, settingsAsXML.Attributes, SettingsPolicy.Default, request);
+                loadSettingNode(this, settingsAsXML.DocumentElement, SettingsPolicy.Default, request);
             }
         }
 
-        static public void loadSettingNode(ISettingsDictionary dict, IEnumerable Attributes, bool overwriteExisting, bool onlyIfUnknown, Request request)
+        static public void loadSettingNode(ISettingsDictionary dict, IEnumerable Attributes, SettingsPolicy settingsPolicy, Request request)
         {
             if (Attributes == null) return;
             foreach (object o in Attributes)
@@ -617,14 +644,16 @@ namespace AltAIMLbot.Utils
                 if (o is XmlNode)
                 {
                     XmlNode n = (XmlNode)o;
-                    loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown, request);
+                    loadSettingNode(dict, n, settingsPolicy,  request);
                 }
             }
         }
 
-        private static void loadNameValueSetting(ISettingsDictionary dict, string name, string value, string updateOrAddOrDefualt, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
+        private static void loadNameValueSetting(ISettingsDictionary dict, string name, string value, string updateOrAddOrDefualt, XmlNode myNode, SettingsPolicy settingsPolicy, Request request)
         {
             updateOrAddOrDefualt = updateOrAddOrDefualt.ToLower().Trim();
+            bool overwriteExisting = settingsPolicy.overwriteExisting;
+            bool onlyIfUnknown = settingsPolicy.onlyIfUnknown;
 
             overwriteExisting =
                 Boolean.Parse(StaticXMLUtils.GetAttribValue(myNode, "overwriteExisting", "" + overwriteExisting));
@@ -708,7 +737,7 @@ namespace AltAIMLbot.Utils
                         return;
                     }
                 }
-                WithoutTrace(dict, () => dict.addSetting(name, value));
+                WithoutTrace(dict, () => dict.addSetting(name, Unifiable.MakeUnifiableFromString(value, false)));
             }
             else
             {
@@ -729,7 +758,7 @@ namespace AltAIMLbot.Utils
                         return;
                     }
                 }
-                WithoutTrace(dict, () => dict.updateSetting(name, (value)));
+                WithoutTrace(dict, () => dict.updateSetting(name, Unifiable.MakeUnifiableFromString(value, false)));
             }
         }
 
@@ -738,7 +767,7 @@ namespace AltAIMLbot.Utils
             return StaticXMLUtils.WithoutTrace(dict, func);
         }
 
-        static public void loadSettingNode(ISettingsDictionary dict, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
+        static public void loadSettingNode(ISettingsDictionary dict, XmlNode myNode, SettingsPolicy settingsPolicy, Request request)
         {
             lock (LockInfo.Watch(dict))
             {
@@ -746,22 +775,22 @@ namespace AltAIMLbot.Utils
                 SettingsDictionary settingsDict = ToSettingsDictionary(dict);
                 WithoutTrace(dict, () =>
                 {
-                    loadSettingNode0(settingsDict, myNode, overwriteExisting,
-                                     onlyIfUnknown, request);
+                    loadSettingNode0(settingsDict, myNode, settingsPolicy, request);
                     return true;
                 });
             }
         }
 
-        static public void loadSettingNode0(ISettingsDictionary dict, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
+        static public void loadSettingNode0(ISettingsDictionary dict, XmlNode myNode, SettingsPolicy settingsPolicy, Request request)
         {
+            bool onlyIfUnknown = settingsPolicy.onlyIfUnknown;
 
             if (myNode == null) return;
             if (myNode.NodeType == XmlNodeType.Comment) return;
             if (myNode.NodeType == XmlNodeType.Attribute)
             {
                 // attribues should not overwrite existing? 
-                loadNameValueSetting(dict, myNode.Name, myNode.Value, "add", myNode, overwriteExisting, onlyIfUnknown, request);
+                loadNameValueSetting(dict, myNode.Name, myNode.Value, "add", myNode, settingsPolicy, request);
                 return;
             }
             int atcount = 0;
@@ -772,16 +801,16 @@ namespace AltAIMLbot.Utils
             }
             if (myNode.NodeType == XmlNodeType.XmlDeclaration)
             {
-                loadSettingNode(dict, myNode.Attributes, false, onlyIfUnknown, request);
-                loadSettingNode(dict, myNode.ChildNodes, overwriteExisting, onlyIfUnknown, request);
+                loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, onlyIfUnknown), request);
+                loadSettingNode(dict, myNode.ChildNodes, settingsPolicy, request);
                 return;
             }
             string lower = myNode.Name.ToLower();
 
             if (myNode.NodeType == XmlNodeType.Document || lower == "#document")
             {
-                loadSettingNode(dict, myNode.Attributes, false, onlyIfUnknown, request);
-                loadSettingNode(dict, myNode.ChildNodes, overwriteExisting, onlyIfUnknown, request);
+                loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, onlyIfUnknown), request);
+                loadSettingNode(dict, myNode.ChildNodes, settingsPolicy, request);
                 return;
             }
             if (lower == "substitutions")
@@ -804,7 +833,7 @@ namespace AltAIMLbot.Utils
                                 chdict = request.GetSubstitutions(substName, true);
                                 substDict.writeToLog("Creating substitutions: " + chdict);
                             }
-                            loadSettingNode(chdict, n.ChildNodes, overwriteExisting, onlyIfUnknown, request);
+                            loadSettingNode(chdict, n.ChildNodes, settingsPolicy, request);
                             continue;
                         }
                         catch (Exception e)
@@ -817,7 +846,7 @@ namespace AltAIMLbot.Utils
                     else
                     {
                         /// ProgramD shoukd nbot actually be here
-                        loadSettingNode(chdict, n, overwriteExisting, onlyIfUnknown, request);
+                        loadSettingNode(chdict, n, settingsPolicy, request);
                     }
                 }
                 return;
@@ -828,7 +857,7 @@ namespace AltAIMLbot.Utils
                 if (href != null && href.Length > 0)
                 {
                     string name = StaticXMLUtils.GetAttribValue(myNode, "id", myNode.Name);
-                    loadNameValueSetting(dict, name, href, "add", myNode, false, true, request);
+                    loadNameValueSetting(dict, name, href, "add", myNode, new SettingsPolicy(false, true), request);
                     return;
                 }
             }
@@ -838,8 +867,8 @@ namespace AltAIMLbot.Utils
                 var p = myNode.ParentNode;
                 if (p != null && p.Name.ToLower() == "bots")
                 {
-                    loadSettingNode(dict, myNode.ChildNodes, overwriteExisting, onlyIfUnknown, request);
-                    loadSettingNode(dict, myNode.Attributes, false, false, request);
+                    loadSettingNode(dict, myNode.ChildNodes, settingsPolicy, request);
+                    loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, false), request);
                     return;
                 }
             }
@@ -847,12 +876,14 @@ namespace AltAIMLbot.Utils
             if (lower == "root" || lower == "vars" || lower == "items" || lower == "properties"
                 || lower == "bots" || lower == "testing" || lower == "predicates")
             {
-                loadSettingNode(dict, myNode.ChildNodes, overwriteExisting, onlyIfUnknown, request);
-                loadSettingNode(dict, myNode.Attributes, false, false, request);
+                loadSettingNode(dict, myNode.ChildNodes, settingsPolicy, request);
+                loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, false), request);
                 return;
             }
+
             if ((lower == "include"))
             {
+                bool overwriteExisting = settingsPolicy.overwriteExisting;
                 string path = StaticXMLUtils.GetAttribValue(myNode, "path", myNode.InnerText);
 
                 overwriteExisting =
@@ -861,7 +892,7 @@ namespace AltAIMLbot.Utils
                 onlyIfUnknown =
                     Boolean.Parse(StaticXMLUtils.GetAttribValue(myNode, "onlyIfKnown", "" + onlyIfUnknown));
 
-                loadSettings(ToSettingsDictionary(dict), path, overwriteExisting, onlyIfUnknown, request);
+                loadSettingsNow(ToSettingsDictionary(dict),null, path, new SettingsPolicy(overwriteExisting, onlyIfUnknown),  request);
                 return;
             }
             SettingsDictionary settingsDict = ToSettingsDictionary(dict);
@@ -965,12 +996,12 @@ namespace AltAIMLbot.Utils
                     settingsDict.writeToLog("ERROR cannot make a n/value from " + StaticXMLUtils.TextAndSourceInfo(myNode));
 
                 loadNameValueSetting(dict, name, value, StaticXMLUtils.GetAttribValue(myNode, "type", "add"), myNode,
-                            overwriteExisting, onlyIfUnknown, request);
+                            settingsPolicy, request);
                 return;
             }
             if (lower == "learn" || lower == "srai" || lower == "aiml" || lower == "that" || lower == "category" || lower == "topic")
             {
-                request.bot.loadAIMLFromXML(myNode, "<nofile>");
+                request.Loader.loadAIMLNode(myNode, request.LoadOptions, request);
                 return;
             }
             if (myNode.NodeType == XmlNodeType.Element && atcount == 0)
@@ -981,7 +1012,7 @@ namespace AltAIMLbot.Utils
                 if (itext == value)
                 {
                     string name = myNode.Name;
-                    loadNameValueSetting(dict, name, value, "add", myNode, false, true, request);
+                    loadNameValueSetting(dict, name, value, "add", myNode, new SettingsPolicy(false, true), request);
                     return;
                 }
 
@@ -1055,16 +1086,21 @@ namespace AltAIMLbot.Utils
         {
             if (dictionary == null)
             {
-//                AltBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got NULL");
+                AltBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got NULL");
                 return null;
             }
             if (dictionary is SubQuery) dictionary = ((SubQuery)dictionary).TargetSettings;
             if (dictionary is User) dictionary = ((User)dictionary).Predicates;
             SettingsDictionary sd = dictionary as SettingsDictionary;
             if (sd != null) return sd;
-           /* AltBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got type={0} '{1}'",
+            PrefixProvider pp = dictionary as PrefixProvider;
+            if (pp != null)
+            {
+                return null;
+            }
+            AltBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got type={0} '{1}'",
                                   dictionary.GetType(),
-                                  dictionary);*/
+                                  dictionary);
             return null;
         }
 
@@ -1072,7 +1108,7 @@ namespace AltAIMLbot.Utils
         {
             if (dictionary == null)
             {
-                //AltBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got NULL");
+                AltBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got NULL");
                 return null;
             }
             ParentProvider sd = dictionary as ParentProvider;
@@ -1089,9 +1125,9 @@ namespace AltAIMLbot.Utils
                     if (e != null) return e;
                 }
             }
-           /* AltBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got type={0} '{1}'",
+            AltBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got type={0} '{1}'",
                                   dictionary.GetType(),
-                                  dictionary);*/
+                                  dictionary);
             return null;
         }
 
@@ -1139,11 +1175,11 @@ namespace AltAIMLbot.Utils
             if (NoSettingsAliaes) return NO_SETTINGS;
             string key = TransformKey(TransformName(name));
             string[] aliases;
-            /*if (!AltBot.SettingsAliases.TryGetValue(key, out aliases))
+            if (!AltBot.SettingsAliases.TryGetValue(key, out aliases))
             {
                 return NO_SETTINGS;
-            }*/
-            return NO_SETTINGS;
+            }
+            return aliases;
         }
 
         public bool addSetting0(string name, Unifiable value)
@@ -1153,12 +1189,6 @@ namespace AltAIMLbot.Utils
             {
                 name = TransformName(name);
                 string normalizedName = TransformKey(name);
-                // check blackboard
-                if ((bbPrefix != null) && (this.bot.myChemistry != null))
-                {
-                    string bbKey = bbPrefix + MakeCaseInsensitive.TransformInput(name).ToLower(); ;
-                    this.bot.myChemistry.m_cBus.setHash(bbKey, value);
-                }
                 if (normalizedName == "issubsts")
                 {
                     IsSubsts = TextPatternUtils.IsTrue(value);
@@ -1169,27 +1199,26 @@ namespace AltAIMLbot.Utils
                     SettingsLog("ERROR MASKED ADD SETTING '" + name + "'=" + str(value) + " ");
                     return false;
                 }
-                if (normalizedName.Length > 0)
+                if (!AllowedNameValue(name, value))
                 {
-                    if (!AllowedNameValue(name, value))
-                    {
-                        SettingsLog("!NameValueCheck ADD Setting Local '" + name + "'=" + str(value) + " ");
-                        return true;
-                    }
-                    SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
-                    value = MakeLocalValue(name, value);
-                    found = this.removeSettingReal(name);
-                    if (value != null)
-                    {
-                        this.orderedKeys.Add(name);
-                        this.settingsHash.Add(normalizedName, value);
-                    }
-                    updateListeners(name, value, true, !found);
+                    SettingsLog("!NameValueCheck ADD Setting Local '" + name + "'=" + str(value) + " ");
+                    return true;
                 }
-                else
+                // check blackboard
+                if ((bbPrefix != null) && (this.bot.myChemistry != null))
                 {
-                    SettingsLog("ERROR ADD Setting Local '" + name + "'=" + str(value) + " ");
+                    string bbKey = bbPrefix + MakeCaseInsensitive.TransformInput(name).ToLower(); ;
+                    this.bot.myChemistry.m_cBus.setHash(bbKey, value);
                 }
+                SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
+                value = MakeLocalValue(name, value);
+                found = this.removeSettingReal(name);
+                if (value != null)
+                {
+                    this.orderedKeys.Add(name);
+                    this.settingsHash.Add(normalizedName, value);
+                }
+                updateListeners(name, value, true, !found);
             }
             return !found;
         }
@@ -1212,12 +1241,12 @@ namespace AltAIMLbot.Utils
         }
 
         private Unifiable MakeLocalValue(string name, Unifiable value)
-        {/*
+        {
             Unifiable oldSetting = grabSettingNoDebug(name);
             bool isCollection = IsCollection(name);            
             if (isCollection)
             {
-                string commaVersion = "<li>" + value + "</li>";
+                string commaVersion = "<li>" + value.AsString() + "</li>";
                 string svalue = "";
                 if (IsMissing(oldSetting))
                 {
@@ -1241,7 +1270,7 @@ namespace AltAIMLbot.Utils
                 }
                 value = svalue;
                 return value;
-            }*/
+            }
             return value;
         }
 
@@ -1343,6 +1372,11 @@ namespace AltAIMLbot.Utils
         
         protected bool AllowedNameValue(string name, Unifiable value)
         {
+            if (name.Length < 1)
+            {
+                writeToLog(String.Format("! NameValueCheck '{0}' = '{1}'", name, value));
+                return false;
+            }
             if (name == "topic")
             {
                 if (UnsettableTopic.Contains(value.ToLower())) return false;
@@ -1350,7 +1384,7 @@ namespace AltAIMLbot.Utils
             string s = (string)value;
             if ((s == null) || s.Contains(">"))
             {
-                writeToLog(String.Format("! NameValueCheck {0} = {1}", name, value));
+                writeToLog(String.Format("! NameValueCheck {0} = {1}", name, value.AsString()));
                 return !SuspendUpdates;
             }
             if (IsIdentityReadOnly && (name.ToLower() == "name" || name.ToLower() == "id"))
@@ -1444,23 +1478,23 @@ namespace AltAIMLbot.Utils
         public Unifiable TransformValueIn(Unifiable value)
         {
             string s = TransformValue0(value);
-            /*if (s == null) return Unifiable.NULL;
+            if (s == null) return Unifiable.NULL;
             if (s == "") return Unifiable.Empty;
-            if (TextPatternUtils.IsMissing(value)) 
+            if (Unifiable.IsMissing(value)) 
             {
                 if (NoSettingsAliaes) return null;
                 return Unifiable.MISSING;
-            }*/
+            }
             return s;
         }
         public Unifiable TransformValueOut(Unifiable value)
         {
             Unifiable s = TransformValue0(value);
-            if (s == null) return null;
+            if (s == null) return Unifiable.NULL;
             if (s == "OM")
             {
                 if (NoSettingsAliaes) return null;
-                return s;
+                return Unifiable.MISSING;
             }
             if (s == "")
             {
@@ -1476,40 +1510,40 @@ namespace AltAIMLbot.Utils
 
         public string TransformValue0(Unifiable value)
         {
-            if (TextPatternUtils.IsNull(value))
+            if (Unifiable.IsNull(value))
             {
                 // writeToLog("ERROR " + value + " NULL");
                 return null;
                 //return Unifiable.NULL;
             }
 
-            if (TextPatternUtils.IsEMPTY(value))
+            if (Unifiable.IsEMPTY(value))
             {
                 // writeToLog("ERROR " + value + " NULL");
                 return "";
                 //return Unifiable.NULL;
             }
-            if (TextPatternUtils.IsMissing(value))
+            if (Unifiable.IsMissing(value))
             {
                 //   writeToLog("ERROR " + value + " NULL");
                 if (NoSettingsAliaes) return null;
                 return "OM";
             }
             string ss = value.ToUpper();
-           /* if (ss.Contains("TAG-"))
+            if (ss.Contains("TAG-"))
             {
                 return Unifiable.EnglishNothing;
             }
-            if (TextPatternUtils.IsIncomplete(value))
+            if (Unifiable.IsIncomplete(value))
             {
                 //   writeToLog("ERROR " + value + " NULL");
                 if (NoSettingsAliaes) return null;
                 return Unifiable.INCOMPLETE.AsString();
             }
-            if (TextPatternUtils.IsMulti(value))
+            if (Unifiable.IsMulti(value))
             {
                 return value;
-            }*/
+            }
             var v = StaticXMLUtils.ValueText(value);
             if (false)if (v.Contains("<") || v.Contains("&"))
             {
@@ -1551,7 +1585,7 @@ namespace AltAIMLbot.Utils
         public bool removeSetting(string name)
         {
 			return removeSettingReal(name);
-           // return addSetting(name, Unifiable.MISSING);
+            return addSetting(name, Unifiable.MISSING);
         }
 
         public bool removeSettingReal(string name)
@@ -1646,7 +1680,6 @@ namespace AltAIMLbot.Utils
             {
                 return true;
             }
-
             lock (orderedKeyLock)
             {
                 name = TransformName(name);
@@ -1655,17 +1688,11 @@ namespace AltAIMLbot.Utils
                 {
                     var old = this.settingsHash[normalizedName];
 
-                    // check blackboard
-                    if ((bbPrefix != null) && (this.bot.myChemistry != null))
-                    {
-                        string bbKey = bbPrefix + MakeCaseInsensitive.TransformInput(name).ToLower();
-                        this.bot.myChemistry.m_cBus.setHash(bbKey, value);
-                    }
-
                     updateListeners(name, value, true, false);
                     if (IsMaskedVar(normalizedName))
                     {
                         SettingsLog("MASKED Not Update Local '" + name + "'=" + str(value) + " keeped " + str(old));
+
                     }
                     else
                     {
@@ -1675,6 +1702,13 @@ namespace AltAIMLbot.Utils
                             this.removeFromHash(name);
                             SettingsLog("UPDATE Setting Local '" + name + "'=" + str(value));
                             this.settingsHash.Add(normalizedName, value);
+                            // check blackboard
+                            if ((bbPrefix != null) && (this.bot.myChemistry != null))
+                            {
+                                string bbKey = bbPrefix + MakeCaseInsensitive.TransformInput(name).ToLower(); ;
+                                this.bot.myChemistry.m_cBus.setHash(bbKey, value);
+                            }
+                            SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
                             return true;
                         }
                         else
@@ -1704,7 +1738,7 @@ namespace AltAIMLbot.Utils
         public string str(Unifiable value)
         {
             value = TransformValueOut(value);
-            return "'" + value + "'";
+            return "'" + Unifiable.DescribeUnifiable(value) + "'";
         }
 
         /// <summary>
@@ -1743,7 +1777,15 @@ namespace AltAIMLbot.Utils
             writeToLog("MASKING: " + name);
             lock (maskedVars) maskedVars.Add(name);
         }
-
+        /// <summary>
+        /// Returns the value of a setting given the name of the setting
+        /// </summary>
+        /// <param name="name">the name of the setting whose value we're interested in</param>
+        /// <returns>the value of the setting</returns>
+        public string grabSetting(string name, bool useBlackboad)
+        {
+            return grabSetting0(name, useBlackboad);
+        }
         /// <summary>
         /// Returns the value of a setting given the name of the setting
         /// </summary>
@@ -1762,12 +1804,8 @@ namespace AltAIMLbot.Utils
             try
             {
                 name = TransformName(name);
-                var setting = grabSetting0(name);
+                var setting = grabSetting0(name, true);
                 setting = TransformValueOut(setting);
-                if (setting == null && Servitor.LastServitor.skiploading)
-                {
-                    return null;
-                }
                 return setting;
             }
             catch (Exception e)
@@ -1782,7 +1820,7 @@ namespace AltAIMLbot.Utils
         public string grabSettingOrDefault(string name, string fallback)
         {
             //HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() { this };
-            foreach (ParentProvider overide in LockInfo.CopyOf(_overides))
+            foreach (ParentProvider overide in GraphMaster.CopyOf(_overides))
             {
                 ISettingsDictionary dict = overide();
               //  if (!noGo.Add(dict)) continue;
@@ -1876,8 +1914,33 @@ namespace AltAIMLbot.Utils
             return o;
         }
 
-        public Unifiable grabSetting0(string name)
+        public Unifiable grabSetting0(string name, bool useBlackboard)
         {
+            //string normalizedName = MakeCaseInsensitive.TransformInput(name);
+            string normalizedName = TransformKey(name);
+            // check blackboard
+            if (useBlackboard)
+            {
+                if ((bbPrefix != null) && (this.bot.myChemistry != null))
+                {
+                    string bbKey = bbPrefix + normalizedName.ToLower();
+                    string bbValue = this.bot.myChemistry.m_cBus.getHash(bbKey);
+                    //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
+                    if (bbValue.Length > 0)
+                    {
+                        // update local value
+                        if (this.orderedKeys.Contains(normalizedName))
+                        {
+                            this.removeFromHash(normalizedName);
+                            this.settingsHash.Add(normalizedName, bbValue);
+                        }
+                        return bbValue;
+                    }
+
+                    //Console.WriteLine("*** grabSetting use internal: {0}",name);
+                }
+            }
+
             this.mayUseOverides = true;
             if (LoopingOn(name, "override"))
             {
@@ -1886,7 +1949,7 @@ namespace AltAIMLbot.Utils
             //HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() {this};
             if (this.mayUseOverides)
             {
-                foreach (ParentProvider overide in LockInfo.CopyOf(_overides))
+                foreach (ParentProvider overide in GraphMaster.CopyOf(_overides))
                 {
                     ISettingsDictionary dict = overide();
                     //if (!noGo.Add(dict)) continue;
@@ -1900,7 +1963,7 @@ namespace AltAIMLbot.Utils
             }
             bool isMaskedVar = IsMaskedVar(name);
             bool needsUnlock = System.Threading.Monitor.TryEnter(orderedKeys, TimeSpan.FromSeconds(2));
-            string normalizedName = TransformKey(name);
+            //string normalizedName = TransformKey(name);
             // check blackboard
             if ((bbPrefix != null) && (this.bot.myChemistry != null))
             {
@@ -1949,7 +2012,7 @@ namespace AltAIMLbot.Utils
                     Unifiable u = CheckFallbacks(Fallbacks, name, normalizedName, ref firstFallBack, out returnIt);
                     if (returnIt)
                     {
-                        if (isMaskedVar && !TextPatternUtils.IsNull(u))
+                        if (isMaskedVar && !Unifiable.IsNull(u))
                         {
                             throw new InvalidOperationException("conatins a masked var too!");
                         } 
@@ -1967,7 +2030,7 @@ namespace AltAIMLbot.Utils
                     }
                 }
                 SettingsLog("MISSING '" + name + "'");
-                return null;// Unifiable.MISSING;
+                return Unifiable.MISSING;
             }
             finally
             {
@@ -2212,7 +2275,7 @@ namespace AltAIMLbot.Utils
 
         public static void IndexSet(ISettingsDictionary dictionary, string name, Unifiable value)
         {
-            if (TextPatternUtils.IsIncomplete(value))
+            if (Unifiable.IsIncomplete(value))
             {
                 AltBot.writeDebugLine("IndexSet IsIncomplete " + name);
                 //return;
@@ -2268,7 +2331,7 @@ namespace AltAIMLbot.Utils
                     return null;
                 }
                 dictionary = pp();
-                if (dictionary == null)
+                if (dictionary == null && WarnOnNull)
                 {
                     writeToLog("WARN: NULL inside pp");
                     return null;
@@ -2287,7 +2350,10 @@ namespace AltAIMLbot.Utils
                     writeToLog("ERROR: NULL Provider and IDictionary");
                     return false;
                 }
-                writeToLog("WARNING: NULL Dictionary");
+                if (WarnOnNull)
+                {
+                    writeToLog("WARNING: NULL Dictionary");
+                }
             }
             if (dictionary == this)
             {
@@ -2385,8 +2451,15 @@ namespace AltAIMLbot.Utils
         public List<ParentProvider> MetaProviders = new List<ParentProvider>();
         public static bool NoSettingsAliaes = true;
         public static bool UseUndoPush = false;
-        public ICollectionRequester ObjectRequester;
+        public ICollectionRequester ObjectRequester
+        {
+             get
+             {
+                 return rbot.ObjectRequester;
+             }
+        }
         private bool mayUseOverides;
+        public string bbPrefix;
 
         public Unifiable GetSetReturn(string name, out string realName)
         {
@@ -2647,7 +2720,7 @@ namespace AltAIMLbot.Utils
             }
             return false;
         }
-#if false
+
         public static bool removeSettingWithUndoCommit(SubQuery query, ISettingsDictionary dict, string name)
         {
 
@@ -2702,7 +2775,7 @@ namespace AltAIMLbot.Utils
                                       }
                                   });
             }
-            if (newValue.Contains(">"))
+            if (newValue.AsString().Contains(">"))
             {
                 
             }
@@ -2738,7 +2811,7 @@ namespace AltAIMLbot.Utils
             query.AddSideEffect(debugStr, () => SideEffect());
             return res;
         }
-#endif
+
         public bool DoSettingsCommand(string input, OutputDelegate console)
         {
             if(input=="")
@@ -2772,7 +2845,7 @@ namespace AltAIMLbot.Utils
 
         public void SetValue(ICollectionRequester requester, string name, object value)
         {
-            updateSetting(name, (value).ToString());
+            updateSetting(name, Unifiable.Create(value));
         }
 
         public bool AcceptsNewKeys
@@ -2780,168 +2853,66 @@ namespace AltAIMLbot.Utils
             get { return true; }
         }
 
-        #endregion
-
-                #region Attributes
-
-        /// <summary>
-        /// Holds a dictionary of settings
-        /// </summary>
-        //private Dictionary<string, string> settingsHash = new Dictionary<string, string>();
-
-        /// <summary>
-        /// Contains an ordered collection of all the keys (unfortunately Dictionary<,>s are
-        /// not ordered)
-        /// </summary>
-        //private List<string> orderedKeys = new List<string>();
-
-        /// <summary>
-        /// The bot this dictionary is associated with
-        /// </summary>
-        protected AltAIMLbot.AltBot bot;
-
-        /// <summary>
-        /// The string to prefix when reflecting to the blackboard cache
-        /// </summary>
-        public string bbPrefix = null;
-
-
-        /// <summary>
-        /// An XML representation of the contents of this dictionary
-        /// </summary>
-        public XmlDocument DictionaryAsXML_Old
+        public IEnumerable<string> SettingNames0
         {
-            get
-            {
-                XmlDocument result = new XmlDocument();
-                XmlDeclaration dec = result.CreateXmlDeclaration("1.0", "UTF-8", "");
-                result.AppendChild(dec);
-                XmlNode root = result.CreateNode(XmlNodeType.Element, "root", "");
-                result.AppendChild(root);
-                foreach (string key in this.orderedKeys)
-                {
-                    XmlNode item = result.CreateNode(XmlNodeType.Element, "item", "");
-                    XmlAttribute name = result.CreateAttribute("name");
-                    name.Value = key;
-                    XmlAttribute value = result.CreateAttribute( "value");
-                    value.Value = (string)this.settingsHash[key];
-                    item.Attributes.Append(name);
-                    item.Attributes.Append(value);
-                    root.AppendChild(item);
-                }
-                return result;
-            }
+            get { return Keys; }
         }
 
         #endregion
 
-        /// <summary>
-        /// Ctor
-        /// </summary>
-        /// <param name="bot">The bot for whom this is a settings dictionary</param>
-
-        /// <summary>
-        /// Loads bespoke settings into the class from the file referenced in pathToSettings.
-        /// 
-        /// The XML should have an XML declaration like this:
-        /// 
-        /// <?xml version="1.0" encoding="utf-8" ?> 
-        /// 
-        /// followed by a <root> tag with child nodes of the form:
-        /// 
-        /// <item name="name" value="value"/>
-        /// </summary>
-        /// <param name="pathToSettings">The file containing the settings</param>
-        public void loadSettings(string pathToSettings)
+        public static void AddPseudonym(ISettingsDictionary dictionary, string key)
         {
-            if (pathToSettings.Length > 0)
+            var dict = ToSettingsDictionary(dictionary);
+            if (dict == null)
             {
-                FileInfo fi = new FileInfo(pathToSettings);
-                if (fi.Exists)
-                {
-                    XmlDocument xmlDoc = new XmlDocument();
-                    xmlDoc.Load(pathToSettings);
-                    this.loadSettings(xmlDoc);
-                }
-                else
-                {
-                    Console.WriteLine("FileNotFoundException:{0}", pathToSettings);
-                    throw new FileNotFoundException();
-                }
+                return;
             }
-            else
+            if (dict.AddName(key))
             {
-                Console.WriteLine("FileNotFoundException:{0}", pathToSettings);
-                throw new FileNotFoundException();
+                dict.AddMonitorPath(key + ".xml", SettingsPolicy.Default);
             }
         }
 
-        /// <summary>
-        /// Loads bespoke settings to the class from the XML supplied in the args.
-        /// 
-        /// The XML should have an XML declaration like this:
-        /// 
-        /// <?xml version="1.0" encoding="utf-8" ?> 
-        /// 
-        /// followed by a <root> tag with child nodes of the form:
-        /// 
-        /// <item name="name" value="value"/>
-        /// </summary>
-        /// <param name="settingsAsXML">The settings as an XML document</param>
-        public void loadSettings(XmlDocument settingsAsXML)
+        public List<string> Names = new List<string>();
+
+        private bool AddName(string key)
         {
-            // empty the hash
-            this.clearSettings();
-
-            XmlNodeList rootChildren = settingsAsXML.DocumentElement.ChildNodes;
-
-            foreach (XmlNode myNode in rootChildren)
+            key = TransformKey(key);
+            lock (Names)
             {
-                if ((myNode.Name == "item") & (myNode.Attributes.Count == 2))
-                {
-                    if ((myNode.Attributes[0].Name == "name") & (myNode.Attributes[1].Name == "value"))
-                    {
-                        string name = myNode.Attributes["name"].Value;
-                        string value = myNode.Attributes["value"].Value;
-                        if (name.Length > 0)
-                        {
-                            this.addSetting(name, value);
-                        }
-                    }
-                }
+                if (Names.Contains(key)) return false;
+                Names.Add(key);
             }
+            return true;
         }
 
+        public Dictionary<string, SettingsPolicy> MonitorPaths = new Dictionary<string, SettingsPolicy>();
+        public static bool WarnOnNull;
 
-        /// <summary>
-        /// Returns a collection of the names of all the settings defined in the dictionary
-        /// </summary>
-        /// <returns>A collection of the names of all the settings defined in the dictionary</returns>
-        public string[] SettingNames0
+        private bool AddMonitorPath(string key, SettingsPolicy policy)
         {
-            get
+            lock (MonitorPaths)
             {
-                string[] result = new string[this.orderedKeys.Count];
-                this.orderedKeys.CopyTo(result, 0);
-                return result;
+                if (MonitorPaths.ContainsKey(key)) return false;
+                MonitorPaths.Add(key, policy);
             }
+            return true;
         }
-
-        /// <summary>
-        /// Copies the values in the current object into the ASettingsDictionary passed as the target
-        /// </summary>
-        /// <param name="target">The target to recieve the values from this ASettingsDictionary</param>
-        public void Clone(ASettingsDictionary target)
-        {
-            foreach (string key in this.orderedKeys)
-            {
-                target.addSetting(key, this.grabSetting(key));
-            }
-            target.bbPrefix = bbPrefix;
-        }
-
-        
     }
+
+    public class SettingsPolicy
+    {
+        public SettingsPolicy(bool oE, bool oU)
+        {
+            overwriteExisting = oE;
+            onlyIfUnknown = oU;
+        }
+
+        public static SettingsPolicy Default = new SettingsPolicy(true, false);
+        public bool overwriteExisting = true;
+        public bool onlyIfUnknown = false;
+    }
+
     public class SettingsDictionaryEnumerator : IEnumerator<KeyValuePair<string, Unifiable>>
     {
         private readonly ISettingsDictionary Root;
@@ -3019,8 +2990,8 @@ namespace AltAIMLbot.Utils
         }
 
         #endregion
- 
+
     }
 }
 
-//#endif
+

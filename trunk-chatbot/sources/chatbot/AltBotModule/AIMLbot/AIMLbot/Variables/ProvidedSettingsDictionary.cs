@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using MushDLR223.ScriptEngines;
+using RTParser.Variables;
 
-using Unifiable = System.String;
-namespace AltAIMLbot.Utils
-
+namespace RTParser.Variables
 {
     public class ProvidedSettingsDictionary : ISettingsDictionary
     {
