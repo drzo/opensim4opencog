@@ -98,8 +98,12 @@ namespace MushDLR223.Virtualization
             return false;
         }
 
-        public static string ToRelativePath(string str, string prefix)
+        public static string ToRelativePath(string str, string prefix)        
         {
+            if (str == null)
+            {
+                str = ".";
+            }
             if (IsWildPath(str))
             {
                 string dirName;
@@ -224,6 +228,7 @@ namespace MushDLR223.Virtualization
 
         private static string GetFullPath(string str)
         {
+            if (str == null) return str;
             if (IsWildPath(str))
             {
                 string dirname;

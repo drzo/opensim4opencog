@@ -15,6 +15,9 @@ dbgfmt(F,A):-'format'(F,A).
 
 :-use_module(library(swicli)).
 
+:-cli_load_assembly('examples/hillpeople2d/bin/x64/Debug/hillpeople2d.exe').
+
+end_of_file.
 
 :-use_module('examples/hillpeople/hillpeople.pl').
 
