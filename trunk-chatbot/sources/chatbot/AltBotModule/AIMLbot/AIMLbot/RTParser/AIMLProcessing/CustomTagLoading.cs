@@ -3,8 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Xml;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using MushDLR223.Virtualization;
 using RTParser.Utils;
+using AIMLTagHandler=RTParser.Utils.AIMLTagHandler;
+using CustomTagAttribute=RTParser.Utils.CustomTagAttribute;
+using TagHandler=RTParser.Utils.TagHandler;
 
 namespace RTParser
 {
@@ -45,7 +51,7 @@ namespace RTParser
         /// <returns>the output Unifiable</returns>
         static public AIMLTagHandler getBespokeTags(User user, SubQuery query, Request request, Result result, XmlNode node)
         {
-            RTPBot targetBot = query.TargetBot;
+            AltBot targetBot = query.TargetBot;
             string nodename = node.Name.ToLower();
             if (CustomTags != null)
             {
@@ -127,7 +133,7 @@ namespace RTParser
                         }
                         catch (Exception e)
                         {
-                            RTPBot.writeException(e);
+                            AltBot.writeException(e);
 
                         }
                         continue;
@@ -145,7 +151,7 @@ namespace RTParser
                             }
                             catch (Exception e)
                             {
-                                RTPBot.writeException(e);
+                                AltBot.writeException(e);
 
                             }
                         }
@@ -153,7 +159,7 @@ namespace RTParser
                 }
                 catch (Exception ee)
                 {
-                    RTPBot.writeException(ee);
+                    AltBot.writeException(ee);
                 }
             }
         }

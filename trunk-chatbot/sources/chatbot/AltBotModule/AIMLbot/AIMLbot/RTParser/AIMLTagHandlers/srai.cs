@@ -5,15 +5,19 @@ using System.Xml;
 using System.Text;
 using System.IO;
 using AIMLbot;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using RTParser.Utils;
+using AIMLLoader=RTParser.Utils.AIMLLoader;
 
 namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
-    /// The srai element instructs the AIML interpreter to pass the result of processing the contents 
+    /// The srai element instructs the AIML interpreter to pass the result of Processing the contents 
     /// of the srai element to the AIML matching loop, as if the input had been produced by the user 
-    /// (this includes stepping through the entire input normalization process). The srai element does 
+    /// (this includes stepping through the entire input normalization Process). The srai element does 
     /// not have any attributes. It may contain any AIML template elements. 
     /// 
     /// As with all AIML elements, nested forms should be parsed from inside out, so embedded srais are 
@@ -22,7 +26,7 @@ namespace RTParser.AIMLTagHandlers
     public class srai : RTParser.Utils.AIMLTagHandler
     {
         public static bool UseSraiLimiters = false;
-        RTParser.RTPBot mybot;
+        RTParser.AltBot mybot;
         /// <summary>
         /// Ctor
         /// </summary>
@@ -31,12 +35,12 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public srai(RTParser.RTPBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+        /// <param name="templateNode">The node to be Processed</param>
+        public srai(RTParser.AltBot bot,
+                        User user,
+                        SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -146,7 +150,7 @@ namespace RTParser.AIMLTagHandlers
         }
 
         private const bool ProcessChange12 = true;
-        public override Unifiable CompleteProcess()
+        public override Unifiable CompleteProcessU()
         {
             if (RecurseResultValid) return RecurseResult;
             if (InUnify)
@@ -160,7 +164,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 return sraiResult;
                 ResetValues(true);
-                sraiResult = base.CompleteProcess();
+                sraiResult = base.CompleteProcessU();
                 if (RecurseResultValid)
                 {
                     return RecurseResult;
@@ -189,8 +193,8 @@ namespace RTParser.AIMLTagHandlers
             if (RecurseResultValid) return RecurseResult;
             if (CheckNode("srai"))
             {
-                bool chatTraced = bot.chatTrace;
-                bot.chatTrace = false;
+                bool chatTraced = Proc.chatTrace;
+                Proc.chatTrace = false;
                 try
                 {
                     var templateNodeInnerValue = Recurse();
@@ -219,7 +223,7 @@ namespace RTParser.AIMLTagHandlers
                             return Unifiable.INCOMPLETE;
                         }
                     }
-                    templateNodeInnerValue = RTPBot.CleanupCyc(templateNodeInnerValue);
+                    templateNodeInnerValue = AltBot.CleanupCyc(templateNodeInnerValue);
                     var vv = ProcessChangeSrai(request, query, templateNodeInnerValue, templateNode, initialString, writeToLog);
                     if (!Unifiable.IsNullOrEmpty(vv))
                     {
@@ -256,7 +260,7 @@ namespace RTParser.AIMLTagHandlers
                 }
                 finally
                 {
-                    bot.chatTrace = chatTraced;
+                    Proc.chatTrace = chatTraced;
                 }
             }
             return Unifiable.Empty;
@@ -270,7 +274,7 @@ namespace RTParser.AIMLTagHandlers
                 writeToLog("ERROR BAD REQUEST " + request);
                 return templateNodeInnerValue;
             }
-            var salientRequest = MasterRequest.GetOriginalSalientRequest(request);
+            var salientRequest = Request.GetOriginalSalientRequest(request);
             try
             {
                 Unifiable prevResult;
@@ -303,7 +307,7 @@ namespace RTParser.AIMLTagHandlers
                 }
                 Unifiable subResultOutput = null;
                 writeToLog = writeToLog ?? DEVNULL;
-                RTPBot mybot = request.TargetBot;
+                AltBot mybot = request.TargetBot;
                 User user = request.Requester;
                 var thisrequest = request;
                 var thisresult = request.CurrentResult;
@@ -397,7 +401,7 @@ namespace RTParser.AIMLTagHandlers
                         }
                         AIMLbot.MasterResult subResult;
                         string subQueryRawOutputText;
-                        subResult = GetSubResult(prefix, request, user, mybot, (MasterRequest) subRequest, showDebug,
+                        subResult = GetSubResult(prefix, request, user, mybot, subRequest, showDebug,
                                                  out subResultOutput,
                                                  out subQueryRawOutputText, writeToLog);
 
@@ -491,7 +495,7 @@ namespace RTParser.AIMLTagHandlers
             }
         }
 
-        private static void ShowChatTrace(string subRequestrawInput, RTPBot mybot, int depth, MasterResult subResult, XmlNode templateNode)
+        private static void ShowChatTrace(string subRequestrawInput, AltBot mybot, int depth, MasterResult subResult, XmlNode templateNode)
         {
             mybot.writeChatTrace("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
             mybot.writeChatTrace("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
@@ -504,7 +508,7 @@ namespace RTParser.AIMLTagHandlers
             mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:MISSING({1})\" ;\n", depth, depth);
         }
 
-        static MasterResult GetSubResult(String prefix, Request prevRequest, User user, RTPBot mybot, MasterRequest subRequest, bool showDebug, out Unifiable subResultOutput, out  string subQueryRawOutput1, OutputDelegate writeToLog)
+        static MasterResult GetSubResult(String prefix, Request prevRequest, User user, AltBot mybot, Request subRequest, bool showDebug, out Unifiable subResultOutput, out  string subQueryRawOutput1, OutputDelegate writeToLog)
         {
             var prev = subRequest.GraphsAcceptingUserInput;
             var prevSO = user.SuspendAddResultToUser;
@@ -512,7 +516,7 @@ namespace RTParser.AIMLTagHandlers
             try
             {
                 Dictionary<Unifiable, Unifiable> sraiMark = null;
-                var originalSalientRequest = MasterRequest.GetOriginalSalientRequest(prevRequest);
+                var originalSalientRequest = Request.GetOriginalSalientRequest(prevRequest);
                 if (UseSraiLimiters)
                 {
                     sraiMark = originalSalientRequest.CreateSRAIMark();
@@ -526,7 +530,7 @@ namespace RTParser.AIMLTagHandlers
                 subResult = (MasterResult) mybot.ChatWithToplevelResults(subRequest,subResult);
                 subResultOutput = subResult.RawOutput;
                 int resultCount = subResult.OutputSentences.Count;
-                if (RTPBot.BE_COMPLETE_NOT_FAST && resultCount == 0)
+                if (AltBot.BE_COMPLETE_NOT_FAST && resultCount == 0)
                 {
                     subRequest.ResetValues(false);
                     if (UseSraiLimiters) originalSalientRequest.ResetSRAIResults(sraiMark);

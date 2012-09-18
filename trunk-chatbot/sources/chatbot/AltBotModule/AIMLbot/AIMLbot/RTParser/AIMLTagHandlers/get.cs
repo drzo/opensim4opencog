@@ -1,6 +1,9 @@
 using System;
 using System.Xml;
 using System.Text;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using RTParser.Database;
 using RTParser.Utils;
 using RTParser.Variables;
@@ -33,19 +36,19 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public get(RTParser.RTPBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+        /// <param name="templateNode">The node to be Processed</param>
+        public get(RTParser.AltBot bot,
+                        User user,
+                        SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
         }
         protected override bool ExpandingSearchWillYieldNoExtras { get { return true; } }
 
-        public override Unifiable CompleteProcess()
+        public override Unifiable CompleteProcessU()
         {
             Unifiable pc = ProcessChange();
             string s = (string) pc;
@@ -101,7 +104,7 @@ namespace RTParser.AIMLTagHandlers
                         return 1.0f;
                     }
                     // trace the next line to see why
-                    bot.TraceTest("NULL from success?!",
+                    Proc.TraceTest("NULL from success?!",
                                    () => GetActualValue(name, typeof (bot) == GetType() ? "bot" : "get", out succeed));
                     return 1.0f;
                 }
@@ -143,7 +146,7 @@ namespace RTParser.AIMLTagHandlers
                         return defaultVal;
                     }
                     // trace the next line to see why
-                    bot.TraceTest("!IsValue(" + Unifiable.DescribeUnifiable(v) + ") from success?!",
+                    Proc.TraceTest("!IsValue(" + Unifiable.DescribeUnifiable(v) + ") from success?!",
                                    () => GetActualValue(name, typeof (bot) == GetType() ? "bot" : "get", out succeed));
                     return v;
                 }

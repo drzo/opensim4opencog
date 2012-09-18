@@ -1,10 +1,13 @@
+#if false
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using AltAIMLbot.Utils;
+using RTParser;
 using RTParser.Utils;
 
 namespace AltAIMLbot
@@ -545,3 +548,4 @@ namespace AltAIMLbot
         }
     }
 }
+#endif

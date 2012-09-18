@@ -5,6 +5,8 @@ using System.Xml;
 using System.IO;
 using System.Net;
 using System.Text.RegularExpressions;
+using AltAIMLParser;
+using RTParser;
 
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
@@ -27,14 +29,14 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class wolframserver : AltAIMLbot.Utils.AIMLTagHandler
+    public class wolframserver : Utils.AIMLTagHandler
     {
 
-        public wolframserver(AltAIMLbot.AltBot bot,
-                AltAIMLbot.User user,
-                AltAIMLbot.Utils.SubQuery query,
-                AltAIMLbot.Request request,
-                AltAIMLbot.Result result,
+        public wolframserver(AltBot bot,
+                User user,
+                Utils.SubQuery query,
+                Request request,
+                Result result,
                 XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {

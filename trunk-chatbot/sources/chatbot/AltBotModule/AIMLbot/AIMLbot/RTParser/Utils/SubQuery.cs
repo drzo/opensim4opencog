@@ -2,14 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Xml;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
+using RTParser;
 using RTParser.Database;
+using RTParser.Utils;
 using RTParser.Variables;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
+//using List<Unifiable> = System.Collections.Generic.List<string>;
 
-
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     /// <summary>
     /// A container class for holding wildcard matches encountered during an individual path's 
@@ -17,23 +20,115 @@ namespace RTParser.Utils
     /// </summary>
     [Serializable]
     public class SubQuery : StaticAIMLUtils, ISettingsDictionary, IComparable<SubQuery>, RequestOrQuery, UndoStackHolder,
-        ConversationScopeHolder, SituationInConversation
+                            ConversationScopeHolder, SituationInConversation
     {
+        #region Attributes
+        /// <summary>
+        /// The path that this query relates to
+        /// </summary>
+        //public string FullPath;
+
+        /// <summary>
+        /// The template found from searching the graphmaster brain with the path 
+        /// </summary>
+        public string Template = string.Empty;
+
+        /// <summary>
+        /// The path in the graphmaster brain to find the Template 
+        /// </summary>
+        public string TemplatePath = string.Empty;
+
+        /// <summary>
+        /// If the raw input matches a wildcard then this attribute will contain the block of 
+        /// text that the user has inputted that is matched by the wildcard.
+        /// </summary>
+        public List<string> InputStar
+        {
+            get { return Stars["pattern"]; }
+        }
+
+        /// <summary>
+        /// If the "that" part of the normalized path contains a wildcard then this attribute 
+        /// will contain the block of text that the user has inputted that is matched by the wildcard.
+        /// </summary>
+        public List<string> ThatStar
+        {
+            get { return Stars["that"]; }
+        }
+
+        public Dictionary<string, List<string>> Stars = new Dictionary<string, List<string>>();
+
+        /// <summary>
+        /// If the "topic" part of the normalized path contains a wildcard then this attribute 
+        /// will contain the block of text that the user has inputted that is matched by the wildcard.
+        /// </summary>
+        public List<string> TopicStar
+        {
+            get { return Stars["topic"]; }
+        }
+        public List<string> StateStar
+        {
+            get { return Stars["state"]; }
+        }
+        //public List<string> StateStar2 = new List<string>();
+
+        #endregion
+
+        /*
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        /// <param name="fullPath">The path that this query relates to</param>
+        public SubQuery(string fullPath, Request request)
+        {
+            this.FullPath = fullPath;
+            this.Request = request;
+        }
+
+        public AltBot TargetBot
+        {
+            get { return Request.TargetBot; }
+        }
+
+        public SettingsDictionary TargetSettings
+        {
+            get { return Request.TargetSettings; }
+        }
+
+        public Request Request;
+        */
+        public List<string> GetStars(string s)
+        {
+            s = s.ToLower();
+            if (s == "input") s = "pattern";
+            return Stars[s.ToLower()];
+        }
+        /*
+        public string ReduceStarAttribute<T>(IConvertible arg)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool UseDictionaryForSet(ISettingsDictionary dictionary)
+        {
+            throw new NotImplementedException();
+        }
+        */
         public
             //static 
             object TagHandlerLock = new object();
         public
             //static 
-            Dictionary<string, AIMLTagHandler> TagHandlers;
-        private RTPBot ov_TargetBot;
+            Dictionary<string, RTParser.Utils.AIMLTagHandler> TagHandlers;
+        private AltBot ov_TargetBot;
         public TemplateInfo CurrentTemplate;
-        public AIMLTagHandler LastTagHandler;
-        public Node Pattern;
+        public RTParser.Utils.AIMLTagHandler LastTagHandler;
+        public RTParser.Utils.Node Pattern;
         public string prefix;
         public Request Request;
         public Result Result;
         public GraphQuery TopLevel;
-        public AIMLTagHandler CurrentTagHandler;
+        public RTParser.Utils.AIMLTagHandler CurrentTagHandler;
         public XmlNode CurrentNode;
 
         public override bool Equals(object obj)
@@ -49,6 +144,10 @@ namespace RTParser.Utils
         /// <param name="fullPath">The path that this query relates to</param>
         public SubQuery(Unifiable fullPath, Result res, Request request)
         {
+            foreach (var node in GraphMaster.StarTypes)
+            {
+                Stars[node] = new List<string>();
+            }
             Result = res;
             Request = request;
             Graph = request.Graph;
@@ -68,7 +167,7 @@ namespace RTParser.Utils
             get { return Request.Requester; }
         }
 
-        public RTPBot TargetBot
+        public AltBot TargetBot
         {
             get { return ov_TargetBot ?? Request.TargetBot; }
             set { ov_TargetBot = value; }
@@ -85,37 +184,22 @@ namespace RTParser.Utils
 
         #endregion
 
-        public List<Unifiable> Flags = new List<Unifiable>();
+        public List<string> Flags = new List<string>();
 
         /// <summary>
         /// The path that this query relates to
         /// </summary>
         public string FullPath;
 
-        public List<Unifiable> GuardStar = new List<Unifiable>();
-
-        /// <summary>
-        /// If the raw input matches a wildcard then this attribute will contain the block of 
-        /// text that the user has inputted that is matched by the wildcard.
-        /// </summary>
-        public List<Unifiable> InputStar = new List<Unifiable>();
+        public List<string> GuardStar
+        {
+            get { return GetStars("guard"); }
+        }
 
         /// <summary>
         /// The template found from searching the graphmaster brain with the path 
-        /// </summary>
+        /// </summary>*/
         public UList Templates = new UList();
-
-        /// <summary>
-        /// If the "that" part of the normalized path contains a wildcard then this attribute 
-        /// will contain the block of text that the user has inputted that is matched by the wildcard.
-        /// </summary>
-        public List<Unifiable> ThatStar = new List<Unifiable>();
-
-        /// <summary>
-        /// If the "topic" part of the normalized path contains a wildcard then this attribute 
-        /// will contain the block of text that the user has inputted that is matched by the wildcard.
-        /// </summary>
-        public List<Unifiable> TopicStar = new List<Unifiable>();
 
         public Result ParentResult
         {
@@ -179,7 +263,7 @@ namespace RTParser.Utils
         public int GetDictValue;
         public int SetDictValue;
 
-        public bool IsSourceRequest(AIMLTagHandler node, out  string src)
+        public bool IsSourceRequest(RTParser.Utils.AIMLTagHandler node, out  string src)
         {
             src = null;
             return false;
@@ -193,7 +277,7 @@ namespace RTParser.Utils
             get
             {
                 return (NamedValuesFromSettings.UseLuceneForSet && Request != null &&
-                       Request.depth < Request.UseLuceneForSetMaxDepth);
+                        Request.depth < Request.UseLuceneForSetMaxDepth);
             }
         }
         /// <summary>
@@ -204,7 +288,7 @@ namespace RTParser.Utils
             get
             {
                 return (NamedValuesFromSettings.UseLuceneForGet && Request != null &&
-                       Request.depth < Request.UseLuceneForGetMaxDepth);
+                        Request.depth < Request.UseLuceneForGetMaxDepth);
             }
         }
 
@@ -277,7 +361,7 @@ namespace RTParser.Utils
             get { return TargetSettings.NameSpace; }
         }
 
-        public UserConversationScope Requester
+        public RTParser.UserConversationScope Requester
         {
             get { return CurrentUser; }
         }
@@ -364,10 +448,10 @@ namespace RTParser.Utils
         {
             string nodePattern = ((object)Pattern ?? "-no-pattern-").ToString().Trim();
             string s = SafeFormat("\nINPUT='{6}'\nPATTERN='{0}' InThToGu={1}:{2}:{3}:{4} Tc={5} Graph={7}\n",
-                         nodePattern,
-                                     InputStar.Count, ThatStar.Count, TopicStar.Count,
-                                     GuardStar.Count, Templates == null ? 0 : Templates.Count,
-                         FullPath, Graph);
+                                  nodePattern,
+                                  InputStar.Count, ThatStar.Count, TopicStar.Count,
+                                  GuardStar.Count, Templates == null ? 0 : Templates.Count,
+                                  FullPath, Graph);
             if (Templates != null)
                 foreach (TemplateInfo path in Templates)
                 {
@@ -397,7 +481,7 @@ namespace RTParser.Utils
             {
                 if (TagHandlers != null)
                 {
-                    foreach (KeyValuePair<string, AIMLTagHandler> aimlTagHandler in TagHandlers)
+                    foreach (KeyValuePair<string, RTParser.Utils.AIMLTagHandler> aimlTagHandler in TagHandlers)
                     {
                         aimlTagHandler.Value.Dispose();
                     }
@@ -454,11 +538,11 @@ namespace RTParser.Utils
             return (a, b, c) => "*";
         }
 
-        public List<Unifiable> GetMatchList(MatchState matchstate)
+        public List<string> GetMatchList(MatchState matchstate)
         {
             switch (matchstate)
             {
-                case MatchState.UserInput:
+                case MatchState.Pattern:
                     return InputStar;
                     break;
                 case MatchState.That:
@@ -470,21 +554,24 @@ namespace RTParser.Utils
                 case MatchState.Flag:
                     return Flags;
                     break;
+                case MatchState.State:
+                    return StateStar;
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException("matchstate");
             }
         }
 
-        public AIMLTagHandler GetTagHandler(XmlNode node)
+        public RTParser.Utils.AIMLTagHandler GetTagHandler(XmlNode node)
         {
             lock (TagHandlerLock)
             {
                 string str = node.OuterXml;
                 str = TextPatternUtils.CleanWhitepaces(str).ToLower();
-                AIMLTagHandler handler;
+                RTParser.Utils.AIMLTagHandler handler;
                 if (TagHandlers == null)
                 {
-                    TagHandlers = new Dictionary<string, AIMLTagHandler>();
+                    TagHandlers = new Dictionary<string, RTParser.Utils.AIMLTagHandler>();
                 }
                 else if (TagHandlers.TryGetValue(str, out handler))
                 {
@@ -494,7 +581,7 @@ namespace RTParser.Utils
 
                 User user = subquery.CurrentUser;
                 Request request = subquery.Request;
-                RTPBot bot = subquery.TargetBot;
+                AltBot bot = subquery.TargetBot;
                 Result result = subquery.Result;
 
                 // if (node.ChildNodes.Count == 0) ;         
@@ -542,7 +629,7 @@ namespace RTParser.Utils
             }
         }
 
-        public bool CanUseNode(Node node)
+        public bool CanUseNode(RTParser.Utils.Node node)
         {
             return TopLevel.CanUseNode(node);
         }
@@ -739,12 +826,12 @@ namespace RTParser.Utils
 
         #region SituationInConversation Members
 
-        public Utterance TheUtterence
+        public RTParser.Utterance TheUtterence
         {
             get { throw new NotImplementedException(); }
         }
 
-        public IEnumerable<UserConversationScope> Receivers
+        public IEnumerable<RTParser.UserConversationScope> Receivers
         {
             get { throw new NotImplementedException(); }
         }
@@ -763,7 +850,10 @@ namespace RTParser.Utils
 
         #endregion
     }
+}
 
+namespace RTParser.Utils
+{
     public interface RequestOrQuery : ConversationScopeHolder
     {
 

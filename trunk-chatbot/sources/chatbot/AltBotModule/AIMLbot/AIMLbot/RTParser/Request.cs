@@ -5,25 +5,59 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using AIMLbot;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser;
 using RTParser.AIMLTagHandlers;
 using RTParser.Utils;
 using RTParser.Variables;
+using AIMLLoader=RTParser.Utils.AIMLLoader;
+using AIMLTagHandler=RTParser.Utils.AIMLTagHandler;
+using MasterRequest = AltAIMLParser.Request;
 
-namespace RTParser
+
+namespace AltAIMLParser
 {
-
-
     /// <summary>
     /// Encapsulates all sorts of information about a request to the Proccessor for processing
     /// </summary>
-    public class Request : QuerySettings, QuerySettingsSettable, QuerySettingsReadOnly, RequestOrQuery, UndoStackHolder, ConversationScopeHolder
+    sealed public class Request : QuerySettings, QuerySettingsSettable, QuerySettingsReadOnly, RequestOrQuery, UndoStackHolder, ConversationScopeHolder
     {
         #region Attributes
+        public int depth = 0;
+        public int depthMax = 128;
+
+
+        /// <summary>
+        /// The bot to which the request is being made
+        /// </summary>
+        public AltBot bot;
+
+        /// <summary>
+        /// The bot to which the request is being made
+        /// </summary>
+        public User user
+        {
+            get { return Requester; }
+        }
+
+        /// <summary>
+        /// The final result produced by this request
+        /// </summary>
+        public Result result;
+
+        /// <summary>
+        /// Flag to show that the request has timed out
+        /// </summary>
+        public bool hasTimedOut = false;
 
         public double thisScore = 1.0;
+        //protected Result _CurrentResult;
+        /// <summary>
+        /// The final result produced by this request
+        /// </summary>
         public double TopLevelScore
         {
             get
@@ -45,6 +79,7 @@ namespace RTParser
                 }
             }
         }
+        public GraphMaster CurrentGraph;
         public int RequestDepth { get; set; }
         private int _MaxCanEvalResult = -1;
         public int MaxCanEvalResult
@@ -72,7 +107,7 @@ namespace RTParser
             }
             Result currentResult = CurrentResult;
             if (currentResult != null) currentResult.ResetAnswers(clearSubQueries);
-            StartedOn = RTPBot.Now;
+            StartedOn = AltBot.Now;
             TimeOut = TheDurration;
             _Durration = TimeSpan.Zero;
             _SRAIResults.Clear();
@@ -135,7 +170,7 @@ namespace RTParser
         {
             get
             {
-                if (_Durration == TimeSpan.Zero) return RTPBot.Now - StartedOn;
+                if (_Durration == TimeSpan.Zero) return AltBot.Now - StartedOn;
                 return _Durration;
             }
             set { _Durration = value; }
@@ -150,7 +185,7 @@ namespace RTParser
         // How many subqueries are going to be submitted with combos ot "that"/"topic" tags 
         public int MaxInputs { get; set; }
 
-        public int depth
+        public int depthSRAI
         {
             get { return SraiDepth.Current; }
             set { SraiDepth.Current = value; }
@@ -170,7 +205,7 @@ namespace RTParser
         /// <summary>
         /// The raw input from the user
         /// </summary>
-        public Utterance ChatInput { get; set; }
+        public RTParser.Utterance ChatInput { get; set; }
 
         public Request ParentRequest { get; set; }
 
@@ -206,7 +241,7 @@ namespace RTParser
         /// <summary>
         /// The Proccessor to which the request is being made
         /// </summary>
-        public RTPBot TargetBot { get; set; }
+        public AltBot TargetBot { get; set; }
 
         /// <summary>
         /// The final result produced by this request
@@ -245,7 +280,7 @@ namespace RTParser
         /// <summary>
         /// Flag to show that the request has timed out
         /// </summary>
-        public virtual string WhyRequestComplete
+        public string WhyRequestComplete
         {
             get
             {
@@ -278,7 +313,7 @@ namespace RTParser
                 {
                     retWhyComplete = (WhyComplete ?? "") + "SraiDepth=" + SraiDepth + " ";
                 }
-                if (RTPBot.Now > TimesOutAt)
+                if (AltBot.Now > TimesOutAt)
                 {
                     retWhyComplete = string.Format("{0}TimesOutAt={1:0} ", (retWhyComplete ?? ""), Durration.Seconds);
                 }
@@ -324,7 +359,7 @@ namespace RTParser
                 {
                     return ParentRequest.ResponderPredicates;
                 }
-                RTPBot.writeDebugLine("ERROR Cant find responder Dictionary !!!");
+                AltBot.writeDebugLine("ERROR Cant find responder Dictionary !!!");
                 return null; // TargetSettings;
             }
             set { _responderYouPreds = value; }
@@ -376,12 +411,18 @@ namespace RTParser
         }
 
         public Request OriginalSalientRequest { get; set; }
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        /// <param name="rawInput">The raw input from the user</param>
+        /// <param name="user">The user who made the request</param>
+        /// <param name="bot">The bot to which this is a request</param>
+        public Request(string rawInput, User user, AltBot bot)
+            : this(rawInput, user, user.That, bot.BotAsUser, bot, null, null)
+        {
 
-#if interface
-        protected RequestImpl(QuerySettingsReadOnly defaults)        
-#else
-        protected Request(QuerySettingsReadOnly defaults, bool unused)
-#endif // interface
+        }
+        private Request(QuerySettingsReadOnly defaults, bool unused)
             : base(defaults)
         {
             ApplySettings(defaults, this);
@@ -392,18 +433,19 @@ namespace RTParser
         /// <param name="rawInput">The raw input from the user</param>
         /// <param name="user">The user who made the request</param>
         /// <param name="bot">The bot to which this is a request</param>
-        protected
-#if interface
-            RequestImpl
-#else
- Request
-#endif // interface
-(Unifiable rawInput, User user, Unifiable thatSaid, User targetUser, RTPBot bot, Request parent, GraphMaster graphMaster)
+        public Request(Unifiable rawInput, User user, Unifiable thatSaid, User targetUser, AltBot bot, Request parent, GraphMaster graphMaster)
             : this(bot.GetQuerySettings(), false) // Get query settings intially from user
         {
             ExitQueue = new CommitQueue();
             SideEffects = new CommitQueue();
             TargetBot = bot;
+            ChatInput = RTParser.Utterance.GetParsedUserInputSentences(thisRequest, rawInput);
+            this.Requester = user;
+            this.bot = bot;
+            this.StartedOn = DateTime.Now;
+            this.depth = 0;
+            this.depthMax = 128;
+            TargetSettings = user.Predicates;
             IsToplevelRequest = parent == null;
             this.Stage = SideEffectStage.UNSTARTED;
             matchable = matchable ?? MakeMatchable(rawInput);
@@ -413,7 +455,7 @@ namespace RTParser
             if (parent != null)
             {
                 //ChatInput = parent.ChatInput;
-                ChatInput = Utterance.GetParsedUserInputSentences(thisRequest, rawInput);
+                ChatInput = RTParser.Utterance.GetParsedUserInputSentences(thisRequest, rawInput);
                 Requester = parent.Requester;
                 depth = parent.depth + 1;
                 OriginalSalientRequest = parent.OriginalSalientRequest;
@@ -421,7 +463,7 @@ namespace RTParser
             }
             else
             {
-                ChatInput = Utterance.GetParsedUserInputSentences(thisRequest, rawInput);
+                ChatInput = RTParser.Utterance.GetParsedUserInputSentences(thisRequest, rawInput);
             }
             DebugLevel = -1;
             if (parent != null) targetUser = parent.Responder;
@@ -579,7 +621,7 @@ namespace RTParser
                 // when we change to s struct, lastOptions will never be null
                 // ReSharper disable ConditionIsAlwaysTrueOrFalse
                 if (lastOptions == null || lastOptions.TheRequest != null)
-                // ReSharper restore ConditionIsAlwaysTrueOrFalse
+                    // ReSharper restore ConditionIsAlwaysTrueOrFalse
                 {
                     lastOptions = new LoaderOptions(thisRequest, Graph);
                 }
@@ -814,7 +856,7 @@ namespace RTParser
         private Unifiable _topic;
 
         public Unifiable Flags { get; set; }
-        virtual public GraphQuery TopLevelQuery { get; set; }
+        public GraphQuery TopLevelQuery { get; set; }
 
         public Unifiable Topic
         {
@@ -1001,9 +1043,9 @@ namespace RTParser
             return (MasterResult)currentResult;
         }
 
-        private MasterRequest thisRequest
+        private Request thisRequest
         {
-            get { return (MasterRequest)this; }
+            get { return (Request)this; }
         }
 
         public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, GraphMaster graphMaster)
@@ -1014,7 +1056,7 @@ namespace RTParser
         }
 
         public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User requester, Unifiable thatSaid, User requestee,
-            RTPBot rTPBot, Request parent, GraphMaster graphMaster)
+                                              AltBot rTPBot, Request parent, GraphMaster graphMaster)
         {
             Unifiable thatToUse = thatSaid ?? That;
             var subRequest = new MasterRequest(templateNodeInnerValue, requester ?? Requester, thatToUse,
@@ -1263,7 +1305,7 @@ namespace RTParser
             set { iopts = value; }
         }
 
-        public MasterRequest ParentMostRequest
+        public Request ParentMostRequest
         {
             get
             {
@@ -1358,11 +1400,11 @@ namespace RTParser
 
         public Dictionary<string, GraphMaster> GetMatchingGraphs(string graphname, GraphMaster master)
         {
-            RTPBot t = TargetBot;
+            AltBot t = TargetBot;
             Dictionary<string, GraphMaster> graphs = new Dictionary<string, GraphMaster>();
             if (graphname == "*")
             {
-                foreach (KeyValuePair<string, GraphMaster> ggg in GraphMaster.CopyOf(RTPBot.GraphsByName))
+                foreach (KeyValuePair<string, GraphMaster> ggg in GraphMaster.CopyOf(AltBot.GraphsByName))
                 {
                     var G = ggg.Value;
                     if (G != null && !graphs.ContainsValue(G)) graphs[ggg.Key] = G;
@@ -1386,7 +1428,7 @@ namespace RTParser
             set
             {
                 WhyComplete = null;
-                StartedOn = RTPBot.Now;
+                StartedOn = AltBot.Now;
                 if (TimeOut < value)
                 {
                     TimeOut = value;
@@ -1481,7 +1523,7 @@ namespace RTParser
 
         public IList<Result> UsedResults { get; set; }
 
-        virtual public SubQuery CurrentQuery
+        public SubQuery CurrentQuery
         {
             get
             {
@@ -1669,16 +1711,16 @@ namespace RTParser
             string infoName = "" + templateInfo.ToFileString(Requester.PrintOptions);
             //writeToLog("disabling0 " + infoName);
             rr.AddUndo("un-disabling0 " + infoName, () =>
-            {
-                //writeToLog("un-disabling0 " + infoName);
-                templateInfo.IsDisabledOutput = false;
-            });
+                                                        {
+                                                            //writeToLog("un-disabling0 " + infoName);
+                                                            templateInfo.IsDisabledOutput = false;
+                                                        });
             rr.ExitQueue.Add(
                 "re-enabling " + infoName,
                 () =>
-                {
-                    templateInfo.IsDisabledOutput = false;
-                });
+                    {
+                        templateInfo.IsDisabledOutput = false;
+                    });
         }
 
         public void MarkTemplate(TemplateInfo queryTemplate)
@@ -1693,6 +1735,7 @@ namespace RTParser
         public CommitQueue ExitQueue { get; set; }
         private bool HasExited;
         public bool NoImmediate = true;
+        public bool MayTimeOut;
 
         public string SraiGraph
         {
@@ -1771,7 +1814,10 @@ namespace RTParser
 
         #endregion
     }
+}
 
+namespace RTParser
+{
     public class CommitQueue
     {
 
@@ -1802,7 +1848,7 @@ namespace RTParser
             }
             catch (Exception exception)
             {
-                RTPBot.writeDebugLine("ERROR in " + start.Name + " " + exception);
+                AltBot.writeDebugLine("ERROR in " + start.Name + " " + exception);
             }
         }
 

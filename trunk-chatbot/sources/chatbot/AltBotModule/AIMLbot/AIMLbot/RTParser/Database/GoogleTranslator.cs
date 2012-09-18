@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using AltAIMLParser;
 using RTParser;
 using RTParser.Utils;
 
@@ -11,8 +12,8 @@ namespace RTParser.Database
     public class GoogleTranslator
     {
          
-        private RTPBot TheBot;
-        public GoogleTranslator(RTPBot bot)
+        private AltBot TheBot;
+        public GoogleTranslator(AltBot bot)
         {
             TheBot = bot;
             TheBot.AddExcuteHandler("gpara", GetParaphrase);

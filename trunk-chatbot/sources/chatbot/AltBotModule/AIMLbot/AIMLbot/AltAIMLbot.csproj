@@ -325,12 +325,20 @@
     <Compile Include="RTParser\SelfLearning.cs" />
     <Compile Include="RTParser\SideEffectStage.cs" />
     <Compile Include="RTParser\TemplateResult.cs" />
-    <Compile Include="RTParser\Unify\BestUnifiable.cs" />
+    <Compile Include="RTParser\Unify\BestUnifiable.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="RTParser\Unify\EmptyUnifiable.cs" />
-    <Compile Include="RTParser\Unify\StringAppendableUnifiableImpl.cs" />
-    <Compile Include="RTParser\Unify\StringUnifiable.cs" />
-    <Compile Include="RTParser\Unify\TextPatternUtils.cs" />
-    <Compile Include="RTParser\Unify\Unifiable.cs" />
+    <Compile Include="RTParser\Unify\StringAppendableUnifiableImpl.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="RTParser\Unify\StringUnifiable.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="RTParser\Unify\Unifiable.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="RTParser\Utils\TextPatternUtils.cs" />
     <Compile Include="RTParser\User.cs" />
     <Compile Include="RTParser\UserDuringProcessing.cs" />
     <Compile Include="RTParser\UserManager.cs" />
@@ -338,33 +346,32 @@
     <Compile Include="RTParser\Utils\AIMLLoader.cs" />
     <Compile Include="RTParser\Utils\AIMLTagHandler.cs" />
     <Compile Include="RTParser\Utils\AIMLTagHandlerUtils.cs" />
-    <Compile Include="RTParser\Utils\AIMLTagHandlerUtils_legacy.cs" />
-    <Compile Include="RTParser\Utils\AIMLTagHandler_legacy.cs" />
-    <Compile Include="RTParser\Utils\CategoryInfo.cs" />
+    <Compile Include="RTParser\Unused\AIMLTagHandlerUtils_legacy.cs" />
+    <Compile Include="RTParser\Unused\AIMLTagHandler_legacy.cs" />
+    <Compile Include="RTParser\GraphInfo\CategoryInfo.cs" />
     <Compile Include="RTParser\Utils\CustomTag.cs" />
     <Compile Include="RTParser\Utils\Gender.cs" />
     <Compile Include="RTParser\Utils\GraphLinkInfo.cs" />
-    <Compile Include="RTParser\Utils\GraphMaster.cs" />
+    <Compile Include="RTParser\XmlGraph\GraphMaster.cs" />
     <Compile Include="RTParser\Utils\GraphQuery.cs" />
     <Compile Include="RTParser\Utils\GuardInfo.cs" />
     <Compile Include="RTParser\Utils\LoaderOptions.cs" />
     <Compile Include="RTParser\Utils\LoadingTagHandler.cs" />
-    <Compile Include="RTParser\Utils\MatchInfo.cs" />
     <Compile Include="RTParser\Utils\MatchState.cs" />
     <Compile Include="RTParser\Utils\Node.cs" />
-    <Compile Include="RTParser\Utils\Node_legacy.cs" />
-    <Compile Include="RTParser\Utils\OutputInfo.cs" />
-    <Compile Include="RTParser\Utils\PatternInfo.cs" />
+    <Compile Include="RTParser\Unused\Node_legacy.cs" />
+    <Compile Include="RTParser\Unused\OutputInfo.cs" />
+    <Compile Include="RTParser\Unused\PatternInfo.cs" />
     <Compile Include="RTParser\Utils\QueryList.cs" />
-    <Compile Include="RTParser\Utils\ResponseInfo.cs" />
+    <Compile Include="RTParser\Unused\ResponseInfo.cs" />
     <Compile Include="RTParser\Utils\ResultCache.cs" />
     <Compile Include="RTParser\Utils\StaticAIMLUtils.cs" />
     <Compile Include="RTParser\Utils\SubQuery.cs" />
     <Compile Include="RTParser\Utils\TagHandler.cs" />
-    <Compile Include="RTParser\Utils\TemplateInfo.cs" />
+    <Compile Include="RTParser\GraphInfo\TemplateInfo.cs" />
     <Compile Include="RTParser\Utils\TestCaseRunner.cs" />
     <Compile Include="RTParser\Utils\TextTransformer.cs" />
-    <Compile Include="RTParser\Utils\ThatInfo.cs" />
+    <Compile Include="RTParser\Unused\ThatInfo.cs" />
     <Compile Include="RTParser\Utils\TopicInfo.cs" />
     <Compile Include="RTParser\Utils\UndoStack.cs" />
     <Compile Include="RTParser\Utils\UnifibleTagHandler.cs" />
@@ -397,22 +404,10 @@
     <Compile Include="Utils\GraphMaster.cs" />
     <Compile Include="Utils\StaticAIMLUtils.cs" />
     <Compile Include="Utils\TextPatternUtils.cs" />
-    <Compile Include="Variables\CollectionProperty.cs" />
-    <Compile Include="Variables\GetSetDictionary.cs" />
-    <Compile Include="Variables\GetSetProperty.cs" />
-    <Compile Include="Variables\NamedValuesFromSettings.cs" />
-    <Compile Include="Variables\ObjectPropertyDictionary.cs" />
-    <Compile Include="Variables\PrefixProvider.cs" />
-    <Compile Include="Variables\ProvidedSettingsDictionary.cs" />
-    <Compile Include="Variables\SettingsDictionary.cs" />
     <Compile Include="WebScriptExecutor.cs">
     </Compile>
     <Compile Include="WebServitor.cs">
     </Compile>
-    <Compile Include="XmlGraph\PrintOptions.cs" />
-    <Compile Include="XmlGraph\TestCaseRunner.cs" />
-    <Compile Include="XmlGraph\XmlNodeEval.cs" />
-    <Compile Include="XmlGraph\XmlNodeEvaluator.cs" />
     <Compile Include="YBtrees.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\behavior.cs">
@@ -611,6 +606,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="ported\" />
     <Folder Include="RTParser\obj\Debug\TempPE\" />
     <Folder Include="RTParser\obj\Release\TempPE\" />
   </ItemGroup>

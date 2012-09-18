@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections;
 //using System.Linq;
@@ -6,6 +6,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using AltAIMLbot.Utils;
+using RTParser;
+
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 

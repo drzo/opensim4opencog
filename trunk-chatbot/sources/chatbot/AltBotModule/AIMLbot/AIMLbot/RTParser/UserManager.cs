@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using AIMLbot;
+using AltAIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
@@ -10,7 +11,7 @@ using RTParser.Variables;
 
 namespace RTParser
 {
-    public partial class RTPBot
+    public partial class AltBot
     {
         public static string UNKNOWN_PARTNER = "UNKNOWN_PARTNER";
         public readonly object ListUserDirs = new object();
@@ -22,7 +23,7 @@ namespace RTParser
         public SettingsDictionary Settings
         {
             get { return BotAsUser.Predicates; }
-            set { BotAsUser.Predicates = value; }
+            //set { BotAsUser.Predicates = value; }
         }
 
         private R UserOper<R>(string operationType, Func<R> action, OutputDelegate output)
@@ -88,7 +89,7 @@ namespace RTParser
 
         public bool BotUserDirective(User myUser, string input, OutputDelegate console)
         {
-            RTPBot myBot = this;
+            AltBot myBot = this;
             if (input == null) return false;
             input = input.Trim();
             if (input == "") return false;
@@ -937,6 +938,10 @@ namespace RTParser
         public string GetPathSetting(string namePath, string defaultVal)
         {
             string retP = SettingPath0(namePath, defaultVal);
+            if (retP == null)
+            {
+                return defaultVal;
+            }
             string ret = HostSystem.ToRelativePath(retP, RuntimeDirectory);
             string retA = HostSystem.GetAbsolutePath(retP);
             return ret;
@@ -1009,7 +1014,7 @@ namespace RTParser
                                  : stringPlit[2].Split(new char[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0];
             if (vstring == null || double.TryParse(vstring, out vscored))
             {
-                if (!RTPBot.IncludeMeNeValue)
+                if (!AltBot.IncludeMeNeValue)
                 {
 //                    useOut = string.Format("{0}", said);
                     useOut = string.Format("{0} menevalue= 1{1:1} ", said, res.Score * 1.4);
@@ -1023,7 +1028,7 @@ namespace RTParser
             }
             user = user.Replace("_", " ").Replace("  ", " ");
             useOut = useOut.Replace("_", " ").Replace("  ", " ");
-            if (RTPBot.UseUsersNameInOutput && useNameInOutput && !user.Contains("UNKNOWN"))
+            if (AltBot.UseUsersNameInOutput && useNameInOutput && !user.Contains("UNKNOWN"))
             {
                 if (!useOut.ToLower().Contains(user.ToLower()))
                 {

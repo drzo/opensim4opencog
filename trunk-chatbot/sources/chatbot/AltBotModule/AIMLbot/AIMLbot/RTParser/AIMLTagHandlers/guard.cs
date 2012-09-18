@@ -1,6 +1,9 @@
 using System;
 using System.Text;
 using System.Xml;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -32,12 +35,12 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query guard originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public guard(RTParser.RTPBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+        /// <param name="templateNode">The node to be Processed</param>
+        public guard(RTParser.AltBot bot,
+                        User user,
+                        SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -52,7 +55,7 @@ namespace RTParser.AIMLTagHandlers
                 templateNodeInnerText = Recurse();
                 if (!IsNullOrEmpty(templateNodeInnerText))
                 {
-                    Unifiable res = this.bot.SystemExecute(templateNodeInnerText, language, request);
+                    Unifiable res = this.Proc.SystemExecute(templateNodeInnerText, language, request);
                     if (!Unifiable.IsNullOrEmpty(res)) return res;
                 }
             }

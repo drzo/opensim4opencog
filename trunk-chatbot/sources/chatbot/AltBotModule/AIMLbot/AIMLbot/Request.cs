@@ -1,7 +1,9 @@
+#if false 
 using System;
 using System.Collections.Generic;
 using System.Text;
 using AltAIMLbot.Utils;
+using RTParser.Variables;
 
 namespace AltAIMLbot
 {
@@ -261,3 +263,4 @@ namespace AltAIMLbot
         }
     }
 }
+#endif

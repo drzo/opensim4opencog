@@ -1,6 +1,9 @@
 using System;
 using System.Text;
 using System.Xml;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 
 namespace RTParser.AIMLTagHandlers
@@ -34,21 +37,21 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public that(RTParser.RTPBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+        /// <param name="templateNode">The node to be Processed</param>
+        public that(RTParser.AltBot bot,
+                        User user,
+                        SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : this(bot, user, query, request, result, templateNode, 1)
         {
         }
-        public that(RTParser.RTPBot bot,
-                RTParser.User user,
-                RTParser.Utils.SubQuery query,
-                RTParser.Request request,
-                RTParser.Result result,
+        public that(RTParser.AltBot bot,
+                User user,
+                SubQuery query,
+                Request request,
+                Result result,
                 XmlNode templateNode, int offset)
             : base(bot, user, query, request, result, templateNode, offset)
         {
@@ -81,11 +84,11 @@ namespace RTParser.Utils
     abstract public class AIMLConstraintTagHandler : RTParser.Utils.AIMLTagHandler
     {
         protected int offetFrom;
-        public AIMLConstraintTagHandler(RTParser.RTPBot bot,
-                RTParser.User user,
-                RTParser.Utils.SubQuery query,
-                RTParser.Request request,
-                RTParser.Result result,
+        public AIMLConstraintTagHandler(RTParser.AltBot bot,
+                User user,
+                SubQuery query,
+                Request request,
+                Result result,
                 XmlNode templateNode, int offset)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -93,18 +96,18 @@ namespace RTParser.Utils
             IsStarAtomically = false;
         }
 
-        public AIMLConstraintTagHandler(RTParser.RTPBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+        public AIMLConstraintTagHandler(RTParser.AltBot bot,
+                        User user,
+                        SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : this(bot, user, query, request, result, templateNode, 1)
         {
         }
         protected void localError(string s, string at1)
         {
-            writeToLogWarn("ERROR! An input tag with a bady formed index (" + at1 + ") was encountered processing the input: " +
+            writeToLogWarn("ERROR! An input tag with a bady formed index (" + at1 + ") was encountered Processing the input: " +
                 this.request.rawInput + s);
         }
 

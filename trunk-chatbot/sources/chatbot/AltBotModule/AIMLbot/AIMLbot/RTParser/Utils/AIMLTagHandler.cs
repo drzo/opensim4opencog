@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Xml;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using MushDLR223.Utilities;
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
@@ -98,7 +101,7 @@ namespace RTParser.Utils
         /// <param name="request">The request itself</param>
         /// <param name="result">The result to be passed back to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public AIMLTagHandler(RTPBot bot,
+        public AIMLTagHandler(AltBot bot,
                               User user,
                               SubQuery query,
                               Request request,
@@ -110,8 +113,8 @@ namespace RTParser.Utils
             this._request = request;
             this.result = result;
             this.templateNode = templateNode;
-            inputString = templateNode.OuterXml;
-            initialString = inputString;
+            inputStringU = templateNode.OuterXml;
+            initialString = inputStringU;
             this.user = user;
             if (this.templateNode.Attributes != null) this.templateNode.Attributes.RemoveNamedItem("xmlns");
         }
@@ -172,7 +175,7 @@ namespace RTParser.Utils
 
         protected bool ReadOnly;
 
-        public RTPBot TargetBot
+        public AltBot TargetBot
         {
             get
             {
@@ -180,7 +183,7 @@ namespace RTParser.Utils
                 if (result != null) return result.TargetBot;
                 if (request != null) return request.TargetBot;
                 if (user != null) return user.bot;
-                return bot;
+                return Proc;
             }
         }
 
@@ -423,7 +426,7 @@ namespace RTParser.Utils
         {
             if (handler == this)
             {
-                bot.RaiseError(new InvalidOperationException("SetParent: same: " + this));
+                Proc.RaiseError(new InvalidOperationException("SetParent: same: " + this));
             }
             else if (handler == null)
             {
@@ -503,7 +506,7 @@ namespace RTParser.Utils
                     return recurseResult;
                 }
                 
-                if (!RTPBot.BE_COMPLETE_NOT_FAST) return recurseResult0;
+                if (!AltBot.BE_COMPLETE_NOT_FAST) return recurseResult0;
 
                 var recurseResult1 = RecurseProcess();
                 if (CompleteEvaluatution(recurseResult1, this, out recurseResult))
@@ -624,7 +627,7 @@ namespace RTParser.Utils
                 {
                     return src ?? OuterSource();
                 }
-                var test = CompleteProcess();
+                var test = CompleteProcessU();
                 if (Unifiable.IsNull(test))
                 {
                     if (QueryHasFailed)
@@ -790,7 +793,7 @@ namespace RTParser.Utils
             // ?? IsDeterministic = false;
             XmlNode starNode = getNodeAndSetSiblingNode("<star />", templateNode);
             LineInfoElement.unsetReadonly(starNode);
-            star recursiveStar = new star(this.bot, this.user, this.query, this.request, this.result, starNode);
+            star recursiveStar = new star(this.Proc, this.user, this.query, this.request, this.result, starNode);
 //          recursiveStar.SetParent(this);
             var vv = recursiveStar.ProcessAimlChange();
             //var vv2 = recursiveStar.CompleteAimlProcess(););
@@ -812,7 +815,7 @@ namespace RTParser.Utils
             if (!request.CanProcess(starContent)) return null;
             XmlNode sraiNode = getNodeAndSetSiblingNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
             LineInfoElement.unsetReadonly(sraiNode);
-            srai sraiHandler = new srai(this.bot, this.user, this.query, this.request, this.result, sraiNode);
+            srai sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
             sraiHandler.KnowsCanProcess = true;
             var vv = sraiHandler.CompleteAimlProcess();// Transform();
             if (Unifiable.IsNull(vv))
@@ -825,7 +828,7 @@ namespace RTParser.Utils
                 writeToLogWarn("CALLSRAI EMPTY: <- " + starContent);
                 sraiNode = getNodeAndSetSiblingNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
                 LineInfoElement.unsetReadonly(sraiNode);
-                sraiHandler = new srai(this.bot, this.user, this.query, this.request, this.result, sraiNode);                
+                sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);                
                 vv = sraiHandler.CompleteAimlProcess();// Transform();
                 return vv;
             }
@@ -853,7 +856,7 @@ namespace RTParser.Utils
                 {
                     if (saveResultsOnChildren && throwOnSave)
                     {
-                        bot.RaiseError(new InvalidOperationException("save NULLL ResultsOnChildren! " + this));
+                        Proc.RaiseError(new InvalidOperationException("save NULLL ResultsOnChildren! " + this));
                     }
                     QueryHasFailedN++;
                     templateResult = UnifiableEmpty;
@@ -956,7 +959,7 @@ namespace RTParser.Utils
 
         protected AIMLTagHandler GetChildTagHandler(XmlNode childNode)
         {
-            var Proc = this.bot.TagHandling;
+            var Proc = this.Proc.TagHandling;
             User user = request.Requester ?? this.user;
             AIMLTagHandler part = Proc.GetTagHandler(user, query, request, result, childNode, this);
             //AddChild(part);
@@ -990,7 +993,7 @@ namespace RTParser.Utils
             if (vv == vv2)
             {
                 Unifiable vv3 = null;
-                parent.bot.TraceTest(" ", () =>
+                parent.Proc.TraceTest(" ", () =>
                 {
                     bool successM;
                     vv3 = ProcessTagHandlerNode(tn, false, false, out successM, tagHandler);
@@ -1022,7 +1025,7 @@ namespace RTParser.Utils
             var vv = ProcessChildNode(childNode, ReadOnly, false, out success, tagHandlerChild);
             if (!success)
             {
-                bot.TraceTest(TextPatternUtils.SafeFormat("RE-EVALING CHILD '{0}' '{1}'", Unifiable.DescribeUnifiable(vv), childNode),
+                Proc.TraceTest(TextPatternUtils.SafeFormat("RE-EVALING CHILD '{0}' '{1}'", Unifiable.DescribeUnifiable(vv), childNode),
                                () => ProcessChildNode(childNode, ReadOnly, false, out success, tagHandlerChild));
                 //return null;
                 QueryHasFailedN++;
@@ -1056,7 +1059,7 @@ namespace RTParser.Utils
             }
             if (!childSuccess)
             {
-                bot.TraceTest("!childSuccess in " + tagHandlerChild, () =>
+                Proc.TraceTest("!childSuccess in " + tagHandlerChild, () =>
                 {
                     vv = ProcessTagHandlerNode(childNode, protectChildren, saveOnInnerXML, out childSuccess,
                                             tagHandlerChild);
@@ -1111,7 +1114,7 @@ namespace RTParser.Utils
 
         static public Unifiable ProcessNonElement(bool saveOnInnerXML, XmlNode childNode, out bool success)
         {
-            if (saveOnInnerXML && throwOnSave) RTPBot.RaiseErrorStatic(new InvalidOperationException("saveOnInnerXML! " + childNode)); 
+            if (saveOnInnerXML && throwOnSave) AltBot.RaiseErrorStatic(new InvalidOperationException("saveOnInnerXML! " + childNode)); 
             
             {
                 string childNodeInnerXml = childNode.InnerXml;
@@ -1172,7 +1175,7 @@ namespace RTParser.Utils
 
             if (saveOnInnerXML && throwOnSave)
             {
-                throw tagHandlerChild.bot.RaiseError(new InvalidOperationException("saveOnInnerXML! " + tagHandlerChild));
+                throw tagHandlerChild.Proc.RaiseError(new InvalidOperationException("saveOnInnerXML! " + tagHandlerChild));
             }
             try
             {
@@ -1198,7 +1201,7 @@ namespace RTParser.Utils
                     bool copyParent, copyChild;
                     copyParent = copyChild = protectChildren;
 
-                    var Proc = tagHandlerChild.bot.TagHandling;
+                    var Proc = tagHandlerChild.Proc.TagHandling;
                     //if (tagHandlerChild == null) tagHandlerChild = Proc.GetTagHandler(user, query, request, result, childNode, parent);
 
                     string value = Proc.processNode(childNode, query,
@@ -1210,7 +1213,7 @@ namespace RTParser.Utils
                     if (tagHandlerChild.QueryHasFailed) success = false;
                     if (tagHandlerChild.QueryHasSuceeded) success = true;
 
-                    if (!RTPBot.BE_COMPLETE_NOT_FAST)
+                    if (!AltBot.BE_COMPLETE_NOT_FAST)
                     {
                         return value;
                     }
@@ -1518,7 +1521,7 @@ namespace RTParser.Utils
         /// <returns>The resulting transformed Unifiable</returns>
         public override string Transform()
         {
-            if (!IsNullOrEmpty(this.inputString))
+            if (!IsNullOrEmpty(this.inputStringU))
             {
                 if (RecurseResultValid)
                 {
@@ -1543,7 +1546,7 @@ namespace RTParser.Utils
             }
         }
 
-        public override Unifiable CompleteProcess()
+        public override Unifiable CompleteProcessU()
         {
             if (RecurseResultValid) return RecurseResult;
             var vv1 = ProcessAChange();
@@ -1598,7 +1601,7 @@ namespace RTParser.Utils
                 ResetValues(true);
                 var problem = "CompleteProcess() == NULL " + LineNumberTextInfo();
                 writeToLogWarn(problem);
-                bot.TraceTest(problem, () => ProcessAChange());
+                Proc.TraceTest(problem, () => ProcessAChange());
                 return false;
             }
             if (resultValue.IsWildCard)
@@ -1770,7 +1773,7 @@ namespace RTParser.Utils
                 writeToLog(errmsg);
                 if (throwOnSave)
                 {
-                    throw bot.RaiseError(new InvalidOperationException("save NULL ResultsOnChildren! " + this + " " + errmsg));
+                    throw Proc.RaiseError(new InvalidOperationException("save NULL ResultsOnChildren! " + this + " " + errmsg));
                 }
             }
             if (InUnify)
@@ -2150,7 +2153,7 @@ namespace RTParser.Utils
 
     public interface IAIMLTransaction
     {
-        RTPBot TargetBot { get; }
+        AltBot TargetBot { get; }
         SubQuery CurrentQuery { get; }
         User user { get; }
         Request request { get; }

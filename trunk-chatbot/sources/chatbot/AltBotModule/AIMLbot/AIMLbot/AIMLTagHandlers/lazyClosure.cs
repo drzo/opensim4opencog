@@ -1,10 +1,17 @@
+#if fasle 
+
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 using AltAIMLbot.Utils;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
+using RTParser;
+using RTParser.Utils;
+using RTParser.Variables;
+using AIMLTagHandler=RTParser.Utils.AIMLTagHandler;
 using Unifiable = System.String;
 
 namespace AltAIMLbot.AIMLTagHandlers
@@ -267,3 +274,4 @@ namespace AltAIMLbot.AIMLTagHandlers
         #endregion
     }
 }
+#endif

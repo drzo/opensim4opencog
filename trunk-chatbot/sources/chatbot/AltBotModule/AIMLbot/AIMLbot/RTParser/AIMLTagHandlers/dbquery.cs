@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime;
 using System.Text;
 using System.Xml;
@@ -9,6 +9,9 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using RTParser;
 using RTParser.Utils;
 using Lucene.Net.Store;
@@ -31,11 +34,11 @@ namespace RTParser.AIMLTagHandlers
     public class dbquery : RTParser.Utils.AIMLTagHandler
     {
 
-        public dbquery(RTParser.RTPBot bot,
-                RTParser.User user,
-                RTParser.Utils.SubQuery query,
-                RTParser.Request request,
-                RTParser.Result result,
+        public dbquery(RTParser.AltBot bot,
+                User user,
+                SubQuery query,
+                Request request,
+                Result result,
                 XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -56,9 +59,9 @@ namespace RTParser.AIMLTagHandlers
                     const bool expandOnNoHits = true; // actually WordNet
                     const float threshold = 0.0f;
                     Unifiable templateNodeInnerValue = ProcessChildNode(((XmlNode)node));
-                    string failPrefix = RTPBot.GetAttribValue(((XmlNode)node), "failprefix", "").ToLower();
-                    string passPrefix = RTPBot.GetAttribValue(((XmlNode)node), "passprefix", "").ToLower();
-                    string resultPrefix = RTPBot.GetAttribValue(((XmlNode)node), "resultprefix", "").ToLower();
+                    string failPrefix = AltBot.GetAttribValue(((XmlNode)node), "failprefix", "").ToLower();
+                    string passPrefix = AltBot.GetAttribValue(((XmlNode)node), "passprefix", "").ToLower();
+                    string resultPrefix = AltBot.GetAttribValue(((XmlNode)node), "resultprefix", "").ToLower();
                     if (!string.IsNullOrEmpty(failPrefix))
                     {
                         //on <dbquery> failure, use a <srai> fallback
@@ -110,7 +113,7 @@ namespace RTParser.AIMLTagHandlers
                             return callSRAI(sariCallStr);
                         }
                         return converseMemo;
-                        //Unifiable converseMemo = this.user.bot.conversationStack.Pop();
+                        //Unifiable converseMemo = Proc.conversationStack.Pop();
                     }
                 }
                 if (hasPassed)
@@ -141,7 +144,7 @@ namespace RTParser.AIMLTagHandlers
                     return FAIL;
                 }
                 float reliability;
-                string failPrefix = RTPBot.GetAttribValue(templateNode, "failprefix", "").ToLower();
+                string failPrefix = AltBot.GetAttribValue(templateNode, "failprefix", "").ToLower();
                 Unifiable converseMemo = TargetBot.LuceneIndexer.AskQuery(searchTerm1, this.writeToLog,
                                                                           () =>
                                                                               {
@@ -159,7 +162,7 @@ namespace RTParser.AIMLTagHandlers
                 // otherwise there is a conversation memo then pop it??
                 if (IsNullOrEmpty(converseMemo))
                 {
-                    //Unifiable converseMemo = this.user.bot.conversationStack.Pop();
+                    //Unifiable converseMemo = Proc.conversationStack.Pop();
                 }
                 return converseMemo;
             }
@@ -171,11 +174,11 @@ namespace RTParser.AIMLTagHandlers
 
         public override void writeToLog(string s, params object[] p)
         {
-            //this.user.bot.writeToLog("DBQUERY: " + s, p);
-            //bool tempB = this.user.bot.IsLogging;
-            //this.user.bot.IsLogging = true;
-            // base.user.bot.writeToLog("DBQUERY: " + s, p);
-            //this.user.bot.IsLogging = tempB;
+            //Proc.writeToLog("DBQUERY: " + s, p);
+            //bool tempB = Proc.IsLogging;
+            //Proc.IsLogging = true;
+            // base.user.rbot.writeToLog("DBQUERY: " + s, p);
+            //Proc.IsLogging = tempB;
             DLRConsole.DebugWriteLine("DBQUERY: " + s, p);
 
         }

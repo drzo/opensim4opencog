@@ -2,6 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Xml;
 using AIMLbot;
+using AltAIMLParser;
+using MasterRequest = AltAIMLParser.Request;
+
+
 //using CategoryInfo = RTParser.Utils.TemplateInfo;
 
 namespace RTParser.Utils
@@ -18,7 +22,7 @@ namespace RTParser.Utils
         public List<CategoryInfo> CategoryInfos;
         public bool DebugFiles;
         public bool recurse;
-        public RTPBot RProcessor;
+        public AltBot RProcessor;
         public bool NeedsLoaderLock;
         private bool _searchForGuard = false;
 

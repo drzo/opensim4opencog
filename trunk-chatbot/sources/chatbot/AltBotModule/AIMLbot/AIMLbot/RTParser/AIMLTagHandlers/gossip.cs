@@ -1,11 +1,14 @@
 using System;
 using System.Xml;
 using System.Text;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 
 namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
-    /// The gossip element instructs the AIML interpreter to capture the result of processing the 
+    /// The gossip element instructs the AIML interpreter to capture the result of Processing the 
     /// contents of the gossip elements and to store these contents in a manner left up to the 
     /// implementation. Most common uses of gossip have been to store captured contents in a separate 
     /// file. 
@@ -22,23 +25,23 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public gossip(RTParser.RTPBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+        /// <param name="templateNode">The node to be Processed</param>
+        public gossip(RTParser.AltBot bot,
+                        User user,
+                        SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
         }
 
         /// <summary>
-        /// The method that does the actual processing of the text.
+        /// The method that does the actual Processing of the text.
         /// 
         /// This like the think tag retunns nothihng.. but logs it to the console
         /// </summary>
-        /// <returns>The resulting processed text</returns>
+        /// <returns>The resulting Processed text</returns>
         protected override Unifiable Format(Unifiable templateNodeInnerText)
         {
             if (CheckNode("gossip"))

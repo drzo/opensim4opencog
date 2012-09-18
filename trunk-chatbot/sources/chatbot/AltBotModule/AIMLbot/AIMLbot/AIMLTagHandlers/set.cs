@@ -1,7 +1,9 @@
 using System;
 using System.Xml;
 using System.Text;
-using AltAIMLbot.Utils;
+using AltAIMLParser;
+using RTParser;
+using RTParser.Variables;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
@@ -22,7 +24,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// A set element may contain any AIML template elements.
     /// </summary>
-    public class set : AltAIMLbot.Utils.AIMLTagHandler
+    public class set : Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -33,11 +35,11 @@ namespace AltAIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public set(AltAIMLbot.AltBot bot,
-                        AltAIMLbot.User user,
-                        AltAIMLbot.Utils.SubQuery query,
-                        AltAIMLbot.Request request,
-                        AltAIMLbot.Result result,
+        public set(AltBot bot,
+                        User user,
+                        Utils.SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -50,9 +52,9 @@ namespace AltAIMLbot.AIMLTagHandlers
             {
                 string name = GetAttribValue("name,var", null);
                 string type0 = GetAttribValue("type,dict", "user");
-                SettingsDictionary dict = request.GetDictionary(type0) ?? this.user.Predicates;
+                ISettingsDictionary dict = request.GetDictionary(type0) ?? this.user.Predicates;
                 string settingValue = TemplateNodeInnerText;
-                this.bot.IsTraced(name);
+ 
                 if (settingValue.Length > 0)
                 {
                     dict.addSetting(name, settingValue);

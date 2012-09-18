@@ -10,6 +10,8 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
 using AIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -28,6 +30,9 @@ using Console=System.Console;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 using AltAIMLbot;
+using AIMLLoader=RTParser.Utils.AIMLLoader;
+using Gender=RTParser.Utils.Gender;
+using MasterRequest = AltAIMLParser.Request;
 
 namespace RTParser
 {
@@ -43,21 +48,30 @@ namespace RTParser
     /// Encapsulates a Proccessor. If no settings.xml file is found or referenced the Proccessor will try to
     /// default to safe settings.
     /// </summary>
-    public partial class RTPBot : StaticAIMLUtils, IChatterBot
+    public partial class AltBot : StaticAIMLUtils, IChatterBot
     {
-        public static bool IncludeMeNeValue;
-        public static Dictionary<string, RTPBot> Robots = new Dictionary<string, RTPBot>();
-
-        public static RTPBot FindOrCreateRobot(string text)
+       /* public static implicit operator AltBot(AltBot ab)
         {
-            RTPBot robot;
+            return ab.TheAltBot;
+        }
+        public static implicit operator AltBot(AltBot rtp)
+        {
+            return rtp.TheAltBot ?? rtp.servitor.curBot;
+        }
+        */
+        public static bool IncludeMeNeValue;
+        public static Dictionary<string, AltBot> Robots = new Dictionary<string, AltBot>();
+
+        public static AltBot FindOrCreateRobot(string text)
+        {
+            AltBot robot;
             lock (Robots)
             {
                 if (TryGetValueLocked(Robots, Robots, text, out robot))
                 {
                     return robot;
                 }
-                Robots[text] = robot = new RTPBot();
+                Robots[text] = robot = new AltBot();
             }
             robot.SetName(text);
             return robot;
@@ -134,7 +148,7 @@ namespace RTParser
             var botAsUser1 = BotAsUser ?? LastUser;
             s = Trim(s);
             if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
-            var r = new AIMLbot.MasterRequest(s, botAsUser1, Unifiable.EnglishNothing, botAsUser1, this, null,
+            var r = new MasterRequest(s, botAsUser1, Unifiable.EnglishNothing, botAsUser1, this, null,
                                               DefaultStartGraph);
             //r.ChatOutput.RawText = s;
             r.writeToLog = writeToLog;
@@ -177,78 +191,18 @@ namespace RTParser
         /// <summary>
         /// A dictionary object that looks after all the settings associated with this Proccessor
         /// </summary>
-        public SettingsDictionary GlobalSettings;
+        //public SettingsDictionary GlobalSettings { get { return  TheAltBot.GlobalSettings; } }
 
-        public SettingsDictionary SharedGlobalSettings;
-
+        /// <summary>
+        /// A dictionary object that looks after all the settings in all processors
+        /// </summary>
+        public static SettingsDictionary SharedGlobalSettings;
         #endregion
-
-        /// <summary>
-        /// A dictionary of all the gender based substitutions used by this Proccessor
-        /// </summary>
-        public SettingsDictionary GenderSubstitutions;
-
-        /// <summary>
-        /// A dictionary of all the first person to second person (and back) substitutions
-        /// </summary>
-        public SettingsDictionary Person2Substitutions;
-
-        /// <summary>
-        /// A dictionary of first / third person substitutions
-        /// </summary>
-        public SettingsDictionary PersonSubstitutions;
-
-        /// <summary>
-        /// Generic substitutions that take place during the normalization process
-        /// </summary>
-        public SettingsDictionary InputSubstitutions;
 
         /// <summary>
         /// Output substitutions that take place before the bot speaks
         /// </summary>
-        static public SettingsDictionary OutputSubstitutions;
-
-        /// <summary>
-        /// The default predicates to set up for a user
-        /// </summary>
-        public SettingsDictionary DefaultPredicates;
-
-        /// <summary>
-        /// A weak name/value association list of what has happened in dialog  
-        /// </summary>
-        public SettingsDictionary HeardPredicates;
-
-        /// <summary>
-        /// A name+prop/value association list of things like  look.set-return, look.format-whword,
-        /// look.format-assert, look.format-query, look.format-etc,
-        /// </summary>
-        public SettingsDictionary RelationMetaProps;
-
-        /// <summary>
-        /// When a tag has no name like <icecream/> it is transformed to <bot name="icecream"></bot>
-        /// </summary>
-        public static bool UnknownTagsAreBotVars = true;
-
-        /// <summary>
-        ///  Substitution blocks for graphmasters
-        /// </summary>
-        public Dictionary<string, ISettingsDictionary> AllDictionaries = new Dictionary<string, ISettingsDictionary>();
-
-        /// <summary>
-        /// An List<> containing the tokens used to split the input into sentences during the 
-        /// normalization process
-        /// </summary>
-        static public List<string> Splitters = new List<string>();
-
-        /// <summary>
-        /// Flag to show if the Proccessor is willing to accept user input
-        /// </summary>
-        public bool isAcceptingUserInput = true;
-
-        /// <summary>
-        /// A dictionary of all inherited settings betten users
-        /// </summary>
-        public SettingsDictionary AllUserPreds;
+        public static SettingsDictionary OutputSubstitutions;
 
         /// <summary>
         /// A dictionary of all settings from anyone .. just a fallback
@@ -256,297 +210,12 @@ namespace RTParser
         public SettingsDictionary EnginePreds;
 
         readonly public TagHandlerProcessor TagHandling = new TagHandlerProcessor();
-        /// <summary>
-        /// A buffer to hold log messages to be written out to the log file when a max size is reached
-        /// </summary>
-        private readonly List<string> LogBuffer = new List<string>();
 
         /// <summary>
         /// A list of Topic states that are set currently (for use of guarding content)
         /// </summary>
         public List<Unifiable> CurrentStates = new List<Unifiable>();
 
-        /// <summary>
-        /// How big to let the log buffer get before writing to disk
-        /// </summary>
-        private int MaxLogBufferSize
-        {
-            get { return Convert.ToInt32(GlobalSettings.grabSetting("maxlogbuffersize")); }
-        }
-
-        /// <summary>
-        /// The message to show if a user tries to use the Proccessor whilst it is set to not process user input
-        /// </summary>
-        private Unifiable NotAcceptingUserInputMessage
-        {
-            get { return GlobalSettings.grabSettingNoDebug("notacceptinguserinputmessage"); }
-        }
-
-        /// <summary>
-        /// The maximum amount of time a request should take (in milliseconds)
-        /// </summary>
-        public double TimeOut
-        {
-            get
-            {
-                return 7000;
-                if (GlobalSettings == null || !GlobalSettings.containsSettingCalled("timeout"))
-                {
-                    return 2000000;
-                }
-                String s = GlobalSettings.grabSettingNoDebug("timeout").ToValue(null);
-                return Convert.ToDouble(s);
-            }
-        }
-
-        /// <summary>
-        /// The message to display in the event of a timeout
-        /// </summary>
-        public Unifiable TimeOutMessage
-        {
-            get { return GlobalSettings.grabSetting("timeoutmessage"); }
-        }
-
-        /// <summary>
-        /// The locale of the Proccessor as a CultureInfo object
-        /// </summary>
-        public CultureInfo Locale
-        {
-            get { return new CultureInfo(GlobalSettings.grabSetting("culture")); }
-        }
-
-        /// <summary>
-        /// Will match all the illegal characters that might be inputted by the user
-        /// </summary>
-        public Regex Strippers
-        {
-            get
-            {
-                return new Regex(GlobalSettings.grabSettingNoDebug("stripperregex"),
-                                 RegexOptions.IgnorePatternWhitespace);
-            }
-        }
-
-        /// <summary>
-        /// The email address of the botmaster to be used if WillCallHome is set to true
-        /// </summary>
-        public string AdminEmail
-        {
-            get { return GlobalSettings.grabSetting("adminemail"); }
-            set
-            {
-                if (value.Length > 0)
-                {
-                    // check that the email is valid
-                    Unifiable patternStrict = @"^(([^<>()[\]\\.,;:\s@\""]+"
-                                              + @"(\.[^<>()[\]\\.,;:\s@\""]+)*)|(\"".+\""))@"
-                                              + @"((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"
-                                              + @"\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+"
-                                              + @"[a-zA-Z]{2,}))$";
-                    Regex reStrict = new Regex(patternStrict);
-
-                    if (reStrict.IsMatch(value))
-                    {
-                        // update the settings
-                        GlobalSettings.addSetting("adminemail", value);
-                    }
-                    else
-                    {
-                        throw (new Exception("The AdminEmail is not a valid email address"));
-                    }
-                }
-                else
-                {
-                    GlobalSettings.addSetting("adminemail", Unifiable.Empty);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Flag to denote if the Proccessor is writing messages to its logs
-        /// </summary>
-        public bool IsLogging
-        {
-            get
-            {
-                // otherwse we use up too much ram
-                if (true) return false;
-                if (!GlobalSettings.containsSettingCalled("islogging")) return false;
-                Unifiable islogging = GlobalSettings.grabSettingNoDebug("islogging");
-                if (IsTrue(islogging))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Flag to denote if the Proccessor will email the botmaster using the AdminEmail setting should an error
-        /// occur
-        /// </summary>
-        public bool WillCallHome
-        {
-            get
-            {
-                Unifiable willcallhome = GlobalSettings.grabSetting("willcallhome");
-                return (IsTrue(willcallhome));
-            }
-        }
-
-        /// <summary>
-        /// When the RTPBot was initialised
-        /// </summary>
-        public DateTime StartedOn = DateTime.Now;
-
-        /// <summary>
-        /// The supposed sex of the Proccessor
-        /// </summary>
-        public Gender Sex
-        {
-            get
-            {
-                int sex = Convert.ToInt32(GlobalSettings.grabSetting("gender"));
-                Gender result;
-                switch (sex)
-                {
-                    case -1:
-                        result = Gender.Unknown;
-                        break;
-                    case 0:
-                        result = Gender.Female;
-                        break;
-                    case 1:
-                        result = Gender.Male;
-                        break;
-                    default:
-                        result = Gender.Unknown;
-                        break;
-                }
-                return result;
-            }
-        }
-
-        private string _PathToUserFiles;
-
-        public string PathToUserDir
-        {
-            get
-            {
-                if (_PathToUserFiles != null) return _PathToUserFiles;
-                if (GlobalSettings.containsSettingCalled("userdirectory"))
-                {
-                    Unifiable dir = GlobalSettings.grabSettingNoDebug("userdirectory");
-                    HostSystem.CreateDirectory(dir);
-                    _PathToUserFiles = dir;
-                    return HostSystem.ToRelativePath(dir, RuntimeDirectory);
-                }
-                foreach (string s in new[] { PersonalAiml, PathToAIML, PathToConfigFiles, RuntimeDirectory })
-                {
-                    if (s == null) continue;
-                    string exists = HostSystem.Combine(s, "users");
-                    if (HostSystem.DirExists(exists))
-                    {
-                        exists = HostSystem.ToRelativePath(exists, RuntimeDirectory);
-                        _PathToUserFiles = exists;
-                        return exists;
-                    }
-                }
-                string tryplace = HostSystem.Combine(PathToAIML, "users");
-                HostSystem.CreateDirectory(tryplace);
-                _PathToUserFiles = tryplace;
-                return tryplace;
-            }
-        }
-
-        private string _PathToBotPersonalFiles;
-
-        protected string PersonalAiml
-        {
-            get { return _PathToBotPersonalFiles; }
-            set
-            {
-                lock (_RuntimeDirectories)
-                {
-                    if (_PathToUserFiles != null) _RuntimeDirectories.Remove(_PathToUserFiles);
-                    _PathToUserFiles = value;
-                    _RuntimeDirectories.Remove(value);
-                    _RuntimeDirectories.Insert(0, value);
-                }
-            }
-        }
-
-        /// <summary>
-        /// The directory to look in for the AIML files
-        /// </summary>
-        public string PathToAIML
-        {
-            get { return GetPathSetting("aimldirectory", "aiml"); }
-        }
-
-        private readonly object RuntimeDirectoriesLock = new object();
-
-        public List<string> RuntimeDirectories
-        {
-            get { lock (RuntimeDirectoriesLock) return new List<string>(_RuntimeDirectories); }
-        }
-
-        private string _dataDir = Environment.CurrentDirectory;
-
-        protected string RuntimeDirectory
-        {
-            get { return _dataDir ?? Environment.CurrentDirectory; }
-            set { _dataDir = value; }
-        }
-
-        /// <summary>
-        /// The directory to look in for the various XML configuration files
-        /// </summary>
-        public string PathToConfigFiles
-        {
-            get { return GetPathSetting("configdirectory", "config"); }
-        }
-
-        /// <summary>
-        /// The directory into which the various log files will be written
-        /// </summary>
-        public string PathToLogs
-        {
-            get { return GetPathSetting("logdirectory", null); }
-        }
-
-        /// <summary>
-        /// If set to false the input from AIML files will undergo the same normalization process that
-        /// user input goes through. If true the Proccessor will assume the AIML is correct. Defaults to true.
-        /// </summary>
-        public bool TrustAIML = true;
-
-        /// <summary>
-        /// The maximum number of characters a "that" element of a path is allowed to be. Anything above
-        /// this length will cause "that" to be "*". This is to avoid having the graphmaster process
-        /// huge "that" elements in the path that might have been caused by the Proccessor reporting third party
-        /// data.
-        /// </summary>
-        public int MaxThatSize = 256;
-
-        //#endregion
-
-        #region Delegates
-
-        public delegate void LogMessageDelegate();
-
-        #endregion
-
-        #region Events
-
-        public event LogMessageDelegate WrittenToLog;
-
-        #endregion
-
-        public static int BotNumberCreated;
 
 
         public static readonly Dictionary<string, string[]> SettingsAliases = new Dictionary<string, string[]>();
@@ -563,7 +232,11 @@ namespace RTParser
             return qsbase;
         }
 
-        public Servitor servitor = null;
+        public Servitor servitor
+        {
+            get { return myServitor; }
+            set { myServitor = value; }
+        }
         public bool useServitor = false;
         public void sayConsole(string message)
         {
@@ -712,12 +385,8 @@ namespace RTParser
             if (useServitor == false) return;
             if (servitor == null)
             {
-                servitor = new Servitor(this.UserID, null);
-                servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
-                servitor.curBot.wordNetEngine = wordNetEngine;
-                reloadServitor();
+                updateServitor2RTP();
             }
-            updateServitor2RTP();
             //User specific code (ALTBOT USER->RTPUSER  )
             try
             {
@@ -753,9 +422,11 @@ namespace RTParser
             if (useServitor == false) return;
             if (servitor == null)
             {
-                servitor = new Servitor(this.UserID, null);
+
+                servitor = new Servitor(this, this.UserID, null);
+                servitor.curBot = this;
                 servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
-                servitor.curBot.wordNetEngine = wordNetEngine;
+                //servitor.curBot.wordNetEngine = wordNetEngine;
                 reloadServitor();
             }
 
@@ -765,10 +436,7 @@ namespace RTParser
             if (useServitor == false) return;
             if (servitor == null)
             {
-                servitor = new Servitor(this.UserID, null);
-                servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
-                servitor.curBot.wordNetEngine = wordNetEngine;
-                reloadServitor();
+                updateServitor2RTP();
             }
             updateRTP2Sevitor();
             try
@@ -811,24 +479,19 @@ namespace RTParser
         public void updateRTP2Sevitor()
         {
             if (useServitor == false) return;
-            if (servitor==null)
+            if (servitor == null)
             {
-                servitor = new Servitor(this.UserID, null);
-                servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
-                servitor.curBot.wordNetEngine = wordNetEngine;
-                reloadServitor();
-
-
+                updateServitor2RTP();
             }
             // fill in the blanks
             servitor.curBot.AdminEmail = this.AdminEmail;
-            servitor.curBot.conversationStack = this.conversationStack;
+            //servitor.curBot.conversationStack = this.conversationStack;
             servitor.curBot.isAcceptingUserInput = this.isAcceptingUserInput;
             servitor.curBot.LastLogMessage = this.LastLogMessage;
-            servitor.curBot.MaxThatSize = this.MaxThatSize;
-            servitor.curBot.StartedOn = this.StartedOn;
-            servitor.curBot.TrustAIML = this.TrustAIML;
-            servitor.curBot.StartedOn = this.StartedOn;
+            //servitor.curBot.MaxThatSize = this.MaxThatSize;
+            //servitor.curBot.StartedOn = this.StartedOn;
+            //servitor.curBot.TrustAIML = this.TrustAIML;
+            //servitor.curBot.StartedOn = this.StartedOn;
             servitor.curBot.GlobalSettings.updateSetting("aimldirectory", PathToAIML);
 
             if (SharedGlobalSettings !=null) 
@@ -892,10 +555,10 @@ namespace RTParser
         /// <summary>
         /// Ctor
         /// </summary>
-        public RTPBot()
+        protected AltBot()
             : base()
         {
-            rtpbotcommands = new RTPBotCommands(this);
+            AltBotcommands = new AltBotCommands(this);
             qsbase = QuerySettings.CogbotDefaults;
             _RuntimeDirectories = new List<string>();
             PushSearchPath(HostSystem.GetAbsolutePath(AppDomain.CurrentDomain.RelativeSearchPath));
@@ -912,6 +575,10 @@ namespace RTParser
                 EnsureBotInit(BotNumberCreated == 1);
             }
         }
+
+
+        public static int BotNumberCreated;
+                
 
         public string PopSearchPath(string directory)
         {
@@ -947,6 +614,8 @@ namespace RTParser
             lock (_RuntimeDirectories)
             {
                 bool found = false; // _RuntimeDirectories.Remove(directory);
+
+                _RuntimeDirectories.Remove(directory);
                 _RuntimeDirectories.Insert(0, directory);
                 // ReSharper disable ConditionIsAlwaysTrueOrFalse
                 return found ? directory : null;
@@ -986,7 +655,7 @@ namespace RTParser
 #if !(NOT_FAKE_LISTENERS)
         public Dictionary<string, object> listeners = new Dictionary<string, object>();
 
-        public RTPBot MyBot
+        public AltBot MyBot
         {
             get { return this; }
         }
@@ -1090,7 +759,7 @@ namespace RTParser
 
         internal AIMLLoader GetLoader(Request request)
         {
-            RTPBot bot = this;
+            AltBot bot = this;
             AIMLLoader loader = bot.Loader;
             if (!bot.StaticLoader || loader == null)
             {
@@ -1136,26 +805,23 @@ namespace RTParser
         /// <summary>
         /// Instantiates the dictionary objects and collections associated with this class
         /// </summary>
-        private void setup()
+        private void setupDictionaries()
         {
             bool prev = isAcceptingUserInput;
             try
             {
+ 
                 //isAcceptingUserInput = false;
-                RelationMetaProps = new SettingsDictionary("chat.relationprops", this, null);
+                RegisterDictionary("chat.relationprops", RelationMetaProps);
                 RegisterDictionary("meta", RelationMetaProps);
                 RegisterDictionary("metaprops", RelationMetaProps);
 
-                GlobalSettings = new SettingsDictionary("bot.globalsettings", this, null);
+                RegisterDictionary("bot.globalsettings", GlobalSettings);
                 GlobalSettings.InsertMetaProvider(GetRelationMetaProps);
 
-                GenderSubstitutions = new SettingsDictionary("nl.substitutions.gender", this, null);
                 RegisterSubstitutions("gender", GenderSubstitutions);
-                Person2Substitutions = new SettingsDictionary("nl.substitutions.person2", this, null);
                 RegisterSubstitutions("person2", Person2Substitutions);
-                PersonSubstitutions = new SettingsDictionary("nl.substitutions.person", this, null);
                 RegisterSubstitutions("person", PersonSubstitutions);
-                InputSubstitutions = new SettingsDictionary("nl.substitutions.input", this, null);
                 InputSubstitutions.IsSubsts = true;
                 InputSubstitutions.IsTraced = true;
                 RegisterSubstitutions("input", InputSubstitutions);
@@ -1164,12 +830,13 @@ namespace RTParser
 
 
                 //ParentProvider provider = new ParentProvider(() => GlobalSettings);
-                DefaultPredicates = new SettingsDictionary("bot.defaultpredicates", this, null);
-                DefaultPredicates = new SettingsDictionary("defaults", this, null);
+                //DefaultPredicates = new SettingsDictionary("bot.defaultpredicates", this, null);
+                //DefaultPredicates = new SettingsDictionary("defaults", this, null);
+                RegisterDictionary("bot.defaultpredicates", DefaultPredicates);
+                RegisterDictionary("defaults", DefaultPredicates);
                 DefaultPredicates.InsertMetaProvider(GetRelationMetaProps);
-                HeardPredicates = new SettingsDictionary("chat.heardpredicates", this, null);
                 RegisterDictionary("heard", HeardPredicates);
-                AllUserPreds = new SettingsDictionary("bot.alluserpred", this, null);
+                
                 RegisterDictionary("predicates", AllUserPreds);
                 EnginePreds = AllUserPreds;
                 RegisterDictionary("enginepreds", EnginePreds);
@@ -1236,8 +903,8 @@ namespace RTParser
             }
         }
 
-        // Load the dictionaries for this RTPBot from the various configuration files
-        public static void loadConfigs(RTPBot thiz, string pathToSettings, Request request)
+        // Load the dictionaries for this AltBot from the various configuration files
+        public static void loadConfigs(AltBot thiz, string pathToSettings, Request request)
         {
             if (!HostSystem.DirExists(pathToSettings))
             {
@@ -1308,6 +975,8 @@ namespace RTParser
             thiz.InputSubstitutions.loadSettings(
                 HostSystemCombine(pathToSettings, GlobalSettings.grabSetting("substitutions")), request);
             thiz.InputSubstitutions.loadSettings(HostSystemCombine(pathToSettings, "substitutions.xml"), request);
+            thiz.InputSubstitutions.loadSettings(HostSystemCombine(pathToSettings, "substitutions2.xml"), request);
+            thiz.InputSubstitutions.loadSettings(HostSystemCombine(pathToSettings, "substitutions3.xml"), request);
             thiz.InputSubstitutions.IsTraced = true;
 
             // Grab the splitters for this Proccessor
@@ -1320,8 +989,8 @@ namespace RTParser
 
 
             User guser = thiz.FindUser("globalPreds");
-            SettingsDictionary.loadSettings(guser.Predicates, HostSystemCombine(pathToSettings, "globalpreds.xml"),
-                                            true, false, request);
+            SettingsDictionary.loadSettingsNow(guser.Predicates, pathToSettings, "globalpreds.xml",
+                                            SettingsPolicy.Default, request);
             thiz.writeToLog("Files left to process = " + files.Count);
             foreach (string list in files)
             {
@@ -1389,57 +1058,6 @@ namespace RTParser
             }
             Unifiable res = settings.grabSetting(name);
             return res;
-        }
-
-        /// <summary>
-        /// Loads the splitters for this Proccessor from the supplied config file (or sets up some safe defaults)
-        /// </summary>
-        /// <param name="pathToSplitters">Path to the config file</param>
-        private void loadSplitters(string pathToSplitters)
-        {
-            if (DontUseSplitters) return;
-            if (HostSystem.FileExists(pathToSplitters))
-            {
-                XmlDocumentLineInfo splittersXmlDoc = new XmlDocumentLineInfo(pathToSplitters, true);
-                Stream stream = HostSystem.OpenRead(pathToSplitters);
-                try
-                {
-                    splittersXmlDoc.Load(stream);
-                }
-                finally
-                {
-                    HostSystem.Close(stream);
-                }
-
-                // the XML should have an XML declaration like this:
-                // <?xml version="1.0" encoding="utf-8" ?> 
-                // followed by a <root> tag with children of the form:
-                // <item value="value"/>
-                if (splittersXmlDoc.ChildNodes.Count == 2)
-                {
-                    if (splittersXmlDoc.LastChild.HasChildNodes)
-                    {
-                        foreach (XmlNode myNode in splittersXmlDoc.LastChild.ChildNodes)
-                        {
-                            if ((myNode.Name == "item") & (myNode.Attributes.Count == 1))
-                            {
-                                Unifiable value = Unifiable.Create(myNode.Attributes["value"].Value);
-                                Splitters.Add(value);
-                            }
-                        }
-                    }
-                }
-            }
-            if (Splitters.Count == 0)
-            {
-                // if we process lisp and other things
-                if (true) return;
-                // we don't have any splitters, so lets make do with these...
-                Splitters.Add(".");
-                Splitters.Add("!");
-                //this.Splitters.Add("?");
-                Splitters.Add(";");
-            }
         }
 
         #endregion
@@ -1572,7 +1190,7 @@ namespace RTParser
         /// Proccessor starts
         /// </summary>
         /// <param name="path">the path to the file for saving</param>
-        public void saveToBinaryFile(string path)
+        public void saveToBinaryFile1(string path)
         {
             BinaryFormatter bf = Unifiable.GetBinaryFormatter();
             string binext = ".gfxbin";
@@ -1594,7 +1212,7 @@ namespace RTParser
         /// Loads a dump of the graphmaster into memory so avoiding processing the AIML files again
         /// </summary>
         /// <param name="path">the path to the dump file</param>
-        public void loadFromBinaryFile(string path)
+        public void loadFromBinaryFile1(string path)
         {
             BinaryFormatter bf = Unifiable.GetBinaryFormatter();
             string binext = ".gfxbin";
@@ -1732,7 +1350,7 @@ The AIMLbot program.
         {
             get
             {
-                lock (RTPBot.GraphsByName) return new ListAsSet<GraphMaster>(GraphMaster.CopyOf(RTPBot.GraphsByName).Values);
+                lock (AltBot.GraphsByName) return new ListAsSet<GraphMaster>(GraphMaster.CopyOf(AltBot.GraphsByName).Values);
             }
         }
 
@@ -1746,7 +1364,11 @@ The AIMLbot program.
 
 
         public static Dictionary<string, GraphMaster> GraphsByName = new Dictionary<string, GraphMaster>();
-        public Dictionary<string, GraphMaster> LocalGraphsByName = new Dictionary<string, GraphMaster>();
+        public Dictionary<string, GraphMaster> LocalGraphsByName
+        {
+            get { return Graphs; }
+        }
+         
         public static CycDatabase TheCycS;
         public CycDatabase TheCyc
         {
@@ -2076,12 +1698,12 @@ The AIMLbot program.
             ExternalIntern("BotAsUser", thisBotAsUser);
             thisBotAsUser.IsRoleAcct = true;
             SharedGlobalSettings = this.GlobalSettings;
-            thisBotAsUser.Predicates = new SettingsDictionary(myName, this, () => SharedGlobalSettings);
+            thisBotAsUser.Predicates.InsertFallback(() => SharedGlobalSettings);
             thisBotAsUser.Predicates.InsertFallback(() => AllUserPreds);
             AllUserPreds.InsertFallback(() => SharedGlobalSettings);
 
             GlobalSettings.IsTraced = true;
-            GlobalSettings = thisBotAsUser.Predicates;
+            thisBotAsUser.Predicates.InsertProvider(() => GlobalSettings);
             //BotAsUser.UserDirectory = "aiml/users/heardselfsay";
             //BotAsUser.UserID = "heardselfsay";
             //BotAsUser.UserName = "heardselfsay";
@@ -2107,11 +1729,11 @@ The AIMLbot program.
                 {
                     throw new NullReferenceException("SetName! = " + myName);
                 }
-                if (_g == null)
+                //if (_g == null)
                 {
                     GraphMaster od;
                     GraphsByName.TryGetValue("default", out od);
-                    _g = GraphMaster.FindOrCreate(dgn);
+                    //_g = GraphMaster.FindOrCreate(dgn);
                     if (od == null) GraphsByName["default"] = _g;
                     else _g.AddGenlMT(od, writeToLog);
                     _h //= TheUserListernerGraph 
@@ -2160,8 +1782,8 @@ The AIMLbot program.
                 var tc = DLRConsole.TransparentCallers;
                 lock (tc)
                 {
-                    tc.Add(typeof(RTPBot));
-                    tc.Add(typeof(AIMLbot.MasterRequest));
+                    tc.Add(typeof(AltBot));
+                    tc.Add(typeof(MasterRequest));
                     // ReSharper disable AssignNullToNotNullAttribute
                     tc.Add(typeof(MasterResult).BaseType);
                     // ReSharper restore AssignNullToNotNullAttribute
@@ -2288,6 +1910,8 @@ The AIMLbot program.
         private List<string> _RuntimeDirectories;
         ICollectionRequester _objr;
         private readonly List<Action> PostObjectRequesterSet = new List<Action>();
+        //private AltBot TheAltBot;
+
         public ICollectionRequester ObjectRequester
         {
             get
@@ -2355,121 +1979,6 @@ The AIMLbot program.
 
         #endregion
 
-        public ISettingsDictionary GetDictionary(string name)
-        {
-            var idict = GetDictionary0(name);
-            if (idict!=null) return idict;
-            var rtpbotobjCol = ScriptManager.ResolveToObject(this, name);
-            if (rtpbotobjCol == null || rtpbotobjCol.Count == 0)
-            {
-                return null;
-            }
-            //if (tr)
-            foreach (object o in rtpbotobjCol)
-            {
-                ParentProvider pp = o as ParentProvider;
-                ISettingsDictionary pi = o as ISettingsDictionary;
-                User pu = o as User;
-                if (pp != null)
-                {
-                    pi = pp();
-                }
-                if (pi != null)
-                {
-                    return pi;
-                }
-                if (pu != null)
-                {
-                    return pu;
-                }
-            }
-            return null;
-        }
-
-        public ISettingsDictionary GetDictionary0(string named)
-        {
-            Func<ISettingsDictionary, SettingsDictionary> SDCAST = SettingsDictionary.ToSettingsDictionary;
-            //dict = FindDict(type, query, dict);
-            if (named == null) return null;
-            string key = named.ToLower().Trim();
-            if (key == "") return null;
-            lock (AllDictionaries)
-            {
-                ISettingsDictionary dict;
-                if (AllDictionaries.TryGetValue(key, out dict))
-                {
-                    return dict;
-                }
-            }
-            if (key == "predicates")
-            {
-                return SDCAST(this.AllUserPreds);
-            }
-            // try to use a global blackboard predicate
-            User gUser = ExemplarUser;
-            if (key == "globalpreds") return SDCAST(gUser);
-            if (key == "allusers") return SDCAST(AllUserPreds);
-            var path = named.Split(new[] { '.' });
-            if (path.Length == 1)
-            {
-                User user = FindUser(key);
-                if (user != null) return user;
-            }
-            else
-            {
-                if (path[0] == "bot" || path[0] == "users" || path[0] == "char" || path[0] == "nl")
-                {
-                    ISettingsDictionary f = GetDictionary(string.Join(".", path, 1, path.Length - 1));
-                    if (f != null) return SDCAST(f);
-                }
-                if (path[0] == "substitutions")
-                {
-                    ISettingsDictionary f = GetDictionary(string.Join(".", path, 1, path.Length - 1), "substitutions",
-                                                          true);
-                    if (f != null) return SDCAST(f);
-                }
-                else
-                {
-                    ISettingsDictionary f = GetDictionary(path[0]);
-                    if (f != null)
-                    {
-                        SettingsDictionary sd = SDCAST(f);
-                        ParentProvider pp = sd.FindDictionary(string.Join(".", path, 1, path.Length - 1), null);
-                        if (pp != null)
-                        {
-                            ISettingsDictionary pi = pp();
-                            if (pi != null) return SDCAST(pi);
-                        }
-                    }
-                }
-            }
-            return null;
-        }
-
-        public ISettingsDictionary GetDictionary(string named, string type, bool createIfMissing)
-        {
-            lock (AllDictionaries)
-            {
-                string key = (type + "." + named).ToLower();
-                ISettingsDictionary dict;
-                if (!AllDictionaries.TryGetValue(key, out dict))
-                {
-                    ISettingsDictionary sdict = GetDictionary(named);
-                    if (sdict != null) return sdict;
-                    if (createIfMissing)
-                    {
-                        dict = AllDictionaries[key] = AllDictionaries[named] = new SettingsDictionary(named, this, null);
-                        User user = ExemplarUser ?? BotAsUser;
-                        Request r = //user.CurrentRequest ??
-                                    user.CreateRequest(
-                                        "@echo <!-- loadDictionary '" + named + "' from '" + type + "' -->", Unifiable.EnglishNothing, BotAsUser);
-                        loadDictionary(dict, named, type, r);
-                    }
-                }
-                return dict;
-            }
-        }
-
         private void loadDictionary(ISettingsDictionary dictionary, string path, string type, Request r0)
         {
             User user = LastUser ?? 
@@ -2491,7 +2000,7 @@ The AIMLbot program.
                         {
                             try
                             {
-                                SettingsDictionary.loadSettings(dictionary, named, true, false, r);
+                                SettingsDictionary.loadSettingsNow(dictionary, null, named, SettingsPolicy.Default, r);
                                 loaded++;
                                 break;
                             }
@@ -2512,43 +2021,13 @@ The AIMLbot program.
             }
         }
 
-        public void RegisterDictionary(ISettingsDictionary dict)
-        {
-            RegisterDictionary(dict.NameSpace, dict);
-        }
-        public void RegisterDictionary(string named, ISettingsDictionary dict)
-        {
-            named = named.ToLower().Trim().Replace("  ", " ");
-            string key = named.Replace(" ", "_");
-            RegisterDictionary(named, dict, true);
-        }
-
-        public void RegisterDictionary(string key, ISettingsDictionary dict, bool always)
-        {
-            Action needsExit = LockInfo.MonitorTryEnter("RegisterDictionary " + key, AllDictionaries, MaxWaitTryEnter);
-            try
-            {
-                var path = key.Split(new[] { '.' });
-                if (always || !AllDictionaries.ContainsKey(key)) AllDictionaries[key] = dict;
-                if (path.Length > 1)
-                {
-                    if (path[0] == "bot" || path[0] == "users" || path[0] == "char" || path[0] == "nl")
-                    {
-                        string join = string.Join(".", path, 1, path.Length - 1);
-                        RegisterDictionary(join, dict, false);
-                    }
-                }
-            }
-            finally
-            {
-                needsExit();
-            }
-        }
-
-        private void RegisterSubstitutions(string named, ISettingsDictionary dict)
+        private void RegisterSubstitutions(string named, SettingsDictionary dict)
         {
             dict.IsTraced = false;
+            dict.IsSubsts = true;
             RegisterDictionary("substitutions" + "." + named, dict);
+            string dictNameSpace = "nl.substitutions" + "." + named;
+            RegisterDictionary(dictNameSpace, dict);
         }
 
         protected IEnumerable GetSearchRoots(Request request)

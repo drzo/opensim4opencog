@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using RTParser.Utils;
+using AIMLTagHandler=RTParser.Utils.AIMLTagHandler;
 
 namespace RTParser
 {

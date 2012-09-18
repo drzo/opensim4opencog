@@ -1,12 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using AltAIMLParser;
+using RTParser;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    class filterqa : AltAIMLbot.Utils.AIMLTagHandler
+    class filterqa : Utils.AIMLTagHandler
     {
                         /// <summary>
         /// Ctor
@@ -17,11 +19,11 @@ namespace AltAIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public filterqa(AltAIMLbot.AltBot bot,
-                        AltAIMLbot.User user,
-                        AltAIMLbot.Utils.SubQuery query,
-                        AltAIMLbot.Request request,
-                        AltAIMLbot.Result result,
+        public filterqa(AltBot bot,
+                        User user,
+                        Utils.SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {

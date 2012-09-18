@@ -6,6 +6,8 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Xml;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
@@ -69,14 +71,14 @@ namespace RTParser.Utils
         /// <summary>
         /// The RProcessor whose brain is being processed
         /// </summary>
-        public RTPBot RProcessorOld
+        public AltBot RProcessorOld
         {
             get { return LoaderRequest00.TargetBot; }
         }
 
         #endregion
 
-        public AIMLLoader(RTPBot bot)
+        public AIMLLoader(AltBot bot)
         {
         }
 
@@ -84,7 +86,7 @@ namespace RTParser.Utils
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot whose brain is being processed</param>
-        public AIMLLoader(RTPBot bot, Request request)
+        public AIMLLoader(AltBot bot, Request request)
         {
             this.LoaderRequest00 = request;
             //XmlNodeEvaluators.Add(this);
@@ -128,7 +130,7 @@ namespace RTParser.Utils
         public long loadAIMLDir0(string path, LoaderOptions loadOpts)
         {
             long total = 0;
-            RTPBot RProcessor = loadOpts.RProcessor;
+            AltBot RProcessor = loadOpts.RProcessor;
             path = ResolveToURI(path, loadOpts);
 
             Request request = loadOpts.TheRequest;
@@ -221,7 +223,7 @@ namespace RTParser.Utils
                 {
                     return pathIn;
                 }
-                if (!relPath.Contains("*")) RTPBot.writeDebugLine("WARNING PATH NOT EXIST ERROR: " + relPath);
+                if (!relPath.Contains("*")) AltBot.writeDebugLine("WARNING PATH NOT EXIST ERROR: " + relPath);
             }
             return relPath;
         }
@@ -297,7 +299,7 @@ namespace RTParser.Utils
 
         public long loadAIMLURI0(string path0, LoaderOptions loadOpts)
         {
-            RTPBot RProcessor = loadOpts.RProcessor;
+            AltBot RProcessor = loadOpts.RProcessor;
             string path = path0;
             loadOpts.Loading0 = path;
             string pathIn = path;
@@ -317,7 +319,7 @@ namespace RTParser.Utils
                        // request.LoadOptions = loadOpts;
                        // request.Filename = path;
                         //loadOpts = request.LoadOptions;
-                        //RTPBot.loadConfigs(RProcessor, path, request);
+                        //AltBot.loadConfigs(RProcessor, path, request);
                         total += loadAIMLDir(path, loadOpts);
                         TotalCheck(path, total, loadOpts);
                     }
@@ -443,7 +445,7 @@ namespace RTParser.Utils
         {
             long total = 0;
             path = ResolveToURI(path, loadOpts);
-            RTPBot RProcessor = loadOpts.RProcessor;
+            AltBot RProcessor = loadOpts.RProcessor;
             //RProcessor.ReloadHooks.Add(() => loadAIMLFile0(path, loadOpts, forceReload));
             Request request = loadOpts.TheRequest;
             loadOpts = EnsureOptions(loadOpts, request, path);
@@ -526,7 +528,7 @@ namespace RTParser.Utils
         /// <param name="loadOpts">Where the XML document originated</param>
         public void loadAIMLString(string docString, LoaderOptions loadOpts)
         {
-            RTPBot RProcessor = loadOpts.RProcessor;
+            AltBot RProcessor = loadOpts.RProcessor;
             Request request = loadOpts.TheRequest;
             //            RProcessor0.ReloadHooks.Add(() => loadAIMLFile0(path, loadOpts));
             string path = request.Filename;
@@ -560,9 +562,9 @@ namespace RTParser.Utils
         public long loadAIMLStream(Stream input0, LoaderOptions loadOpts)
         {
             long total = 0;
-            RTPBot RProcessor = loadOpts.RProcessor;
+            AltBot RProcessor = loadOpts.RProcessor;
             Request request = loadOpts.TheRequest;
-            DateTime oneMinuteFromNow = RTPBot.Now + TimeSpan.FromMinutes(1);
+            DateTime oneMinuteFromNow = AltBot.Now + TimeSpan.FromMinutes(1);
             if (request.TimesOutAt < oneMinuteFromNow)
             {
                 request.TimesOutAt = oneMinuteFromNow + TimeSpan.FromMinutes(1);
@@ -622,7 +624,7 @@ namespace RTParser.Utils
         /// <param name="loadOpts">Where the XML document originated</param>
         public void loadAIMLStreamFallback(Stream input0, LoaderOptions loadOpts)
         {
-            RTPBot RProcessor = loadOpts.RProcessor;
+            AltBot RProcessor = loadOpts.RProcessor;
             Request request = loadOpts.TheRequest;
             string path = request.Filename;
             loadOpts = EnsureOptions(loadOpts, request, path);
@@ -716,7 +718,7 @@ namespace RTParser.Utils
             long total = 0;
             query = query ?? request.CurrentQuery;
             //Result result = query.Result;
-            RTPBot RProcessor = request.TargetBot;
+            AltBot RProcessor = request.TargetBot;
             AIMLLoader prev = RProcessor.Loader;
             GraphMaster loadOptsPrevGraph = loadOpts.CtxGraph;
             try
@@ -784,7 +786,7 @@ namespace RTParser.Utils
                 return 0;
             }
             long total = 0;
-            RTPBot RProcessor = loadOpts.RProcessor;
+            AltBot RProcessor = loadOpts.RProcessor;
             AIMLLoader prev = RProcessor.Loader;
             try
             {
@@ -855,7 +857,7 @@ namespace RTParser.Utils
                 ISettingsDictionary dict = IsSettingsTag(currentNodeName, request);
                 if (dict != null)
                 {
-                    SettingsDictionary.loadSettingNode(dict, currentNode, true, false,
+                    SettingsDictionary.loadSettingNode(dict, currentNode, SettingsPolicy.Default,
                                                        request);
                 }
                 else
@@ -1635,7 +1637,7 @@ namespace RTParser.Utils
         private Unifiable generateCPath(Unifiable pattern, Unifiable that, Unifiable flag, Unifiable topicName,
                                         bool isUserInput, Func<Unifiable, bool, Unifiable> innerFormater)
         {
-            RTPBot RProcessor = LoaderRequest00.TargetBot;
+            AltBot RProcessor = LoaderRequest00.TargetBot;
 
             // to hold the normalized path to be entered into the graphmaster
             Unifiable normalizedPath = Unifiable.CreateAppendable();
@@ -1800,7 +1802,7 @@ namespace RTParser.Utils
             input = input.Replace("*", " * ").Replace("  ", " ");
             input = Trim(input);
             // objects for normalization of the input
-            RTPBot RProcessor = LoaderRequest00.TargetBot;
+            AltBot RProcessor = LoaderRequest00.TargetBot;
             ApplySubstitutions substitutor = new ApplySubstitutions(RProcessor);
             StripIllegalCharacters stripper = new StripIllegalCharacters(RProcessor);
 

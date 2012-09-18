@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime;
 using System.Text;
 using System.Xml;
@@ -9,6 +9,9 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using RTParser;
 using RTParser.Utils;
 
@@ -17,11 +20,11 @@ namespace RTParser.AIMLTagHandlers
     public class push : RTParser.Utils.AIMLTagHandler
     {
 
-        public push(RTParser.RTPBot bot,
-                RTParser.User user,
-                RTParser.Utils.SubQuery query,
-                RTParser.Request request,
-                RTParser.Result result,
+        public push(RTParser.AltBot bot,
+                User user,
+                SubQuery query,
+                Request request,
+                Result result,
                 XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -37,7 +40,7 @@ namespace RTParser.AIMLTagHandlers
                 try
                 {
                     Unifiable templateNodeInnerValue = Recurse();
-                    this.user.bot.conversationStack.Push((string)templateNodeInnerValue);
+                    Proc.conversationStack.Push((string)templateNodeInnerValue);
                 }
                 catch
                 {

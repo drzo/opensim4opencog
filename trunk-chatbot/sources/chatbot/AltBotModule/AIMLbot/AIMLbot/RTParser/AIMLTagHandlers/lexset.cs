@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime;
 using System.Text;
 using System.Xml;
@@ -9,6 +9,9 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using RTParser;
 using RTParser.Utils;
 
@@ -17,11 +20,11 @@ namespace RTParser.AIMLTagHandlers
     public class lexset : RTParser.Utils.AIMLTagHandler
     {
 
-        public lexset(RTParser.RTPBot bot,
-                RTParser.User user,
-                RTParser.Utils.SubQuery query,
-                RTParser.Request request,
-                RTParser.Result result,
+        public lexset(RTParser.AltBot bot,
+                User user,
+                SubQuery query,
+                Request request,
+                Result result,
                 XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -42,17 +45,17 @@ namespace RTParser.AIMLTagHandlers
                     string [] lexset = lexlist.Split(' ');
                     string lexspec = word;
                     // Append the definition of any tokens including the original set and the token list
-                    if (this.user.bot.wordAttributeHash.Contains(word)) { lexspec +=" "+ (string)this.user.bot.wordAttributeHash[word]; }
+                    if (Proc.wordAttributeHash.Contains(word)) { lexspec +=" "+ (string)Proc.wordAttributeHash[word]; }
                     lexspec += " "+lexlist;
                     foreach (string lexcat in lexset)
                     {
                         try
                         {
-                            lexspec += " " + ((string)this.user.bot.wordAttributeHash[lexcat]);
+                            lexspec += " " + ((string)Proc.wordAttributeHash[lexcat]);
                         }
                         catch { }
                     }
-                    this.user.bot.wordAttributeHash[word]=lexspec.Trim();
+                    Proc.wordAttributeHash[word]=lexspec.Trim();
                 }
                 catch
                 {

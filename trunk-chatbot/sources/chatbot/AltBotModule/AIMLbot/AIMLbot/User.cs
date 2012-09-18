@@ -1,9 +1,13 @@
+#if false 
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using AltAIMLbot.Utils;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
+using RTParser;
+using RTParser.Variables;
 
 namespace AltAIMLbot
 {
@@ -11,7 +15,7 @@ namespace AltAIMLbot
     /// Encapsulates information and history of a user who has interacted with the bot
     /// </summary>
     [Serializable]
-    public class User
+    public partial class User
     {
         #region Attributes
 
@@ -23,7 +27,7 @@ namespace AltAIMLbot
         /// <summary>
         /// The bot this user is using
         /// </summary>
-        public AltAIMLbot.AltBot bot;
+        public AltBot bot;
 
         /// <summary>
         /// The GUID that identifies this user to the bot
@@ -84,7 +88,7 @@ namespace AltAIMLbot
 		/// <summary>
 		/// the predicates associated with this particular user
 		/// </summary>
-        public AltAIMLbot.Utils.SettingsDictionary Predicates;
+        public SettingsDictionary Predicates;
 
         /// <summary>
         /// The most recent result to be returned by the bot
@@ -113,14 +117,14 @@ namespace AltAIMLbot
         /// </summary>
         /// <param name="UserID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-		public User(string UserID, AltAIMLbot.AltBot bot)
+		public User(string UserID, AltBot bot)
 		{
             bot.AddUser(UserID, this);
             if (UserID.Length > 0)
             {
                 this.id = UserID;
                 this.bot = bot;
-                this.Predicates = new AltAIMLbot.Utils.SettingsDictionary(UserID, this.bot, null);
+                this.Predicates = new SettingsDictionary(UserID, this.bot, null);
                 this.bot.DefaultPredicates.Clone(this.Predicates);
                 this.Predicates.bbPrefix = "user";
                 this.Predicates.addSetting("topic", "*");
@@ -312,3 +316,4 @@ namespace AltAIMLbot
         }
     }
 }
+#endif

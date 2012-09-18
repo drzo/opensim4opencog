@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using AIMLbot;
+using AltAIMLParser;
 using DcBus;
 using System.Runtime.Serialization.Formatters.Binary;
 
@@ -11,6 +13,7 @@ using Aima.Core.Logic.Propositional.Algorithms;
 using Aima.Core.Logic.Propositional.Parsing;
 using Aima.Core.Logic.Propositional.Parsing.AST;
 using LAIR.ResourceAPIs.WordNet;
+using RTParser;
 
 
 /******************************************************************************************
@@ -39,9 +42,9 @@ namespace AltAIMLbot
         // Connects a AltBot with some world, real or virtual
         // Creates multiple threads so it can have an independent existance
 
-        // To be used with RTPBot
+        // To be used with AltBot
         // see 
-        //   - Bot.cs RTPBot(),
+        //   - Bot.cs AltBot(),
         //   - BotConsole.cs Prepare(), 
         //   - WorldObjectsForAimLBot.cs StartupListener00()
 
@@ -92,14 +95,14 @@ namespace AltAIMLbot
             set { _rapStoreTrunkLevel = value; }
         }
 
-        public Servitor(string UserID, sayProcessorDelegate outputDelegate)
+        public Servitor(AltBot aimlBot, string UserID, sayProcessorDelegate outputDelegate)
         {
-            Servitor.LastServitor = this;
+            curBot = aimlBot;
             Start(UserID, outputDelegate);
         }
-        public Servitor(string UserID, sayProcessorDelegate outputDelegate, bool skipLoading, bool skippersonalitycheck, bool initialcritical)
+        public Servitor(AltBot aimlBot, string UserID, sayProcessorDelegate outputDelegate, bool skipLoading, bool skippersonalitycheck, bool initialcritical)
         {
-            Servitor.LastServitor = this;
+            curBot = aimlBot;
             skiploading = skipLoading;
             skipPersonalityCheck = skippersonalitycheck;
             initialCritical = initialcritical;
@@ -114,10 +117,13 @@ namespace AltAIMLbot
             Console.WriteLine("             UserName:" + Environment.UserName);
             Console.WriteLine("            TickCount:" + Environment.TickCount);
             Console.WriteLine("            UserID:" + UserID);
-            
-            AltBot myBot = new AltBot();
-            myScheduler = new Scheduler(this);
-            myIndex = new InvertedIndex();
+            if (curBot.servitor != null)
+            {
+
+            }
+            AltBot myBot = curBot;// ?? new AltBot();
+            myScheduler = myScheduler ?? new Scheduler(this);
+            myIndex = myIndex ?? new InvertedIndex();
             rapStoreDirectory = ".//rapstore//";
             myBot.bbSafe = true;
 
@@ -138,7 +144,7 @@ namespace AltAIMLbot
             myBot.loadSettings();
 
             Console.WriteLine("Servitor User");
-            User myUser = new User(UserID, myBot);
+            var myUser = new MasterUser(UserID, myBot);
 
             curUser = myUser;
             //myBot.isAcceptingUserInput = false;
@@ -194,7 +200,7 @@ namespace AltAIMLbot
         public void initWordNet(string wordNetPath)
         {
             Console.WriteLine("*** Servitor init WN-Load ***");
-            curBot.wordNetEngine = new WordNetEngine(wordNetPath, true);
+            curBot.wordNetEngine = curBot.wordNetEngine ?? new WordNetEngine(wordNetPath, true);
         }
         public bool setGuestEvalObject(object guestObj)
         {
@@ -275,7 +281,7 @@ namespace AltAIMLbot
         {
             try
             {
-                User u = new User(UserID, curBot);
+                var u = new MasterUser(UserID, curBot);
                 Request r = new Request(input, u, curBot);
                 Result res = curBot.Chat(r);
                 if (traceServitor)
@@ -312,7 +318,7 @@ namespace AltAIMLbot
         {
             try
             {
-                User u = new User(UserID, curBot);
+                var u = new MasterUser(UserID, curBot);
                 Request r = new Request(input, u, curBot);
                 Result res = curBot.Chat(r);
                 if (traceServitor)
@@ -529,7 +535,7 @@ namespace AltAIMLbot
 
                             lastAIMLInstance = curAIMLInstance;
                             if (curBot.myCron != null) curBot.myCron.clear();
-                            curBot.Size = 0;
+                            curBot.SizeC = 0;
                             curBot.loadAIMLFromFiles();
                             loadedCore = true;
                             if (Directory.Exists(curAIMLClass)) curBot.loadAIMLFromFiles(curAIMLClass);
@@ -703,6 +709,7 @@ namespace AltAIMLbot
 
         public  void sayResponse(string message)
         {
+            if (message == null) return;
             if (!message.ToUpper().Contains("IGNORENOP"))
             {
                 //myChemistry.m_cBus.setHash("mdollsay", myResp);

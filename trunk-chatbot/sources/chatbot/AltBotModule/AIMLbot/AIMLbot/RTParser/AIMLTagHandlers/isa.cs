@@ -1,6 +1,9 @@
 using System;
 using System.Xml;
 using System.Text;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
@@ -18,12 +21,12 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public isa(RTParser.RTPBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+        /// <param name="templateNode">The node to be Processed</param>
+        public isa(RTParser.AltBot bot,
+                        User user,
+                        SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -33,7 +36,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (templateNode.NodeType == XmlNodeType.Text)
             {
-                return bot.TheCyc.IsaFilter(with, templateNode.InnerText) ? ISA_TRUE : ISA_FALSE;
+                return Proc.TheCyc.IsaFilter(with, templateNode.InnerText) ? ISA_TRUE : ISA_FALSE;
             }
             if (templateNode.HasChildNodes)
             {
@@ -43,12 +46,12 @@ namespace RTParser.AIMLTagHandlers
                     try
                     {
                         Unifiable processChildNode = ProcessChildNode(childNode);
-                        if (!bot.TheCyc.IsaFilter(with, processChildNode)) return ISA_FALSE;
+                        if (!Proc.TheCyc.IsaFilter(with, processChildNode)) return ISA_FALSE;
                         SetWith(childNode, with);
                     }
                     catch (Exception e)
                     {
-                        RTPBot.writeDebugLine("" + e);
+                        AltBot.writeDebugLine("" + e);
                     }
                 }
                 return ISA_TRUE;

@@ -13,6 +13,7 @@ namespace AltAIMLbot.Utils
         Pattern,
         That,
         Topic,
-        State
+        State,
+        Flag,
     }
 }

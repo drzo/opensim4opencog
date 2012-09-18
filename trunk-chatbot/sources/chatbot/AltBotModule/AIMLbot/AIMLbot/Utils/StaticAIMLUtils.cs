@@ -12,7 +12,7 @@ using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using Unifiable = System.String;
 using ISettingsDictionary = AltAIMLbot.Utils.SettingsDictionary;
-using RTPBot = AltAIMLbot.AltBot;
+using AltBot = AltAIMLbot.AltBot;
 
 namespace AltAIMLbot.Utils
 {
@@ -197,7 +197,7 @@ namespace AltAIMLbot.Utils
                 }
                 catch (Exception e)
                 {
-                    RTPBot.writeDebugLine("ERROR: LoaderOper {0}", e);
+                    AltBot.writeDebugLine("ERROR: LoaderOper {0}", e);
                     if (NoRuntimeErrors) return default(R);
                     throw;
                     //return default(R);
@@ -477,7 +477,7 @@ namespace AltAIMLbot.Utils
             int total = 0;
             query = query ?? request.CurrentQuery;
             //Result result = query.Result;
-            RTPBot RProcessor = request.TargetBot;
+            AltBot RProcessor = request.TargetBot;
             AIMLLoader prev = RProcessor.Loader;
             try
             {
@@ -645,7 +645,7 @@ namespace AltAIMLbot.Utils
             }
             catch (Exception e)
             {
-                RTPBot.writeDebugLine("" + e);
+                AltBot.writeDebugLine("" + e);
                 rfound = false;
                 return null;
             }
@@ -760,13 +760,13 @@ namespace AltAIMLbot.Utils
             if (fromend) ii = uc - i;
             if (uc == 0)
             {
-                RTPBot.writeDebugLine(" !ERROR -star underflow! " + i + " in " + name);
+                AltBot.writeDebugLine(" !ERROR -star underflow! " + i + " in " + name);
                 found = false;
                 return PASSTHRU<T>(String.Empty);
             }
             if (ii >= uc || ii < 0)
             {
-                RTPBot.writeDebugLine(" !ERROR -star badindexed 0 < " + i + " < " + uc + " in " + name);
+                AltBot.writeDebugLine(" !ERROR -star badindexed 0 < " + i + " < " + uc + " in " + name);
                 found = false;
                 return unifiables[ii];
             }

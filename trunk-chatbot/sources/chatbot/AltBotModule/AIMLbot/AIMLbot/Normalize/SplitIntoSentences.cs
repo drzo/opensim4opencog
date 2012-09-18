@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
+using RTParser;
 using RTParser.Utils;
 
 namespace AltAIMLbot.Normalize
@@ -14,7 +15,7 @@ namespace AltAIMLbot.Normalize
         /// <summary>
         /// The bot this sentence splitter is associated with
         /// </summary>
-        private AltAIMLbot.AltBot bot;
+        private AltBot bot;
 
         /// <summary>
         /// The raw input string
@@ -26,7 +27,7 @@ namespace AltAIMLbot.Normalize
         /// </summary>
         /// <param name="bot">The bot this sentence splitter is associated with</param>
         /// <param name="inputString">The raw input string to be processed</param>
-        public SplitIntoSentences(AltAIMLbot.AltBot bot, string inputString)
+        public SplitIntoSentences(AltBot bot, string inputString)
         {
             this.bot = bot;
             this.inputString = inputString;
@@ -36,7 +37,7 @@ namespace AltAIMLbot.Normalize
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot this sentence splitter is associated with</param>
-        public SplitIntoSentences(AltAIMLbot.AltBot bot)
+        public SplitIntoSentences(AltBot bot)
         {
             this.bot = bot;
         }

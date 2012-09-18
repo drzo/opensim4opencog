@@ -6,6 +6,9 @@ using System.IO;
 using System.Threading;
 using System.Xml;
 using AIMLbot;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -15,13 +18,18 @@ using RTParser.Database;
 using RTParser.Normalize;
 using RTParser.Utils;
 using RTParser.Variables;
+using AIMLLoader=RTParser.Utils.AIMLLoader;
+using AIMLTagHandler=RTParser.Utils.AIMLTagHandler;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 using PatternInfo = RTParser.Unifiable;
 using ThatInfo = RTParser.Unifiable;
 using TopicInfo = RTParser.Unifiable;
 using GuardInfo = RTParser.Unifiable;
+//using MatchState=RTParser.Utils.MatchState;
 using ResponseInfo = RTParser.Unifiable;
+using MasterRequest = AltAIMLParser.Request;
+
 
 namespace RTParser
 {
@@ -30,7 +38,7 @@ namespace RTParser
         SystemExecHandler ChatWithHandler(string userName);
     }
 
-    public partial class RTPBot
+    public partial class AltBot
     {
         public static bool BE_COMPLETE_NOT_FAST = false;
         public static int SraiDepthMax = 17;
@@ -147,10 +155,16 @@ namespace RTParser
         /// </summary>
         public int Size
         {
-            get { return DefaultStartGraph.Size + DefaultHeardSelfSayGraph.Size; }
+            get { return SizeC + DefaultStartGraph.Size + DefaultHeardSelfSayGraph.Size; }
         }
 
-        private GraphMaster _g;
+        public int SizeC = 0;
+
+        private GraphMaster _g
+        {
+            get { return Graphmaster; }
+            set { Graphmaster = value; }
+        }
         private GraphMaster _h;
         private static GraphMaster TheUserListenerGraph;
 
@@ -233,19 +247,12 @@ namespace RTParser
         //public string lastDefMSM;
         //public string lastDefState;
 
-        public Stack<string> conversationStack = new Stack<string>();
         static public Hashtable _wordAttributeHash = new Hashtable();
         public Hashtable wordAttributeHash
         {
             get { return _wordAttributeHash; }
         }
 
-
-        static public WordNetEngine _wordNetEngine;
-        public WordNetEngine wordNetEngine
-        {
-            get { return _wordNetEngine; }
-        }
 
         // = new WordNetEngine(HostSystem.Combine(Environment.CurrentDirectory, this.GlobalSettings.grabSetting("wordnetdirectory")), true);
 
@@ -388,7 +395,7 @@ namespace RTParser
         {
             var rtarget = BotAsUser;
             Unifiable botLastSaid = findOrCreateUser.ResponderJustSaid;
-            AIMLbot.MasterRequest r = findOrCreateUser.CreateRequest(rawInput, botLastSaid, rtarget);
+            MasterRequest r = findOrCreateUser.CreateRequest(rawInput, botLastSaid, rtarget);
             if (rtarget == null)
             {
                 OnBotCreated(() => r.SetSpeakerAndResponder(findOrCreateUser, BotAsUser));
@@ -412,21 +419,23 @@ namespace RTParser
                 return servitor.respondToChat(rawInput);
 
             }
-            return Chat(rawInput, UserGUID).Output;
+            return ChatWR(rawInput, UserGUID).Output;
         }
 
+        
         /// <summary>
         /// Given some raw input and a unique ID creates a response for a new user
         /// </summary>
         /// <param name="rawInput">the raw input</param>
         /// <param name="UserGUID">an ID for the new user (referenced in the result object)</param>
         /// <returns>the result to be output to the user</returns>
-        public Result Chat(string rawInput, string UserGUID)
+        public Result ChatWR(string rawInput, string UserGUID)
         {
             Request request = MakeRequestToBot(rawInput, UserGUID);
             request.IsTraced = this.IsTraced;
             return ChatWithRequest(request);
         }
+        
         /// <summary>
         /// Given a request containing user input, produces a result from the Proccessor
         /// </summary>
@@ -725,7 +734,7 @@ namespace RTParser
                             request.Requester.Predicates.updateSetting("question", english);
                         }
                     }
-                    AllQueries.Add(G.gatherQueriesFromGraph(userSentence, request, MatchState.UserInput));
+                    AllQueries.Add(G.gatherQueriesFromGraph(userSentence, request, MatchState.Pattern));
                 }
                 try
                 {
@@ -1222,7 +1231,7 @@ namespace RTParser
         private Result ImmediateAIMLNode(Request parentRequest, XmlNode templateNode)
         {
             string requestName = ToTemplateXML(templateNode);
-            RTPBot request0Proccessor = this;
+            AltBot request0Proccessor = this;
             GuardInfo sGuard = null;
             Request request = null;
             User user = BotAsUser;
@@ -1489,10 +1498,10 @@ namespace RTParser
                     writeToLog("Loaded Corpus Bigrams: '{0}'", file);
                 }
             }
-            if (_wordNetEngine == null)
+            if (wordNetEngine == null)
             {
                 Console.WriteLine("*** Start WN-Load ***");
-                _wordNetEngine = new WordNetEngine(PathToWordNet, true);
+                wordNetEngine = new WordNetEngine(PathToWordNet, true);
                 Console.WriteLine("*** DONE WN-Load ***");
             }
             else
@@ -1525,33 +1534,33 @@ namespace RTParser
         private void Sleep16Seconds(int secs)
         {
             napNum++;
-            DateTime start = RTPBot.Now;
+            DateTime start = AltBot.Now;
             var errOutput = DLRConsole.SYSTEM_ERR_WRITELINE;
             string thisTime = " #" + napNum;
             try
             {
-                errOutput("START Sleep" + secs + "Seconds " + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalMilliseconds);
+                errOutput("START Sleep" + secs + "Seconds " + thisTime + " \ntime=" + AltBot.Now.Subtract(start).TotalMilliseconds);
                 Thread.Sleep(TimeSpan.FromSeconds(secs));
-                errOutput("COMPLETE Sleep" + secs + "Seconds " + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalSeconds);
+                errOutput("COMPLETE Sleep" + secs + "Seconds " + thisTime + " \ntime=" + AltBot.Now.Subtract(start).TotalSeconds);
                 Enqueue("ENQUE Sleep" + secs + "Seconds #" + thisTime, () => Sleep16Seconds(secs));
 
             }
             catch (ThreadAbortException e)
             {
-                errOutput("ThreadAbortException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalSeconds);
+                errOutput("ThreadAbortException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + AltBot.Now.Subtract(start).TotalSeconds);
             }
             catch (ThreadInterruptedException e)
             {
-                errOutput("ThreadInterruptedException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalSeconds);
+                errOutput("ThreadInterruptedException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + AltBot.Now.Subtract(start).TotalSeconds);
             }
             catch (Exception e)
             {
-                errOutput("Exception Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalSeconds);
+                errOutput("Exception Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + AltBot.Now.Subtract(start).TotalSeconds);
                 throw;
             }
             finally
             {
-                errOutput("Finanaly Sleep" + secs + "Seconds #" + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalSeconds);
+                errOutput("Finanaly Sleep" + secs + "Seconds #" + thisTime + " \ntime=" + AltBot.Now.Subtract(start).TotalSeconds);
             }
         }
 

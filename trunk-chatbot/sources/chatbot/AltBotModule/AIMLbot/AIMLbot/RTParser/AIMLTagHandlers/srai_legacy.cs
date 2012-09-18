@@ -9,9 +9,9 @@ using AIMLbot;
 namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
-    /// The srai element instructs the AIML interpreter to pass the result of processing the contents 
+    /// The srai element instructs the AIML interpreter to pass the result of Processing the contents 
     /// of the srai element to the AIML matching loop, as if the input had been produced by the user 
-    /// (this includes stepping through the entire input normalization process). The srai element does 
+    /// (this includes stepping through the entire input normalization Process). The srai element does 
     /// not have any attributes. It may contain any AIML template elements. 
     /// 
     /// As with all AIML elements, nested forms should be parsed from inside out, so embedded srais are 
@@ -19,7 +19,7 @@ namespace RTParser.AIMLTagHandlers
     /// </summary>
     public class srai_legacy : RTParser.Utils.AIMLTagHandler
     {
-        RTParser.RTPBot mybot;
+        RTParser.AltBot mybot;
         /// <summary>
         /// Ctor
         /// </summary>
@@ -28,8 +28,8 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public srai_legacy(RTParser.RTPBot bot,
+        /// <param name="templateNode">The node to be Processed</param>
+        public srai_legacy(RTParser.AltBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,

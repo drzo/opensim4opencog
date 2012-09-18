@@ -10,19 +10,23 @@ using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics;
 using AIMLbot;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using RTParser;
 using RTParser.Utils;
+using MasterRequest = AltAIMLParser.Request;
 
 namespace RTParser.AIMLTagHandlers
 {
     public class process_msm : RTParser.Utils.AIMLTagHandler
     {
 
-        public process_msm(RTParser.RTPBot bot,
-                RTParser.User user,
-                RTParser.Utils.SubQuery query,
-                RTParser.Request request,
-                RTParser.Result result,
+        public process_msm(RTParser.AltBot bot,
+                User user,
+                SubQuery query,
+                Request request,
+                Result result,
                 XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -30,11 +34,11 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "processmsm")
+            if (this.templateNode.Name.ToLower() == "Processmsm")
             {
                 string machine = GetAttribValue("name", null);
                 string line = templateNodeInnerText.ToValue(query);
-                RTPBot.writeDebugLine("\n\n >>>>>>>>>>>>>>>>>>>>>> PROCESSMSM : |{0}|<<<<<<<<<<<<<<<<<<<<", line);
+                AltBot.writeDebugLine("\n\n >>>>>>>>>>>>>>>>>>>>>> PROCESSMSM : |{0}|<<<<<<<<<<<<<<<<<<<<", line);
                 Unifiable results = null;
                 MachineSideEffect(() => { results = ProcessChangeMSM(); });
                 return results;
@@ -44,17 +48,17 @@ namespace RTParser.AIMLTagHandlers
 
         protected Unifiable ProcessChangeMSM()
         {
-            //if (this.templateNode.Name.ToLower() == "processmsm")
+            //if (this.templateNode.Name.ToLower() == "Processmsm")
             {
                 string machine = GetAttribValue("name", null);
                 string line = templateNodeInnerText.ToValue(query);
-                RTPBot.writeDebugLine("\n\n >>>>>>>>>>>>>>>>>>>>>> PROCESSMSM : |{0}|<<<<<<<<<<<<<<<<<<<<", line);
+                AltBot.writeDebugLine("\n\n >>>>>>>>>>>>>>>>>>>>>> PROCESSMSM : |{0}|<<<<<<<<<<<<<<<<<<<<", line);
                 //varMSM.lastDefMachine = machine;
                 var varMSM = this.botActionMSM;
 
                 varMSM.addMachine(machine);
                 // set topic to "collectevidencepatterns"
-                //this.user.bot.AddAiml("<set name='topic'>collectevidencepatters</set>");
+                //Proc.AddAiml("<set name='topic'>collectevidencepatters</set>");
                 //this.user.Predicates.updateSetting("topic", "collectevidencepatters");
                 this.user.TopicSetting = "CEP";
 
@@ -65,12 +69,12 @@ namespace RTParser.AIMLTagHandlers
                 // estimate what evidence can be gleaned from the current state
                 varMSM.inspectEvidenceStates();
 
-                // process the input text
+                // Process the input text
 
-                //string evidenceReply = this.user.bot.ChatString(line, this.user.UserID);
+                //string evidenceReply = Proc.ChatString(line, this.user.UserID);
                 string evidenceReply = subChat(line, this.user.TopicSetting, request, true);
 
-                RTPBot.writeDebugLine("MSM: WithEvidence {0} ", varMSM.ToString());
+                AltBot.writeDebugLine("MSM: WithEvidence {0} ", varMSM.ToString());
 
                 // TODO: we should also get evidence across machine boundries
 
@@ -83,9 +87,9 @@ namespace RTParser.AIMLTagHandlers
                 }
                 // make the next_state values the new current state values
                 varMSM.advanceStateValues();
-                RTPBot.writeDebugLine("MSM: AfterAdvance {0} ", varMSM.ToString());
+                AltBot.writeDebugLine("MSM: AfterAdvance {0} ", varMSM.ToString());
 
-                // For each machine set the appropriate topic, and process the input text
+                // For each machine set the appropriate topic, and Process the input text
                 string totalReply = "";
                 double strongestVal = -9999;
                 foreach (string actingMachine in machinesTopState.Keys)
@@ -104,16 +108,16 @@ namespace RTParser.AIMLTagHandlers
                             //string topicSet = "<set name='topic'>"+responseTopic+"</set>";
                             //this.user.Predicates.updateSetting("topic", responseTopic);
                             this.user.TopicSetting = responseTopicUp;
-                            //this.user.bot.AddAiml(topicSet);
+                            //Proc.AddAiml(topicSet);
                             string actionReply = "";
-                            //actionReply = this.user.bot.ChatString(line, this.user.UserID);
+                            //actionReply = Proc.ChatString(line, this.user.UserID);
 
 
                             actionReply = subChat(line, responseTopicUp, request, false);
 
                             // Append or use non-null response with the most certainty
                             //totalReply += " " + actionReply;
-                            RTPBot.writeDebugLine("MSM:[[ PossReply m:{0} s:{1} p:{2} RT: {3} REPLY:{4} ]]  <<< * * * * * *", actingMachine, actionState, actp, responseTopicUp, actionReply.Trim());
+                            AltBot.writeDebugLine("MSM:[[ PossReply m:{0} s:{1} p:{2} RT: {3} REPLY:{4} ]]  <<< * * * * * *", actingMachine, actionState, actp, responseTopicUp, actionReply.Trim());
 
                             if ((actp > strongestVal) && (actionReply.Trim().Length > 0))
                             {
@@ -124,14 +128,14 @@ namespace RTParser.AIMLTagHandlers
                     }
                 }
                 Unifiable result = totalReply.Trim();
-                RTPBot.writeDebugLine("MSM: FinalReply :{0}", totalReply.Trim());
+                AltBot.writeDebugLine("MSM: FinalReply :{0}", totalReply.Trim());
                 return result;
             }
             return Unifiable.Empty;
 
         }
 
-        public string subChat(string line, string topic, RTParser.Request request, bool allowMultiplesTemplates)
+        public string subChat(string line, string topic, Request request, bool allowMultiplesTemplates)
         {
             //----------------------
             // snarf from "srai"
@@ -157,7 +161,7 @@ namespace RTParser.AIMLTagHandlers
                 var newresult = request.CreateResult(subRequest);
                 //subRequest.CurrentResult = newresult;
                 user.SuspendAddResultToUser = true;
-                subResult = (Result) this.bot.ChatWithRequest(subRequest);
+                subResult = (Result) this.Proc.ChatWithRequest(subRequest);
                 // subResult = this.Proc.Chat(subRequest, request.Graph);
             }
             finally
@@ -237,7 +241,7 @@ namespace RTParser.AIMLTagHandlers
         }
         public void addMachine(string machine)
         {
-            RTPBot.writeDebugLine("MSM: addMachine({0})", machine);
+            AltBot.writeDebugLine("MSM: addMachine({0})", machine);
             machines[machine] = 1;
             lastDefMachine = machine;
         }
@@ -254,14 +258,14 @@ namespace RTParser.AIMLTagHandlers
         }
         public void setState(string machine, string state, double prob)
         {
-            RTPBot.writeDebugLine("MSM: setState({0},{1},{2})", machine, state, prob);
+            AltBot.writeDebugLine("MSM: setState({0},{1},{2})", machine, state, prob);
             addMachineState(machine, state);
             string machineState = machine + ":" + state;
              cur_machineStateVal[machineState] = prob;
         }
         public void defState(string machine, string state, double initProb, double selfProb)
         {
-            RTPBot.writeDebugLine("MSM:   defState({0},{1},{2},{3})", machine, state, initProb, selfProb);
+            AltBot.writeDebugLine("MSM:   defState({0},{1},{2},{3})", machine, state, initProb, selfProb);
             machines[machine] = 1;
             lastDefState = state;
             string machineState = machine + ":" + state;
@@ -273,12 +277,12 @@ namespace RTParser.AIMLTagHandlers
         }
         public void clearEvidence()
         {
-            RTPBot.writeDebugLine("MSM:  clearEvidence()");
+            AltBot.writeDebugLine("MSM:  clearEvidence()");
             currentEvidence.Clear();
         }
         public void setEvidence(string evidence, double evidenceProb)
         {
-            RTPBot.writeDebugLine("MSM:  setEvidence({0},{1})", evidence, evidenceProb);
+            AltBot.writeDebugLine("MSM:  setEvidence({0},{1})", evidence, evidenceProb);
             currentEvidence.Add(evidence, evidenceProb);
         }
 
@@ -286,7 +290,7 @@ namespace RTParser.AIMLTagHandlers
         {
             addMachineState(machine, myState);
 
-            RTPBot.writeDebugLine("MSM: addResponse({0},{1},{2},{3})", machine, myState, myTopic, prob);
+            AltBot.writeDebugLine("MSM: addResponse({0},{1},{2},{3})", machine, myState, myTopic, prob);
              string machineSrcState = machine + ":" + myState;
             
             if (!machineStateResponses.ContainsKey(machineSrcState))
@@ -300,7 +304,7 @@ namespace RTParser.AIMLTagHandlers
 
         public void addTransition(string machine, string srcState, string dstState, double prob)
         {
-            RTPBot.writeDebugLine("MSM: addTransition({0},{1},{2},{3})", machine, srcState, dstState, prob);
+            AltBot.writeDebugLine("MSM: addTransition({0},{1},{2},{3})", machine, srcState, dstState, prob);
             string machineSrcState = machine + ":" + srcState;
             string machineDstState = machine + ":" + dstState;
             addMachineState(machine, srcState);
@@ -319,13 +323,13 @@ namespace RTParser.AIMLTagHandlers
             }
             catch
             {
-                RTPBot.writeDebugLine("addTransition fail {0} {1} {2}", machineSrcState, machineDstState, prob);
+                AltBot.writeDebugLine("addTransition fail {0} {1} {2}", machineSrcState, machineDstState, prob);
             }
         }
 
         public void incrTransition(string machine, string srcState, string dstState, double prob)
         {
-            RTPBot.writeDebugLine("MSM: incrTransition({0},{1},{2},{3})", machine, srcState, dstState, prob);
+            AltBot.writeDebugLine("MSM: incrTransition({0},{1},{2},{3})", machine, srcState, dstState, prob);
             string machineSrcState = machine + ":" + srcState;
             string machineDstState = machine + ":" + dstState;
             addMachineState(machine, srcState);
@@ -354,13 +358,13 @@ namespace RTParser.AIMLTagHandlers
             }
             catch
             {
-                RTPBot.writeDebugLine("incrTransition fail {0} {1} {2}", machineSrcState, machineDstState, prob);
+                AltBot.writeDebugLine("incrTransition fail {0} {1} {2}", machineSrcState, machineDstState, prob);
             }
         }
 
         public double getTransitionProb(string machine, string srcState, string dstState)
         {
-            RTPBot.writeDebugLine("MSM: getTransitionProb({0},{1},{2})", machine, srcState, dstState);
+            AltBot.writeDebugLine("MSM: getTransitionProb({0},{1},{2})", machine, srcState, dstState);
             string machineSrcState = machine + ":" + srcState;
             string machineDstState = machine + ":" + dstState;
             try
@@ -378,14 +382,14 @@ namespace RTParser.AIMLTagHandlers
             }
             catch
             {
-                //RTPBot.writeDebugLine("   missing Transition {0} -- {1} ", srcState, dstState);
+                //AltBot.writeDebugLine("   missing Transition {0} -- {1} ", srcState, dstState);
                 return (double)0.0001;
             }
         }
 
         public void addEmission(string machine, string srcState, string evidence, double prob)
         {
-            RTPBot.writeDebugLine("MSM: addEmission({0},{1},{2},{3})", machine, srcState, evidence, prob);
+            AltBot.writeDebugLine("MSM: addEmission({0},{1},{2},{3})", machine, srcState, evidence, prob);
             lastDefEvidence = evidence;
 
             string machineSrcState = machine + ":" + srcState;
@@ -405,7 +409,7 @@ namespace RTParser.AIMLTagHandlers
             }
             catch
             {
-                RTPBot.writeDebugLine("addEmission fail {0} {1} {2}", machineSrcState, evidence, prob);
+                AltBot.writeDebugLine("addEmission fail {0} {1} {2}", machineSrcState, evidence, prob);
             }
 
 
@@ -413,7 +417,7 @@ namespace RTParser.AIMLTagHandlers
 
         public void addEvidenceState(string machine, string srcState, string evidence, double prob)
         {
-            RTPBot.writeDebugLine("MSM: addEvidenceState({0},{1},{2},{3})", machine, srcState, evidence, prob);
+            AltBot.writeDebugLine("MSM: addEvidenceState({0},{1},{2},{3})", machine, srcState, evidence, prob);
             lastDefEvidence = evidence;
 
             string machineSrcState = machine + ":" + srcState;
@@ -433,7 +437,7 @@ namespace RTParser.AIMLTagHandlers
             }
             catch
             {
-                RTPBot.writeDebugLine("addEvidenceState fail {0} {1} {2}", machineSrcState, evidence, prob);
+                AltBot.writeDebugLine("addEvidenceState fail {0} {1} {2}", machineSrcState, evidence, prob);
             }
 
 
@@ -593,7 +597,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                     double p = transP * bf_prob;
 
-                    //RTPBot.writeDebugLine(" Transition: P({0}) = {1}", atomicKey, p);
+                    //AltBot.writeDebugLine(" Transition: P({0}) = {1}", atomicKey, p);
                     transitionChain += p;
                 }// for cur_state
 
@@ -610,9 +614,9 @@ namespace RTParser.AIMLTagHandlers
                     catch
                     {
                     }
-                    //RTPBot.writeDebugLine(" Evidence: P({0}) = {1} ", evidenceToken,evidenceProb);
-                    //RTPBot.writeDebugLine("      EMP: P({0} | {1}) = {2} ", evidenceToken, nextSrcMachineState, emitProb);
-                    //RTPBot.writeDebugLine("        G: {0} ", (emitProb * evidenceProb));
+                    //AltBot.writeDebugLine(" Evidence: P({0}) = {1} ", evidenceToken,evidenceProb);
+                    //AltBot.writeDebugLine("      EMP: P({0} | {1}) = {2} ", evidenceToken, nextSrcMachineState, emitProb);
+                    //AltBot.writeDebugLine("        G: {0} ", (emitProb * evidenceProb));
 
                     evidenceChain = evidenceChain + (emitProb * evidenceProb);
                 }
@@ -620,7 +624,7 @@ namespace RTParser.AIMLTagHandlers
                 double rawBeliefInNextState = evidenceChain * transitionChain;
                 next_machineStateVal[nextSrcMachineState] = rawBeliefInNextState;
                 Nsum += rawBeliefInNextState;
-                //RTPBot.writeDebugLine(" Next Raw P({0}) = {1} from tcp={2} and ecp={3}", nextSrcMachineState, rawBeliefInNextState, transitionChain, evidenceChain);
+                //AltBot.writeDebugLine(" Next Raw P({0}) = {1} from tcp={2} and ecp={3}", nextSrcMachineState, rawBeliefInNextState, transitionChain, evidenceChain);
 
                 if (rawBeliefInNextState > bestVal)
                 {
@@ -640,8 +644,8 @@ namespace RTParser.AIMLTagHandlers
             //}
             normalizeMachineNextState(machine);
 
-            RTPBot.writeDebugLine("MSM: The highest probability for machine {0} in state {1} [{2}]", machine, bestGuess, next_machineStateVal[bestGuess]);
-            RTPBot.writeDebugLine("MSM: Guess = [{0}]", bestGuess);
+            AltBot.writeDebugLine("MSM: The highest probability for machine {0} in state {1} [{2}]", machine, bestGuess, next_machineStateVal[bestGuess]);
+            AltBot.writeDebugLine("MSM: Guess = [{0}]", bestGuess);
             return bestGuess ;
         }
 

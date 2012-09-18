@@ -22,7 +22,7 @@ namespace RTParser.Utils
 
         private void writeToLog(string message, params object[] args)
         {
-            RTPBot.writeDebugLine("!NODE: " +  message + " in " +ToString(), args);
+            AltBot.writeDebugLine("!NODE: " +  message + " in " +ToString(), args);
         }
 
         private Node Parent;

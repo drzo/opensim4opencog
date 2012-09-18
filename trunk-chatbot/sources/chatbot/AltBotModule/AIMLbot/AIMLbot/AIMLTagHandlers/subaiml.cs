@@ -1,7 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Xml;
 using System.Text;
+using AltAIMLParser;
+using RTParser;
+
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 
@@ -23,14 +26,14 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class subaiml : AltAIMLbot.Utils.AIMLTagHandler
+    public class subaiml : Utils.AIMLTagHandler
     {
 
-        public subaiml(AltAIMLbot.AltBot bot,
-                AltAIMLbot.User user,
-                AltAIMLbot.Utils.SubQuery query,
-                AltAIMLbot.Request request,
-                AltAIMLbot.Result result,
+        public subaiml(AltBot bot,
+                User user,
+                Utils.SubQuery query,
+                Request request,
+                Result result,
                 XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {

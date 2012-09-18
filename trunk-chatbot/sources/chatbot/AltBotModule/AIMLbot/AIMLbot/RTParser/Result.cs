@@ -1,16 +1,19 @@
 using System;
 using System.Collections.Generic;
 using AIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
+using RTParser;
 using RTParser.Utils;
 using RTParser.Variables;
 using UPath = RTParser.Unifiable;
+using MasterRequest = AltAIMLParser.Request;
 
 
-namespace RTParser
+namespace AltAIMLbot
 {
-
     /// <summary>
     /// Encapsulates information about the result of a request to the bot
     /// </summary>
@@ -28,9 +31,10 @@ namespace RTParser
 
         //public double TemplateRating { get; set; }
 
-        public TimeSpan Durration
+        public TimeSpan Duration
         {
             get { return request.Durration; }
+            set { request.Durration = value; }
         }
 
 
@@ -85,8 +89,8 @@ namespace RTParser
 
         //  private readonly ParsedSentences ChatInput;
         public abstract Result result { get; }
-        private Utterance _chatOutput;
-        public Utterance ChatOutput
+        private RTParser.Utterance _chatOutput;
+        public RTParser.Utterance ChatOutput
         {
             get
             {
@@ -113,6 +117,14 @@ namespace RTParser
         /// The normalized sentence(s) (paths) fed into the graphmaster
         /// </summary>
         public List<Unifiable> InputPaths
+        {
+            get { return ChatInput.NormalizedPaths; }
+        }
+
+        /// <summary>
+        /// The normalized sentence(s) (paths) fed into the graphmaster
+        /// </summary>
+        public List<Unifiable> NormalizedPaths
         {
             get { return ChatInput.NormalizedPaths; }
         }
@@ -151,15 +163,28 @@ namespace RTParser
         /// <param name="user">The user for whom this is a result</param>
         /// <param name="bot">The bot providing the result</param>
         /// <param name="request">The request that originated this result</param>
+        public Result(User user, AltBot bot, Request request)
+            : this(request.rawInput, user, bot, request, request.Responder)
+        {
+            this.request = request;
+            this.request.result = this;
+        }
+
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        /// <param name="user">The user for whom this is a result</param>
+        /// <param name="bot">The bot providing the result</param>
+        /// <param name="request">The request that originated this result</param>
         public
 
 #if interface
             ResultImpl
 #else
- Result
+            Result
 #endif // interface
 
-(string rawInput, UserDuringProcessing user, RTPBot bot, Request parent, UserConversationScope targetUser)
+            (string rawInput, UserDuringProcessing user, AltBot bot, Request parent, UserConversationScope targetUser)
             : base(parent)
         {
             this.request = parent;
@@ -172,8 +197,8 @@ namespace RTParser
             //this.Requester = user;
             altResponder = targetUser;
             request.TargetBot = bot;
-            ChatOutput = new Utterance(bot.EnsureEnglish, user, altResponder, null, MaxPrintResults)
-                              {InResponse = ChatInput};
+            ChatOutput = new RTParser.Utterance(bot.EnsureEnglish, user, altResponder, null, MaxPrintResults)
+                             {InResponse = ChatInput};
             //OutputSentences = ChatOutput.SemanticSentences;
             writeToLog = writeToLog ?? user.WriteToUserTrace;
             writeToLog = writeToLog ?? request.WriteLine;
@@ -369,7 +394,7 @@ namespace RTParser
         {
             get
             {
-                if (EndedOn < RTPBot.Now)
+                if (EndedOn < AltBot.Now)
                     return true;
                 if (request.IsTimedOutOrOverBudget)
                 {
@@ -380,7 +405,7 @@ namespace RTParser
             }
             set
             {
-                EndedOn = value ? RTPBot.Now : DateTime.MaxValue;
+                EndedOn = value ? AltBot.Now : DateTime.MaxValue;
                 //_Durration = value ? Durration : TimeSpan.Zero;
             }
         }
@@ -475,7 +500,7 @@ namespace RTParser
             ExitQueue.Commit(true);
         }
 
-        public RTPBot TargetBot
+        public AltBot TargetBot
         {
             get { return request.TargetBot; }
         }
@@ -487,10 +512,29 @@ namespace RTParser
         }
 
         public string _normalizedOutput;
-        public readonly Utterance ChatInput;
+        public readonly RTParser.Utterance ChatInput;
         private SubQuery _CurrentQuery;
         private string matchable;
         private int OutputPings;
+        public char resultCount;
+        public bool isValidOutput
+        {
+            get
+            {
+                if (OutputSentences.Count > 0)
+                {
+                    return true;
+                }
+                else
+                {
+                    if (resultCount > 0)
+                    {
+                        return true;
+                    }
+                    return false;
+                }
+            }
+        }
 
         //public ChatLabel CatchLabel { get; set; }
 
@@ -530,14 +574,31 @@ namespace RTParser
             {
                 if (IsTraced)
                 {
-                   // writeToLog("AIMLTRACE SQ: " + this + " \n" + query.ToString().TrimStart());
+                    // writeToLog("AIMLTRACE SQ: " + this + " \n" + query.ToString().TrimStart());
                 }
                 if (!SubQueries.Contains(query)) SubQueries.Add(query);
             }
             DLRConsole.SystemFlush();
             Started = true;
         }
+        public void AddOutputSentences(string sentence)
+        {
+            this.resultCount++;
+            List<string> sents = StaticAIMLUtils.SentenceBreaker(sentence, null);
+            if (sents.Count == 0 && sentence == " , ")
+            {
+                if (resultCount == 1) OutputSentences.Add(sentence);
+                return;
+            }
+            foreach (var s in sents)
+            {
+                if (s.Contains(". "))
+                {
 
+                }
+                OutputSentences.Add(s);
+            }
+        }
         public void AddOutputSentences(TemplateInfo ti, string unifiable, double score)
         {
             AddOutputSentences0(ti, unifiable, score);
@@ -696,7 +757,7 @@ namespace RTParser
                 {
                     writeToLog("ERROR:  AddRssult: " + Requester.UserID + " " + unifiable);
                 }
-                EndedOn = RTPBot.Now;
+                EndedOn = AltBot.Now;
                 if (addToFront)
                 {
                     OutputSentences.Insert(0, unifiable);

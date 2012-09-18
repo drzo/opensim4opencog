@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using RTParser;
 
 namespace AltAIMLbot.Normalize
 {
@@ -9,10 +10,10 @@ namespace AltAIMLbot.Normalize
     /// </summary>
     public class MakeCaseInsensitive : AltAIMLbot.Utils.TextTransformer
     {
-        public MakeCaseInsensitive(AltAIMLbot.AltBot bot, string inputString) : base(bot, inputString)
+        public MakeCaseInsensitive(AltBot bot, string inputString) : base(bot, inputString)
         { }
 
-        public MakeCaseInsensitive(AltAIMLbot.AltBot bot) : base(bot) 
+        public MakeCaseInsensitive(AltBot bot) : base(bot) 
         { }
 
         protected override string ProcessChange()

@@ -1,7 +1,9 @@
 using System;
 using System.Xml;
 using System.Text;
-using AltAIMLbot.Utils;
+using AltAIMLParser;
+using RTParser;
+using RTParser.Variables;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
@@ -16,7 +18,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// The bot element does not have any content. 
     /// </summary>
-    public class bot : AltAIMLbot.Utils.AIMLTagHandler
+    public class bot : Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -27,11 +29,11 @@ namespace AltAIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public bot(AltAIMLbot.AltBot bot,
-                        AltAIMLbot.User user,
-                        AltAIMLbot.Utils.SubQuery query,
-                        AltAIMLbot.Request request,
-                        AltAIMLbot.Result result,
+        public bot(AltBot bot,
+                        User user,
+                        Utils.SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -44,7 +46,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             {
                 string name = GetAttribValue("name,var", () => TemplateNodeInnerText);
                 string type0 = GetAttribValue("type,dict", "bot");
-                SettingsDictionary dict = request.GetDictionary(type0) ?? bot.GlobalSettings;
+                ISettingsDictionary dict = request.GetDictionary(type0) ?? bot.GlobalSettings;
                 return dict.grabSetting(name);
             }
             return string.Empty;

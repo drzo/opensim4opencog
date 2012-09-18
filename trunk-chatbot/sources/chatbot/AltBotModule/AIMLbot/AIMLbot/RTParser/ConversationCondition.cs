@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 using System.Xml.XPath;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser.AIMLTagHandlers;
@@ -130,7 +132,7 @@ namespace RTParser.Utils
         }
         private void writeToLog(string s, params object[] args)
         {
-            RTPBot.writeDebugLine("" + this + " " + s, args);
+            AltBot.writeDebugLine("" + this + " " + s, args);
         }
 
 

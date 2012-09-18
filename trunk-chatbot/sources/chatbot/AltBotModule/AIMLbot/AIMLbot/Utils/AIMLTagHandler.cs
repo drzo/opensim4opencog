@@ -2,7 +2,10 @@ using System;
 using System.Text;
 using System.Xml;
 using AltAIMLbot.AIMLTagHandlers;
+using AltAIMLParser;
 using MushDLR223.Utilities;
+using RTParser;
+using RTParser.Variables;
 using TextPatternUtils = RTParser.Utils.TextPatternUtils;
 
 namespace AltAIMLbot.Utils 
@@ -22,10 +25,10 @@ namespace AltAIMLbot.Utils
         /// <param name="request">The request itself</param>
         /// <param name="result">The result to be passed back to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public AIMLTagHandler   (   AltAIMLbot.AltBot bot, 
-                                    AltAIMLbot.User user, 
+        public AIMLTagHandler   (   AltBot bot, 
+                                    User user, 
                                     AltAIMLbot.Utils.SubQuery query,
-                                    AltAIMLbot.Request request, 
+                                    Request request, 
                                     AltAIMLbot.Result result, 
                                     XmlNode templateNode) :base(bot,templateNode.OuterXml)
         {
@@ -57,7 +60,7 @@ namespace AltAIMLbot.Utils
         /// <summary>
         /// A representation of the user who made the request
         /// </summary>
-        public AltAIMLbot.User user;
+        public User user;
 
         /// <summary>
         /// The query that produced this node containing the wildcard matches
@@ -67,7 +70,7 @@ namespace AltAIMLbot.Utils
         /// <summary>
         /// A representation of the input into the bot made by the user
         /// </summary>
-        public AltAIMLbot.Request request;
+        public Request request;
 
         /// <summary>
         /// A representation of the result to be returned to the user

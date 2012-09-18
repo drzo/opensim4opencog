@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
 using AIMLbot;
+using AltAIMLParser;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -27,7 +28,6 @@ using RTParser.Web;
 using Console=System.Console;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
-using AltAIMLbot;
 
 namespace RTParser
 {
@@ -36,7 +36,7 @@ namespace RTParser
     /// Encapsulates a Proccessor. If no settings.xml file is found or referenced the Proccessor will try to
     /// default to safe settings.
     /// </summary
-    public partial class RTPBot : ScriptInterpreterFactory
+    public partial class AltBot : ScriptInterpreterFactory
     {
 
         private object EvalAIMLHandler(string cmd, Request user)
@@ -144,10 +144,10 @@ namespace RTParser
             Self = was;
         }
 
-        private RTPBot TheBot;
+        private AltBot TheBot;
         private string Lang;
 
-        public AIMLScriptIntperForFiletype(string type, RTPBot bot)
+        public AIMLScriptIntperForFiletype(string type, AltBot bot)
         {
             this.Lang = type;
             TheBot = bot;

@@ -1,6 +1,7 @@
 using System;
 using System.Text.RegularExpressions;
 using System.Text;
+using RTParser;
 
 namespace AltAIMLbot.Normalize
 {
@@ -10,10 +11,10 @@ namespace AltAIMLbot.Normalize
     /// </summary>
     public class StripIllegalCharacters : AltAIMLbot.Utils.TextTransformer
     {
-        public StripIllegalCharacters(AltAIMLbot.AltBot bot, string inputString) : base(bot, inputString)
+        public StripIllegalCharacters(AltBot bot, string inputString) : base(bot, inputString)
         { }
 
-        public StripIllegalCharacters(AltAIMLbot.AltBot bot)
+        public StripIllegalCharacters(AltBot bot)
             : base(bot) 
         { }
 

@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Xml;
 using System.Text;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -18,12 +21,12 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public cycassert(RTParser.RTPBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+        /// <param name="templateNode">The node to be Processed</param>
+        public cycassert(RTParser.AltBot bot,
+                        User user,
+                        SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -36,7 +39,7 @@ namespace RTParser.AIMLTagHandlers
                 string sent = templateNodeInnerText = Recurse();
                 if (IsValue(sent))
                 {
-                    string mt = TheCyc.Cyclify(GetAttribValue("mt", bot.GetUserMt(user, query)));
+                    string mt = TheCyc.Cyclify(GetAttribValue("mt", Proc.GetUserMt(user, query)));
                     return this.TheCyc.EvalSubL(
                         SafeFormat("(eval (subseq `(cyc-assert '{0} {1} ) 0 3) )", sent, mt), null);
                 }

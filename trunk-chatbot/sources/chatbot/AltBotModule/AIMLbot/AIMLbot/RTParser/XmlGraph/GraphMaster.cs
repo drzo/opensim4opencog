@@ -9,6 +9,9 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml;
 using AIMLbot;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
@@ -20,6 +23,7 @@ using TopicInfo = RTParser.Unifiable;
 using GuardInfo = RTParser.Unifiable;
 using ResponseInfo = RTParser.Unifiable;
 using System.Threading;
+using System.Text;
 
 //using StringAppendableUnifiable = System.Text.StringBuilder;
 
@@ -47,9 +51,9 @@ namespace RTParser.Utils
             get
             {
                 var names = new List<string>();
-                lock (RTPBot.GraphsByName)
+                lock (AltBot.GraphsByName)
                 {
-                    foreach (KeyValuePair<string, GraphMaster> pair in RTPBot.GraphsByName)
+                    foreach (KeyValuePair<string, GraphMaster> pair in AltBot.GraphsByName)
                     {
                         if (pair.Value == this)
                         {
@@ -165,7 +169,7 @@ namespace RTParser.Utils
         public GraphMaster(string gn, GraphMaster child, bool isParallel)
         //: base(bot)
         {
-            RTPBot.GraphsByName[gn] = this;
+            AltBot.GraphsByName[gn] = this;
             IsParallel = isParallel;
             SilentTagsInPutParallel = DefaultSilentTagsInPutParallel;
             SilentTagsInPutParallel = false;
@@ -279,7 +283,7 @@ namespace RTParser.Utils
                 if (_STAR_PATH == null)
                 {
                     _STAR_PATH = "TAG-INPUT * TAG-THAT * TAG-TOPIC * TAG-FLAG *";
-                    // ((RTPBot)null).Loader.generatePath("*", "*", "*", "*", false);
+                    // ((AltBot)null).Loader.generatePath("*", "*", "*", "*", false);
                 }
                 return _STAR_PATH;
             }
@@ -899,7 +903,7 @@ namespace RTParser.Utils
 
         internal void writeToLog(string message, params object[] args)
         {
-            RTPBot.writeDebugLine("GRAPH: " + message + " in " + ToString(), args);
+            AltBot.writeDebugLine("GRAPH: " + message + " in " + ToString(), args);
         }
 
 
@@ -1009,7 +1013,7 @@ namespace RTParser.Utils
         private List<Result> DoParallelEval(List<GraphMaster> totry, Request request, Unifiable unifiable)
         {
             var pl = new List<Result>();
-            RTPBot proc = request.TargetBot;
+            AltBot proc = request.TargetBot;
             foreach (GraphMaster p in CopyOf(totry))
             {
                 if (request.IsTimedOutOrOverBudget) return pl;
@@ -1623,7 +1627,7 @@ namespace RTParser.Utils
 
         public static GraphMaster FindOrCreate(string dgn)
         {
-            var gbn = RTPBot.GraphsByName;
+            var gbn = AltBot.GraphsByName;
             lock (gbn)
             {
                 GraphMaster v;
@@ -1646,5 +1650,48 @@ namespace RTParser.Utils
         {
             return RootNode.RunLowMemHooks();
         }
+
+        public static string[] StarTypes = new[] { "state", "topic", "pattern", "that", };
+        public AltAIMLbot.Utils.Node root = new AltAIMLbot.Utils.Node();
+        public string evaluate(string path, SubQuery query, Request request, MatchState state, StringBuilder builder)
+        {
+            return root.evaluate(path, query, request, state, builder);
+        }
+
+        public double getPathScore(string path)
+        {
+            return root.getPathScore(path);
+        }
+
+        public void collectFullPaths(string inpath, List<string> collector)
+        {
+            root.collectFullPaths(inpath, collector);
+        }
+
+        public void searchFullPaths(string targetPath, string inpath, List<string> collector)
+        {
+            root.searchFullPaths(targetPath, inpath, collector);
+        }
+
+        public void addCategory(string path, string template, string filename, double score, double scale)
+        {
+            root.addCategory(path, template, filename, score, scale);
+        }
+
+        public void DisableFilename(string filename)
+        {
+            root.WithFilename(filename, false, false);
+        }
+
+        public void EnableFilename(string filename)
+        {
+            root.WithFilename(filename, false, true);
+        }
+
+        public void UnloadFilename(string filename)
+        {
+            root.WithFilename(filename, true, false);
+        }
+
     }
 }

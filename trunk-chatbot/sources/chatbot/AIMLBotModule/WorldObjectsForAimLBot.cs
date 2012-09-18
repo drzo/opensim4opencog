@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading;
 using AIMLbot;
 using AltAIMLbot;
+using AltAIMLParser;
 using Cogbot.Actions;
 using Cogbot;
 using Cogbot.ScriptEngines;
@@ -24,7 +25,7 @@ using String=System.String;
 using Thread=System.Threading.Thread;
 using PathSystem3D.Navigation;
 using SUnifiable=System.String;
-using User=RTParser.User;
+using User=AltAIMLbot.User;
 
 namespace AIMLBotModule
 {
@@ -123,9 +124,9 @@ namespace AIMLBotModule
         readonly static object RegisterTalkToCmdLock = new object();
 
 
-        object BotExecHandler(string cmd, RTParser.Request request)
+        object BotExecHandler(string cmd, Request request)
         {
-            RTParser.User prev = MyUser;
+            User prev = MyUser;
             try
             {
                 MyUser = request.Requester;
@@ -155,9 +156,9 @@ namespace AIMLBotModule
             }
         }
 
-        object BotExecHandlerNew(string cmd, RTParser.Result request)
+        object BotExecHandlerNew(string cmd, Result request)
         {
-            RTParser.User prev = MyUser;
+            User prev = MyUser;
             try
             {
                 MyUser = request.Requester.Value;
@@ -183,9 +184,9 @@ namespace AIMLBotModule
             }
         }
 
-        object LispExecHandler(string cmd, RTParser.Request request)
+        object LispExecHandler(string cmd, Request request)
         {
-            RTParser.User prev = MyUser;
+            User prev = MyUser;
             try
             {
                 MyUser = request.Requester;
@@ -221,7 +222,7 @@ namespace AIMLBotModule
         }
 
         public Bot _MyBot;
-        private RTParser.User _MyUser;
+        private User _MyUser;
 
         readonly TaskQueueHandler AimlBotReadSimData;
         readonly TaskQueueHandler AimlBotRespond;
@@ -360,7 +361,7 @@ namespace AIMLBotModule
             if (target == null) return;
             string name = source.GetName();
             if (string.IsNullOrEmpty(name)) return;
-            RTParser.User user = GetMyUser(name);
+            User user = GetMyUser(name);
             SettingsDictionary myUserPredicates = user.Predicates;
             myUserPredicates.addSetting("it", targetid.ToString());
             myUserPredicates.addSetting("what", targetid.ToString());
@@ -432,7 +433,7 @@ namespace AIMLBotModule
             MyBot.SetChatOnOff(username, value);
         }
 
-        private RTParser.User GetMyUser(string fromname)
+        private User GetMyUser(string fromname)
         {
             bool newlyCreated;
             if (MyBotNullWarning()) return MyUser;
@@ -444,7 +445,7 @@ namespace AIMLBotModule
             {
                 return MyUser;
             }
-            RTParser.User user = MyBot.FindOrCreateUser(fromname, out newlyCreated);
+            User user = MyBot.FindOrCreateUser(fromname, out newlyCreated);
             if (newlyCreated)
             {
                 user.InsertProvider(() => this.provideWorldUserVars);
@@ -491,7 +492,7 @@ namespace AIMLBotModule
             {
                 return;
             }
-            RTParser.User myUser = GetMyUser(im.FromAgentName);
+            User myUser = GetMyUser(im.FromAgentName);
             SettingsDictionary myUserPredicates = myUser.Predicates;
             myUserPredicates.addSetting("host", im.FromAgentID.ToString());
             // myUser.Predicates.addObjectFields(im);
@@ -534,11 +535,11 @@ namespace AIMLBotModule
             HandleIM(im, myUser, groupName, message, UseThrottle);
 
         }
-        private void HandleIM(InstantMessage im, RTParser.User myUser, string groupName, string message, bool UseThrottle)
+        private void HandleIM(InstantMessage im, User myUser, string groupName, string message, bool UseThrottle)
         {
             RunTask(()=>HandleIM0(im,myUser,groupName,message,UseThrottle), "AIML_OnInstantMessage: " + myUser + ": " + message);
         }
-        private void HandleIM0(InstantMessage im, RTParser.User myUser, string groupName, string message, bool UseThrottle)
+        private void HandleIM0(InstantMessage im, User myUser, string groupName, string message, bool UseThrottle)
                         {
 
                             UUID toSession = im.ToAgentID ^ im.IMSessionID;
@@ -678,7 +679,7 @@ namespace AIMLBotModule
             {
                 fromname = "" + id;
             }
-            RTParser.User myUser = GetMyUser(fromname);
+            User myUser = GetMyUser(fromname);
             // todo hard coded to be changed
             if (!myUser.RespondToChat && MessageTurnsOnChat(message))
             {
@@ -996,7 +997,7 @@ namespace AIMLBotModule
         {
             return AIMLInterp(input, GetMyUser(myUser));
         }
-        public SUnifiable AIMLInterp(string input, RTParser.User myUser)
+        public SUnifiable AIMLInterp(string input, User myUser)
         {
             if (MyBot.useServitor)
             {
@@ -1092,7 +1093,7 @@ namespace AIMLBotModule
             return AddToResult(unifiable, splts);
         }
 
-        public SUnifiable AIMLInterp0(string input, RTParser.User myUser)
+        public SUnifiable AIMLInterp0(string input, User myUser)
         {
             // set a global
             MyUser = myUser;
@@ -1130,8 +1131,8 @@ namespace AIMLBotModule
             }
             var r = MyBot.MakeRequestToBot(input, MyUser);
             r.IsTraced = true;
-            RTParser.Result res = MyBot.ChatWithRequest(r);
-            string useOut = MyBot.CleanupCyc(res.Output);
+            Result res = MyBot.ChatWithRequest(r);
+            string useOut = AltBot.CleanupCyc(res.Output);
             if (NeverSay(useOut)) return null;
             return useOut;
         }
@@ -1141,7 +1142,7 @@ namespace AIMLBotModule
             return (useOut != null && useOut.Contains("RANDOM TOPIC."));
         }
 
-        public SUnifiable AIMLInterpScored(string input, RTParser.User myUser, out double scored)
+        public SUnifiable AIMLInterpScored(string input, User myUser, out double scored)
         {
             scored = 0.0;
             // set a global
@@ -1184,9 +1185,9 @@ namespace AIMLBotModule
                 return "";
             }
             r.IsTraced = true;
-            RTParser.Result res = MyBot.ChatWithRequest(r);
+            Result res = MyBot.ChatWithRequest(r);
             scored = res.Score;
-            string useOut = MyBot.CleanupCyc(res.Output);
+            string useOut = AltBot.CleanupCyc(res.Output);
             return useOut;
         }
 
@@ -1218,7 +1219,7 @@ namespace AIMLBotModule
             //todo throw new NotImplementedException();
         }
 
-        public RTParser.User MyUser
+        public User MyUser
         {
             get
             {

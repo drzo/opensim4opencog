@@ -13,8 +13,10 @@ using Aima.Core.Logic.Propositional.Algorithms;
 using Aima.Core.Logic.Propositional.Parsing;
 using Aima.Core.Logic.Propositional.Parsing.AST;
 using Aima.Core.Logic.Propositional.Visitors;
+using AltAIMLParser;
 using MiniSatCS;
 using System.Reflection;
+using RTParser;
 
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs

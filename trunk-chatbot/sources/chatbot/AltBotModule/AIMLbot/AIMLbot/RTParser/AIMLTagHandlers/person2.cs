@@ -1,6 +1,9 @@
 using System;
 using System.Xml;
 using System.Text;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -13,10 +16,10 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The non-atomic person2 element instructs the AIML interpreter to: 
     /// 
-    /// 1. replace words with first-person aspect in the result of processing the contents of the 
+    /// 1. replace words with first-person aspect in the result of Processing the contents of the 
     /// person2 element with words with the grammatically-corresponding second-person aspect; and,
     /// 
-    /// 2. replace words with second-person aspect in the result of processing the contents of the 
+    /// 2. replace words with second-person aspect in the result of Processing the contents of the 
     /// person2 element with words with the grammatically-corresponding first-person aspect. 
     /// 
     /// The definition of "grammatically-corresponding" is left up to the implementation.
@@ -35,12 +38,12 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public person2(RTParser.RTPBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+        /// <param name="templateNode">The node to be Processed</param>
+        public person2(RTParser.AltBot bot,
+                        User user,
+                        SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -48,9 +51,9 @@ namespace RTParser.AIMLTagHandlers
 
 
         /// <summary>
-        /// The method that does the actual processing of the text.
+        /// The method that does the actual Processing of the text.
         /// </summary>
-        /// <returns>The resulting processed text</returns>
+        /// <returns>The resulting Processed text</returns>
         protected override Unifiable Format(Unifiable templateNodeInnerText)
         {
             if (CheckNode("person2"))
@@ -58,7 +61,7 @@ namespace RTParser.AIMLTagHandlers
                 if (!IsNullOrEmpty(templateNodeInnerText))
                 {
                     // non atomic version of the node
-                    return RTParser.Normalize.ApplySubstitutions.Substitute( this.bot.Person2Substitutions, templateNodeInnerText);
+                    return RTParser.Normalize.ApplySubstitutions.Substitute( this.Proc.Person2Substitutions, templateNodeInnerText);
                 }
                 else
                 {

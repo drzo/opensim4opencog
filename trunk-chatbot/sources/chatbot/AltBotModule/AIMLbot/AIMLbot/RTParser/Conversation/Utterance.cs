@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser.Database;
@@ -207,7 +208,7 @@ namespace RTParser
             if (sf > 0)
             {
                 String newClip = sentence.Substring(0, sf - 1);
-                // RTPBot.writeDebugLine("AIMLTRACE !REWRITE THAT QUESTION " + sentence + " => " + newClip);
+                // AltBot.writeDebugLine("AIMLTRACE !REWRITE THAT QUESTION " + sentence + " => " + newClip);
                 if (newClip.Length > 4) sentence = newClip;
             }
             sentence = TextPatternUtils.SymTrim(sentence, '?');
@@ -219,7 +220,7 @@ namespace RTParser
                 {
                     newClip = newClip.Substring(1).TrimStart();
                 }
-                //   RTPBot.writeDebugLine("AIMLTRACE !REWRITE THAT SENT " + sentence + " => " + newClip);
+                //   AltBot.writeDebugLine("AIMLTRACE !REWRITE THAT SENT " + sentence + " => " + newClip);
                 if (newClip.Length > 4) sentence = newClip;
             }
             return sentence;
@@ -243,7 +244,7 @@ namespace RTParser
             if (request.Stage > SideEffectStage.PARSING_INPUT) return;
 
             //ParsedSentences result = request.UserInput;
-            RTPBot thiz = request.TargetBot;
+            AltBot thiz = request.TargetBot;
             int maxInputs = request.MaxInputs;
             int numInputs = 0;
             int sentenceNum = 0;
@@ -259,7 +260,7 @@ namespace RTParser
                     string sentenceRaw = sentenceURaw;
                     if (NatLangDb.WasQuestion(sentenceRaw))
                     {
-                        RTPBot.writeDebugLine("Question: " + sentenceRaw);
+                        AltBot.writeDebugLine("Question: " + sentenceRaw);
                     }
                     char[] toCharArray = " .,!:".ToCharArray();
                     string sentence = TextPatternUtils.SymTrim(sentenceRaw, toCharArray);
@@ -268,7 +269,7 @@ namespace RTParser
                     sentence = sentence.Trim(toCharArray);
                     if (sentence.Length == 0)
                     {
-                        RTPBot.writeDebugLine("skipping input sentence " + sentenceRaw);
+                        AltBot.writeDebugLine("skipping input sentence " + sentenceRaw);
                         continue;
                     }
                     sentenceNum++;

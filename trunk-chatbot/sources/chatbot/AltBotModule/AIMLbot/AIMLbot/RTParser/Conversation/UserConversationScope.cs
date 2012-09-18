@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using AltAIMLbot;
 using RTParser.Utils;
 
 namespace RTParser

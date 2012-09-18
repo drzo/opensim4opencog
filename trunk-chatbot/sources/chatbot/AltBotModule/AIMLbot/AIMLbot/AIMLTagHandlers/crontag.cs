@@ -1,7 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Xml;
 using System.Text;
+using AltAIMLParser;
+using RTParser;
+
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 
@@ -23,7 +26,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class crontag : AltAIMLbot.Utils.AIMLTagHandler
+    public class crontag : Utils.AIMLTagHandler
     {
                        /// <summary>
         /// Ctor
@@ -34,11 +37,11 @@ namespace AltAIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public crontag(AltAIMLbot.AltBot bot,
-                        AltAIMLbot.User user,
-                        AltAIMLbot.Utils.SubQuery query,
-                        AltAIMLbot.Request request,
-                        AltAIMLbot.Result result,
+        public crontag(AltBot bot,
+                        User user,
+                        Utils.SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {

@@ -1,7 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Web;
 using System.Xml;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser.AIMLTagHandlers;
@@ -12,6 +15,7 @@ using TopicInfo = RTParser.Unifiable;
 using GuardInfo = RTParser.Unifiable;
 using ResponseInfo = RTParser.Unifiable;
 using AIMLbot;
+using AIMLTagHandler=RTParser.Utils.AIMLTagHandler;
 
 namespace RTParser
 {
@@ -60,7 +64,7 @@ namespace RTParser
         {
             AIMLTagHandler tagHandler = getBespokeTags(user, query, request, result, node);
             string nodeNameLower = ToLower(node.LocalName);
-            RTPBot targetBot = query.TargetBot;
+            AltBot targetBot = query.TargetBot;
             if (Equals(null, tagHandler))
             {
                 switch (nodeNameLower)
@@ -429,7 +433,7 @@ namespace RTParser
 
         static public void writeToLog(string message, params object[] args)
         {
-            RTPBot.writeDebugLine(message, args);
+            AltBot.writeDebugLine(message, args);
         }
 
 
@@ -554,7 +558,7 @@ namespace RTParser
                                                 AIMLTagHandler parentHandler, TemplateInfo templateInfo,
                                                 bool copyChild, bool copyParent)
         {
-            RTPBot Proc = query.TargetBot;
+            AltBot Proc = query.TargetBot;
 
             //query.LastTagHandler = handler;
             bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput ||
@@ -750,7 +754,7 @@ namespace RTParser
                                   AIMLTagHandler parentHandler, bool protectChild, bool copyParent,
                                   AIMLTagHandler nodeHandler, bool suspendLimits, out bool templateSucceeded)
         {
-            Request originalSalientRequest = MasterRequest.GetOriginalSalientRequest(request);
+            Request originalSalientRequest = Request.GetOriginalSalientRequest(request);
             var wasSuspendRestrati = request.SuspendSearchLimits;
             templateSucceeded = true;
             request.SuspendSearchLimits = suspendLimits;
@@ -807,7 +811,7 @@ namespace RTParser
                                   AIMLTagHandler parentHandler, bool protectChild, bool copyParent,
                                   AIMLTagHandler tagHandler, out bool childSuccess)
         {
-            RTPBot TargetBot = request.TargetBot;
+            AltBot TargetBot = request.TargetBot;
             childSuccess = true;
             if (node == null)
             {

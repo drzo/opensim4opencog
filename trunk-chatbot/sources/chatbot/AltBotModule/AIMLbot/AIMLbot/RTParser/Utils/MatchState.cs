@@ -6,11 +6,11 @@ namespace RTParser.Utils
     /// Used when pushing values represented by wildcards onto collections for
     /// the star, thatstar and topicstar AIML values.
     /// </summary>
-    public enum MatchState
+    /*public enum MatchState
     {
         UserInput,
         That,
         Topic,
         Flag
-    }
+    }*/
 }

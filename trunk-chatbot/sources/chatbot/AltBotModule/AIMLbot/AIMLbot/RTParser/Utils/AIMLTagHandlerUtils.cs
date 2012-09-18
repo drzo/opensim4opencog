@@ -1,5 +1,6 @@
 using System;
 using System.Xml;
+using AltAIMLbot.Utils;
 using MushDLR223.Utilities;
 using RTParser.Variables;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
@@ -16,7 +17,7 @@ namespace RTParser.Utils
             if (!request.IsTraced) return;
             if (request.DebugLevel < i)
             {
-                RTPBot.Breakpoint("Level " + request.DebugLevel + "<" + i);
+                AltBot.Breakpoint("Level " + request.DebugLevel + "<" + i);
             }
         }
 
@@ -114,7 +115,7 @@ namespace RTParser.Utils
                 writeToLogWarn("BAD " + unifiable, objs);
                 return;
             }
-            this.bot.writeToLog("AIMLTRACE: " + unifiable + DLRConsole.NoFormatDirectives(" in " + GetType().Name + "  " + LineNumberTextInfo()), objs);
+            this.Proc.writeToLog("AIMLTRACE: " + unifiable + DLRConsole.NoFormatDirectives(" in " + GetType().Name + "  " + LineNumberTextInfo()), objs);
         }
 
         #region Implementation of IXmlLineInfo

@@ -8,11 +8,13 @@ using System.Threading;
 using System.Xml;
 using System.Web;
 using System.IO;
+using AltAIMLParser;
 using LAIR.ResourceAPIs.WordNet;
 using LAIR.Collections.Generic;
 using MushDLR223.Utilities;
 using RaptorDB;
 using System.Linq;
+using RTParser;
 using Unifiable = System.String;
 
 namespace AltAIMLbot.Utils
@@ -798,6 +800,10 @@ namespace AltAIMLbot.Utils
             else if (firstWord == "<PATTERN>")
             {
                 newMatchstate = MatchState.Pattern;
+            }
+            else if (firstWord == "<FLAG>")
+            {
+                newMatchstate = MatchState.Flag;
             }
             return newMatchstate;
         }

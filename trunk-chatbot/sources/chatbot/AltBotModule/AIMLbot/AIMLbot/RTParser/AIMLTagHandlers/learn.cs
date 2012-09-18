@@ -2,6 +2,9 @@ using System;
 using System.Xml;
 using System.Text;
 using System.IO;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using MushDLR223.Utilities;
 using RTParser.Utils;
 
@@ -9,7 +12,7 @@ namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
     /// The learn element instructs the AIML interpreter to retrieve a resource specified by a URI, 
-    /// and to process its AIML object contents.
+    /// and to Process its AIML object contents.
     /// supports network HTTP and web service based AIML learning (as well as local filesystem)
     /// </summary>
     public class learn : RTParser.Utils.LoadingTagHandler
@@ -22,12 +25,12 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public learn(RTParser.RTPBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+        /// <param name="templateNode">The node to be Processed</param>
+        public learn(RTParser.AltBot bot,
+                        User user,
+                        SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -126,7 +129,7 @@ namespace RTParser.AIMLTagHandlers
                 String graphName = GetAttribValue("graph", null);
                 if (graphName != null)
                 {
-                    g = bot.GetGraph(graphName, g0);
+                    g = Proc.GetGraph(graphName, g0);
                     if (g != null) request.Graph = g;
                 }
                 Unifiable path = GetAttribValue("filename,uri,file,url,dir,path,pathname,directory", null);
@@ -186,7 +189,7 @@ namespace RTParser.AIMLTagHandlers
                         }
                         catch (Exception e2)
                         {
-                            bot.writeToLog(e2);
+                            Proc.writeToLog(e2);
                             writeToLogWarn("ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: {0} error {1}", path, e2);
                         }
 

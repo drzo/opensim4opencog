@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime;
 using System.Text;
 using System.Xml;
@@ -9,6 +9,9 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using RTParser;
 using RTParser.Utils;
 
@@ -17,11 +20,11 @@ namespace RTParser.AIMLTagHandlers
     public class evidence_pattern : RTParser.Utils.AIMLTagHandler
     {
 
-        public evidence_pattern(RTParser.RTPBot bot,
-                RTParser.User user,
-                RTParser.Utils.SubQuery query,
-                RTParser.Request request,
-                RTParser.Result result,
+        public evidence_pattern(RTParser.AltBot bot,
+                User user,
+                SubQuery query,
+                Request request,
+                Result result,
                 XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -51,11 +54,11 @@ namespace RTParser.AIMLTagHandlers
                                          @" prob=" + quote + prob_str + quote +
                                          @" /></think>ep "+evidence+"</template></category></topic>";
                                          //@"</aiml>";
-                    //this.user.bot.AddAiml(evidenceCode);
+                    //Proc.AddAiml(evidenceCode);
                     GraphMaster myGraph = request.GetGraph("msm");
-                    AddSideEffect("ADD AIML " + evidenceCode, () => this.user.bot.AddAiml(myGraph, evidenceCode));
+                    AddSideEffect("ADD AIML " + evidenceCode, () => Proc.AddAiml(myGraph, evidenceCode));
 
-                    RTPBot.writeDebugLine("MSM: evidence_pattern evidenceCode = {0}", evidenceCode);
+                    AltBot.writeDebugLine("MSM: evidence_pattern evidenceCode = {0}", evidenceCode);
 
                 }
                 catch (Exception e)

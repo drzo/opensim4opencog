@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Xml;
+using AltAIMLbot;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 
 namespace RTParser.Utils
@@ -110,7 +112,7 @@ namespace RTParser.Utils
         {
             // request = request ?? Loader.LoaderRequest00;
             User user = request.Requester;
-            RTPBot robot = request.TargetBot ?? Loader.TargetBot;
+            AltBot robot = request.TargetBot ?? Loader.TargetBot;
 
             string tcname = FindNodeOrAttrib(src, "name", null);
             string tcdesc = FindNodeOrAttrib(src, "Description", null);
@@ -160,7 +162,7 @@ namespace RTParser.Utils
                 requestToBot.IsTraced = traceIt;
                 if (traceIt)
                 {
-                    RTPBot.Breakpoint("testing...");
+                    AltBot.Breakpoint("testing...");
                     requestToBot.DebugLevel = 9;
                 }
                 Result result = robot.ChatWithRequest(requestToBot);
@@ -184,7 +186,7 @@ namespace RTParser.Utils
                 outputdelegate("PASSED={0}", m);
                 if (traceIt)
                 {
-                    RTPBot.Breakpoint("tested...");
+                    AltBot.Breakpoint("tested...");
                 }
                 return GetMessage(src, "PASSED='" + m +
                                        "'", "TESTCASE='" + tcname + "' GOOD='" + good +

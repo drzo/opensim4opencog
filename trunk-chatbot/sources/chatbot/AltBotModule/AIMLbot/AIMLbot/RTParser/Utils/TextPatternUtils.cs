@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Xml;
+using AltAIMLbot.Utils;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 
@@ -42,7 +43,7 @@ namespace RTParser.Utils
             sentence = Trim(sentence);
 
             if ("!?.".Contains(sentence.Substring(sentence.Length - 1))) return true;
-            foreach (Unifiable splitter in RTPBot.Splitters)
+            foreach (Unifiable splitter in AltBot.Splitters)
             {
                 if (sentence.EndsWith(splitter))
                 {

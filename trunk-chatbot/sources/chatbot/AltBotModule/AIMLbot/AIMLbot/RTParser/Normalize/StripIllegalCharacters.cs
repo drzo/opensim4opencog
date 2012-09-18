@@ -10,21 +10,21 @@ namespace RTParser.Normalize
     /// </summary>
     public class StripIllegalCharacters : RTParser.Utils.TextTransformer
     {
-        public StripIllegalCharacters(RTParser.RTPBot bot, Unifiable inputString) : base(bot, inputString)
+        public StripIllegalCharacters(RTParser.AltBot bot, Unifiable inputString) : base(bot, inputString)
         { }
 
-        public StripIllegalCharacters(RTParser.RTPBot bot)
+        public StripIllegalCharacters(RTParser.AltBot bot)
             : base(bot) 
         { }
 
         protected override Unifiable ProcessChange()
         {
-            string newVariable = ((string)inputString);
+            string newVariable = ((string)inputStringU);
             if (newVariable != null)
             {
-                if (newVariable.StartsWith("TAG-")) return inputString;
+                if (newVariable.StartsWith("TAG-")) return inputStringU;
             }
-            return this.bot.Strippers.Replace(this.inputString, " ");
+            return this.Proc.Strippers.Replace(this.inputStringU, " ");
         }
     }
 }

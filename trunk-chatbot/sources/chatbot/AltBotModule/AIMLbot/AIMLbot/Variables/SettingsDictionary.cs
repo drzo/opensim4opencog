@@ -1,3 +1,4 @@
+//#if false
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -1054,14 +1055,14 @@ namespace AltAIMLbot.Utils
         {
             if (dictionary == null)
             {
-//                RTPBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got NULL");
+//                AltBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got NULL");
                 return null;
             }
             if (dictionary is SubQuery) dictionary = ((SubQuery)dictionary).TargetSettings;
             if (dictionary is User) dictionary = ((User)dictionary).Predicates;
             SettingsDictionary sd = dictionary as SettingsDictionary;
             if (sd != null) return sd;
-           /* RTPBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got type={0} '{1}'",
+           /* AltBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got type={0} '{1}'",
                                   dictionary.GetType(),
                                   dictionary);*/
             return null;
@@ -1071,7 +1072,7 @@ namespace AltAIMLbot.Utils
         {
             if (dictionary == null)
             {
-                //RTPBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got NULL");
+                //AltBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got NULL");
                 return null;
             }
             ParentProvider sd = dictionary as ParentProvider;
@@ -1088,7 +1089,7 @@ namespace AltAIMLbot.Utils
                     if (e != null) return e;
                 }
             }
-           /* RTPBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got type={0} '{1}'",
+           /* AltBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got type={0} '{1}'",
                                   dictionary.GetType(),
                                   dictionary);*/
             return null;
@@ -3022,4 +3023,4 @@ namespace AltAIMLbot.Utils
     }
 }
 
-
+//#endif

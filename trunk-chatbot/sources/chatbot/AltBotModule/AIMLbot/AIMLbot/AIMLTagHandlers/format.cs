@@ -1,6 +1,8 @@
 using System;
 using System.Xml;
 using System.Text;
+using AltAIMLParser;
+using RTParser;
 using RTParser.Utils;
 
 namespace AltAIMLbot.AIMLTagHandlers
@@ -8,7 +10,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// <summary>
     /// The format element tells the AIML interpreter to render the contents of the element 
     /// </summary>
-    public class format : AltAIMLbot.Utils.AIMLTagHandler
+    public class format : Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -19,19 +21,20 @@ namespace AltAIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public format(AltAIMLbot.AltBot bot,
-                        AltAIMLbot.User user,
-                        AltAIMLbot.Utils.SubQuery query,
-                        AltAIMLbot.Request request,
-                        AltAIMLbot.Result result,
+        public format(AltBot bot,
+                        User user,
+                        Utils.SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode, Func<string, string> formatter)
             : base(bot, user, query, request, result, templateNode)
         {
             isRecursive = true;
-            Formatter = formatter;
+            Formatter = formatter;            
         }
 
         private readonly Func<string, string> Formatter;
+        protected string[] splitter = null;
         public override bool isFormatter
         {
             get { return true; }
@@ -39,19 +42,21 @@ namespace AltAIMLbot.AIMLTagHandlers
         protected override string ProcessChange()
         {
             if (Formatter == null) return TemplateNodeInnerText;
-            StringBuilder result = new StringBuilder();
+            StringBuilder result = new StringBuilder();            
             if (this.TemplateNodeHasText)
             {
                 bool needSpace = false;
-                string[] words = this.TemplateNodeInnerText.Split(' ');
+                string[] words = splitter != null
+                                     ? this.TemplateNodeInnerText.Split(splitter, StringSplitOptions.None)
+                                     : new[] {this.TemplateNodeInnerText};
                 foreach (string word in words)
                 {
                     string newWord = Formatter(word);
-                    if (needSpace) result.Append(" "); else needSpace = true;
+                    if (needSpace) result.Append(splitter); else needSpace = true;
                     result.Append(newWord);                    
                 }
             }
-            return " " + result.ToString();
+            return result.ToString();
         }
     }
 }

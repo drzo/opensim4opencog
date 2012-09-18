@@ -139,7 +139,7 @@ namespace RTParser
                             {
 
                                 Min = 0,
-                                Max = RTPBot.SraiDepthMax
+                                Max = AltBot.SraiDepthMax
                             },
 
         };

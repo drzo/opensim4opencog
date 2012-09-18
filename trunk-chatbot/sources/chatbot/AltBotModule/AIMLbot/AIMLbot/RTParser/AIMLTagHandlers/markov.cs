@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Xml;
 using System.Collections;
@@ -6,6 +6,9 @@ using System.Collections.Generic;
 using System.IO;
 //using System.Linq;
 using System.Text.RegularExpressions;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using MushDLR223.Virtualization;
 using RTParser;
 
@@ -15,11 +18,11 @@ namespace RTParser.AIMLTagHandlers
     public class markov : RTParser.Utils.AIMLTagHandler
     {
 
-                public markov(RTParser.RTPBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+                public markov(RTParser.AltBot bot,
+                        User user,
+                        SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -38,7 +41,7 @@ namespace RTParser.AIMLTagHandlers
                     // source can contain a set of names seperated by spaces that define the language models to
                     // be used. So you can say source="general.trn mandy.trn angry.ngm"
 
-                    this.user.bot.STM_Brain.Clear();
+                    Proc.STM_Brain.Clear();
                     string names_str = names;
                     string[] nameset = names_str.Split(' ');
                     foreach (string name in nameset)
@@ -48,10 +51,10 @@ namespace RTParser.AIMLTagHandlers
                         //if (Directory.Exists(file))
                         if (HostSystem.FileExists(file))
                         {
-                            RTPBot.writeDebugLine("LoadMarkovSTM: '{0}'", file);
+                            AltBot.writeDebugLine("LoadMarkovSTM: '{0}'", file);
                             StreamReader sr = HostSystem.GetStreamReader(file);
-                            this.user.bot.STM_Brain.WindowSize = 4;
-                            this.user.bot.STM_Brain.Learn(sr);
+                            Proc.STM_Brain.WindowSize = 4;
+                            Proc.STM_Brain.Learn(sr);
                             sr.Close();
                         }
 
@@ -59,10 +62,10 @@ namespace RTParser.AIMLTagHandlers
                         //if (Directory.Exists(file))
                         if (HostSystem.FileExists(file))
                         {
-                            RTPBot.writeDebugLine("LoadMarkovSTM: '{0}'", file);
+                            AltBot.writeDebugLine("LoadMarkovSTM: '{0}'", file);
                             StreamReader sr = HostSystem.GetStreamReader(file);
-                            this.user.bot.STM_Brain.WindowSize = 3;
-                            this.user.bot.STM_Brain.LearnNgram(sr);
+                            Proc.STM_Brain.WindowSize = 3;
+                            Proc.STM_Brain.LearnNgram(sr);
                             sr.Close();
                         }
                     }
@@ -80,10 +83,10 @@ namespace RTParser.AIMLTagHandlers
                         //if (Directory.Exists(file))
                         if (HostSystem.FileExists(file))
                         {
-                            RTPBot.writeDebugLine("LoadMarkovSTM: '{0}'", file);
+                            AltBot.writeDebugLine("LoadMarkovSTM: '{0}'", file);
                             StreamReader sr = HostSystem.GetStreamReader(file);
-                            this.user.bot.STM_Brain.WindowSize = 4;
-                            this.user.bot.STM_Brain.Learn(sr);
+                            Proc.STM_Brain.WindowSize = 4;
+                            Proc.STM_Brain.Learn(sr);
                             sr.Close();
                         }
 
@@ -91,19 +94,19 @@ namespace RTParser.AIMLTagHandlers
                         //if (Directory.Exists(file))
                         if (HostSystem.FileExists(file))
                         {
-                            RTPBot.writeDebugLine("LoadMarkovSTM: '{0}'", file);
+                            AltBot.writeDebugLine("LoadMarkovSTM: '{0}'", file);
                             StreamReader sr = HostSystem.GetStreamReader(file);
-                            this.user.bot.STM_Brain.WindowSize = 3;
-                            this.user.bot.STM_Brain.LearnNgram(sr);
+                            Proc.STM_Brain.WindowSize = 3;
+                            Proc.STM_Brain.LearnNgram(sr);
                             sr.Close();
                         }
                     }
 
 
-                    line = this.user.bot.STM_Brain.GetResponse(line);
-                    if (line == null) line = this.user.bot.STM_Brain.GetRandomResponse();
+                    line = Proc.STM_Brain.GetResponse(line);
+                    if (line == null) line = Proc.STM_Brain.GetRandomResponse();
                     Unifiable result = line;
-                    // RTPBot.writeDebugLine(line);
+                    // AltBot.writeDebugLine(line);
                     return result;
 
                 }
@@ -111,10 +114,10 @@ namespace RTParser.AIMLTagHandlers
                 {
                     // Use the generic load
                     String line = templateNodeInnerText.ToValue(query);
-                    line = this.user.bot.MBrain.GetResponse(line);
-                    if (line == null) line = this.user.bot.MBrain.GetRandomResponse();
+                    line = Proc.MBrain.GetResponse(line);
+                    if (line == null) line = Proc.MBrain.GetRandomResponse();
                     Unifiable result = line;
-                    // RTPBot.writeDebugLine(line);
+                    // AltBot.writeDebugLine(line);
                     return result;
                 }
             }
@@ -607,7 +610,7 @@ public class MBrain
       //float target = (float)rand.NextDouble() / 3 + 2 / 3f; // for 0 ...1 space
       float target = ((float)rand.NextDouble() * -10f) + (-0.3f); // for log space
 
-      DateTime starttime = RTPBot.Now;
+      DateTime starttime = AltBot.Now;
       TimeSpan duration;
       long thinkticks = 0;
       do
@@ -667,13 +670,13 @@ public class MBrain
           if ((skewv == bestskew && myresp.Text.Length < bestResponse.Text.Length) || (skewv < bestskew))
           {
               bestd = diff; bestResponse = myresp; bestskew = skewv;
-             RTPBot.writeDebugLine("MKOV: {0} to {1} -->{2} {3} | tg={4}| pb={5} sk={6} tx={7}", bestd,diff, boostcount, k, target, myresp.Probability,skewv,myresp.Text);
+             AltBot.writeDebugLine("MKOV: {0} to {1} -->{2} {3} | tg={4}| pb={5} sk={6} tx={7}", bestd,diff, boostcount, k, target, myresp.Probability,skewv,myresp.Text);
 
           }
           //}
-          duration = RTPBot.Now - starttime;
+          duration = AltBot.Now - starttime;
       } while ((Math.Abs(duration.TotalMilliseconds) < 7500)||(thinkticks<3000));
-      RTPBot.writeDebugLine(" ----\n **** Markov generator thunk {0} turns in {1} milliseconds : {2} --> {3}@df={4} sk={5} tx={6}**** \n", thinkticks, duration.TotalMilliseconds, bestResponse.Keyword, bestResponse.Probability, bestd, bestskew,bestResponse.Text);
+      AltBot.writeDebugLine(" ----\n **** Markov generator thunk {0} turns in {1} milliseconds : {2} --> {3}@df={4} sk={5} tx={6}**** \n", thinkticks, duration.TotalMilliseconds, bestResponse.Keyword, bestResponse.Probability, bestd, bestskew,bestResponse.Text);
       return lastReply = bestResponse.Text;
   }
 
@@ -755,7 +758,7 @@ public class MBrain
       text = text.Replace("<unk>", "something");
       text = text.Replace("<unk/>", "something");
 
-      //RTPBot.writeDebugLine("NGram-Learn {0} -> {1}", text, occurances);
+      //AltBot.writeDebugLine("NGram-Learn {0} -> {1}", text, occurances);
       string[] chunks = Tokenize(text, true);
       if (correctSpelling) CorrectSpelling(chunks);
 
@@ -779,11 +782,11 @@ public class MBrain
   while ((linecount < 80000) && ((line = tr.ReadLine()) != null))
     {
         linecount++;
-        if (linecount % 1000 == 0) { RTPBot.writeDebugLine("Mlearn {0}", linecount); }
+        if (linecount % 1000 == 0) { AltBot.writeDebugLine("Mlearn {0}", linecount); }
        line = line.Trim();
       if(line.Length!=0 && line[0]!='#') Learn(line, false);
     }
-    RTPBot.writeDebugLine("Last Line Mlearn {0}", linecount);
+    AltBot.writeDebugLine("Last Line Mlearn {0}", linecount);
   }
 
   public void LearnNgram(System.IO.TextReader tr)
@@ -795,7 +798,7 @@ public class MBrain
           while ((linecount < 8000000) && ((line = tr.ReadLine()) != null))
           {
               linecount++;
-              if (linecount % 1000 == 0) { RTPBot.writeDebugLine("NG-learn {0}", linecount); }
+              if (linecount % 1000 == 0) { AltBot.writeDebugLine("NG-learn {0}", linecount); }
               line = line.Trim();
               if (line.Length != 0 && line[0] != '#') LearnNGram(line, false);
           }
@@ -803,7 +806,7 @@ public class MBrain
       catch (Exception e)
       {
       }
-      RTPBot.writeDebugLine("Last Line NG-learn {0}", linecount);
+      AltBot.writeDebugLine("Last Line NG-learn {0}", linecount);
   }
 
   struct Response

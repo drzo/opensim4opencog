@@ -288,7 +288,7 @@ namespace RTParser.Utils
         /// <param name="request">The request itself</param>
         /// <param name="result">The result to be passed back to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public AIMLTagHandler_legacy(RTParser.RTPBot bot,
+        public AIMLTagHandler_legacy(RTParser.AltBot bot,
                                     RTParser.User user,
                                     RTParser.Utils.SubQuery query,
                                     RTParser.Request request,
@@ -448,12 +448,12 @@ namespace RTParser.Utils
                 doc.Load(sr);
                 if (doc.ChildNodes.Count == 0)
                 {
-                    RTPBot.writeDebugLine("NULL outerXML=" + outerXML);
+                    AltBot.writeDebugLine("NULL outerXML=" + outerXML);
                     return null;
                 }
                 if (doc.ChildNodes.Count != 1)
                 {
-                    RTPBot.writeDebugLine("1 != outerXML=" + outerXML);
+                    AltBot.writeDebugLine("1 != outerXML=" + outerXML);
                 }
                 var temp = doc.FirstChild;
                 if (temp is LineInfoElement)
@@ -466,7 +466,7 @@ namespace RTParser.Utils
             }
             catch (Exception exception)
             {
-                RTPBot.writeDebugLine("outerXML=" + outerXML);
+                AltBot.writeDebugLine("outerXML=" + outerXML);
                 throw exception;
             }
         }
@@ -488,12 +488,12 @@ namespace RTParser.Utils
                 //doc.IsReadOnly = false;
                 if (doc.ChildNodes.Count == 0)
                 {
-                    RTPBot.writeDebugLine("NULL outerXML=" + outerXML);
+                    AltBot.writeDebugLine("NULL outerXML=" + outerXML);
                   //  return null;
                 }
                 if (doc.ChildNodes.Count != 1)
                 {
-                    RTPBot.writeDebugLine("1 != outerXML=" + outerXML);
+                    AltBot.writeDebugLine("1 != outerXML=" + outerXML);
                 }
                 var temp = doc.FirstChild;
                 if (temp is LineInfoElement)
@@ -506,7 +506,7 @@ namespace RTParser.Utils
             }
             catch (Exception exception)
             {
-                RTPBot.writeDebugLine("ERROR outerXML='" + outerXML + "'\n" + exception + "\n" + AIMLLoader.LocationInfo(templateNode));
+                AltBot.writeDebugLine("ERROR outerXML='" + outerXML + "'\n" + exception + "\n" + AIMLLoader.LocationInfo(templateNode));
                 throw exception;
             }
         }

@@ -1,8 +1,10 @@
+#if  false
 using System;
 using System.Collections.Generic;
 using System.Xml;
 using System.IO;
 using AltAIMLbot.Normalize;
+using RTParser;
 
 namespace AltAIMLbot.Utils
 {
@@ -29,7 +31,7 @@ namespace AltAIMLbot.Utils
         /// <summary>
         /// The bot this dictionary is associated with
         /// </summary>
-        protected AltAIMLbot.AltBot bot;
+        protected AltBot bot;
 
         /// <summary>
         /// The string to prefix when reflecting to the blackboard cache
@@ -87,7 +89,7 @@ namespace AltAIMLbot.Utils
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot for whom this is a settings dictionary</param>
-        public ASettingsDictionary(AltAIMLbot.AltBot bot)
+        public ASettingsDictionary(AltBot bot)
         {
             this.bot = bot;
          }
@@ -375,3 +377,4 @@ namespace AltAIMLbot.Utils
         #endregion
     }
 }
+#endif

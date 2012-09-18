@@ -14,10 +14,10 @@ namespace RTParser.Web
     {
         #region Implementation of ScriptExecutorGetter
 
-        private RTPBot TheBot;
+        private AltBot TheBot;
         //private User myUser;
 
-        public WebScriptExecutor(RTPBot bot)
+        public WebScriptExecutor(AltBot bot)
         {
             TheBot = bot;
         }

@@ -2,7 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
-
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using GraphQuery = RTParser.Utils.QueryList;
 using MushDLR223.Utilities;
 
@@ -104,7 +105,7 @@ namespace RTParser.Utils
 
         internal static void writeToLog(string message, params object[] args)
         {
-            RTPBot.writeDebugLine("QUERYTRACE: " + message, args);
+            AltBot.writeDebugLine("QUERYTRACE: " + message, args);
         }
 
         private void CheckConsistent()

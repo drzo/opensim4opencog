@@ -9,8 +9,10 @@ using System.Text;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Reflection;
 using System.Net.Mail;
-using AltAIMLbot.AIMLTagHandlers;
+using AIMLbot;
+using AltAIMLbot;
 using AltAIMLbot.Utils;
+using AltAIMLParser;
 using DcBus;
 using Aima.Core.Logic.Propositional.Algorithms;
 using Aima.Core.Logic.Propositional.Parsing;
@@ -19,6 +21,20 @@ using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
+using RTParser;
+using RTParser.AIMLTagHandlers;
+using RTParser.Utils;
+using RTParser.Variables;
+using AIMLLoader=AltAIMLbot.Utils.AIMLLoader;
+using AIMLTagHandler=AltAIMLbot.Utils.AIMLTagHandler;
+using bot=AltAIMLbot.AIMLTagHandlers.bot;
+using CustomTagAttribute=AltAIMLbot.Utils.CustomTagAttribute;
+using Gender=AltAIMLbot.Utils.Gender;
+using MatchState=AltAIMLbot.Utils.MatchState;
+using Node=AltAIMLbot.Utils.Node;
+using recursiveVerbatum=AltAIMLbot.AIMLTagHandlers.recursiveVerbatum;
+using TagHandler=AltAIMLbot.Utils.TagHandler;
+using verbatum=AltAIMLbot.AIMLTagHandlers.verbatum;
 
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
@@ -39,17 +55,10 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 **************************************************************************************************/
 
-namespace AltAIMLbot
+namespace RTParser
 {
-    /// <summary>
-    /// Encapsulates a bot. If no settings.xml file is found or referenced the bot will try to
-    /// default to safe settings.
-    /// </summary>
-    /// 
-        public delegate void sayProcessorDelegate(string message);
-        public delegate void systemProcessorDelegate(string message);
-[Serializable]
-    public class AltBot
+    [Serializable]
+    public partial class AltBot
     {
         #region Attributes
 
@@ -67,7 +76,12 @@ namespace AltAIMLbot
         public bool blockCron = false;
         public RandomMemory myRandMem = new RandomMemory();
 
-        public WordNetEngine wordNetEngine =null;
+        static private WordNetEngine _wordNetEngine;
+        public WordNetEngine wordNetEngine
+        {
+            get { return _wordNetEngine; }
+            set { _wordNetEngine = _wordNetEngine ?? value; }
+        }
 
         [NonSerialized ]
         public KnowledgeBase myKB = new KnowledgeBase();
@@ -91,7 +105,7 @@ namespace AltAIMLbot
         /// </summary>
         public SettingsDictionary GlobalSettings;
 
-        public ISettingsDictionary AllUserPreds
+        public SettingsDictionary AllUserPreds
         {
             get
             {
@@ -136,6 +150,38 @@ namespace AltAIMLbot
         /// </summary>
         private Dictionary<string, Assembly> LateBindingAssemblies = new Dictionary<string, Assembly>();
 
+        public void RegisterDictionary(string named, ISettingsDictionary dict)
+        {
+            named = named.ToLower().Trim().Replace("  ", " ");
+            string key = named.Replace(" ", "_");
+            RegisterDictionary(named, dict, true);
+        }
+
+        public void RegisterDictionary(string key, ISettingsDictionary dict, bool always)
+        {
+            SettingsDictionary.AddPseudonym(dict, key);
+            Action needsExit = LockInfo.MonitorTryEnter("RegisterDictionary " + key, AllDictionaries, MaxWaitTryEnter);
+            try
+            {
+                var path = key.Split(new[] { '.' });
+                if (always || !AllDictionaries.ContainsKey(key))
+                {
+                    AllDictionaries[key] = dict;
+                }
+                if (path.Length > 1)
+                {
+                    if (path[0] == "bot" || path[0] == "users" || path[0] == "char" || path[0] == "nl")
+                    {
+                        string join = string.Join(".", path, 1, path.Length - 1);
+                        RegisterDictionary(join, dict, false);
+                    }
+                }
+            }
+            finally
+            {
+                needsExit();
+            }
+        }
         /// <summary>
         /// An List<> containing the tokens used to split the input into sentences during the 
         /// normalization process
@@ -159,6 +205,7 @@ namespace AltAIMLbot
         {
             get
             {
+                if (GlobalSettings == null) return 1000;
                 return Convert.ToInt32(this.GlobalSettings.grabSetting("maxlogbuffersize"));
             }
         }
@@ -176,16 +223,31 @@ namespace AltAIMLbot
         public object loglock = new object();
 
         /// <summary>
+        /// If set to false the input from AIML files will undergo the same normalization process that
+        /// user input goes through. If true the Proccessor will assume the AIML is correct. Defaults to true.
+        /// </summary>
+        public bool TrustAIML = true;
+
+        /// <summary>
+        /// The maximum number of characters a "that" element of a path is allowed to be. Anything above
+        /// this length will cause "that" to be "*". This is to avoid having the graphmaster process
+        /// huge "that" elements in the path that might have been caused by the Proccessor reporting third party
+        /// data.
+        /// </summary>
+        public int MaxThatSize = 256;
+
+        /// <summary>
         /// The message to show if a user tries to use the bot whilst it is set to not process user input
         /// </summary>
         private string NotAcceptingUserInputMessage
         {
+
             get
             {
                 return this.GlobalSettings.grabSetting("notacceptinguserinputmessage");
             }
         }
-
+      
         /// <summary>
         /// The maximum amount of time a request should take (in milliseconds)
         /// </summary>
@@ -193,7 +255,13 @@ namespace AltAIMLbot
         {
             get
             {
-                return Convert.ToDouble(this.GlobalSettings.grabSetting("timeout"));
+                return 70000;
+                if (GlobalSettings == null || !GlobalSettings.containsSettingCalled("timeout"))
+                {
+                    return 2000000;
+                }
+                String s = GlobalSettings.grabSettingNoDebug("timeout").ToValue(null);
+                return Convert.ToDouble(s);
             }
         }
 
@@ -218,6 +286,7 @@ namespace AltAIMLbot
                 return new CultureInfo(this.GlobalSettings.grabSetting("culture"));
             }
         }
+         
 
         /// <summary>
         /// Will match all the illegal characters that might be inputted by the user
@@ -245,10 +314,10 @@ namespace AltAIMLbot
                 {
                     // check that the email is valid
                     string patternStrict = @"^(([^<>()[\]\\.,;:\s@\""]+"
-                    + @"(\.[^<>()[\]\\.,;:\s@\""]+)*)|(\"".+\""))@"
-                    + @"((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"
-                    + @"\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+"
-                    + @"[a-zA-Z]{2,}))$";
+                                           + @"(\.[^<>()[\]\\.,;:\s@\""]+)*)|(\"".+\""))@"
+                                           + @"((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"
+                                           + @"\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+"
+                                           + @"[a-zA-Z]{2,}))$";
                     Regex reStrict = new Regex(patternStrict);
 
                     if (reStrict.IsMatch(value))
@@ -275,7 +344,8 @@ namespace AltAIMLbot
         {
             get
             {
-                string islogging = this.GlobalSettings.grabSetting("islogging");
+                if (GlobalSettings == null) return true;
+                string islogging = ((string) GlobalSettings.grabSetting("islogging")) ?? "true";
                 if (islogging.ToLower() == "true")
                 {
                     return true;
@@ -295,7 +365,8 @@ namespace AltAIMLbot
         {
             get
             {
-                string willcallhome = this.GlobalSettings.grabSetting("willcallhome");
+                if (GlobalSettings == null) return true;
+                string willcallhome = this.GlobalSettings.grabSetting("willcallhome") ?? "true";
                 if (willcallhome.ToLower() == "true")
                 {
                     return true;
@@ -339,7 +410,7 @@ namespace AltAIMLbot
                 return result;
             }
         }
-
+        /*
         /// <summary>
         /// The directory to look in for the AIML files
         /// </summary>
@@ -347,7 +418,7 @@ namespace AltAIMLbot
         {
             get
             {
-                return Path.Combine(Environment.CurrentDirectory, this.GlobalSettings.grabSetting("aimldirectory"));
+                return Path.Combine(Environment.CurrentDirectory, this.GlobalSettings.grabSetting("aimldirectory","aiml"));
             }
         }
 
@@ -377,32 +448,105 @@ namespace AltAIMLbot
         /// The number of categories this bot has in its graphmaster "brain"
         /// </summary>
         public int Size;
-
+        */
         /// <summary>
         /// The default "brain" of the bot
         /// </summary>
-        public AltAIMLbot.Utils.GraphMaster Graphmaster;
+        public GraphMaster Graphmaster;
 
         /// <summary>
         /// The named "brains" of the bot
         /// default graphmaster should be listed under "*"
         /// </summary>
-        public Dictionary<string, AltAIMLbot.Utils.GraphMaster> Graphs;
+        public Dictionary<string, GraphMaster> Graphs;
+
+        private string _PathToUserFiles;
+
+        public string PathToUserDir
+        {
+            get
+            {
+                if (_PathToUserFiles != null) return _PathToUserFiles;
+                if (GlobalSettings.containsSettingCalled("userdirectory"))
+                {
+                    Unifiable dir = GlobalSettings.grabSettingNoDebug("userdirectory");
+                    HostSystem.CreateDirectory(dir);
+                    _PathToUserFiles = dir;
+                    return HostSystem.ToRelativePath(dir, RuntimeDirectory);
+                }
+                foreach (string s in new[] { PersonalAiml, PathToAIML, PathToConfigFiles, RuntimeDirectory })
+                {
+                    if (s == null) continue;
+                    string exists = HostSystem.Combine(s, "users");
+                    if (HostSystem.DirExists(exists))
+                    {
+                        exists = HostSystem.ToRelativePath(exists, RuntimeDirectory);
+                        _PathToUserFiles = exists;
+                        return exists;
+                    }
+                }
+                string tryplace = HostSystem.Combine(PathToAIML, "users");
+                HostSystem.CreateDirectory(tryplace);
+                _PathToUserFiles = tryplace;
+                return tryplace;
+            }
+        }
+
+        private string _PathToBotPersonalFiles;
+
+        protected string PersonalAiml
+        {
+            get { return _PathToBotPersonalFiles; }
+            set
+            {
+                lock (_RuntimeDirectories)
+                {
+                    if (_PathToUserFiles != null) _RuntimeDirectories.Remove(_PathToUserFiles);
+                    _PathToUserFiles = value;
+                    _RuntimeDirectories.Remove(value);
+                    _RuntimeDirectories.Insert(0, value);
+                }
+            }
+        }
 
         /// <summary>
-        /// If set to false the input from AIML files will undergo the same normalization process that
-        /// user input goes through. If true the bot will assume the AIML is correct. Defaults to true.
+        /// The directory to look in for the AIML files
         /// </summary>
-        public bool TrustAIML=true;
+        public string PathToAIML
+        {
+            get { return GetPathSetting("aimldirectory", "aiml"); }
+        }
+
+        private readonly object RuntimeDirectoriesLock = new object();
+
+        public List<string> RuntimeDirectories
+        {
+            get { lock (RuntimeDirectoriesLock) return new List<string>(_RuntimeDirectories); }
+        }
+
+        private string _dataDir = Environment.CurrentDirectory;
+
+        protected string RuntimeDirectory
+        {
+            get { return _dataDir ?? Environment.CurrentDirectory; }
+            set { _dataDir = value; }
+        }
 
         /// <summary>
-        /// The maximum number of characters a "that" element of a path is allowed to be. Anything above
-        /// this length will cause "that" to be "*". This is to avoid having the graphmaster process
-        /// huge "that" elements in the path that might have been caused by the bot reporting third party
-        /// data.
+        /// The directory to look in for the various XML configuration files
         /// </summary>
-        public int MaxThatSize = 256;
+        public string PathToConfigFiles
+        {
+            get { return GetPathSetting("configdirectory", "config"); }
+        }
 
+        /// <summary>
+        /// The directory into which the various log files will be written
+        /// </summary>
+        public string PathToLogs
+        {
+            get { return GetPathSetting("logdirectory", null); }
+        }
 
         /// <summary>
         /// A general stack to remember things to mention later
@@ -428,7 +572,7 @@ namespace AltAIMLbot
 
         public string lastBehaviorChatInput;
         public string lastBehaviorChatOutput;
-        public User lastBehaviorUser;
+        public AltAIMLbot.User lastBehaviorUser;
         public Queue<string> chatInputQueue = new Queue<string>();
 
         #endregion
@@ -438,22 +582,6 @@ namespace AltAIMLbot
         public event LogMessageDelegate WrittenToLog;
 
         #endregion
-
-        /// <summary>
-        /// Ctor
-        /// </summary>
-        public AltBot()
-        {
-            this.setup();  
-        }
-
-        #region Settings methods
-        /// <summary>
-        /// Loads AIML from .aiml files into the graphmaster "brain" of the Proccessor
-        /// </summary>
-        public void loadAIMLFromDefaults()
-        {
-        }
 
         /// <summary>
         /// Loads AIML from .aiml files into the graphmaster "brain" of the bot
@@ -524,16 +652,22 @@ namespace AltAIMLbot
         {
             this.myCron = new Cron(this);
 
+            SettingsDictionary.WarnOnNull = false;
+            this.RelationMetaProps = new SettingsDictionary("chat.relationprops", this);
+            SettingsDictionary.WarnOnNull = true;
             this.GlobalSettings = new SettingsDictionary("bot", this);
             this.GenderSubstitutions = new SettingsDictionary("substituions.gender", this);
             this.Person2Substitutions = new SettingsDictionary("substituions.person2", this);
             this.PersonSubstitutions = new SettingsDictionary("substituions.person", this);
             this.InputSubstitutions = new SettingsDictionary("substituions.input", this);
             this.DefaultPredicates = new SettingsDictionary("allusers",this);
+            this.HeardPredicates = new SettingsDictionary("chat.heardpredicates", this);
+            RegisterDictionary("bot.alluserpred", this.AllUserPreds);
             this.CustomTags = new Dictionary<string, TagHandler>();
-            this.Graphmaster = new GraphMaster();
-            this.Graphs = new Dictionary<string, AltAIMLbot.Utils.GraphMaster>();
+            this.Graphs = new Dictionary<string, GraphMaster>();
+            this.Graphmaster = new GraphMaster("default");
             this.Graphs.Add("*", this.Graphmaster);
+            this.setupDictionaries();
         }
 
         /// <summary>
@@ -693,6 +827,7 @@ namespace AltAIMLbot
         /// <param name="pathToSplitters">Path to the config file</param>
         private void loadSplitters(string pathToSplitters)
         {
+            if (pathToSplitters == null) return;
             FileInfo splittersFile = new FileInfo(pathToSplitters);
             if (splittersFile.Exists)
             {
@@ -726,14 +861,14 @@ namespace AltAIMLbot
                 Splitters.Add(";");
             }
         }
-        #endregion
+       // #endregion
 
         #region Logging methods
 
         /// <summary>
         /// The last message to be entered into the log (for testing purposes)
         /// </summary>
-        public string LastLogMessage=string.Empty;
+       // public string LastLogMessage=string.Empty;
 
         /// <summary>
         /// Writes a (timestamped) message to the bot's log.
@@ -741,49 +876,6 @@ namespace AltAIMLbot
         /// Log files have the form of yyyyMMdd.log.
         /// </summary>
         /// <param name="message">The message to log</param>
-        public void writeToLog(string message, params object[] args)
-        {
-            message = DLRConsole.SafeFormat(message, args);
-            Console.WriteLine("Log:" + message);
-
-            this.LastLogMessage = message;
-            if (this.IsLogging)
-            {
-                this.LogBuffer.Add(DateTime.Now.ToString() + ": " + message + Environment.NewLine);
-                if (this.LogBuffer.Count > this.MaxLogBufferSize-1)
-                {
-                    // Write out to log file
-                    DirectoryInfo logDirectory = new DirectoryInfo(this.PathToLogs);
-                    if (!logDirectory.Exists)
-                    {
-                        logDirectory.Create();
-                    }
-
-                    string logFileName = DateTime.Now.ToString("yyyyMMdd")+".log";
-                    FileInfo logFile = new FileInfo(Path.Combine(this.PathToLogs,logFileName));
-                    StreamWriter writer;
-                    if (!logFile.Exists)
-                    {
-                        writer = logFile.CreateText();
-                    }
-                    else
-                    {
-                        writer = logFile.AppendText();
-                    }
-
-                    foreach (string msg in this.LogBuffer)
-                    {
-                        writer.WriteLine(msg);
-                    }
-                    writer.Close();
-                    this.LogBuffer.Clear();
-                }
-            }
-            if (!object.Equals(null, this.WrittenToLog))
-            {
-                this.WrittenToLog();
-            }
-        }
 
         #endregion
 
@@ -884,13 +976,13 @@ namespace AltAIMLbot
         /// <param name="rawInput">the raw input</param>
         /// <param name="UserGUID">an ID for the new user (referenced in the result object)</param>
         /// <returns>the result to be output to the user</returns>
-        public Result Chat(string rawInput, string UserGUID)
+        public AltAIMLbot.Result Chat(string rawInput, string UserGUID)
         {
-            Request request = new Request(rawInput, GetUser(UserGUID), this);
+            Request request = new Request(rawInput, FindOrCreateUser(UserGUID), this);
             return this.Chat(request);
         }
 
-        public Result Chat(Request request)
+        public AltAIMLbot.Result Chat(Request request)
         {
             return Chat(request, "*");
         }
@@ -906,7 +998,7 @@ namespace AltAIMLbot
             request.CurrentGraph = ourGraphMaster;
 
             User user = request.user;
-            Result result = new Result(user, this, request);
+            var result = new MasterResult(user, this, request);
             bool saveResult = false;
 
             lock (ExternDB.mylock)
@@ -937,6 +1029,7 @@ namespace AltAIMLbot
                     }
                     if (user.Qstate.Count == 0)
                     {
+                        result.NormalizedPaths.Clear();
                         Console.WriteLine("DEBUG:Using Normal Search");
                         // Standard operation
                         foreach (string sentence in rawSentences)
@@ -945,7 +1038,10 @@ namespace AltAIMLbot
                             List<string> paths = gatherPaths(user, sentence, user.getPreStates(), user.getPostStates(),
                                                              loader);
                             SortPaths(paths, ourGraphMaster.getPathScore);
-                            result.NormalizedPaths = paths;
+                            foreach (var path in paths)
+                            {
+                                result.NormalizedPaths.Add(path);                                
+                            }
                         }
                     }
                     else
@@ -1005,7 +1101,7 @@ namespace AltAIMLbot
                     // grab the templates for the various sentences from the graphmaster
                     foreach (string path in result.NormalizedPaths)
                     {
-                        Utils.SubQuery query = new SubQuery(path, request);
+                        AltAIMLbot.Utils.SubQuery query = new SubQuery(path, result, request);
                         if (chatDB == null)
                         {
                             query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.Pattern, new StringBuilder());
@@ -1018,7 +1114,7 @@ namespace AltAIMLbot
                         //query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                         //query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                         Console.WriteLine("DEBUG: TemplatePath = " + query.TemplatePath);
-                        if (query.Template.Length < 120) Console.WriteLine("DEBUG: Template = " + query.Template);
+                        Console.WriteLine("DEBUG: Template = " + query.Template);
                         myBehaviors.SkipLog = true;
                         myBehaviors.logText("CHAT QueryPath:" + path);
                         myBehaviors.logText("CHAT TemplatePath:" + query.TemplatePath);
@@ -1092,7 +1188,7 @@ namespace AltAIMLbot
         }
 
 
-    private static void SortPaths(List<string> paths, Func<string, double> func)
+        private static void SortPaths(List<string> paths, Func<string, double> func)
         {
             paths.Sort((s1, s2) =>
                            {
@@ -1104,7 +1200,7 @@ namespace AltAIMLbot
                            });
         }
 
-        private static List<string> gatherPaths(User user, string sentence,IEnumerable<string> usergetPreStates, IEnumerable<string> usergetPostStates, AIMLLoader loader)
+        private static List<string> gatherPaths(AltAIMLbot.User user, string sentence,IEnumerable<string> usergetPreStates, IEnumerable<string> usergetPostStates, AIMLLoader loader)
         {
             List<string> normalizedPaths = new List<string>();
             foreach (var that in user.getThats())
@@ -1133,10 +1229,11 @@ namespace AltAIMLbot
         /// </summary>       
         public void evalTemplateNode(XmlNode templateNode)
         {
-            User imaginaryUser = new User("evalTemplateNode User", this);
+            var imaginaryUser = FindOrCreateUser("evalTemplateNode User");
             Request request = new Request("evalTemplateNode Request", imaginaryUser, this);
-            Utils.SubQuery query = new SubQuery("evalTemplateNode SubQuery", request);
-            Result result = new Result(request.user, this, request);
+            AltAIMLbot.Result result = new MasterResult(request.user, this, request);
+            AltAIMLbot.Utils.SubQuery query = new SubQuery("evalTemplateNode SubQuery", result, request);
+            
  
             string outputSentence = this.processNode(templateNode, query, request, result, request.user, true);
        
@@ -1150,7 +1247,7 @@ namespace AltAIMLbot
         /// <param name="result">the result to be sent to the user</param>
         /// <param name="user">the user who originated the request</param>
         /// <returns>the output string</returns>
-        public string processNode(XmlNode node, SubQuery query, Request request, Result result, User user, bool allowProcess)
+        public string processNode(XmlNode node, SubQuery query, Request request, AltAIMLbot.Result result, AltAIMLbot.User user, bool allowProcess)
         {
             // check for timeout (to avoid infinite loops)
             if (request.MayTimeOut && request.StartedOn.AddMilliseconds(request.bot.TimeOut) < DateTime.Now)
@@ -1223,8 +1320,6 @@ namespace AltAIMLbot
                                     }
                                 }
                             }
-                            string resultNodeInnerXML2 = tagHandler.Transform();
-                            string resultNodeInnerXML3 = resultNodeInnerXML2.ToString();
                         }
                         else
                         {
@@ -1270,7 +1365,7 @@ namespace AltAIMLbot
             }
         }
 
-        public string GetOutputSentence(string template, XmlNode resultNode, SubQuery query, Request request, Result result, User user, bool allowProcess)
+        public string GetOutputSentence(string template, XmlNode resultNode, SubQuery query, Request request, AltAIMLbot.Result result, AltAIMLbot.User user, bool allowProcess)
         {
             if (template == null) template = resultNode.OuterXml;
             if (!StaticXMLUtils.ContainsXml(template))
@@ -1312,7 +1407,7 @@ namespace AltAIMLbot
             }
         }
 
-    private AIMLTagHandler GetTagHandler(XmlNode node, SubQuery query, Request request, Result result, User user, bool liText)
+        private AIMLTagHandler GetTagHandler(XmlNode node, SubQuery query, Request request, AltAIMLbot.Result result, AltAIMLbot.User user, bool liText)
         {
             AIMLTagHandler tagHandler = this.getBespokeTags(user, query, request, result, node);
             string nodeNameLower = node.Name.ToLower();
@@ -1322,165 +1417,165 @@ namespace AltAIMLbot
                 { switch (nodeNameLower)
                 {
                     case "bot":
-                        return new AIMLTagHandlers.bot(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.bot(this, user, query, request, result, node);
                         
                     case "condition":
-                        return new AIMLTagHandlers.condition(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.condition(this, user, query, request, result, node);
                         
                     case "date":
-                        return new AIMLTagHandlers.date(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.date(this, user, query, request, result, node);
                         
                     case "formal":
-                        return new AIMLTagHandlers.formal(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.formal(this, user, query, request, result, node);
                         
                     case "gender":
-                        return new AIMLTagHandlers.gender(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.gender(this, user, query, request, result, node);
                         
                     case "get":
-                        return new AIMLTagHandlers.get(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.get(this, user, query, request, result, node);
                         
                     case "gossip":
-                        return new AIMLTagHandlers.gossip(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.gossip(this, user, query, request, result, node);
                         
                     case "id":
-                        return new AIMLTagHandlers.id(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.id(this, user, query, request, result, node);
                         
                     case "input":
-                        return new AIMLTagHandlers.input(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.input(this, user, query, request, result, node);
                         
                     case "javascript":
-                        return new AIMLTagHandlers.javascript(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.javascript(this, user, query, request, result, node);
                         
                     case "learn":
-                        return new AIMLTagHandlers.learn(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.learn(this, user, query, request, result, node);
                         
                     case "lowercase":
-                        return new AIMLTagHandlers.lowercase(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.lowercase(this, user, query, request, result, node);
                         
                     case "person":
-                        return new AIMLTagHandlers.person(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.person(this, user, query, request, result, node);
                         
                     case "person2":
-                        return new AIMLTagHandlers.person2(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.person2(this, user, query, request, result, node);
                         
                     case "random":
-                        return new AIMLTagHandlers.random(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.random(this, user, query, request, result, node);
                         
                     case "sentence":
-                        return new AIMLTagHandlers.sentence(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.sentence(this, user, query, request, result, node);
                         
                     case "set":
-                        return new AIMLTagHandlers.set(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.set(this, user, query, request, result, node);
                         
                     case "size":
-                        return new AIMLTagHandlers.size(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.size(this, user, query, request, result, node);
                         
                     case "sr":
-                        return new AIMLTagHandlers.sr(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.sr(this, user, query, request, result, node);
                         
                     case "srai":
-                        return new AIMLTagHandlers.srai(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.srai(this, user, query, request, result, node);
                         
                     case "star":
-                        return new AIMLTagHandlers.star(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.star(this, user, query, request, result, node);
                         
                     case "system":
-                        return new AIMLTagHandlers.system(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.system(this, user, query, request, result, node);
                         
                     case "that":
-                        return new AIMLTagHandlers.that(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.that(this, user, query, request, result, node);
                         
                     case "thatstar":
-                        return new AIMLTagHandlers.thatstar(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.thatstar(this, user, query, request, result, node);
                         
                     case "think":
-                        return new AIMLTagHandlers.think(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.think(this, user, query, request, result, node);
                         
                     case "topicstar":
-                        return new AIMLTagHandlers.topicstar(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.topicstar(this, user, query, request, result, node);
                         
                     case "uppercase":
-                        return new AIMLTagHandlers.uppercase(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.uppercase(this, user, query, request, result, node);
                         
                     case "version":
                     case "name":
-                        return new AIMLTagHandlers.botsetting(this, user, query, request, result, node, nodeNameLower);
+                        return new AltAIMLbot.AIMLTagHandlers.botsetting(this, user, query, request, result, node, nodeNameLower);
                         
 
 
                     case "push":
-                        return new AIMLTagHandlers.push(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.push(this, user, query, request, result, node);
                         
                     case "pop":
-                        return new AIMLTagHandlers.pop(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.pop(this, user, query, request, result, node);
                         
                     case "postcache":
-                        return new AIMLTagHandlers.postcache(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.postcache(this, user, query, request, result, node);
                         
                     case "refserver":
-                        return new AIMLTagHandlers.refserver(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.refserver(this, user, query, request, result, node);
                         
                     case "pannouserver":
-                        return new AIMLTagHandlers.pannouserver(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.pannouserver(this, user, query, request, result, node);
                         
                     case "trueknowledgeserver":
-                        return new AIMLTagHandlers.trueknowledgeserver(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.trueknowledgeserver(this, user, query, request, result, node);
                         
                     case "wolframserver":
-                        return new AIMLTagHandlers.wolframserver(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.wolframserver(this, user, query, request, result, node);
                         
                     case "filterqa":
-                        return new AIMLTagHandlers.filterqa(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.filterqa(this, user, query, request, result, node);
                         
                     case "summerize":
-                        return new AIMLTagHandlers.summerize(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.summerize(this, user, query, request, result, node);
                         
 
                     case "inject":
-                        return new AIMLTagHandlers.inject(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.inject(this, user, query, request, result, node);
                         
                     case "chemsys":
-                        return new AIMLTagHandlers.chemsys(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.chemsys(this, user, query, request, result, node);
                         
                     case "nop":
-                        return new AIMLTagHandlers.nop(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.nop(this, user, query, request, result, node);
                         
                     case "scxml":
-                        return new AIMLTagHandlers.scxml(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.scxml(this, user, query, request, result, node);
                         
                     case "btxml":
-                        return new AIMLTagHandlers.btxml(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.btxml(this, user, query, request, result, node);
                         
                     case "say":
-                        return new AIMLTagHandlers.say(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.say(this, user, query, request, result, node);
                         
                     case "sapi":
-                        return new AIMLTagHandlers.sapi(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.sapi(this, user, query, request, result, node);
                         
                     case "satisfied":
-                        return new AIMLTagHandlers.satisfied(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.satisfied(this, user, query, request, result, node);
                         
                     case "behavior":
-                        return new AIMLTagHandlers.behavior(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.behavior(this, user, query, request, result, node);
                         
                     case "rbehavior":
-                        return new AIMLTagHandlers.rbehavior(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.rbehavior(this, user, query, request, result, node);
                         
                     case "rndint":
-                        return new AIMLTagHandlers.rndint(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.rndint(this, user, query, request, result, node);
                         
                     case "rnddbl":
-                        return new AIMLTagHandlers.rnddbl(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.rnddbl(this, user, query, request, result, node);
                         
                     case "crontag":
-                        return new AIMLTagHandlers.crontag(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.crontag(this, user, query, request, result, node);
                         
                     case "subaiml":
-                        return new AIMLTagHandlers.subaiml(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.subaiml(this, user, query, request, result, node);
                         
                     case "template":
                     case "li":
-                        return new AIMLTagHandlers.format(this, user, query, request, result, node, null);
+                        return new AltAIMLbot.AIMLTagHandlers.format(this, user, query, request, result, node, null);
 
                     case "#whitespace":
                     case "#text":
@@ -1555,12 +1650,12 @@ namespace AltAIMLbot
             {
                 return null;
             }
-            tagHandler = new lazyClosure(this, user, query, request, result, node);
-            writeToLog("AIMLLOADER:  lazyClosure: " + node.OuterXml);
+            //tagHandler = new lazyClosure(this, user, query, request, result, node);
+            writeToLog("AIMLLOADER:  lazyClosure?!: " + node.OuterXml);
             return tagHandler;
         }
 
-    /// <summary>
+        /// <summary>
         /// Searches the CustomTag collection and processes the AIML if an appropriate tag handler is found
         /// </summary>
         /// <param name="user">the user who originated the request</param>
@@ -1569,7 +1664,7 @@ namespace AltAIMLbot
         /// <param name="result">the result to be sent to the user</param>
         /// <param name="node">the node to evaluate</param>
         /// <returns>the output string</returns>
-        public AIMLTagHandler getBespokeTags(User user, SubQuery query, Request request, Result result, XmlNode node)
+        public AIMLTagHandler getBespokeTags(AltAIMLbot.User user, SubQuery query, Request request, AltAIMLbot.Result result, XmlNode node)
         {
             if (this.CustomTags.ContainsKey(node.Name.ToLower()))
             {
@@ -1599,12 +1694,6 @@ namespace AltAIMLbot
 
         #endregion
 
-        public string EnsureEnglish(string arg)
-        {
-            return arg;
-
-        }
-
 
 
         #region Serialization
@@ -1615,6 +1704,12 @@ namespace AltAIMLbot
         /// </summary>
         /// <param name="path">the path to the file for saving</param>
         public void saveToBinaryFile(string path)
+        {
+            saveToBinaryFile0(path + ".btxbin");
+            saveToBinaryFile1(path);
+        }
+
+        public void saveToBinaryFile0(string path)
         {
             // check to delete an existing version of the file
             FileInfo fi = new FileInfo(path);
@@ -1631,7 +1726,7 @@ namespace AltAIMLbot
                 bf.Serialize(saveFile, this.myCron);
                 bf.Serialize(saveFile, this.myRandMem);
                 bf.Serialize(saveFile, this.Graphs);
-               // bf.Serialize(saveFile, this.myBehaviors);
+                // bf.Serialize(saveFile, this.myBehaviors);
             }
             catch (Exception e)
             {
@@ -1647,18 +1742,23 @@ namespace AltAIMLbot
         /// <param name="path">the path to the dump file</param>
         public void loadFromBinaryFile(string path)
         {
+            loadFromBinaryFile0(path + ".btxbin");
+            loadFromBinaryFile1(path);
+        }
+        public void loadFromBinaryFile0(string path)
+        {
             FileStream loadFile = File.OpenRead(path);
             BinaryFormatter bf = new BinaryFormatter();
-            this.Graphmaster = (AltAIMLbot.Utils.GraphMaster)bf.Deserialize(loadFile);
+            this.Graphmaster = (GraphMaster)bf.Deserialize(loadFile);
             this.myCron = (Cron)bf.Deserialize(loadFile);
             this.myRandMem = (RandomMemory)bf.Deserialize(loadFile);
-            this.Graphs = (Dictionary<string, AltAIMLbot.Utils.GraphMaster>)bf.Deserialize(loadFile);
+            this.Graphs = (Dictionary<string, GraphMaster>)bf.Deserialize(loadFile);
             //this.myBehaviors = (BehaviorSet)bf.Deserialize(loadFile);
 
             loadFile.Close();
             this.myBehaviors.bot = this;
             this.myCron.myBot = this;
-           // this.myBehaviors.postSerial(this);
+            // this.myBehaviors.postSerial(this);
 
         }
 
@@ -1783,7 +1883,7 @@ The AltAIMLbot program.
             }
         }
 
-        public void importBBUserSettings(User myUser, string bbKey, string settingKey)
+        public void importBBUserSettings(AltAIMLbot.User myUser, string bbKey, string settingKey)
         {
             string myValue = myChemistry.m_cBus.getHash(bbKey);
             if (myValue.Length > 0)
@@ -1792,7 +1892,7 @@ The AltAIMLbot program.
             }
         }
 
-        public void importBBUser(User myUser)
+        public void importBBUser(AltAIMLbot.User myUser)
         {
             importBBUserSettings(myUser, "username", "name");
             importBBUserSettings(myUser, "userage", "age");
@@ -1942,7 +2042,7 @@ The AltAIMLbot program.
 
         #endregion
 
- #region FSM
+        #region FSM
 
         public void advanceFSM()
         {
@@ -1952,9 +2052,9 @@ The AltAIMLbot program.
         {
             myFSMS.defineMachine(name,FSMXML);
         }
-#endregion
+        #endregion
 
-#region behavior
+        #region behavior
         public void performBehaviors()
         {
             myBehaviors.runBotBehaviors(this);
@@ -1963,307 +2063,183 @@ The AltAIMLbot program.
         {
             myBehaviors.defineBehavior(name, BehaveXML);
         }
-#endregion
+        #endregion
+
+        /// <summary>
+        /// A weak name/value association list of what has happened in dialog  
+        /// </summary>
+        public SettingsDictionary HeardPredicates;
+
+        /// <summary>
+        /// A name+prop/value association list of things like  look.set-return, look.format-whword,
+        /// look.format-assert, look.format-query, look.format-etc,
+        /// </summary>
+        public SettingsDictionary RelationMetaProps;
+        /// <summary>
+        /// When a tag has no name like <icecream/> it is transformed to <bot name="icecream"></bot>
+        /// </summary>
+        public static bool UnknownTagsAreBotVars = true;
 
 
-    private User GetUser(string type0)
+        public GraphMaster GetGraph(string graphName)
         {
-            lock (UsersByID)
-            {
+            return GetGraph(graphName, Graphmaster);
+        }
 
-                User user;
-                if (UsersByID.TryGetValue(type0.ToLower(), out user))
+        public ISettingsDictionary GetDictionary(string name)
+        {
+            var idict = GetDictionary0(name);
+            if (idict != null) return idict;
+            var AltBotobjCol = ScriptManager.ResolveToObject(this, name);
+            if (AltBotobjCol == null || AltBotobjCol.Count == 0)
+            {
+                return null;
+            }
+            //if (tr)
+            foreach (object o in AltBotobjCol)
+            {
+                ParentProvider pp = o as ParentProvider;
+                ISettingsDictionary pi = o as ISettingsDictionary;
+                User pu = o as User;
+                if (pp != null)
                 {
-                    return user;
+                    pi = pp();
                 }
-                return new User(type0, this);
+                if (pi != null)
+                {
+                    return pi;
+                }
+                if (pu != null)
+                {
+                    return pu;
+                }
             }
-        }
-
-    private readonly Dictionary<string, User> UsersByID = new Dictionary<string, User>();
-    /// <summary>
-    /// A weak name/value association list of what has happened in dialog  
-    /// </summary>
-    public SettingsDictionary HeardPredicates;
-
-    /// <summary>
-    /// A name+prop/value association list of things like  look.set-return, look.format-whword,
-    /// look.format-assert, look.format-query, look.format-etc,
-    /// </summary>
-    public SettingsDictionary RelationMetaProps;
-
-    public SettingsDictionary GetRelationMetaProps()
-    {
-        return RelationMetaProps;
-    }
-    /// <summary>
-    /// When a tag has no name like <icecream/> it is transformed to <bot name="icecream"></bot>
-    /// </summary>
-    public static bool UnknownTagsAreBotVars = true;
-
-    /// <summary>
-    ///  Substitution blocks for graphmasters
-    /// </summary>
-    public Dictionary<string, ISettingsDictionary> AllDictionaries = new Dictionary<string, ISettingsDictionary>();
-    public ICollectionRequester ObjectRequester;
-
-    public void AddUser(string id, User user)
-    {
-            lock (UsersByID)
-            {
-                UsersByID[id.ToLower()] = user;
-            }
-    }
-
-    public GraphMaster GetGraph(string graphName)
-    {
-        GraphMaster ourGraphMaster;
-        if (Graphs.TryGetValue(graphName, out ourGraphMaster))
-        {
-            return ourGraphMaster;
-        }
-        return null;
-    }
-
-    public ISettingsDictionary GetDictionary(string name)
-    {
-        var idict = GetDictionary0(name);
-        if (idict != null) return idict;
-        var rtpbotobjCol = ScriptManager.ResolveToObject(this, name);
-        if (rtpbotobjCol == null || rtpbotobjCol.Count == 0)
-        {
             return null;
         }
-        //if (tr)
-        foreach (object o in rtpbotobjCol)
-        {
-            ParentProvider pp = o as ParentProvider;
-            ISettingsDictionary pi = o as ISettingsDictionary;
-            User pu = o as User;
-            if (pp != null)
-            {
-                pi = pp();
-            }
-            if (pi != null)
-            {
-                return pi;
-            }
-            if (pu != null)
-            {
-                return pu.Predicates;
-            }
-        }
-        return null;
-    }
 
-    public ISettingsDictionary GetDictionary0(string named)
-    {
-        Func<ISettingsDictionary, SettingsDictionary> SDCAST = SettingsDictionary.ToSettingsDictionary;
-        //dict = FindDict(type, query, dict);
-        if (named == null) return null;
-        string key = named.ToLower().Trim();
-        if (key == "") return null;
-        lock (AllDictionaries)
+        public ISettingsDictionary GetDictionary0(string named)
         {
-            ISettingsDictionary dict;
-            if (AllDictionaries.TryGetValue(key, out dict))
+            Func<ISettingsDictionary, SettingsDictionary> SDCAST = SettingsDictionary.ToSettingsDictionary;
+            //dict = FindDict(type, query, dict);
+            if (named == null) return null;
+            string key = named.ToLower().Trim();
+            if (key == "") return null;
+            lock (AllDictionaries)
             {
-                return dict;
+                ISettingsDictionary dict;
+                if (AllDictionaries.TryGetValue(key, out dict))
+                {
+                    return dict;
+                }
             }
-        }
-        if (key == "predicates")
-        {
-            return SDCAST(this.AllUserPreds);
-        }
-        // try to use a global blackboard predicate
-        var gUser = AllUserPreds;
-        if (key == "globalpreds") return SDCAST(gUser);
-        if (key == "allusers") return SDCAST(AllUserPreds);
-        var path = named.Split(new[] { '.' });
-        if (path.Length == 1)
-        {
-            User user = GetUser(key);
-            if (user != null) return user.Predicates;
-        }
-        else
-        {
-            if (path[0] == "bot" || path[0] == "users" || path[0] == "char" || path[0] == "nl")
+            if (key == "predicates")
             {
-                ISettingsDictionary f = GetDictionary(string.Join(".", path, 1, path.Length - 1));
-                if (f != null) return SDCAST(f);
+                return SDCAST(this.AllUserPreds);
             }
-            if (path[0] == "substitutions")
+            // try to use a global blackboard predicate
+            User gUser = ExemplarUser;
+            if (key == "globalpreds") return SDCAST(gUser);
+            if (key == "allusers") return SDCAST(AllUserPreds);
+            var path = named.Split(new[] { '.' });
+            if (path.Length == 1)
             {
-                ISettingsDictionary f = GetDictionary(string.Join(".", path, 1, path.Length - 1), "substitutions",
-                                                      true);
-                if (f != null) return SDCAST(f);
+                User user = FindOrCreateUser(key);
+                if (user != null) return user;
             }
             else
             {
-                ISettingsDictionary f = GetDictionary(path[0]);
-                if (f != null)
-                {
-                    SettingsDictionary sd = SDCAST(f);
-                    ParentProvider pp = sd.FindDictionary(string.Join(".", path, 1, path.Length - 1), null);
-                    if (pp != null)
-                    {
-                        ISettingsDictionary pi = pp();
-                        if (pi != null) return SDCAST(pi);
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    public ISettingsDictionary GetDictionary(string named, string type, bool createIfMissing)
-    {
-        lock (AllDictionaries)
-        {
-            string key = (type + "." + named).ToLower();
-            ISettingsDictionary dict;
-            if (!AllDictionaries.TryGetValue(key, out dict))
-            {
-                ISettingsDictionary sdict = GetDictionary(named);
-                if (sdict != null) return sdict;
-                if (createIfMissing)
-                {
-                    dict = AllDictionaries[key] = AllDictionaries[named] = new SettingsDictionary(named, this, null);
-                    /*User user = ExemplarUser ?? BotAsUser;
-                    Request r = //user.CurrentRequest ??
-                                user.CreateRequest(
-                                    "@echo <!-- loadDictionary '" + named + "' from '" + type + "' -->", Unifiable.EnglishNothing, BotAsUser);*/
-                    loadDictionary(dict, named, type, null);
-                }
-            }
-            return dict;
-        }
-    }
-
-    private void loadDictionary(ISettingsDictionary dictionary, string path, string type, Request r0)
-    {
-        //User user = LastUser ?? ExemplarUser ?? BotAsUser;
-        /*Request r = r0 ??
-            //user.CurrentRequest ??
-                    user.CreateRequest(
-                        "@echo <!-- loadDictionary '" + dictionary + "' from '" + type + "' -->", Unifiable.EnglishNothing,
-                        BotAsUser);*/
-        int loaded = 0;
-        foreach (string p in GetSearchRoots(r0))
-        {
-            foreach (string s0 in new[] { "", type, type + "s", })
-            {
-                foreach (string s1 in new[] { "", "." + type, ".xml", ".subst", ".properties", })
-                {
-                    string named = HostSystem.Combine(p, path + s0 + s1);
-                    if (HostSystem.FileExists(named))
-                    {
-                        try
-                        {
-                            SettingsDictionary.loadSettings(dictionary, named, true, false, r0);
-                            loaded++;
-                            break;
-                        }
-                        catch (Exception e)
-                        {
-                            writeToLog("ERROR {0}", e);
-                            //continue;
-                            throw;
-                        }
-                    }
-                }
-            }
-            if (loaded > 0) return;
-        }
-        if (loaded == 0)
-        {
-            writeToLog("WARNING: Cannot find " + path + " for " + type);
-        }
-    }
-
-    private IEnumerable<string> GetSearchRoots(object o)
-    {
-        return new string[] {".", "aiml"};
-    }
-
-    public void RegisterDictionary(ISettingsDictionary dict)
-    {
-        RegisterDictionary(dict.NameSpace, dict);
-    }
-    public void RegisterDictionary(string named, ISettingsDictionary dict)
-    {
-        named = named.ToLower().Trim().Replace("  ", " ");
-        string key = named.Replace(" ", "_");
-        RegisterDictionary(named, dict, true);
-    }
-    private TimeSpan MaxWaitTryEnter = TimeSpan.FromSeconds(10);
-
-    public void RegisterDictionary(string key, ISettingsDictionary dict, bool always)
-    {
-        Action needsExit = LockInfo.MonitorTryEnter("RegisterDictionary " + key, AllDictionaries, MaxWaitTryEnter);
-        try
-        {
-            var path = key.Split(new[] { '.' });
-            if (always || !AllDictionaries.ContainsKey(key)) AllDictionaries[key] = dict;
-            if (path.Length > 1)
-            {
                 if (path[0] == "bot" || path[0] == "users" || path[0] == "char" || path[0] == "nl")
                 {
-                    string join = string.Join(".", path, 1, path.Length - 1);
-                    RegisterDictionary(join, dict, false);
+                    ISettingsDictionary f = GetDictionary(string.Join(".", path, 1, path.Length - 1));
+                    if (f != null) return SDCAST(f);
+                }
+                if (path[0] == "substitutions")
+                {
+                    ISettingsDictionary f = GetDictionary(string.Join(".", path, 1, path.Length - 1), "substitutions",
+                                                          true);
+                    if (f != null) return SDCAST(f);
+                }
+                else
+                {
+                    ISettingsDictionary f = GetDictionary(path[0]);
+                    if (f != null)
+                    {
+                        SettingsDictionary sd = SDCAST(f);
+                        ParentProvider pp = sd.FindDictionary(string.Join(".", path, 1, path.Length - 1), null);
+                        if (pp != null)
+                        {
+                            ISettingsDictionary pi = pp();
+                            if (pi != null) return SDCAST(pi);
+                        }
+                    }
                 }
             }
+            return null;
         }
-        finally
-        {
-            needsExit();
-        }
-    }
-    public static void writeDebugLine(string s)
-    {
-        throw new NotImplementedException();
-    }
 
-    public string SystemExecute(string name, object o, Request request
-        )
-    {
-        throw new NotImplementedException();
-    }
-
-    public bool IsTraced(string name)
-    {
-        if ("dealerhand playerhand".Contains(name))
+        public ISettingsDictionary GetDictionary(string named, string type, bool createIfMissing)
         {
-            return true;
+            lock (AllDictionaries)
+            {
+                string key = (type + "." + named).ToLower();
+                ISettingsDictionary dict;
+                if (!AllDictionaries.TryGetValue(key, out dict))
+                {
+                    ISettingsDictionary sdict = GetDictionary(named);
+                    if (sdict != null) return sdict;
+                    if (createIfMissing)
+                    {
+                        dict = AllDictionaries[key] = AllDictionaries[named] = new SettingsDictionary(named, this, null);
+                        User user = ExemplarUser ?? BotAsUser;
+                        Request r = //user.CurrentRequest ??
+                                    user.CreateRequest(
+                                        "@echo <!-- loadDictionary '" + named + "' from '" + type + "' -->", Unifiable.EnglishNothing, BotAsUser);
+                        loadDictionary(dict, named, type, r);
+                    }
+                }
+                return dict;
+            }
         }
-        return false;
+
+        public Dictionary<string, ISettingsDictionary> AllDictionaries = new Dictionary<string, ISettingsDictionary>();
     }
-    }
+}
+
+namespace AltAIMLbot
+{
+    /// <summary>
+    /// Encapsulates a bot. If no settings.xml file is found or referenced the bot will try to
+    /// default to safe settings.
+    /// </summary>
+    /// 
+        public delegate void sayProcessorDelegate(string message);
+        public delegate void systemProcessorDelegate(string message);
+
     public class myConst
     {
         public static string MEMHOST = "127.0.0.1";
         //public static string MEMHOST = "192.168.2.141";
     }
-    public class UserDuringProcessing : User
+    /*public class UserDuringProcessing : User
     {
-        public UserDuringProcessing(string UserID, AltAIMLbot.AltBot bot)
+        public UserDuringProcessing(string UserID, AltBot bot)
             : base(UserID,bot)
         {
         }
     }
-    public class UserConversationScope : User
+    public class UserConversationScope : MasterUser
     {
-        public UserConversationScope(string UserID, AltAIMLbot.AltBot bot)
+        public UserConversationScope(string UserID, AltBot bot)
             : base(UserID,bot)
         {
         }
-    }
+    }*/
 
    // public class Unifiable 
    // {
     //
     //}
-
+    /*
     public class Utterance
     {
         public int maxResults;
@@ -2304,5 +2280,5 @@ The AltAIMLbot program.
             maxResults = maxSentences + 10;
         }
 
-    }
+    }*/
 }

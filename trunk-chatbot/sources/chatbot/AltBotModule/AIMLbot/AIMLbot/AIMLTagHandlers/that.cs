@@ -2,7 +2,10 @@ using System;
 using System.Text;
 using System.Xml;
 using AltAIMLbot.Utils;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
+using RTParser;
+using AIMLTagHandler=AltAIMLbot.Utils.AIMLTagHandler;
 using Unifiable = System.String;
 
 namespace AltAIMLbot.AIMLTagHandlers
@@ -36,11 +39,11 @@ namespace AltAIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public that(AltAIMLbot.AltBot bot,
-                        AltAIMLbot.User user,
-                        AltAIMLbot.Utils.SubQuery query,
-                        AltAIMLbot.Request request,
-                        AltAIMLbot.Result result,
+        public that(AltBot bot,
+                        User user,
+                        SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode, 1)
         {
@@ -51,7 +54,9 @@ namespace AltAIMLbot.AIMLTagHandlers
             if (CheckNode("that,justbeforethat,response"))
             {
                 var at1 = GetAttribValue("index", null);
-                return GetIndexes(at1, request.Responder, (a, b, u) => this.user.getThat(a, b),
+                var talker = this.user;
+                var responder = request.Responder;
+                return GetIndexes(at1, responder, (a, b, u) => talker.getThat(a, b, u),
                                    (str, args) => localError(at1, str));
             }
             return string.Empty;

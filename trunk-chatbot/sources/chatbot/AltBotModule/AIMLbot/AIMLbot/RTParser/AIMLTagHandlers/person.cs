@@ -1,6 +1,9 @@
 using System;
 using System.Xml;
 using System.Text;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using RTParser.AIMLTagHandlers;
 using RTParser.Utils;
 using RTParser.Variables;
@@ -16,10 +19,10 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The non-atomic person element instructs the AIML interpreter to: 
     /// 
-    /// 1. replace words with first-person aspect in the result of processing the contents of the 
+    /// 1. replace words with first-person aspect in the result of Processing the contents of the 
     /// person element with words with the grammatically-corresponding third-person aspect; and 
     /// 
-    /// 2. replace words with third-person aspect in the result of processing the contents of the 
+    /// 2. replace words with third-person aspect in the result of Processing the contents of the 
     /// person element with words with the grammatically-corresponding first-person aspect.
     /// 
     /// The definition of "grammatically-corresponding" is left up to the implementation. 
@@ -38,12 +41,12 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public person(RTParser.RTPBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+        /// <param name="templateNode">The node to be Processed</param>
+        public person(RTParser.AltBot bot,
+                        User user,
+                        SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -56,7 +59,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 return dict;
         }
-            return bot.PersonSubstitutions;
+            return Proc.PersonSubstitutions;
     }
 }
 }

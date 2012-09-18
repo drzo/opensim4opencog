@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime;
 using System.Text;
 using System.Xml;
@@ -9,6 +9,9 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using RTParser;
 using RTParser.Utils;
 
@@ -17,11 +20,11 @@ namespace RTParser.AIMLTagHandlers
     public class pop : RTParser.Utils.AIMLTagHandler
     {
 
-        public pop(RTParser.RTPBot bot,
-                RTParser.User user,
-                RTParser.Utils.SubQuery query,
-                RTParser.Request request,
-                RTParser.Result result,
+        public pop(RTParser.AltBot bot,
+                User user,
+                SubQuery query,
+                Request request,
+                Result result,
                 XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -38,9 +41,9 @@ namespace RTParser.AIMLTagHandlers
 
                 try
                 {
-                    if (this.user.bot.conversationStack.Count > 0)
+                    if (Proc.conversationStack.Count > 0)
                     {
-                        Unifiable converseMemo = this.user.bot.conversationStack.Pop();
+                        Unifiable converseMemo = Proc.conversationStack.Pop();
                         return converseMemo;
                     }
                     else

@@ -2,6 +2,8 @@ using System;
 using System.Xml;
 using System.Text;
 using System.IO;
+using AltAIMLParser;
+using RTParser;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
@@ -9,7 +11,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// The learn element instructs the AIML interpreter to retrieve a resource specified by a URI, 
     /// and to process its AIML object contents.
     /// </summary>
-    public class learn : AltAIMLbot.Utils.AIMLTagHandler
+    public class learn : Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -20,11 +22,11 @@ namespace AltAIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public learn(AltAIMLbot.AltBot bot,
-                        AltAIMLbot.User user,
-                        AltAIMLbot.Utils.SubQuery query,
-                        AltAIMLbot.Request request,
-                        AltAIMLbot.Result result,
+        public learn(AltBot bot,
+                        User user,
+                        Utils.SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {

@@ -1,5 +1,10 @@
+#if false
 using System;
 using System.Collections.Generic;
+using AltAIMLParser;
+using RTParser;
+using RTParser.Utils;
+using RTParser.Variables;
 
 namespace AltAIMLbot.Utils
 {
@@ -105,3 +110,4 @@ namespace AltAIMLbot.Utils
         }
     }
 }
+#endif

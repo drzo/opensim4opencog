@@ -7,6 +7,9 @@ using System.Threading;
 using System.Xml;
 using System.IO;
 using System.Xml.Serialization;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using Lucene.Net.Store;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -89,7 +92,11 @@ namespace RTParser.Variables
         /// <summary>
         /// The bot this dictionary is associated with (only for writting log)
         /// </summary>
-        protected RTPBot bot;
+        protected AltBot bot;
+        protected AltBot rbot
+        {
+            get { return bot; }
+        }
 
         private string theNameSpace;
         public bool TrimKeys = true;
@@ -152,6 +159,22 @@ namespace RTParser.Variables
             }
         }
 
+        public void CopyFrom(SettingsDictionary from, bool localOnly, bool existingOnly)
+        {
+            foreach(string key in from.Keys)
+            {
+                if (existingOnly && !containsSettingCalled(key))
+                {
+                    continue;
+                }
+                if (localOnly && !containsLocalCalled(key))
+                {
+                    continue;
+                }
+                addSetting(key, from.grabSettingNoDebug(key));
+            }
+        }
+
         /// <summary>
         /// Removes the first occurrence of a specific object from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
         /// </summary>
@@ -208,7 +231,11 @@ namespace RTParser.Variables
         public string NameSpace
         {
             get { return theNameSpace; }
-            set { theNameSpace = value; }
+            set
+            {
+                AddName(value);
+                theNameSpace = value;
+            }
         }
 
         public bool IsTraced { get; set; }
@@ -388,21 +415,22 @@ namespace RTParser.Variables
 
         #endregion
 
+        public SettingsDictionary(String name, AltBot bot)
+            : this(name, bot, null)
+        {
+
+        }
+
         /// <summary>
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot for whom this is a settings dictionary</param>
-        public SettingsDictionary(String name, RTPBot bot, ParentProvider parent)
+        public SettingsDictionary(String name, AltBot bot, ParentProvider parent)
         {
-            ObjectRequester = bot.ObjectRequester;
-            theNameSpace = ScriptManager.ToKey(name);
+            this.bot = bot;
+            theNameSpace = ScriptManager.ToKey(name).ToLower();
             IsSubsts = name.Contains("subst");
             TrimKeys = !name.Contains("subst");
-            this.bot = bot;
-            if (!IsSubsts)
-            {
-                if (bot.RelationMetaProps != null) this.InsertMetaProvider(bot.GetRelationMetaProps);
-            }
             IsTraced = true;
             bot.RegisterDictionary(name, this);
             if (parent != null) _fallbacks.Add(parent);
@@ -415,9 +443,17 @@ namespace RTParser.Variables
             IsTraced = false;
             AddSettingToCollection(null, pp, _fallbacks);
             AddSettingToCollection(null, pp, _listeners);
+            if (!IsSubsts)
+            {
+                this.InsertMetaProvider(bot.GetRelationMetaProps);
+            }
         }
 
         #region Methods
+        public void loadSettings(string pathToSettings)
+        {
+            loadSettings(pathToSettings, SettingsPolicy.Default, null);
+        }
         /// <summary>
         /// Loads bespoke settings into the class from the file referenced in pathToSettings.
         /// 
@@ -432,8 +468,40 @@ namespace RTParser.Variables
         /// <param name="pathToSettings">The file containing the settings</param>
         public void loadSettings(string pathToSettings, Request request)
         {
-            pathToSettings = HostSystem.ResolveToExistingPath(pathToSettings);
-            OutputDelegate writeToLog = request.writeToLog;
+            loadSettings(pathToSettings, SettingsPolicy.Default, request);   
+        }
+        public void loadSettings(string pathToSettings, SettingsPolicy settingsPolicy, Request request)
+        {
+            if (pathToSettings == null) return;
+            AddMonitorPath(pathToSettings, settingsPolicy);
+            loadSettingsNow(pathToSettings, settingsPolicy, request);
+        }
+        public void loadSettingsFromPrefix(string prefixToSettings, SettingsPolicy settingsPolicy, Request request)
+        {
+            lock (MonitorPaths)
+            {
+                foreach (var path in MonitorPaths)
+                {
+                    string pathToSettings = HostSystem.Combine(prefixToSettings, path.Key);
+                    try
+                    {
+                        loadSettingsNow(pathToSettings, path.Value, request);
+                    }
+                    catch (FileNotFoundException fnf)
+                    {
+
+                    }
+                }
+            }
+        }
+
+         public void loadSettingsNow(string pathToSettings,  SettingsPolicy settingsPolicy, Request request)
+        {
+            if (request == null)
+                request = bot.GetBotRequest("<!- Loads Config to " + this + " from: '" + pathToSettings + "' -->"); 
+             pathToSettings = HostSystem.ResolveToExistingPath(pathToSettings);
+             OutputDelegate writeToLog = this.writeToLog;
+             if (request != null) writeToLog = request.writeToLog;
             if (pathToSettings == null) return;
             lock (orderedKeyLock)
             {
@@ -449,7 +517,7 @@ namespace RTParser.Variables
                             xmlDoc.Load(stream);
                             HostSystem.Close(stream);
                             IsIdentityReadOnly = false;
-                            this.loadSettings(xmlDoc, request);
+                            loadSettingNode(this, xmlDoc, settingsPolicy,  request);
                         }
                         catch (ChatSignal e)
                         {
@@ -479,10 +547,11 @@ namespace RTParser.Variables
             }
         }
 
-        static public void loadSettings(ISettingsDictionary dict0, string pathToSettings,
-            bool overwriteExisting, bool onlyIfUnknown, Request request)
+        public static void loadSettingsNow(ISettingsDictionary dict0, string prefix, string pathToSettings0,
+            SettingsPolicy settingsPolicy, Request request)
         {
-            if (pathToSettings == null) return;
+            string pathToSettings = HostSystem.Combine(prefix, pathToSettings0);
+            if (pathToSettings0 == null) return;
             SettingsDictionary dict = ToSettingsDictionary(dict0);
             OutputDelegate writeToLog = dict.writeToLog;
             // or else
@@ -497,7 +566,7 @@ namespace RTParser.Variables
                     {
                         foreach (string s in HostSystem.GetFiles(pathToSettings, "*.xml"))
                         {
-                            loadSettings(dict, s, overwriteExisting, onlyIfUnknown, request);
+                            loadSettingsNow(dict, null, s, settingsPolicy, request);
                         }
                         return;
                     }
@@ -514,7 +583,7 @@ namespace RTParser.Variables
                         var stream = HostSystem.GetStream(pathToSettings);
                         xmlDoc.Load(stream);
                         HostSystem.Close(stream);
-                        loadSettingNode(dict, xmlDoc, overwriteExisting, onlyIfUnknown, request);
+                        loadSettingNode(dict, xmlDoc, settingsPolicy,  request);
                         writeToLog("Loaded Settings found in: " + pathToSettings);
                         if (dict.fromFile == null) dict.fromFile = pathToSettings;
                     }
@@ -539,7 +608,7 @@ namespace RTParser.Variables
             if (!message.Contains(nameSpace)) message += " in " + nameSpace;
             if (!tol.Contains("dictlog")) message = "DICTLOG: " + message;
             if (bot != null) bot.writeToLog(message);
-            else RTPBot.writeDebugLine(message);
+            else AltBot.writeDebugLine(message);
         }
 
         /// <summary>
@@ -554,7 +623,7 @@ namespace RTParser.Variables
         /// <item name="name" value="value"/>
         /// </summary>
         /// <param name="settingsAsXML">The settings as an XML document</param>
-        public void loadSettings(XmlDocument settingsAsXML, Request request)
+        public void loadSettingsNotUsed(XmlDocument settingsAsXML, Request request)
         {
             lock (orderedKeyLock)
             {
@@ -562,12 +631,12 @@ namespace RTParser.Variables
                 {
                     writeToLog("ERROR no doc element in " + settingsAsXML);
                 }
-                loadSettingNode(this, settingsAsXML.Attributes, true, false, request);
-                loadSettingNode(this, settingsAsXML.DocumentElement, true, false, request);
+                loadSettingNode(this, settingsAsXML.Attributes, SettingsPolicy.Default, request);
+                loadSettingNode(this, settingsAsXML.DocumentElement, SettingsPolicy.Default, request);
             }
         }
 
-        static public void loadSettingNode(ISettingsDictionary dict, IEnumerable Attributes, bool overwriteExisting, bool onlyIfUnknown, Request request)
+        static public void loadSettingNode(ISettingsDictionary dict, IEnumerable Attributes, SettingsPolicy settingsPolicy, Request request)
         {
             if (Attributes == null) return;
             foreach (object o in Attributes)
@@ -575,14 +644,16 @@ namespace RTParser.Variables
                 if (o is XmlNode)
                 {
                     XmlNode n = (XmlNode)o;
-                    loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown, request);
+                    loadSettingNode(dict, n, settingsPolicy,  request);
                 }
             }
         }
 
-        private static void loadNameValueSetting(ISettingsDictionary dict, string name, string value, string updateOrAddOrDefualt, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
+        private static void loadNameValueSetting(ISettingsDictionary dict, string name, string value, string updateOrAddOrDefualt, XmlNode myNode, SettingsPolicy settingsPolicy, Request request)
         {
             updateOrAddOrDefualt = updateOrAddOrDefualt.ToLower().Trim();
+            bool overwriteExisting = settingsPolicy.overwriteExisting;
+            bool onlyIfUnknown = settingsPolicy.onlyIfUnknown;
 
             overwriteExisting =
                 Boolean.Parse(StaticXMLUtils.GetAttribValue(myNode, "overwriteExisting", "" + overwriteExisting));
@@ -696,7 +767,7 @@ namespace RTParser.Variables
             return StaticXMLUtils.WithoutTrace(dict, func);
         }
 
-        static public void loadSettingNode(ISettingsDictionary dict, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
+        static public void loadSettingNode(ISettingsDictionary dict, XmlNode myNode, SettingsPolicy settingsPolicy, Request request)
         {
             lock (LockInfo.Watch(dict))
             {
@@ -704,22 +775,22 @@ namespace RTParser.Variables
                 SettingsDictionary settingsDict = ToSettingsDictionary(dict);
                 WithoutTrace(dict, () =>
                 {
-                    loadSettingNode0(settingsDict, myNode, overwriteExisting,
-                                     onlyIfUnknown, request);
+                    loadSettingNode0(settingsDict, myNode, settingsPolicy, request);
                     return true;
                 });
             }
         }
 
-        static public void loadSettingNode0(ISettingsDictionary dict, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
+        static public void loadSettingNode0(ISettingsDictionary dict, XmlNode myNode, SettingsPolicy settingsPolicy, Request request)
         {
+            bool onlyIfUnknown = settingsPolicy.onlyIfUnknown;
 
             if (myNode == null) return;
             if (myNode.NodeType == XmlNodeType.Comment) return;
             if (myNode.NodeType == XmlNodeType.Attribute)
             {
                 // attribues should not overwrite existing? 
-                loadNameValueSetting(dict, myNode.Name, myNode.Value, "add", myNode, overwriteExisting, onlyIfUnknown, request);
+                loadNameValueSetting(dict, myNode.Name, myNode.Value, "add", myNode, settingsPolicy, request);
                 return;
             }
             int atcount = 0;
@@ -730,16 +801,16 @@ namespace RTParser.Variables
             }
             if (myNode.NodeType == XmlNodeType.XmlDeclaration)
             {
-                loadSettingNode(dict, myNode.Attributes, false, onlyIfUnknown, request);
-                loadSettingNode(dict, myNode.ChildNodes, overwriteExisting, onlyIfUnknown, request);
+                loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, onlyIfUnknown), request);
+                loadSettingNode(dict, myNode.ChildNodes, settingsPolicy, request);
                 return;
             }
             string lower = myNode.Name.ToLower();
 
             if (myNode.NodeType == XmlNodeType.Document || lower == "#document")
             {
-                loadSettingNode(dict, myNode.Attributes, false, onlyIfUnknown, request);
-                loadSettingNode(dict, myNode.ChildNodes, overwriteExisting, onlyIfUnknown, request);
+                loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, onlyIfUnknown), request);
+                loadSettingNode(dict, myNode.ChildNodes, settingsPolicy, request);
                 return;
             }
             if (lower == "substitutions")
@@ -762,7 +833,7 @@ namespace RTParser.Variables
                                 chdict = request.GetSubstitutions(substName, true);
                                 substDict.writeToLog("Creating substitutions: " + chdict);
                             }
-                            loadSettingNode(chdict, n.ChildNodes, overwriteExisting, onlyIfUnknown, request);
+                            loadSettingNode(chdict, n.ChildNodes, settingsPolicy, request);
                             continue;
                         }
                         catch (Exception e)
@@ -775,7 +846,7 @@ namespace RTParser.Variables
                     else
                     {
                         /// ProgramD shoukd nbot actually be here
-                        loadSettingNode(chdict, n, overwriteExisting, onlyIfUnknown, request);
+                        loadSettingNode(chdict, n, settingsPolicy, request);
                     }
                 }
                 return;
@@ -786,7 +857,7 @@ namespace RTParser.Variables
                 if (href != null && href.Length > 0)
                 {
                     string name = StaticXMLUtils.GetAttribValue(myNode, "id", myNode.Name);
-                    loadNameValueSetting(dict, name, href, "add", myNode, false, true, request);
+                    loadNameValueSetting(dict, name, href, "add", myNode, new SettingsPolicy(false, true), request);
                     return;
                 }
             }
@@ -796,8 +867,8 @@ namespace RTParser.Variables
                 var p = myNode.ParentNode;
                 if (p != null && p.Name.ToLower() == "bots")
                 {
-                    loadSettingNode(dict, myNode.ChildNodes, overwriteExisting, onlyIfUnknown, request);
-                    loadSettingNode(dict, myNode.Attributes, false, false, request);
+                    loadSettingNode(dict, myNode.ChildNodes, settingsPolicy, request);
+                    loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, false), request);
                     return;
                 }
             }
@@ -805,12 +876,14 @@ namespace RTParser.Variables
             if (lower == "root" || lower == "vars" || lower == "items" || lower == "properties"
                 || lower == "bots" || lower == "testing" || lower == "predicates")
             {
-                loadSettingNode(dict, myNode.ChildNodes, overwriteExisting, onlyIfUnknown, request);
-                loadSettingNode(dict, myNode.Attributes, false, false, request);
+                loadSettingNode(dict, myNode.ChildNodes, settingsPolicy, request);
+                loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, false), request);
                 return;
             }
+
             if ((lower == "include"))
             {
+                bool overwriteExisting = settingsPolicy.overwriteExisting;
                 string path = StaticXMLUtils.GetAttribValue(myNode, "path", myNode.InnerText);
 
                 overwriteExisting =
@@ -819,7 +892,7 @@ namespace RTParser.Variables
                 onlyIfUnknown =
                     Boolean.Parse(StaticXMLUtils.GetAttribValue(myNode, "onlyIfKnown", "" + onlyIfUnknown));
 
-                loadSettings(ToSettingsDictionary(dict), path, overwriteExisting, onlyIfUnknown, request);
+                loadSettingsNow(ToSettingsDictionary(dict),null, path, new SettingsPolicy(overwriteExisting, onlyIfUnknown),  request);
                 return;
             }
             SettingsDictionary settingsDict = ToSettingsDictionary(dict);
@@ -923,7 +996,7 @@ namespace RTParser.Variables
                     settingsDict.writeToLog("ERROR cannot make a n/value from " + StaticXMLUtils.TextAndSourceInfo(myNode));
 
                 loadNameValueSetting(dict, name, value, StaticXMLUtils.GetAttribValue(myNode, "type", "add"), myNode,
-                            overwriteExisting, onlyIfUnknown, request);
+                            settingsPolicy, request);
                 return;
             }
             if (lower == "learn" || lower == "srai" || lower == "aiml" || lower == "that" || lower == "category" || lower == "topic")
@@ -939,7 +1012,7 @@ namespace RTParser.Variables
                 if (itext == value)
                 {
                     string name = myNode.Name;
-                    loadNameValueSetting(dict, name, value, "add", myNode, false, true, request);
+                    loadNameValueSetting(dict, name, value, "add", myNode, new SettingsPolicy(false, true), request);
                     return;
                 }
 
@@ -1013,14 +1086,19 @@ namespace RTParser.Variables
         {
             if (dictionary == null)
             {
-                RTPBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got NULL");
+                AltBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got NULL");
                 return null;
             }
             if (dictionary is SubQuery) dictionary = ((SubQuery)dictionary).TargetSettings;
             if (dictionary is User) dictionary = ((User)dictionary).Predicates;
             SettingsDictionary sd = dictionary as SettingsDictionary;
             if (sd != null) return sd;
-            RTPBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got type={0} '{1}'",
+            PrefixProvider pp = dictionary as PrefixProvider;
+            if (pp != null)
+            {
+                return null;
+            }
+            AltBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got type={0} '{1}'",
                                   dictionary.GetType(),
                                   dictionary);
             return null;
@@ -1030,7 +1108,7 @@ namespace RTParser.Variables
         {
             if (dictionary == null)
             {
-                RTPBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got NULL");
+                AltBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got NULL");
                 return null;
             }
             ParentProvider sd = dictionary as ParentProvider;
@@ -1047,7 +1125,7 @@ namespace RTParser.Variables
                     if (e != null) return e;
                 }
             }
-            RTPBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got type={0} '{1}'",
+            AltBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got type={0} '{1}'",
                                   dictionary.GetType(),
                                   dictionary);
             return null;
@@ -1097,7 +1175,7 @@ namespace RTParser.Variables
             if (NoSettingsAliaes) return NO_SETTINGS;
             string key = TransformKey(TransformName(name));
             string[] aliases;
-            if (!RTPBot.SettingsAliases.TryGetValue(key, out aliases))
+            if (!AltBot.SettingsAliases.TryGetValue(key, out aliases))
             {
                 return NO_SETTINGS;
             }
@@ -1121,27 +1199,26 @@ namespace RTParser.Variables
                     SettingsLog("ERROR MASKED ADD SETTING '" + name + "'=" + str(value) + " ");
                     return false;
                 }
-                if (normalizedName.Length > 0)
+                if (!AllowedNameValue(name, value))
                 {
-                    if (!AllowedNameValue(name, value))
-                    {
-                        SettingsLog("!NameValueCheck ADD Setting Local '" + name + "'=" + str(value) + " ");
-                        return true;
-                    }
-                    SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
-                    value = MakeLocalValue(name, value);
-                    found = this.removeSettingReal(name);
-                    if (value != null)
-                    {
-                        this.orderedKeys.Add(name);
-                        this.settingsHash.Add(normalizedName, value);
-                    }
-                    updateListeners(name, value, true, !found);
+                    SettingsLog("!NameValueCheck ADD Setting Local '" + name + "'=" + str(value) + " ");
+                    return true;
                 }
-                else
+                // check blackboard
+                if ((bbPrefix != null) && (this.bot.myChemistry != null))
                 {
-                    SettingsLog("ERROR ADD Setting Local '" + name + "'=" + str(value) + " ");
+                    string bbKey = bbPrefix + MakeCaseInsensitive.TransformInput(name).ToLower(); ;
+                    this.bot.myChemistry.m_cBus.setHash(bbKey, value);
                 }
+                SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
+                value = MakeLocalValue(name, value);
+                found = this.removeSettingReal(name);
+                if (value != null)
+                {
+                    this.orderedKeys.Add(name);
+                    this.settingsHash.Add(normalizedName, value);
+                }
+                updateListeners(name, value, true, !found);
             }
             return !found;
         }
@@ -1295,6 +1372,11 @@ namespace RTParser.Variables
         
         protected bool AllowedNameValue(string name, Unifiable value)
         {
+            if (name.Length < 1)
+            {
+                writeToLog(String.Format("! NameValueCheck '{0}' = '{1}'", name, value));
+                return false;
+            }
             if (name == "topic")
             {
                 if (UnsettableTopic.Contains(value.ToLower())) return false;
@@ -1610,6 +1692,7 @@ namespace RTParser.Variables
                     if (IsMaskedVar(normalizedName))
                     {
                         SettingsLog("MASKED Not Update Local '" + name + "'=" + str(value) + " keeped " + str(old));
+
                     }
                     else
                     {
@@ -1619,6 +1702,13 @@ namespace RTParser.Variables
                             this.removeFromHash(name);
                             SettingsLog("UPDATE Setting Local '" + name + "'=" + str(value));
                             this.settingsHash.Add(normalizedName, value);
+                            // check blackboard
+                            if ((bbPrefix != null) && (this.bot.myChemistry != null))
+                            {
+                                string bbKey = bbPrefix + MakeCaseInsensitive.TransformInput(name).ToLower(); ;
+                                this.bot.myChemistry.m_cBus.setHash(bbKey, value);
+                            }
+                            SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
                             return true;
                         }
                         else
@@ -1687,7 +1777,15 @@ namespace RTParser.Variables
             writeToLog("MASKING: " + name);
             lock (maskedVars) maskedVars.Add(name);
         }
-
+        /// <summary>
+        /// Returns the value of a setting given the name of the setting
+        /// </summary>
+        /// <param name="name">the name of the setting whose value we're interested in</param>
+        /// <returns>the value of the setting</returns>
+        public string grabSetting(string name, bool useBlackboad)
+        {
+            return grabSetting0(name, useBlackboad);
+        }
         /// <summary>
         /// Returns the value of a setting given the name of the setting
         /// </summary>
@@ -1706,7 +1804,7 @@ namespace RTParser.Variables
             try
             {
                 name = TransformName(name);
-                var setting = grabSetting0(name);
+                var setting = grabSetting0(name, true);
                 setting = TransformValueOut(setting);
                 return setting;
             }
@@ -1816,8 +1914,33 @@ namespace RTParser.Variables
             return o;
         }
 
-        public Unifiable grabSetting0(string name)
+        public Unifiable grabSetting0(string name, bool useBlackboard)
         {
+            //string normalizedName = MakeCaseInsensitive.TransformInput(name);
+            string normalizedName = TransformKey(name);
+            // check blackboard
+            if (useBlackboard)
+            {
+                if ((bbPrefix != null) && (this.bot.myChemistry != null))
+                {
+                    string bbKey = bbPrefix + normalizedName.ToLower();
+                    string bbValue = this.bot.myChemistry.m_cBus.getHash(bbKey);
+                    //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
+                    if (bbValue.Length > 0)
+                    {
+                        // update local value
+                        if (this.orderedKeys.Contains(normalizedName))
+                        {
+                            this.removeFromHash(normalizedName);
+                            this.settingsHash.Add(normalizedName, bbValue);
+                        }
+                        return bbValue;
+                    }
+
+                    //Console.WriteLine("*** grabSetting use internal: {0}",name);
+                }
+            }
+
             this.mayUseOverides = true;
             if (LoopingOn(name, "override"))
             {
@@ -1840,7 +1963,26 @@ namespace RTParser.Variables
             }
             bool isMaskedVar = IsMaskedVar(name);
             bool needsUnlock = System.Threading.Monitor.TryEnter(orderedKeys, TimeSpan.FromSeconds(2));
-            string normalizedName = TransformKey(name);
+            //string normalizedName = TransformKey(name);
+            // check blackboard
+            if ((bbPrefix != null) && (this.bot.myChemistry != null))
+            {
+                string bbKey = bbPrefix + normalizedName.ToLower();
+                string bbValue = this.bot.myChemistry.m_cBus.getHash(bbKey);
+                //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
+                if (bbValue.Length > 0 && false)
+                {
+                    // update local value
+                    if (this.orderedKeys.Contains(normalizedName))
+                    {
+                        this.removeFromHash(normalizedName);
+                        this.settingsHash.Add(normalizedName, bbValue);
+                    }
+                    return bbValue;
+                }
+
+                //Console.WriteLine("*** grabSetting use internal: {0}",name);
+            } 
             try
             {
                 if (containsLocalCalled0(name))
@@ -2135,7 +2277,7 @@ namespace RTParser.Variables
         {
             if (Unifiable.IsIncomplete(value))
             {
-                RTPBot.writeDebugLine("IndexSet IsIncomplete " + name);
+                AltBot.writeDebugLine("IndexSet IsIncomplete " + name);
                 //return;
             }
             dictionary.addSetting(name, value);
@@ -2189,7 +2331,7 @@ namespace RTParser.Variables
                     return null;
                 }
                 dictionary = pp();
-                if (dictionary == null)
+                if (dictionary == null && WarnOnNull)
                 {
                     writeToLog("WARN: NULL inside pp");
                     return null;
@@ -2208,7 +2350,10 @@ namespace RTParser.Variables
                     writeToLog("ERROR: NULL Provider and IDictionary");
                     return false;
                 }
-                writeToLog("WARNING: NULL Dictionary");
+                if (WarnOnNull)
+                {
+                    writeToLog("WARNING: NULL Dictionary");
+                }
             }
             if (dictionary == this)
             {
@@ -2306,8 +2451,15 @@ namespace RTParser.Variables
         public List<ParentProvider> MetaProviders = new List<ParentProvider>();
         public static bool NoSettingsAliaes = true;
         public static bool UseUndoPush = false;
-        public ICollectionRequester ObjectRequester;
+        public ICollectionRequester ObjectRequester
+        {
+             get
+             {
+                 return rbot.ObjectRequester;
+             }
+        }
         private bool mayUseOverides;
+        public string bbPrefix;
 
         public Unifiable GetSetReturn(string name, out string realName)
         {
@@ -2701,8 +2853,66 @@ namespace RTParser.Variables
             get { return true; }
         }
 
+        public IEnumerable<string> SettingNames0
+        {
+            get { return Keys; }
+        }
+
         #endregion
+
+        public static void AddPseudonym(ISettingsDictionary dictionary, string key)
+        {
+            var dict = ToSettingsDictionary(dictionary);
+            if (dict == null)
+            {
+                return;
+            }
+            if (dict.AddName(key))
+            {
+                dict.AddMonitorPath(key + ".xml", SettingsPolicy.Default);
+            }
+        }
+
+        public List<string> Names = new List<string>();
+
+        private bool AddName(string key)
+        {
+            key = TransformKey(key);
+            lock (Names)
+            {
+                if (Names.Contains(key)) return false;
+                Names.Add(key);
+            }
+            return true;
+        }
+
+        public Dictionary<string, SettingsPolicy> MonitorPaths = new Dictionary<string, SettingsPolicy>();
+        public static bool WarnOnNull;
+
+        private bool AddMonitorPath(string key, SettingsPolicy policy)
+        {
+            lock (MonitorPaths)
+            {
+                if (MonitorPaths.ContainsKey(key)) return false;
+                MonitorPaths.Add(key, policy);
+            }
+            return true;
+        }
     }
+
+    public class SettingsPolicy
+    {
+        public SettingsPolicy(bool oE, bool oU)
+        {
+            overwriteExisting = oE;
+            onlyIfUnknown = oU;
+        }
+
+        public static SettingsPolicy Default = new SettingsPolicy(true, false);
+        public bool overwriteExisting = true;
+        public bool onlyIfUnknown = false;
+    }
+
     public class SettingsDictionaryEnumerator : IEnumerator<KeyValuePair<string, Unifiable>>
     {
         private readonly ISettingsDictionary Root;

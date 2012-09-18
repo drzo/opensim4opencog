@@ -1,11 +1,14 @@
 using System;
 using System.Xml;
 using System.Text;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 
 namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
-    /// The space element instructs the AIML interpreter to perform all usual processing of its 
+    /// The space element instructs the AIML interpreter to perform all usual Processing of its 
     /// contents, but to not return any value, regardless of whether the contents produce output.
     /// 
     /// The space element has no attributes. It may contain any AIML template elements.
@@ -20,12 +23,12 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public space(RTParser.RTPBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+        /// <param name="templateNode">The node to be Processed</param>
+        public space(RTParser.AltBot bot,
+                        User user,
+                        SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {

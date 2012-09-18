@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Xml;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using MushDLR223.Utilities;
 using RTParser.AIMLTagHandlers;
 using PatternInfo = RTParser.Unifiable;
@@ -201,7 +203,7 @@ namespace RTParser.Utils
             }
             if (TemplateRating != 1.0)
             {
-                RTPBot.writeDebugLine("!! SCORE =" + TemplateRating + " for " + this);
+                AltBot.writeDebugLine("!! SCORE =" + TemplateRating + " for " + this);
             }
         }
 

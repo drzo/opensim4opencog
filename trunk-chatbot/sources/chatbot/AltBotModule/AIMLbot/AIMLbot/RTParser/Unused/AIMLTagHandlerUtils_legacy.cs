@@ -100,7 +100,7 @@ namespace RTParser.Utils
                         }
                         catch (Exception e)
                         {
-                            RTPBot.writeDebugLine("ERROR: " + e);
+                            AltBot.writeDebugLine("ERROR: " + e);
                         }
 
                     }
@@ -169,7 +169,7 @@ namespace RTParser.Utils
                     catch (Exception exception)
                     {
 
-                        RTPBot.writeDebugLine("AIMLTRACE: DECIMAL " + reduceStar + " " + exception);
+                        AltBot.writeDebugLine("AIMLTRACE: DECIMAL " + reduceStar + " " + exception);
                     }
                 }
             }
@@ -234,7 +234,7 @@ namespace RTParser.Utils
             }
             catch (Exception e)
             {
-                RTPBot.writeDebugLine("" + e);
+                AltBot.writeDebugLine("" + e);
             }
             return name;
         }
@@ -245,7 +245,7 @@ namespace RTParser.Utils
             int uc = unifiables.Count;
             if (uc == 0)
             {
-                RTPBot.writeDebugLine(" !ERROR -star underflow! " + i + "- ");
+                AltBot.writeDebugLine(" !ERROR -star underflow! " + i + "- ");
                 return String.Empty;
             }
             if (ii > uc)
@@ -347,12 +347,12 @@ namespace RTParser.Utils
                 doc.Load(sr);
                 if (doc.ChildNodes.Count == 0)
                 {
-                    RTPBot.writeDebugLine("NULL outerXML=" + outerXML);
+                    AltBot.writeDebugLine("NULL outerXML=" + outerXML);
                     return null;
                 }
                 if (doc.ChildNodes.Count != 1)
                 {
-                    RTPBot.writeDebugLine("1 != outerXML=" + outerXML);
+                    AltBot.writeDebugLine("1 != outerXML=" + outerXML);
                 }
                 var temp = doc.FirstChild;
                 if (temp is LineInfoElement)
@@ -365,7 +365,7 @@ namespace RTParser.Utils
             }
             catch (Exception exception)
             {
-                RTPBot.writeDebugLine("outerXML=" + outerXML);
+                AltBot.writeDebugLine("outerXML=" + outerXML);
                 throw exception;
             }
         }
@@ -386,12 +386,12 @@ namespace RTParser.Utils
                 var de = doc.DocumentElement;
                 if (doc.ChildNodes.Count == 0)
                 {
-                    RTPBot.writeDebugLine("NULL outerXML=" + outerXML);
+                    AltBot.writeDebugLine("NULL outerXML=" + outerXML);
                     //  return null;
                 }
                 if (doc.ChildNodes.Count != 1)
                 {
-                    RTPBot.writeDebugLine("1 != outerXML=" + outerXML);
+                    AltBot.writeDebugLine("1 != outerXML=" + outerXML);
                 }
                 var temp = doc.FirstChild;
                 if (temp is LineInfoElement)
@@ -405,7 +405,7 @@ namespace RTParser.Utils
             }
             catch (Exception exception)
             {
-                RTPBot.writeDebugLine("ERROR outerXML='" + outerXML + "'\n" + exception + "\n" + AIMLLoader.LocationInfo(templateNode));
+                AltBot.writeDebugLine("ERROR outerXML='" + outerXML + "'\n" + exception + "\n" + AIMLLoader.LocationInfo(templateNode));
                 throw exception;
             }
         }
@@ -621,7 +621,7 @@ namespace RTParser.Utils
             if (!request.IsTraced) return;
             if (request.DebugLevel < i)
             {
-                RTPBot.Breakpoint("Level " + request.DebugLevel + "<" + i);
+                AltBot.Breakpoint("Level " + request.DebugLevel + "<" + i);
             }
         }
     }

@@ -1,6 +1,8 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using RTParser;
+using RTParser.Variables;
 
 namespace AltAIMLbot.Normalize
 {
@@ -10,11 +12,11 @@ namespace AltAIMLbot.Normalize
     /// </summary>
     public class ApplySubstitutions : AltAIMLbot.Utils.TextTransformer
     {
-        public ApplySubstitutions(AltAIMLbot.AltBot bot, string inputString)
+        public ApplySubstitutions(AltBot bot, string inputString)
             : base(bot, inputString)
         { }
 
-        public ApplySubstitutions(AltAIMLbot.AltBot bot)
+        public ApplySubstitutions(AltBot bot)
             : base(bot)
         { }
 
@@ -48,7 +50,7 @@ namespace AltAIMLbot.Normalize
         /// <param name="dictionary">The dictionary containing the substitutions</param>
         /// <param name="target">the target string to which the substitutions are to be applied</param>
         /// <returns>The processed string</returns>
-        public static string Substitute(AltAIMLbot.AltBot bot, AltAIMLbot.Utils.SettingsDictionary dictionary, string target)
+        public static string Substitute(AltBot bot, SettingsDictionary dictionary, string target)
         {
             string marker = ApplySubstitutions.getMarker(5);
             string result = target;

@@ -1,6 +1,8 @@
 using System;
 using System.Xml;
 using System.Text;
+using AltAIMLParser;
+using RTParser;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
@@ -25,7 +27,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// fact that most AIML has been written in English. However, the decision about whether to 
     /// transform gender of other words is left up to the implementation.
     /// </summary>
-    public class gender : AltAIMLbot.Utils.AIMLTagHandler
+    public class gender : Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -36,11 +38,11 @@ namespace AltAIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public gender(AltAIMLbot.AltBot bot,
-                        AltAIMLbot.User user,
-                        AltAIMLbot.Utils.SubQuery query,
-                        AltAIMLbot.Request request,
-                        AltAIMLbot.Result result,
+        public gender(AltBot bot,
+                        User user,
+                        Utils.SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -54,7 +56,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 if (this.TemplateNodeHasText)
                 {
                     // non atomic version of the node
-                    return AltAIMLbot.Normalize.ApplySubstitutions.Substitute(this.bot, this.bot.GenderSubstitutions, this.TemplateNodeInnerText);
+                    return Normalize.ApplySubstitutions.Substitute(this.bot, this.bot.GenderSubstitutions, this.TemplateNodeInnerText);
                 }
                 else
                 {

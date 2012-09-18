@@ -1,6 +1,8 @@
 using System;
 using System.Xml;
 using System.Text;
+using AltAIMLParser;
+using RTParser;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
@@ -10,7 +12,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// The version element does not have any content. 
     /// </summary>
-    public class botsetting : AltAIMLbot.Utils.AIMLTagHandler
+    public class botsetting : Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -21,11 +23,11 @@ namespace AltAIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public botsetting(AltAIMLbot.AltBot bot,
-                        AltAIMLbot.User user,
-                        AltAIMLbot.Utils.SubQuery query,
-                        AltAIMLbot.Request request,
-                        AltAIMLbot.Result result,
+        public botsetting(AltBot bot,
+                        User user,
+                        Utils.SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode, string settingGrab)
             : base(bot, user, query, request, result, templateNode)
         {

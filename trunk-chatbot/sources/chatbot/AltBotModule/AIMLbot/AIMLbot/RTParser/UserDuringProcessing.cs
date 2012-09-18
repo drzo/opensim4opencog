@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using AltAIMLbot;
+using AltAIMLParser;
 using MushDLR223.Utilities;
 using RTParser.AIMLTagHandlers;
 using RTParser.Utils;
@@ -33,7 +35,7 @@ namespace RTParser
         void addResult(Result result);
 
         string StartGraphName { get; set; }
-        SettingsDictionary Predicates { get; set; }
+        SettingsDictionary Predicates { get; /*set;*/ }
         void InsertProvider(ParentProvider pp);
         Request CurrentRequest { get; set; }
         bool SuspendAddResultToUser { get; set; }

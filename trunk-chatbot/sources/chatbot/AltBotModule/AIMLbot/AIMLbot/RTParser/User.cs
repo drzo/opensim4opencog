@@ -1,14 +1,44 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using AIMLbot;
+using AltAIMLbot;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
+using RTParser;
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using RTParser.Utils;
 using RTParser.Variables;
+using MasterRequest = AltAIMLParser.Request;
+
+namespace AltAIMLbot
+{
+    public interface User : IUser, UserStaticModel, RTParser.UserConversationScope, RTParser.UserDuringProcessing
+    {
+        void DisposeObject();
+        bool IsValid { get; set; }
+        GraphMaster StartGraph { get; set; }
+        object TemplatesLock { get; }
+        GraphMaster HeardYouSayGraph { get; set; }
+        Request LastRequest { get; set; }
+        AltBot rbot { get;}
+        string blackBoardThat { get; set; }
+        Dictionary<string, double> Qstate { get; }
+
+        void RaiseEvent(string p, AltBot robot);
+
+        MasterRequest CreateRequest(Unifiable message, User targetUser);
+        IEnumerable<string> getThats();
+        IEnumerable<string> getTopics();
+        IEnumerable<string> getPreStates();
+        IEnumerable<string> getPostStates();
+        void setUserID(string id);
+    }
+}
 
 namespace RTParser
 {
@@ -22,7 +52,7 @@ namespace RTParser
 
     public interface UserStaticModel: IUser
     {
-        RTPBot bot { get; }
+        AltBot bot { get; }
         string UserID { get; set; }
         string UserName { get; set; }
 
@@ -64,20 +94,6 @@ namespace RTParser
         bool IsNamed(string lname);
     }
 
-    public interface User : IUser, UserStaticModel, UserConversationScope, UserDuringProcessing
-    {
-        void DisposeObject();
-        bool IsValid { get; set; }
-        GraphMaster StartGraph { get; set; }
-        object TemplatesLock { get; }
-        GraphMaster HeardYouSayGraph { get; set; }
-        Request LastRequest { get; set; }
-
-        void RaiseEvent(string p, RTPBot robot);
-
-        MasterRequest CreateRequest(Unifiable message, User targetUser);
-    }
-
     /// <summary>
     /// Encapsulates information and history of a user who has interacted with the bot
     /// </summary>
@@ -85,12 +101,25 @@ namespace RTParser
                                      UserDuringProcessing, 
                                      User
     {
+        /// <summary>
+        /// List of possible non-determinstic "states". When present will select the one with 
+        /// the highest score
+        /// </summary>
+        public Dictionary<string, double> Qstate
+        {
+            get { return _Qstate; }
+        }
+        public Dictionary<string, double> _Qstate = new Dictionary<string, double>();
 
-        public void RaiseEvent(string name, RTPBot robot)
+        /// <summary>
+        /// the value of the "that" on the blackboard predicate
+        /// </summary>
+        public string blackBoardThat { get; set; }
+        public void RaiseEvent(string name, AltBot robot)
         {
             try
             {
-                var R = CreateRequest("ONUSER" + name + " " + UserID, ResponderJustSaid , bot.BotAsUser);
+                var R = CreateRequest("ONUSER" + name + " " + UserID, ResponderJustSaid , rbot.BotAsUser);
                 R.Graph = robot.DefaultEventGraph;
                 R.AddGraph(robot.DefaultEventGraph);
                 R.AddGraph(StartGraph);
@@ -106,7 +135,7 @@ namespace RTParser
         {
             get
             {
-                if (_lastRequest == null) return CreateRequest("PING", ResponderJustSaid, bot.BotAsUser);
+                if (_lastRequest == null) return CreateRequest("PING", ResponderJustSaid, rbot.BotAsUser);
                 return _lastRequest;
             }
             set
@@ -146,7 +175,7 @@ namespace RTParser
         {
             find = (find ?? "").Trim().ToLower();
             if (find == "") find = UserName;
-            User userFound = bot.FindOrCreateUser(find);
+            User userFound = rbot.FindOrCreateUser(find);
             ConversationLog log = ConversationLog.GetConversationLog(this, userFound, createIfMissing);
             return log;
         }
@@ -173,7 +202,7 @@ namespace RTParser
             Request req = request.CreateSubRequest(cmd, null);
             req.Responder = this;
             req.IsToplevelRequest = request.IsToplevelRequest;
-            return bot.LightWeigthBotDirective(cmd, req);
+            return rbot.LightWeigthBotDirective(cmd, req);
         }
 
         /// <summary>
@@ -184,8 +213,11 @@ namespace RTParser
         /// <summary>
         /// The bot this user is using
         /// </summary>
-        public RTPBot bot { get; set; }
-
+        public AltBot bot { get; set; }
+        public AltBot rbot
+        {
+            get { return bot; }
+        }
         public TaskQueueHandler OnTaskAtATimeHandler
         {
             get { return GetTaskQueueHandler("HeardSelfSsy"); }
@@ -201,7 +233,7 @@ namespace RTParser
         }
 
         private readonly object SaveLock = new object();
-        public static void SaveAllOften(RTPBot robot)
+        public static void SaveAllOften(AltBot robot)
         {
             foreach (User node in robot.SetOfUsers)
             {
@@ -239,7 +271,7 @@ namespace RTParser
 
         public GraphMaster HeardYouSayGraph
         {
-            get { return FindGraphLocally("heardyousaygraph") ?? bot.DefaultStartGraph; }
+            get { return FindGraphLocally("heardyousaygraph") ?? rbot.DefaultStartGraph; }
             set
             {
                 if (!Predicates.containsLocalCalled("heardyousaygraph"))
@@ -255,11 +287,11 @@ namespace RTParser
 
         private GraphMaster FindGraphLocally(string varname)
         {
-            GraphMaster _uGraph = bot.GetUserGraph(NameSpace);
+            GraphMaster _uGraph = rbot.GetUserGraph(NameSpace);
             //Predicates.IsTraced = false;
             var v = Predicates.grabSettingNoDebug(varname);
             if (Unifiable.IsMissing(v)) return null;
-            GraphMaster _Graph = bot.GetGraph(v, _uGraph);
+            GraphMaster _Graph = rbot.GetGraph(v, _uGraph);
             if (_Graph != null)
             {
                 return _Graph;
@@ -270,7 +302,7 @@ namespace RTParser
 
         public GraphMaster HeardSelfSayGraph
         {
-            get { return FindGraphLocally("heardselfsay") ?? bot.DefaultHeardSelfSayGraph; }
+            get { return FindGraphLocally("heardselfsay") ?? rbot.DefaultHeardSelfSayGraph; }
             set
             {
                 if (!Predicates.containsLocalCalled("heardselfsay"))
@@ -292,8 +324,8 @@ namespace RTParser
         {
             get
             {
-                GraphMaster v = FindGraphLocally("startgraph") ?? bot.DefaultStartGraph;
-                if (v.Size == 0) v = bot.DefaultStartGraph;
+                GraphMaster v = FindGraphLocally("startgraph") ?? rbot.DefaultStartGraph;
+                if (v.Size == 0) v = rbot.DefaultStartGraph;
                 return v;
             }
             set
@@ -322,7 +354,7 @@ namespace RTParser
             }
             set
             {
-                StartGraph = bot.GetGraph(value, StartGraph);
+                StartGraph = rbot.GetGraph(value, StartGraph);
             }
         }
 
@@ -409,7 +441,7 @@ namespace RTParser
                 {
                     return;
                 }
-                if (false && bot.IsLastKnownUser(value))
+                if (false && rbot.IsLastKnownUser(value))
                 {
                     return;
                 }
@@ -509,12 +541,12 @@ namespace RTParser
             {
                 if (!this.Predicates.containsSettingCalled("topic"))
                 {
-                    return bot.NOTOPIC;
+                    return rbot.NOTOPIC;
                 }
                 var t = this.Predicates.grabSetting("topic");
                 if (IsNullOrEmpty(t))
                 {
-                    return bot.NOTOPIC;
+                    return rbot.NOTOPIC;
                 }
                 return t;
             }
@@ -524,7 +556,7 @@ namespace RTParser
         /// <summary>
         /// the predicates associated with this particular user
         /// </summary>
-        public SettingsDictionary Predicates { get; set; }
+        public SettingsDictionary Predicates { get; private set; }
 
         //public SettingsDictionary Predicates0;
 
@@ -598,7 +630,7 @@ namespace RTParser
         /// </summary>
         /// <param name="UserID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-        internal UserImpl(string userID, RTPBot bot)
+        internal UserImpl(string userID, AltBot bot)
             : this(userID, bot, null)
         {
         }
@@ -608,9 +640,10 @@ namespace RTParser
         /// </summary>
         /// <param name="userID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-        protected internal UserImpl(string userID, RTPBot bot, ParentProvider provider)
+        protected internal UserImpl(string userID, AltBot bot, ParentProvider provider)
             // : base(bot)
         {
+            this.bot = bot; 
             IsValid = true;
             userTrace = WriteToUserTrace;
             MaxRespondToChatPerMinute = 10;
@@ -622,14 +655,13 @@ namespace RTParser
             ProofTemplates = new ListAsSet<TemplateInfo>();
             DisabledTemplates = new ListAsSet<TemplateInfo>();
             DisallowedGraphs = new HashSet<GraphMaster>();
-            qsbase = new QuerySettingsImpl(bot.GetQuerySettings());
+            qsbase = new QuerySettingsImpl(rbot.GetQuerySettings());
             PrintOptions = new PrintOptions("PO_" + userID);
             if (userID.Length > 0)
             {
                 WriterOptions = new PrintOptions("PW_" + userID);
                 this.id = userID;
-                this.bot = bot;
-                qsbase.IsTraced = IsTraced = bot.IsTraced;
+                qsbase.IsTraced = IsTraced = rbot.IsTraced;
                 // we dont inherit the BotAsUser we inherit the bot's setings
                 // ApplySettings(bot.BotAsUser, this);
                 this.Predicates = new SettingsDictionary(userID + ".predicates", this.bot, provider);
@@ -637,7 +669,7 @@ namespace RTParser
                 this.Predicates.AddPrefix("user.", () => this);
                 this.bot.DefaultPredicates.Clone(this.Predicates);                
                 //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
-                this.Predicates.addSetting("topic", bot.NOTOPIC);
+                this.Predicates.addSetting("topic", rbot.NOTOPIC);
                 this.Predicates.InsertFallback(() => bot.AllUserPreds);
                 UserID = userID;
                 UserName = userID;
@@ -657,7 +689,7 @@ namespace RTParser
                 }
                 needsSave = true;
                 StampResponseGiven();
-                bot.AddExcuteHandler(userID, ChatWithThisUser);
+                rbot.AddExcuteHandler(userID, ChatWithThisUser);
                 AllQueries = new ListAsSet<GraphQuery>();
             }
             else
@@ -919,7 +951,7 @@ namespace RTParser
                 if (r != null)
                 {
                     if (r.IsTraced)
-                        RTPBot.writeDebugLine("AIMLTRACE: SuspendAddResultToUser, " + latestResult);
+                        AltBot.writeDebugLine("AIMLTRACE: SuspendAddResultToUser, " + latestResult);
                 }
                 return;
             }
@@ -1042,12 +1074,12 @@ namespace RTParser
             {
                 if (IsNullOrEmpty(value))
                 {
-                    bot.RaiseError(new InvalidOperationException("set_JustSaid: " + this));
+                    rbot.RaiseError(new InvalidOperationException("set_JustSaid: " + this));
                     return;
                 }
                 if (!IsValue(value))
                 {
-                    bot.RaiseError(new InvalidOperationException("set_JustSaid: TAG: " + value + " for " + this));
+                    rbot.RaiseError(new InvalidOperationException("set_JustSaid: TAG: " + value + " for " + this));
                     return;
                 }
                 if (!IsEnglish(value))
@@ -1103,7 +1135,7 @@ namespace RTParser
                     var vv = Predicates.grabSetting("that");
                     if (Unifiable.IsMulti(vv))
                     {
-                        RTPBot.writeDebugLine("WARNING ONLY USING ONE Result: " + Unifiable.DescribeUnifiable(vv));
+                        AltBot.writeDebugLine("WARNING ONLY USING ONE Result: " + Unifiable.DescribeUnifiable(vv));
                         vv = vv.Possibles[0];
                     }
                     Unifiable output;
@@ -1119,12 +1151,12 @@ namespace RTParser
             {
                 if (IsNullOrEmpty(value))
                 {
-                    bot.RaiseError(new InvalidOperationException("set_ResponderJustSaid: " + this));
+                    rbot.RaiseError(new InvalidOperationException("set_ResponderJustSaid: " + this));
                     return;
                 }
                 if (!IsValue(value))
                 {
-                    bot.RaiseError(
+                    rbot.RaiseError(
                         new InvalidOperationException("set_ResponderJustSaid: !IsValue: " + value + " for " + this));
                     return;
                 }
@@ -1167,7 +1199,7 @@ namespace RTParser
                             return user0;
                         }
                     }
-                    User user = bot.FindUser0(lname);
+                    User user = rbot.FindUser0(lname);
                     if (user != null && user != this)
                     {
                         return user;
@@ -1263,7 +1295,7 @@ namespace RTParser
             if (input == "")
             {
                 console(Predicates.ToDebugString());
-                RTPBot.WriteUserInfo(console, "", this);
+                AltBot.WriteUserInfo(console, "", this);
                 return true;
             }
             return Predicates.DoSettingsCommand(input, console);
@@ -1285,11 +1317,11 @@ namespace RTParser
                     userTrace(s);
                     return;
                 }
-                bot.writeToUserLog(s);
+                rbot.writeToUserLog(s);
             }
             catch (Exception exception)
             {
-                bot.writeToLog(exception);
+                rbot.writeToLog(exception);
             }
         }
 
@@ -1490,7 +1522,7 @@ namespace RTParser
             OutputDelegate logger = DEVNULL;
             logger("DEBUG9 Saving User Directory {0}", userdir);
             Predicates.SaveTo(userdir, "user.predicates", "UserPredicates.xml");
-            GraphMaster gm = bot.GetGraph(UserID, StartGraph);
+            GraphMaster gm = rbot.GetGraph(UserID, StartGraph);
             gm.WriteToFile(UserID, HostSystem.Combine(userdir, UserID) + ".saved", PrintOptions.SAVE_TO_FILE, logger);
         }
 
@@ -1548,7 +1580,7 @@ namespace RTParser
                 }
                 if (userdir.EndsWith("Predicates.xml"))
                 {
-                    SettingsDictionary.loadSettings(Predicates, userdir, true, true, null);
+                    SettingsDictionary.loadSettingsNow(Predicates, null, userdir, new SettingsPolicy(true, true), null);
                 }
                 return;
             }
@@ -1570,7 +1602,7 @@ namespace RTParser
         {
             string[] hostSystemGetFiles = HostSystem.GetFiles(userdir, "*.aiml");
             if (hostSystemGetFiles == null || hostSystemGetFiles.Length <= 0) return;
-            var request = new MasterRequest("@echo load user aiml ", this, Unifiable.EnglishNothing, bot.BotAsUser, bot,
+            var request = new Request("@echo load user aiml ", this, Unifiable.EnglishNothing, rbot.BotAsUser, bot,
                                             null, StartGraph);
             request.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
             request.Graph = StartGraph;
@@ -1579,7 +1611,7 @@ namespace RTParser
             var gs = bot.GlobalSettings;
             try
             {
-                if (bot.BotAsUser == this)
+                if (rbot.BotAsUser == this)
                 {
                     bot.GlobalSettings = Predicates;
                 }
@@ -1706,7 +1738,7 @@ namespace RTParser
 
         public actMSM botActionMSM
         {
-            get { return bot.pMSM; }
+            get { return rbot.pMSM; }
         }
 
         public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
@@ -1805,7 +1837,7 @@ namespace RTParser
                 {
                     foreach (var role in roles.ToArray())
                     {
-                        request.AddGraph(bot.GetUserGraph(role));
+                        request.AddGraph(rbot.GetUserGraph(role));
                     }
                 }
             }
@@ -1881,6 +1913,57 @@ namespace RTParser
         {
             IsValid = false;
             Dispose();
+        }
+        /// <summary>
+        /// the value of the "topic" predicate
+        /// </summary>
+        public string TopicString
+        {
+            get
+            {
+                return GetValueOr("topic", "*");
+            }
+        }
+
+        private string GetValueOr(string varname, string or)
+        {
+            var t = this.Predicates.grabSetting(varname);
+            if (string.IsNullOrEmpty(t)) return or;
+            return t;
+        }
+
+        /// <summary>
+        /// the value of the "state" predicate
+        /// </summary>
+        public string State
+        {
+            get
+            {
+                return GetValueOr("state", "*");
+            }
+        }
+
+        public IEnumerable<string> getThats()
+        {
+            return new[] {(string) getLastBotOutputForThat() };
+        }
+        public IEnumerable<string> getTopics()
+        {
+            return new[] { (string)Topic };
+        }
+        public IEnumerable<string> getPreStates()
+        {
+            return new[] { State };
+        }
+        public IEnumerable<string> getPostStates()
+        {
+            return new[] { State };
+        }
+
+        public void setUserID(string id)
+        {
+            this.id = id;
+            this.UserName = id;
         }
     }
 

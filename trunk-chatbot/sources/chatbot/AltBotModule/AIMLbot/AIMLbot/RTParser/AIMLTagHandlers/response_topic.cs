@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime;
 using System.Text;
 using System.Xml;
@@ -9,6 +9,9 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using RTParser;
 using RTParser.Utils;
 
@@ -17,11 +20,11 @@ namespace RTParser.AIMLTagHandlers
     public class response_topic : RTParser.Utils.AIMLTagHandler
     {
 
-        public response_topic(RTParser.RTPBot bot,
-                RTParser.User user,
-                RTParser.Utils.SubQuery query,
-                RTParser.Request request,
-                RTParser.Result result,
+        public response_topic(RTParser.AltBot bot,
+                User user,
+                SubQuery query,
+                Request request,
+                Result result,
                 XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -48,7 +51,7 @@ namespace RTParser.AIMLTagHandlers
                     payload= payload.Replace("rcategory", "category");
                     payload= payload.Replace("rpattern", "pattern");
                     string responseCode = "<aiml graph=\"msm\"> <topic name=\"" + myTopic + "\"> " + payload + " </topic> </aiml>";
-                    RTPBot.writeDebugLine("MSM: response_topic ResponseCode = {0}", responseCode);
+                    AltBot.writeDebugLine("MSM: response_topic ResponseCode = {0}", responseCode);
                     MachineSideEffect(() => varMSM.addResponse(machine, myState, myTopic, prob));
                     // TODO: define machine-state -> topic
                     AddSideEffect("Add AIML " + responseCode, () => TargetBot.AddAiml(responseCode));

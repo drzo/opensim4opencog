@@ -1,7 +1,7 @@
 
 
 using System;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 
 namespace RTParser
 {

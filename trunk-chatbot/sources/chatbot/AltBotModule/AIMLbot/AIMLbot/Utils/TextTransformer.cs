@@ -1,4 +1,5 @@
 using System;
+using RTParser;
 
 namespace AltAIMLbot.Utils
 {
@@ -28,7 +29,12 @@ namespace AltAIMLbot.Utils
         /// <summary>
         /// The bot that this transformation is connected with
         /// </summary>
-        public AltAIMLbot.AltBot bot;
+        public AltBot bot;
+
+        public AltBot Proc
+        {
+            get { return bot; }
+        }
 
         /// <summary>
         /// The input string to be transformed in some way
@@ -59,7 +65,7 @@ namespace AltAIMLbot.Utils
         /// </summary>
         /// <param name="bot">The bot this transformer is a part of</param>
         /// <param name="inputString">The input string to be transformed</param>
-        public TextTransformer(AltAIMLbot.AltBot bot, string inputString)
+        public TextTransformer(AltBot bot, string inputString)
         {
             this.bot = bot;
             this.inputString = inputString;
@@ -69,7 +75,7 @@ namespace AltAIMLbot.Utils
         /// ctor
         /// </summary>
         /// <param name="bot">The bot this transformer is a part of</param>
-        public TextTransformer(AltAIMLbot.AltBot bot)
+        public TextTransformer(AltBot bot)
         {
             this.bot = bot;
             this.inputString = string.Empty;

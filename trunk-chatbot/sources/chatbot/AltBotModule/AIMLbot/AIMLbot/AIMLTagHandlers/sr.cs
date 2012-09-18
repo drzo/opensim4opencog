@@ -1,6 +1,8 @@
 using System;
 using System.Xml;
 using System.Text;
+using AltAIMLParser;
+using RTParser;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
@@ -11,7 +13,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// The atomic sr does not have any content. 
     /// </summary>
-    public class sr : AltAIMLbot.Utils.AIMLTagHandler
+    public class sr : Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -22,11 +24,11 @@ namespace AltAIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public sr(AltAIMLbot.AltBot bot,
-                        AltAIMLbot.User user,
-                        AltAIMLbot.Utils.SubQuery query,
-                        AltAIMLbot.Request request,
-                        AltAIMLbot.Result result,
+        public sr(AltBot bot,
+                        User user,
+                        Utils.SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -39,7 +41,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             if (this.TemplateNodeName == "sr")
             {
                 string starContent = GetStarContent();
-                XmlNode sraiNode = AltAIMLbot.Utils.AIMLTagHandler.getNode("<srai>" + starContent + "</srai>");
+                XmlNode sraiNode = Utils.AIMLTagHandler.getNode("<srai>" + starContent + "</srai>");
                 srai sraiHandler = new srai(this.bot, this.user, this.query, this.request, this.result, sraiNode);
                 return sraiHandler.Transform();
             }

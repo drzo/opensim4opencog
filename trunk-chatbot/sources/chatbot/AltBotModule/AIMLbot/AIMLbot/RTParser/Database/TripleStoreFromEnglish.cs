@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Xml;
+using AltAIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser.Utils;
@@ -51,13 +52,13 @@ namespace RTParser.Database
         }
 
         private readonly IEnglishFactiodEngine EnglishFactiodStore;
-        readonly RTPBot TheBot;
+        readonly AltBot TheBot;
         private readonly WordExpander WordNetExpand;
         private bool ExtremeDebug;
         private XmlNode templateNodeInit;
         public IEntityFilter EntityFilter { get; private set; }
 
-        public TripleStoreFromEnglish(IEnglishFactiodEngine englishFactiodStore, RTPBot theBot, WordExpander expander)
+        public TripleStoreFromEnglish(IEnglishFactiodEngine englishFactiodStore, AltBot theBot, WordExpander expander)
         {
             EntityFilter = this;
             TheBot = theBot;

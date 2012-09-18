@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser;
 using RTParser.Utils;
 using RTParser.Variables;
+using AIMLTagHandler=RTParser.Utils.AIMLTagHandler;
 
 namespace RTParser.Database
 {
@@ -19,14 +23,14 @@ namespace RTParser.Database
         {
             Request request = query.Request;
             OutputDelegate writeToLog = request.writeToLog ?? DEVNULL;
-            RTPBot TargetBot = request.TargetBot;
+            AltBot TargetBot = request.TargetBot;
             ISettingsDictionary udict;
             string dictName = AIMLTagHandler.GetNameOfDict(query, subject ?? dict.NameSpace, node, out udict);
             // try to use a global blackboard predicate
-            RTParser.User gUser = TargetBot.ExemplarUser;
+            User gUser = TargetBot.ExemplarUser;
 
-            defaultVal = RTPBot.GetAttribValue(node, "default,defaultValue", defaultVal);
-            gName = RTPBot.GetAttribValue(node, "global_name", gName);
+            defaultVal = AltBot.GetAttribValue(node, "default,defaultValue", defaultVal);
+            gName = AltBot.GetAttribValue(node, "global_name", gName);
 
             string realName0;
 
@@ -154,9 +158,9 @@ namespace RTParser.Database
             setReturn = StaticXMLUtils.GetAttribValue<string>(templateNode, "set-return", () => _sreturn, query.ReduceStarAttribute<string>);
 
             Request request = query.Request;
-            RTPBot TargetBot = request.TargetBot;
+            AltBot TargetBot = request.TargetBot;
             // try to use a global blackboard predicate
-            RTParser.User gUser = TargetBot.ExemplarUser;
+            User gUser = TargetBot.ExemplarUser;
 
             string realName;
             Unifiable resultGet = SettingsDictionary.grabSettingDefaultDict(dict, name, out realName);
@@ -164,7 +168,7 @@ namespace RTParser.Database
             bool shouldSet = ShouldSet(templateNode, dict, realName, value, resultGet, query);
 
             User user = query.CurrentUser;
-            ITripleStore userbotLuceneIndexer = (ITripleStore)user.bot.TripleStore;
+            ITripleStore userbotLuceneIndexer = (ITripleStore)user.rbot.TripleStore;
             string userName = user.UserID;
             if (!shouldSet)
             {

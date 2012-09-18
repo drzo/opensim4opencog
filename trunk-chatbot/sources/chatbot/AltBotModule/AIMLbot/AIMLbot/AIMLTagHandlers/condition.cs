@@ -6,7 +6,9 @@ using Aima.Core.Logic.Propositional.Algorithms;
 using Aima.Core.Logic.Propositional.Parsing;
 using Aima.Core.Logic.Propositional.Parsing.AST;
 using Aima.Core.Logic.Propositional.Visitors;
-using AltAIMLbot.Utils;
+using AltAIMLParser;
+using RTParser;
+using RTParser.Variables;
 using Unifiable = System.String;
 
 namespace AltAIMLbot.AIMLTagHandlers
@@ -97,7 +99,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// AIML predicate, and a required attribute value, which contains a simple pattern expression. The 
     /// element may contain any AIML template elements. 
     /// </summary>
-    public class condition : AltAIMLbot.Utils.AIMLTagHandler
+    public class condition : Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -108,11 +110,11 @@ namespace AltAIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public condition(AltAIMLbot.AltBot bot,
-                        AltAIMLbot.User user,
-                        AltAIMLbot.Utils.SubQuery query,
-                        AltAIMLbot.Request request,
-                        AltAIMLbot.Result result,
+        public condition(AltBot bot,
+                        User user,
+                        Utils.SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -130,7 +132,7 @@ namespace AltAIMLbot.AIMLTagHandlers
 
 
                 string type = GetAttribValue("type,dict", null);
-                SettingsDictionary dict = type == null ? null : request.GetDictionary(type);
+                ISettingsDictionary dict = type == null ? null : request.GetDictionary(type);
 
                 // old style name=value test
                 if (name != null && conditionValue != null)
@@ -187,7 +189,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                         if (cname == null && cvalue != null)
                         {
                             string ctype = GetAttribValue("type,dict", null);
-                            SettingsDictionary cdict = (ctype == null ? dict : request.GetDictionary(ctype)) ??
+                            ISettingsDictionary cdict = (ctype == null ? dict : request.GetDictionary(ctype)) ??
                                                        request.TargetSettings;
                             conditionValue = conditionValue ?? cdict.grabSetting(name) ?? String.Empty;
                             if (IsPredMatch(cvalue, conditionValue))
@@ -201,7 +203,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                         if (cname != null && cvalue != null)
                         {
                             string ctype = GetAttribValue("type,dict", null);
-                            SettingsDictionary cdict = (ctype == null ? dict : request.GetDictionary(ctype)) ??
+                            ISettingsDictionary cdict = (ctype == null ? dict : request.GetDictionary(ctype)) ??
                                                        request.TargetSettings;
                             string actualValue = cdict.grabSetting(cname);
                             if (IsPredMatch(cvalue, actualValue))

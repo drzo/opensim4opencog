@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Text.RegularExpressions;
 using System.Xml;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 
 namespace RTParser.Utils
 {
@@ -29,7 +32,7 @@ namespace RTParser.Utils
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public UnifibleTagHandler(RTPBot bot,
+        public UnifibleTagHandler(AltBot bot,
                                   User user,
                                   SubQuery query,
                                   Request request,
@@ -47,7 +50,7 @@ namespace RTParser.Utils
             if (mc.Count == 0)
             {
                 if (matchVars.Count == 0) return SUCCEED_NOVARS;
-                RTPBot.writeDebugLine("DEBUG9: UnifyStars '" + me + "'!='" + source + "'");
+                AltBot.writeDebugLine("DEBUG9: UnifyStars '" + me + "'!='" + source + "'");
                 return null;
             }
             if (mc.Count != matchVars.Count)
@@ -66,7 +69,7 @@ namespace RTParser.Utils
                             }
                         }
                     }
-                    RTPBot.writeDebugLine("ERROR: UnifyStars '" + me + "'!='" + source + "'");
+                    AltBot.writeDebugLine("ERROR: UnifyStars '" + me + "'!='" + source + "'");
                     return null;
                 }
             }

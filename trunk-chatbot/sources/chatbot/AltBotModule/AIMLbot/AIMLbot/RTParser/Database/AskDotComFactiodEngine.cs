@@ -4,7 +4,7 @@ namespace RTParser.Database
 {
     class AskDotComFactiodEngine : WebGetFactiodEngine
     {
-        public AskDotComFactiodEngine(IEnglishFactiodEngine fallback, RTPBot rtpBot) : base(fallback, rtpBot)
+        public AskDotComFactiodEngine(IEnglishFactiodEngine fallback, AltBot AltBot) : base(fallback, AltBot)
         {
         }
 

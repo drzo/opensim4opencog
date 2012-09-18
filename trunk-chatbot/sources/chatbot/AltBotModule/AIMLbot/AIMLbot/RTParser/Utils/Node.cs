@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using UPath = RTParser.Unifiable;
@@ -95,7 +97,7 @@ namespace RTParser.Utils
         {
             get
             {
-                if (_graph != null) return RTPBot.FindGraph(_graph);
+                if (_graph != null) return AltBot.FindGraph(_graph);
                 Node Parent0 = _parentObject;
                 if (Parent0 != null)
                 {
@@ -321,7 +323,7 @@ namespace RTParser.Utils
 
         private void writeToLog(string message, params object[] args)
         {
-            RTPBot.writeDebugLine("!NODE: " + message + " in " + ToString(), args);
+            AltBot.writeDebugLine("!NODE: " + message + " in " + ToString(), args);
         }
 
         public void RotateTemplate(TemplateInfo templateInfo)
@@ -1110,13 +1112,13 @@ namespace RTParser.Utils
                         // capture and push the star content appropriate to the current matchstate
                         switch (matchstate)
                         {
-                            case MatchState.UserInput:
+                            case MatchState.Pattern:
                                 if (childNodeWord.StoreWildCard()) Insert(query.InputStar, newWildcard.Frozen(query));
                                 // added due to this match being the end of the line
                                 newWildcard.Length = 0; // Remove(0, newWildcard.Length);
                                 break;
                             default:
-                                List<Unifiable> stars = query.GetMatchList(matchstate);
+                                var stars = query.GetMatchList(matchstate);
                                 if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.Frozen(query));
                                 newWildcard.Length = 0;
                                 break;
@@ -1165,7 +1167,7 @@ namespace RTParser.Utils
                     }
                     else if (firstWord == "TAG-INPUT")
                     {
-                        newMatchstate = MatchState.UserInput;
+                        newMatchstate = MatchState.Pattern;
                     }
                 }
 
@@ -1184,7 +1186,7 @@ namespace RTParser.Utils
                             if (childNodeWord.StoreWildCard())
                             {
                                 writeToLog("should store WC for " + childNodeWord + " from " + firstWord);
-                                List<Unifiable> stars = query.GetMatchList(matchstate);
+                                var stars = query.GetMatchList(matchstate);
                                 Insert(stars, firstWord);
                             }
                         }
@@ -1193,7 +1195,7 @@ namespace RTParser.Utils
                             if (childNodeWord.StoreWildCard())
                             {
                                 writeToLog("should store WC for " + childNodeWord + " from " + firstWord);
-                                List<Unifiable> stars = query.GetMatchList(matchstate);
+                                var stars = query.GetMatchList(matchstate);
                                 Insert(stars, firstWord);
                             }
                         }
@@ -1202,7 +1204,7 @@ namespace RTParser.Utils
                     {
                         // capture and push the star content appropriate to the matchstate if it exists
                         // and then clear it for subsequent wildcards
-                        List<Unifiable> stars = query.GetMatchList(matchstate);
+                        var stars = query.GetMatchList(matchstate);
                         if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.Frozen(query));
                         newWildcard.Length = 0;
                     }
@@ -1250,7 +1252,7 @@ namespace RTParser.Utils
                             // capture and push the star content appropriate to the current matchstate
                             switch (matchstate)
                             {
-                                case MatchState.UserInput:
+                                case MatchState.Pattern:
                                     if (childNodeWord.StoreWildCard())
                                     {
                                         Insert(query.InputStar, newWildcard.Frozen(query));
@@ -1259,7 +1261,7 @@ namespace RTParser.Utils
                                     }
                                     break;
                                 default:
-                                    List<Unifiable> stars = query.GetMatchList(matchstate);
+                                    var stars = query.GetMatchList(matchstate);
                                     if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.Frozen(query));
                                     break;
                             }
@@ -1330,7 +1332,7 @@ namespace RTParser.Utils
             }
         }
 
-        private static void Insert(List<Unifiable> unifiables, string s)
+        private static void Insert(List<string> unifiables, string s)
         {
             s = s.Replace("TAG-START", "");
             s = s.Replace("TAG-END", "").Trim();

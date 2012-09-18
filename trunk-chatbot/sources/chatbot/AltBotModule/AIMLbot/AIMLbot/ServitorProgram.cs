@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using AltAIMLbot;
 using LAIR.ResourceAPIs.WordNet;
+using RTParser;
 
 namespace AltAIMLbot
 {
@@ -65,7 +66,7 @@ namespace AltAIMLbot
                 RaptorDB.Global.SaveTimerSeconds = 60000;
                 Console.WriteLine("*** Create servitor ***");
 
-                servitor = new Servitor(userID, null, true, true, true);
+                servitor = new Servitor(AltBot.FindOrCreateRobot("default"), userID, null, true, true, true);
                 Console.WriteLine("*** Created WN ***");
 
                 servitor.curBot.isAcceptingUserInput = false;
@@ -107,7 +108,7 @@ namespace AltAIMLbot
                 {
                     PathToWordNet = @"./wordnet30";
                 }
-                if (PathToWordNet != null)
+                if (PathToWordNet != null && servitor.curBot.wordNetEngine == null)
                 {
                     Console.WriteLine("*** Starting WN ***");
                     servitor.curBot.wordNetEngine = new WordNetEngine(PathToWordNet, true);
@@ -160,12 +161,14 @@ namespace AltAIMLbot
                 try
                 {                    
                     string input = ConsoleReadLine();
+                    input = input.Trim();
                     if (input.ToLower() == "exit")
                     {
                         break;
                     }
                     else
                     {
+                        if (input.Length==0) continue;
                         string answer = respondToChat(input);
                         ConsoleWrite("Bot: " + answer);
                         if (sayReposeServ) servitor.sayResponse(answer);

@@ -1,6 +1,9 @@
 using System;
 using System.Xml;
 using System.Text;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
@@ -28,12 +31,12 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public thatstar(RTParser.RTPBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+        /// <param name="templateNode">The node to be Processed</param>
+        public thatstar(RTParser.AltBot bot,
+                        User user,
+                        SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode, 1)
         {
@@ -43,7 +46,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if(templateNode.ParentNode.Name=="srai")
             {
-                var vv = RTParser.Normalize.ApplySubstitutions.Substitute(this.bot.Person2Substitutions, unifiable);
+                var vv = RTParser.Normalize.ApplySubstitutions.Substitute(this.Proc.Person2Substitutions, unifiable);
                 return vv;
             }
             return unifiable;

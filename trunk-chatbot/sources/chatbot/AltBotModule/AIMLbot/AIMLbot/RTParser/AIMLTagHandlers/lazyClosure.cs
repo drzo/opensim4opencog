@@ -1,10 +1,14 @@
 using System;
 using System.Text;
 using System.Xml;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser.Utils;
 using RTParser.Variables;
+using AIMLTagHandler=RTParser.Utils.AIMLTagHandler;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -18,12 +22,12 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public lazyClosure(RTParser.RTPBot bot,
-                           RTParser.User user,
-                           RTParser.Utils.SubQuery query,
-                           RTParser.Request request,
-                           RTParser.Result result,
+        /// <param name="templateNode">The node to be Processed</param>
+        public lazyClosure(RTParser.AltBot bot,
+                           User user,
+                           SubQuery query,
+                           Request request,
+                           Result result,
                            XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -33,9 +37,9 @@ namespace RTParser.AIMLTagHandlers
         #region Overrides of TextTransformer
 
         /// <summary>
-        /// The method that does the actual processing of the text.
+        /// The method that does the actual Processing of the text.
         /// </summary>
-        /// <returns>The resulting processed text</returns>
+        /// <returns>The resulting Processed text</returns>
         public override Unifiable RecurseProcess()
         {
             if (templateNode.NodeType == XmlNodeType.Comment) return Unifiable.Empty;
@@ -52,11 +56,11 @@ namespace RTParser.AIMLTagHandlers
             if (currentNodeName == "substitutions")
             {
                 var prevDict = request.TargetSettings;
-                // process each of these child "settings"? nodes
+                // Process each of these child "settings"? nodes
                 try
                 {
                     request.TargetSettings = request.TargetBot.InputSubstitutions;
-                    SettingsDictionary.loadSettingNode(request.TargetSettings, templateNode, true, false, request);
+                    SettingsDictionary.loadSettingNode(request.TargetSettings, templateNode, SettingsPolicy.Default, request);
                 }
                 finally
                 {
@@ -66,9 +70,9 @@ namespace RTParser.AIMLTagHandlers
             }
             if (currentNodeName == "genlmt")
             {
-                string name = RTPBot.GetAttribValue(templateNode, "name,mt,to,super,into", null);
-                string removeTo = RTPBot.GetAttribValue(templateNode, "remove", null);
-                string from = RTPBot.GetAttribValue(templateNode, "graph,from", null);
+                string name = AltBot.GetAttribValue(templateNode, "name,mt,to,super,into", null);
+                string removeTo = AltBot.GetAttribValue(templateNode, "remove", null);
+                string from = AltBot.GetAttribValue(templateNode, "graph,from", null);
                 bool deleteLink = false;
                 if (name == null)
                 {
@@ -96,8 +100,8 @@ namespace RTParser.AIMLTagHandlers
             }
             if (currentNodeName == "sraigraph")
             {
-                string name = RTPBot.GetAttribValue(templateNode, "name,mt,to,super,into", null);
-                string from = RTPBot.GetAttribValue(templateNode, "graph,from", null);
+                string name = AltBot.GetAttribValue(templateNode, "name,mt,to,super,into", null);
+                string from = AltBot.GetAttribValue(templateNode, "graph,from", null);
                 if (name == null)
                 {
                     name = Trim(templateNode.InnerText);
@@ -122,13 +126,13 @@ namespace RTParser.AIMLTagHandlers
             }
             if (currentNodeName == "item")
             {
-                SettingsDictionary.loadSettingNode(request.TargetSettings, templateNode, true, false, request);
+                SettingsDictionary.loadSettingNode(request.TargetSettings, templateNode, SettingsPolicy.Default, request);
                 return ProcessSucceed();
 
             }
             if (currentNodeName == "bot")
             {
-                SettingsDictionary.loadSettingNode(request.TargetBot.Settings, templateNode, true, false, request);
+                SettingsDictionary.loadSettingNode(request.TargetBot.Settings, templateNode, SettingsPolicy.Default, request);
                 return ProcessSucceed();
             }
             string currentNodeOuterXml = templateNode.OuterXml;
@@ -161,12 +165,12 @@ namespace RTParser.AIMLTagHandlers
                 return RecurseResult = TransformAtomically(Format, false);
             }
 
-            if (RTPBot.UnknownTagsAreBotVars)
+            if (AltBot.UnknownTagsAreBotVars)
             {
-                var v = bot.GlobalSettings.grabSetting(currentNodeName);
+                var v = Proc.GlobalSettings.grabSetting(currentNodeName);
                 if (!Unifiable.IsIncomplete(v)) return v;
             }
-            var vs = bot.EvalAiml(templateNode, request, request.writeToLog);
+            var vs = Proc.EvalAiml(templateNode, request, request.writeToLog);
             StringBuilder sb = new StringBuilder();
             int writeThrus = 0;
             int total = 0;
@@ -176,7 +180,7 @@ namespace RTParser.AIMLTagHandlers
                 total++;
                 string nodeOuterXml = ToXmlValue(node);
                 WriteLine(nodeOuterXml);
-                string p = RTPBot.GetAttribValue(node,"PASSED","FALSE");
+                string p = AltBot.GetAttribValue(node,"PASSED","FALSE");
                 if (p=="False")
                 {
                     writeThrus++;
@@ -202,9 +206,9 @@ namespace RTParser.AIMLTagHandlers
         #region Overrides of TextTransformer
 
         /// <summary>
-        /// The method that does the actual processing of the text.
+        /// The method that does the actual Processing of the text.
         /// </summary>
-        /// <returns>The resulting processed text</returns>
+        /// <returns>The resulting Processed text</returns>
         protected override Unifiable ProcessChange()
         {
             if (RecurseResultValid)

@@ -181,7 +181,7 @@ namespace AltAIMLbot.Utils
                 outputdelegate("PASSED={0}", m);
                 if (traceIt)
                 {
-                    //RTPBot.Breakpoint("tested...");
+                    //AltBot.Breakpoint("tested...");
                 }
                 return GetMessage(src, "PASSED='" + m +
                                        "'", "TESTCASE='" + tcname + "' GOOD='" + good +

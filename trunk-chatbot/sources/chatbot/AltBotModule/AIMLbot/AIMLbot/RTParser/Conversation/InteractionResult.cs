@@ -1,5 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using AltAIMLbot;
+using AltAIMLParser;
 using RTParser.Utils;
 using RTParser.Variables;
 
@@ -10,11 +12,11 @@ namespace RTParser
         /// <summary>
         /// The bot that is providing the answer
         /// </summary>
-        //     RTPBot TargetBot { get; set; }
+        //     AltBot TargetBot { get; set; }
         /// The user that is providing the <that/> answer
         //        User Responder { get; set; }
         //        string WhyComplete { get; set; }
-        bool IsTraced { get; set; }
+        //bool IsTraced { get; set; }
 
         /// <summary>
         /// The individual sentences that constitute the raw input from the user
@@ -82,7 +84,7 @@ namespace RTParser
         Unifiable NormalizedOutput { get; }
         double TemplateRating { get; set; }
         bool Started { get; set; }
-        TimeSpan Durration { get; }
+        TimeSpan Duration { get; }
         string WhyResultComplete { get; set; }
         UserConversationScope Requester { get; }
         //   User Requester { get; set; }

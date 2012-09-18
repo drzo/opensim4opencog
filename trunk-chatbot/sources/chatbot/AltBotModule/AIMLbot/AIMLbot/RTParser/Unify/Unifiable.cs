@@ -6,6 +6,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
 using System.Xml;
+using AltAIMLbot.Utils;
 using MushDLR223.Virtualization;
 using RTParser.Database;
 using RTParser.Utils;
@@ -50,7 +51,7 @@ namespace RTParser
             {
                 if (u.GetType() != obj.GetType())
                 {
-                    RTPBot.writeDebugLine("BAD ERROR in Deserialization " + Unifiable.DescribeUnifiable(u) + "!-" +
+                    AltBot.writeDebugLine("BAD ERROR in Deserialization " + Unifiable.DescribeUnifiable(u) + "!-" +
                                           Unifiable.DescribeUnifiable(obj));
                 }
                 return u;
@@ -58,7 +59,7 @@ namespace RTParser
             u = Unifiable.MakeUnifiableFromString(infoGetString, false);
             if (u.GetType() != obj.GetType())
             {
-                RTPBot.writeDebugLine("BAD ERROR in Deserialization " + Unifiable.DescribeUnifiable(u) + "!-" +
+                AltBot.writeDebugLine("BAD ERROR in Deserialization " + Unifiable.DescribeUnifiable(u) + "!-" +
                                       Unifiable.DescribeUnifiable(obj));
             }
             return u; // Formatters ignore this return value?
@@ -497,7 +498,7 @@ namespace RTParser
             }
             catch (Exception e)
             {
-                RTPBot.writeDebugLine("" + e.Message + ": " + " " + e.StackTrace + "\n" + stringAppendable);
+                AltBot.writeDebugLine("" + e.Message + ": " + " " + e.StackTrace + "\n" + stringAppendable);
                 throw;
             }
         }
@@ -971,7 +972,7 @@ namespace RTParser
         {
             try
             {
-                RTPBot.writeDebugLine("UNIFYABLETRACE: " + message, args);
+                AltBot.writeDebugLine("UNIFYABLETRACE: " + message, args);
             }
             catch
             {

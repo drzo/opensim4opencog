@@ -5,6 +5,8 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Xml;
+using AltAIMLbot;
+using AltAIMLParser;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -20,7 +22,7 @@ using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 
 namespace RTParser
 {
-    public partial class RTPBot
+    public partial class AltBot
     {
         private bool AllreadyUnderstandingSentences = false;
         readonly private object AllreadyUnderstandingSentencesLock = new object();
@@ -323,7 +325,7 @@ namespace RTParser
                 AddHeardPreds0(s, dictionary);
             }
             writeDebugLine("-----------------------------------------------------------------");
-            //RTPBot.writeDebugLine("" + dictionary.ToDebugString());
+            //AltBot.writeDebugLine("" + dictionary.ToDebugString());
         }
 
         private void AddHeardPreds0(Unifiable unifiable, SettingsDictionary dictionary)
@@ -344,7 +346,7 @@ namespace RTParser
         }
         private void SetupUserWithGraph0(GraphMaster graph, string newname, string newkey, User newuser)
         {            
-            //graph.AddParallelMT(RTPBot.TheUserListenerGraph, newuser.WriteToUserTrace);
+            //graph.AddParallelMT(AltBot.TheUserListenerGraph, newuser.WriteToUserTrace);
             newuser.StartGraph = graph;
             newuser.UserID = newkey;
             newuser.UserName = newname;
@@ -373,10 +375,10 @@ namespace RTParser
 
         private bool DoLogCmd(OutputDelegate console, bool showHelp, string cmd1, string args1)
         {
-            if (showHelp) console("@log " + RTPBot.AIMLDEBUGSETTINGS);
+            if (showHelp) console("@log " + AltBot.AIMLDEBUGSETTINGS);
             if (cmd1.StartsWith("log"))
             {
-                RTPBot.LoggedWords.UpateLogging(args1, console);
+                AltBot.LoggedWords.UpateLogging(args1, console);
                 return true;
             }
             if (cmd1 == "on" || cmd1 == "off")

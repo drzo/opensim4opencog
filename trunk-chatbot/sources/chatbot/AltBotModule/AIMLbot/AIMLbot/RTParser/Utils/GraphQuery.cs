@@ -3,8 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
 using AIMLbot;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
+using MasterRequest = AltAIMLParser.Request;
+
 
 namespace RTParser.Utils
 {
@@ -17,7 +22,7 @@ namespace RTParser.Utils
                    request.IsComplete(toplevel.CurrentResult);
         }
 
-        public AIMLbot.MasterRequest TheRequest;
+        public MasterRequest TheRequest;
         private List<TemplateInfo> Templates;
         private List<SubQuery> Bindings;
         public List<Node> PatternsUsed;
@@ -188,7 +193,7 @@ namespace RTParser.Utils
 
         internal static void writeToLog(string message, params object[] args)
         {
-            RTPBot.writeDebugLine("QUERYTRACE: " + message, args);
+            AltBot.writeDebugLine("QUERYTRACE: " + message, args);
         }
 
         private void CheckConsistent()

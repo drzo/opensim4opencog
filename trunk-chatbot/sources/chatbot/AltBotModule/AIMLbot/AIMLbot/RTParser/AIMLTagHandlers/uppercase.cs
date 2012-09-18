@@ -1,6 +1,9 @@
 using System;
 using System.Xml;
 using System.Text;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -22,26 +25,26 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public uppercase(RTParser.RTPBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+        /// <param name="templateNode">The node to be Processed</param>
+        public uppercase(RTParser.AltBot bot,
+                        User user,
+                        SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
         }
 
         /// <summary>
-        /// The method that does the actual processing of the text.
+        /// The method that does the actual Processing of the text.
         /// </summary>
-        /// <returns>The resulting processed text</returns>
+        /// <returns>The resulting Processed text</returns>
         protected override Unifiable Format(Unifiable templateNodeInnerText)
         {
             if (CheckNode("uppercase"))
             {
-                return templateNodeInnerText.ToValue(query).ToUpper(this.bot.Locale);
+                return templateNodeInnerText.ToValue(query).ToUpper(this.Proc.Locale);
             }
             return Unifiable.Empty;
         }

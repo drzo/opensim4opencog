@@ -1,4 +1,7 @@
 using System.Xml;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;
 using RTParser.Database;
 using RTParser.Variables;
 
@@ -6,11 +9,11 @@ namespace RTParser.AIMLTagHandlers
 {
     /// <summary>
     /// The set element instructs the AIML interpreter to set the value of a predicate to the result 
-    /// of processing the contents of the set element. The set element has a required attribute name, 
+    /// of Processing the contents of the set element. The set element has a required attribute name, 
     /// which must be a valid AIML predicate name. If the predicate has not yet been defined, the AIML 
     /// interpreter should define it in memory. 
     /// 
-    /// The AIML interpreter should, generically, return the result of processing the contents of the 
+    /// The AIML interpreter should, generically, return the result of Processing the contents of the 
     /// set element. The set element must not perform any text formatting or other "normalization" on 
     /// the predicate contents when returning them. 
     /// 
@@ -31,12 +34,12 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public set(RTParser.RTPBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+        /// <param name="templateNode">The node to be Processed</param>
+        public set(RTParser.AltBot bot,
+                        User user,
+                        SubQuery query,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -85,7 +88,7 @@ namespace RTParser.AIMLTagHandlers
                     }
                 }
                 string setReturn = GetAttribValue(templateNode, "set-return",
-                                                  () =>((string) bot.GetRelationMetaProps().GetMeta(name, "set-return")),
+                                                  () =>((string) Proc.GetRelationMetaProps().GetMeta(name, "set-return")),
                                                   ReduceStarAttribute<string>);
                 if (value == null)
                 {

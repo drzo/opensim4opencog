@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using RTParser.Utils;
 using MushDLR223.Utilities;
@@ -46,12 +47,12 @@ namespace RTParser.Database
             return res.Trim();
         }
 
-        private readonly RTPBot TheBot;
+        private readonly AltBot TheBot;
         private readonly IEnglishFactiodEngine assertTo;
 
-        public WebGetFactiodEngine(IEnglishFactiodEngine fallback, RTPBot rtpBot)
+        public WebGetFactiodEngine(IEnglishFactiodEngine fallback, AltBot AltBot)
         {
-            TheBot = rtpBot;
+            TheBot = AltBot;
             assertTo = fallback;
 // ReSharper disable DoNotCallOverridableMethodsInConstructor
             string named = GetServiceName();

@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using AltAIMLParser;
 using MushDLR223.Utilities;
 using System.IO;
 using System.Runtime.Serialization;
@@ -22,8 +23,8 @@ namespace RTParser.Database
     {
         private GoogleTranslator googleTranslator = null;
         public static NatLangDb NatLangProc;
-        static RTPBot bot;
-        public NatLangDb(RTParser.RTPBot p)
+        static AltBot bot;
+        public NatLangDb(RTParser.AltBot p)
         {
             bot = p;
             googleTranslator = new GoogleTranslator(p);

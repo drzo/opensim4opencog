@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using MushDLR223.Utilities;
+using RTParser;
 using RTParser.Utils;
 
 
@@ -20,7 +21,7 @@ namespace AltAIMLbot.Utils
         /// <summary>
         /// The bot whose brain is being processed
         /// </summary>
-        private AltAIMLbot.AltBot bot;
+        private AltBot bot;
         private string graphName = "*";
         private string topicName = "*";
         private string stateNamePre = "*";
@@ -35,7 +36,7 @@ namespace AltAIMLbot.Utils
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot whose brain is being processed</param>
-        public AIMLLoader(AltAIMLbot.AltBot bot)
+        public AIMLLoader(AltBot bot)
         {
             this.bot = bot;
         }
@@ -482,7 +483,7 @@ namespace AltAIMLbot.Utils
 
                     
                     // keep count of the number of categories that have been processed
-                    this.bot.Size++;
+                    //this.bot.Size++;
                 }
                 catch
                 {
@@ -561,7 +562,7 @@ namespace AltAIMLbot.Utils
                         ourGraphMaster.addCategory(categoryPath, templateXML, filename, 1, 1);
                     }
                     // keep count of the number of categories that have been processed
-                    this.bot.Size++;
+                    this.bot.SizeC++;
                 }
                 catch (Exception e)
                 {

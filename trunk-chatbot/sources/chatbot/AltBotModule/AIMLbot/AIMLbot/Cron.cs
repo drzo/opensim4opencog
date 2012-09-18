@@ -7,6 +7,8 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using AltAIMLbot;
 using DcBus;
+using RTParser;
+
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 

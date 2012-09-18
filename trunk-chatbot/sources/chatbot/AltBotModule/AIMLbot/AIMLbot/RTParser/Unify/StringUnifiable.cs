@@ -3,8 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Xml;
+using AltAIMLbot.Utils;
 using RTParser.Database;
 using RTParser.Utils;
+using AIMLTagHandler=RTParser.Utils.AIMLTagHandler;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 using IndexTargetList = System.Collections.Generic.ICollection<RTParser.IndexTarget>;
 using IndexTargetListImpl = System.Collections.Generic.HashSet<RTParser.IndexTarget>;
@@ -875,7 +877,7 @@ namespace RTParser
             }
             catch (Exception e)
             {
-                RTPBot.writeDebugLine("" + e.Message + ": " + " '" + str0 + "'");
+                AltBot.writeDebugLine("" + e.Message + ": " + " '" + str0 + "'");
                 StringUnifiable su = MakeUnifiableFromString(str0, false) as StringUnifiable;
                 Unifiable[] suu = new Unifiable[] {su};
                 su.splittedCache = suu;
@@ -948,7 +950,7 @@ namespace RTParser
             }
             catch (Exception e)
             {
-                RTPBot.writeDebugLine("" + e.Message + ": " + " " + e.StackTrace + "\n" +
+                AltBot.writeDebugLine("" + e.Message + ": " + " " + e.StackTrace + "\n" +
                                       DescribeUnifiable(stringAppendable));
                 throw;
             }
