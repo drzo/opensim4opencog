@@ -272,7 +272,7 @@ namespace AltAIMLbot.Utils
         }
         public override string ToString()
         {
-            if (templateNode.OuterXml!=inputString)
+            if (templateNode.OuterXml != initialString)
             {
                 return base.ToString() + " => " + templateNode.OuterXml;
             }

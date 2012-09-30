@@ -19,7 +19,7 @@ namespace AltAIMLbot.Utils
 
         public override string ToString()
         {
-            return GetType().Name + ": " + inputString;
+            return GetType().Name + ": " + InputString;
         }
 
         #region Attributes
@@ -52,6 +52,7 @@ namespace AltAIMLbot.Utils
             {
                 this.inputString = value;
                 inputStringU = value;
+                transformComplete = null;
             }
         }
 
@@ -115,7 +116,7 @@ namespace AltAIMLbot.Utils
         /// <returns>The resulting transformed string</returns>
         virtual public string Transform()
         {
-            if (this.inputString.Length > 0)
+            if (InputString.Length > 0)
             {
                 if (transformComplete == null)
                 {
@@ -157,10 +158,9 @@ namespace AltAIMLbot.Utils
         /// </summary>
         /// <param name="input">The Unifiable to be transformed</param>
         /// <returns>The resulting output</returns>
-        public Unifiable TransformU(string input)
+        public Unifiable TransformU(Unifiable input)
         {
-            this.inputStringU = Unifiable.MakeUnifiableFromString(input, false);
-            this.inputString = input;
+            this.InputStringU = input;
             return this.TransformU();
         }
 
@@ -220,6 +220,7 @@ namespace AltAIMLbot.Utils
             {
                 this.inputStringU = value;
                 inputString = value.AsString();
+                transformComplete = null;
             }
         }
 

@@ -787,6 +787,7 @@ namespace AltAIMLbot.Utils
             // Normalize all words unless they're the AIML wildcards "*" and "_" during AIML loading
             foreach (string word in substitutedWords)
             {
+                if (word == "") continue;
                 string normalizedWord;
                 if (isUserInput)
                 {
@@ -806,7 +807,7 @@ namespace AltAIMLbot.Utils
                 result.Append(normalizedWord.Trim() + " ");
             }
 
-            return result.ToString().Replace("  "," "); // make sure the whitespace is neat
+            return result.ToString().Replace("  "," ").Trim(); // make sure the whitespace is neat
         }
         #endregion
     }

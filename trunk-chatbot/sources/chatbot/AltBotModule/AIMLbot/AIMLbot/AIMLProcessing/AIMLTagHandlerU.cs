@@ -100,7 +100,7 @@ namespace RTParser.Utils
             this.result = result;
             this.templateNode = templateNode;
             InputStringU = templateNode.OuterXml;
-            initialString = inputStringU;
+            initialString = InputString;
             this.user = user;
             if (this.templateNode.Attributes != null) this.templateNode.Attributes.RemoveNamedItem("xmlns");
         }
