@@ -157,8 +157,6 @@ namespace RTParser
             get { return SizeC + DefaultStartGraph.Size + DefaultHeardSelfSayGraph.Size; }
         }
 
-        public int SizeC = 0;
-
         private GraphMaster _g
         {
             get { return Graphmaster; }

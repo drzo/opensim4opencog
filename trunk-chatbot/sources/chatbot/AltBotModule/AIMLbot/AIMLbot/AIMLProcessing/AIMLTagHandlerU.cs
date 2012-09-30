@@ -20,8 +20,12 @@ namespace RTParser.Utils
     /// The template for all classes that handle the AIML tags found within template nodes of a
     /// category.
     /// </summary>
-    public abstract partial class AIMLTagHandlerU : TextTransformer, IAIMLTransaction, IXmlLineInfo, IDisposable, ConversationScopeHolder
+    public abstract partial class AIMLTagHandlerU : AIMLTagHandler, IAIMLTransaction, IXmlLineInfo, IDisposable, ConversationScopeHolder
     {
+        sealed protected override string ProcessChange()
+        {
+            return ProcessChangeU();
+        }
         public SituationInConversation ContextScope
         {
             get
@@ -31,22 +35,7 @@ namespace RTParser.Utils
                 return null;
             }
         }
-        /// <summary>
-        /// A representation of the input into the Proc made by the user
-        /// </summary>
-        public Request _request;
 
-        /// <summary>
-        /// A representation of the result to be returned to the user
-        /// </summary>
-        private Result _result0;
-
-        /// <summary>
-        /// A flag to denote if inner tags are to be processed recursively before processing this tag
-        /// </summary>
-        public bool isRecursive = true;
-
-        public bool IsStarAtomically = false; // true break it right now
         public bool IsStarted;
         public bool IsOverBudget;
         public bool IsDisposing;
@@ -58,15 +47,11 @@ namespace RTParser.Utils
         /// <summary>
         /// The query that produced this node containing the wildcard matches
         /// </summary>
-        public SubQuery query;
+        //public SubQuery query;
 
         internal TemplateInfo templateInfo;
 
-        /// <summary>
-        /// The template node to be processed by the class
-        /// </summary>
-        public XmlNode templateNode;
-
+#if false
         /// <summary>
         /// A representation of the user who made the request
         /// </summary>
@@ -84,6 +69,7 @@ namespace RTParser.Utils
                 }
             }
         }
+#endif
 
         /// <summary>
         /// Default ctor to use when late binding
@@ -107,10 +93,10 @@ namespace RTParser.Utils
                               Request request,
                               Result result,
                               XmlNode templateNode)
-            : base(bot, templateNode.OuterXml, null)
+            : base(bot,user,query,request,result, templateNode)
         {
             this.query = query;
-            this._request = request;
+           // this._request = request;
             this.result = result;
             this.templateNode = templateNode;
             InputStringUU = templateNode.OuterXml;
@@ -135,6 +121,17 @@ namespace RTParser.Utils
             get { return query; }
         }
 
+#if false
+        /// <summary>
+        /// A representation of the input into the Proc made by the user
+        /// </summary>
+        public Request _request;
+
+        /// <summary>
+        /// A representation of the result to be returned to the user
+        /// </summary>
+        private Result _result0;
+        
         public Request request
         {
             get
@@ -172,7 +169,7 @@ namespace RTParser.Utils
             }
             set { _result0 = value; }
         }
-
+#endif
         protected bool ReadOnly;
 
         public AltBot TargetBot

@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using AltAIMLbot.Utils;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser.Variables;
@@ -11,7 +12,7 @@ namespace RTParser.Normalize
     /// Checks the text for any matches in the bot's substitutions dictionary and makes
     /// any appropriate changes.
     /// </summary>
-    public class ApplySubstitutions : RTParser.Utils.TextTransformer
+    public class ApplySubstitutions : TextTransformer
     {
         public ApplySubstitutions(RTParser.AltBot bot, Unifiable inputString)
             : base(bot, null, inputString)
@@ -20,6 +21,11 @@ namespace RTParser.Normalize
         public ApplySubstitutions(RTParser.AltBot bot)
             : base(bot)
         { }
+
+        protected override string ProcessChange()
+        {
+            return ProcessChangeU().AsString();
+        }
 
         /// <summary>
         /// Produces a random "marker" Unifiable that tags text that is already the result of a substitution

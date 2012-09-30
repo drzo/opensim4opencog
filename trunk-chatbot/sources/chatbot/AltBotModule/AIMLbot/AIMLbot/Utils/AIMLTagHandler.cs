@@ -55,12 +55,12 @@ namespace AltAIMLbot.Utils
         /// <summary>
         /// A flag to denote if inner tags are to be processed recursively before processing this tag
         /// </summary>
-        public bool isStarWhenChildless = false;
+        public bool IsStarAtomically = false;
 
         /// <summary>
         /// A representation of the user who made the request
         /// </summary>
-        public User user;
+        public User user { get; set; }
 
         /// <summary>
         /// The query that produced this node containing the wildcard matches
@@ -70,12 +70,12 @@ namespace AltAIMLbot.Utils
         /// <summary>
         /// A representation of the input into the bot made by the user
         /// </summary>
-        public Request request;
+        public Request request { get; set; }
 
         /// <summary>
         /// A representation of the result to be returned to the user
         /// </summary>
-        public AltAIMLbot.Result result;
+        public AltAIMLbot.Result result { get; set; }
 
         /// <summary>
         /// The template node to be processed by the class
@@ -277,6 +277,11 @@ namespace AltAIMLbot.Utils
                 return base.ToString() + " => " + templateNode.OuterXml;
             }
             return GetType().Name + ": " + templateNode.OuterXml;
+        }
+
+        protected override Unifiable ProcessChangeU()
+        {
+            return ProcessChange();
         }
     }
 }

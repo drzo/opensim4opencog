@@ -371,7 +371,6 @@
     <Compile Include="RTParser\Utils\TagHandler.cs" />
     <Compile Include="GraphInfo\TemplateInfo.cs" />
     <Compile Include="RTParser\Utils\TestCaseRunner.cs" />
-    <Compile Include="RTParser\Utils\TextTransformer.cs" />
     <Compile Include="Unused\ThatInfo.cs" />
     <Compile Include="Unused\TopicInfo.cs" />
     <Compile Include="RTParser\Utils\UndoStack.cs" />

@@ -47,7 +47,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
-            isStarWhenChildless = true;
+            IsStarAtomically = true;
         }
 
         protected override string ProcessChange()

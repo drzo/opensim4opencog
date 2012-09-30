@@ -33,7 +33,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
             isRecursive = false;
-            isStarWhenChildless = false;
+            IsStarAtomically = false;
         }
 
         protected override string ProcessChange()

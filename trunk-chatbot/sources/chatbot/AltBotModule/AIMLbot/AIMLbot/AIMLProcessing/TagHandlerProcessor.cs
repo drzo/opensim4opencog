@@ -425,6 +425,7 @@ namespace RTParser
             {
                 return new bot(targetBot, user, query, request, result, node);
             }
+
             tagHandlerU = new lazyClosure(targetBot, user, query, request, result, node);
             writeToLog("AIMLLOADER:  lazyClosure: " + node.OuterXml);
             return tagHandlerU;

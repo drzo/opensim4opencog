@@ -411,27 +411,12 @@ namespace RTParser
                 return result;
             }
         }
-        /*
-        /// <summary>
-        /// The directory to look in for the AIML files
-        /// </summary>
-        public string PathToAIML
-        {
-            get
-            {
-                return Path.Combine(Environment.CurrentDirectory, this.GlobalSettings.grabSetting("aimldirectory","aiml"));
-            }
-        }
-
         /// <summary>
         /// The directory to look in for the various XML configuration files
         /// </summary>
         public string PathToConfigFiles
         {
-            get
-            {
-                return Path.Combine(Environment.CurrentDirectory, this.GlobalSettings.grabSetting("configdirectory"));
-            }
+            get { return GetPathSetting("configdirectory", "config"); }
         }
 
         /// <summary>
@@ -439,17 +424,15 @@ namespace RTParser
         /// </summary>
         public string PathToLogs
         {
-            get
-            {
-                return Path.Combine(Environment.CurrentDirectory, this.GlobalSettings.grabSetting("logdirectory"));
-            }
+            get { return GetPathSetting("logdirectory", null); }
         }
+
 
         /// <summary>
         /// The number of categories this bot has in its graphmaster "brain"
         /// </summary>
-        public int Size;
-        */
+        public int SizeC;
+
         /// <summary>
         /// The default "brain" of the bot
         /// </summary>
@@ -533,21 +516,6 @@ namespace RTParser
             set { _dataDir = value; }
         }
 
-        /// <summary>
-        /// The directory to look in for the various XML configuration files
-        /// </summary>
-        public string PathToConfigFiles
-        {
-            get { return GetPathSetting("configdirectory", "config"); }
-        }
-
-        /// <summary>
-        /// The directory into which the various log files will be written
-        /// </summary>
-        public string PathToLogs
-        {
-            get { return GetPathSetting("logdirectory", null); }
-        }
 
         /// <summary>
         /// A general stack to remember things to mention later
@@ -1327,7 +1295,7 @@ namespace RTParser
                         }
                         else
                         {
-                            if (tagHandler.isStarWhenChildless)
+                            if (tagHandler.IsStarAtomically)
                             {
                                 string debug = node.OuterXml;
                                 // atomic tag?!
@@ -1646,6 +1614,8 @@ namespace RTParser
                 }
             }
             if (tagHandler != null) return tagHandler;
+            tagHandler = TagHandling.GetTagHandler00(user, query, request, result, node, false);
+            if (tagHandler != null) return tagHandler;
             if (nodeNameLower == "name")
             {
                 return new bot(this, user, query, request, result, node);
@@ -1654,7 +1624,7 @@ namespace RTParser
             {
                 return null;
             }
-            //tagHandler = new lazyClosure(this, user, query, request, result, node);
+            tagHandler = new lazyClosure(this, user, query, request, result, node);
             writeToLog("AIMLLOADER:  lazyClosure?!: " + node.OuterXml);
             return tagHandler;
         }
