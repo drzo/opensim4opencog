@@ -761,13 +761,26 @@ namespace AltAIMLbot.Utils
         /// <returns>The normalized string</returns>
         private string Normalize(string input, bool isUserInput)
         {
+            if (input == "*") return input;
+            string r = Normalize0(input, isUserInput);
+            if (input.Contains("_"))
+            {
+                if (r.Trim()!=input.Trim())
+                {
+                    r = Normalize0(input, isUserInput);
+                }
+            }
+            return r;
+        }
+        private string Normalize0(string input, bool isUserInput)
+        {
             StringBuilder result = new StringBuilder();
 
             // objects for normalization of the input
             ApplySubstitutions substitutor = new ApplySubstitutions(this.bot);
             StripIllegalCharacters stripper = new StripIllegalCharacters(this.bot);
 
-            string substitutedInput = substitutor.TransformU(input);
+            string substitutedInput = substitutor.Transform(input);
             // split the pattern into it's component words
             string[] substitutedWords = substitutedInput.Split(" \r\n\t".ToCharArray());
 
@@ -777,7 +790,7 @@ namespace AltAIMLbot.Utils
                 string normalizedWord;
                 if (isUserInput)
                 {
-                    normalizedWord = stripper.TransformU(word);
+                    normalizedWord = stripper.Transform(word);
                 }
                 else
                 {
@@ -787,7 +800,7 @@ namespace AltAIMLbot.Utils
                     }
                     else
                     {
-                        normalizedWord = stripper.TransformU(word);
+                        normalizedWord = stripper.Transform(word);
                     }
                 }
                 result.Append(normalizedWord.Trim() + " ");

@@ -23,12 +23,13 @@ namespace RTParser.Normalize
         }
         protected override Unifiable ProcessChangeU()
         {
-            string newVariable = ((string)InputStringUU);
+            return InputStringU;
+            string newVariable = ((string)InputStringU);
             if (newVariable != null)
             {
-                if (newVariable.StartsWith("TAG-")) return InputStringUU;
+                if (newVariable.StartsWith("TAG-")) return InputStringU;
             }
-            return this.Proc.Strippers.Replace(this.InputStringUU, " ");
+            return this.Proc.Strippers.Replace(this.InputStringU, " ");
         }
     }
 }

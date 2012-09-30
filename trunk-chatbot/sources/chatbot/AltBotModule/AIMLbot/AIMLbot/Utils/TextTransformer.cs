@@ -1,4 +1,5 @@
 using System;
+using java.lang;
 using RTParser;
 using RTParser.Utils;
 
@@ -42,8 +43,16 @@ namespace AltAIMLbot.Utils
         /// </summary>
         public string InputString
         {
-            get{return this.inputString;}
-            set{this.inputString=value;}
+            get
+            {
+                if (inputString == null) throw new NullPointerException("InputString");
+                return this.inputString;
+            }
+            set
+            {
+                this.inputString = value;
+                inputStringU = value;
+            }
         }
 
         /// <summary>
@@ -95,7 +104,7 @@ namespace AltAIMLbot.Utils
         /// <returns>The resulting output</returns>
         public string Transform(string input)
         {
-            this.inputString = input;
+            this.InputString = input;
             return this.Transform();
         }
 
@@ -130,12 +139,12 @@ namespace AltAIMLbot.Utils
         /// ctor
         /// </summary>
         /// <param name="bot">The bot this transformer is a part of</param>
-        /// <param name="inputString">The input Unifiable to be transformed</param>
-        public TextTransformer(AltBot bot, string instr, Unifiable inputString)
+        /// <param name="inu">The input Unifiable to be transformed</param>
+        public TextTransformer(AltBot bot, string instr, Unifiable inu)
         {
             this.bot = bot;
-            this.InputStringUU = inputString ?? instr;
-            this.inputString = initialString = instr ?? InputStringUU.AsString();
+            this.inputStringU = inu ?? instr;
+            this.inputString = initialString = instr ?? inputStringU.AsString();
         }
 
         public virtual float CallCanUnify(Unifiable with)
@@ -148,9 +157,9 @@ namespace AltAIMLbot.Utils
         /// </summary>
         /// <param name="input">The Unifiable to be transformed</param>
         /// <returns>The resulting output</returns>
-        public string TransformU(string input)
+        public Unifiable TransformU(string input)
         {
-            this.InputStringUU = Unifiable.MakeUnifiableFromString(input, false);
+            this.inputStringU = Unifiable.MakeUnifiableFromString(input, false);
             this.inputString = input;
             return this.TransformU();
         }
@@ -161,7 +170,7 @@ namespace AltAIMLbot.Utils
         /// <returns>The resulting transformed Unifiable</returns>
         public virtual Unifiable TransformU()
         {
-            if (!IsNullOrEmpty(this.InputStringUU))
+            if (!IsNullOrEmpty(this.InputStringU))
             {
                 return this.ProcessAimlChange();
             }
@@ -184,7 +193,7 @@ namespace AltAIMLbot.Utils
 
         public virtual Unifiable CompleteProcessU()
         {
-            return InputStringUU;
+            return InputStringU;
         }
 
         #region Attributes
@@ -194,7 +203,7 @@ namespace AltAIMLbot.Utils
         /// <summary>
         /// Instance of the input Unifiable
         /// </summary>
-        protected Unifiable InputStringUU;
+        protected Unifiable inputStringU;
 
 
         /// <summary>
@@ -202,8 +211,16 @@ namespace AltAIMLbot.Utils
         /// </summary>
         public Unifiable InputStringU
         {
-            get { return this.InputStringUU; }
-            set { this.InputStringUU = value; }
+            get
+            {
+                if (inputStringU == null) throw new NullPointerException("InputStringU");
+                return this.inputStringU;
+            }
+            set
+            {
+                this.inputStringU = value;
+                inputString = value.AsString();
+            }
         }
 
         /// <summary>

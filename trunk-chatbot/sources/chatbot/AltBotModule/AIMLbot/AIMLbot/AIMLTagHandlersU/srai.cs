@@ -10,7 +10,6 @@ using AltAIMLbot.Utils;
 using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using RTParser.Utils;
-using AIMLLoader=RTParser.Utils.AIMLLoader;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -503,7 +502,7 @@ namespace RTParser.AIMLTagHandlers
             mybot.writeChatTrace("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n",
                                  subRequestrawInput, depth, subResult.InputPaths);
             mybot.writeChatTrace("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth,
-                                 AIMLLoader.TextAndSourceInfo(templateNode));
+                                 AIMLLoaderU.TextAndSourceInfo(templateNode));
 
             mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:MISSING({1})\" ;\n", depth, depth);
         }

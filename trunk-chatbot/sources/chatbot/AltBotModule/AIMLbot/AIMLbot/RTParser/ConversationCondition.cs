@@ -113,7 +113,7 @@ namespace RTParser.Utils
             bool indexPosition;
             string indexVal;
             TagName = node.LocalName;
-            Pattern = AIMLLoader.TryGetPrecondionThat(TagName, node,
+            Pattern = AIMLLoaderU.TryGetPrecondionThat(TagName, node,
                                                       out isRequired, out indexVal, out indexPosition);
             IsPrecond = isRequired;
             IndexPosition = indexPosition;

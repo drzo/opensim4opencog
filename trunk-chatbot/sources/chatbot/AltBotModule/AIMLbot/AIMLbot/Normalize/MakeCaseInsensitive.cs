@@ -19,7 +19,7 @@ namespace RTParser.Normalize
 
         protected override Unifiable ProcessChangeU()
         {
-            return this.InputStringUU.ToCaseInsensitive();
+            return this.InputStringU.ToCaseInsensitive();
         }
         protected override string ProcessChange()
         {

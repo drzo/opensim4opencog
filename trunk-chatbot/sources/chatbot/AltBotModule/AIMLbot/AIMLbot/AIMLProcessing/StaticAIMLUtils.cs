@@ -480,7 +480,7 @@ namespace RTParser.Utils
             query = query ?? request.CurrentQuery;
             //Result result = query.Result;
             AltBot RProcessor = request.TargetBot;
-            AIMLLoader prev = RProcessor.Loader;
+            AIMLLoaderU prev = RProcessor.Loader;
             try
             {
                 // RProcessor.Loader = this;
@@ -830,7 +830,7 @@ namespace RTParser.Utils
 
         public static string PadStars(string pattern)
         {
-            if (!AIMLLoader.SeekOutAndRepair) return pattern;
+            if (!AIMLLoaderU.SeekOutAndRepair) return pattern;
             pattern = Trim(pattern);
             int pl = pattern.Length;
             if (pl == 0) return "~*";

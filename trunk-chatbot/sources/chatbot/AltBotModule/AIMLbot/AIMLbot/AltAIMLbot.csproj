@@ -344,7 +344,7 @@
     <Compile Include="RTParser\UserDuringProcessing.cs" />
     <Compile Include="RTParser\UserManager.cs" />
     <Compile Include="AIMLProcessing\AIMLFormatingTagHandler.cs" />
-    <Compile Include="AIMLProcessing\AIMLLoader.cs" />
+    <Compile Include="AIMLProcessing\AIMLLoaderU.cs" />
     <Compile Include="AIMLProcessing\AIMLTagHandlerU.cs" />
     <Compile Include="AIMLProcessing\AIMLTagHandlerUtils.cs" />
     <Compile Include="Unused\AIMLTagHandlerUtils_legacy.cs" />

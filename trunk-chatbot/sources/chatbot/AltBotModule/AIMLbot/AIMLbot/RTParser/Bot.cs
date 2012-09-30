@@ -30,7 +30,6 @@ using Console=System.Console;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 using AltAIMLbot;
-using AIMLLoader=RTParser.Utils.AIMLLoader;
 using Gender=RTParser.Utils.Gender;
 using MasterRequest = AltAIMLParser.Request;
 
@@ -166,9 +165,9 @@ namespace RTParser
             return r;
         }
 
-        private AIMLLoader _loader;
-        private AIMLLoader _loaderOnceLeast;
-        public AIMLLoader Loader
+        private AIMLLoaderU _loader;
+        private AIMLLoaderU _loaderOnceLeast;
+        public AIMLLoaderU Loader
         {
             set
             {
@@ -757,13 +756,13 @@ namespace RTParser
         }
 
 
-        internal AIMLLoader GetLoader(Request request)
+        internal AIMLLoaderU GetLoader(Request request)
         {
             AltBot bot = this;
-            AIMLLoader loader = bot.Loader;
+            AIMLLoaderU loader = bot.Loader;
             if (!bot.StaticLoader || loader == null)
             {
-                loader = new AIMLLoader(bot, request);
+                loader = new AIMLLoaderU(bot, request);
             }
             bot.Loader = loader;
             return loader;
@@ -788,7 +787,7 @@ namespace RTParser
             try
             {
                 request.GraphsAcceptingUserInput = false;
-                AIMLLoader loader = GetLoader(request);
+                AIMLLoaderU loader = GetLoader(request);
                 loader.loadAIMLNode(newAIML.DocumentElement, filename, request);
             }
             finally

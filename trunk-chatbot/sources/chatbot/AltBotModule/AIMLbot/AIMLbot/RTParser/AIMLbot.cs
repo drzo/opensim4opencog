@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using AltAIMLParser;
@@ -117,7 +117,7 @@ namespace AIMLbot
     
     namespace Utils
     {
-        public class AIMLLoader : RTParser.Utils.AIMLLoader
+        public class AIMLLoader : RTParser.Utils.AIMLLoaderU
         {
             public AIMLLoader(AltBot bot)
                 : base(bot, bot == null ? null : bot.GetBotRequest("-AIMLLoader-"))

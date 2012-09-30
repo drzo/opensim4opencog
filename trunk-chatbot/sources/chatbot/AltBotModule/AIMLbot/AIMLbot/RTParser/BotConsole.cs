@@ -777,7 +777,7 @@ namespace RTParser
                     files = args;
                 }
                 GraphMaster G = robot.GetGraph(graphname, myUser.StartGraph);
-                AIMLLoader loader = robot.GetLoader(request);
+                AIMLLoaderU loader = robot.GetLoader(request);
                 LoaderOptions reqLoadOptionsValue = request.LoadOptions.Value;
                 var prev = request.Graph;
                 try

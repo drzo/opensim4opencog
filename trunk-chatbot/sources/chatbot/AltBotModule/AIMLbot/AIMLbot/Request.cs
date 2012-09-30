@@ -13,7 +13,6 @@ using RTParser;
 using RTParser.AIMLTagHandlers;
 using RTParser.Utils;
 using RTParser.Variables;
-using AIMLLoader=RTParser.Utils.AIMLLoader;
 using MasterRequest = AltAIMLParser.Request;
 
 
@@ -636,12 +635,12 @@ namespace AltAIMLParser
         }
 
 
-        private AIMLLoader _aimlloader = null;
-        public AIMLLoader Loader
+        private AIMLLoaderU _aimlloader = null;
+        public AIMLLoaderU Loader
         {
             get
             {
-                if (_aimlloader == null) _aimlloader = new AIMLLoader(TargetBot, thisRequest);
+                if (_aimlloader == null) _aimlloader = new AIMLLoaderU(TargetBot, thisRequest);
                 return _aimlloader;
             }
         }

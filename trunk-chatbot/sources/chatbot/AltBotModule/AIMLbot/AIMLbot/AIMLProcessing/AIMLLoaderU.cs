@@ -29,7 +29,7 @@ namespace RTParser.Utils
     /// A utility class for loading AIML files from disk into the graphmaster structure that 
     /// forms an AIML RProcessor's "brain"
     /// </summary>
-    public class AIMLLoader : XmlNodeEvaluatorImpl
+    public class AIMLLoaderU : XmlNodeEvaluatorImpl
     {
         #region Attributes
 
@@ -78,7 +78,7 @@ namespace RTParser.Utils
 
         #endregion
 
-        public AIMLLoader(AltBot bot)
+        public AIMLLoaderU(AltBot bot)
         {
         }
 
@@ -86,7 +86,7 @@ namespace RTParser.Utils
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot whose brain is being processed</param>
-        public AIMLLoader(AltBot bot, Request request)
+        public AIMLLoaderU(AltBot bot, Request request)
         {
             this.LoaderRequest00 = request;
             //XmlNodeEvaluators.Add(this);
@@ -719,7 +719,7 @@ namespace RTParser.Utils
             query = query ?? request.CurrentQuery;
             //Result result = query.Result;
             AltBot RProcessor = request.TargetBot;
-            AIMLLoader prev = RProcessor.Loader;
+            AIMLLoaderU prev = RProcessor.Loader;
             GraphMaster loadOptsPrevGraph = loadOpts.CtxGraph;
             try
             {
@@ -787,7 +787,7 @@ namespace RTParser.Utils
             }
             long total = 0;
             AltBot RProcessor = loadOpts.RProcessor;
-            AIMLLoader prev = RProcessor.Loader;
+            AIMLLoaderU prev = RProcessor.Loader;
             try
             {
                 RProcessor.Loader = this;
@@ -1211,7 +1211,7 @@ namespace RTParser.Utils
                 }
             }
 
-            Func<Unifiable, bool, Unifiable> normalizerT = (inputText, isUserInput) => Trim(Normalize(inputText, isUserInput));
+            Func<Unifiable, bool, Unifiable> normalizerT = (inputText, isUserInput) => Trim(NormalizeU(inputText, isUserInput));
             Unifiable categoryPath = generatePath(patternText, that, cond, topicName, false, normalizerT).ToUpper();
             PatternInfo patternInfo = loaderOpts.CtxGraph.FindPattern(patternNode, patternText);//PatternInfo.GetPattern(loaderOpts, patternNode, categoryPath);
             TopicInfo topicInfo = loaderOpts.CtxGraph.FindTopic(topicName);
@@ -1578,7 +1578,7 @@ namespace RTParser.Utils
 
         private static string LastRepair(string normalizedPattern, bool isUserInput, bool UseRawUserInput)
         {
-            if (!AIMLLoader.SeekOutAndRepair) return normalizedPattern;
+            if (!AIMLLoaderU.SeekOutAndRepair) return normalizedPattern;
             bool hasStars = normalizedPattern.Contains("*") || normalizedPattern.Contains("_");
             if (!hasStars) return normalizedPattern;
             bool hasBrackets = normalizedPattern.Contains("<") || normalizedPattern.Contains(">");
@@ -1786,7 +1786,7 @@ namespace RTParser.Utils
         /// <param name="isUserInput">True if the Unifiable being normalized is part of the user input path - 
         /// flags that we need to normalize out * and _ chars</param>
         /// <returns>The normalized Unifiable</returns>
-        public Unifiable Normalize(string input, bool isUserInput)
+        public Unifiable NormalizeU(string input, bool isUserInput)
         {
             string input0 = input;
             if (Unifiable.IsNullOrEmpty(input)) return Unifiable.Empty;
@@ -1834,6 +1834,7 @@ namespace RTParser.Utils
                     normalizedWord = stripper.TransformU(word);
                     if (normalizedWord != wwword)
                     {
+                        normalizedWord = stripper.TransformU(word);
                       //  if (!wwword.Contains("'"))
                         //    writeToLog("Normalize stripper " + word + "->" + normalizedWord);
                     }

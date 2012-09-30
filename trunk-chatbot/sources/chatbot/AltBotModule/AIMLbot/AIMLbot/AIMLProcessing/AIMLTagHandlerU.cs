@@ -99,8 +99,8 @@ namespace RTParser.Utils
            // this._request = request;
             this.result = result;
             this.templateNode = templateNode;
-            InputStringUU = templateNode.OuterXml;
-            initialString = InputStringUU;
+            InputStringU = templateNode.OuterXml;
+            initialString = inputStringU;
             this.user = user;
             if (this.templateNode.Attributes != null) this.templateNode.Attributes.RemoveNamedItem("xmlns");
         }
@@ -1518,7 +1518,7 @@ namespace RTParser.Utils
         /// <returns>The resulting transformed Unifiable</returns>
         public override Unifiable TransformU()
         {
-            if (!IsNullOrEmpty(this.InputStringUU))
+            if (!IsNullOrEmpty(this.InputStringU))
             {
                 if (RecurseResultValid)
                 {

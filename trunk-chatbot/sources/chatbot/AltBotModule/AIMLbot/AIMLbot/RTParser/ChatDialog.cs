@@ -18,7 +18,6 @@ using RTParser.Database;
 using RTParser.Normalize;
 using RTParser.Utils;
 using RTParser.Variables;
-using AIMLLoader=RTParser.Utils.AIMLLoader;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 using PatternInfo = RTParser.Unifiable;
@@ -910,9 +909,9 @@ namespace RTParser
         {
             if (Loader == null)
             {
-                Loader = new AIMLLoader(this, GetBotRequest("swapPerson " + inputString));
+                Loader = new AIMLLoaderU(this, GetBotRequest("swapPerson " + inputString));
             }
-            string temp = Loader.Normalize(inputString, true);
+            string temp = Loader.NormalizeU(inputString, true);
             //temp = ApplySubstitutions.Substitute(this, this.PersonSubstitutions, temp);
             temp = ApplySubstitutions.Substitute(Person2Substitutions, temp);
             return temp;
@@ -1199,7 +1198,7 @@ namespace RTParser
         }
 
         public Result ImmediateAiml(XmlNode templateNode, Request request0,
-                                            AIMLLoader loader)
+                                            AIMLLoaderU loader)
         {
             Result masterResult = request0.CreateResult(request0);
             bool prev = request0.GraphsAcceptingUserInput;

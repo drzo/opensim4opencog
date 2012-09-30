@@ -250,9 +250,9 @@ namespace RTParser
             int sentenceNum = 0;
             int topicNum = 0;
             int thatNum = 0;
-            AIMLLoader loader = thiz.GetLoader(request);
+            AIMLLoaderU loader = thiz.GetLoader(request);
             Func<Unifiable, bool, Unifiable> normalizerT =
-                (inputText, isUserInput) => loader.Normalize(inputText, isUserInput).Trim();
+                (inputText, isUserInput) => loader.NormalizeU(inputText, isUserInput).Trim();
             string lastInput = "";
             {
                 foreach (Unifiable sentenceURaw in rawSentences)
