@@ -214,7 +214,7 @@ namespace AltAIMLbot.Utils
                     
                 if (this.bot.rapStoreDirectory != null)
                 {
-                    if ((filename.Contains("\\") || filename.Contains("/")) && (extDB.wasLoaded(filename)))
+                    if ((filename.Contains("\\") || filename.Contains("/")) && (!filename.Contains("servitorgraphmap")) && (extDB.wasLoaded(filename)))
                     {
                         // We loaded that file
                         extDB.Close();

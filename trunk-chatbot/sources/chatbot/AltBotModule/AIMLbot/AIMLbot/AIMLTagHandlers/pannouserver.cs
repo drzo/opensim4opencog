@@ -56,6 +56,9 @@ namespace AltAIMLbot.AIMLTagHandlers
                 XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
+            isRecursive = true;
+            IsStarAtomically = true;
+            isBoring = true;
         }
 
         protected override String ProcessChange()
@@ -67,6 +70,8 @@ namespace AltAIMLbot.AIMLTagHandlers
                 try
                 {
                     String templateNodeInnerValue = this.TemplateNodeInnerText;
+                    //String templateNodeInnerValue = this.templateNode.InnerText;
+
                     string myUrl = TemplateNodeAttributes["url"].Value;
                     string myLogin = TemplateNodeAttributes["login"].Value;
                     string myKey = TemplateNodeAttributes["key"].Value;

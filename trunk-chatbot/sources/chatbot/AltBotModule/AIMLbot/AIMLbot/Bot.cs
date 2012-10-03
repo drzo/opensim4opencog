@@ -1344,6 +1344,11 @@ namespace RTParser
             {
                 return template;
             }
+            while (template.Contains("<template><template>"))
+            {
+                template = template.Replace("<template><template>", "<template>");
+                template = template.Replace("</template></template>", "</template>");
+            }
             resultNode = resultNode ?? AIMLTagHandler.getNode("<node>" + template + "</node>");
             if (resultNode.HasChildNodes)
             {

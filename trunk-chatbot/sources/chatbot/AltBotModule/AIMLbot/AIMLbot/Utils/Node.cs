@@ -1270,8 +1270,8 @@ namespace AltAIMLbot.Utils
             lock (children)
             {
                 childmax++;
-                children.Add(childWord, nd);
-                nd.Parent = this;
+                if (!children.ContainsKey(childWord)) children.Add(childWord, nd);
+                if (nd!=null) nd.Parent = this;
                 childrenStr += "(" + childWord + ")";
                 if (fullChildSet) return;
                 if ((childnum + NumberOfChildNodes) != childmax)

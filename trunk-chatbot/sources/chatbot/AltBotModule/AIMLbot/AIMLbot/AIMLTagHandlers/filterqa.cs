@@ -28,6 +28,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
             this.isRecursive = true;
+            this.isBoring = true;
         }
         protected override string ProcessChange()
         {
@@ -64,10 +65,12 @@ namespace AltAIMLbot.AIMLTagHandlers
 
             if (this.TemplateNodeName == "filterqa")
             {
-                if (this.TemplateNodeHasText)
-                {
+                //string message = this.templateNode.InnerText ;
+                string message = this.TemplateNodeInnerText;
+                //if (this.TemplateNodeHasText)
+                    if (message.Length >0)
+                    {
 
-                    string message = this.TemplateNodeInnerText;
                     string valid = "";
                     string errorMessage = "";
                     string failMessage = "";

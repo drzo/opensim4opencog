@@ -1924,20 +1924,22 @@ namespace RTParser.Variables
                 if ((bbPrefix != null) && (this.bot.myChemistry != null))
                 {
                     string bbKey = bbPrefix + normalizedName.ToLower();
-                    string bbValue = this.bot.myChemistry.m_cBus.getHash(bbKey);
-                    //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
-                    if (bbValue.Length > 0)
+                    if (!bbKey.Contains(" "))
                     {
-                        // update local value
-                        if (this.orderedKeys.Contains(normalizedName))
+                        string bbValue = this.bot.myChemistry.m_cBus.getHash(bbKey);
+                        //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
+                        if (bbValue.Length > 0)
                         {
-                            this.removeFromHash(normalizedName);
-                            this.settingsHash.Add(normalizedName, bbValue);
+                            // update local value
+                            if (this.orderedKeys.Contains(normalizedName))
+                            {
+                                this.removeFromHash(normalizedName);
+                                this.settingsHash.Add(normalizedName, bbValue);
+                            }
+                            return bbValue;
                         }
-                        return bbValue;
-                    }
-
                     //Console.WriteLine("*** grabSetting use internal: {0}",name);
+                    }
                 }
             }
 
@@ -1968,20 +1970,23 @@ namespace RTParser.Variables
             if ((bbPrefix != null) && (this.bot.myChemistry != null))
             {
                 string bbKey = bbPrefix + normalizedName.ToLower();
-                string bbValue = this.bot.myChemistry.m_cBus.getHash(bbKey);
-                //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
-                if (bbValue.Length > 0 && false)
+                if (!bbKey.Contains(" "))
                 {
-                    // update local value
-                    if (this.orderedKeys.Contains(normalizedName))
+                    string bbValue = this.bot.myChemistry.m_cBus.getHash(bbKey);
+                    //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
+                    if (bbValue.Length > 0 && false)
                     {
-                        this.removeFromHash(normalizedName);
-                        this.settingsHash.Add(normalizedName, bbValue);
+                        // update local value
+                        if (this.orderedKeys.Contains(normalizedName))
+                        {
+                            this.removeFromHash(normalizedName);
+                            this.settingsHash.Add(normalizedName, bbValue);
+                        }
+                        return bbValue;
                     }
-                    return bbValue;
-                }
 
-                //Console.WriteLine("*** grabSetting use internal: {0}",name);
+                    //Console.WriteLine("*** grabSetting use internal: {0}",name);
+                }
             } 
             try
             {

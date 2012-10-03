@@ -58,6 +58,11 @@ namespace AltAIMLbot.Utils
         public bool IsStarAtomically = false;
 
         /// <summary>
+        /// A flag to denote if just the innertext should be used instead of full recrusive processing
+        /// </summary>
+        public bool isBoring = false;
+        
+        /// <summary>
         /// A representation of the user who made the request
         /// </summary>
         public User user { get; set; }
@@ -163,6 +168,10 @@ namespace AltAIMLbot.Utils
             {
                 if (innerTextOverride != null) return innerTextOverride;
                 var ret = TemplateNodeInnerText0;
+                if (isBoring)
+                {
+                    return ret;
+                }
 
                 if (TemplateNodeInnerXml.Contains("<") && innerTextOverride == null)
                 {

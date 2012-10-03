@@ -389,43 +389,56 @@ namespace AltAIMLbot
         {
             ArrayList vals = new ArrayList();
             String[] list, parts;
-
-            list = line.Split(new char[] { ',' });
-
-            foreach (String entry in list)
+            try
             {
-                int start, end, interval;
+                list = line.Split(new char[] { ',' });
 
-                parts = entry.Split(new char[] { '-', '/' });
-
-                if (parts[0].Equals("*"))
+                foreach (String entry in list)
                 {
-                    if (parts.Length > 1)
-                    {
-                        start = startNr;
-                        end = maxNr;
+                    int start, end, interval;
 
-                        interval = int.Parse(parts[1]);
+                    parts = entry.Split(new char[] { '-', '/' });
+
+                    if (parts[0].Equals("*"))
+                    {
+                        if (parts.Length > 1)
+                        {
+                            start = startNr;
+                            end = maxNr;
+
+                            interval = int.Parse(parts[1]);
+                        }
+                        else
+                        {
+                            // put a -1 in place
+                            start = -1;
+                            end = -1;
+                            interval = 1;
+                        }
                     }
                     else
                     {
-                        // put a -1 in place
-                        start = -1;
-                        end = -1;
-                        interval = 1;
+                        // format is 0-8/2
+                        start = int.Parse(parts[0]);
+                        end = parts.Length > 1 ? int.Parse(parts[1]) : int.Parse(parts[0]);
+                        interval = parts.Length > 2 ? int.Parse(parts[2]) : 1;
                     }
+
+                    for (int i = start; i <= end; i += interval)
+                    {
+                        vals.Add(i);
+                    }
+                }
+            }
+            catch(Exception e)
+            {
+                if (line == "-1")
+                {
+                    vals.Add(-1);
                 }
                 else
                 {
-                    // format is 0-8/2
-                    start = int.Parse(parts[0]);
-                    end = parts.Length > 1 ? int.Parse(parts[1]) : int.Parse(parts[0]);
-                    interval = parts.Length > 2 ? int.Parse(parts[2]) : 1;
-                }
-
-                for (int i = start; i <= end; i += interval)
-                {
-                    vals.Add(i);
+                    vals.Add(1);
                 }
             }
             return vals;

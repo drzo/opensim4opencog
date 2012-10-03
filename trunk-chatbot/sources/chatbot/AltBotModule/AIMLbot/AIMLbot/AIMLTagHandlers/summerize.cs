@@ -26,6 +26,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
             this.isRecursive = true;
+            this.isBoring = true;
         }
 
         protected override string ProcessChange()
