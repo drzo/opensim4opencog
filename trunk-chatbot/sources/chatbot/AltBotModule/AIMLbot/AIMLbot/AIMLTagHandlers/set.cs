@@ -52,6 +52,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             {
                 string name = GetAttribValue("name,var", null);
                 string type0 = GetAttribValue("type,dict", "user");
+                string returnn = GetAttribValue("ret,return", null);
                 ISettingsDictionary dict = request.GetDictionary(type0) ?? this.user.Predicates;
                 string settingValue = TemplateNodeInnerText;
  
@@ -59,6 +60,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 {
                     dict.addSetting(name, settingValue);
                     if (name != "coins") bot.writeToLog("SET " + name + "=" + settingValue);
+                    if (returnn != null) return returnn;
                     return dict.grabSetting(name);
 
                 }
