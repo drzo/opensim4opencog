@@ -942,6 +942,9 @@ namespace MushDLR223.Utilities
             if (MustSpaceWildcards)
             {
                 clean = FormatTextNode(text);
+                if (clean != text.Trim() && text.Contains("_"))
+                {
+                }
             }
             else
             {
