@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{1B0D3922-C6FB-47C0-A688-2773C002955A}</ProjectGuid>
+    <ProjectGuid>{F175B7F8-3C75-4BE6-B122-A0D4D2B36719}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
@@ -24,21 +24,6 @@
     </StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -81,10 +66,6 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="IKVM.OpenJDK.Core, Version=7.1.4532.2, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.JScript" />
-    <Reference Include="Microsoft.Vsa" />
-    <Reference Include="OpenCyc, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="System">
       <Name>System</Name>
     </Reference>
@@ -122,44 +103,61 @@
       <Name>LAIR.Collections</Name>
       <HintPath>..\..\..\..\..\bin\LAIR.Collections.dll</HintPath>
     </Reference>
+    <Reference Include="OpenCyc.dll">
+      <Name>OpenCyc.dll</Name>
+      <HintPath>..\..\..\..\..\bin\OpenCyc.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Core.dll">
+      <Name>IKVM.OpenJDK.Core.dll</Name>
+      <HintPath>..\..\..\..\..\bin\IKVM.OpenJDK.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.Runtime.dll">
+      <Name>IKVM.Runtime.dll</Name>
+      <HintPath>..\..\..\..\..\bin\IKVM.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.JScript">
+      <Name>Microsoft.JScript</Name>
+    </Reference>
+    <Reference Include="Microsoft.VisualBasic">
+      <Name>Microsoft.VisualBasic</Name>
+    </Reference>
+    <Reference Include="Microsoft.Vsa">
+      <Name>Microsoft.Vsa</Name>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Aima.NET\Aima.NET.csproj">
       <Name>Aima.NET</Name>
-      <Project>{6680621A-896E-47C6-BA83-1EF07EF188B3}</Project>
+      <Project>{93C4E25A-DA6B-4011-80F3-7E1A086A95F6}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\main\MushDLR223\MushDLR223.csproj">
       <Name>MushDLR223</Name>
-      <Project>{19A1AA71-F91B-4846-9D93-882FB2992048}</Project>
+      <Project>{E64505B9-62DE-4AF1-93C6-DDDB42B7D4E7}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\GenericSets\src\Iesi.Collections.Generic\Iesi.Collections.Generic.csproj">
       <Name>Iesi.Collections.Generic</Name>
-      <Project>{5B23BE6C-6BB3-4CFC-BC62-E292D85CA2DB}</Project>
+      <Project>{4B2E2493-97E6-4906-A585-A48B3A1FDAA5}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Lucene\src\Lucene.Net\Lucene.Net.csproj">
       <Name>Lucene.Net</Name>
-      <Project>{3FF4F31C-6305-4E60-9D9A-BD9FA51D8B5C}</Project>
+      <Project>{A78BA968-49D5-4981-A21F-4408577A3A5A}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\WordNet\WordNet\LAIR.ResourceAPIs.WordNet.csproj">
       <Name>LAIR.ResourceAPIs.WordNet</Name>
-      <Project>{84F11AF8-D72B-47D3-A087-9B428E593332}</Project>
+      <Project>{C3E5E5FD-77E2-4F2C-8BAF-C6C2542BB82D}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\..\RaptorDB\RaptorDB.csproj">
       <Name>RaptorDB</Name>
-      <Project>{10A8E1BB-F7E9-4EE5-8A56-3832A451C1EB}</Project>
+      <Project>{AD0C80FE-3FB1-4858-9E90-8AE685F2C21A}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AIMLTagHandlers\lazyClosure.cs" />
-    <Compile Include="AIMLTagHandlers\recursiveVerbatum.cs" />
-    <Compile Include="AIMLTagHandlers\verbatum.cs" />
-    <Compile Include="AIMLTagHandlers\format.cs" />
     <Compile Include="BayesClassifier.cs">
     </Compile>
     <Compile Include="BehaviorTree.cs">
@@ -172,241 +170,49 @@
     </Compile>
     <Compile Include="PorterStemmer.cs">
     </Compile>
-    <Compile Include="RTParser\AIMLbot.cs" />
-    <Compile Include="AIMLProcessing\CustomTagLoading.cs" />
-    <Compile Include="AIMLProcessing\TagHandlerProcessor.cs" />
-    <Compile Include="AIMLTagHandlersU\aiml.cs" />
-    <Compile Include="AIMLTagHandlersU\aimlexec.cs" />
-    <Compile Include="AIMLTagHandlersU\and.cs" />
-    <Compile Include="AIMLTagHandlersU\bind.cs" />
-    <Compile Include="AIMLTagHandlersU\bot.cs" />
-    <Compile Include="AIMLTagHandlersU\category.cs" />
-    <Compile Include="AIMLTagHandlersU\condition.cs" />
-    <Compile Include="AIMLTagHandlersU\cycassert.cs" />
-    <Compile Include="AIMLTagHandlersU\cyccondition.cs" />
-    <Compile Include="AIMLTagHandlersU\cycphrase.cs" />
-    <Compile Include="AIMLTagHandlersU\cycquery.cs" />
-    <Compile Include="AIMLTagHandlersU\cycrandom.cs" />
-    <Compile Include="AIMLTagHandlersU\cycretract.cs" />
-    <Compile Include="AIMLTagHandlersU\cycsystem.cs" />
-    <Compile Include="AIMLTagHandlersU\cycterm.cs" />
-    <Compile Include="AIMLTagHandlersU\date.cs" />
-    <Compile Include="AIMLTagHandlersU\dbdelete.cs" />
-    <Compile Include="AIMLTagHandlersU\dbload.cs" />
-    <Compile Include="AIMLTagHandlersU\dbpush.cs" />
-    <Compile Include="AIMLTagHandlersU\dbquery.cs" />
-    <Compile Include="AIMLTagHandlersU\dbupdate.cs" />
-    <Compile Include="AIMLTagHandlersU\dependentmachine.cs" />
-    <Compile Include="AIMLTagHandlersU\evidencestate.cs" />
-    <Compile Include="AIMLTagHandlersU\evidence_assoc.cs" />
-    <Compile Include="AIMLTagHandlersU\evidence_pattern.cs" />
-    <Compile Include="AIMLTagHandlersU\formal.cs" />
-    <Compile Include="AIMLTagHandlersU\format.cs" />
-    <Compile Include="AIMLTagHandlersU\gender.cs" />
-    <Compile Include="AIMLTagHandlersU\get.cs" />
-    <Compile Include="AIMLTagHandlersU\gossip.cs" />
-    <Compile Include="AIMLTagHandlersU\guard.cs" />
-    <Compile Include="AIMLTagHandlersU\guardstar.cs" />
-    <Compile Include="AIMLTagHandlersU\id.cs" />
-    <Compile Include="AIMLTagHandlersU\input.cs" />
-    <Compile Include="AIMLTagHandlersU\inputreq.cs" />
-    <Compile Include="AIMLTagHandlersU\isa.cs" />
-    <Compile Include="AIMLTagHandlersU\javascript.cs" />
-    <Compile Include="AIMLTagHandlersU\lazyClosure.cs" />
-    <Compile Include="AIMLTagHandlersU\learn.cs" />
-    <Compile Include="AIMLTagHandlersU\lex.cs" />
-    <Compile Include="AIMLTagHandlersU\lexis.cs" />
-    <Compile Include="AIMLTagHandlersU\lexset.cs" />
-    <Compile Include="AIMLTagHandlersU\liif.cs" />
-    <Compile Include="AIMLTagHandlersU\lowercase.cs" />
-    <Compile Include="AIMLTagHandlersU\markov.cs" />
-    <Compile Include="AIMLTagHandlersU\msm.cs" />
-    <Compile Include="AIMLTagHandlersU\optional.cs" />
-    <Compile Include="AIMLTagHandlersU\or.cs" />
-    <Compile Include="AIMLTagHandlersU\peekstack.cs" />
-    <Compile Include="AIMLTagHandlersU\person.cs" />
-    <Compile Include="AIMLTagHandlersU\person2.cs" />
-    <Compile Include="AIMLTagHandlersU\pop.cs" />
-    <Compile Include="AIMLTagHandlersU\process_msm.cs" />
-    <Compile Include="AIMLTagHandlersU\push.cs" />
-    <Compile Include="AIMLTagHandlersU\random.cs" />
-    <Compile Include="AIMLTagHandlersU\recursiveVerbatum.cs" />
-    <Compile Include="AIMLTagHandlersU\regex.cs" />
-    <Compile Include="AIMLTagHandlersU\response_topic.cs" />
-    <Compile Include="AIMLTagHandlersU\root.cs" />
-    <Compile Include="AIMLTagHandlersU\sentence.cs" />
-    <Compile Include="AIMLTagHandlersU\set.cs" />
-    <Compile Include="AIMLTagHandlersU\setevidence.cs" />
-    <Compile Include="AIMLTagHandlersU\setstate.cs" />
-    <Compile Include="AIMLTagHandlersU\size.cs" />
-    <Compile Include="AIMLTagHandlersU\soundcode.cs" />
-    <Compile Include="AIMLTagHandlersU\space.cs" />
-    <Compile Include="AIMLTagHandlersU\sr.cs" />
-    <Compile Include="AIMLTagHandlersU\srai.cs" />
-    <Compile Include="AIMLTagHandlersU\srai_legacy.cs" />
-    <Compile Include="AIMLTagHandlersU\star.cs" />
-    <Compile Include="AIMLTagHandlersU\state.cs" />
-    <Compile Include="AIMLTagHandlersU\substitute.cs" />
-    <Compile Include="AIMLTagHandlersU\system.cs" />
-    <Compile Include="AIMLTagHandlersU\template.cs" />
-    <Compile Include="AIMLTagHandlersU\that.cs" />
-    <Compile Include="AIMLTagHandlersU\thatstar.cs" />
-    <Compile Include="AIMLTagHandlersU\think.cs" />
-    <Compile Include="AIMLTagHandlersU\topic.cs" />
-    <Compile Include="AIMLTagHandlersU\topicstar.cs" />
-    <Compile Include="AIMLTagHandlersU\transition.cs" />
-    <Compile Include="AIMLTagHandlersU\tscore.cs" />
-    <Compile Include="AIMLTagHandlersU\uppercase.cs" />
-    <Compile Include="AIMLTagHandlersU\verbatum.cs" />
-    <Compile Include="AIMLTagHandlersU\version.cs" />
-    <Compile Include="AIMLTagHandlersU\when.cs" />
-    <Compile Include="AIMLTagHandlersU\xml.cs" />
-    <Compile Include="AIMLTagHandlersU\xmlattribute.cs" />
-    <Compile Include="RTParser\Bot.cs" />
-    <Compile Include="RTParser\BotConsole.cs" />
-    <Compile Include="RTParser\BotInterpreters.cs" />
-    <Compile Include="RTParser\ChatDialog.cs" />
-    <Compile Include="RTParser\ConversationCondition.cs" />
-    <Compile Include="Conversation\ConversationLog.cs" />
-    <Compile Include="Conversation\InteractionResult.cs" />
-    <Compile Include="Conversation\SituationInConversation.cs" />
-    <Compile Include="Conversation\UserConversationScope.cs" />
-    <Compile Include="Conversation\Utterance.cs" />
-    <Compile Include="RTParser\CycNLTagHandlers\NumberTemplate.cs" />
-    <Compile Include="RTParser\CycNLTagHandlers\OptionalOne.cs" />
-    <Compile Include="Database\AskDotComFactiodEngine.cs" />
-    <Compile Include="Database\BrillTagger.cs" />
-    <Compile Include="Database\CycDatabase.cs" />
-    <Compile Include="Database\GoogleTranslator.cs" />
-    <Compile Include="Database\IDocSearch.cs" />
-    <Compile Include="Database\IEnglishFactiodEngine.cs" />
-    <Compile Include="Database\IEntityFilter.cs" />
-    <Compile Include="Database\ITripleStore.cs" />
-    <Compile Include="Database\MyLuceneIndexer.cs" />
-    <Compile Include="Database\NamedValuesFromSettings.cs" />
-    <Compile Include="Database\NatLangDb.cs" />
-    <Compile Include="Database\TripleStoreFromEnglish.cs" />
-    <Compile Include="Database\TrueKnowledgeFactiodEngine.cs" />
-    <Compile Include="Database\WebGetFactiodEngine.cs" />
-    <Compile Include="Database\WikiAnswersFactoidEngine.cs" />
-    <Compile Include="GUI\RealTimeBotConsole.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="GUI\RealTimeBotConsole.Designer.cs">
-      <DependentUpon>RealTimeBotConsole.cs</DependentUpon>
-    </Compile>
-    <Compile Include="RTParser\JoinedTextBuffer.cs" />
-    <Compile Include="RTParser\LegacyBot.cs" />
-    <Compile Include="Normalize\ApplySubstitutions.cs" />
-    <Compile Include="Normalize\MakeCaseInsensitive.cs" />
-    <Compile Include="Normalize\SplitIntoSentences.cs" />
-    <Compile Include="Normalize\StripIllegalCharacters.cs" />
-    <Compile Include="RTParser\Prolog\Builtins.cs" />
-    <Compile Include="RTParser\Prolog\CSProlog.cs" />
-    <Compile Include="RTParser\Prolog\Engine.cs" />
-    <Compile Include="RTParser\Prolog\Ext.cs" />
-    <Compile Include="RTParser\Prolog\IO.cs" />
-    <Compile Include="RTParser\Prolog\Main.cs" />
-    <Compile Include="RTParser\Prolog\Operator.cs" />
-    <Compile Include="RTParser\Prolog\Persistent.cs" />
-    <Compile Include="RTParser\Prolog\PL.cs" />
-    <Compile Include="RTParser\Prolog\PredDescr.cs" />
-    <Compile Include="RTParser\Prolog\PredStorage.cs" />
-    <Compile Include="RTParser\Prolog\PrologConsole.cs" />
-    <Compile Include="RTParser\Prolog\SimpleDOMParser.cs" />
-    <Compile Include="RTParser\Prolog\Term.cs" />
-    <Compile Include="RTParser\Prolog\TermNodeList.cs" />
-    <Compile Include="RTParser\Prolog\TermSet.cs" />
-    <Compile Include="RTParser\Prolog\Utils.cs" />
-    <Compile Include="RTParser\Proof.cs" />
-    <Compile Include="Request.cs" />
-    <Compile Include="RTParser\RequestSettings.cs" />
-    <Compile Include="Result.cs" />
-    <Compile Include="RTParser\SelfLearning.cs" />
-    <Compile Include="RTParser\SideEffectStage.cs" />
-    <Compile Include="RTParser\TemplateResult.cs" />
-    <Compile Include="Unify\BestUnifiable.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Unify\EmptyUnifiable.cs" />
-    <Compile Include="Unify\StringAppendableUnifiableImpl.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Unify\StringUnifiable.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Unify\Unifiable.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="RTParser\Utils\TextPatternUtils.cs" />
-    <Compile Include="Unused\MatchInfo.cs" />
-    <Compile Include="User.cs" />
-    <Compile Include="RTParser\UserDuringProcessing.cs" />
-    <Compile Include="RTParser\UserManager.cs" />
-    <Compile Include="AIMLProcessing\AIMLFormatingTagHandler.cs" />
-    <Compile Include="AIMLProcessing\AIMLLoaderU.cs" />
-    <Compile Include="AIMLProcessing\AIMLTagHandlerU.cs" />
-    <Compile Include="AIMLProcessing\AIMLTagHandlerUtils.cs" />
-    <Compile Include="Unused\AIMLTagHandlerUtils_legacy.cs" />
-    <Compile Include="Unused\AIMLTagHandler_legacy.cs" />
-    <Compile Include="GraphInfo\CategoryInfo.cs" />
-    <Compile Include="RTParser\Utils\CustomTag.cs" />
-    <Compile Include="RTParser\Utils\Gender.cs" />
-    <Compile Include="RTParser\Utils\GraphLinkInfo.cs" />
-    <Compile Include="XmlGraph\GraphMaster.cs" />
-    <Compile Include="RTParser\Utils\GraphQuery.cs" />
-    <Compile Include="RTParser\Utils\GuardInfo.cs" />
-    <Compile Include="RTParser\Utils\LoaderOptions.cs" />
-    <Compile Include="AIMLProcessing\LoadingTagHandler.cs" />
-    <Compile Include="Unused\MatchState.cs" />
-    <Compile Include="RTParser\Utils\Node.cs" />
-    <Compile Include="Unused\Node_legacy.cs" />
-    <Compile Include="Unused\OutputInfo.cs" />
-    <Compile Include="Unused\PatternInfo.cs" />
-    <Compile Include="RTParser\Utils\QueryList.cs" />
-    <Compile Include="Unused\ResponseInfo.cs" />
-    <Compile Include="RTParser\Utils\ResultCache.cs" />
-    <Compile Include="AIMLProcessing\StaticAIMLUtils.cs" />
-    <Compile Include="Utils\SubQuery.cs" />
-    <Compile Include="RTParser\Utils\TagHandler.cs" />
-    <Compile Include="GraphInfo\TemplateInfo.cs" />
-    <Compile Include="RTParser\Utils\TestCaseRunner.cs" />
-    <Compile Include="Unused\ThatInfo.cs" />
-    <Compile Include="Unused\TopicInfo.cs" />
-    <Compile Include="RTParser\Utils\UndoStack.cs" />
-    <Compile Include="RTParser\Utils\UnifibleTagHandler.cs" />
-    <Compile Include="Variables\CollectionProperty.cs" />
-    <Compile Include="Variables\GetSetDictionary.cs" />
-    <Compile Include="Variables\GetSetProperty.cs" />
-    <Compile Include="Variables\ObjectPropertyDictionary.cs" />
-    <Compile Include="Variables\PrefixProvider.cs" />
-    <Compile Include="Variables\ProvidedSettingsDictionary.cs" />
-    <Compile Include="Variables\SettingsDictionary.cs" />
-    <Compile Include="RTParser\WebScriptExecutor.cs" />
-    <Compile Include="XmlGraph\PrintOptions.cs" />
-    <Compile Include="XmlGraph\XmlNodeEval.cs" />
-    <Compile Include="XmlGraph\XmlNodeEvaluator.cs" />
-    <Compile Include="ServitorProgram.cs" />
     <Compile Include="Qchem.cs">
     </Compile>
     <Compile Include="Qfsm.cs">
     </Compile>
+    <Compile Include="Request.cs">
+    </Compile>
+    <Compile Include="Result.cs">
+    </Compile>
     <Compile Include="Servitor.cs">
+    </Compile>
+    <Compile Include="ServitorProgram.cs">
     </Compile>
     <Compile Include="TextRanker.cs">
     </Compile>
-    <Compile Include="Utils\GraphMaster.cs" />
-    <Compile Include="Utils\StaticAIMLUtils.cs" />
-    <Compile Include="Utils\TextPatternUtils.cs" />
+    <Compile Include="User.cs">
+    </Compile>
     <Compile Include="WebScriptExecutor.cs">
     </Compile>
     <Compile Include="WebServitor.cs">
     </Compile>
     <Compile Include="YBtrees.cs">
     </Compile>
+    <Compile Include="AIMLProcessing\AIMLFormatingTagHandler.cs">
+    </Compile>
+    <Compile Include="AIMLProcessing\AIMLLoaderU.cs">
+    </Compile>
+    <Compile Include="AIMLProcessing\AIMLTagHandlerU.cs">
+    </Compile>
+    <Compile Include="AIMLProcessing\AIMLTagHandlerUtils.cs">
+    </Compile>
+    <Compile Include="AIMLProcessing\CustomTagLoading.cs">
+    </Compile>
+    <Compile Include="AIMLProcessing\LoadingTagHandler.cs">
+    </Compile>
+    <Compile Include="AIMLProcessing\StaticAIMLUtils.cs">
+    </Compile>
+    <Compile Include="AIMLProcessing\TagHandlerProcessor.cs">
+    </Compile>
     <Compile Include="AIMLTagHandlers\behavior.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\bot.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlers\botsetting.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\btxml.cs">
     </Compile>
@@ -422,6 +228,8 @@
     </Compile>
     <Compile Include="AIMLTagHandlers\formal.cs">
     </Compile>
+    <Compile Include="AIMLTagHandlers\format.cs">
+    </Compile>
     <Compile Include="AIMLTagHandlers\gender.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\get.cs">
@@ -435,6 +243,8 @@
     <Compile Include="AIMLTagHandlers\input.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\javascript.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlers\lazyClosure.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\learn.cs">
     </Compile>
@@ -457,6 +267,8 @@
     <Compile Include="AIMLTagHandlers\random.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\rbehavior.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlers\recursiveVerbatum.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\refserver.cs">
     </Compile>
@@ -502,11 +314,371 @@
     </Compile>
     <Compile Include="AIMLTagHandlers\uppercase.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\botsetting.cs">
+    <Compile Include="AIMLTagHandlers\verbatum.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\wolframserver.cs">
     </Compile>
+    <Compile Include="AIMLTagHandlersU\aiml.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\aimlexec.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\and.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\bind.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\bot.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\category.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\condition.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\cycassert.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\cyccondition.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\cycphrase.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\cycquery.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\cycrandom.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\cycretract.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\cycsystem.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\cycterm.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\date.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\dbdelete.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\dbload.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\dbpush.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\dbquery.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\dbupdate.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\dependentmachine.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\evidencestate.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\evidence_assoc.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\evidence_pattern.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\formal.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\format.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\gender.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\get.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\gossip.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\guard.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\guardstar.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\id.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\input.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\inputreq.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\isa.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\javascript.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\lazyClosure.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\learn.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\lex.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\lexis.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\lexset.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\liif.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\lowercase.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\markov.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\msm.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\optional.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\or.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\peekstack.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\person.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\person2.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\pop.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\process_msm.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\push.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\random.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\recursiveVerbatum.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\regex.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\response_topic.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\root.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\sentence.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\set.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\setevidence.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\setstate.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\size.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\soundcode.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\space.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\sr.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\srai.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\srai_legacy.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\star.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\state.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\substitute.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\system.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\template.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\that.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\thatstar.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\think.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\topic.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\topicstar.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\transition.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\tscore.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\uppercase.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\verbatum.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\version.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\when.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\xml.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlersU\xmlattribute.cs">
+    </Compile>
+    <Compile Include="Conversation\ConversationLog.cs">
+    </Compile>
+    <Compile Include="Conversation\InteractionResult.cs">
+    </Compile>
+    <Compile Include="Conversation\SituationInConversation.cs">
+    </Compile>
+    <Compile Include="Conversation\UserConversationScope.cs">
+    </Compile>
+    <Compile Include="Conversation\Utterance.cs">
+    </Compile>
+    <Compile Include="Database\AskDotComFactiodEngine.cs">
+    </Compile>
+    <Compile Include="Database\BrillTagger.cs">
+    </Compile>
+    <Compile Include="Database\CycDatabase.cs">
+    </Compile>
+    <Compile Include="Database\GoogleTranslator.cs">
+    </Compile>
+    <Compile Include="Database\IDocSearch.cs">
+    </Compile>
+    <Compile Include="Database\IEnglishFactiodEngine.cs">
+    </Compile>
+    <Compile Include="Database\IEntityFilter.cs">
+    </Compile>
+    <Compile Include="Database\ITripleStore.cs">
+    </Compile>
+    <Compile Include="Database\MyLuceneIndexer.cs">
+    </Compile>
+    <Compile Include="Database\NamedValuesFromSettings.cs">
+    </Compile>
+    <Compile Include="Database\NatLangDb.cs">
+    </Compile>
+    <Compile Include="Database\TripleStoreFromEnglish.cs">
+    </Compile>
+    <Compile Include="Database\TrueKnowledgeFactiodEngine.cs">
+    </Compile>
+    <Compile Include="Database\WebGetFactiodEngine.cs">
+    </Compile>
+    <Compile Include="Database\WikiAnswersFactoidEngine.cs">
+    </Compile>
+    <Compile Include="GraphInfo\CategoryInfo.cs">
+    </Compile>
+    <Compile Include="GraphInfo\TemplateInfo.cs">
+    </Compile>
+    <Compile Include="GUI\RealTimeBotConsole.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI\RealTimeBotConsole.Designer.cs">
+      <DependentUpon>RealTimeBotConsole.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Normalize\ApplySubstitutions.cs">
+    </Compile>
+    <Compile Include="Normalize\MakeCaseInsensitive.cs">
+    </Compile>
+    <Compile Include="Normalize\SplitIntoSentences.cs">
+    </Compile>
+    <Compile Include="Normalize\StripIllegalCharacters.cs">
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
+    </Compile>
+    <Compile Include="RTParser\AIMLbot.cs">
+    </Compile>
+    <Compile Include="RTParser\Bot.cs">
+    </Compile>
+    <Compile Include="RTParser\BotConsole.cs">
+    </Compile>
+    <Compile Include="RTParser\BotInterpreters.cs">
+    </Compile>
+    <Compile Include="RTParser\ChatDialog.cs">
+    </Compile>
+    <Compile Include="RTParser\ConversationCondition.cs">
+    </Compile>
+    <Compile Include="RTParser\JoinedTextBuffer.cs">
+    </Compile>
+    <Compile Include="RTParser\LegacyBot.cs">
+    </Compile>
+    <Compile Include="RTParser\Proof.cs">
+    </Compile>
+    <Compile Include="RTParser\RequestSettings.cs">
+    </Compile>
+    <Compile Include="RTParser\SelfLearning.cs">
+    </Compile>
+    <Compile Include="RTParser\SideEffectStage.cs">
+    </Compile>
+    <Compile Include="RTParser\TemplateResult.cs">
+    </Compile>
+    <Compile Include="RTParser\UserDuringProcessing.cs">
+    </Compile>
+    <Compile Include="RTParser\UserManager.cs">
+    </Compile>
+    <Compile Include="RTParser\WebScriptExecutor.cs">
+    </Compile>
+    <Compile Include="RTParser\CycNLTagHandlers\NumberTemplate.cs">
+    </Compile>
+    <Compile Include="RTParser\CycNLTagHandlers\OptionalOne.cs">
+    </Compile>
+    <Compile Include="RTParser\Prolog\Builtins.cs">
+    </Compile>
+    <Compile Include="RTParser\Prolog\CSProlog.cs">
+    </Compile>
+    <Compile Include="RTParser\Prolog\Engine.cs">
+    </Compile>
+    <Compile Include="RTParser\Prolog\Ext.cs">
+    </Compile>
+    <Compile Include="RTParser\Prolog\IO.cs">
+    </Compile>
+    <Compile Include="RTParser\Prolog\Main.cs">
+    </Compile>
+    <Compile Include="RTParser\Prolog\Operator.cs">
+    </Compile>
+    <Compile Include="RTParser\Prolog\Persistent.cs">
+    </Compile>
+    <Compile Include="RTParser\Prolog\PL.cs">
+    </Compile>
+    <Compile Include="RTParser\Prolog\PredDescr.cs">
+    </Compile>
+    <Compile Include="RTParser\Prolog\PredStorage.cs">
+    </Compile>
+    <Compile Include="RTParser\Prolog\PrologConsole.cs">
+    </Compile>
+    <Compile Include="RTParser\Prolog\SimpleDOMParser.cs">
+    </Compile>
+    <Compile Include="RTParser\Prolog\Term.cs">
+    </Compile>
+    <Compile Include="RTParser\Prolog\TermNodeList.cs">
+    </Compile>
+    <Compile Include="RTParser\Prolog\TermSet.cs">
+    </Compile>
+    <Compile Include="RTParser\Prolog\Utils.cs">
+    </Compile>
+    <Compile Include="RTParser\Utils\CustomTag.cs">
+    </Compile>
+    <Compile Include="RTParser\Utils\Gender.cs">
+    </Compile>
+    <Compile Include="RTParser\Utils\GraphLinkInfo.cs">
+    </Compile>
+    <Compile Include="RTParser\Utils\GraphQuery.cs">
+    </Compile>
+    <Compile Include="RTParser\Utils\GuardInfo.cs">
+    </Compile>
+    <Compile Include="RTParser\Utils\LoaderOptions.cs">
+    </Compile>
+    <Compile Include="RTParser\Utils\Node.cs">
+    </Compile>
+    <Compile Include="RTParser\Utils\QueryList.cs">
+    </Compile>
+    <Compile Include="RTParser\Utils\ResultCache.cs">
+    </Compile>
+    <Compile Include="RTParser\Utils\TagHandler.cs">
+    </Compile>
+    <Compile Include="RTParser\Utils\TestCaseRunner.cs">
+    </Compile>
+    <Compile Include="RTParser\Utils\TextPatternUtils.cs">
+    </Compile>
+    <Compile Include="RTParser\Utils\UndoStack.cs">
+    </Compile>
+    <Compile Include="RTParser\Utils\UnifibleTagHandler.cs">
+    </Compile>
+    <Compile Include="Unify\BestUnifiable.cs">
+    </Compile>
+    <Compile Include="Unify\EmptyUnifiable.cs">
+    </Compile>
+    <Compile Include="Unify\StringAppendableUnifiableImpl.cs">
+    </Compile>
+    <Compile Include="Unify\StringUnifiable.cs">
+    </Compile>
+    <Compile Include="Unify\Unifiable.cs">
+    </Compile>
+    <Compile Include="Unused\AIMLTagHandlerUtils_legacy.cs">
+    </Compile>
+    <Compile Include="Unused\AIMLTagHandler_legacy.cs">
+    </Compile>
+    <Compile Include="Unused\MatchInfo.cs">
+    </Compile>
+    <Compile Include="Unused\MatchState.cs">
+    </Compile>
+    <Compile Include="Unused\Node_legacy.cs">
+    </Compile>
+    <Compile Include="Unused\OutputInfo.cs">
+    </Compile>
+    <Compile Include="Unused\PatternInfo.cs">
+    </Compile>
+    <Compile Include="Unused\ResponseInfo.cs">
+    </Compile>
+    <Compile Include="Unused\ThatInfo.cs">
+    </Compile>
+    <Compile Include="Unused\TopicInfo.cs">
     </Compile>
     <Compile Include="Utils\AIMLLoader.cs">
     </Compile>
@@ -516,6 +688,8 @@
     </Compile>
     <Compile Include="Utils\Gender.cs">
     </Compile>
+    <Compile Include="Utils\GraphMaster.cs">
+    </Compile>
     <Compile Include="Utils\JSON.cs">
     </Compile>
     <Compile Include="Utils\MatchState.cs">
@@ -524,75 +698,40 @@
     </Compile>
     <Compile Include="Utils\RandomMemory.cs">
     </Compile>
-    <Compile Include="Utils\SettingsDictionary.cs" />
-    <None Include="Utils\SubQuery.cs.alt" />
+    <Compile Include="Utils\SettingsDictionary.cs">
+    </Compile>
+    <Compile Include="Utils\StaticAIMLUtils.cs">
+    </Compile>
+    <Compile Include="Utils\SubQuery.cs">
+    </Compile>
     <Compile Include="Utils\TagHandler.cs">
+    </Compile>
+    <Compile Include="Utils\TextPatternUtils.cs">
     </Compile>
     <Compile Include="Utils\TextTransformer.cs">
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="RTParser\AIMLbot.csproj" />
-    <Content Include="RTParser\AIMLbot.csproj.user" />
-    <Content Include="RTParser\AIMLBot.XML" />
-    <Content Include="RTParser\obj\Debug\AIMLbot.csproj.FileListAbsolute.txt" />
-    <Content Include="RTParser\obj\Debug\AIMLbot.dll" />
-    <Content Include="RTParser\obj\Debug\AIMLbot.pdb" />
-    <Content Include="RTParser\obj\Debug\Refactor\AIMLbot.dll" />
-    <Content Include="RTParser\Prolog\csc_options.inc" />
-    <Content Include="RTParser\Prolog\CSProlog.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="RTParser\AIMLbot.vpj" />
-    <None Include="RTParser\ChatDialog.cs.bak" />
-    <None Include="RTParser\obj\Debug\DesignTimeResolveAssemblyReferencesInput.cache" />
-    <None Include="RTParser\obj\Debug\ResolveAssemblyReference.cache" />
-    <None Include="RTParser\Prolog\PL.grm" />
-    <None Include="RTParser\Prolog\SetName.bat" />
-    <None Include="RTParser\User.cs.bak" />
-    <None Include="RTParser\Utils\UndoStack.cs.bak" />
-    <None Include="Variables\SettingsDictionary.cs.bak" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="GUI\RealTimeBotConsole.resx">
-      <DependentUpon>RealTimeBotConsole.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.0">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.0 %28x86%29</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
-      <Visible>False</Visible>
-      <ProductName>Windows Installer 3.1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="RTParser\obj\Debug\TempPE\" />
-    <Folder Include="RTParser\obj\Release\TempPE\" />
+    <Compile Include="Variables\CollectionProperty.cs">
+    </Compile>
+    <Compile Include="Variables\GetSetDictionary.cs">
+    </Compile>
+    <Compile Include="Variables\GetSetProperty.cs">
+    </Compile>
+    <Compile Include="Variables\ObjectPropertyDictionary.cs">
+    </Compile>
+    <Compile Include="Variables\PrefixProvider.cs">
+    </Compile>
+    <Compile Include="Variables\ProvidedSettingsDictionary.cs">
+    </Compile>
+    <Compile Include="Variables\SettingsDictionary.cs">
+    </Compile>
+    <Compile Include="XmlGraph\GraphMaster.cs">
+    </Compile>
+    <Compile Include="XmlGraph\PrintOptions.cs">
+    </Compile>
+    <Compile Include="XmlGraph\XmlNodeEval.cs">
+    </Compile>
+    <Compile Include="XmlGraph\XmlNodeEvaluator.cs">
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

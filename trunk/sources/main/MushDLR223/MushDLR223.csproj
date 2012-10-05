@@ -1,13 +1,12 @@
-﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{19A1AA71-F91B-4846-9D93-882FB2992048}</ProjectGuid>
+    <ProjectGuid>{E64505B9-62DE-4AF1-93C6-DDDB42B7D4E7}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ApplicationIcon>
-    </ApplicationIcon>
+    <ApplicationIcon></ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
     <AssemblyName>MushDLR223</AssemblyName>
@@ -17,11 +16,9 @@
     <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>
-    </AppDesignerFolder>
+    <AppDesignerFolder></AppDesignerFolder>
     <RootNamespace>MushDLR223</RootNamespace>
-    <StartupObject>
-    </StartupObject>
+    <StartupObject></StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
   </PropertyGroup>
@@ -67,51 +64,51 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System">
-      <Name>System</Name>
+        <Name>System</Name>
     </Reference>
     <Reference Include="System.Core">
-      <Name>System.Core</Name>
+        <Name>System.Core</Name>
     </Reference>
     <Reference Include="System.Data">
-      <Name>System.Data</Name>
+        <Name>System.Data</Name>
     </Reference>
     <Reference Include="System.Xml">
-      <Name>System.Xml</Name>
+        <Name>System.Xml</Name>
     </Reference>
     <Reference Include="System.Web">
-      <Name>System.Web</Name>
+        <Name>System.Web</Name>
     </Reference>
     <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
+        <Name>System.Drawing</Name>
     </Reference>
     <Reference Include="System.Windows.Forms">
-      <Name>System.Windows.Forms</Name>
+        <Name>System.Windows.Forms</Name>
     </Reference>
     <Reference Include="System.Data">
-      <Name>System.Data</Name>
+        <Name>System.Data</Name>
     </Reference>
     <Reference Include="log4net.dll">
-      <Name>log4net.dll</Name>
+        <Name>log4net.dll</Name>
       <HintPath>..\..\..\bin\log4net.dll</HintPath>
     </Reference>
     <Reference Include="HttpServer.dll">
-      <Name>HttpServer.dll</Name>
+        <Name>HttpServer.dll</Name>
       <HintPath>..\..\..\bin\HttpServer.dll</HintPath>
     </Reference>
     <Reference Include="System">
-      <Name>System</Name>
+        <Name>System</Name>
     </Reference>
     <Reference Include="Microsoft.JScript">
-      <Name>Microsoft.JScript</Name>
+        <Name>Microsoft.JScript</Name>
     </Reference>
     <Reference Include="Microsoft.Vsa">
-      <Name>Microsoft.Vsa</Name>
+        <Name>Microsoft.Vsa</Name>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\external\DotLisp\DotLisp.csproj">
       <Name>DotLisp</Name>
-      <Project>{F1CF395A-6C0C-41EB-BD60-B7AF224822CA}</Project>
+      <Project>{D56BDE24-D6C4-47FF-850F-599534379014}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
@@ -120,11 +117,14 @@
     </Compile>
     <Compile Include="ScriptEngines\CmdResult.cs">
     </Compile>
+    <Compile Include="ScriptEngines\CogbotEvent.cs">
+    </Compile>
     <Compile Include="ScriptEngines\CommonScriptInterpreter.cs">
     </Compile>
     <Compile Include="ScriptEngines\DotLispInterpreter.cs">
     </Compile>
-    <Compile Include="ScriptEngines\EventPipelines.cs" />
+    <Compile Include="ScriptEngines\EventPipelines.cs">
+    </Compile>
     <Compile Include="ScriptEngines\GlobalScriptVars.cs">
     </Compile>
     <Compile Include="ScriptEngines\ICollectionProvider.cs">
@@ -137,7 +137,6 @@
     </Compile>
     <Compile Include="ScriptEngines\NamedParam.cs">
     </Compile>
-    <Compile Include="ScriptEngines\CogbotEvent.cs" />
     <Compile Include="ScriptEngines\ScriptInterpreter.cs">
     </Compile>
     <Compile Include="ScriptEngines\ScriptManager.cs">

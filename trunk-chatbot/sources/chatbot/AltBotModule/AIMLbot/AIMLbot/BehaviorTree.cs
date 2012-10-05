@@ -264,7 +264,7 @@ namespace AltAIMLbot
         {
             items.Insert(0, item);
         }
-        public string ToString()
+        override public string ToString()
         {
             string result = "[";
             foreach (string x in items)

@@ -166,7 +166,6 @@ namespace RoboKindAvroQPID
         /// </summary>
         /// 
         /// <param name="connectionUri">The broker URL.</param>
-        /// <param name="botcontrol">The channel name to publish on.</param>
         public RoboKindConnectorQPID(string connectionUri)
         {
             log.Debug("TopicPublisher(string connectionUri = " + connectionUri + "): called");
@@ -347,7 +346,7 @@ namespace RoboKindAvroQPID
     
 
         /// <summary> Holds the producer to send report messages on. </summary>
-        private IMessagePublisher publisher;
+        //private IMessagePublisher publisher;
 
         /// <summary> A monitor used to wait for shutdown. </summary>
         private AutoResetEvent shutdownReceivedEvt = new AutoResetEvent(false);
@@ -504,9 +503,9 @@ namespace RoboKindAvroQPID
 
         /// <summary> Checks whether or not a text field on a message has the specified value. </summary>
         /// 
-        /// <param name="e">The message to check.</param>
-        /// <param name="e">The name of the field to check.</param>
-        /// <param name="e">The expected value of the field to compare with.</param>
+        /// <param name="m">The message to check.</param>
+        /// <param name="fieldName">The name of the field to check.</param>
+        /// <param name="value">The expected value of the field to compare with.</param>
         /// 
         /// <returns> <tt>true</tt>If the specified field has the specified value, <tt>fals</tt> otherwise. </returns>
         private static bool CheckTextField(IMessage m, string fieldName, string value)
@@ -536,7 +535,7 @@ namespace RoboKindAvroQPID
             reportMessage.Headers.SetShort("SHORT", 2);
 
             throw new NotImplementedException();
-            publisher.Send(reportMessage);
+            //publisher.Send(reportMessage);
 
             Console.WriteLine("Sent report: " + report);
         }

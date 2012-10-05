@@ -105,7 +105,7 @@ namespace ABCLScriptEngine
     public class ABCLInterpreter : LispInterpreter, ScriptInterpreter, ScriptInterpreterFactory
     {
 
-        public object Impl
+        override public object Impl
         {
             get { return this; }
         }

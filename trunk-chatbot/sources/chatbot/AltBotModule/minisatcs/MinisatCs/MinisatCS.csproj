@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{4589A275-409A-49E0-BB38-4149AA089FB1}</ProjectGuid>
+    <ProjectGuid>{9FD173B8-FBF7-43C1-B840-0F2BDDC9D09D}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -88,7 +88,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Aima.NET\Aima.NET.csproj">
       <Name>Aima.NET</Name>
-      <Project>{6680621A-896E-47C6-BA83-1EF07EF188B3}</Project>
+      <Project>{93C4E25A-DA6B-4011-80F3-7E1A086A95F6}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>

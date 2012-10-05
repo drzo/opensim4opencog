@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{63AF96CC-7455-497D-8370-22A665172A4E}</ProjectGuid>
+    <ProjectGuid>{F3EA8251-A75F-44BD-AC87-ED377ED02976}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
@@ -123,12 +123,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\PennBank\PennBank\LAIR.ResourceAPIs.PennBank.csproj">
       <Name>LAIR.ResourceAPIs.PennBank</Name>
-      <Project>{CF477C7C-FEFC-4634-B395-744BA76B8D6F}</Project>
+      <Project>{613157F4-3F7C-4758-A28B-D0A089426F6B}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\LAIR.CommonPort\LAIR.CommonPort.csproj">
       <Name>LAIR.CommonPort</Name>
-      <Project>{03059518-2339-41B2-AF9A-E47368BE8E4C}</Project>
+      <Project>{DD695CEB-D5D6-40A9-98AD-84E3FC255957}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>

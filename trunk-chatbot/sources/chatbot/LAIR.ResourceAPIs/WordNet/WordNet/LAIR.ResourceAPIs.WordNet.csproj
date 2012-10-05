@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{84F11AF8-D72B-47D3-A087-9B428E593332}</ProjectGuid>
+    <ProjectGuid>{C3E5E5FD-77E2-4F2C-8BAF-C6C2542BB82D}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -114,7 +114,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\LAIR.CommonPort\LAIR.CommonPort.csproj">
       <Name>LAIR.CommonPort</Name>
-      <Project>{03059518-2339-41B2-AF9A-E47368BE8E4C}</Project>
+      <Project>{DD695CEB-D5D6-40A9-98AD-84E3FC255957}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
