@@ -121,7 +121,7 @@ namespace ABCLScriptEngine.UI
         //
         //   System.ObjectDisposedException:
         //     The System.IO.TextReader is closed.
-        public virtual int Peek()
+        public override int Peek()
         {
             LockBuffer();
             if (myBuffer != null)
@@ -147,7 +147,7 @@ namespace ABCLScriptEngine.UI
         //
         //   System.ObjectDisposedException:
         //     The System.IO.TextReader is closed.
-        public virtual int Read()
+        public override int Read()
         {
             int av = available();
             while (av < 1)
@@ -202,7 +202,7 @@ namespace ABCLScriptEngine.UI
         //
         //   System.ObjectDisposedException:
         //     The System.IO.TextReader is closed.
-        public virtual int Read(char[] buffer, int index, int count)
+        public override int Read(char[] buffer, int index, int count)
         {
             int av = available();
             if (count > av)
@@ -255,7 +255,7 @@ namespace ABCLScriptEngine.UI
         //
         //   System.ObjectDisposedException:
         //     The System.IO.TextReader is closed.
-        public virtual int ReadBlock(char[] buffer, int index, int count)
+        public override int ReadBlock(char[] buffer, int index, int count)
         {
             int av = available();
             while (count > av)
@@ -298,7 +298,7 @@ namespace ABCLScriptEngine.UI
         //
         //   System.ObjectDisposedException:
         //     The System.IO.TextReader is closed.
-        public virtual string ReadLine()
+        public override string ReadLine()
         {
             int pos = myBuffer.IndexOf('\n');
             while (pos == -1)

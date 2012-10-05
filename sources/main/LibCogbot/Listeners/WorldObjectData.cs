@@ -292,13 +292,8 @@ namespace Cogbot
                 }            
             if (AV != null)
             {
- 
-                if (AV==m_TheSimAvatar)
-                {
-                    
-                }
                 Primitive prev = AV.Prim;
-                if (prev==null)
+                if (prev == null)
                 {
                     AV.SetFirstPrim(av);
                 }

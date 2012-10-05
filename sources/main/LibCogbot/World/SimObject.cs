@@ -1657,7 +1657,6 @@ namespace Cogbot.World
                 _TOSRTING = _TOSRTING.Replace("  ", " ").Replace(") (", ")(");
             }
             string _TOSRTINGR = _TOSRTING;
-            this._TOSRTING = _TOSRTING;
             toStringNeedsUpdate = false;
             //_TOSRTING = null;
             return _TOSRTINGR;

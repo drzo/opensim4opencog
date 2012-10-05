@@ -775,7 +775,7 @@
         <Match pattern="*.cs" recurse="true"/>
       </Files>
     </Project>
-
+<!--
     <Project name="AIMLbot" path="sources/chatbot/RTParser" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
@@ -789,37 +789,22 @@
           <XmlDocFile>AIMLBot.XML</XmlDocFile>
         </Options>
       </Configuration>
-
-      <ReferencePath>../../../bin/</ReferencePath>
+!     <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
       <Reference name="System.Web" localCopy="false"/>
       <Reference name="System.Windows.Forms" localCopy="false"/>
       <Reference name="System.Drawing" localCopy="false"/>
-      <!-- <Reference name="HttpServer.dll" localCopy="false"/>-->
       <Reference name="System.Core" localCopy="false" />
-      <Reference name="OpenCyc.dll" localCopy="false"/>
-      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
-      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-      <Reference name="IKVM.Runtime.JNI.dll" localCopy="false"/>
-      <Reference name="MushDLR223"  localCopy="false"/>
-      <Reference name="LAIR.Collections.dll" localCopy="false"/>
-      <Reference name="LAIR.ResourceAPIs.WordNet" localCopy="false"/>      
-      <Reference name="Lucene.Net" localCopy="false"/>
-      <Reference name="Microsoft.JScript"  localCopy="false"/>
-      <Reference name="Microsoft.VisualBasic"  localCopy="false"/>
-      <Reference name="Microsoft.Vsa"  localCopy="false"/>
-      <Reference name="PrologScriptEngine"  localCopy="false"/>
       <Reference name="AltAIMLbot"  localCopy="false"/>
-      <Reference name="DcBus.dll" localCopy="false" />
-      <Reference name="Enyim.Caching.dll"  localCopy="false"/>
-
+ 
       <Files>
           <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="AssemblyInfo.cs"/><Exclude name="Program.cs"/></Match>
       </Files>
   </Project>
-
+-->
+ 
 
 
     <Project name="Iesi.Collections.Generic" path="sources/chatbot/AltBotModule/GenericSets/src/Iesi.Collections.Generic" type="Library" frameworkVersion="v3_5">
@@ -950,24 +935,30 @@
       </Configuration>
 
       <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System" localCopy="false"/>
-      <Reference name="System.Data" localCopy="false"/>
-      <Reference name="System.Xml" localCopy="false"/>
-      <Reference name="System.Web" localCopy="false"/>
-      <Reference name="System.Windows.Forms" localCopy="false"/>
-      <Reference name="System.Drawing" localCopy="false"/>
       <Reference name="Aima.NET" localCopy="false"/>
-      <Reference name="MushDLR223" localCopy="false"/>
-      <Reference name="MiniSatCs" localCopy="false"/>      
-      <Reference name="Iesi.Collections.Generic" localCopy="false"/>      
-      <Reference name="System.Core" localCopy="false" />
       <Reference name="DcBus.dll" localCopy="false" />
       <Reference name="Enyim.Caching.dll"  localCopy="false"/>
-      <Reference name="Lucene.Net"  localCopy="false"/>
-      <Reference name="LAIR.ResourceAPIs.WordNet"  localCopy="false"/>
+      <Reference name="Iesi.Collections.Generic" localCopy="false"/>      
+      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="LAIR.Collections" localCopy="false"/>
+      <Reference name="LAIR.ResourceAPIs.WordNet"  localCopy="false"/>
+      <Reference name="Lucene.Net"  localCopy="false"/>
+      <Reference name="Microsoft.JScript"  localCopy="false"/>
+      <Reference name="Microsoft.VisualBasic"  localCopy="false"/>
+      <Reference name="Microsoft.Vsa"  localCopy="false"/>
+      <Reference name="MiniSatCs" localCopy="false"/>      
+      <Reference name="MushDLR223" localCopy="false"/>
+      <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="RaptorDB"  localCopy="false"/>
-
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Core" localCopy="false" />
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Drawing" localCopy="false"/>
+      <Reference name="System.Web" localCopy="false"/>
+      <Reference name="System.Windows.Forms" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+ 
       <Files>
           <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
       </Files>
@@ -994,8 +985,6 @@
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Drawing" localCopy="false"/>
       <Reference name="System.Windows.Forms" localCopy="false"/>
-      <!-- not until needed <Reference name="OpenMetaverse"/>-->
-     <!-- <Reference name="System.Text" localCopy="false"/> -->
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
       <Reference name="System.Web" localCopy="false"/>
@@ -1188,7 +1177,6 @@
       <Reference name="OpenMetaverseTypes" localCopy="false"/>      
       <Reference name="System" localCopy="false"/>
       <Reference name="DotLisp" localCopy="false"/>
-      <Reference name="AIMLbot" localCopy="false"/> 
       <Reference name="System.Core" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
@@ -1840,7 +1828,7 @@
       <Reference name="OpenMetaverseTypes" />
       <Reference name="PathSystem3D" />
       <Reference name="PrimMesher.dll" localCopy="false"/>
-      <Reference name="PrologScriptEngine" />
+      <Reference name="PrologBotModule" />
       <Reference name="protobuf-net.dll" localCopy="false"/>
       <Reference name="Radegast.exe" />
       <Reference name="RadSpeechLin" />

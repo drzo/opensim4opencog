@@ -67,7 +67,7 @@ namespace Cogbot.ScriptEngines
             set { if (value is BotClient) BotClient = value as BotClient; }
         }
 
-        public object Impl
+        override public object Impl
         {
             get { return this; }
         }

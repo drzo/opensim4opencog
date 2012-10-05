@@ -4,7 +4,6 @@ using System.Text;
 using System.Threading;
 using Apache.Qpid.Messaging;
 using Cogbot;
-using Cogbot;
 using Cogbot.World;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
