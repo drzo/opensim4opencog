@@ -2719,7 +2719,7 @@ namespace AltAIMLbot
             // Clear a specified KB
             RunStatus rs = RunStatus.Failure;
             string mtName = "root";
-            string innerStr = myNode.InnerXml;
+            string innerStr = myNode.InnerXml.Trim();
 
             try
             {
@@ -2744,7 +2744,7 @@ namespace AltAIMLbot
             RunStatus rs = RunStatus.Failure;
             string childMtName = "root";
             string parentMtName = "root";
-            string innerStr = myNode.InnerXml;
+            string innerStr = myNode.InnerXml.Trim();
 
             try
             {
@@ -2769,7 +2769,7 @@ namespace AltAIMLbot
             // Assert with overwrite some si_text
             RunStatus rs = RunStatus.Failure;
             string mtName = "root";
-            string innerStr = myNode.InnerXml;
+            string innerStr = myNode.InnerXml.Trim();
 
             try
             {
@@ -2792,7 +2792,7 @@ namespace AltAIMLbot
             // load some KE (which will have MT definitions)
             RunStatus rs = RunStatus.Failure;
             string path = "default.ke";
-            string innerStr = myNode.InnerXml;
+            string innerStr = myNode.InnerXml.Trim();
 
             try
             {
@@ -2815,7 +2815,7 @@ namespace AltAIMLbot
             // insert some si_text (overwrite)
             RunStatus rs = RunStatus.Failure;
             string mtName = "root";
-            string innerStr = myNode.InnerXml;
+            string innerStr = myNode.InnerXml.Trim();
 
             try
             {
@@ -2839,7 +2839,7 @@ namespace AltAIMLbot
             // Append some si_text 
             RunStatus rs = RunStatus.Failure;
             string mtName = "root";
-            string innerStr = myNode.InnerXml;
+            string innerStr = myNode.InnerXml.Trim();
 
             try
             {
@@ -2864,7 +2864,7 @@ namespace AltAIMLbot
             // Conduct a test if the si_query is true
             string condition = myNode.Attributes["cond"].Value;
             string mtName = "root";
-            string innerStr = myNode.InnerXml;
+            string innerStr = myNode.InnerXml.Trim();
             //if it doesn't exist then return failure
             if (bot.myServitor.prologEngine == null)
             {
@@ -2914,7 +2914,7 @@ namespace AltAIMLbot
             catch(Exception e)
             {
             }
-            string innerStr = myNode.InnerXml;
+            string innerStr = myNode.InnerXml.Trim();
             //if it doesn't exist then return failure
             if (bot.myServitor.prologEngine == null)
             {
@@ -2999,6 +2999,17 @@ namespace AltAIMLbot
 
         #region particleFilter
 
+        public SymbolicParticleFilter findOrCreatePF(string name)
+        {
+            SymbolicParticleFilter resultFilter = null;
+            if (!bot.servitor.partFilterDict.ContainsKey(name))
+            {
+                bot.servitor.partFilterDict.Add(name, new SymbolicParticleFilter());
+            }
+            resultFilter = bot.servitor.partFilterDict[name];
+            return resultFilter;
+        }
+
         // <definestate prob=""> state_list|...</>
         //bot.myServitor.partFilter.prototype.variables.Add("in(r0)", 0.8);
         public IEnumerable<RunStatus> ProcessDefineState(XmlNode myNode)
@@ -3006,20 +3017,23 @@ namespace AltAIMLbot
             // Append some si_text 
             RunStatus rs = RunStatus.Failure;
             string probStr = "0.5";
-            string innerStr = myNode.InnerXml;
+            string innerStr = myNode.InnerXml.Trim();
+            string filter = "basic";
 
             try
             {
                 if (myNode.Attributes["prob"] != null) probStr = myNode.Attributes["prob"].Value;
+                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                SymbolicParticleFilter myFilter = findOrCreatePF(filter);
                 double prob = Double.Parse(probStr);
                 string[] state_list = innerStr.Split('|');
                 foreach (string state in state_list)
                 {
-                    if (!bot.myServitor.partFilter.prototype.variables.ContainsKey(state))
+                    if (!myFilter.prototype.variables.ContainsKey(state))
                     {
-                        bot.myServitor.partFilter.prototype.variables.Add(state, prob);
+                        myFilter.prototype.variables.Add(state, prob);
                     }
-                    bot.myServitor.partFilter.prototype.variables[state]= prob;
+                    myFilter.prototype.variables[state] = prob;
                 }
                 rs = RunStatus.Success;
             }
@@ -3038,11 +3052,14 @@ namespace AltAIMLbot
         {
             // Append some si_text 
             RunStatus rs = RunStatus.Failure;
-            string innerStr = myNode.InnerXml;
+            string innerStr = myNode.InnerXml.Trim();
+            string filter = "basic";
 
             try
             {
-                bot.myServitor.partFilter.constraintSet.Add(innerStr);
+                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                SymbolicParticleFilter myFilter = findOrCreatePF(filter);
+                myFilter.constraintSet.Add(innerStr);
                 rs = RunStatus.Success;
             }
             catch (Exception e)
@@ -3062,18 +3079,20 @@ namespace AltAIMLbot
             RunStatus rs = RunStatus.Failure;
             string probStr = "0.5";
             string state = "in(0)";
-            string innerStr = myNode.InnerXml;
-
+            string innerStr = myNode.InnerXml.Trim();
+            string filter = "basic";
             try
             {
                 if (myNode.Attributes["prob"] != null) probStr = myNode.Attributes["prob"].Value;
                 if (myNode.Attributes["state"] != null) state = myNode.Attributes["state"].Value;
+                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                SymbolicParticleFilter myFilter = findOrCreatePF(filter);
                 double prob = Double.Parse(probStr);
                 string[] sense_list = innerStr.Split('|');
                 foreach (string sense in sense_list)
                 {
                     string frag = String.Format("{0}|{1}={2}", state, sense, prob);
-                    bot.myServitor.partFilter.addStateSenseProb(frag);
+                    myFilter.addStateSenseProb(frag);
                 }
                 rs = RunStatus.Success;
             }
@@ -3095,18 +3114,21 @@ namespace AltAIMLbot
             string probStr = "0.5";
             string state = "in(0)";
             string act = "act(0)";
-            string innerStr = myNode.InnerXml;
+            string innerStr = myNode.InnerXml.Trim();
+            string filter = "basic";
 
             try
             {
                 if (myNode.Attributes["prob"] != null) probStr = myNode.Attributes["prob"].Value;
                 if (myNode.Attributes["state"] != null) state = myNode.Attributes["state"].Value;
                 if (myNode.Attributes["act"] != null) act = myNode.Attributes["act"].Value;
+                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                SymbolicParticleFilter myFilter = findOrCreatePF(filter);
                 double prob = Double.Parse(probStr);
                 string[] state_list = innerStr.Split('|');
 
                 string frag = String.Format("{0}|{1}={2}:{3}", state, act, prob, innerStr);
-                bot.myServitor.partFilter.addStateActTransition(frag);
+                myFilter.addStateActTransition(frag);
 
                 rs = RunStatus.Success;
             }
@@ -3129,6 +3151,7 @@ namespace AltAIMLbot
             string senseMt = "particleSenseMt";
             string actMt = "particleActMt";
             string innerStr = myNode.InnerXml;
+            string filter = "basic";
 
             string actset = "";
             string senseset = "";
@@ -3136,8 +3159,10 @@ namespace AltAIMLbot
             {
                 if (myNode.Attributes["sensemt"] != null) senseMt = myNode.Attributes["sensemt"].Value;
                 if (myNode.Attributes["actmt"] != null) actMt = myNode.Attributes["actmt"].Value;
+                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                SymbolicParticleFilter myFilter = findOrCreatePF(filter);
 
-                foreach (string q in bot.myServitor.partFilter.actList)
+                foreach (string q in myFilter.actList)
                 {
                     if (bot.servitor.prologEngine.isTrueIn(q, actMt))
                     {
@@ -3145,7 +3170,7 @@ namespace AltAIMLbot
                         actset += q;
                     }
                 }
-                foreach (string q in bot.myServitor.partFilter.senseList)
+                foreach (string q in myFilter.senseList)
                 {
                     if (bot.servitor.prologEngine.isTrueIn(q, senseMt))
                     {
@@ -3154,7 +3179,7 @@ namespace AltAIMLbot
                     }
                 }
 
-                bot.myServitor.partFilter.quickFilter(actset, senseset);
+                myFilter.quickFilter(actset, senseset);
 
                 rs = RunStatus.Success;
             }
@@ -3181,16 +3206,19 @@ namespace AltAIMLbot
             string mtName = "meanParticleMt";
             string innerStr = myNode.InnerXml;
             double threshold = 0.5;
+            string filter = "basic";
 
             try
             {
                 if (myNode.Attributes["threshold"] != null) probStr = myNode.Attributes["threshold"].Value;
                 if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
-                 threshold = Double.Parse(probStr);
+                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                SymbolicParticleFilter myFilter = findOrCreatePF(filter);
+                threshold = Double.Parse(probStr);
 
-                bot.myServitor.partFilter.defMeanParticle();
-                bot.myServitor.partFilter.meanParticle.normalize(bot.myServitor.partFilter.constraintSet);
-                string meanDMT= bot.myServitor.partFilter.meanParticle.asDataMt(threshold);
+                myFilter.defMeanParticle();
+                myFilter.meanParticle.normalize(myFilter.constraintSet);
+                string meanDMT = myFilter.meanParticle.asDataMt(threshold);
                 bot.servitor.prologEngine.insertKB(meanDMT, mtName);
 
                 rs = RunStatus.Success;

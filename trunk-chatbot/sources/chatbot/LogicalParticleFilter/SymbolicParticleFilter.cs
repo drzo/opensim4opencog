@@ -613,7 +613,17 @@ namespace LogicalParticleFilter1
                 inputObservation.observable.Add(o, 1.0);
             }
             updateModel(inputObservation);
-            traceStack++;
+            if (traceStack < traceDepth)
+            {
+                traceStack++;
+            }
+            else
+            {
+                for (int i = 0; i < traceDepth; i++)
+                {
+                    traceSet[i] = traceSet[i + 1];
+                }
+            }
             defMeanParticle ();
             traceSet[traceStack] = new Particle (meanParticle) ;
         }
