@@ -286,7 +286,7 @@ namespace LogicalParticleFilter1
                 if (!stateList.Contains(nextState)) stateList.Add(nextState);
             }
             if (!stateList.Contains(state)) stateList.Add(state);
-            if (!actList.Contains(act)) actList.Add(state);
+            if (!actList.Contains(act)) actList.Add(act);
 
         }
         // We're building a frame slot/value system

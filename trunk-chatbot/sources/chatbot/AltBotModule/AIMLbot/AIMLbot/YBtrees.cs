@@ -768,6 +768,61 @@ namespace AltAIMLbot
                             yield return result;
                         }
                         break;
+                    //Particle filter interface
+                    case "definestate":
+                        foreach (RunStatus result in ProcessDefineState(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "stateconstraintset":
+                        foreach (RunStatus result in ProcessConstraintSet(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "statesense":
+                        foreach (RunStatus result in ProcessStateSense(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "stateacttransition":
+                        foreach (RunStatus result in ProcessStateActTransition(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "quickfilter":
+                        foreach (RunStatus result in ProcessQuickFilter(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "meanparticle":
+                        foreach (RunStatus result in ProcessMeanParticle(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
 
                     default:
                         // Ignore the Nops
@@ -2960,7 +3015,11 @@ namespace AltAIMLbot
                 string[] state_list = innerStr.Split('|');
                 foreach (string state in state_list)
                 {
-                    bot.myServitor.partFilter.prototype.variables.Add(state, prob);
+                    if (!bot.myServitor.partFilter.prototype.variables.ContainsKey(state))
+                    {
+                        bot.myServitor.partFilter.prototype.variables.Add(state, prob);
+                    }
+                    bot.myServitor.partFilter.prototype.variables[state]= prob;
                 }
                 rs = RunStatus.Success;
             }
@@ -3020,7 +3079,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessDefineState '{0}','{1}':{2}", probStr, innerStr, e.Message);
+                Console.WriteLine("Error ProcessStateSense '{0}','{1}':{2}", probStr, innerStr, e.Message);
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -3042,18 +3101,18 @@ namespace AltAIMLbot
             {
                 if (myNode.Attributes["prob"] != null) probStr = myNode.Attributes["prob"].Value;
                 if (myNode.Attributes["state"] != null) state = myNode.Attributes["state"].Value;
-                if (myNode.Attributes["act"] != null) state = myNode.Attributes["act"].Value;
+                if (myNode.Attributes["act"] != null) act = myNode.Attributes["act"].Value;
                 double prob = Double.Parse(probStr);
                 string[] state_list = innerStr.Split('|');
 
                 string frag = String.Format("{0}|{1}={2}:{3}", state, act, prob, innerStr);
-                bot.myServitor.partFilter.addStateSenseProb(frag);
+                bot.myServitor.partFilter.addStateActTransition(frag);
 
                 rs = RunStatus.Success;
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessDefineState '{0}','{1}':{2}", probStr, innerStr, e.Message);
+                Console.WriteLine("Error ProcessStateActTransition '{0}','{1}':{2}", probStr, innerStr, e.Message);
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -3121,12 +3180,13 @@ namespace AltAIMLbot
             string probStr = "0.5";
             string mtName = "meanParticleMt";
             string innerStr = myNode.InnerXml;
+            double threshold = 0.5;
 
             try
             {
                 if (myNode.Attributes["threshold"] != null) probStr = myNode.Attributes["threshold"].Value;
                 if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
-                double threshold = Double.Parse(probStr);
+                 threshold = Double.Parse(probStr);
 
                 bot.myServitor.partFilter.defMeanParticle();
                 bot.myServitor.partFilter.meanParticle.normalize(bot.myServitor.partFilter.constraintSet);
@@ -3137,7 +3197,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessDefineState '{0}','{1}':{2}", probStr, innerStr, e.Message);
+                Console.WriteLine("Error ProcessMeanParticle '{0}','{1}':{2}", threshold, mtName, e.Message);
                 rs = RunStatus.Failure;
             }
             yield return rs;
