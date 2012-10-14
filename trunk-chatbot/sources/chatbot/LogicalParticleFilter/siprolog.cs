@@ -227,6 +227,7 @@ namespace LogicalParticleFilter1
 
         public void insertKB(string ruleSet,string startMT )
         {
+            //replaces KB with a fresh rule set
             PNode focus = KBGraph.Contains(startMT);
             if (focus == null)
             {
@@ -244,6 +245,7 @@ namespace LogicalParticleFilter1
 
         public void appendKB(string ruleSet, string startMT)
         {
+            // Adds a string rule set
             PNode focus = KBGraph.Contains(startMT);
             if (focus == null)
             {
@@ -261,6 +263,7 @@ namespace LogicalParticleFilter1
 
         public void loadKB(string filename, string startMT)
         {
+            //loads a file (clear and overwrite)
             if (File.Exists(filename))
             {
                 StreamReader streamReader = new StreamReader(filename);
@@ -435,6 +438,45 @@ namespace LogicalParticleFilter1
             return slib;
         }
 
+        public bool isTrueIn(string inQuery, string queryMT)
+        {
+            List<Dictionary<string, string>> bindingList = new List<Dictionary<string, string>>();
+
+            Dictionary<string, string> bindingsDict = new Dictionary<string, string>();
+            query = inQuery;
+            PartList qlist = ParseBody(new Tokeniser(query));
+            if (qlist == null)
+            {
+                Console.WriteLine("An error occurred parsing the query '{0}.\n", query);
+                return false;
+            }
+            Body q = new Body(qlist);
+            if (show)
+            {
+                Console.Write("Query is: ");
+                q.print();
+                Console.WriteLine("\n\n");
+            }
+
+            var vs = varNames(q.plist);
+            context = vs;
+            // db.rules = findVisibleKBRules(queryMT);
+            db.rules = findVisibleKBRulesSorted(queryMT);
+            db.index.Clear();
+            bool isTrue = false;
+            // Prove the query.
+            prove(
+                renameVariables(q.plist, 0, null),
+                    new PEnv(),
+                db,
+                1,
+                delegate(PEnv env)
+                {
+                    isTrue = true;
+                }
+                );
+            return isTrue;
+        }
         public void askQuery(string inQuery,string queryMT)
         {
             query = inQuery;

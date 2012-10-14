@@ -14,7 +14,8 @@ using Aima.Core.Logic.Propositional.Parsing;
 using Aima.Core.Logic.Propositional.Parsing.AST;
 using LAIR.ResourceAPIs.WordNet;
 using RTParser;
-
+using VDS.RDF.Parsing;
+using LogicalParticleFilter1;
 
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
@@ -72,6 +73,9 @@ namespace AltAIMLbot
         public int _rapStoreTrunkLevel;
         public static Servitor LastServitor;
 
+        [NonSerialized]
+        public SIProlog prologEngine = new SIProlog();
+        
         public string rapStoreDirectory
         {
             get { return _rapStoreDirectory; }

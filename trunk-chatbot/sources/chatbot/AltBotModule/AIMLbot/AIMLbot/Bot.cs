@@ -195,7 +195,7 @@ namespace RTParser
         private List<string> LogBuffer = new List<string>();
 
 
-        public string rapStoreDirectory = ".\\rapstore\\";
+        public string rapStoreDirectory = null;// ".\\rapstore\\";
         public int rapStoreSlices = 0;
         public int rapStoreTrunkLevel = 0;
 

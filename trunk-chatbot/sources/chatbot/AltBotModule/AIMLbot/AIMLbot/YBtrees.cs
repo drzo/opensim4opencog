@@ -17,6 +17,9 @@ using AltAIMLParser;
 using MiniSatCS;
 using System.Reflection;
 using RTParser;
+using VDS.RDF.Parsing;
+using LogicalParticleFilter1;
+
 
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
@@ -65,6 +68,9 @@ namespace AltAIMLbot
 
             }
         }
+        [NonSerialized]
+        public SymbolicParticleFilter ourFilter = new SymbolicParticleFilter();
+
 
         [NonSerialized]
         private AltBot _bot;
@@ -90,6 +96,32 @@ namespace AltAIMLbot
             _bot = bot;
             if (treeDoc == null) treeDoc = new XmlDocument();
             treeDoc.LoadXml(serialDoc);
+        }
+        public IEnumerable<RunStatus> evalBehaviorXml(string behaviorDef)
+        {
+            XmlDocument evalDoc = new XmlDocument ();
+            try
+            {
+
+                behaviorDef = behaviorDef.Replace("&gt;", ">");
+                behaviorDef = behaviorDef.Replace("&lt;", "<");
+                evalDoc.LoadXml(behaviorDef);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + e.StackTrace);
+                Console.WriteLine("ERR XML:" + behaviorDef);
+            }
+            foreach (RunStatus myChildResult in runSubTree(evalDoc))
+            {
+                RunStatus childResult = RunStatus.Failure;
+                childResult = myChildResult;
+                if (childResult != RunStatus.Running) break;
+                yield return RunStatus.Running;
+            }
+            yield return RunStatus.Success;
+            yield break;
         }
 
         public void defineBehavior(string mname, string behaviorDef)
@@ -655,6 +687,80 @@ namespace AltAIMLbot
                         break;
                     case "breaker":
                         foreach (RunStatus result in  ProcessBreaker(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+//Siprolog interface
+                    case "clearprologmt":
+                        foreach (RunStatus result in ProcessClearPrologMt(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "connectmt":
+                        foreach (RunStatus result in ProcessConnectMt(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "tellprologtmt":
+                        foreach (RunStatus result in ProcessTellPrologMt(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "loadke":
+                        foreach (RunStatus result in ProcessLoadKEKB(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "insertmt":
+                        foreach (RunStatus result in ProcessInsertMt(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "appendmt":
+                        foreach (RunStatus result in ProcessAppendMt(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "assertprolog":
+                        foreach (RunStatus result in ProcessAssertProlog(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+
+                    case "evalprologmacro":
+                        foreach (RunStatus result in ProcessEvalPrologMacro(myNode))
                         {
                             myResult = result;
                             bot.myBehaviors.runState[nodeID] = myResult;
@@ -2539,6 +2645,300 @@ namespace AltAIMLbot
             yield return result;
             yield break;
         }
+        #endregion
+        #region Siprolog
+        // Siprolog clauses
+        // =<clearKB mt="name>
+        // =<tellKB mt="name"> si_text
+        // =<assertwrt mt="name">si_query
+        // <random_select mt="name" var="var"> si_query
+        // <sequence_query mt="name" var="var"> si_query
+        // <selector_query mt="name" var="var"> si_query
+        // <query_macro mt="name" var="var" cmd="selector|sequence|random|..."> si_query
+        // =<connectMT child="name" parent="name">>
+        // =<loadKEKB file="path">
+        // =<appendKB mt="name">si_text
+        // =<insertKB mt="name">si_text
+        public IEnumerable<RunStatus> ProcessClearPrologMt(XmlNode myNode)
+        {
+            // Clear a specified KB
+            RunStatus rs = RunStatus.Failure;
+            string mtName = "root";
+            string innerStr = myNode.InnerXml;
+
+            try
+            {
+                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
+
+
+                bot.myServitor.prologEngine.insertKB("", mtName);
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessClearProKB '{0}':{1}", mtName, e.Message);
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
+
+        public IEnumerable<RunStatus> ProcessConnectMt(XmlNode myNode)
+        {
+            //Connect two MT's
+            RunStatus rs = RunStatus.Failure;
+            string childMtName = "root";
+            string parentMtName = "root";
+            string innerStr = myNode.InnerXml;
+
+            try
+            {
+                if (myNode.Attributes["child"] != null) childMtName = myNode.Attributes["child"].Value;
+                if (myNode.Attributes["parent"] != null) parentMtName = myNode.Attributes["parent"].Value;
+
+
+                bot.myServitor.prologEngine.connectMT(childMtName, parentMtName);
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessConnectMt '{0}', '{1}':{2}", childMtName, parentMtName, e.Message);
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
+
+        public IEnumerable<RunStatus> ProcessTellPrologMt(XmlNode myNode)
+        {
+            // Assert with overwrite some si_text
+            RunStatus rs = RunStatus.Failure;
+            string mtName = "root";
+            string innerStr = myNode.InnerXml;
+
+            try
+            {
+                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
+
+
+                bot.myServitor.prologEngine.insertKB(innerStr, mtName);
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessTellProKB '{0}':{1}", mtName, e.Message);
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
+        public IEnumerable<RunStatus> ProcessLoadKEKB(XmlNode myNode)
+        {
+            // load some KE (which will have MT definitions)
+            RunStatus rs = RunStatus.Failure;
+            string path = "default.ke";
+            string innerStr = myNode.InnerXml;
+
+            try
+            {
+                if (myNode.Attributes["path"] != null) path = myNode.Attributes["path"].Value;
+
+
+                bot.myServitor.prologEngine.loadKEKB(path);
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessLoadKEKB '{0}':{1}", path, e.Message);
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
+        public IEnumerable<RunStatus> ProcessInsertMt(XmlNode myNode)
+        {
+            // insert some si_text (overwrite)
+            RunStatus rs = RunStatus.Failure;
+            string mtName = "root";
+            string innerStr = myNode.InnerXml;
+
+            try
+            {
+                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
+
+
+                bot.myServitor.prologEngine.insertKB(innerStr, mtName);
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessInsertKB '{0}':{1}", mtName, e.Message);
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
+
+        public IEnumerable<RunStatus> ProcessAppendMt(XmlNode myNode)
+        {
+            // Append some si_text 
+            RunStatus rs = RunStatus.Failure;
+            string mtName = "root";
+            string innerStr = myNode.InnerXml;
+
+            try
+            {
+                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
+
+
+                bot.myServitor.prologEngine.appendKB(innerStr, mtName);
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessAppendKB '{0}':{1}", mtName, e.Message);
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
+
+
+        public IEnumerable<RunStatus> ProcessAssertProlog(XmlNode myNode)
+        {
+            // Conduct a test if the si_query is true
+            string condition = myNode.Attributes["cond"].Value;
+            string mtName = "root";
+            string innerStr = myNode.InnerXml;
+            //if it doesn't exist then return failure
+            if (bot.myServitor.prologEngine == null)
+            {
+                yield return RunStatus.Failure;
+                yield break;
+            }
+            RunStatus r = RunStatus.Failure;
+            try
+            {
+                bool result = bot.myServitor.prologEngine.isTrueIn(innerStr, mtName);
+                if (result) r = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessAssertGuest '{0}':{1}", condition, e.Message);
+                r = RunStatus.Failure;
+            }
+
+            yield return r;
+            yield break;
+        }
+
+        public IEnumerable<RunStatus> ProcessEvalPrologMacro(XmlNode myNode)
+        {
+            // given a prolog query, will take the bindings of var as a list of subbehavior id's (or other)
+            // then place them inside a <cmd> tag and execute
+            //examples:
+            // <query_macro outtercmd='select' innercmd='subbehavior' mt='decide' var="ACTION" >should_act(ACTION)</query_macro>
+            // <query_macro outtercmd='random' innercmd='task,say' mt='tellerSpindle' var="MESSAGE" >couldSay(MESSAGE)</query_macro>
+            //
+            string filler = "";
+
+            string var = "X";
+            string outerCmd ="random";
+            string innerCmd = "task,say";
+            string mtName = "root";
+            string outerCode = "";
+            string innerCode = "";
+            try
+            {
+                if (myNode.Attributes["filler"] != null) filler = myNode.Attributes["filler"].Value;
+                if (myNode.Attributes["var"] != null) var = myNode.Attributes["var"].Value;
+                if (myNode.Attributes["outercmd"] != null) outerCmd = myNode.Attributes["outercmd"].Value;
+                if (myNode.Attributes["innercmd"] != null) innerCmd = myNode.Attributes["innercmd"].Value;
+                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
+            }
+            catch(Exception e)
+            {
+            }
+            string innerStr = myNode.InnerXml;
+            //if it doesn't exist then return failure
+            if (bot.myServitor.prologEngine == null)
+            {
+                yield return RunStatus.Failure;
+                yield break;
+            }
+            RunStatus r = RunStatus.Failure;
+            try
+            {
+                string[] splitOuter = outerCmd.Split(',');
+                string[] splitInner = innerCmd.Split(',');
+                List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
+                // Dictionary<string, string> bindings = new Dictionary<string,string> ();
+                bot.myServitor.prologEngine.askQuery(innerStr, mtName, out bingingsList);
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    foreach (string k in bindings.Keys)
+                    {
+                        //Console.WriteLine("BINDING {0} = {1}", k, bindings[k]);
+                        if (k == var)
+                        {
+                            if (innerCmd == "subbehavior")
+                            {
+                                innerCode += String.Format("<{0} id='{1}'/>\n", innerCmd, bindings[k]);
+                            }
+                            else
+                            {
+                                if (splitInner.Length == 1)
+                                {
+                                    innerCode += String.Format("<{0}>{1}{2}</{0}>\n", innerCmd,filler, bindings[k]);
+                                }
+                                else
+                                {
+                                    string frag = bindings[k];
+                                    if (filler.Length > 0) { frag = filler + " " + frag; }
+                                    for (int i = splitInner.Length-1; i >=0 ;i-- )
+                                    {
+                                        string tag = splitInner[i];
+                                        frag = String.Format("<{0}>{1}</{0}>\n", tag, frag);
+
+                                    }
+                                    innerCode += frag + "\n";
+                                }
+                            }
+                        }
+                    }
+                }
+
+                string outerFrag = innerCode;
+
+                for (int i = splitOuter.Length-1; i >=0 ;i-- )
+                {
+                    string tag = splitOuter[i];
+                    outerFrag = String.Format("<{0}>\n{1}</{0}>\n", tag, outerFrag);
+                }
+                outerCode += outerFrag + "\n";
+                
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessPrologBehaveMacro '{0}','{1}','{2}','{3}','{4}':'{5}'", var, innerCmd, outerCmd, innerStr, mtName, e.Message);
+                r = RunStatus.Failure;
+            }
+
+             RunStatus result = RunStatus.Failure;
+            //result = ProcessParallel(myNode);
+            foreach (RunStatus myChildResult in evalBehaviorXml(outerCode))
+            {
+                result = myChildResult;
+                if (result != RunStatus.Running) break;
+                yield return RunStatus.Running;
+            }
+
+            yield return result;
+            yield break;
+
+        }
+
+ 
         #endregion
 
         public void addOCCLogicForInteraction(KnowledgeBase kb, string target)
