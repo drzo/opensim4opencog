@@ -1726,14 +1726,27 @@ namespace AltAIMLbot.Utils
         }
         public void rememberLoaded(string filename)
         {
-            loadeddb.Set(filename, filename);
-
+            string reftime = "indefinite";
+            if (File.Exists(filename))
+            {
+                DateTime lastWriteTimeUtc = File.GetLastWriteTimeUtc(filename);
+                reftime = lastWriteTimeUtc.ToString();
+            }
+            //loadeddb.Set(filename, filename);
+            loadeddb.Set(filename,reftime);
         }
         public bool wasLoaded(string filename)
         {
             string lf = "";
+            string reftime = "indefinite";
+            if (File.Exists(filename))
+            {
+                DateTime lastWriteTimeUtc = File.GetLastWriteTimeUtc(filename);
+                reftime = lastWriteTimeUtc.ToString();
+            }
             bool ret = loadeddb.Get(filename, out lf);
-            return (filename == lf);
+            //return (filename == lf);
+            return (reftime == lf);
         }
         public bool isTrunk(string absPath)
         {

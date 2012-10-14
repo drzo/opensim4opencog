@@ -2941,6 +2941,211 @@ namespace AltAIMLbot
  
         #endregion
 
+
+        #region particleFilter
+
+        // <definestate prob=""> state_list|...</>
+        //bot.myServitor.partFilter.prototype.variables.Add("in(r0)", 0.8);
+        public IEnumerable<RunStatus> ProcessDefineState(XmlNode myNode)
+        {
+            // Append some si_text 
+            RunStatus rs = RunStatus.Failure;
+            string probStr = "0.5";
+            string innerStr = myNode.InnerXml;
+
+            try
+            {
+                if (myNode.Attributes["prob"] != null) probStr = myNode.Attributes["prob"].Value;
+                double prob = Double.Parse(probStr);
+                string[] state_list = innerStr.Split('|');
+                foreach (string state in state_list)
+                {
+                    bot.myServitor.partFilter.prototype.variables.Add(state, prob);
+                }
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessDefineState '{0}','{1}':{2}", probStr, innerStr, e.Message);
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
+            
+        // <stateConstraintSet> state_list|...</>
+        //    bot.myServitor.partFilter.constraintSet.Add("in(r0)|in(r1)|in(r2)|in(r3)|in(r4)");
+        public IEnumerable<RunStatus> ProcessConstraintSet(XmlNode myNode)
+        {
+            // Append some si_text 
+            RunStatus rs = RunStatus.Failure;
+            string innerStr = myNode.InnerXml;
+
+            try
+            {
+                bot.myServitor.partFilter.constraintSet.Add(innerStr);
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessConstraintSet '{0}':{1}", innerStr, e.Message);
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
+
+        // <stateSense state="" prob=""> senseList|...</>
+        //    bot.myServitor.partFilter.addStateSenseProb("in(r0)|sense(even)=0.95");
+        public IEnumerable<RunStatus> ProcessStateSense(XmlNode myNode)
+        {
+            // Append some si_text 
+            RunStatus rs = RunStatus.Failure;
+            string probStr = "0.5";
+            string state = "in(0)";
+            string innerStr = myNode.InnerXml;
+
+            try
+            {
+                if (myNode.Attributes["prob"] != null) probStr = myNode.Attributes["prob"].Value;
+                if (myNode.Attributes["state"] != null) state = myNode.Attributes["state"].Value;
+                double prob = Double.Parse(probStr);
+                string[] sense_list = innerStr.Split('|');
+                foreach (string sense in sense_list)
+                {
+                    string frag = String.Format("{0}|{1}={2}", state, sense, prob);
+                    bot.myServitor.partFilter.addStateSenseProb(frag);
+                }
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessDefineState '{0}','{1}':{2}", probStr, innerStr, e.Message);
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
+
+         //   <stateActTransition state="" act="" prob="">nextstatelist|...</>
+         //   bot.myServitor.partFilter.addStateActTransition("in(r0)|act(forward)=0.5:in(r0)");
+        public IEnumerable<RunStatus> ProcessStateActTransition(XmlNode myNode)
+        {
+            // Append some si_text 
+            RunStatus rs = RunStatus.Failure;
+            string probStr = "0.5";
+            string state = "in(0)";
+            string act = "act(0)";
+            string innerStr = myNode.InnerXml;
+
+            try
+            {
+                if (myNode.Attributes["prob"] != null) probStr = myNode.Attributes["prob"].Value;
+                if (myNode.Attributes["state"] != null) state = myNode.Attributes["state"].Value;
+                if (myNode.Attributes["act"] != null) state = myNode.Attributes["act"].Value;
+                double prob = Double.Parse(probStr);
+                string[] state_list = innerStr.Split('|');
+
+                string frag = String.Format("{0}|{1}={2}:{3}", state, act, prob, innerStr);
+                bot.myServitor.partFilter.addStateSenseProb(frag);
+
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessDefineState '{0}','{1}':{2}", probStr, innerStr, e.Message);
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
+
+        // use particleActMt, particleSenseMt, particleStateMt
+        //    bot.myServitor.partFilter.quickFilter("act(forward)", "sense(odd)");
+        public IEnumerable<RunStatus> ProcessQuickFilter(XmlNode myNode)
+        {
+            // collects true acts in senses in pointed to mt's
+            // then updates filter
+            RunStatus rs = RunStatus.Failure;
+            string senseMt = "particleSenseMt";
+            string actMt = "particleActMt";
+            string innerStr = myNode.InnerXml;
+
+            string actset = "";
+            string senseset = "";
+            try
+            {
+                if (myNode.Attributes["sensemt"] != null) senseMt = myNode.Attributes["sensemt"].Value;
+                if (myNode.Attributes["actmt"] != null) actMt = myNode.Attributes["actmt"].Value;
+
+                foreach (string q in bot.myServitor.partFilter.actList)
+                {
+                    if (bot.servitor.prologEngine.isTrueIn(q, actMt))
+                    {
+                        if (actset.Length > 0) actset += "|";
+                        actset += q;
+                    }
+                }
+                foreach (string q in bot.myServitor.partFilter.senseList)
+                {
+                    if (bot.servitor.prologEngine.isTrueIn(q, senseMt))
+                    {
+                        if (senseset.Length > 0) senseset += "|";
+                        senseset += q;
+                    }
+                }
+
+                bot.myServitor.partFilter.quickFilter(actset, senseset);
+
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessQuickFilter '{0}','{1}':{2}", senseMt, actMt, e.Message);
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }       
+ 
+       //     bot.myServitor.partFilter.defMeanParticle();
+      //      //bot.myServitor.partFilter.dump();
+      //      Console.WriteLine("meanP raw:{0}", bot.myServitor.partFilter.meanParticle.ToString());
+      //      bot.myServitor.partFilter.meanParticle.normalize(bot.myServitor.partFilter.constraintSet);
+      //      Console.WriteLine("meanP norm:{0}", bot.myServitor.partFilter.meanParticle.ToString());
+       // <meanparticle threshold="0.5" mt="meanParticleMt"/>
+        public IEnumerable<RunStatus> ProcessMeanParticle(XmlNode myNode)
+        {
+            // Append some si_text 
+            RunStatus rs = RunStatus.Failure;
+            string probStr = "0.5";
+            string mtName = "meanParticleMt";
+            string innerStr = myNode.InnerXml;
+
+            try
+            {
+                if (myNode.Attributes["threshold"] != null) probStr = myNode.Attributes["threshold"].Value;
+                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
+                double threshold = Double.Parse(probStr);
+
+                bot.myServitor.partFilter.defMeanParticle();
+                bot.myServitor.partFilter.meanParticle.normalize(bot.myServitor.partFilter.constraintSet);
+                string meanDMT= bot.myServitor.partFilter.meanParticle.asDataMt(threshold);
+                bot.servitor.prologEngine.insertKB(meanDMT, mtName);
+
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessDefineState '{0}','{1}':{2}", probStr, innerStr, e.Message);
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
+
+        #endregion
+
         public void addOCCLogicForInteraction(KnowledgeBase kb, string target)
         {
 

@@ -186,6 +186,9 @@ namespace LogicalParticleFilter1
         public Dictionary<string, Estimator> state_act_tansition = new Dictionary<string, Estimator>();
 
         public List<string> constraintSet = new List<string>();
+        public List<string> stateList = new List<string>();
+        public List<string> actList = new List<string>();
+        public List<string> senseList = new List<string>();
 
         public SymbolicParticleFilter()
         {
@@ -241,6 +244,8 @@ namespace LogicalParticleFilter1
             {
                 myEstimate.estimate.Add(state, double.Parse(strProb));
             }
+            if (!stateList.Contains(state)) stateList.Add(state);
+            if (!senseList.Contains(aux)) senseList.Add(aux);
         }
 
         public void addStateActTransition(string rule)
@@ -278,7 +283,11 @@ namespace LogicalParticleFilter1
                 {
                     myEstimate.estimate.Add(nextState, prob);
                 }
+                if (!stateList.Contains(nextState)) stateList.Add(nextState);
             }
+            if (!stateList.Contains(state)) stateList.Add(state);
+            if (!actList.Contains(act)) actList.Add(state);
+
         }
         // We're building a frame slot/value system
         // where the frame is indexed as "the world I am experiencing now"

@@ -75,7 +75,9 @@ namespace AltAIMLbot
 
         [NonSerialized]
         public SIProlog prologEngine = new SIProlog();
-        
+        [NonSerialized]
+        public SymbolicParticleFilter partFilter = new SymbolicParticleFilter();
+       
         public string rapStoreDirectory
         {
             get { return _rapStoreDirectory; }
