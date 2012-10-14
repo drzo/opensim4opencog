@@ -823,6 +823,15 @@ namespace AltAIMLbot
                             yield return result;
                         }
                         break;
+                    case "genfilterfrommt":
+                        foreach (RunStatus result in ProcessGenFilterFromMt(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
 
                     default:
                         // Ignore the Nops
@@ -3232,6 +3241,82 @@ namespace AltAIMLbot
             yield break;
         }
 
+        public IEnumerable<RunStatus> ProcessGenFilterFromMt(XmlNode myNode)
+        {
+            // Append some si_text 
+            RunStatus rs = RunStatus.Failure;
+            string probStr = "0.001";
+            string mtName = "defParticleMt";
+            string innerStr = myNode.InnerXml;
+            double threshold = 0.001;
+            string filter = "basic";
+
+            try
+            {
+                if (myNode.Attributes["threshold"] != null) probStr = myNode.Attributes["threshold"].Value;
+                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
+                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                SymbolicParticleFilter myFilter = findOrCreatePF(filter);
+                threshold = Double.Parse(probStr);
+
+                List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
+
+                //State-Apriori
+                bot.servitor.prologEngine.askQuery("stateProb(STATE,PROB)", mtName, out bingingsList);
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    double prob = Double.Parse(bindings["PROB"]);
+                    string state = bindings["STATE"];
+                    if (prob >= threshold)
+                    {
+                        if (!myFilter.prototype.variables.ContainsKey(state))
+                        {
+                            myFilter.prototype.variables.Add(state, prob);
+                        }
+                        myFilter.prototype.variables[state] = prob;
+                    }
+                }
+
+                //State-Sense-Prob
+                bot.servitor.prologEngine.askQuery("stateSenseProb(STATE,SENSE,PROB)", mtName, out bingingsList);
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    string state = bindings["STATE"];
+                    string sense = bindings["SENSE"];
+                    double prob = Double.Parse(bindings["PROB"]);
+                    if (prob >= threshold)
+                    {
+                        string frag = String.Format("{0}|{1}={2}", state, sense, prob);
+                        myFilter.addStateSenseProb(frag);
+                    }
+                }
+
+                //State-Act-NextAct
+                bot.servitor.prologEngine.askQuery("stateTransitionProb(STATE,ACT,PROB,NEXT)", mtName, out bingingsList);
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    string state = bindings["STATE"];
+                    string act = bindings["ACT"];
+                    string next = bindings["NEXT"];
+                    double prob = Double.Parse(bindings["PROB"]);
+                    if (prob >= threshold)
+                    {
+                        string frag = String.Format("{0}|{1}={2}:{3}", state, act, prob, next);
+                        myFilter.addStateActTransition(frag);
+                    }
+                }
+
+
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessGenFilterFromMt '{0}','{1}':{2}", threshold, mtName,filter, e.Message);
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
         #endregion
 
         public void addOCCLogicForInteraction(KnowledgeBase kb, string target)
