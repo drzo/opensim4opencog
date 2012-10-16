@@ -832,6 +832,25 @@ namespace AltAIMLbot
                             yield return result;
                         }
                         break;
+// Chatmapper
+                    case "loadchatmaper":
+                        foreach (RunStatus result in ProcessLoadChatMapper(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "waitforchat":
+                        foreach (RunStatus result in ProcessWaitForChatInput(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
 
                     default:
                         // Ignore the Nops
@@ -1938,7 +1957,41 @@ namespace AltAIMLbot
             yield return r;
             yield break;
         }
+        //WaitForChatInput
+        public IEnumerable<RunStatus> ProcessWaitForChatInput(XmlNode myNode)
+        {
+            string sentStr = myNode.InnerXml;
+             RunStatus rs = RunStatus.Failure;
+             string wait = "10000";
+             try
+             {
+                 if (myNode.Attributes["wait"] != null)
+                 {
+                     wait = myNode.Attributes["wait"].Value;
+                 }
+             }
+             catch (Exception e)
+             {
+                 wait = "10000";
+             }
+             int waitV = Int32.Parse(wait);
+             int starttime = Environment.TickCount;
+             int triggertime = starttime +waitV;
+             while (Environment.TickCount < triggertime)
+             {
+                 if (bot.chatInputQueue.Count > 0)
+                 {
+                     rs = RunStatus.Success;
+                     yield return rs;
+                     yield break;
+                     
+                 }
+                 yield return RunStatus.Running;
 
+             }
+             yield return rs;
+            yield break;
+       }
 
         //CHAT: chat controlled by the behavior system
         public IEnumerable<RunStatus> ProcessChat(XmlNode myNode)
@@ -3241,6 +3294,11 @@ namespace AltAIMLbot
             yield break;
         }
 
+        // <genFilterFromMt mt="defParticleMt" threshold="0.0001"/>
+        // will skip probabilities below threshold
+        // will stateProb(STATE,PROB) , stateSenseProb(STATE,SENSE,PROB) and
+        // stateTransitionProb(STATE,ACT,PROB,NEXT)
+
         public IEnumerable<RunStatus> ProcessGenFilterFromMt(XmlNode myNode)
         {
             // Append some si_text 
@@ -3319,6 +3377,37 @@ namespace AltAIMLbot
         }
         #endregion
 
+        // <loadchatmaper path="chatmapper\example.xml"/>
+        public IEnumerable<RunStatus> ProcessLoadChatMapper(XmlNode myNode)
+        {
+            // Append some si_text 
+            RunStatus rs = RunStatus.Failure;
+            string innerStr = myNode.InnerXml.Trim();
+            string srcFile = @"chatmapper\Example.xml";
+
+            try
+            {
+                if (myNode.Attributes["path"] != null) srcFile = myNode.Attributes["path"].Value;
+                ChatToBTXML myTranslator = new ChatToBTXML();
+                myTranslator.defineChatTreeFile(srcFile);
+                string myCodes = myTranslator.btxmlCode;
+                XmlDocument chatDoc = new XmlDocument ();
+                chatDoc.LoadXml (myCodes);
+                bot.loadAIMLFromXML(chatDoc, srcFile);
+
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessDefineState '{0}','{1}':{2}", srcFile, innerStr, e.Message);
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
+
+
+
         public void addOCCLogicForInteraction(KnowledgeBase kb, string target)
         {
 
@@ -3389,4 +3478,295 @@ namespace AltAIMLbot
             kb.Tell(string.Format("((selfFeelNaughtyAbout{0}) => selfFeelNaughty)", target));
         }
     }
+    #region chatmapper
+    /******************************************************************************************
+        ChatMapper XML to BTXML importer -- Copyright (c) 2012,Kino Coursey, Daxtron Labs
+
+        Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+        associated documentation files (the "Software"), to deal in the Software without restriction,
+        including without limitation the rights to use, copy, modify, merge, publish, distribute,
+        sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+
+        The above copyright notice and this permission notice shall be included in all copies or
+        substantial portions of the Software.
+
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+        NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+        NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+        DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
+        OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+        **************************************************************************************************/
+
+    class ChatToBTXML
+    {
+        public XmlDocument treeDoc;
+        public string btxmlCode = "";
+
+        public string chatXML = "";
+        bool inDialog = false;
+        string precode = "";
+        string midcode = "";
+        string postcode = "";
+        string inputwait = "";
+        string choicetag = "selector";
+
+        public ChatToBTXML()
+        {
+            treeDoc = new XmlDocument();
+
+        }
+
+        public void defineChatTreeFile(string filename)
+        {
+            string chatXML = System.IO.File.ReadAllText(filename);
+            btxmlCode = "";
+            btxmlCode += "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+            btxmlCode += "<aiml version=\"1.0\">\n";
+            btxmlCode += " <state name=\"*\">\n";
+
+            treeDoc.LoadXml(chatXML);
+            foreach (XmlNode childNode in treeDoc.ChildNodes)
+            {
+                processNode(childNode);
+            }
+            btxmlCode += " </state>\n";
+            btxmlCode += "</aiml>\n";
+
+        }
+
+        public void processNode(XmlNode myNode)
+        {
+            switch (myNode.Name.ToLower())
+            {
+                case "dialogentry":
+                    precode = "";
+                    midcode = "";
+                    postcode = "";
+                    choicetag = "selector";
+                    inputwait = "";
+                    processDialogEntry(myNode);
+
+                    break;
+                case "outgoinglinks":
+                    postcode = "";
+                    if (myNode.ChildNodes.Count > 0)
+                    {
+                        if (myNode.ChildNodes.Count > 1)
+                        {
+                            //postcode += "   <task>\n";
+                            //postcode += "     <get_user_input/>\n";
+                            //postcode += "   <task>\n";
+                            if (inputwait.Length > 0)
+                            {
+                                postcode += "   <waitForChatInput wait='" + inputwait + "'/>\n";
+                            }
+                        }
+                        postcode += "   <" + choicetag + ">\n";
+                        for (int childIndex = 0; childIndex < myNode.ChildNodes.Count; childIndex++)
+                        {
+                            XmlNode childNode = myNode.ChildNodes[childIndex];
+                            processNode(childNode);
+                        }
+                        postcode += "   </" + choicetag + ">\n";
+                    }
+                    break;
+                case "link":
+                    processLink(myNode);
+                    break;
+                case "field":
+                    processField(myNode);
+                    break;
+                case "actors":
+                    break;
+                case "items":
+                    break;
+                case "locations":
+                    break;
+                case "uservariables":
+                    break;
+                case "conditionsstring":
+                    if (myNode.InnerText.Length > 0)
+                    {
+                        precode += "   <comment> ConditionsString - " + myNode.InnerText + "</comment>\n";
+                    }
+                    break;
+
+                case "userscript":
+                    if (myNode.InnerText.Length > 0)
+                    {
+                        precode += "   <comment> UserScript - " + myNode.InnerText + "</comment>\n";
+                    }
+                    break;
+
+                default:
+                    for (int childIndex = 0; childIndex < myNode.ChildNodes.Count; childIndex++)
+                    {
+                        XmlNode childNode = myNode.ChildNodes[childIndex];
+                        processNode(childNode);
+                    }
+                    break;
+            }
+        }
+
+        public void processField(XmlNode myNode)
+        {
+            if (!inDialog) return;
+
+            string type = "";
+            string hint = "";
+            string title = "";
+            string value = "";
+            try
+            {
+                type = myNode.Attributes["type"].Value;
+                hint = myNode.Attributes["hint"].Value;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR: processField attributes");
+            }
+
+            for (int childIndex = 0; childIndex < myNode.ChildNodes.Count; childIndex++)
+            {
+                XmlNode childNode = myNode.ChildNodes[childIndex];
+                switch (childNode.Name.ToLower())
+                {
+                    case "title":
+                        title = childNode.InnerText;
+                        break;
+                    case "value":
+                        value = childNode.InnerText;
+                        break;
+                    default:
+                        break;
+
+                }
+            }
+
+            if (value.Length > 0)
+            {
+                value = value.Replace("\r\n", " ");
+                value = value.Replace('\n', ' ');
+                value = value.Replace('\r', ' ');
+                switch (title.ToLower())
+                {
+                    case "menu text":
+
+                        midcode += "   <assert_menu cond='" + value + "' />\n";
+                        break;
+                    case "dialogue text":
+                        midcode += "   <task>\n";
+                        midcode += "      <say>" + value + "<say/>\n";
+                        midcode += "   <task>\n";
+                        break;
+                    case "description":
+                        precode += "   <comment> desc - " + value + "</comment>\n";
+                        break;
+                    case "title":
+                        precode += "   <comment> title - " + value + "</comment>\n";
+                        break;
+                    case "animation files":
+                        precode += "   <comment> animation - " + value + "</comment>\n";
+                        break;
+                    case "audio files":
+                        precode += "   <comment> audio - " + value + "</comment>\n";
+                        break;
+                    case "conditionsstring":
+                        precode += "   <comment> ConditionsString - " + value + "</comment>\n";
+                        break;
+                    case "assertcondition":
+                        precode += "   <assert cond='" + value + "/>\n";
+                        break;
+                    case "choicetag":
+                        choicetag = value;
+                        break;
+                    case "inputwait":
+                        inputwait = value;
+                        break;
+                    case "behaviorcode":
+                        midcode += value + "\n";
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
+        }
+
+        public void processLink(XmlNode myNode)
+        {
+            string OriginConvoID = "";
+            string OriginDialogID = "";
+            string DestinationConvoID = "";
+            string DestinationDialogID = "";
+            string IsConnector = "";
+
+            try
+            {
+                OriginConvoID = myNode.Attributes["OriginConvoID"].Value;
+                OriginDialogID = myNode.Attributes["OriginDialogID"].Value;
+                DestinationConvoID = myNode.Attributes["DestinationConvoID"].Value;
+                DestinationDialogID = myNode.Attributes["DestinationDialogID"].Value;
+                IsConnector = myNode.Attributes["IsConnector"].Value;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR: processLink attributes");
+            }
+            string srckey = OriginConvoID + "_" + OriginDialogID;
+            string destkey = DestinationConvoID + "_" + DestinationDialogID;
+
+            postcode += "      <subbehavior id='" + destkey + "' />\n";
+
+        }
+
+        public void processDialogEntry(XmlNode myNode)
+        {
+            string ID = "";
+            string ConversationID = "";
+            string IsRoot = "";
+            string IsGroup = "";
+            string DelaySimStatus = "";
+            string FalseCondtionAction = "";
+            string ConditionPriority = "";
+            bool prevInDialog = inDialog;
+            inDialog = true;
+
+            try
+            {
+                ID = myNode.Attributes["ID"].Value;
+                ConversationID = myNode.Attributes["ConversationID"].Value;
+                IsRoot = myNode.Attributes["IsRoot"].Value;
+                IsGroup = myNode.Attributes["IsGroup"].Value;
+                DelaySimStatus = myNode.Attributes["DelaySimStatus"].Value;
+                FalseCondtionAction = myNode.Attributes["FalseCondtionAction"].Value;
+                ConditionPriority = myNode.Attributes["ConditionPriority"].Value;
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR: processDialogEntry attributes");
+            }
+            string bkey = ConversationID + "_" + ID;
+            btxmlCode += "\n\n  <behavior id='" + bkey + "' />\n";
+
+            for (int childIndex = 0; childIndex < myNode.ChildNodes.Count; childIndex++)
+            {
+                XmlNode childNode = myNode.ChildNodes[childIndex];
+                processNode(childNode);
+            }
+            btxmlCode += precode;
+            btxmlCode += midcode;
+            btxmlCode += postcode;
+
+            btxmlCode += "  </behavior>\n";
+
+            inDialog = prevInDialog;
+        }
+
+    }
+    #endregion
+
 }
