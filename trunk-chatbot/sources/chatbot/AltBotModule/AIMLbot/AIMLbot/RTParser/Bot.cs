@@ -554,7 +554,8 @@ namespace RTParser
         /// <summary>
         /// Ctor
         /// </summary>
-        protected AltBot()
+        //protected AltBot()
+        public  AltBot()
             : base()
         {
             AltBotcommands = new AltBotCommands(this);
