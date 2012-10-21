@@ -1726,7 +1726,7 @@ namespace AltAIMLbot.Utils
         }
         public void rememberLoaded(string filename)
         {
-            string reftime = "indefinite";
+            string reftime = DateTime.Now.ToUniversalTime().ToString(); // "indefinite";
             if (File.Exists(filename))
             {
                 DateTime lastWriteTimeUtc = File.GetLastWriteTimeUtc(filename);

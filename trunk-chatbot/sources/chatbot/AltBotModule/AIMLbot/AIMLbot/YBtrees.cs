@@ -19,7 +19,8 @@ using System.Reflection;
 using RTParser;
 using VDS.RDF.Parsing;
 using LogicalParticleFilter1;
-
+using LAIR.ResourceAPIs.WordNet;
+using LAIR.Collections.Generic;
 
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
@@ -217,6 +218,13 @@ namespace AltAIMLbot
                         // return RunStatus.Success;
                     }
                 }
+                //Sequence semantics
+                if (childResult == RunStatus.Failure)
+                {
+                    yield return RunStatus.Failure;
+                    yield break;
+                }
+
             }
             yield return RunStatus.Success;
             yield break;
@@ -234,6 +242,9 @@ namespace AltAIMLbot
                        (nodeName.ToLower() == "assert")
                     || (nodeName.ToLower() == "asserttimer")
                     || (nodeName.ToLower() == "assertguest")
+                    || (nodeName.ToLower() == "assertmenu")
+                    || (nodeName.ToLower() == "assertprolog")
+                    || (nodeName.ToLower().StartsWith ("assert"))
                     );
         }
         public bool isBreaker(string nodeName)
@@ -526,6 +537,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessBehavior(myNode))
                         {
                             myResult = result;
+                            //Console.WriteLine("  yield {0} {1} = {2}", myNode.Name.ToLower(), nodeID, result.ToString());
                             bot.myBehaviors.runState[nodeID] = myResult;
                             if (myResult != RunStatus.Running) break;
                             yield return result;
@@ -833,7 +845,7 @@ namespace AltAIMLbot
                         }
                         break;
 // Chatmapper
-                    case "loadchatmaper":
+                    case "loadchatmapper":
                         foreach (RunStatus result in ProcessLoadChatMapper(myNode))
                         {
                             myResult = result;
@@ -842,7 +854,7 @@ namespace AltAIMLbot
                             yield return result;
                         }
                         break;
-                    case "waitforchat":
+                    case "waitforchatinput":
                         foreach (RunStatus result in ProcessWaitForChatInput(myNode))
                         {
                             myResult = result;
@@ -851,7 +863,15 @@ namespace AltAIMLbot
                             yield return result;
                         }
                         break;
-
+                    case "assertmenu":
+                        foreach (RunStatus result in ProcessAssertMenu(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
                     default:
                         // Ignore the Nops
                         bot.myBehaviors.runState[nodeID] = RunStatus.Success;
@@ -986,6 +1006,7 @@ namespace AltAIMLbot
             bool restoring = false;
             int pace = 0;
             bool continueflag = true;
+            string processAs = "parallel";
             try
             {
                 if (myNode.Attributes["restore"] != null)
@@ -996,11 +1017,21 @@ namespace AltAIMLbot
                 {
                     restorable |= (myNode.Attributes["resumes"].Value.ToLower() == "true");
                 }
+                if (myNode.Attributes["processas"] != null)
+                {
+                    processAs = myNode.Attributes["processas"].Value.ToLower();
+                }
                 if (myNode.Attributes["pace"] != null)
                 {
                     pace = 5000;
                     pace = Int32.Parse(myNode.Attributes["pace"].Value);
                 }
+                foreach (XmlAttribute att in myNode.Attributes)
+                {
+                    // attribute stuff
+                    Console.WriteLine(" behavior attribute: {0} = {1}", att.Name, att.Value);
+                }
+
             }
             catch (Exception e)
             {
@@ -1010,16 +1041,46 @@ namespace AltAIMLbot
             if (restorable == false)
             {
                 RunStatus result = RunStatus.Failure;
-                //result = ProcessParallel(myNode);
-                foreach (RunStatus myChildResult in ProcessParallel(myNode))
+                switch (processAs.ToLower())
                 {
-                    result = myChildResult;
-                    if (result != RunStatus.Running) break;
-                    yield return RunStatus.Running;
-                }
+                    case "parallel":
+                            //result = ProcessParallel(myNode);
+                            foreach (RunStatus myChildResult in ProcessParallel(myNode))
+                            {
+                                result = myChildResult;
+                                if (result != RunStatus.Running) break;
+                                yield return RunStatus.Running;
+                            }
 
-                yield return result;
-                yield break;
+                            yield return result;
+                            yield break;
+
+                    case "selector":
+                            //result = ProcessParallel(myNode);
+                            foreach (RunStatus myChildResult in ProcessSelector(myNode))
+                            {
+                                result = myChildResult;
+                                if (result != RunStatus.Running) break;
+                                yield return RunStatus.Running;
+                            }
+
+                            yield return result;
+                            yield break;
+
+                    case "sequence":
+                            //result = ProcessParallel(myNode);
+                            foreach (RunStatus myChildResult in ProcessSequence(myNode))
+                            {
+                                result = myChildResult;
+                                if (result != RunStatus.Running) break;
+                                yield return RunStatus.Running;
+                            }
+
+                            yield return result;
+                            yield break;
+
+
+                }
             }
             Console.WriteLine("\n\n****** COMPLEX BEHAVIOR BEGIN\n\n");
             string nodeID = "null";
@@ -1977,11 +2038,14 @@ namespace AltAIMLbot
              int waitV = Int32.Parse(wait);
              int starttime = Environment.TickCount;
              int triggertime = starttime +waitV;
+             bot.myBehaviors.waitingForChat = true;
              while (Environment.TickCount < triggertime)
              {
                  if (bot.chatInputQueue.Count > 0)
                  {
                      rs = RunStatus.Success;
+                     bot.myBehaviors.waitingForChat = false;
+
                      yield return rs;
                      yield break;
                      
@@ -1989,8 +2053,9 @@ namespace AltAIMLbot
                  yield return RunStatus.Running;
 
              }
+             bot.myBehaviors.waitingForChat = false;
              yield return rs;
-            yield break;
+             yield break;
        }
 
         //CHAT: chat controlled by the behavior system
@@ -3392,8 +3457,10 @@ namespace AltAIMLbot
                 myTranslator.defineChatTreeFile(srcFile);
                 string myCodes = myTranslator.btxmlCode;
                 XmlDocument chatDoc = new XmlDocument ();
+                string destFile = srcFile.Replace(".xml", ".btxml");
+                System.IO.File.WriteAllText(destFile, myCodes);
                 chatDoc.LoadXml (myCodes);
-                bot.loadAIMLFromXML(chatDoc, srcFile);
+                bot.loadAIMLFromXML(chatDoc, srcFile +DateTime.Now.ToString());
 
                 rs = RunStatus.Success;
             }
@@ -3405,7 +3472,227 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
+        public IEnumerable<RunStatus> ProcessAssertMenu(XmlNode myNode)
+        {
+            string condition = myNode.Attributes["cond"].Value;
+            string parameters = myNode.InnerText;
+            //if no input exists doesn't exist then return failure
+            if (bot.chatInputQueue.Count==0)
+              {
+                yield return RunStatus.Failure;
+                yield break;
+              }
 
+            string userInput = bot.chatInputQueue.Peek();
+            string[] userWords = userInput.Split(' ');
+            string[] condWords = condition.Split(' ');
+
+            RunStatus r = RunStatus.Success;
+            try
+            {
+                // for each condition sense, scan user words to see if any match
+                //  if you can find a match for all the condition senses then it matches
+                //  otherwise the assert fails
+                foreach (string condWord in condWords)
+                {
+                    bool goodMatch = false;
+                    foreach (string userWord in userWords)
+                    {
+                        if (matchesWildSense (condWord,userWord)){ goodMatch =true; break;}
+                    }
+                    if (goodMatch == false)
+                    {
+                         r = RunStatus.Failure ;
+                         break;
+                    }
+                }
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessAssertGuest '{0}':{1}", condition, e.Message);
+                r = RunStatus.Failure;
+            }
+            if (r == RunStatus.Success)
+            {
+                // if we match then consume the input
+                bot.chatInputQueue.Dequeue();
+            }
+            yield return r;
+            yield break;
+        }
+
+         bool matchesWildSense(string sense, string queryWord)//, Request request)
+        {
+            // always clip off the first "*";
+            if (sense.StartsWith("*")) sense = sense.Substring(1);
+            if (sense.Length == 0) return false;
+            //AltBot contextBot = request.bot;
+            AltBot contextBot = bot;
+
+            // ported from unifying AIML bot's <lexis> tag
+            // form is "*<word>:<relation>:<part-of-speech>:<+/~>"
+            // <word> can be a regular expression 
+            // Should support "*canine", "*canine:hypo","*canine:hypo:n"
+            // and "*can::v" 
+            // Also POS can be "bot" or "user" for reference to the predicates
+            // so  "*location::bot" or "*girlfriend::user"
+            // can also have negation, 
+            //   for "*girfriend::user:~" or or "*disease::n:~"
+            // default is POS=noun, Relations = InstanceHypernym +Hypernym
+            string[] senseArgs = sense.ToLower().Split(':');
+            string wnWord = "";
+            string wnRelation = "";
+            string wnPos = "";
+            bool negation = false;
+
+            wnWord = senseArgs[0];
+            if (senseArgs.Length >= 2) wnRelation = senseArgs[1];
+            if (senseArgs.Length >= 3) wnPos = senseArgs[2];
+            if (senseArgs.Length >= 4) negation = senseArgs[3].ToLower().Contains("~");
+
+            Console.WriteLine("MWS:{0},{1},{2},{3} [{4}]", wnWord, wnRelation, wnPos, negation, queryWord);
+
+            // Can you find a match inside (using regex while we're here)?
+            var matcher = new Regex(wnWord);
+            if (matcher.IsMatch(queryWord))
+            {
+                Console.WriteLine("MWS:Regex Match");
+                return (true ^ negation);
+            }
+
+            // bot settings check
+
+            if (wnPos == "bot")
+            {
+                string val = contextBot.GlobalSettings.grabSetting(wnWord);
+                if (val == null) return (false ^ negation);
+                if (queryWord.ToLower().Contains(val.ToLower()))
+                {
+                    Console.WriteLine("MWS:bot pred Match");
+                    return (true ^ negation);
+                }
+                return (false ^ negation);
+            }
+
+            if (wnPos == "user")
+            {
+                //string val = request.user.Predicates.grabSetting(wnWord);
+                string val = bot.lastBehaviorUser.Predicates.grabSetting(wnWord); ; //request.user.Predicates.grabSetting(wnWord);
+                if (val == null) return (false ^ negation);
+                if (queryWord.ToLower().Contains(val.ToLower()))
+                {
+                    Console.WriteLine("MWS:user pred Match");
+                    return (true ^ negation);
+                }
+                return (false ^ negation);
+            }
+
+            // Ok, lets try WordNet
+            //if ((contextBot == null) || (contextBot.wordNetEngine == null)) return (false ^ negation);
+
+            // NO ENGINE == JUST PLAIN FALSE (unknowable == false)
+            if ((contextBot == null) || (contextBot.wordNetEngine == null)) return (false);
+
+            WordNetEngine ourWordNetEngine = contextBot.wordNetEngine;
+            Set<SynSet> synPatternSet = null;
+            // find our POS domain if possible
+            WordNetEngine.POS ourPOS = WordNetEngine.POS.Noun;
+            if (wnPos.Length > 0)
+            {
+                // populate POS list
+                foreach (WordNetEngine.POS p in Enum.GetValues(typeof(WordNetEngine.POS)))
+                    if (p != WordNetEngine.POS.None)
+                    {
+                        if (p.ToString().ToLower().Equals(wnPos) || p.ToString().ToLower().StartsWith(wnPos))
+                        {
+                            ourPOS = p;
+                        }
+                    }
+            }
+            try { synPatternSet = ourWordNetEngine.GetSynSets(wnWord, ourPOS); }
+            catch (Exception)
+            {
+                return (false ^ negation);
+            }
+            if (synPatternSet.Count == 0)
+            {
+                try { synPatternSet = ourWordNetEngine.GetSynSets(wnWord.ToLower(), ourPOS); }
+                catch (Exception)
+                {
+                    return (false ^ negation);
+                }
+
+            }
+
+            Set<SynSet> synInputSet = null;
+            try { synInputSet = ourWordNetEngine.GetSynSets(queryWord, ourPOS); }
+            catch (Exception)
+            {
+                return (false ^ negation);
+            }
+            if (synInputSet.Count == 0)
+            {
+                try { synInputSet = ourWordNetEngine.GetSynSets(queryWord.ToLower(), ourPOS); }
+                catch (Exception)
+                {
+                    return (false ^ negation);
+                }
+
+            }
+
+
+            List<WordNetEngine.SynSetRelation> vlist = new List<WordNetEngine.SynSetRelation>(); //[2];
+            //vlist[0] = WordNetEngine.SynSetRelation.Hyponym;
+            //vlist[1] = WordNetEngine.SynSetRelation.InstanceHyponym;
+            //vlist[0] = WordNetEngine.SynSetRelation.Hypernym ;
+            //vlist[1] = WordNetEngine.SynSetRelation.InstanceHypernym;
+            if (wnRelation.Length == 0)
+            {
+                vlist.Add(WordNetEngine.SynSetRelation.Hypernym);
+                vlist.Add(WordNetEngine.SynSetRelation.InstanceHypernym);
+            }
+            else
+            {
+                // populate Relation list
+                foreach (WordNetEngine.SynSetRelation r in Enum.GetValues(typeof(WordNetEngine.SynSetRelation)))
+                    if (r != WordNetEngine.SynSetRelation.None)
+                    {
+                        if (r.ToString().ToLower().Contains(wnRelation))
+                        {
+                            vlist.Add(r);
+                        }
+                    }
+
+            }
+
+            if ((synInputSet.Count > 0) && (synPatternSet.Count > 0))
+            {
+                foreach (SynSet synDstSet in synInputSet)
+                {
+                    foreach (SynSet synSrcSet in synPatternSet)
+                    {
+                        //synSets.Items.Add(synSet);
+                        List<SynSet> linkageList = null;
+
+                        linkageList = synDstSet.GetShortestPathTo(synSrcSet, vlist);
+                        if ((linkageList != null) && (linkageList.Count > 0))
+                        {
+                            Console.WriteLine("MWS:WordNetMatch Match");
+                            foreach (SynSet link in linkageList)
+                            {
+                                Console.WriteLine("MWS: link({0})", link.ToString());
+                            }
+                            return (true ^ negation);
+                        }
+                    }
+                }
+                return (false ^ negation);
+            }
+
+
+            return (false ^ negation);
+        }
 
 
         public void addOCCLogicForInteraction(KnowledgeBase kb, string target)
@@ -3510,6 +3797,7 @@ namespace AltAIMLbot
         string postcode = "";
         string inputwait = "";
         string choicetag = "selector";
+        string processas = "sequence";
 
         public ChatToBTXML()
         {
@@ -3521,7 +3809,7 @@ namespace AltAIMLbot
         {
             string chatXML = System.IO.File.ReadAllText(filename);
             btxmlCode = "";
-            btxmlCode += "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+            //btxmlCode += "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
             btxmlCode += "<aiml version=\"1.0\">\n";
             btxmlCode += " <state name=\"*\">\n";
 
@@ -3559,6 +3847,7 @@ namespace AltAIMLbot
                             //postcode += "   <task>\n";
                             if (inputwait.Length > 0)
                             {
+                                processas="sequence";
                                 postcode += "   <waitForChatInput wait='" + inputwait + "'/>\n";
                             }
                         }
@@ -3619,8 +3908,8 @@ namespace AltAIMLbot
             string value = "";
             try
             {
-                type = myNode.Attributes["type"].Value;
-                hint = myNode.Attributes["hint"].Value;
+               if (myNode.Attributes["type"]!=null) type = myNode.Attributes["type"].Value;
+               if (myNode.Attributes["hint"]!=null)  hint = myNode.Attributes["hint"].Value;
             }
             catch (Exception e)
             {
@@ -3653,12 +3942,12 @@ namespace AltAIMLbot
                 {
                     case "menu text":
 
-                        midcode += "   <assert_menu cond='" + value + "' />\n";
+                        midcode += "   <assertmenu cond='" + value + "' />\n";
                         break;
                     case "dialogue text":
                         midcode += "   <task>\n";
-                        midcode += "      <say>" + value + "<say/>\n";
-                        midcode += "   <task>\n";
+                        midcode += "      <say>" + value + "</say>\n";
+                        midcode += "   </task>\n";
                         break;
                     case "description":
                         precode += "   <comment> desc - " + value + "</comment>\n";
@@ -3733,6 +4022,7 @@ namespace AltAIMLbot
             string ConditionPriority = "";
             bool prevInDialog = inDialog;
             inDialog = true;
+            processas = "sequence";
 
             try
             {
@@ -3750,17 +4040,19 @@ namespace AltAIMLbot
                 Console.WriteLine("ERROR: processDialogEntry attributes");
             }
             string bkey = ConversationID + "_" + ID;
-            btxmlCode += "\n\n  <behavior id='" + bkey + "' />\n";
 
             for (int childIndex = 0; childIndex < myNode.ChildNodes.Count; childIndex++)
             {
                 XmlNode childNode = myNode.ChildNodes[childIndex];
                 processNode(childNode);
             }
+            btxmlCode += "\n\n  <behavior processas='"+processas+"' id='" + bkey + "'  >\n";
+            //btxmlCode += "   <sequence>\n";
             btxmlCode += precode;
             btxmlCode += midcode;
             btxmlCode += postcode;
 
+            //btxmlCode += "   </sequence>\n";
             btxmlCode += "  </behavior>\n";
 
             inDialog = prevInDialog;

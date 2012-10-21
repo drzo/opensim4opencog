@@ -195,7 +195,7 @@ namespace LogicalParticleFilter1
             processParticleTransform = defaultTransformParticle;
             particles = new Particle[numberOfParticles];
             accum = new double[numberOfParticles];
-            traceSet = new Particle[traceDepth];
+            traceSet = new Particle[traceDepth+1];
 
         }
         public void defMeanParticle()
@@ -613,7 +613,7 @@ namespace LogicalParticleFilter1
                 inputObservation.observable.Add(o, 1.0);
             }
             updateModel(inputObservation);
-            if (traceStack < traceDepth)
+            if (traceStack < traceDepth-1)
             {
                 traceStack++;
             }

@@ -223,6 +223,27 @@ namespace AltAIMLbot
         }
         public string respondToChat(string input, bool doHaviours)
         {
+            curBot.isPerformingOutput = true;
+            if (curBot.myBehaviors.waitingForChat)
+            {
+                Console.WriteLine(" ************ FOUND waitingForChat ************");
+                curUser.Predicates.updateSetting("lastinput", input);
+                //curBot.lastBehaviorChatInput = input;
+                curBot.myBehaviors.logText("waitingForChat USER INPUT:" + input);
+                curBot.chatInputQueue.Clear();
+                curBot.chatInputQueue.Enqueue(input);
+                curBot.lastBehaviorUser = curUser;
+                //curBot.myBehaviors.runEventHandler("onchat");
+                curBot.flushOutputQueue();
+
+                //curBot.myBehaviors.queueEvent("onchat");
+                //curBot.processOutputQueue();
+
+                curBot.lastBehaviorChatOutput = "";
+                myScheduler.SleepAllTasks(30000);
+                curBot.isPerformingOutput = true;
+                return "";
+            }
             // Try the event first
             if (doHaviours && curBot.myBehaviors.hasEventHandler("onchat"))
             {
@@ -279,10 +300,14 @@ namespace AltAIMLbot
                     {
                         Console.WriteLine("SERVITOR: respondToChat({0})={1}", input, res.Output);
                     }
+                    curBot.isPerformingOutput = true;
                     return res.Output;
             }
             catch
-            { return "..."; }
+            {
+                curBot.isPerformingOutput = true;
+                return "..."; 
+            }
 
         }
         public string respondToChat(string input,string UserID)

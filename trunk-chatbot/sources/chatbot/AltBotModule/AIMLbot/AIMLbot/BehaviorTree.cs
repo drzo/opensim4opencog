@@ -293,6 +293,7 @@ namespace AltAIMLbot
         public Stack handlerStack;
         public string persistantDirectory;
         public List<string> invisiblePatterns;
+        public bool waitingForChat = false;
 
 
         public AltBot bot {
