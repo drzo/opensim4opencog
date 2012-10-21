@@ -33,7 +33,7 @@ namespace RTParser.Utils
     {
         #region Attributes
 
-        public static bool SeekOutAndRepair = true;
+        public static bool SeekOutAndRepair = false;
         public Request LoaderRequest00;
 
         /// <summary>
