@@ -872,6 +872,192 @@ namespace AltAIMLbot
                             yield return result;
                         }
                         break;
+
+// Coppelia
+
+                    case "coppeliaaction":
+                        foreach (RunStatus result in ProcessCoppeliaAction(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliaactionstate":
+                        foreach (RunStatus result in ProcessCoppeliaActionState(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliaagentfeature":
+                        foreach (RunStatus result in ProcessCoppeliaAgentFeature(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliaagentresponsiblebelief":
+                        foreach (RunStatus result in ProcessCoppeliaAgentResponsibleBelief(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliaanger":
+                        foreach (RunStatus result in ProcessCoppeliaAnger(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliaambition":
+                        foreach (RunStatus result in ProcessCoppeliaAmbition(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliadesired":
+                        foreach (RunStatus result in ProcessCoppeliaDesired(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliaactiontendancy":
+                        foreach (RunStatus result in ProcessCoppeliaActionTendancy(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+
+                    case "coppeliaemotion":
+                        foreach (RunStatus result in ProcessCoppeliaEmotion(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliaexpectedsatisfaction":
+                        foreach (RunStatus result in ProcessCoppeliaExpectedSatisfaction(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliafeatureemotionbelief":
+                        foreach (RunStatus result in ProcessCoppeliaFeatureEmotionBelief(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliafeaturebelief":
+                        foreach (RunStatus result in ProcessCoppeliaFeatureBelief(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliaperform":
+                        foreach (RunStatus result in ProcessCoppeliaPerform(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliapraiseworthy":
+                        foreach (RunStatus result in ProcessCoppeliaPraiseworthy(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliarelation":
+                        foreach (RunStatus result in ProcessCoppeliaRelation(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "assertcoppeila":
+                        foreach (RunStatus result in ProcessAssertCoppelia(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliaresponse":
+                        foreach (RunStatus result in ProcessCoppeliaResponse(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliastatelikelihood":
+                        foreach (RunStatus result in ProcessCoppeliaStateLikelihood(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliastate":
+                        foreach (RunStatus result in ProcessCoppeliaState(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliastatestate":
+                        foreach (RunStatus result in ProcessCoppeliaStateState(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+
+//DEFAULT
                     default:
                         // Ignore the Nops
                         bot.myBehaviors.runState[nodeID] = RunStatus.Success;
@@ -3481,14 +3667,15 @@ namespace AltAIMLbot
 
         public IEnumerable<RunStatus> ProcessCoppeliaFeatureBelief(XmlNode myNode)
         {
-            // <coppeliaFeatuerBelief agent="self" state="targetstate" value="1" />
-            // Agent wants state to occur or not occur
+            // <coppeliaFeatuerBelief agent="self" feature="good" target="other" value="1" />
+            // agent believes that targets feature will facilitate state
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
             string cFeature = "good";
             string cAgent = "self";
             string cTarget = "other";
+            string cState = "state";
             string cValue = "0";
             float fValue = 0;
             try
@@ -3497,6 +3684,7 @@ namespace AltAIMLbot
                 if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
                 if (myNode.Attributes["target"] != null) cTarget = myNode.Attributes["target"].Value;
                 if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                if (myNode.Attributes["state"] != null) cState = myNode.Attributes["state"].Value;
                 fValue = float.Parse(cValue);
                 int featureID = AgentFeatures.Parse(cFeature);
 
@@ -3506,10 +3694,322 @@ namespace AltAIMLbot
                     {
                         if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cTarget))
                         {
+                            if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                            {
+                                Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                                Agent target = bot.servitor.CoppeliaAgentDictionary[cTarget];
+                                int state = bot.servitor.CoppeliaStateDictionary[cState];
+                                a1.SetFeatureBelief(featureID, state, target.AgentID, fValue);
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+        public IEnumerable<RunStatus> ProcessCoppeliaAgentResponsibleBelief(XmlNode myNode)
+        {
+            // <coppeliaFeatuerBelief agent="self" feature="good" target="other" value="1" />
+            // agent believes that targets feature will facilitate state
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cFeature = "good";
+            string cAgent = "self";
+            string cTarget = "other";
+            string cState = "state";
+            string cValue = "0";
+            float fValue = 0;
+            try
+            {
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (myNode.Attributes["target"] != null) cTarget = myNode.Attributes["target"].Value;
+                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                if (myNode.Attributes["state"] != null) cState = myNode.Attributes["state"].Value;
+                fValue = float.Parse(cValue);
+                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    {
+                        if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cTarget))
+                        {
+                            if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                            {
+                                Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                                Agent target = bot.servitor.CoppeliaAgentDictionary[cTarget];
+                                int state = bot.servitor.CoppeliaStateDictionary[cState];
+                                a1.SetAgentResponsibleBelief(target.AgentID, state,  fValue);
+                            }
+                        }
+                    }
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+        public IEnumerable<RunStatus> ProcessCoppeliaExpectedSatisfaction(XmlNode myNode)
+        {
+            // <coppeliaFeatuerBelief agent="self" feature="good" target="other" value="1" />
+            // agent believes that targets feature will facilitate state
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cFeature = "good";
+            string cAgent = "self";
+            string cAction = "action";
+            string cTarget = "other";
+            string cValue = "0";
+            float fValue = 0;
+            try
+            {
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                if (myNode.Attributes["action"] != null) cAction = myNode.Attributes["state"].Value;
+                if (myNode.Attributes["target"] != null) cTarget = myNode.Attributes["target"].Value;
+                fValue = float.Parse(cValue);
+                if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                {
+                        if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
+                        {
                             Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
                             Agent target = bot.servitor.CoppeliaAgentDictionary[cTarget];
-                            int state = 0;
-                            a1.SetFeatureBelief(featureID, state, target.AgentID, fValue);
+                            AgentAction action= bot.servitor.CoppeliaActionDictionary[cAction];
+                            a1.SetExpectedSatisfaction(target.AgentID, action.GlobalIndex , fValue);
+                        }
+                }
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+
+        public IEnumerable<RunStatus> ProcessCoppeliaAnger(XmlNode myNode)
+        {
+            // <coppeliaFeatuerBelief agent="self" feature="good" target="other" value="1" />
+            // agent believes that targets feature will facilitate state
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cAgent = "self";
+            string cTarget = "other";
+            string cValue = "0";
+            float fValue = 0;
+            try
+            {
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                if (myNode.Attributes["target"] != null) cTarget = myNode.Attributes["target"].Value;
+                fValue = float.Parse(cValue);
+                if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                {
+                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cTarget))
+                    {
+                        Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                        Agent target = bot.servitor.CoppeliaAgentDictionary[cTarget];
+                        a1.SetAnger(target.AgentID, fValue);
+                    }
+                }
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+        public IEnumerable<RunStatus> ProcessCoppeliaPraiseworthy(XmlNode myNode)
+        {
+            // <coppeliaFeatuerBelief agent="self" feature="good" target="other" value="1" />
+            // agent believes that targets feature will facilitate state
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cAgent = "self";
+            string cTarget = "other";
+            string cValue = "0";
+            float fValue = 0;
+            try
+            {
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                if (myNode.Attributes["target"] != null) cTarget = myNode.Attributes["target"].Value;
+                fValue = float.Parse(cValue);
+                if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                {
+                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cTarget))
+                    {
+                        Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                        Agent target = bot.servitor.CoppeliaAgentDictionary[cTarget];
+                        a1.SetPraiseworthy(target.AgentID, fValue);
+                    }
+                }
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+        public IEnumerable<RunStatus> ProcessCoppeliaEmotion(XmlNode myNode)
+        {
+            // <coppeliaFeatuerBelief agent="self" feature="good" target="other" value="1" />
+            // agent believes that targets feature will facilitate state
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cAgent = "self";
+            string cEmotion = "joy";
+            string cValue = "0";
+            float fValue = 0;
+            try
+            {
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                if (myNode.Attributes["emotion"] != null) cEmotion = myNode.Attributes["emotion"].Value;
+                fValue = float.Parse(cValue);
+                int iEmotion = AgentEmotions.Parse(cEmotion);
+                if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                {
+                    if (iEmotion >=0 )
+                    {
+                        Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                        a1.SetEmotion(iEmotion, fValue);
+                    }
+                }
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+
+        public IEnumerable<RunStatus> ProcessCoppeliaDesired(XmlNode myNode)
+        {
+            // <coppeliaFeatuerBelief agent="self" feature="good" target="other" value="1" />
+            // agent believes that targets feature will facilitate state
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cAgent = "self";
+            string cEmotion = "joy";
+            string cValue = "0";
+            float fValue = 0;
+            try
+            {
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                if (myNode.Attributes["emotion"] != null) cEmotion = myNode.Attributes["emotion"].Value;
+                fValue = float.Parse(cValue);
+                int iEmotion = AgentEmotions.Parse(cEmotion);
+                if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                {
+                    if (iEmotion >= 0)
+                    {
+                        Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                        a1.SetDesired(iEmotion, fValue);
+                    }
+                }
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+        public IEnumerable<RunStatus> ProcessCoppeliaActionTendancy(XmlNode myNode)
+        {
+            // <coppeliaFeatuerBelief agent="self" feature="good" target="other" value="1" />
+            // agent believes that targets feature will facilitate state
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cAgent = "self";
+            string cTarget = "other";
+            string cAction = "act";
+            string cValue = "0";
+            float fValue = 0;
+            try
+            {
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (myNode.Attributes["target"] != null) cTarget = myNode.Attributes["target"].Value;
+                if (myNode.Attributes["action"] != null) cAction = myNode.Attributes["action"].Value;
+                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                fValue = float.Parse(cValue);
+                
+                if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                {
+                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cTarget))
+                    {
+                        if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
+                        {
+                            Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                            Agent a2 = bot.servitor.CoppeliaAgentDictionary[cTarget];
+                            AgentAction act = bot.servitor.CoppeliaActionDictionary[cAction];
+                            a1.SetAT(a2.AgentID, act.GlobalIndex, fValue);
+
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+  
+        public IEnumerable<RunStatus> ProcessCoppeliaFeatureEmotionBelief(XmlNode myNode)
+        {
+            // <coppeliaFeatureEmotionBelief agent="self" feature="good" target="other" value="1" />
+            // agent believes that targets feature will facilitate state
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cFeature = "good";
+            string cEmotion = "joy";
+            string cAgent = "self";
+            string cValue = "0";
+            float fValue = 0;
+            try
+            {
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (myNode.Attributes["feature"] != null) cFeature = myNode.Attributes["feature"].Value;
+                if (myNode.Attributes["emotion"] != null) cEmotion = myNode.Attributes["emotion"].Value;
+
+                fValue = float.Parse(cValue);
+                int iEmotion = AgentEmotions.Parse(cEmotion);
+                int iFeature = AgentFeatures.Parse(cFeature);
+
+                if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                {
+                    if (iEmotion >=0)
+                    {
+                        if (iFeature>=0)
+                        {
+                            Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                            a1.SetFeatureEmotionBelief(iFeature,iEmotion, fValue);
                         }
                     }
                 }
@@ -3581,15 +4081,15 @@ namespace AltAIMLbot
 
         public IEnumerable<RunStatus> ProcessCoppeliaStateLikelihood(XmlNode myNode)
         {
-            // <coppeliaState state="act" initial="true/false" />
+            // <coppeliaStateLikelihood agent="self" state="state1" likelihood="0.5" />
             // defines a value and it's initial state truth value
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
             string cAgent = "self";
             string cState = "stateUnknown";
-            string cStateProb = "0";
-            float pStateProb = 0;
+            string cStateProb = "0.5";
+            float pStateProb = (float)0.5;
 
             try
             {
@@ -3859,6 +4359,203 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
+
+
+
+        // Assert based on guest object Eval
+        // "cond" will be invoked on bot.guestEvalObject which should return a bool
+        // which will determine the assert success or failure
+        // fails if guest does not exist
+        // the inner text defines the call parameters
+        // One idiom would be to check if the guest object exists as a guard to
+        //  a guest specific behavior subtree
+        // One can also use the check for <selector>'s that depend on a particular
+        //  guest object type
+        public IEnumerable<RunStatus> ProcessAssertCoppelia(XmlNode myNode)
+        {
+            string condition = myNode.Attributes["cond"].Value;
+            string parameters = myNode.InnerText;
+            string condData = myNode.Attributes["cond"] == null ? null : myNode.Attributes["cond"].Value;
+            string[] parms = condData.Trim().Split(' ');
+            string varName = parms[0];
+            string rel = "";
+            string val = "";
+            double dval = 0;
+            Int32 elapsedTime = Environment.TickCount - transitionTime;
+
+            string cAgent = "agent";
+            string cRelation = "null";
+            string cRecipient = "agent";
+            string cAct = "act";
+            string cState = "state";
+            string cFeature = "good";
+            string cEmotion = "joy";
+
+            if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+            if (myNode.Attributes["relation"] != null) cRelation = myNode.Attributes["relation"].Value;
+            if (myNode.Attributes["reciptient"] != null) cRecipient = myNode.Attributes["reciptient"].Value;
+            if (myNode.Attributes["act"] != null) cAct = myNode.Attributes["act"].Value;
+            if (myNode.Attributes["state"] != null) cState = myNode.Attributes["state"].Value;
+            if (myNode.Attributes["feature"] != null) cFeature = myNode.Attributes["feature"].Value;
+            if (myNode.Attributes["emotion"] != null) cEmotion = myNode.Attributes["emotion"].Value;
+            Agent a1 = null;
+            Agent a2 = null;
+            int iRelation = AgentRelations.Parse(cRelation);
+            int iFeature = AgentFeatures.Parse(cFeature);
+            int iEmotions = AgentRelations.Parse(cEmotion);
+
+            if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+            {
+               a1 =bot.servitor.CoppeliaAgentDictionary[cAgent];
+            }
+            if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cRecipient))
+            {
+                a2 = bot.servitor.CoppeliaAgentDictionary[cRecipient];
+            }
+
+            //Console.WriteLine("  CondData='{0}' '{1}' '{2}' '{3}'", condData, varName,rel,val);
+            try { rel = parms[1].ToLower(); }
+            catch { }
+            try { val = parms[2]; }
+            catch { }
+            try
+            {
+                dval = double.Parse(val);
+            }
+            catch (Exception e)
+            {
+                dval = 0;
+            }
+            // Fetch conditional test
+            // Checking blackboard/cache but should include 
+            // bot predicates,cache, chemistry
+            string sv = "";
+            double bbVal = 0;
+            try
+            {
+                //sv = myChemistry.m_cBus.getHash("mdollhearduuid");
+                sv = bot.myChemistry.m_cBus.getHash(varName);
+                bbVal = double.Parse(sv);
+            }
+            catch (Exception e) { }
+
+            if (varName == "angerat") bbVal = a1.GetAnger(a2.AgentID);
+            if (varName == "emotion") bbVal = a1.GetEmotion(iEmotions);
+
+
+            // Special variables?
+            if (varName == "timeout") bbVal = elapsedTime;
+            if (varName == "behaviorstackcount") bbVal = bot.myBehaviors.behaviorStack.Count;
+            if (varName == "behaviorqueuecount") bbVal = bot.myBehaviors.eventQueue.Count;
+            if (varName == "prob") bbVal = rgen.NextDouble();
+            if (varName.Contains(".runtime"))
+            {
+                string tName = varName.Replace(".runtime", "");
+                bbVal = bot.myBehaviors.timeRunning(tName);
+            }
+            if (varName.Contains(".lastrun"))
+            {
+                string tName = varName.Replace(".lastrun", "");
+                bbVal = bot.myBehaviors.lastRunning(tName);
+            }
+            if (varName.Contains(".drive"))
+            {
+                string dName = varName.Replace(".drive", "");
+                double halflife = 1000 * double.Parse(myNode.Attributes["halflife"].Value);
+                int lastRun = bot.myBehaviors.lastRunning(dName);
+                bbVal = Math.Pow(0.5, (lastRun / halflife));
+            }
+
+
+
+
+
+            //Console.WriteLine("  CondTest=('{0}' '{1}') '{2}' '{3}'", sv, bbVal, rel, val);
+
+            // Check Condition
+            bool valid = false;
+            Match match = null;
+            switch (rel)
+            {
+                case "==":
+                    valid = (bbVal == dval);
+                    break;
+                case "<":
+                    valid = (bbVal < dval);
+                    break;
+                case ">":
+                    valid = (bbVal > dval);
+                    break;
+                case "lt":
+                    valid = (bbVal < dval);
+                    break;
+                case "gt":
+                    valid = (bbVal > dval);
+                    break;
+                case "<=":
+                    valid = (bbVal <= dval);
+                    break;
+                case ">=":
+                    valid = (bbVal >= dval);
+                    break;
+                case "matches":
+                    match = (new Regex(val)).Match(sv);
+                    valid = match.Success;
+                    break;
+                case "!matches":
+                    match = (new Regex(val)).Match(sv);
+                    valid = !match.Success;
+                    break;
+                case "notmatches":
+                    match = (new Regex(val)).Match(sv);
+                    valid = !match.Success;
+                    break;
+                case "=~":
+                    match = (new Regex(val)).Match(sv);
+                    valid = match.Success;
+                    break;
+                case "!~":
+                    match = (new Regex(val)).Match(sv);
+                    valid = !match.Success;
+                    break;
+            }
+
+            // General check of the last valid propositional model
+            // <assert cond="activemodel (NOT selfWantsTouch)"/>
+            if (varName == "activemodel")
+            {
+                string query = condData;
+                query = query.Replace("activemodel", "");
+                query = query.Replace("implies", "=>");
+                query = query.Replace(" imp ", "=> ");
+                query = query.Replace("equiv", "<=>");
+                query = query.Trim();
+
+                Sentence sen = (Sentence)new PEParser().Parse(query);
+                try
+                {
+                    valid = bot.myActiveModel.IsTrue(sen);
+                }
+                catch
+                {
+                    valid = false;
+                }
+            }
+
+            if (varName == "TRUE") valid = true;
+            // The return
+            if (valid)
+            {
+                yield return RunStatus.Success;
+                yield break;
+            }
+            else
+            {
+                yield return RunStatus.Failure;
+                yield break;
+            }
+        }
+
         #endregion
 
         // <loadchatmaper path="chatmapper\example.xml"/>
