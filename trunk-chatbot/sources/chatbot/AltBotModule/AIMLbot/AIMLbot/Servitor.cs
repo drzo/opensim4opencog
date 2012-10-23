@@ -16,6 +16,7 @@ using LAIR.ResourceAPIs.WordNet;
 using RTParser;
 using VDS.RDF.Parsing;
 using LogicalParticleFilter1;
+using CAMeRAVUEmotion;
 
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
@@ -79,7 +80,17 @@ namespace AltAIMLbot
         public Dictionary<string, SymbolicParticleFilter> partFilterDict = new Dictionary<string, SymbolicParticleFilter>();
         //[NonSerialized]
         //public SymbolicParticleFilter partFilter = new SymbolicParticleFilter();
-       
+
+        [NonSerialized]
+        HumanAgent a2;
+        [NonSerialized]
+        Agent a1;
+
+        [NonSerialized]
+        public Dictionary<string, Agent> CoppeliaAgentDictionary = new Dictionary<string, Agent>();
+        public Dictionary<string, AgentAction> CoppeliaActionDictionary = new Dictionary<string, AgentAction>();
+        public Dictionary<string, int> CoppeliaStateDictionary = new Dictionary<string, int>();
+
         public string rapStoreDirectory
         {
             get { return _rapStoreDirectory; }
@@ -115,6 +126,105 @@ namespace AltAIMLbot
             skipPersonalityCheck = skippersonalitycheck;
             initialCritical = initialcritical;
             Start(UserID, outputDelegate);
+        }
+        public void InitCoppelia()
+        {
+            //Create new agents
+            a1 = new Agent(0, 0, 1, -1, 0, 0, 0, 0);
+            a2 = new HumanAgent();
+            CoppeliaAgentDictionary["self"] = a1;
+            CoppeliaAgentDictionary["other"] = a2;
+            CoppeliaAgentDictionary["human"] = a2;
+
+            //Register the RequestingInput function (see below) as a function that needs to be called when Agent a2 (which is the HumanAgent) needs to respond to input
+            a2.input += new HumanAgent.InputRequest(RequestingInput);
+
+            //Register the GlobalActionReceived function (see below) as a function that needs to be called whenever any action is performed by any agent.
+            Global.actionBroadcast += new Global.ActionListener(GlobalActionReceived);
+            //Register both agents with the model, so they will be updated
+            //You'll most likely always need to do this for all agents
+            CAMeRAVUEmotion.Model.RegisterAgent(a1);
+            CAMeRAVUEmotion.Model.RegisterAgent(a2);
+
+            //Register the agents with each other, so they know they exist
+            //Agents will not target other agents with actions unless they know they exist
+            a1.AddAgent(a2.AgentID);
+            a2.AddAgent(a1.AgentID);
+
+            // Need to 
+            // - Creat actions with positivity/negativity +
+            // - define the responses between actions +
+            // - define the states +
+            // - define ambition for each actor and state+
+            // - defeine Action->State facilitation for each actor +
+            // - define State->State facilitation for each actor
+            // - define Actor features
+            // - define manual actions
+
+
+            //Start running the model
+            //This will run the Model in a separate thread, until it is stopped
+            //Stopping the model will in essense pause the simulation, so you can do this whenever necessary
+            //The Model will pause when a HumanAgent needs to respond to input
+            CAMeRAVUEmotion.Model.Start();
+        }
+
+        /// <summary>
+        /// This function is called when the HumanAgent a1's input member is fired (which happens when it receives an action from another agent)
+        /// </summary>
+        /// <returns></returns>
+        int RequestingInput()
+        {
+            //Some display so users know what's going on
+
+            Console.WriteLine("Select Response");
+
+            //display possible responses
+            for (int i = 0; i < a2.PossibleResponses.Count; ++i)
+            {
+                Console.WriteLine("" + i + ": " + Global.GetActionByID(a2.PossibleResponses[i]).Name);
+            }
+
+            //Request input from users
+            int num = -1;
+            bool failedParse = false;
+            do
+            {
+                failedParse = false;
+                string input = Console.In.ReadLine();
+                if (!int.TryParse(input, out num))
+                {
+                    failedParse = true;
+                }
+            } while (!failedParse && num < 0 || num >= a2.PossibleResponses.Count);
+
+            int responseID = -1;
+
+            //Check if the input of the user is valid
+            if (num >= 0 && num < a2.PossibleResponses.Count)
+                responseID = a2.PossibleResponses[num];
+
+            //Return the selected response
+            //-1 is an invalid ActionID and will constitute "no action"
+            return responseID;
+        }
+
+        /// <summary>
+        /// This function is called when any agent performs any action.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="action"></param>
+        /// <param name="target"></param>
+        void GlobalActionReceived(int sender, int action, int target)
+        {
+            Console.WriteLine("Caught Action: Agent " + sender + " performed action " + Global.GetActionByID(action).Name + " on Agent " + target);
+
+            //if the OK action is performed, update STATE_LOST_THE_GAME to true
+           // if (action == OK.GlobalIndex)
+           // {
+           //     Console.WriteLine("Setting state STATE_LOST_THE_GAME to true");
+           //     Global.SetState(STATE_LOST_THE_GAME, true);
+           // }
         }
 
         public void Start(string UserID,sayProcessorDelegate outputDelegate)
@@ -201,7 +311,8 @@ namespace AltAIMLbot
 
             Console.WriteLine("Servitor WebServitor.beginService");
             WebServitor.beginService(this);
-
+            Console.WriteLine(" Servitor beginning Coppelia");
+            InitCoppelia();
             Console.WriteLine(" Servitor startup complete");
         }
 

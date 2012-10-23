@@ -21,7 +21,7 @@ using VDS.RDF.Parsing;
 using LogicalParticleFilter1;
 using LAIR.ResourceAPIs.WordNet;
 using LAIR.Collections.Generic;
-
+using CAMeRAVUEmotion;
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 
@@ -2217,8 +2217,8 @@ namespace AltAIMLbot
         {
             RunStatus rs = RunStatus.Failure;
             Console.WriteLine("*** PROCESSING KB ***");
-            Model MiniModel = new Model();
-            Model walkModel = null;
+            Aima.Core.Logic.Propositional.Algorithms.Model MiniModel = new Aima.Core.Logic.Propositional.Algorithms.Model();
+            Aima.Core.Logic.Propositional.Algorithms.Model walkModel = null;
             MiniSatCSSolver myMiniSolver = new MiniSatCSSolver();
             string myReport = "";
             string miniPostives = "";
@@ -3442,6 +3442,425 @@ namespace AltAIMLbot
         }
         #endregion
 
+        #region Coppelia
+        public IEnumerable<RunStatus> ProcessCoppeliaAgentFeature(XmlNode myNode)
+        {
+            // <coppeliaFeature agent="self" feature="good" value="1" />
+            // Agent wants state to occur or not occur
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cFeature = "good";
+            string cAgent = "self";
+            string cValue = "0";
+            float fValue = 0;
+            try
+            {
+                if (myNode.Attributes["feature"] != null) cFeature = myNode.Attributes["feature"].Value;
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                fValue = float.Parse(cValue);
+                int featureID = AgentFeatures.Parse(cFeature);
+                if (featureID >=0 )
+                {
+                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    {
+                        Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                        a1.SetFeature(featureID, fValue);
+                    }
+                }
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+
+        public IEnumerable<RunStatus> ProcessCoppeliaFeatureBelief(XmlNode myNode)
+        {
+            // <coppeliaFeatuerBelief agent="self" state="targetstate" value="1" />
+            // Agent wants state to occur or not occur
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cFeature = "good";
+            string cAgent = "self";
+            string cTarget = "other";
+            string cValue = "0";
+            float fValue = 0;
+            try
+            {
+                if (myNode.Attributes["feature"] != null) cFeature = myNode.Attributes["feature"].Value;
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (myNode.Attributes["target"] != null) cTarget = myNode.Attributes["target"].Value;
+                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                fValue = float.Parse(cValue);
+                int featureID = AgentFeatures.Parse(cFeature);
+
+                if (featureID >= 0)
+                {
+                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    {
+                        if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cTarget))
+                        {
+                            Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                            Agent target = bot.servitor.CoppeliaAgentDictionary[cTarget];
+                            int state = 0;
+                            a1.SetFeatureBelief(featureID, state, target.AgentID, fValue);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+
+        public IEnumerable<RunStatus> ProcessCoppeliaAction(XmlNode myNode)
+        {
+            // <coppeliaAction state="act" positivity="0" negativity="0" />
+            // defines a value and it's initial state truth value
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cAction = "actionUnknown";
+            string cPositivity = "0";
+            string cNegativity = "0";
+            float fPositivity = 0;
+            float fNegativity = 0;
+
+            try
+            {
+                if (myNode.Attributes["action"] != null) cAction = myNode.Attributes["action"].Value;
+                if (myNode.Attributes["positivity"] != null) cPositivity = myNode.Attributes["positivity"].Value;
+                if (myNode.Attributes["negativity"] != null) cNegativity = myNode.Attributes["negativity"].Value;
+                fPositivity = float.Parse(cPositivity);
+                fNegativity = float.Parse(cNegativity);
+            }
+            catch
+            {
+            }
+            AgentAction newAction = new AgentAction(cAction, fPositivity, fNegativity);
+            bot.servitor.CoppeliaActionDictionary[cAction] = newAction;
+            yield return rs;
+            yield break;
+        }
+
+        public IEnumerable<RunStatus> ProcessCoppeliaState(XmlNode myNode)
+        {
+            // <coppeliaState state="act" initial="true/false" />
+            // defines a value and it's initial state truth value
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cState = "stateUnknown";
+            string cInitState = "false";
+            bool bState = false;
+
+            try
+            {
+                if (myNode.Attributes["state"] != null) cState = myNode.Attributes["state"].Value;
+                if (myNode.Attributes["initial"] != null) cInitState = myNode.Attributes["initial"].Value;
+                bState = bool.Parse(cInitState);
+            }
+            catch
+            {
+            }
+            int newState = Global.AddState(bState);
+            bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+
+        public IEnumerable<RunStatus> ProcessCoppeliaStateLikelihood(XmlNode myNode)
+        {
+            // <coppeliaState state="act" initial="true/false" />
+            // defines a value and it's initial state truth value
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cAgent = "self";
+            string cState = "stateUnknown";
+            string cStateProb = "0";
+            float pStateProb = 0;
+
+            try
+            {
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+
+                if (myNode.Attributes["state"] != null) cState = myNode.Attributes["state"].Value;
+                if (myNode.Attributes["likelihood"] != null) cStateProb = myNode.Attributes["likelihood"].Value;
+                pStateProb = float.Parse(cStateProb);
+                if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                {
+                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    {
+                        Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                        int state = bot.servitor.CoppeliaStateDictionary[cState];
+                        a1.SetStateLikelihood(state, pStateProb);
+                    }
+                }
+            }
+            catch
+            {
+            }
+            yield return rs;
+            yield break;
+        }
+
+        public IEnumerable<RunStatus> ProcessCoppeliaResponse(XmlNode myNode)
+        {
+            // <coppeliaResponse action="act" response="reaction" />
+            // reaction can follow an agent receiving act
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cAct = "actAction";
+            string cResponse = "actReaction";
+
+            try
+            {
+                if (myNode.Attributes["action"] != null) cAct = myNode.Attributes["action"].Value;
+                if (myNode.Attributes["response"] != null) cResponse = myNode.Attributes["response"].Value;
+
+                if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAct))
+                {
+                    if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cResponse))
+                    {
+                        AgentAction a1 = bot.servitor.CoppeliaActionDictionary[cAct];
+                        AgentAction a2 = bot.servitor.CoppeliaActionDictionary[cResponse];
+                        a1.AddResponse(a2.GlobalIndex);
+                    }
+                }
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+
+        public IEnumerable<RunStatus> ProcessCoppeliaAmbition(XmlNode myNode)
+        {
+            // <coppeliaAmbition agent="self" state="targetstate" value="1" />
+            // Agent wants state to occur or not occur
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cState = "state";
+            string cAgent = "self";
+            string cValue = "0";
+            float fValue = 0;
+            try
+            {
+                if (myNode.Attributes["state"] != null) cState = myNode.Attributes["state"].Value;
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                fValue = float.Parse(cValue);
+
+                if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                {
+                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    {
+                        Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                        int state = bot.servitor.CoppeliaStateDictionary[cState];
+                        a1.AddAmbition(state, fValue);
+                    }
+                }
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+
+        public IEnumerable<RunStatus> ProcessCoppeliaActionState(XmlNode myNode)
+        {
+            // <coppeliaActState agent="self" act="act1" statedst="s2"  value="1" />
+            // Agent believes Act will cause state with prob v
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cAct = "act";
+            string cState = "state";
+            string cAgent = "self";
+            string cValue = "0";
+            float fValue = 0;
+            try
+            {
+                if (myNode.Attributes["act"] != null)   cAct = myNode.Attributes["act"].Value;
+                if (myNode.Attributes["state"] != null) cState = myNode.Attributes["state"].Value;
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                fValue = float.Parse(cValue);
+
+                if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                {
+                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    {
+                        if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAct))
+                        {
+                            AgentAction act = bot.servitor.CoppeliaActionDictionary[cAct];
+                            Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                            int state = bot.servitor.CoppeliaStateDictionary[cState];
+                            a1.SetActionStateBelief(act.GlobalIndex ,state, fValue);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+
+        public IEnumerable<RunStatus> ProcessCoppeliaStateState(XmlNode myNode)
+        {
+            // <coppeliaStateState agent="self" statesrc="s1" statedst="s2"  value="1" />
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cStateSrc = "state1";
+            string cStateDest = "state2";
+            string cAgent = "self";
+            string cValue = "0";
+            float fValue = 0;
+            try
+            {
+                if (myNode.Attributes["statesrc"] != null) cStateSrc = myNode.Attributes["state"].Value;
+                if (myNode.Attributes["statedest"] != null) cStateDest = myNode.Attributes["state"].Value;
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                fValue = float.Parse(cValue);
+
+                if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cStateSrc))
+                {
+                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    {
+                        if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cStateDest))
+                        {
+                            Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                            int stateSrc = bot.servitor.CoppeliaStateDictionary[cStateSrc];
+                            int stateDest = bot.servitor.CoppeliaStateDictionary[cStateDest];
+                            a1.SetStateFacStateBelief(stateSrc, stateDest, fValue);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+
+        public IEnumerable<RunStatus> ProcessCoppeliaPerform(XmlNode myNode)
+        {
+            // <coppeliaPerform agent="self" act="a1" recipient="other" />
+            // Agent just performed act to recipient
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cAct = "actAction";
+            string cAgent = "agent";
+            string cRecipient = "reciptient";
+
+            try
+            {
+                if (myNode.Attributes["action"] != null) cAct = myNode.Attributes["action"].Value;
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (myNode.Attributes["reciptient"] != null) cRecipient = myNode.Attributes["reciptient"].Value;
+
+                if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAct))
+                {
+                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    {
+                        if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cRecipient))
+                        {
+                            AgentAction act = bot.servitor.CoppeliaActionDictionary[cAct];
+                            Agent agent = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                            Agent recipent = bot.servitor.CoppeliaAgentDictionary[cRecipient];
+                            agent.ManualPerform(act, recipent);
+
+                        }
+                    }
+                }
+
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+
+
+        public IEnumerable<RunStatus> ProcessCoppeliaRelation(XmlNode myNode)
+        {
+            // <coppeliaPerform agent="self" act="a1" recipient="other" />
+            // Agent just performed act to recipient
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cRelation = "actAction";
+            string cAgent = "agent";
+            string cRecipient = "reciptient";
+            string cValue = "0";
+            float fValue = 0;
+
+            try
+            {
+                if (myNode.Attributes["relation"] != null) cRelation = myNode.Attributes["relation"].Value;
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (myNode.Attributes["reciptient"] != null) cRecipient = myNode.Attributes["reciptient"].Value;
+                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                fValue = float.Parse(cValue);
+                int relationID = AgentRelations.Parse(cRelation);
+
+                if (relationID >=0 )
+                {
+                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    {
+                        if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cRecipient))
+                        {
+                            Agent agent = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                            Agent recipent = bot.servitor.CoppeliaAgentDictionary[cRecipient];
+                            agent.SetRelation(recipent.AgentID,relationID,fValue);
+
+                        }
+                    }
+                }
+
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+        #endregion
+
         // <loadchatmaper path="chatmapper\example.xml"/>
         public IEnumerable<RunStatus> ProcessLoadChatMapper(XmlNode myNode)
         {
@@ -3472,6 +3891,8 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
+
+
         public IEnumerable<RunStatus> ProcessAssertMenu(XmlNode myNode)
         {
             string condition = myNode.Attributes["cond"].Value;
