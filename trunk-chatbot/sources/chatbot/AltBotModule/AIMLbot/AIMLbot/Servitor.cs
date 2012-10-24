@@ -90,6 +90,7 @@ namespace AltAIMLbot
         public Dictionary<string, Agent> CoppeliaAgentDictionary = new Dictionary<string, Agent>();
         public Dictionary<string, AgentAction> CoppeliaActionDictionary = new Dictionary<string, AgentAction>();
         public Dictionary<string, int> CoppeliaStateDictionary = new Dictionary<string, int>();
+        public Dictionary<string, int> CoppeliaMoralsDictionary = new Dictionary<string, int>();
 
         public string rapStoreDirectory
         {
@@ -130,7 +131,7 @@ namespace AltAIMLbot
         public void InitCoppelia()
         {
             //Create new agents
-            a1 = new Agent(0, 0, 1, -1, 0, 0, 0, 0);
+            a1 = new Agent(0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f);
             a2 = new HumanAgent();
             CoppeliaAgentDictionary["self"] = a1;
             CoppeliaAgentDictionary["other"] = a2;

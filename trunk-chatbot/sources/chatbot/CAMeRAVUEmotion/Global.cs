@@ -5,7 +5,13 @@ using System.Text;
 
 namespace CAMeRAVUEmotion
 {
-    // From the work on Silicon Coppelia
+    // This code was taken from Silicon Coppelia,
+    // developed within the Center for Advanced Media Research Amsterdam 
+    // at the VU University Amsterdam (CAMeRA@VU) 
+    // and written by Matthijs Aart Pontier and Ghazanfar Farooq Siddiqui. 
+    // More information and publications can be found here:
+    // http://camera-vu.nl/matthijs/
+    // http://www.linkedin.com/profile/view?id=19933074 
     // http://www.few.vu.nl/~mpr210/
     // http://www.few.vu.nl/~mpr210/DissertationMAPontier.pdf
     // http://camera-vu.nl/matthijs/IAT-2009_Coppelia.pdf
@@ -43,6 +49,11 @@ namespace CAMeRAVUEmotion
         static int _lastState = 0;
         static int _lastAction = 0;
 
+        //moralprinciples, what type should this be? should there be a separate moralprinciple class?
+        internal static Dictionary<int, bool> MORALPRINCIPLES = new Dictionary<int, bool>();	//0 = Autonomy //1 = Non-Maleficence //2 = Beneficence	//3 = Justice
+
+        static int _lastMoralPrinciple = 0;
+
         internal static Dictionary<int, List<AgentAction>> ACTIONS = new Dictionary<int, List<AgentAction>>();
 
         #endregion variables
@@ -64,6 +75,22 @@ namespace CAMeRAVUEmotion
                 foreach (AgentAction a in temp)
                 {
                     if (a.GlobalIndex == globalID)
+                        return a;
+                }
+            }
+
+            return null;
+        }
+
+        public static AgentAction GetActionByName(string name)
+        {
+            foreach (int key in ACTIONS.Keys)
+            {
+                List<AgentAction> temp = ACTIONS[key];
+
+                foreach (AgentAction a in temp)
+                {
+                    if (a.Name == name)
                         return a;
                 }
             }
@@ -119,9 +146,63 @@ namespace CAMeRAVUEmotion
         {
             get
             {
+                //Console.WriteLine("# States is: " + STATES.Count);
                 return STATES.Count;
             }
         }
+
+
+        /// <summary>
+        /// This function can be called to register a new moral principle.
+        /// </summary>
+        /// <returns>A value that can be stored to indicate a specific moral principle. Store these in a variable, and use that variable to access the moral principle.</returns>
+        public static int AddMoralPrinciple(bool initialValue)
+        {
+            int newMoralPrinciple = _lastMoralPrinciple;
+            MORALPRINCIPLES[_lastMoralPrinciple++] = initialValue;
+            Console.WriteLine("Moral Principle added: " + newMoralPrinciple);
+            return newMoralPrinciple;
+        }
+        public static int AddMoralPrinciple()
+        {
+            return AddMoralPrinciple(true);
+        }
+
+        /// <summary>
+        /// Gets the value of a moral principle.
+        /// </summary>
+        /// <param name="stateIndex">The index, returned by AddMoralPrinciple at an earlier time, that indicates a moral principle.</param>
+        /// <returns></returns>
+        public static bool GetMoralPrinciple(int moralPrincipleIndex)
+        {
+            if (MORALPRINCIPLES.Keys.Contains(moralPrincipleIndex))
+                return MORALPRINCIPLES[moralPrincipleIndex];
+            else return false;
+        }
+        /// <summary>
+        /// Sets the value of a moral principle.
+        /// </summary>
+        /// <param name="moralPrincipleIndex">The index, returned by AddMoralPrinciple at an earlier time, that indicates a moral principle.</param>
+        /// <param name="value"></param>
+        public static void SetMoralPrinciple(int moralPrincipleIndex, bool value)
+        {
+            if (MORALPRINCIPLES.Keys.Contains(moralPrincipleIndex))
+                MORALPRINCIPLES[moralPrincipleIndex] = value;
+
+        }
+
+         /// <summary>
+        /// The current number of moral principles in the simulation.
+        /// </summary>
+        public static int MoralPrincipleCount
+        {
+            get
+            {
+                //Console.WriteLine("# Moral Principles is: " + MORALPRINCIPLES.Count);
+                return MORALPRINCIPLES.Count;
+            }
+        }
+
 
         /// <summary>
         /// A function that can be used to sort descending with the List class's Sort function.

@@ -1057,6 +1057,43 @@ namespace AltAIMLbot
                         }
                         break;
 
+                    case "coppeliamoral":
+                        foreach (RunStatus result in ProcessCoppeliaMoral(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliamoralambitionl":
+                        foreach (RunStatus result in ProcessCoppeliaMoralAmbition(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "coppeliaactionmoralbelief":
+                        foreach (RunStatus result in ProcessCoppeliaActionMoralBelief(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                    case "gencoppeliafrommt":
+                        foreach (RunStatus result in ProcessGenCoppeliaFromMt(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+
 //DEFAULT
                     default:
                         // Ignore the Nops
@@ -3634,9 +3671,12 @@ namespace AltAIMLbot
         // agentActions(Action, positive, negative)
         // actionResponse(Action,Response)
         // defState(State,Initial)
-        // ambition(Actor,State,value)
+        // stateAmbition(Actor,State,value)
         // actionStateBelief(Actor,Action,State,value)
-        //
+
+        // moralPrinciple(Moral,Initial)
+        // moralAmbition(Actor,Moral,value)
+        // actionMoralBelief(Actor,Action,Moral,value)
 
         public IEnumerable<RunStatus> ProcessGenCoppeliaFromMt(XmlNode myNode)
         {
@@ -3701,14 +3741,14 @@ namespace AltAIMLbot
                     string cInitState = bindings["INITIAL"];
                     bool bState = false;
                     bState = bool.Parse(cInitState);
-                    if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                    if (!bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
                     {
                         int newState = Global.AddState(bState);
                         bot.servitor.CoppeliaStateDictionary[cState] = newState;
                     }
                 }
                 // ambition(Actor,State,value)
-                bot.servitor.prologEngine.askQuery("ambition(ACTOR,STATE,VALUE)", mtName, out bingingsList);
+                bot.servitor.prologEngine.askQuery("stateAmbition(ACTOR,STATE,VALUE)", mtName, out bingingsList);
                 foreach (Dictionary<string, string> bindings in bingingsList)
                 {
                     string cActor = bindings["ACTOR"];
@@ -3751,6 +3791,68 @@ namespace AltAIMLbot
                         }
                     }
                 }
+                //Morals
+                // moralPrinciple(Moral,Initial)
+                bot.servitor.prologEngine.askQuery("moralPrinciple(MORAL,INITIAL)", mtName, out bingingsList);
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    string cMoral = bindings["MORAL"];
+                    string cInitState = bindings["INITIAL"];
+                    bool bState = false;
+                    bState = bool.Parse(cInitState);
+                    if (!bot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
+                    {
+                        int newState = Global.AddState(bState);
+                        bot.servitor.CoppeliaMoralsDictionary[cMoral] = newState;
+                    }
+                }
+                // moralAmbition(Actor,Moral,value)
+                bot.servitor.prologEngine.askQuery("stateAmbition(ACTOR,MORAL,VALUE)", mtName, out bingingsList);
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    string cActor = bindings["ACTOR"];
+                    string cMoral = bindings["MORAL"];
+                    string cValue = bindings["VALUE"];
+                    float fValue = 0;
+                    fValue = float.Parse(cValue);
+                    if (bot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
+                    {
+                        if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cActor))
+                        {
+                            Agent a1 = bot.servitor.CoppeliaAgentDictionary[cActor];
+                            int moral = bot.servitor.CoppeliaMoralsDictionary[cMoral];
+                            a1.AddMoralAmbition(moral, fValue);
+                        }
+                    }
+                }
+                // actionMoralBelief(Actor,Action,Moral,value)
+                bot.servitor.prologEngine.askQuery("actionStateBelief(ACTOR,ACTION,MORAL,VALUE)", mtName, out bingingsList);
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    string cActor = bindings["ACTOR"];
+                    string cAction = bindings["ACTION"];
+                    string cMoral = bindings["MORAL"];
+                    string cValue = bindings["VALUE"];
+                    float fValue = 0;
+                    fValue = float.Parse(cValue);
+
+                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cActor))
+                    {
+                        if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
+                        {
+                            if (bot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
+                            {
+                                AgentAction act = bot.servitor.CoppeliaActionDictionary[cAction];
+                                Agent a1 = bot.servitor.CoppeliaAgentDictionary[cActor];
+                                int moral = bot.servitor.CoppeliaMoralsDictionary[cMoral];
+                                a1.SetActionMoralPrincipleBelief(act.GlobalIndex, moral, fValue);
+                            }
+                        }
+                    }
+                }
+
+
+
                 rs = RunStatus.Success;
             }
             catch (Exception e)
@@ -4224,6 +4326,8 @@ namespace AltAIMLbot
             yield break;
         }
 
+
+
         public IEnumerable<RunStatus> ProcessCoppeliaStateLikelihood(XmlNode myNode)
         {
             // <coppeliaStateLikelihood agent="self" state="state1" likelihood="0.5" />
@@ -4330,7 +4434,114 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
+// Coppelia Morals
+        public IEnumerable<RunStatus> ProcessCoppeliaMoral(XmlNode myNode)
+        {
+            // <coppeliaState state="act" initial="true/false" />
+            // defines a value and it's initial state truth value
 
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cMoral = "stateUnknown";
+            string cInitState = "false";
+            bool bState = false;
+
+            try
+            {
+                if (myNode.Attributes["moral"] != null) cMoral = myNode.Attributes["moral"].Value;
+                if (myNode.Attributes["initial"] != null) cInitState = myNode.Attributes["initial"].Value;
+                bState = bool.Parse(cInitState);
+                if (!bot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
+                {
+                    int newMoral = Global.AddMoralPrinciple(bState);
+                    bot.servitor.CoppeliaMoralsDictionary[cMoral] = newMoral;
+                }
+            }
+            catch
+            {
+            }
+            yield return rs;
+            yield break;
+        }
+
+        public IEnumerable<RunStatus> ProcessCoppeliaMoralAmbition(XmlNode myNode)
+        {
+            // <coppeliaAmbition agent="self" state="targetstate" value="1" />
+            // Agent wants state to occur or not occur
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cMoral = "moral";
+            string cAgent = "self";
+            string cValue = "0";
+            float fValue = 0;
+            try
+            {
+                if (myNode.Attributes["moral"] != null) cMoral = myNode.Attributes["moral"].Value;
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                fValue = float.Parse(cValue);
+
+                if (bot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
+                {
+                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    {
+                        Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                        int moral = bot.servitor.CoppeliaStateDictionary[cMoral];
+                        a1.AddMoralAmbition(moral, fValue);
+                    }
+                }
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
+        public IEnumerable<RunStatus> ProcessCoppeliaActionMoralBelief(XmlNode myNode)
+        {
+            // <coppeliaActState agent="self" act="act1" statedst="s2"  value="1" />
+            // Agent believes Act will cause state with prob v
+
+            RunStatus rs = RunStatus.Success;
+            string innerStr = myNode.InnerXml.Trim();
+            string cAct = "act";
+            string cMoral = "moral";
+            string cAgent = "self";
+            string cValue = "0";
+            float fValue = 0;
+            try
+            {
+                if (myNode.Attributes["act"] != null) cAct = myNode.Attributes["act"].Value;
+                if (myNode.Attributes["moral"] != null) cMoral = myNode.Attributes["moral"].Value;
+                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                fValue = float.Parse(cValue);
+
+                if (bot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
+                {
+                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    {
+                        if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAct))
+                        {
+                            AgentAction act = bot.servitor.CoppeliaActionDictionary[cAct];
+                            Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                            int moral = bot.servitor.CoppeliaMoralsDictionary[cMoral];
+                            a1.SetActionMoralPrincipleBelief(act.GlobalIndex, moral, fValue);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+            //int newState = Global.AddState(bState);
+            //bot.servitor.CoppeliaStateDictionary[cState] = newState;
+            yield return rs;
+            yield break;
+        }
         public IEnumerable<RunStatus> ProcessCoppeliaActionState(XmlNode myNode)
         {
             // <coppeliaActState agent="self" act="act1" statedst="s2"  value="1" />

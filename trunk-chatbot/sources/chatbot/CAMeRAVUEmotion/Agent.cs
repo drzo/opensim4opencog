@@ -5,7 +5,13 @@ using System.Text;
 
 namespace CAMeRAVUEmotion
 {
-    // From the work on Silicon Coppelia
+    // This code was taken from Silicon Coppelia,
+    // developed within the Center for Advanced Media Research Amsterdam 
+    // at the VU University Amsterdam (CAMeRA@VU) 
+    // and written by Matthijs Aart Pontier and Ghazanfar Farooq Siddiqui. 
+    // More information and publications can be found here:
+    // http://camera-vu.nl/matthijs/
+    // http://www.linkedin.com/profile/view?id=19933074 
     // http://www.few.vu.nl/~mpr210/
     // http://www.few.vu.nl/~mpr210/DissertationMAPontier.pdf
     // http://camera-vu.nl/matthijs/IAT-2009_Coppelia.pdf
@@ -43,6 +49,22 @@ namespace CAMeRAVUEmotion
         #region variables
 
         internal int queuedAction = -1, queuedTarget = -1, receivedAction = -1, receivedAgent = -1;
+
+        public int ReceivedAction
+        {
+            get
+            {
+                return receivedAction;
+            }
+        }
+
+        public int ReceivedAgent
+        {
+            get
+            {
+                return receivedAgent;
+            }
+        }
 
         #region weights
 
@@ -178,9 +200,10 @@ namespace CAMeRAVUEmotion
         //******************************************************
         public float wesidt = 0.8f;
         public float wesui = 0.2f;
-        public float wesaeu = 1;		//weight of expected utility on expected satisfaction action
-        public float wesapos = 0;		//weight of positivity action on expected satisfaction actionn 
-        public float wesaneg = 0;		//weight of negativity action on expected satisfaction action
+        public float wesaeu = .1f;		//weight of expected utility on expected satisfaction action
+        public float wesapos = .2f;		//weight of positivity action on expected satisfaction action
+        public float wesaneg = .2f;		//weight of negativity action on expected satisfaction action
+        public float wesmor = .5f;      //weight of morality action on expected satisfaction action
 
         //WEIGHT EMOTIONS///////////////
 
@@ -255,6 +278,19 @@ namespace CAMeRAVUEmotion
         {
             AMBITIONS[state] = value;
         }
+
+        //moral ambitions
+        internal Dictionary<int, float> MORALAMBITIONS = new Dictionary<int, float>();
+        /// <summary>
+        /// Adds a Moral Ambition to an Agent.
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="value"></param>
+        public void AddMoralAmbition(int moralprinciple, float value)
+        {
+            MORALAMBITIONS[moralprinciple] = value;
+        }
+
         /// <summary>
         /// Gets an ambition from an Agent.
         /// </summary>
@@ -265,6 +301,21 @@ namespace CAMeRAVUEmotion
             if (AMBITIONS.Keys.Contains(state))
             {
                 return AMBITIONS[state];
+            }
+            else
+                return 0;
+        }
+
+        /// <summary>
+        /// Gets a moral ambition from an Agent.
+        /// </summary>
+        /// <param name="state"></param>
+        /// <returns>The Agent's Ambition for that state, or 0 if no ambition exists.</returns>
+        public float GetMoralAmbition(int moralprinciple)
+        {
+            if (MORALAMBITIONS.Keys.Contains(moralprinciple))
+            {
+                return MORALAMBITIONS[moralprinciple];
             }
             else
                 return 0;
@@ -486,6 +537,60 @@ namespace CAMeRAVUEmotion
             return 0;
         }
 
+        /// <summary>
+        /// Sets the Agent's belief that an action facilitates a moral principle
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="state"></param>
+        /// <param name="value"></param>
+        public void SetActionMoralPrincipleBelief(int action, int moralprinciple, float value)
+        {
+            int index = -1;
+            ActionMoralPrincipleBelief temp;
+            foreach (ActionMoralPrincipleBelief ampb in actionMoralPrincipleBeliefs)
+            {
+                if (action == ampb._action && moralprinciple == ampb._moralprinciple)
+                {
+                    index = actionMoralPrincipleBeliefs.IndexOf(ampb);
+                    break;
+                }
+            }
+
+            if (index != -1)
+            {
+                temp = actionMoralPrincipleBeliefs[index];
+                temp._value = value;
+                actionMoralPrincipleBeliefs[index] = temp;
+            }
+            else
+            {
+                temp = new ActionMoralPrincipleBelief(action, moralprinciple, value);
+                actionMoralPrincipleBeliefs.Add(temp);
+            }
+        }
+         public void SetActionMoralPrincipleBelief(int action, int moralprinciple)
+         {
+             SetActionMoralPrincipleBelief( action,  moralprinciple,0);
+         }
+       /// <summary>
+        /// Gets the Agent's belief that an action facilitates a moral principle
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        public float GetActionMoralPrincipleBelief(int action, int moralprinciple)
+        {
+            foreach (ActionMoralPrincipleBelief ampb in actionMoralPrincipleBeliefs)
+            {
+                if (action == ampb._action && moralprinciple == ampb._moralprinciple)
+                {
+                    return ampb._value;
+                }
+            }
+
+            return 0;
+        }
+
         //general beliefs about features leading to emotions
         internal float[,] featureEmotionBeliefs =
         {
@@ -612,6 +717,9 @@ namespace CAMeRAVUEmotion
 
         //action state influence beliefs
         List<ActionStateBelief> actionStateBeliefs = new List<ActionStateBelief>();
+
+        //action moralprinciple influence beliefs
+        List<ActionMoralPrincipleBelief> actionMoralPrincipleBeliefs = new List<ActionMoralPrincipleBelief>();
 
         //anger towards other agents
         internal Dictionary<int, float> anger = new Dictionary<int, float>();
@@ -926,11 +1034,7 @@ namespace CAMeRAVUEmotion
             if (index == -1)
                 expectedUtilityFeatures.Add(new ExpectedUtility(agentID, state, feature, value));
             else
-            {
-                ExpectedUtility temp = expectedUtilityFeatures[index];
-                temp.Value = value;
-                expectedUtilityFeatures[index] = temp;
-            }
+                expectedUtilityFeatures[index] = new ExpectedUtility(agentID, state, feature, value);
         }
         /// <summary>
         /// 
@@ -977,11 +1081,7 @@ namespace CAMeRAVUEmotion
             if (index == -1)
                 expectedUtilityActions.Add(new ExpectedUtility(agentID, state, action, value));
             else
-            {
-                ExpectedUtility temp = expectedUtilityActions[index];
-                temp.Value = value;
-                expectedUtilityActions[index] = temp;
-            }
+                expectedUtilityActions[index] = new ExpectedUtility(agentID, state, action, value);
         }
         /// <summary>
         /// 
@@ -998,6 +1098,54 @@ namespace CAMeRAVUEmotion
                 {
                     //replace this
                     return eu.Value;
+                }
+            }
+
+            return 0;
+        }
+
+        //MORAL:
+        //expected morality of agent's features towards states
+        internal List<Morality> moralityActions = new List<Morality>();
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="moralprinciple"></param>
+        /// <param name="agentID"></param>
+        /// <param name="action"></param>
+        /// <param name="value"></param>
+        public void SetMoralityAction(int moralprinciple, int agentID, int action, float value)
+        {
+            int index = -1;
+            foreach (Morality mu in moralityActions)
+            {
+                if (mu._agentID == agentID && mu._moralprinciple == moralprinciple && mu._feature == action)
+                {
+                    //replace this
+                    index = moralityActions.IndexOf(mu);
+                }
+            }
+
+            if (index == -1)
+                moralityActions.Add(new Morality(agentID, moralprinciple, action, value));
+            else
+                moralityActions[index] = new Morality(agentID, moralprinciple, action, value);
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="moralprinciple"></param>
+        /// <param name="agentID"></param>
+        /// <param name="action"></param>
+        /// <returns></returns>
+        public float GetMoralityAction(int moralprinciple, int agentID, int action)
+        {
+            foreach (Morality mu in moralityActions)
+            {
+                if (mu._agentID == agentID && mu._moralprinciple == moralprinciple && mu._feature == action)
+                {
+                    //replace this
+                    return mu.Value;
                 }
             }
 
@@ -1157,6 +1305,44 @@ namespace CAMeRAVUEmotion
                 return 0;
         }
 
+        //general morality actions
+        internal Dictionary<int, Dictionary<int, float>> generalMoralityActions = new Dictionary<int, Dictionary<int, float>>();
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="agentID"></param>
+        /// <param name="actionID"></param>
+        /// <param name="value"></param>
+        public void SetGMoralityAction(int agentID, int actionID, float value)
+        {
+            Dictionary<int, float> tmp = new Dictionary<int, float>();
+            if (generalMoralityActions.Keys.Contains(agentID))
+                //retrieve this dictionary
+                tmp = generalMoralityActions[agentID];
+
+            tmp[actionID] = value;
+
+            generalMoralityActions[agentID] = tmp;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="agentID"></param>
+        /// <param name="actionID"></param>
+        /// <returns></returns>
+        public float GetGMoralityAction(int agentID, int actionID)
+        {
+            if (generalMoralityActions.Keys.Contains(agentID))
+            {
+                if (generalMoralityActions[agentID].Keys.Contains(actionID))
+                    return generalMoralityActions[agentID][actionID];
+                else
+                    return 0;
+            }
+            else
+                return 0;
+        }
+
         //Action Tendancy
         internal Dictionary<int, Dictionary<int, float>> actionTendancy = new Dictionary<int, Dictionary<int, float>>();
         /// <summary>
@@ -1298,6 +1484,13 @@ namespace CAMeRAVUEmotion
         //activity means whether or not the agent updates within the simulation
         internal bool bActive = true;
 
+        public float Mood
+        {
+            get
+            {
+                return mood;
+            }
+        }
         internal float mood = 0;
 
         //dynamic array of other agents that are perceived by this agent
@@ -1622,7 +1815,7 @@ namespace CAMeRAVUEmotion
         /// This function is called every tick by the Model. Any Agents that have actions queued will perform these.
         /// This means all Agents will wait until the current cycle has completed, before performing their actions.
         /// </summary>
-        protected internal virtual void Perform()
+        protected internal virtual bool Perform()
         {
             //calculate highestTendencyAction
             
@@ -1632,13 +1825,19 @@ namespace CAMeRAVUEmotion
             {
                 Console.WriteLine("Agent " + AgentID + " performing action: " + Global.GetActionByID(queuedAction).Name);
 
+                Global.GetActionByID(queuedAction).Perform();
+
                 Model.GetAgentByID( queuedTarget ).PerceiveAction( this, Global.GetActionByID(queuedAction ) );
                 possibleResponses.Clear();
                 Global.Broadcast(ID, queuedAction, queuedTarget);
 
                 queuedAction = -1;
                 queuedTarget = -1;
+
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>

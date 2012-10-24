@@ -5,7 +5,13 @@ using System.Text;
 
 namespace CAMeRAVUEmotion
 {
-    // From the work on Silicon Coppelia
+    // This code was taken from Silicon Coppelia,
+    // developed within the Center for Advanced Media Research Amsterdam 
+    // at the VU University Amsterdam (CAMeRA@VU) 
+    // and written by Matthijs Aart Pontier and Ghazanfar Farooq Siddiqui. 
+    // More information and publications can be found here:
+    // http://camera-vu.nl/matthijs/
+    // http://www.linkedin.com/profile/view?id=19933074 
     // http://www.few.vu.nl/~mpr210/
     // http://www.few.vu.nl/~mpr210/DissertationMAPontier.pdf
     // http://camera-vu.nl/matthijs/IAT-2009_Coppelia.pdf
@@ -57,9 +63,34 @@ namespace CAMeRAVUEmotion
         }
 
         internal static bool waitingForInput = false;
+        public static bool WaitingForInput
+        {
+            get
+            {
+                return waitingForInput;
+            }
+        }
+
         internal static int inputAgent = -1;
 
         static bool shouldStop = false;
+
+        static bool stalled = false;
+        /// <summary>
+        /// This variable is set to true when the model exhausts its action-reaction chain
+        /// </summary>
+        public static bool Stalled
+        {
+            get
+            {
+                return stalled;
+            }
+        }
+
+        public static void Unstall()
+        {
+            stalled = false;
+        }
 
         /// <summary>
         /// Stops the Model's update sequence.
@@ -67,6 +98,18 @@ namespace CAMeRAVUEmotion
         public static void Stop()
         {
             shouldStop = true;
+        }
+
+        static AgentAction temp = new AgentAction("temp", 0, 0);
+
+        public static void SelectAction(List<AgentAction> choices, Agent choosingAgent, Agent targetAgent)
+        {
+            temp.responseList.Clear();
+            
+            foreach (AgentAction a in choices)
+                temp.AddResponse(a.GlobalIndex);
+
+            targetAgent.ManualPerform(temp, choosingAgent);
         }
 
         /// <summary>
@@ -87,6 +130,8 @@ namespace CAMeRAVUEmotion
             List<float> p_eu_a = new List<float>();
             List<float> n_eu_a = new List<float>();
             int n1 = 0, p1 = 0;
+
+            List<float> mu_a = new List<float>();
 
             List<float> p_at_ap = new List<float>();
             List<float> n_at_ap = new List<float>();
@@ -126,7 +171,7 @@ namespace CAMeRAVUEmotion
                             }
                         }
                     }
-                    //*****************calculating EU actions***************************************************
+                    //*****************calculating EU actions (regarding 1 goal?)***************************************************
                     foreach (int response in agent1.possibleResponses)
                     {
                         AgentAction a = Global.GetActionByID(response);
@@ -138,7 +183,9 @@ namespace CAMeRAVUEmotion
                         {
                             for (int state = 0; state < Global.StateCount; ++state)
                             {
-                                agent1.SetExpectedUtilityAction(state, agent2, response, agent1.GetActionStateBelief(a.GlobalIndex, state) * agent1.GetAmbition(state));
+                                float asb = agent1.GetActionStateBelief(a.GlobalIndex, state);
+                                float val = agent1.GetAmbition(state);
+                                agent1.SetExpectedUtilityAction(state, agent2, response, asb * val);
                             }
                         }
                     }
@@ -147,6 +194,9 @@ namespace CAMeRAVUEmotion
                     {
                         for (int feature = 0; feature < AgentFeatures.NUM_VALUES; ++feature)
                         {
+                            p_eu_f.Clear();
+                            n_eu_f.Clear();
+
                             for (int state = 0; state < Global.StateCount; ++state)
                             {
                                 float temp_eu_a = agent1.GetExpectedUtilityFeature(state, agent2id, feature);
@@ -189,6 +239,9 @@ namespace CAMeRAVUEmotion
                         { 
                             p1 = 0; n1 = 0;
 
+                            p_eu_a.Clear();
+                            n_eu_a.Clear();
+
                             for (int state = 0; state < Global.StateCount; ++state)
                             {
                                 float temp_eu_a = agent1.GetExpectedUtilityAction(state, agent2id, response);
@@ -230,10 +283,54 @@ namespace CAMeRAVUEmotion
                         }
                     }
 
+                    //*****************calculating Morality actions (regarding 1 moral principle)***************************************************
+                    foreach (int response in agent1.possibleResponses)
+                    {
+                        AgentAction a = Global.GetActionByID(response);
+
+                        if (a == null)
+                            throw new Exception("Invalid response ID, or something went wrong with the global actions dictionary");
+
+                        foreach (int agent2 in agent1.perceivedAgents)
+                        {
+                            for (int moralprinciple = 0; moralprinciple < Global.MoralPrincipleCount; ++moralprinciple)
+                            {
+                                float ampb = agent1.GetActionMoralPrincipleBelief(a.GlobalIndex, moralprinciple);
+                                float mval = agent1.GetMoralAmbition(moralprinciple);
+                                agent1.SetMoralityAction(moralprinciple, agent2, response, ampb * mval);
+                                Console.WriteLine("Set Morality Action " + response + " toward agent " + agent2 + " regarding moral principle " + moralprinciple + " to " + ampb*mval);
+                            }
+                        }
+                    }
+
+ //***********************calculating Morality(AGENT, ACTIONS, OTHER_AGENT)****************
+                    foreach (int response in agent1.possibleResponses)
+                    {
+                        float temp_morality = 0;
+                        foreach (int agent2id in agent1.perceivedAgents)
+                        {                             
+                            for (int moralprinciple = 0; moralprinciple < Global.MoralPrincipleCount; ++moralprinciple)
+                            {
+                                float temp_mu_a = agent1.GetMoralityAction(moralprinciple, agent2id, response);
+                                temp_morality += temp_mu_a;
+                            }
+                            temp_morality = temp_morality / Global.MoralPrincipleCount;
+
+                            agent1.SetGMoralityAction(agent2id, response, temp_morality);
+                            Console.WriteLine("Set General Morality Action " + response + " toward agent " + agent2id + " to " + temp_morality);
+                        }
+                    }
+
                     ////Calculating General positivity and negativity action tendencies(GPAT[AGENTS] and GNAT[AGENTS])**********************************
                     foreach (int agent2id in agent1.perceivedAgents)
                     {
                         int p2 = 0, p3 = 0, n2 = 0, n3 = 0;
+
+                        p_at_ap.Clear();
+                        n_at_ap.Clear();
+                        p_at_an.Clear();
+                        n_at_an.Clear();
+
                         foreach (int response in agent1.possibleResponses)
                         {
                             AgentAction a = Global.GetActionByID(response);
@@ -407,6 +504,8 @@ namespace CAMeRAVUEmotion
                     {
                         p_geu = 0;
                         n_geu = 0;
+                        p_geu_af.Clear();
+                        n_geu_af.Clear();
 
                         for (int feature = 0; feature < AgentFeatures.NUM_VALUES; ++feature)
                         {
@@ -457,6 +556,7 @@ namespace CAMeRAVUEmotion
 
                         agent1.SetRelation(agent2id, AgentRelations.USE_INTENTION, wp * pos_geu + wn * neg_geu);
 
+                       
                         //==================================================		
                         //********************************************************************		
                         //**********CALCULATING inv_dis_tradeoff******************************
@@ -483,7 +583,22 @@ namespace CAMeRAVUEmotion
                             if (a == null)
                                 throw new Exception("Invalid response ID, or something went wrong with the actions dictionary");
 
+                            //Wat gebeurt er precies?
+                            Console.WriteLine("Calculating Expected Satisfaction. Action " + Global.GetActionByID(response).Name + ", Agent " + agent2id); 
+                            Console.WriteLine(" Morality = " + agent1.GetGMoralityAction(agent2id, response));
+                            Console.WriteLine(" Expected Utility = " + agent1.GetGEUAction(agent2id, response));
+                            Console.WriteLine(" inv = " + (agent1.biasinv * agent1.GetRelation(agent2id, AgentRelations.INVOLVEMENT)));  
+                            Console.WriteLine(" dis = " + (agent1.biasdis * agent1.GetRelation(agent2id, AgentRelations.DISTANCE)));
+                            Console.WriteLine(" 1-d(pos, inv) = " + (1 - Math.Abs(a._positivity - agent1.biasinv * agent1.GetRelation(agent2id, AgentRelations.INVOLVEMENT))));                    
+                            Console.WriteLine(" 1-d(neg, dis) = " + (1 - Math.Abs(a._negativity - agent1.biasdis * agent1.GetRelation(agent2id, AgentRelations.DISTANCE))));
+                            Console.WriteLine(" ES = " + (agent1.wesmor * agent1.GetGMoralityAction(agent2id, response) + 
+                                    agent1.wesaeu * agent1.GetGEUAction(agent2id, response) +
+                                    agent1.wesapos * (1 - Math.Abs(a._positivity - agent1.biasinv * agent1.GetRelation(agent2id, AgentRelations.INVOLVEMENT))) +
+                                    agent1.wesaneg * (1 - Math.Abs(a._negativity - agent1.biasdis * agent1.GetRelation(agent2id, AgentRelations.DISTANCE))))
+                                );
+
                             agent1.SetExpectedSatisfaction(agent2id, response,
+                                    agent1.wesmor * agent1.GetGMoralityAction(agent2id, response) + 
                                     agent1.wesaeu * agent1.GetGEUAction(agent2id, response) +
                                     agent1.wesapos * (1 - Math.Abs(a._positivity - agent1.biasinv * agent1.GetRelation(agent2id, AgentRelations.INVOLVEMENT))) +
                                     agent1.wesaneg * (1 - Math.Abs(a._negativity - agent1.biasdis * agent1.GetRelation(agent2id, AgentRelations.DISTANCE)))
@@ -892,22 +1007,64 @@ namespace CAMeRAVUEmotion
 
                     agent1.receivedAction = agent1.receivedAgent = -1;
                 }
-                else if (agent1 is HumanAgent && waitingForInput)
+                else if (agent1 is HumanAgent)
+                {
+                    if (waitingForInput)
                 {
                     //can humans respond even though they are have not received an action?
-                    //TODO: Implement HumanAgent class
-                    //TODO: poll for user input
-
-                    if ( agent1.ID == inputAgent)
+                        if (agent1.ID == inputAgent)
                     {
                         if ((agent1 as HumanAgent).input != null)
                         {
-                            int responseID = (agent1 as HumanAgent).input();
+                                //run a thread and keep running it until it returns good input
+                                if (!runningThread)
+                                {
+                                    pollingAgent = agent1 as HumanAgent;
 
-                            agent1.queuedAction = responseID;
+                                    threadResponse = -1;
+
+                                    System.Threading.Thread T1 = new System.Threading.Thread(GetResponse);
+                                    T1.Start();
+
+                                    runningThread = true;
+                                }
+                                else
+                                {
+                                    if (threadResponse != -1)
+                                    {
+                                        //int responseID = (agent1 as HumanAgent).input();
+                                        if (threadResponse >= 0)
+                                        {
+                                            agent1.queuedAction = threadResponse;
                             agent1.queuedTarget = agent1.receivedAgent;
+                                        }
+
+                                        runningThread = false;
 
                             waitingForInput = false;
+                        }
+                    }
+                                //else
+                                //{
+                                //    pollingAgent = agent1 as HumanAgent;
+
+                                //    threadResponse = -1;
+
+                                //    System.Threading.Thread T1 = new System.Threading.Thread(GetResponse);
+                                //    T1.Start();
+
+                                //    runningThread = true;
+                                //}
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //check if we can perform the action that has been queued for our agent
+                        if (agent1.queuedAction != -1)
+                        {
+                            inputAgent = agent1.ID;
+                            agent1.Perform();
                         }
                     }
                 }
@@ -919,13 +1076,33 @@ namespace CAMeRAVUEmotion
             //END ROUGH IMPLEMENTATION//
             ////////////////////////////
 
+            stalled = false;// !waitingForInput; //never stall when waiting for input
+
             foreach (Agent a in agents)
-                a.Perform();
+                if (a.Perform())
+                    stalled = false;
 
             if (shouldStop)
                 return false;
 
             return true;
+        }
+
+        static bool runningThread = false;
+        static HumanAgent pollingAgent = null;
+        static int threadResponse = -1;
+
+        static void GetResponse()
+        {
+            while (threadResponse == -1)
+            {
+                threadResponse = GetInput();
+            }
+        }
+
+        static int GetInput()
+        {
+            return pollingAgent.input();
         }
 
         /// <summary>
@@ -939,7 +1116,12 @@ namespace CAMeRAVUEmotion
 
         static void RunModel()
         {
-            while (Run()) ;
+            while (Run());
+        }
+
+        public static void Step()
+        {
+            Run();
         }
     }
 }

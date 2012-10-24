@@ -5,7 +5,13 @@ using System.Text;
 
 namespace CAMeRAVUEmotion
 {
-    // From the work on Silicon Coppelia
+    // This code was taken from Silicon Coppelia,
+    // developed within the Center for Advanced Media Research Amsterdam 
+    // at the VU University Amsterdam (CAMeRA@VU) 
+    // and written by Matthijs Aart Pontier and Ghazanfar Farooq Siddiqui. 
+    // More information and publications can be found here:
+    // http://camera-vu.nl/matthijs/
+    // http://www.linkedin.com/profile/view?id=19933074 
     // http://www.few.vu.nl/~mpr210/
     // http://www.few.vu.nl/~mpr210/DissertationMAPontier.pdf
     // http://camera-vu.nl/matthijs/IAT-2009_Coppelia.pdf
@@ -107,12 +113,24 @@ namespace CAMeRAVUEmotion
                 return _name;
             }
         }
+
+        internal float _positivity = 0, _negativity = 0, _aesthetic = 0;
+
+        public delegate void ActionPerformEvent();
+
+        public ActionPerformEvent performed;
+
+        internal void Perform()
+        {
+            if (performed != null)
+                performed();
+        }
+
         public void SetValence(float pos, float neg)
         {
             _positivity = pos;
             _negativity = neg;
         }
-        internal float _positivity = 0, _negativity = 0, _aesthetic = 0;
 
         //internal Dictionary<int, float> stateInfluences = new Dictionary<int, float>();
         //public void SetInfluence(int state, float influence)

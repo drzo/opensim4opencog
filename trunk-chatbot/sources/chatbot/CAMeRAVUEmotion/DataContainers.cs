@@ -4,8 +4,14 @@ using System.Linq;
 using System.Text;
 
 namespace CAMeRAVUEmotion
-{   
-    // From the work on Silicon Coppelia
+{
+    // This code was taken from Silicon Coppelia,
+    // developed within the Center for Advanced Media Research Amsterdam 
+    // at the VU University Amsterdam (CAMeRA@VU) 
+    // and written by Matthijs Aart Pontier and Ghazanfar Farooq Siddiqui. 
+    // More information and publications can be found here:
+    // http://camera-vu.nl/matthijs/
+    // http://www.linkedin.com/profile/view?id=19933074 
     // http://www.few.vu.nl/~mpr210/
     // http://www.few.vu.nl/~mpr210/DissertationMAPontier.pdf
     // http://camera-vu.nl/matthijs/IAT-2009_Coppelia.pdf
@@ -237,6 +243,10 @@ namespace CAMeRAVUEmotion
             {
                 return _value;
             }
+            set
+            {
+                _value = value;
+            }
         }
 
         //It may be useful to set Agents to null in order to support
@@ -272,6 +282,10 @@ namespace CAMeRAVUEmotion
             {
                 return _value;
             }
+            set
+            {
+                _value = value;
+            }
         }
 
         public StateStateBelief(int state1, int state2, float value )
@@ -303,6 +317,10 @@ namespace CAMeRAVUEmotion
             {
                 return _value;
             }
+            set
+            {
+                _value = value;
+            }
         }
         
         public AgentStateBelief(int agentID, int state, float value )
@@ -333,6 +351,10 @@ namespace CAMeRAVUEmotion
             {
                 return _value;
             }
+            set
+            {
+                _value = value;
+            }
         }
         
         public ActionStateBelief(int action, int state, float value)
@@ -344,6 +366,41 @@ namespace CAMeRAVUEmotion
         public ActionStateBelief(int action, int state)
         {
             _state = state;
+            _action = action;
+            _value = 0;
+        }
+    }
+
+    
+    /// <summary>
+    /// Links an Action and a MoralPrinciple, to a Value
+    /// </summary>
+    public struct ActionMoralPrincipleBelief
+    {
+        internal int _action, _moralprinciple;
+
+        internal float _value;
+        public float Value
+        {
+            get
+            {
+                return _value;
+            }
+            set
+            {
+                _value = value;
+            }
+        }
+
+        public ActionMoralPrincipleBelief(int action, int moralprinciple, float value)
+        {
+            _moralprinciple = moralprinciple;
+            _action = action;
+            _value = value;
+        }
+        public ActionMoralPrincipleBelief(int action, int moralprinciple)
+        {
+            _moralprinciple = moralprinciple;
             _action = action;
             _value = 0;
         }
@@ -379,6 +436,44 @@ namespace CAMeRAVUEmotion
         public ExpectedUtility(int agentID, int state, int feature)
         {
             _state = state;
+            _agentID = agentID;
+            _feature = feature;
+            _value = 0;
+        }
+    }
+
+
+
+    /// <summary>
+    /// Links a Feature of a specific Agent and a MoralPrinciple, to a Value
+    /// </summary>
+    public struct Morality
+    {
+        internal int _agentID, _moralprinciple, _feature;
+
+        internal float _value;
+        public float Value
+        {
+            get
+            {
+                return _value;
+            }
+            internal set
+            {
+                _value = value;
+            }
+        }
+
+        public Morality(int agentID, int moralprinciple, int feature, float value)
+        {
+            _moralprinciple = moralprinciple;
+            _agentID = agentID;
+            _feature = feature;
+            _value = value;
+        }
+        public Morality(int agentID, int moralprinciple, int feature)
+        {
+            _moralprinciple = moralprinciple;
             _agentID = agentID;
             _feature = feature;
             _value = 0;
