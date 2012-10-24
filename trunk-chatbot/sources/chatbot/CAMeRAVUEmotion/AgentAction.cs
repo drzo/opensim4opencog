@@ -107,7 +107,11 @@ namespace CAMeRAVUEmotion
                 return _name;
             }
         }
-
+        public void SetValence(float pos, float neg)
+        {
+            _positivity = pos;
+            _negativity = neg;
+        }
         internal float _positivity = 0, _negativity = 0, _aesthetic = 0;
 
         //internal Dictionary<int, float> stateInfluences = new Dictionary<int, float>();

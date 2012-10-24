@@ -3629,6 +3629,141 @@ namespace AltAIMLbot
         #endregion
 
         #region Coppelia
+
+        // <GenCoppeliaFromMt mt="defCoppeliaMt" threshold="0.0001"/>
+        // agentActions(Action, positive, negative)
+        // actionResponse(Action,Response)
+        // defState(State,Initial)
+        // ambition(Actor,State,value)
+        // actionStateBelief(Actor,Action,State,value)
+        //
+
+        public IEnumerable<RunStatus> ProcessGenCoppeliaFromMt(XmlNode myNode)
+        {
+            // Append some si_text 
+            RunStatus rs = RunStatus.Failure;
+            string probStr = "0.001";
+            string mtName = "defCoppeliaMt";
+            string innerStr = myNode.InnerXml;
+            double threshold = 0.001;
+            string filter = "basic";
+
+            try
+            {
+                if (myNode.Attributes["threshold"] != null) probStr = myNode.Attributes["threshold"].Value;
+                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
+                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                SymbolicParticleFilter myFilter = findOrCreatePF(filter);
+                threshold = Double.Parse(probStr);
+
+                List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
+
+                // agentActions(Action, positive, negative)
+                bot.servitor.prologEngine.askQuery("agentActions(ACTION, POS, NEG)", mtName, out bingingsList);
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    float pos = float.Parse(bindings["POS"]);
+                    float neg = float.Parse(bindings["NEG"]);
+                    string cAction = bindings["ACTION"];
+                    if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
+                    {
+                        bot.servitor.CoppeliaActionDictionary[cAction].SetValence(pos, neg);
+                    }
+                    else
+                    {
+                        AgentAction newAction = new AgentAction(cAction, pos, neg);
+                        bot.servitor.CoppeliaActionDictionary[cAction] = newAction;
+                    }
+                }
+
+                // actionResponse(Action,Response)
+                bot.servitor.prologEngine.askQuery("actionResponse(ACTION,RESPONSE)", mtName, out bingingsList);
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    string cAction = bindings["ACTION"];
+                    string cResponse = bindings["RESPONSE"];
+                    if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
+                    {
+                        if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cResponse))
+                        {
+                            AgentAction a1 = bot.servitor.CoppeliaActionDictionary[cAction];
+                            AgentAction a2 = bot.servitor.CoppeliaActionDictionary[cResponse];
+                            a1.AddResponse(a2.GlobalIndex);
+                        }
+                    }
+                }
+
+                // defState(State,Initial)
+                bot.servitor.prologEngine.askQuery("defState(STATE,INITIAL)", mtName, out bingingsList);
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    string cState = bindings["STATE"];
+                    string cInitState = bindings["INITIAL"];
+                    bool bState = false;
+                    bState = bool.Parse(cInitState);
+                    if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                    {
+                        int newState = Global.AddState(bState);
+                        bot.servitor.CoppeliaStateDictionary[cState] = newState;
+                    }
+                }
+                // ambition(Actor,State,value)
+                bot.servitor.prologEngine.askQuery("ambition(ACTOR,STATE,VALUE)", mtName, out bingingsList);
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    string cActor = bindings["ACTOR"];
+                    string cState = bindings["STATE"];
+                    string cValue = bindings["VALUE"];
+                    float fValue = 0;
+                    fValue = float.Parse(cValue);
+                    if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                    {
+                        if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cActor))
+                        {
+                            Agent a1 = bot.servitor.CoppeliaAgentDictionary[cActor];
+                            int state = bot.servitor.CoppeliaStateDictionary[cState];
+                            a1.AddAmbition(state, fValue);
+                        }
+                    }
+                }
+                // actionStateBelief(Actor,Action,State,value)
+                bot.servitor.prologEngine.askQuery("actionStateBelief(ACTOR,ACTION,STATE,VALUE)", mtName, out bingingsList);
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    string cActor = bindings["ACTOR"];
+                    string cAction = bindings["ACTION"];
+                    string cState = bindings["STATE"];
+                    string cValue = bindings["VALUE"];
+                    float fValue = 0;
+                    fValue = float.Parse(cValue);
+
+                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cActor))
+                    {
+                        if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
+                        {
+                            if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                            {
+                                AgentAction act = bot.servitor.CoppeliaActionDictionary[cAction];
+                                Agent a1 = bot.servitor.CoppeliaAgentDictionary[cActor];
+                                int state = bot.servitor.CoppeliaStateDictionary[cState];
+                                a1.SetActionStateBelief(act.GlobalIndex, state, fValue);
+                            }
+                        }
+                    }
+                }
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessGenFilterFromMt '{0}','{1}':{2}", threshold, mtName, filter, e.Message);
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
+
+
+
         public IEnumerable<RunStatus> ProcessCoppeliaAgentFeature(XmlNode myNode)
         {
             // <coppeliaFeature agent="self" feature="good" value="1" />
@@ -4043,12 +4178,19 @@ namespace AltAIMLbot
                 if (myNode.Attributes["negativity"] != null) cNegativity = myNode.Attributes["negativity"].Value;
                 fPositivity = float.Parse(cPositivity);
                 fNegativity = float.Parse(cNegativity);
+                if (!bot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
+                {
+                    AgentAction newAction = new AgentAction(cAction, fPositivity, fNegativity);
+                    bot.servitor.CoppeliaActionDictionary[cAction] = newAction;
+                }
+                else
+                {
+                    bot.servitor.CoppeliaActionDictionary[cAction].SetValence(fPositivity, fNegativity);
+                }
             }
             catch
             {
             }
-            AgentAction newAction = new AgentAction(cAction, fPositivity, fNegativity);
-            bot.servitor.CoppeliaActionDictionary[cAction] = newAction;
             yield return rs;
             yield break;
         }
@@ -4069,12 +4211,15 @@ namespace AltAIMLbot
                 if (myNode.Attributes["state"] != null) cState = myNode.Attributes["state"].Value;
                 if (myNode.Attributes["initial"] != null) cInitState = myNode.Attributes["initial"].Value;
                 bState = bool.Parse(cInitState);
+                if (!bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                {
+                    int newState = Global.AddState(bState);
+                    bot.servitor.CoppeliaStateDictionary[cState] = newState;
+                }
             }
             catch
             {
             }
-            int newState = Global.AddState(bState);
-            bot.servitor.CoppeliaStateDictionary[cState] = newState;
             yield return rs;
             yield break;
         }
