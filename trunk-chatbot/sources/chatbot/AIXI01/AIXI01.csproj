@@ -54,6 +54,20 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Search.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
+      <Project>{C0B6FD82-C737-4B6B-A1F4-BBD9AFF90656}</Project>
+      <Name>MushDLR223</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AltBotModule\AIMLbot\AIMLbot\AltAIMLbot.csproj">
+      <Project>{B797836E-9464-470F-A214-BBB8BDED9D1C}</Project>
+      <Name>AltAIMLbot</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LogicalParticleFilter\LogicalParticleFilter1.csproj">
+      <Project>{C85DA7F8-A9C2-4A31-8604-4FA2126946B6}</Project>
+      <Name>LogicalParticleFilter1</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
