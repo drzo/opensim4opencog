@@ -69,7 +69,7 @@ namespace LogicalParticleFilter1
 
         #region babyMT
         //===================================================
-        // The baby MT system. A directed graph KB fragments
+        // The baby MT system. A directed graph of KB fragments
         // Should make them PDB's but can collect rulesets
 
         public void connectMT(string childMT, string parentMT)

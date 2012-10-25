@@ -128,6 +128,18 @@ namespace AltAIMLbot
             initialCritical = initialcritical;
             Start(UserID, outputDelegate);
         }
+
+        public string GetCoppeliaAgentNameByID(int queryID)
+        {
+            foreach (string name in CoppeliaAgentDictionary.Keys)
+            {
+                if (CoppeliaAgentDictionary[name].AgentID == queryID)
+                {
+                    return name;
+                }
+            }
+            return "unknown";
+        }
         public void InitCoppelia()
         {
             //Create new agents
@@ -226,6 +238,15 @@ namespace AltAIMLbot
            //     Console.WriteLine("Setting state STATE_LOST_THE_GAME to true");
            //     Global.SetState(STATE_LOST_THE_GAME, true);
            // }
+            string mt = "coppeliaActionMt";
+            string actionReport = String.Format("performedAction({0},{1},{2}).", GetCoppeliaAgentNameByID(sender), Global.GetActionByID(action).Name, GetCoppeliaAgentNameByID(target));
+            this.prologEngine.appendKB(actionReport, mt);
+            if (GetCoppeliaAgentNameByID(sender) == "self")
+            {
+                actionReport = String.Format("selfAct({0},{1}).", Global.GetActionByID(action).Name, GetCoppeliaAgentNameByID(target));
+                this.prologEngine.appendKB(actionReport, mt);
+            }
+
         }
 
         public void Start(string UserID,sayProcessorDelegate outputDelegate)

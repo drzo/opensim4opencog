@@ -3471,7 +3471,7 @@ namespace AltAIMLbot
             {
                 if (myNode.Attributes["prob"] != null) probStr = myNode.Attributes["prob"].Value;
                 if (myNode.Attributes["state"] != null) state = myNode.Attributes["state"].Value;
-                if (myNode.Attributes["act"] != null) act = myNode.Attributes["act"].Value;
+                if (myNode.Attributes["action"] != null) act = myNode.Attributes["action"].Value;
                 if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
                 SymbolicParticleFilter myFilter = findOrCreatePF(filter);
                 double prob = Double.Parse(probStr);
@@ -3582,14 +3582,15 @@ namespace AltAIMLbot
             yield break;
         }
 
-        // <genFilterFromMt mt="defParticleMt" threshold="0.0001"/>
+        // <genFilterFromMt mt="defParticleMt" threshold="0.0001" filter="basic"/>
         // will skip probabilities below threshold
         // will stateProb(STATE,PROB) , stateSenseProb(STATE,SENSE,PROB) and
         // stateTransitionProb(STATE,ACT,PROB,NEXT)
 
         public IEnumerable<RunStatus> ProcessGenFilterFromMt(XmlNode myNode)
         {
-            // Append some si_text 
+            // <genFilterFromMt mt="defParticleMt" threhold="0.001" filter="basic"/>
+
             RunStatus rs = RunStatus.Failure;
             string probStr = "0.001";
             string mtName = "defParticleMt";
@@ -3666,6 +3667,46 @@ namespace AltAIMLbot
         #endregion
 
         #region Coppelia
+        // <UpdateCoppeliaFromMt mt="defCoppeliaMt" threshold="0.0001" filter="basic"/>
+        // will update Coppelia states by querying state(cState) in Mt
+
+        public IEnumerable<RunStatus> ProcessUpdateCoppeliaFromMt(XmlNode myNode)
+        {
+            // Updates the Coppelia Current state model from a given Mt
+
+            RunStatus rs = RunStatus.Failure;
+            string probStr = "0.001";
+            string mtName = "defCoppeliaMt";
+            string innerStr = myNode.InnerXml;
+            double threshold = 0.001;
+            string filter = "basic";
+
+            try
+            {
+                if (myNode.Attributes["threshold"] != null) probStr = myNode.Attributes["threshold"].Value;
+                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
+                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                SymbolicParticleFilter myFilter = findOrCreatePF(filter);
+                threshold = Double.Parse(probStr);
+
+                List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
+                foreach (string state in bot.servitor.CoppeliaStateDictionary.Keys)
+                {
+                    string query = String.Format("state({0})", state);
+                    bool isTrue = bot.servitor.prologEngine.isTrueIn(query, mtName);
+                    int stateIndex = bot.servitor.CoppeliaStateDictionary[state];
+                    Global.SetState(stateIndex, isTrue);
+                }
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessUpdateCoppeliaFromMt '{0}','{1}':{2}", threshold, mtName, filter, e.Message);
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
 
         // <GenCoppeliaFromMt mt="defCoppeliaMt" threshold="0.0001"/>
         // agentActions(Action, positive, negative)
@@ -3678,7 +3719,7 @@ namespace AltAIMLbot
         // moralAmbition(Actor,Moral,value)
         // actionMoralBelief(Actor,Action,Moral,value)
 
-        public IEnumerable<RunStatus> ProcessGenCoppeliaFromMt(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessGenCoppeliaFromMt0(XmlNode myNode)
         {
             // Append some si_text 
             RunStatus rs = RunStatus.Failure;
@@ -3857,19 +3898,107 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessGenFilterFromMt '{0}','{1}':{2}", threshold, mtName, filter, e.Message);
+                Console.WriteLine("Error ProcessGenCoppeliaFromMt '{0}','{1}':{2}", threshold, mtName, filter, e.Message);
                 rs = RunStatus.Failure;
             }
             yield return rs;
             yield break;
         }
 
+        public IEnumerable<RunStatus> ProcessGenCoppeliaFromMt(XmlNode myNode)
+        {
+            //Queries MT for Coppelia related info to create a BTXML fragment
+            // that is then interperted
+
+            RunStatus rs = RunStatus.Failure;
+            string mtName = "defCoppeliaMt";
+            string innerStr = myNode.InnerXml;
+
+            try
+            {
+                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
+                string xcode = "";
+                xcode += kbToBTXML("coppeliaState(STATE,INITIAL)", mtName);
+                xcode += kbToBTXML("coppeliaAction(ACTION,POSITIVITY,NEGATIVITY)", mtName);
+                xcode += kbToBTXML("coppeliaFeature(AGENT,FEATURE,VALUE)", mtName);
+                xcode += kbToBTXML("coppeliaFeatuerBelief(AGENT,FEATURE,TARGET,VALUE)", mtName);
+                xcode += kbToBTXML("coppeliaAgentResponsibleBelief(AGENT,STATE,TARGET,VALUE)", mtName);
+                xcode += kbToBTXML("coppeliaExpectedSatisfaction(AGENT,ACTION,TARGET,VALUE)", mtName);
+                xcode += kbToBTXML("coppeliaAnger(AGENT,TARGET,VALUE)", mtName);
+                xcode += kbToBTXML("coppeliaPraiseworthy(AGENT,TARGET,VALUE)", mtName);
+                xcode += kbToBTXML("coppeliaEmotion(AGENT,EMOTION,VALUE)", mtName);
+                xcode += kbToBTXML("coppeliaDesired(AGENT,EMOTION,VALUE)", mtName);
+                xcode += kbToBTXML("coppeliaActionTendancy(AGENT,ACTION,TARGET,VALUE)", mtName);
+                xcode += kbToBTXML("coppeliaFeatureEmotionBelief(AGENT,FEATURE,EMOTION,VALUE)", mtName);
+                xcode += kbToBTXML("coppeliaStateLikelihood(AGENT,STATE,LIKELIHOOD)", mtName);
+
+                xcode += kbToBTXML("coppeliaResponse(ACTION,RESPONSE)", mtName);
+                xcode += kbToBTXML("coppeliaAmbition(AGENT,STATE,VALUE)", mtName);
+
+                xcode += kbToBTXML("coppeliaMoral(MORAL,INITIAL)", mtName);
+                xcode += kbToBTXML("coppeliaMoralAmbition(AGENT,MORAL,VALUE)", mtName);
+                xcode += kbToBTXML("coppeliaActionMoralBelief(AGENT,ACTION,MORAL,VALUE)", mtName);
+
+                xcode += kbToBTXML("coppeliaActionState(AGENT,ACTION,STATE,VALUE)", mtName);
+                xcode += kbToBTXML("coppeliaStateState(AGENT,STATESRC,STATEDEST,VALUE)", mtName);
+                xcode += kbToBTXML("coppeliaRelation(AGENT,RELATION,RECIPIENT)", mtName);
+                xcode += kbToBTXML("coppeliaPerform(AGENT,ACTION,RECIPIENT)", mtName);
+
+                string btxmlCode="";
+                btxmlCode += "<aiml version=\"1.0\">\n";
+                btxmlCode += " <state name=\"*\">\n";
+                btxmlCode += xcode;
+                btxmlCode += " </state>\n";
+                btxmlCode += "</aiml>\n";
+                XmlDocument coppeliaDoc = new XmlDocument ();
+                coppeliaDoc.LoadXml (btxmlCode);
+                bot.loadAIMLFromXML(coppeliaDoc, "mt:"+mtName +DateTime.Now.ToString());
+            
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessGenCoppeliaFromMt '{0}',{1}", mtName, e.Message);
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
+
+        public string kbToBTXML(string query, string mtName)
+        {
+            // A query like coppeliaAnger(AGENT,TARGET,VALUE) might return 
+            // <coppeliaAnger agent="self" target="other" value="1" />
+            string code = "";
+            try
+            {
+                List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
+                string[] part = query.Split('(');
+                string head = part[0].Trim();
+                bot.servitor.prologEngine.askQuery(query, mtName, out bingingsList);
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    string frag = "<" + head;
+                    foreach (string key in bindings.Keys)
+                    {
+                        frag += String.Format(" {0}=\"{1}\"", key.ToLower(), bindings[key].Trim());
+                    }
+                    frag += " />\n";
+                    code += frag;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error kbToBTXML '{0}':{1}",  mtName,  e.Message);
+            }
+            return code;
+        }
 
 
         public IEnumerable<RunStatus> ProcessCoppeliaAgentFeature(XmlNode myNode)
         {
             // <coppeliaFeature agent="self" feature="good" value="1" />
-            // Agent wants state to occur or not occur
+            // Agent has feature to the degree of value
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
@@ -3952,8 +4081,8 @@ namespace AltAIMLbot
         }
         public IEnumerable<RunStatus> ProcessCoppeliaAgentResponsibleBelief(XmlNode myNode)
         {
-            // <coppeliaFeatuerBelief agent="self" feature="good" target="other" value="1" />
-            // agent believes that targets feature will facilitate state
+            // <coppeliaAgentResponsibleBelief agent="self" state="state" target="other" value="1" />
+            // agent believes that targets is responsible for state
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
@@ -3994,8 +4123,8 @@ namespace AltAIMLbot
         }
         public IEnumerable<RunStatus> ProcessCoppeliaExpectedSatisfaction(XmlNode myNode)
         {
-            // <coppeliaFeatuerBelief agent="self" feature="good" target="other" value="1" />
-            // agent believes that targets feature will facilitate state
+            // <coppeliaExpectedSatisfaction agent="self" action="act" target="other" value="1" />
+            // Agent believes that performing Action to Target will have an expected satisfaction
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
@@ -4034,8 +4163,8 @@ namespace AltAIMLbot
 
         public IEnumerable<RunStatus> ProcessCoppeliaAnger(XmlNode myNode)
         {
-            // <coppeliaFeatuerBelief agent="self" feature="good" target="other" value="1" />
-            // agent believes that targets feature will facilitate state
+            // <coppeliaAnger agent="self" target="other" value="1" />
+            // agent believes that targets is  Anger worthy
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
@@ -4069,8 +4198,8 @@ namespace AltAIMLbot
         }
         public IEnumerable<RunStatus> ProcessCoppeliaPraiseworthy(XmlNode myNode)
         {
-            // <coppeliaFeatuerBelief agent="self" feature="good" target="other" value="1" />
-            // agent believes that targets feature will facilitate state
+            // <coppeliaPraiseworthy agent="self" target="other" value="1" />
+            // agent believes that targets is Praiseworthy
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
@@ -4104,8 +4233,8 @@ namespace AltAIMLbot
         }
         public IEnumerable<RunStatus> ProcessCoppeliaEmotion(XmlNode myNode)
         {
-            // <coppeliaFeatuerBelief agent="self" feature="good" target="other" value="1" />
-            // agent believes that targets feature will facilitate state
+            // <coppeliaEmotion agent="self" emotion="joy" value="1" />
+            // agent feels Emotion to degree value
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
@@ -4140,8 +4269,8 @@ namespace AltAIMLbot
 
         public IEnumerable<RunStatus> ProcessCoppeliaDesired(XmlNode myNode)
         {
-            // <coppeliaFeatuerBelief agent="self" feature="good" target="other" value="1" />
-            // agent believes that targets feature will facilitate state
+            // <coppeliaDesired agent="self" emotion="joy" value="1" />
+            // agent WANTS to feel Emotion to degree value
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
@@ -4175,8 +4304,8 @@ namespace AltAIMLbot
         }
         public IEnumerable<RunStatus> ProcessCoppeliaActionTendancy(XmlNode myNode)
         {
-            // <coppeliaFeatuerBelief agent="self" feature="good" target="other" value="1" />
-            // agent believes that targets feature will facilitate state
+            // <coppeliaActionTendancy agent="self" action="act" target="other" value="1" />
+            // Agent has a tendency to degree value to perform Action to Target
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
@@ -4219,8 +4348,8 @@ namespace AltAIMLbot
   
         public IEnumerable<RunStatus> ProcessCoppeliaFeatureEmotionBelief(XmlNode myNode)
         {
-            // <coppeliaFeatureEmotionBelief agent="self" feature="good" target="other" value="1" />
-            // agent believes that targets feature will facilitate state
+            // <coppeliaFeatureEmotionBelief agent="self" feature="good" emotion="joy" value="1" />
+            // agent believes that having feature will facilitate Emotion
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
@@ -4263,7 +4392,7 @@ namespace AltAIMLbot
         public IEnumerable<RunStatus> ProcessCoppeliaAction(XmlNode myNode)
         {
             // <coppeliaAction state="act" positivity="0" negativity="0" />
-            // defines a value and it's initial state truth value
+            // defines an Action along with its positive and negative valance
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
@@ -4300,7 +4429,7 @@ namespace AltAIMLbot
         public IEnumerable<RunStatus> ProcessCoppeliaState(XmlNode myNode)
         {
             // <coppeliaState state="act" initial="true/false" />
-            // defines a value and it's initial state truth value
+            // defines a state and its initial truth value
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
@@ -4331,7 +4460,7 @@ namespace AltAIMLbot
         public IEnumerable<RunStatus> ProcessCoppeliaStateLikelihood(XmlNode myNode)
         {
             // <coppeliaStateLikelihood agent="self" state="state1" likelihood="0.5" />
-            // defines a value and it's initial state truth value
+            // sets a states likelihood
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
@@ -4437,8 +4566,8 @@ namespace AltAIMLbot
 // Coppelia Morals
         public IEnumerable<RunStatus> ProcessCoppeliaMoral(XmlNode myNode)
         {
-            // <coppeliaState state="act" initial="true/false" />
-            // defines a value and it's initial state truth value
+            // <coppeliaMoral moral="act" initial="true/false" />
+            // defines a moral value and its initial state value
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
@@ -4466,8 +4595,8 @@ namespace AltAIMLbot
 
         public IEnumerable<RunStatus> ProcessCoppeliaMoralAmbition(XmlNode myNode)
         {
-            // <coppeliaAmbition agent="self" state="targetstate" value="1" />
-            // Agent wants state to occur or not occur
+            // <coppeliaMoralAmbition agent="self" moral="moral" value="1" />
+            // Agent wants Moral to have Value
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
@@ -4502,8 +4631,8 @@ namespace AltAIMLbot
         }
         public IEnumerable<RunStatus> ProcessCoppeliaActionMoralBelief(XmlNode myNode)
         {
-            // <coppeliaActState agent="self" act="act1" statedst="s2"  value="1" />
-            // Agent believes Act will cause state with prob v
+            // <coppeliaActionMoralBelief agent="self" act="act1" moral="s2"  value="1" />
+            // Agent believes Act will cause Moral to have Value
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
@@ -4514,7 +4643,7 @@ namespace AltAIMLbot
             float fValue = 0;
             try
             {
-                if (myNode.Attributes["act"] != null) cAct = myNode.Attributes["act"].Value;
+                if (myNode.Attributes["action"] != null) cAct = myNode.Attributes["action"].Value;
                 if (myNode.Attributes["moral"] != null) cMoral = myNode.Attributes["moral"].Value;
                 if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
                 if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
@@ -4544,7 +4673,7 @@ namespace AltAIMLbot
         }
         public IEnumerable<RunStatus> ProcessCoppeliaActionState(XmlNode myNode)
         {
-            // <coppeliaActState agent="self" act="act1" statedst="s2"  value="1" />
+            // <coppeliaActionState agent="self" action="act1" state="s2"  value="1" />
             // Agent believes Act will cause state with prob v
 
             RunStatus rs = RunStatus.Success;
@@ -4556,7 +4685,7 @@ namespace AltAIMLbot
             float fValue = 0;
             try
             {
-                if (myNode.Attributes["act"] != null)   cAct = myNode.Attributes["act"].Value;
+                if (myNode.Attributes["action"] != null) cAct = myNode.Attributes["action"].Value;
                 if (myNode.Attributes["state"] != null) cState = myNode.Attributes["state"].Value;
                 if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
                 if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
@@ -4587,7 +4716,8 @@ namespace AltAIMLbot
 
         public IEnumerable<RunStatus> ProcessCoppeliaStateState(XmlNode myNode)
         {
-            // <coppeliaStateState agent="self" statesrc="s1" statedst="s2"  value="1" />
+            // <coppeliaStateState agent="self" statesrc="s1" statedest="s2"  value="1" />
+            // Agent believes StateSRC will facilitate StateDEST with probability Value
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
@@ -4629,7 +4759,7 @@ namespace AltAIMLbot
 
         public IEnumerable<RunStatus> ProcessCoppeliaPerform(XmlNode myNode)
         {
-            // <coppeliaPerform agent="self" act="a1" recipient="other" />
+            // <coppeliaPerform agent="self" action="a1" recipient="other" />
             // Agent just performed act to recipient
 
             RunStatus rs = RunStatus.Success;
@@ -4672,12 +4802,12 @@ namespace AltAIMLbot
 
         public IEnumerable<RunStatus> ProcessCoppeliaRelation(XmlNode myNode)
         {
-            // <coppeliaPerform agent="self" act="a1" recipient="other" />
-            // Agent just performed act to recipient
+            // <coppeliaRelation agent="self" relation="r1" recipient="other" />
+            // Agent has Relation with Recipient
 
             RunStatus rs = RunStatus.Success;
             string innerStr = myNode.InnerXml.Trim();
-            string cRelation = "actAction";
+            string cRelation = "relation";
             string cAgent = "agent";
             string cRecipient = "reciptient";
             string cValue = "0";
@@ -4750,7 +4880,7 @@ namespace AltAIMLbot
             if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
             if (myNode.Attributes["relation"] != null) cRelation = myNode.Attributes["relation"].Value;
             if (myNode.Attributes["reciptient"] != null) cRecipient = myNode.Attributes["reciptient"].Value;
-            if (myNode.Attributes["act"] != null) cAct = myNode.Attributes["act"].Value;
+            if (myNode.Attributes["action"] != null) cAct = myNode.Attributes["action"].Value;
             if (myNode.Attributes["state"] != null) cState = myNode.Attributes["state"].Value;
             if (myNode.Attributes["feature"] != null) cFeature = myNode.Attributes["feature"].Value;
             if (myNode.Attributes["emotion"] != null) cEmotion = myNode.Attributes["emotion"].Value;
