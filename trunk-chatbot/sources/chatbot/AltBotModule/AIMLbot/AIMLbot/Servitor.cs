@@ -150,7 +150,8 @@ namespace AltAIMLbot
             CoppeliaAgentDictionary["human"] = a2;
 
             //Register the RequestingInput function (see below) as a function that needs to be called when Agent a2 (which is the HumanAgent) needs to respond to input
-            a2.input += new HumanAgent.InputRequest(RequestingInput);
+            //a2.input += new HumanAgent.InputRequest(RequestingInput);
+            a2.input += new HumanAgent.InputRequest(RequestingInputFromMt);
 
             //Register the GlobalActionReceived function (see below) as a function that needs to be called whenever any action is performed by any agent.
             Global.actionBroadcast += new Global.ActionListener(GlobalActionReceived);
@@ -222,6 +223,30 @@ namespace AltAIMLbot
             return responseID;
         }
 
+        int RequestingInputFromMt()
+        {
+            int responseID = -1;
+            for (int i = 0; i < a2.PossibleResponses.Count; ++i)
+            {
+                string query = String.Format("performed({0})", Global.GetActionByID(a2.PossibleResponses[i]).Name);
+                if (this.prologEngine.isTrueIn(query, "coppeliaInputMt"))
+                {
+                    responseID = i;
+                }
+                //Console.WriteLine("" + i + ": " + Global.GetActionByID(a2.PossibleResponses[i]).Name);
+            }
+
+            //Return the selected response
+            //-1 is an invalid ActionID and will constitute "no action"
+            if (responseID == -1)
+            {
+                // since we're looking an an MT we may want to give some time back
+                // so someone else can post to it
+                Thread.Sleep(100);
+            }
+            return responseID;
+        }
+
         /// <summary>
         /// This function is called when any agent performs any action.
         /// </summary>
@@ -238,7 +263,7 @@ namespace AltAIMLbot
            //     Console.WriteLine("Setting state STATE_LOST_THE_GAME to true");
            //     Global.SetState(STATE_LOST_THE_GAME, true);
            // }
-            string mt = "coppeliaActionMt";
+            string mt = "coppeliaOutputMt";
             string actionReport = String.Format("performedAction({0},{1},{2}).", GetCoppeliaAgentNameByID(sender), Global.GetActionByID(action).Name, GetCoppeliaAgentNameByID(target));
             this.prologEngine.appendKB(actionReport, mt);
             if (GetCoppeliaAgentNameByID(sender) == "self")
