@@ -55,6 +55,15 @@ namespace Cogbot
         /// <param name="args"></param>
         public static void Run(string[] args)
         {
+            //if (args.Length == 0) args = new string[] { /*"--httpd", "--aiml",*/ "Nephrael", "Rae" };
+            //if (args.Length == 0) args = new string[] { "--httpd", "--aiml", "Zeno", "Aironaut" };
+            //if (args.Length == 0) args = new string[] { "--httpd", "--aiml", "test", "suite" }; 
+           //if (args.Length == 0) args = new string[] { "--aiml", "kotoko", "irata", "--servitor" };
+            //if (args.Length == 0) args = new string[] { "--httpd", "--aiml", "BinaBot", "Daxeline" }; 
+
+            //if (args.Length == 0) args = new string[] { "--swipl" };                  
+
+
             var orig = args;
             args = ProgramUtil.SetAllCommandLineOptions(args);
 
@@ -63,7 +72,7 @@ namespace Cogbot
             {
                 string[] newArgs = oArgs;
                 ProgramUtil.AllocConsole();
-                RunType("AIMLbot:RTParser.RTPBot", args);
+                RunType("AltAIMLbot:RTParser.AltBot", args);
                 return;
             }
             if (ClientManagerConfig.arguments.GetAfter("--plwin", out oArgs))

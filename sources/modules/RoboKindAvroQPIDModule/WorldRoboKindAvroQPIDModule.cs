@@ -29,7 +29,7 @@ namespace WorldRoboKindAvroQPIDModule
 
         public override void StartupListener()
         {
-            throw new NotImplementedException();
+           /// throw new NotImplementedException();
         }
 
         public void OnEvent(CogbotEvent evt)

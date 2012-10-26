@@ -354,7 +354,7 @@ namespace MushDLR223.Utilities
             IsStatic = TestIsStatic(member0);
             UseSingleton = !IsStatic;
             ReturnType = MemberValueType(member0);
-            if (ReturnType.GetGenericTypeDefinition() == (typeof(ListAsSet<>)))
+            if (ReturnType.IsGenericType && ReturnType.GetGenericTypeDefinition() == (typeof(ListAsSet<>)))
             {
                 return;
             }

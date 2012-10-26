@@ -24,7 +24,8 @@ namespace Cogbot
                                                                                 });
             AddObjectGroup("none", "empty list", () => new List<SimObject>());
             AddObjectGroup("assets", "known assets", () => WorldObjects.SimRootObjects.CopyOf());
-            AddObjectGroup("objects", "known sim root objects", () => WorldObjects.SimRootObjects.CopyOf());
+            AddObjectGroup("objects", "known sim root objects", () => 
+                WorldObjects.SimRootObjects.CopyOf());
             AddObjectGroup("caller", "current command caller", () =>
                                                                    {
                                                                        UUID callerID = BotClient.SessionToCallerId(
