@@ -27,7 +27,7 @@ namespace RTParser
         internal AIMLTagHandlerU GetTagHandler(User user, SubQuery query, Request request, Result result, XmlNode node,
                                               AIMLTagHandlerU parentTagHandlerU)
         {
-            AIMLTagHandlerU tag = GetTagHandler00(user, query, request, result, node, true);
+            AIMLTagHandlerU tag = GetTagHandlerU(user, query, request, result, node, true);
             if (query != null) query.CurrentTagHandlerU = tag;
             if (query != null) query.CurrentNode = node;
             if (tag == null)
@@ -59,7 +59,7 @@ namespace RTParser
             return tag;
         }
 
-        internal AIMLTagHandlerU GetTagHandler00(User user, SubQuery query, Request request, Result result, XmlNode node, bool liText)
+        internal AIMLTagHandlerU GetTagHandlerU(User user, SubQuery query, Request request, Result result, XmlNode node, bool liText)
         {
             AIMLTagHandlerU tagHandlerU = getBespokeTags(user, query, request, result, node);
             string nodeNameLower = ToLower(node.LocalName);
@@ -414,7 +414,7 @@ namespace RTParser
                         if (node.Name.ToLower() != newnode.Name.ToLower())
                         {
                             writeToLog("AIMLLOADER: converted " + node.OuterXml + " -> " + newnode.OuterXml);
-                            return GetTagHandler00(user, query, request, result, newnode, liText);
+                            return GetTagHandlerU(user, query, request, result, newnode, liText);
                         }
                         writeToLog("AIMLLOADER: ! convert " + node.OuterXml + " -> " + newnode.OuterXml);
                     }

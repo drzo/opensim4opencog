@@ -394,7 +394,7 @@ namespace RTParser
                     {
                         string v = servitor.curUser.Predicates.grabSetting(key);
                         activeUser.Predicates.updateSetting(key, v);
-                        Console.WriteLine("ALT->RTP Predicates[{0}] = {1}", key, v);
+                       /// Console.WriteLine("ALT->RTP Predicates[{0}] = {1}", key, v);
                     }
 
                 int rcount = servitor.curUser.SailentResultCount;
@@ -448,7 +448,7 @@ namespace RTParser
                     {
                         string v = activeUser.Predicates[key];
                         servitor.curUser.Predicates.updateSetting(key, v);
-                        Console.WriteLine("RTP->ALT Predicates[{0}] = {1}", key, v);
+                        ///Console.WriteLine("RTP->ALT Predicates[{0}] = {1}", key, v);
                     }
 
                 int rcount = activeUser.SailentResultCount;
@@ -631,6 +631,8 @@ namespace RTParser
             //            BotAsRequestUsed = new AIMLbot.Request("-bank-input-", BotAsUser, this, null);
             AddExcuteHandler("aiml", EvalAIMLHandler);
             AddExcuteHandler("bot", LightWeigthBotDirective);
+            AddExcuteHandler("csharp", CSharpExec);
+            AddExcuteHandler("cs", CSharpExec);
 
             testCaseRunner = new TestCaseRunner(null);
             XmlNodeEvaluators.Add(testCaseRunner);
@@ -1409,14 +1411,14 @@ The AIMLbot program.
             } 
             return g;
         }
-
-        static public GraphMaster FindGraph(string graphPath)
+        
+        static public GraphMaster FindGlobalGraph(string graphPath)
         {
             GraphMaster g;
             lock (GraphsByName) GraphsByName.TryGetValue(graphPath, out g);
             return g;
         }
-
+        
         public GraphMaster GetGraph(string graphPath, GraphMaster current)
         {
             GraphMaster g = FindGraph(graphPath, current);
@@ -1471,6 +1473,7 @@ The AIMLbot program.
                 return FindGraph(left, vg);
             }
 
+            string orig = graphPath;
             graphPath = ToScriptableName(graphPath);
 
             if (graphPath == "current" || graphPath == "")
@@ -1478,18 +1481,6 @@ The AIMLbot program.
                 return current;
             }
 
-            if (true)
-            {
-                if (_g != null && graphPath == "default")
-                {
-                    return DefaultStartGraph;
-                }
-
-                if (_h != null && graphPath == "heardselfsay")
-                {
-                    return DefaultHeardSelfSayGraph;
-                }
-            }
             if (graphPath == "parent" || graphPath == "parallel")
             {
                 if (current == null) return null;
@@ -1720,6 +1711,7 @@ The AIMLbot program.
             //OnTaskAtATimeHandler.Name = "TaskQueue For " + myName;
 
             //thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
+            /*
             string dgn = "default_to_" + NamePath;
             string n2n = NamePath + "_to_" + NamePath;
             string hgn = "heardselfsay_to_" + NamePath;
@@ -1749,6 +1741,7 @@ The AIMLbot program.
             }
             GraphMaster listeningGraph = DefaultHeardSelfSayGraph;
             if (listeningGraph != null) BotAsUser.HeardSelfSayGraph = listeningGraph;
+             * */
             lock (OnBotCreatedHooks)
             {
                 foreach (Action list in OnBotCreatedHooks)
@@ -1794,11 +1787,10 @@ The AIMLbot program.
 
                 if (StaticInitStarted) return;
                 StaticInitStarted = true;
-                GraphsByName["listener"] = TheUserListenerGraph = GraphMaster.FindOrCreate("listener");
-                TheUserListenerGraph.SilentTagsInPutParallel = false;
+                TheListenerGraph = GraphMaster.FindOrCreate("listener");
+                TheListenerGraph.SilentTagsInPutParallel = false;
                 // var defaultGraph = GraphsByName["default"] = GraphMaster.FindOrCreate("default");
-                // defaultGraph.RemovePreviousTemplatesFromNodes = false;
-                GraphsByName["heardselfsay"] = TheUserListenerGraph;////new GraphMaster("heardselfsay");
+                // defaultGraph.RemovePreviousTemplatesFromNodes = false;               
                 AddSettingsAliases("lastuserid", "you");
                 AddSettingsAliases("lastusername", "you");
                 AddSettingsAliases("you", "lastusername");

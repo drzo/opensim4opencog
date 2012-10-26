@@ -935,7 +935,7 @@ namespace RTParser
             }
             if (true.Equals(p)) return TRUE_T;
             if (false.Equals(p)) return FAIL_NIL;
-            throw new NotImplementedException();
+            ///throw new NotImplementedException();
             return MakeUnifiableFromString(p.ToString());
         }
 

@@ -266,7 +266,7 @@ namespace AltAIMLbot.Utils
 
         private bool processBXML(XmlNode thisNode, string filename)
         {
-            if (thisNode is XmlComment) return true;
+            if (StaticXMLUtils.IsBlank(thisNode)) return true;
             string named = thisNode.Name.ToLower();
             if (named == "ser")
             {
@@ -421,6 +421,7 @@ namespace AltAIMLbot.Utils
 
         private void processChildren(XmlNode node, string filename)
         {
+            if (StaticXMLUtils.IsBlank(node)) return;
             // process all the category nodes
             foreach (XmlNode thisNode in node.ChildNodes)
             {

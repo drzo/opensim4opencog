@@ -194,8 +194,22 @@ namespace RTParser
         /// </summary>
         private List<string> LogBuffer = new List<string>();
 
-
-        public string rapStoreDirectory = null;// ".\\rapstore\\";
+        private string _rapStoreDirectory;
+        public string rapStoreDirectory
+        {
+            get
+            {
+                return _rapStoreDirectory;
+            }
+            set
+            {
+                if (Environment.MachineName == "ENKI")
+                {
+                   // return;
+                }
+                _rapStoreDirectory = value;
+            }
+        }
         public int rapStoreSlices = 0;
         public int rapStoreTrunkLevel = 0;
 
@@ -434,7 +448,7 @@ namespace RTParser
         public int SizeC;
 
         /// <summary>
-        /// The default "brain" of the bot
+        /// The default "brain" of the bot (also "*")
         /// </summary>
         public GraphMaster Graphmaster;
 
@@ -636,6 +650,7 @@ namespace RTParser
             this.Graphs = new Dictionary<string, GraphMaster>();
             this.Graphmaster = new GraphMaster("default");
             this.Graphs.Add("*", this.Graphmaster);
+            this.DefaultHeardSelfSayGraph = new GraphMaster("heardselfsay");
             this.setupDictionaries();
         }
 
@@ -885,6 +900,8 @@ namespace RTParser
 
         public void postOutput(string msg)
         {
+            if (string.IsNullOrEmpty(msg)) return;
+
             if (msg.Length < 256)
             {
                 // just post output
@@ -1201,6 +1218,7 @@ namespace RTParser
         /// </summary>       
         public void evalTemplateNode(XmlNode templateNode)
         {
+            if (StaticXMLUtils.IsBlank(templateNode)) return;
             var imaginaryUser = FindOrCreateUser("evalTemplateNode User");
             Request request = new Request("evalTemplateNode Request", imaginaryUser, this);
             AltAIMLbot.Result result = new MasterResult(request.user, this, request);
@@ -1457,7 +1475,7 @@ namespace RTParser
                         return new AltAIMLbot.AIMLTagHandlers.star(this, user, query, request, result, node);
                         
                     case "system":
-                        return new AltAIMLbot.AIMLTagHandlers.system(this, user, query, request, result, node);
+                        return new RTParser.AIMLTagHandlers.system(this, user, query, request, result, node);
                         
                     case "that":
                         return new AltAIMLbot.AIMLTagHandlers.that(this, user, query, request, result, node);
@@ -1619,7 +1637,7 @@ namespace RTParser
                 }
             }
             if (tagHandler != null) return tagHandler;
-            tagHandler = TagHandling.GetTagHandler00(user, query, request, result, node, false);
+            tagHandler = TagHandling.GetTagHandlerU(user, query, request, result, node, false);
             if (tagHandler != null) return tagHandler;
             if (nodeNameLower == "name")
             {

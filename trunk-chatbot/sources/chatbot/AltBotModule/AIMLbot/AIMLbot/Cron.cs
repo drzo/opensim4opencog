@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using AltAIMLbot;
 using DcBus;
+using MushDLR223.Utilities;
 using RTParser;
 
 /******************************************************************************************
@@ -58,7 +59,7 @@ namespace AltAIMLbot
 
         public void clear()
         {
-            if (crontab !=null) crontab.Clear();
+            if (crontab != null) lock (crontab) crontab.Clear();
             if (processes != null) processes.Clear();
             Console.WriteLine(" CLEAR CRONTAB: clear");
         }
@@ -160,7 +161,9 @@ namespace AltAIMLbot
             // having lost more than one minute to unavailable processor time
            // for (int minute = (lastMinute == 59 ? 0 : lastMinute + 1); minute <= now.Minute; minute++)
            // {
-                foreach (String cronKey in crontab.Keys)
+            IEnumerable<object> lockInfoCopyOf = null;
+            lock (crontab) lockInfoCopyOf = LockInfo.CopyOf<string>(crontab.Keys);
+            foreach (String cronKey in lockInfoCopyOf)
                 {
                     ArrayList entry = (ArrayList) crontab[cronKey];
                     String timeMode = (String)entry[6];
@@ -187,7 +190,7 @@ namespace AltAIMLbot
                                 // if its one shot and we're done then remove from queue
                                 if (timeMode.Contains("onetime"))
                                 {
-                                    crontab.Remove(entry);
+                                    lock (crontab) crontab.Remove(entry);
                                 }
                             }
                             catch (Exception e)
@@ -218,7 +221,7 @@ namespace AltAIMLbot
                                 // if its one shot and we're done then remove from queue
                                 if (timeMode.Contains("onetime"))
                                 {
-                                    crontab.Remove(entry);
+                                    lock (crontab) crontab.Remove(entry);
                                 }
                             }
                             catch (Exception e)
@@ -354,7 +357,7 @@ namespace AltAIMLbot
 
             try
             {
-                crontab[cols[7]] = entry;
+                lock (crontab) crontab[cols[7]] = entry;
             }
             catch (Exception e)
             {
@@ -455,7 +458,7 @@ namespace AltAIMLbot
         public List<string> cronXmlList()
         {
             List<string> XList = new List<string>();
-            foreach (String cronKey in crontab.Keys)
+            lock (crontab) foreach (String cronKey in crontab.Keys)
             {
                 ArrayList entry = (ArrayList)crontab[cronKey];
                 string dat = String.Format("<crontag timeline=\"{5} {4} {3} {2} {1} {0}\" mode=\"{6}\" id=\"{7}\"> {8} </crontag>",

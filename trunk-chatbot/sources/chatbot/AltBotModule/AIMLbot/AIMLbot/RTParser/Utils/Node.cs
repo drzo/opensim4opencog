@@ -97,7 +97,7 @@ namespace RTParser.Utils
         {
             get
             {
-                if (_graph != null) return AltBot.FindGraph(_graph);
+                if (_graph != null) return AltBot.FindGlobalGraph(_graph);
                 Node Parent0 = _parentObject;
                 if (Parent0 != null)
                 {

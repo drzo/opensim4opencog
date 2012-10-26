@@ -1382,7 +1382,8 @@ namespace RTParser.Variables
                 if (UnsettableTopic.Contains(value.ToLower())) return false;
             }
             string s = (string)value;
-            if ((s == null) || s.Contains(">"))
+
+            if ((s == null) || s.Contains(">") || s.Contains("_to_") || name == "startgraph")
             {
                 writeToLog(String.Format("! NameValueCheck {0} = {1}", name, value.AsString()));
                 return !SuspendUpdates;
@@ -1528,6 +1529,11 @@ namespace RTParser.Variables
                 //   writeToLog("ERROR " + value + " NULL");
                 if (NoSettingsAliaes) return null;
                 return "OM";
+            }
+            string s0 = (string)value;
+            if (s0.Contains("<xor"))
+            {
+                Console.WriteLine("I am doing someting crazy " + s0);
             }
             string ss = value.ToUpper();
             if (ss.Contains("TAG-"))

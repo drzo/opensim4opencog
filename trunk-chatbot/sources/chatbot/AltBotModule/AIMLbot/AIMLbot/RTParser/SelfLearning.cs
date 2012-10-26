@@ -261,7 +261,7 @@ namespace RTParser
             try
             {
                 var HG = DefaultHeardSelfSayGraph;
-                if (HG.Size == 0) HG = GetGraph("listener", _h);
+               
                 if (message == null || message.Length < 4) return null;
                 Request r = theFactSpeaker.CreateRequest(message, toWhom, null, HG, null);
                 // irregardless we only mentally played what the responder responded with

@@ -30,6 +30,8 @@ using Console=System.Console;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 using MasterRequest = AltAIMLParser.Request;
+using Mono.CSharp;
+using Attribute=System.Attribute;
 
 namespace RTParser
 {
@@ -594,6 +596,43 @@ namespace RTParser
             return false;
         }
 
+
+        private static Evaluator _Evaluator = null;
+        private static CompilerContext ctx;
+        private static CompilerSettings compset;
+        private static ReportPrinter rp;
+
+        static public Mono.CSharp.Evaluator GetEvalInstance()
+        {
+            if (_Evaluator == null)
+            {
+                if (ctx == null)
+                {
+                    if (compset == null) compset = new CompilerSettings();
+                    if (rp == null)
+                    {
+                        rp = new StreamReportPrinter(System.Console.Out);
+                    }
+                    ctx = new CompilerContext(compset, rp);
+                }
+                
+                _Evaluator = new Evaluator(ctx);
+                _Evaluator.ReferenceAssembly(typeof(AltBot).Assembly);
+                _Evaluator.Run("using RTParser;");
+                _Evaluator.Run("using AltAIMLParser;");
+                _Evaluator.Run("using AltAIMLbot;");
+
+            }
+            return _Evaluator;
+        }
+
+        [ThreadStaticAttribute] public static Request currentRequest;
+        private object CSharpExec(string cmd, Request requestornull)
+        {
+            currentRequest = requestornull;
+            var ei = GetEvalInstance();
+            return ei.Evaluate(cmd);
+        }
     }
 
     public partial class AltBotCommands //: AltBot

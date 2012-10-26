@@ -16,6 +16,7 @@ using Aima.Core.Logic.Propositional.Visitors;
 using AltAIMLParser;
 using MiniSatCS;
 using System.Reflection;
+using MushDLR223.Utilities;
 using RTParser;
 
 /******************************************************************************************
@@ -1247,6 +1248,10 @@ namespace AltAIMLbot
         public RunStatus processNode(XmlNode myNode)
         {
             if (myNode == null) return RunStatus.Failure;
+            if (StaticXMLUtils.IsBlank(myNode))
+            {
+                return RunStatus.Success;
+            }
             Thread.Sleep(50);
             RunStatus result = RunStatus .Failure ;
             string nodeID = "null";

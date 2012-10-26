@@ -23,7 +23,7 @@ namespace RTParser.Utils
             get
             {
                 if (_graph == null) return null;
-                if (_graphCache == null) AltBot.FindGraph(_graph);
+                if (_graphCache == null) AltBot.FindGlobalGraph(_graph);
                 return _graphCache;
             }
             set

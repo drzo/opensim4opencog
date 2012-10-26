@@ -9,7 +9,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// <summary>
     /// NOT IMPLEMENTED FOR SECURITY REASONS
     /// </summary>
-    public class system : Utils.AIMLTagHandler
+    public class systemUNUSED : Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -20,7 +20,7 @@ namespace AltAIMLbot.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public system(AltBot bot,
+        public systemUNUSED(AltBot bot,
                         User user,
                         Utils.SubQuery query,
                         Request request,

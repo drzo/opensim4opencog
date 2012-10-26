@@ -287,11 +287,11 @@ namespace RTParser
 
         private GraphMaster FindGraphLocally(string varname)
         {
-            GraphMaster _uGraph = rbot.GetUserGraph(NameSpace);
             //Predicates.IsTraced = false;
             var v = Predicates.grabSettingNoDebug(varname);
             if (Unifiable.IsMissing(v)) return null;
-            GraphMaster _Graph = rbot.GetGraph(v, _uGraph);
+            if (Unifiable.IsNullOrEmpty(v)) return null;
+            GraphMaster _Graph = rbot.GetGraph(v, null);
             if (_Graph != null)
             {
                 return _Graph;

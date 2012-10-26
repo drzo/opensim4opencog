@@ -156,13 +156,7 @@ namespace RTParser
             get { return SizeC + DefaultStartGraph.Size + DefaultHeardSelfSayGraph.Size; }
         }
 
-        private GraphMaster _g
-        {
-            get { return Graphmaster; }
-            set { Graphmaster = value; }
-        }
-        private GraphMaster _h;
-        private static GraphMaster TheUserListenerGraph;
+        private static GraphMaster TheListenerGraph;
 
         /// <summary>
         /// The "brain" of the Proccessor
@@ -171,13 +165,13 @@ namespace RTParser
         {
             get
             {
-                if (_g != null) return _g;
+                if (Graphmaster != null) return Graphmaster;
                 if (String.IsNullOrEmpty(NamePath))
                 {
                     writeToLog("No graphmapster!");
                     return null;
                 }
-                return GetGraph(NamePath, _g);
+                return GetGraph(NamePath, Graphmaster);
             }
         }
         public GraphMaster DefaultEventGraph
@@ -187,20 +181,8 @@ namespace RTParser
                 return DefaultStartGraph;
             }
         }
-        public GraphMaster DefaultHeardSelfSayGraph
-        {
-            get
-            {
-                if (_h != null) return _h;
-                if (String.IsNullOrEmpty(NamePath))
-                {
-                    writeToLog("No HeardSelfSayGraph!");
-                    return null;
-                }
-                return GetGraph(NamePath + "_heardselfsay", _h);
-            }
-        }
 
+        public GraphMaster DefaultHeardSelfSayGraph;
 
         /// <summary>
         /// The Markovian "brain" of the Proccessor for generation

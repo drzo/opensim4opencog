@@ -67,6 +67,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="dotNetRDF, Version=0.7.1.2329, Culture=neutral, PublicKeyToken=8b91af99db2769f2, processorArchitecture=MSIL" />
+    <Reference Include="Mono.CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\LogicalParticleFilter\plugins\Mono.CSharp.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=3.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL" />
     <Reference Include="System">
       <Name>System</Name>
@@ -128,6 +132,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\CAMeRAVUEmotion\CAMeRAVUEmotion.csproj">
+      <Project>{4759EF39-D453-4D78-A0B3-623D7955BD33}</Project>
+      <Name>CAMeRAVUEmotion</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\LogicalParticleFilter\LogicalParticleFilter1.csproj">
       <Project>{C85DA7F8-A9C2-4A31-8604-4FA2126946B6}</Project>
       <Name>LogicalParticleFilter1</Name>

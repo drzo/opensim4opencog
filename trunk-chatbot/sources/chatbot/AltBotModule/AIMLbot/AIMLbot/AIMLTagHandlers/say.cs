@@ -88,8 +88,8 @@ namespace AltAIMLbot.AIMLTagHandlers
                         Console.WriteLine("  SayB msg2:{0}", message2);
                         //if (message.Length > 0) this.user.bot.sayProcessor(message);
                         //if (message2.Length > 0) this.user.bot.sayProcessor(message2);
-                        if (message.Length > 0) this.user.bot.postOutput(message);
-                        if (message2.Length > 0) this.user.bot.postOutput(message2);
+                        if (!string.IsNullOrEmpty(message)) this.user.bot.postOutput(message);
+                        if (!string.IsNullOrEmpty(message2)) this.user.bot.postOutput(message2);
                         // Mark the output time
                         this.user.bot.myBehaviors.keepTime("lastchatoutput", RunStatus.Success);
                         this.user.bot.myBehaviors.activationTime("lastchatoutput", RunStatus.Success);

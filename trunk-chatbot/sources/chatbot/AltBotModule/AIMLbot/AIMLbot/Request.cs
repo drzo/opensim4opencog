@@ -635,12 +635,34 @@ namespace AltAIMLParser
         }
 
 
-        private AIMLLoaderU _aimlloader = null;
+        private AIMLLoaderU _uaimlloader = null;
+        public AIMLLoaderU ULoader
+        {
+            get
+            {
+                if (_uaimlloader == null) _uaimlloader = new AIMLLoaderU(TargetBot, thisRequest);
+                return _uaimlloader;
+            }
+        }
+
+
+        //private AIMLLoader _aimlloader = null;
         public AIMLLoaderU Loader
         {
             get
             {
-                if (_aimlloader == null) _aimlloader = new AIMLLoaderU(TargetBot, thisRequest);
+               // if (_aimlloader == null) _aimlloader = new AIMLLoader(TargetBot);
+                //return _aimlloader;
+                return ULoader;
+            }
+
+        }
+        private AIMLLoader _aimlloader = null;
+        public AIMLLoader LoaderA
+        {
+            get
+            {
+                if (_aimlloader == null) _aimlloader = new AIMLLoader(TargetBot);
                 return _aimlloader;
             }
         }
