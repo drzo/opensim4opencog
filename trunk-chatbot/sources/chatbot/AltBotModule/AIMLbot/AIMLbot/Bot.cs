@@ -1509,7 +1509,12 @@ namespace RTParser
                         
                     case "refserver":
                         return new AltAIMLbot.AIMLTagHandlers.refserver(this, user, query, request, result, node);
-                        
+
+                    case "logictext":
+                        return new AltAIMLbot.AIMLTagHandlers.logictext(this, user, query, request, result, node);
+                    case "prolist":
+                        return new AltAIMLbot.AIMLTagHandlers.prolist(this, user, query, request, result, node);
+
                     case "pannouserver":
                         return new AltAIMLbot.AIMLTagHandlers.pannouserver(this, user, query, request, result, node);
                         

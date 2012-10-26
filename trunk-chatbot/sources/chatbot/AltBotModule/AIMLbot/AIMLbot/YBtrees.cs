@@ -22,6 +22,8 @@ using LogicalParticleFilter1;
 using LAIR.ResourceAPIs.WordNet;
 using LAIR.Collections.Generic;
 using CAMeRAVUEmotion;
+using MushDLR223.Utilities;
+
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 
@@ -361,6 +363,11 @@ namespace AltAIMLbot
         public IEnumerable<RunStatus> processNode(XmlNode myNode)
         {
             if (myNode == null)
+            {
+                yield return RunStatus.Failure;
+                yield break;
+            }
+            if (StaticXMLUtils.IsBlank(myNode))
             {
                 yield return RunStatus.Failure;
                 yield break;
