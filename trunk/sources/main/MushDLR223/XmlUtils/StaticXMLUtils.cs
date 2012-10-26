@@ -1484,6 +1484,18 @@ namespace MushDLR223.Utilities
                 //value1.SetOwnerDocument();
             }
         }
+
+        public static bool IsBlank(XmlNode templateNode)
+        {
+            if (templateNode.NodeType == XmlNodeType.Whitespace) return true;
+            if (templateNode.NodeType == XmlNodeType.SignificantWhitespace) return true;
+            if (templateNode.NodeType == XmlNodeType.Comment) return true;
+            if (templateNode.NodeType == XmlNodeType.XmlDeclaration) return true;
+            if (templateNode.NodeType == XmlNodeType.Element) return false;
+            if (templateNode.NodeType == XmlNodeType.Text && templateNode.InnerText.Trim() == "") return true;
+          
+            return false;
+        }
     }
 
     internal class LineNumberInfoZeroZero : IXmlLineInfo

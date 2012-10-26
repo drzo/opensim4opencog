@@ -268,12 +268,6 @@ namespace Cogbot
             var DLRConsoleError = DLRConsole.Error;
             DLRConsole.DetectMainEnv(DLRConsoleError);
             
-            //if (args.Length == 0) args = new string[] { /*"--httpd", "--aiml",*/ "Nephrael", "Rae" };
-            //if (args.Length == 0) args = new string[] { "--httpd", "--aiml", "Zeno", "Aironaut" };
-            //if (args.Length == 0) args = new string[] { "--httpd", "--aiml", "test", "suite" }; 
-            //if (args.Length == 0) args = new string[] { "--httpd", "--aiml", "BinaBot", "Daxeline" };            
-            //if (args.Length == 0) args = new string[] { "--swipl" };                  
-
             if (ClientManager.MainThread == null)
             {
                 ClientManager.MainThread = Thread.CurrentThread;

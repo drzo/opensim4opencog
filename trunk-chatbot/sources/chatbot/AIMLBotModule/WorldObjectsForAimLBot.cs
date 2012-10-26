@@ -365,7 +365,7 @@ namespace AIMLBotModule
             SettingsDictionary myUserPredicates = user.Predicates;
             myUserPredicates.addSetting("it", targetid.ToString());
             myUserPredicates.addSetting("what", targetid.ToString());
-            myUserPredicates.addSetting("object", targetid.ToString());
+           // myUserPredicates.addSetting("object", targetid.ToString());
         }
 
 
@@ -1468,6 +1468,7 @@ namespace AIMLBotModule
                     List.Add(uu);
                 }
                 if (c == 1) return List[0];
+                if (List.Count > 5) List.RemoveRange(0, List.Count - 5);
                 return new BestUnifiable(List);
             }
 
