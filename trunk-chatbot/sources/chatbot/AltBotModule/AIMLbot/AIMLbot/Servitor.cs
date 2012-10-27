@@ -386,6 +386,7 @@ namespace AltAIMLbot
             {
                 Console.WriteLine(" ************ FOUND waitingForChat ************");
                 curUser.Predicates.updateSetting("lastinput", input);
+                prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
                 //curBot.lastBehaviorChatInput = input;
                 curBot.myBehaviors.logText("waitingForChat USER INPUT:" + input);
                 curBot.chatInputQueue.Clear();
@@ -407,6 +408,7 @@ namespace AltAIMLbot
             {
                 Console.WriteLine(" ************ FOUND ONCHAT ************");
                 curUser.Predicates.updateSetting("lastinput", input);
+                prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
                 //curBot.lastBehaviorChatInput = input;
                 curBot.isPerformingOutput = false;
                 curBot.myBehaviors.logText("ONCHAT USER INPUT:" + input);
@@ -425,12 +427,14 @@ namespace AltAIMLbot
 
                 curBot.isPerformingOutput = true;
                 curBot.myBehaviors.logText("ONCHAT IMMED RETURN:" + curBot.lastBehaviorChatOutput);
+                prologEngine.postListPredToMt("lastoutput", curBot.lastBehaviorChatOutput, "lastoutputMt");
                 return curBot.lastBehaviorChatOutput;
             }
             // else try the named behavior
             if (doHaviours && curBot.myBehaviors.definedBehavior("chatRoot"))
             {
                 curUser.Predicates.updateSetting("lastinput", input);
+                prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
                 //curBot.lastBehaviorChatInput = input;
                 curBot.isPerformingOutput = false;
                 curBot.myBehaviors.logText("CHATROOT USER INPUT:" + curBot.lastBehaviorChatOutput);
@@ -447,6 +451,7 @@ namespace AltAIMLbot
 
                 curBot.isPerformingOutput = true;
                 curBot.myBehaviors.logText("CHATROOT IMMED RETURN:" + curBot.lastBehaviorChatOutput);
+                prologEngine.postListPredToMt("lastoutput", curBot.lastBehaviorChatOutput, "lastoutputMt");
                 return curBot.lastBehaviorChatOutput;
             }
             // else just do it (no other behavior is defined)
@@ -472,6 +477,7 @@ namespace AltAIMLbot
         {
             try
             {
+                prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
                 var u = new MasterUser(UserID, curBot);
                 Request r = new Request(input, u, curBot);
                 Result res = curBot.Chat(r);
@@ -479,6 +485,7 @@ namespace AltAIMLbot
                 {
                     Console.WriteLine("SERVITOR: respondToChat({0},{2})={1}", input, res.Output, UserID);
                 }
+                prologEngine.postListPredToMt("lastoutput", res.Output, "lastoutputMt");
                 return res.Output;
             }
             catch
@@ -490,6 +497,7 @@ namespace AltAIMLbot
         {
             try
             {
+                prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
                 Request r = new Request(input, curUser, curBot);
                 Result res = curBot.Chat(r);
                 if (traceServitor)
@@ -497,6 +505,7 @@ namespace AltAIMLbot
                     Console.WriteLine("SERVITOR: reactToChat({0})={1}", input, res.Output);
                 }
                 sayResponse(res.Output);
+                prologEngine.postListPredToMt("lastoutput", res.Output, "lastoutputMt");
                 // Mark the output time
                 curBot.myBehaviors.keepTime("lastchatoutput", RunStatus.Success);
                 curBot.myBehaviors.activationTime("lastchatoutput", RunStatus.Success);
@@ -509,6 +518,7 @@ namespace AltAIMLbot
         {
             try
             {
+                prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
                 var u = new MasterUser(UserID, curBot);
                 Request r = new Request(input, u, curBot);
                 Result res = curBot.Chat(r);
@@ -516,6 +526,7 @@ namespace AltAIMLbot
                 {
                     Console.WriteLine("SERVITOR: reactToChat({0},{2})={1}", input, res.Output, UserID);
                 }
+                prologEngine.postListPredToMt("lastoutput", res.Output, "lastoutputMt");
                 sayResponse(res.Output);
                 // Mark the output time
                 curBot.myBehaviors.keepTime("lastchatoutput", RunStatus.Success);
@@ -543,9 +554,11 @@ namespace AltAIMLbot
                     }
                     else
                     {
+                        prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
                         string answer = respondToChat(input);
                         Console.WriteLine("Bot: " + answer);
                         sayResponse(answer);
+                        prologEngine.postListPredToMt("lastoutput", answer, "lastoutputMt");
                     }
                 }
                 catch

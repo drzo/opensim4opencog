@@ -476,7 +476,7 @@ namespace RTParser.Utils
                     //return;
                 }
                 else
-                    writeToLog("Processing AIML file: " + path + " from " + master);
+                    writeToLog("Processing AIML file(1): " + path + " from " + master);
                 master.AddFileLoaded(path);
                 if (RProcessor.useServitor)
                 {

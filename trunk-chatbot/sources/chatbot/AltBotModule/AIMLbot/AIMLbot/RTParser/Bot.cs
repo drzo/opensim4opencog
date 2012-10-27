@@ -287,7 +287,7 @@ namespace RTParser
                 {
                     Console.WriteLine("***** ERR reloadServitor():{0} ERR ******", e.Message );
                 }
-                servitor.skiploading = true;
+                //servitor.skiploading = true;
                 Console.WriteLine("***** reloadServitor():{0} COMPLETE ******", graphcache);
                 return;
             }

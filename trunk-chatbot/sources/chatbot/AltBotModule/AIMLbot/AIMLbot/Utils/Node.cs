@@ -1733,6 +1733,7 @@ namespace AltAIMLbot.Utils
                 reftime = lastWriteTimeUtc.ToString();
             }
             //loadeddb.Set(filename, filename);
+            Console.WriteLine("\nrememberLoaded:{0} ==> {1}",filename,reftime);
             loadeddb.Set(filename,reftime);
         }
         public bool wasLoaded(string filename)
@@ -1746,6 +1747,7 @@ namespace AltAIMLbot.Utils
             }
             bool ret = loadeddb.Get(filename, out lf);
             //return (filename == lf);
+            Console.WriteLine("\nwasLoaded:{0}  {1}<=>{2}", filename, reftime,lf);
             return (reftime == lf);
         }
         public bool isTrunk(string absPath)

@@ -359,6 +359,24 @@ namespace LogicalParticleFilter1
             }
             return bestGuess;
         }
+
+        public void postListPredToMt(string pred, string text, string mt)
+        {
+            // will take text, convert to a list, place inside pred and
+            // assert to mt
+
+            text = text.Replace("?", " questionmark ");
+            text = text.Replace("!", " exclamationmark ");
+            text = text.Replace(".", " periodmark ");
+            while (text.Contains("  ")) text = text.Replace("  ", " ");
+            text = "[" + text.Replace(" ", ",").Trim() + "]";
+            while (text.Contains("[,")) text = text.Replace("[,", "[");
+            while (text.Contains(",]")) text = text.Replace(",]", "]");
+            while (text.Contains(",,")) text = text.Replace(",,", ",");
+            string gaf = String.Format("{0}({1}).", pred, text);
+            insertKB(gaf, mt);
+        }
+
         #endregion
 
         #region interpreterInterface 

@@ -87,7 +87,7 @@ namespace AltAIMLbot.Utils
             //lock (ExternDB.mylock)
             {
 
-                this.bot.writeToLog("Processing AIML file: " + filename);
+                this.bot.writeToLog("Processing AIML file(2): " + filename);
                 if (this.bot.rapStoreDirectory != null)
                 {
                     if (extDB != null)
@@ -211,7 +211,7 @@ namespace AltAIMLbot.Utils
                 return;
             }
             {
-                    
+
                 if (this.bot.rapStoreDirectory != null)
                 {
                     if ((filename.Contains("\\") || filename.Contains("/")) && (!filename.Contains("servitorgraphmap")) && (extDB.wasLoaded(filename)))
@@ -229,6 +229,11 @@ namespace AltAIMLbot.Utils
                         extDB.OpenAll();
                     }
                 }
+                else
+                {
+                    Console.WriteLine(" this.bot.rapStoreDirectory == null");
+                }
+
                 cleanXMLNS(doc);
                 LoadBXML(doc, filename);
                 if (this.bot.rapStoreDirectory != null)
