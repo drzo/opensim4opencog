@@ -30,16 +30,6 @@ namespace AltAIMLbot
             }
         }
 
-        string myName = "kotoko irata";
-        public ChatProgram()
-        {
-            
-        }
-        public ChatProgram(AltBot bot, string myName0, Servitor present)
-        {
-            MyBot = bot;
-            myName = myName0;
-        }
         public void StartupListener00()
         {
             try
@@ -52,7 +42,7 @@ namespace AltAIMLbot
                 {
                     MyBot.servitor.curBot.sayProcessor = new sayProcessorDelegate(TalkActive);
                 }
-                MyBot.SetName(myName);
+                MyBot.SetName(MyBot.NameAsSet);
                 if (MyBot.useServitor)
                 {
                     MyBot.updateRTP2Sevitor();
@@ -131,7 +121,7 @@ namespace AltAIMLbot
                 RaptorDB.Global.SaveTimerSeconds = 60000;
                 Console.WriteLine("*** Create servitor ***");
 
-                MyBot = MyBot ?? AltBot.FindRobot(myName) ?? new AltBot();
+                MyBot = MyBot ?? new AltBot();
                 MyBot.useServitor = true;
                 servitor = MyBot.servitor ?? new Servitor(MyBot, null, true, true, true);
                 Console.WriteLine("*** Created WN ***");
