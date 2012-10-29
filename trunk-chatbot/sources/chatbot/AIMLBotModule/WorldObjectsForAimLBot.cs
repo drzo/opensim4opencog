@@ -1500,6 +1500,8 @@ namespace AIMLBotModule
             {
                 CheckName(name);
                 name = Parser.ToKey(name);
+                if (!WorldVar(name)) return false;
+                name = name.Substring(wrldVar.Length);
                 if (FakeClientVars) return name == "cogvar";
                 var provs = ScriptManager.GetProviders(client, NameSpace);
                 foreach (ICollectionProvider prov in provs)
@@ -1520,6 +1522,8 @@ namespace AIMLBotModule
                 CheckName(name);
                 if (FakeClientVars) return name == "cogvar";
                 int argsUsed;
+                if (!WorldVar(name)) return false;
+                name = name.Substring(wrldVar.Length);
                 var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, PluginModule.provideAIMLVars);
                 return (v != null && v.Count > 0);
             }
