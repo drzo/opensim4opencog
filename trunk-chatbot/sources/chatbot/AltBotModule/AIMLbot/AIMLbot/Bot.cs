@@ -572,6 +572,9 @@ namespace RTParser
         /// </summary>
         public void loadAIMLFromFiles()
         {
+            loadGlobalBotSettings();
+            string botname = GlobalSettings.grabSetting("name");
+            SetName(botname);
             AIMLLoader loader = new AIMLLoader(this);
             loader.loadAIML(PathToAIML);
         }
@@ -1729,8 +1732,10 @@ namespace RTParser
 
         public void saveToBinaryFile0(string path)
         {
+            if (noSerialzation) return;            
             // check to delete an existing version of the file
             FileInfo fi = new FileInfo(path);
+            Directory.CreateDirectory(fi.DirectoryName);
             if (fi.Exists)
             {
                 fi.Delete();
@@ -1740,7 +1745,7 @@ namespace RTParser
             {
                 BinaryFormatter bf = new BinaryFormatter();
                 //this.myBehaviors.preSerial();
-                bf.Serialize(saveFile, this.Graphmaster);
+                //bf.Serialize(saveFile, this.Graphmaster);
                 bf.Serialize(saveFile, this.myCron);
                 bf.Serialize(saveFile, this.myRandMem);
                 bf.Serialize(saveFile, this.Graphs);
@@ -1767,10 +1772,11 @@ namespace RTParser
         {
             FileStream loadFile = File.OpenRead(path);
             BinaryFormatter bf = new BinaryFormatter();
-            this.Graphmaster = (GraphMaster)bf.Deserialize(loadFile);
+            //this.Graphmaster = (GraphMaster)bf.Deserialize(loadFile);
             this.myCron = (Cron)bf.Deserialize(loadFile);
             this.myRandMem = (RandomMemory)bf.Deserialize(loadFile);
             this.Graphs = (Dictionary<string, GraphMaster>)bf.Deserialize(loadFile);
+            this.Graphmaster = this.Graphs["*"];
             //this.myBehaviors = (BehaviorSet)bf.Deserialize(loadFile);
 
             loadFile.Close();
@@ -2030,7 +2036,7 @@ The AltAIMLbot program.
         public void setBBHash(string key, string data)
         {
             //curBot.myChemistry.m_cBus.setHash(key,data);
-            BBDict[key] = data;
+            lock (BBDict) BBDict[key] = data;
             if (useMemcache)
             {
                 if ((myChemistry != null) && (myChemistry.m_cBus != null))
@@ -2047,10 +2053,12 @@ The AltAIMLbot program.
                 {
                     if ((myChemistry != null) && (myChemistry.m_cBus != null))
                     {
-                        BBDict[key] = myChemistry.m_cBus.getHash(key);
+                        lock (BBDict) BBDict[key] = myChemistry.m_cBus.getHash(key);
                     }
                 }
-                return BBDict[key];
+                string val;
+                lock (BBDict) if (BBDict.TryGetValue(key, out val)) return val;
+                return "";
             }
             catch
             {
@@ -2220,6 +2228,7 @@ The AltAIMLbot program.
         }
 
         public Dictionary<string, ISettingsDictionary> AllDictionaries = new Dictionary<string, ISettingsDictionary>();
+        public bool noSerialzation = true;
     }
 }
 

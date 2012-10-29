@@ -75,7 +75,18 @@ namespace RTParser
             robot.SetName(text);
             return robot;
         }
-
+        public static AltBot FindRobot(string text)
+        {
+            AltBot robot;
+            lock (Robots)
+            {
+                if (TryGetValueLocked(Robots, Robots, text, out robot))
+                {
+                    return robot;
+                }
+                return null;
+            }
+        }
         private readonly List<XmlNodeEvaluator> XmlNodeEvaluators = new List<XmlNodeEvaluator>();
         private TestCaseRunner testCaseRunner;
 
@@ -237,6 +248,7 @@ namespace RTParser
             set { myServitor = value; }
         }
         public bool useServitor = false;
+        public bool useNonServitor = false;
         public void sayConsole(string message)
         {
             //Default output
@@ -256,7 +268,7 @@ namespace RTParser
             string rapstorSL = GlobalSettings.grabSetting("rapstoreslices");
             if ((rapstorSL != null))
             {
-                servitor.rapStoreSlices = int.Parse(rapstorSL); 
+                servitor.rapStoreSlices = int.Parse(rapstorSL);
             }
             string rapstorTL = GlobalSettings.grabSetting("rapstoretrunklevel");
             if ((rapstorTL != null))
@@ -268,7 +280,7 @@ namespace RTParser
             string behaviorcache = GlobalSettings.grabSetting("behaviorcache");
             if ((behaviorcache != null) && (behaviorcache.Length > 0))
             {
-                servitor.curBot.myBehaviors.persistantDirectory=behaviorcache;
+                servitor.curBot.myBehaviors.persistantDirectory = behaviorcache;
             }
 
             if (servitor.skiploading) return;
@@ -285,7 +297,7 @@ namespace RTParser
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("***** ERR reloadServitor():{0} ERR ******", e.Message );
+                    Console.WriteLine("***** ERR reloadServitor():{0} ERR ******", e.Message);
                 }
                 //servitor.skiploading = true;
                 Console.WriteLine("***** reloadServitor():{0} COMPLETE ******", graphcache);
@@ -307,6 +319,7 @@ namespace RTParser
                 Console.WriteLine("No file exists for reloadServitor()");
             }
         }
+
         public void saveServitor()
         {
             try
@@ -330,7 +343,7 @@ namespace RTParser
             //servitor.curBot.Graphmaster.collectPaths("",allPaths);
             //File.WriteAllLines(@"./aiml/graphmap.txt", allPaths.ToArray());
             string graphcache = GlobalSettings.grabSetting("graphcache");
-            if (File.Exists(graphcache))
+            if (false && File.Exists(graphcache)) // Always write for now
             {
                 Console.WriteLine("***** saveServitor():{0} SKIPPING ******", graphcache);
                 if (servitor != null) servitor.skiploading = true;
@@ -357,10 +370,10 @@ namespace RTParser
             }
             foreach (string line in allBehaviors)
             {
-            //    sw.WriteLine(line);
+                //    sw.WriteLine(line);
             }
 
-            foreach( string line in footer)
+            foreach (string line in footer)
             {
                 sw.WriteLine(line);
             }
@@ -370,7 +383,7 @@ namespace RTParser
             string servitorbin = GlobalSettings.grabSetting("servitorbin");
             if (!File.Exists(servitorbin))
             {
-                //servitor.saveToBinaryFile(servitorbin);
+                servitor.saveToBinaryFile(servitorbin);
                 servitor.skiploading = true;
             }
             else
@@ -665,31 +678,51 @@ namespace RTParser
 
         #region Settings methods
 
+        private bool initialSettingsLoaded = false;
+        private readonly object initialSettingsLoadedLock = new object();
         /// <summary>
         /// Loads AIML from .aiml files into the graphmaster "brain" of the Proccessor
         /// </summary>
+        public void loadGlobalBotSettings()
+        {
+            lock (initialSettingsLoadedLock)
+            {
+                if (initialSettingsLoaded) return;
+                initialSettingsLoaded = true;
+                loadConfigs(this, PathToConfigFiles, GetBotRequest("-loadAimlFromDefaults-"));
+                loadAIMLAndSettings(HostSystem.Combine(PathToAIML, "shared_aiml"));
+                this.StartHttpServer();
+                EnsureDefaultUsers();
+            }
+            //MyBot.GlobalSettings.addSetting("name", client.BotLoginParams.FirstName+ " " + client.BotLoginParams.LastName);
+        }
+
         public void loadAIMLFromDefaults()
         {
-            if (useServitor)
+            lock (initialSettingsLoadedLock)
             {
-               // servitor.curBot.loadAIMLFromDefaults();
-                return;
+                loadAIMLFromFiles();
             }
-
         }
 
-        public void loadAIMLFromDefaults0()
+
+        public bool LoadIntoOldAIML
         {
-            loadConfigs(this, PathToConfigFiles, GetBotRequest("-loadAimlFromDefaults-"));
-            loadAIMLAndSettings(HostSystem.Combine(PathToAIML, "shared_aiml"));
+            get { return ((useServitor && useNonServitor) || (!useServitor)); }
         }
-
         /// <summary>
         /// Loads AIML from .aiml files into the graphmaster "brain" of the Proccessor
         /// </summary>
         public void loadAIMLFromURI(string path, Request request)
         {
-
+            if (useServitor)
+            {
+                if (HostSystem.FileOrDirExists(path))
+                {
+                    servitor.loadAIMLFromFiles(path);
+                }
+            }
+            if (!LoadIntoOldAIML) return;
             bool prev = request.GraphsAcceptingUserInput;
             LoaderOptions savedOptions = request.LoadOptions;
             try
@@ -705,14 +738,6 @@ namespace RTParser
             {
                 request.GraphsAcceptingUserInput = prev;
                 request.LoadOptions = savedOptions;
-            }
-            if (useServitor)
-            {
-                if (HostSystem.FileExists(path))
-                {
-                    servitor.loadAIMLFromFiles(path);
-                }
-                return;
             }
         }
 
@@ -733,7 +758,7 @@ namespace RTParser
                 if (HostSystem.FileExists(settings)) loadSettingsFile(settings, request);
                 if (useServitor)
                 {
-                    if (HostSystem.FileExists(settings))
+                    if (HostSystem.FileOrDirExists(settings))
                     {
                         servitor.curBot.loadSettings(settings);
                     }
@@ -741,16 +766,9 @@ namespace RTParser
                 //loading settings first
                 loadConfigs(this, path, request);
 
+                //this loads into servator
                 loadAIMLFromURI(path, request);
-                if (useServitor)
-                {
-                    if (HostSystem.FileExists(path))
-                    {
 
-                        servitor.loadAIMLFromFiles(path);
-                        //return;
-                    }
-                }
             }
             finally
             {
@@ -876,13 +894,6 @@ namespace RTParser
             {
                 isAcceptingUserInput = prev;
             }
-        }
-
-        /// <summary>
-        /// Loads settings based upon the default location of the Settings.xml file
-        /// </summary>
-        public void loadGlobalBotSettings()
-        {
         }
 
         public void ReloadAll()
@@ -1194,6 +1205,7 @@ namespace RTParser
         /// <param name="path">the path to the file for saving</param>
         public void saveToBinaryFile1(string path)
         {
+            if (this.noSerialzation) return;
             BinaryFormatter bf = Unifiable.GetBinaryFormatter();
             string binext = ".gfxbin";
             string localdir = Path.Combine(path, NamePath);
@@ -1669,15 +1681,25 @@ The AIMLbot program.
 
         public string SetName(string myName)
         {
-            lock (OnBotCreatedHooks)
+            lock (IsNameSetLock) lock (OnBotCreatedHooks)
             {
                 return SetName0(myName);
                 //return UserOper(() => SetName0(myName), writeDebugLine);
             }
         }
 
+        private string IsNameSet = null;
+        private object IsNameSetLock = new object();
         private string SetName0(string myName)
         {
+            loadGlobalBotSettings();
+
+            if (IsNameSet == myName && BotAsUser != null)
+            {
+                return BotAsUser.UserDirectory;
+            }
+            IsNameSet = myName;
+
             //char s1 = myName[1];
             Robots[myName] = this;
             NameAsSet = myName;
@@ -1704,44 +1726,14 @@ The AIMLbot program.
             thisBotAsUser.removeSetting("userdir");
             NamePath = ToScriptableName(NameAsSet);
             thisBotAsUser.UserID = NamePath;
-            this.StartHttpServer();
-            SetupExecHandlers();
+            GlobalSettings.addSetting("name", String.Format("{0}", myName));
 
             //var OnTaskAtATimeHandler = HeardSelfSayQueue = thisBotAsUser.OnTaskAtATimeHandler;
             //OnTaskAtATimeHandler.Name = "TaskQueue For " + myName;
 
             //thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
-            /*
-            string dgn = "default_to_" + NamePath;
-            string n2n = NamePath + "_to_" + NamePath;
-            string hgn = "heardselfsay_to_" + NamePath;
-            lock (GraphsByName)
-            {
-                if (String.IsNullOrEmpty(NamePath))
-                {
-                    throw new NullReferenceException("SetName! = " + myName);
-                }
-                //if (_g == null)
-                {
-                    GraphMaster od;
-                    GraphsByName.TryGetValue("default", out od);
-                    //_g = GraphMaster.FindOrCreate(dgn);
-                    if (od == null) GraphsByName["default"] = _g;
-                    else _g.AddGenlMT(od, writeToLog);
-                    _h //= TheUserListernerGraph 
-                        = new GraphMaster(hgn);
-                    GraphsByName[n2n] = _h;
-                    _h.AddGenlMT(GraphsByName["heardselfsay"], writeToLog);
-                    _h.AddGenlMT(GraphsByName["listener"], writeToLog);
-                    GraphsByName[dgn] = _g;
-                    GraphsByName[hgn] = _h;
-                }
 
-                GraphsByName[n2n].RemoveGenlMT(GraphsByName[dgn], writeToLog);
-            }
-            GraphMaster listeningGraph = DefaultHeardSelfSayGraph;
-            if (listeningGraph != null) BotAsUser.HeardSelfSayGraph = listeningGraph;
-             * */
+
             lock (OnBotCreatedHooks)
             {
                 foreach (Action list in OnBotCreatedHooks)
@@ -1757,9 +1749,8 @@ The AIMLbot program.
                 }
                 OnBotCreatedHooks.Clear();
             }
-            loadAIMLFromDefaults0();
-            EnsureDefaultUsers();
-            string official = LoadPersonalDirectories(myName);
+
+            string official = LoadPersonalDirectories(NamePath);
             thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
             AddExcuteHandler(NamePath, ChatWithThisBot);
             return official ?? thisBotAsUser.UserDirectory;

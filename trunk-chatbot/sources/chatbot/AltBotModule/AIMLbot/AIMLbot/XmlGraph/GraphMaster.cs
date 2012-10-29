@@ -29,7 +29,7 @@ using System.Text;
 
 namespace RTParser.Utils
 {
-    //[Serializable]
+    [Serializable]
     public class GraphMaster : ParentChild
     {
         private static string _STAR_PATH;

@@ -67,6 +67,8 @@ namespace AltAIMLbot.Utils
                 }
                 else
                 {
+                    Console.WriteLine("WARN No aiml files fopu8nd in directory " + path);
+                    return;
                     throw new FileNotFoundException("Could not find any .aiml files in the specified directory (" + path + "). Please make sure that your aiml file end in a lowercase aiml extension, for example - myFile.aiml is valid but myFile.AIML is not.");
                 }
             }
@@ -86,7 +88,8 @@ namespace AltAIMLbot.Utils
         {
             //lock (ExternDB.mylock)
             {
-
+                var fn = filename;
+                filename = filename.Replace("\\", "/");// new FileInfo(fn).FullName;
                 this.bot.writeToLog("Processing AIML file(2): " + filename);
                 if (this.bot.rapStoreDirectory != null)
                 {

@@ -572,7 +572,7 @@ namespace RTParser.Variables
                     }
                     if (!HostSystem.FileExists(pathToSettings))
                     {
-                        writeToLog("ERROR No settings found in: " + pathToSettings);
+                        writeToLog("WARNING no settings file: " + pathToSettings);
                         //throw new FileNotFoundException(pathToSettings);
                         return;
                     }
@@ -867,6 +867,7 @@ namespace RTParser.Variables
                 var p = myNode.ParentNode;
                 if (p != null && p.Name.ToLower() == "bots")
                 {
+                    return; //we are not program D definining bots TODO maybe we will be
                     loadSettingNode(dict, myNode.ChildNodes, settingsPolicy, request);
                     loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, false), request);
                     return;

@@ -534,9 +534,9 @@
     </Compile>
     <Compile Include="Database\WikiAnswersFactoidEngine.cs">
     </Compile>
-    <Compile Include="GraphInfo\CategoryInfo.cs">
+    <Compile Include="GUI\GraphInfo\CategoryInfo.cs">
     </Compile>
-    <Compile Include="GraphInfo\TemplateInfo.cs">
+    <Compile Include="GUI\GraphInfo\TemplateInfo.cs">
     </Compile>
     <Compile Include="GUI\RealTimeBotConsole.cs">
       <SubType>Form</SubType>

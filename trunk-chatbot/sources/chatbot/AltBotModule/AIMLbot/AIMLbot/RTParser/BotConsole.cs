@@ -254,6 +254,7 @@ namespace RTParser
 
         public void StartHttpServer()
         {
+            if (HttpTextServer != null) return;
             string[] oArgs;
             if (UseHttpd > 0 && this.HttpTextServer == null)
             {
@@ -417,7 +418,7 @@ namespace RTParser
                     }
 
                     bool myBotBotDirective = false;
-                    if (useServitor)
+                    if (useServitor && !input.StartsWith("@"))
                     {
                         // See what the servitor says
                         updateRTP2Sevitor(myUser);

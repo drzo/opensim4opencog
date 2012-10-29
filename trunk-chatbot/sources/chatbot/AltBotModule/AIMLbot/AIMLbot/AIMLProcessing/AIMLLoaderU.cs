@@ -78,8 +78,10 @@ namespace RTParser.Utils
 
         #endregion
 
+        private AIMLLoader newLoader = null;
         public AIMLLoaderU(AltBot bot)
         {
+            newLoader = new AIMLLoader(bot);
         }
 
         /// <summary>
@@ -89,6 +91,7 @@ namespace RTParser.Utils
         public AIMLLoaderU(AltBot bot, Request request)
         {
             this.LoaderRequest00 = request;
+            newLoader = new AIMLLoader(bot);
             //XmlNodeEvaluators.Add(this);
         }
 
@@ -484,6 +487,7 @@ namespace RTParser.Utils
                 }
                 else
                 {
+                    if (!RProcessor.useNonServitor) return 1;
                     AutoClosingStream tr = HostSystem.OpenRead(path);
                     try
                     {
@@ -780,6 +784,12 @@ namespace RTParser.Utils
         public long loadAIMLNode0(XmlNode currentNode, LoaderOptions loadOpts, Request request,
                                  List<ConversationCondition> additionalRules)
         {
+            if (request.bot.useServitor)
+            {
+                newLoader.loadAIMLFromXML(currentNode, loadOpts.CurrentFilename);
+                return 1;
+            }
+
             if (currentNode == null)
             {
                 writeToLog("ERROR: no currentNode in " + loadOpts);

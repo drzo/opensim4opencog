@@ -63,6 +63,20 @@ namespace AltAIMLbot
         public  string lastAIMLInstance = "";
         public bool traceServitor = true;
         public bool skiploading = false;
+        public void DontSkiploading(System.Action act)
+        {
+            var sl = skiploading;
+            skiploading = false;
+            try
+            {
+                act();
+            }
+            finally
+            {
+                skiploading = sl;
+            }
+        }
+
         public bool savedServitor = false;
         public bool skipPersonalityCheck = false;
         public bool initialCritical = false;
@@ -100,8 +114,8 @@ namespace AltAIMLbot
                 if (curBot != null)
                 {
                     curBot.rapStoreDirectory = value;
-                    _rapStoreDirectory = value;
                 }
+                _rapStoreDirectory = value;
             }
         }
         public int rapStoreSlices
@@ -301,6 +315,7 @@ namespace AltAIMLbot
 
             curBot = myBot;
             curBot.myServitor = this;
+            outputDelegate = outputDelegate ?? curBot.sayProcessor;
             if (outputDelegate == null)
             {
                 myBot.sayProcessor = new sayProcessorDelegate(sayResponse);
@@ -395,6 +410,18 @@ namespace AltAIMLbot
         }
         public string respondToChat(string input, bool doHaviours)
         {
+            if (string.IsNullOrEmpty(input)) return input;
+            input = input.TrimStart();
+            if (input.StartsWith("@"))
+            {
+                curBot.AcceptInput(Console.WriteLine, input, curUser);
+                return "@@";
+            }
+            if (input.StartsWith("<"))
+            {
+                curBot.myBehaviors.runBTXML(input);
+                return "@<>";
+            }
             curBot.isPerformingOutput = true;
             if (curBot.myBehaviors.waitingForChat)
             {
@@ -487,6 +514,7 @@ namespace AltAIMLbot
             }
 
         }
+        /*
         public string respondToChat(string input,string UserID)
         {
             try
@@ -551,7 +579,7 @@ namespace AltAIMLbot
             { }
 
         }
-
+        */
         public void Main(string[] args)
         {
             Start("consoleUser", new sayProcessorDelegate(sayResponse));
@@ -586,6 +614,7 @@ namespace AltAIMLbot
         {
             try
             {
+                if (IsRunning(myCronThread)) return; 
                 if (myCronThread == null)
                 {
                     myCronThread = new Thread(curBot.myCron.start);
@@ -602,6 +631,7 @@ namespace AltAIMLbot
         #region FSM
         public  void startFSMEngine()
         {
+            if (IsRunning(tmFSMThread)) return;
             //Start our own chem thread
             try
             {
@@ -651,6 +681,7 @@ namespace AltAIMLbot
         public  void startBehaviorEngine()
         {
             //Start our own chem thread
+            if (IsRunning(tmBehaveThread)) return;
             try
             {
                 if (tmBehaveThread == null)
@@ -718,6 +749,7 @@ namespace AltAIMLbot
             //Start our own chem thread
             try
             {
+                if (IsRunning(tmTalkThread)) return;
                 if (tmTalkThread == null)
                 {
                     tmTalkThread = new Thread(memTalkThread);
@@ -730,6 +762,13 @@ namespace AltAIMLbot
                 Console.WriteLine("{0}\n{1}", e.Message, e.StackTrace);
             }
         }
+
+        private static bool IsRunning(Thread thread)
+        {
+            if (thread == null) return false;
+            return thread.IsAlive;
+        }
+
         public  bool checkNewPersonality()
         {
             bool loadedCore = false;
@@ -959,11 +998,16 @@ namespace AltAIMLbot
             Thread.Sleep(10);
             if (skiploading)
             {
+                Console.WriteLine(" - WARNING: SERVITOR SKIPLOADING: {0}", path);
                 return;
             }
             if (curBot != null)
             {
                 curBot.loadAIMLFromFile(path);
+            }
+            else
+            {
+                Console.WriteLine(" - WARNING: SERVITOR NO BOT TO LOAD: {0}", path);
             }
         }
         public void loadAIMLFromFiles(string path)
@@ -971,11 +1015,16 @@ namespace AltAIMLbot
             Thread.Sleep(10);
             if (skiploading)
             {
+                Console.WriteLine(" - WARNING: SERVITOR SKIPLOADING: {0}", path);
                 return;
             }
             if (curBot != null)
             {
                 curBot.loadAIMLFromFiles(path);
+            }
+            else
+            {
+                Console.WriteLine(" - WARNING: SERVITOR NO BOT TO LOAD: {0}", path);
             }
         }
 
@@ -1017,7 +1066,7 @@ namespace AltAIMLbot
                 Console.WriteLine(" - BINARY SAVE OVERWRITE:{0}", path);
                 fi.Delete();
             }
-
+            if (curBot.noSerialzation) return;
             FileStream saveFile = File.Create(path);
             BinaryFormatter bf = new BinaryFormatter();
             bf.Serialize(saveFile, curBot);

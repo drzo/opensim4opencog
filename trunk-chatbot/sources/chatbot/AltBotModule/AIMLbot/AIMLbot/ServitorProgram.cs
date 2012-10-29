@@ -1,18 +1,79 @@
 using System;
 using System.IO;
+using AIMLbot;
 using AltAIMLbot;
 using LAIR.ResourceAPIs.WordNet;
+using MushDLR223.ScriptEngines;
 using RTParser;
 
 namespace AltAIMLbot
 {
     public class ChatProgram
     {
+        private ICollectionRequester colreq = new ACollectionRequester();
+
+        private class ACollectionRequester : ICollectionRequester
+        {
+            public object RequesterID
+            {
+                get { return this; }
+            }
+
+            public object SessionLock
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            public RequesterSession SessionMananger
+            {
+                get; set;
+            }
+        }
+
+        string myName = "kotoko irata";
+
+        public void StartupListener00()
+        {
+            try
+            {
+                MyBot = MyBot ?? new Bot();
+                MyBot.ObjectRequester = (ICollectionRequester)colreq;
+                MyBot.useServitor = useServitor;
+                MyBot.outputDelegate = WriteLine;
+                if (MyBot.useServitor)
+                {
+                    MyBot.servitor.curBot.sayProcessor = new sayProcessorDelegate(TalkActive);
+                }
+                MyBot.SetName(myName);
+                if (MyBot.useServitor)
+                {
+                    MyBot.updateRTP2Sevitor();
+                }
+                MyBot.WriteConfig();
+            }
+            catch (Exception e)
+            {
+                WriteLine("ERROR {0}", e);
+            }
+        }
+
+        public void TalkActive(string message)
+        {
+            Console.WriteLine("TalkActive: " + message);
+        }
+
+
+        public static void WriteLine(string s, params object[] args)
+        {
+            Console.WriteLine("BWL: " + s, args);
+        }
+
         public Servitor servitor = null;
         public bool useServitor = true;
         public string servitorbin = "";
         public string userID = "consoleUser";
         public string PathToWordNet = null;
+        private RTParser.AltBot MyBot;
 
         public void sayConsole(string message)
         {
@@ -40,23 +101,19 @@ namespace AltAIMLbot
         }
         public void saveServitor()
         {
-            // string servitorbin = GlobalSettings.grabSetting("servitorbin");
-            if (servitorbin.Length == 0) return;
-            if (!File.Exists(servitorbin))
-            {
-                servitor.saveToBinaryFile(servitorbin);
-                servitor.skiploading = true;
-            }
-            else
-            {
-                Console.WriteLine("Skipping saveServitor(): already exists!!!");
-            }
-
+            servitor.curBot.saveServitor();
         }
-        public void startServitor()
+
+        public void startRobot()
+        {
+            startServitor00();
+            servitor.DontSkiploading(StartupListener00);
+        }
+
+        public void startServitor00()
         {
             if (useServitor == false) return;
-            if (servitor == null)
+            //if (servitor == null)
             {
                 WebServitor.kpfile = @"./wikilink/phraseScore";
                 WebServitor.wsfile = @"./wikilink/count.phrase.sense.txt";
@@ -66,7 +123,9 @@ namespace AltAIMLbot
                 RaptorDB.Global.SaveTimerSeconds = 60000;
                 Console.WriteLine("*** Create servitor ***");
 
-                servitor = new Servitor(AltBot.FindOrCreateRobot("default"), userID, null, true, true, true);
+                MyBot = MyBot ?? AltBot.FindRobot(myName) ?? new AltBot();
+                MyBot.useServitor = true;
+                servitor = MyBot.servitor ?? new Servitor(MyBot, userID, null, true, true, true);
                 Console.WriteLine("*** Created WN ***");
 
                 servitor.curBot.isAcceptingUserInput = false;
@@ -123,6 +182,9 @@ namespace AltAIMLbot
                 {
                     // Load the AIML then save the binary
                     //servitor.curBot.loadAIMLFromFiles(@"C:\RD4541\Acore\RealBot\RealBot2\RealBot2\RealBot2\bin\Debug\aiml\kotoko_irata");
+                    servitor.curBot.rapStoreDirectory = null;
+
+                    //servitor.curBot.rapStoreDirectory = null;
                     
                    // servitor.curBot.rapStoreDirectory = null;
                     
@@ -146,22 +208,20 @@ namespace AltAIMLbot
         }
         public bool LoadDataset(string datasetName)
         {
-            servitor.skiploading = false;
-            servitor.curBot.loadAIMLFromFiles(@"./aiml/" + datasetName);
-            servitor.skiploading = true;
+            servitor.DontSkiploading(() => servitor.curBot.loadAIMLFromFiles(@"./aiml/" + datasetName));
             return true;
         }
 
         public void RunMain(Action<string> ConsoleWrite, Func<string> ConsoleReadLine, bool sayReposeServ)
         {
-            startServitor();
+            startRobot();
             servitor.curBot.sayProcessor = (s) => ConsoleWrite(s);
             SetForegrounded(true);
             //saveServitor();
             while (true)
             {
                 try
-                {                    
+                {
                     string input = ConsoleReadLine();
                     input = input.Trim();
                     if (input.ToLower() == "exit")
@@ -170,7 +230,7 @@ namespace AltAIMLbot
                     }
                     else
                     {
-                        if (input.Length==0) continue;
+                        if (input.Length == 0) continue;
                         string answer = respondToChat(input);
                         ConsoleWrite("Bot: " + answer);
                         if (sayReposeServ) servitor.sayResponse(answer);
@@ -184,6 +244,7 @@ namespace AltAIMLbot
 
         public void SetForegrounded(bool noBackgroundThings)
         {
+            return;
             bool enableBG = !noBackgroundThings;
             servitor.tmFSMEnabled = enableBG;
             servitor.tmBehaveEnabled = enableBG;

@@ -192,22 +192,22 @@ namespace AltAIMLbot
     /// </summary>
     public class SemiStringStackQueue
     {
-        private List<string> items = new List<string>();
+        private readonly List<string> items = new List<string>();
 
         public void Push(string item)
         {
-            items.Add(item);
+            lock (loc) items.Add(item);
         }
         public string Pop()
         {
-            if (items.Count > 0)
-            {
-                string temp = items[items.Count - 1];
-                items.RemoveAt(items.Count - 1);
-                return temp;
-            }
-            else
-                return default(string);
+            lock (loc) if (items.Count > 0)
+                {
+                    string temp = items[items.Count - 1];
+                    items.RemoveAt(items.Count - 1);
+                    return temp;
+                }
+                else
+                    return default(string);
         }
         public string Dequeue()
         {
@@ -215,60 +215,68 @@ namespace AltAIMLbot
         }
         public string Peek()
         {
-            if (items.Count > 0)
-            {
-                string temp = items[items.Count - 1];
-                return temp;
-            }
-            else
-                return default(string);
+            lock (loc) if (items.Count > 0)
+                {
+                    string temp = items[items.Count - 1];
+                    return temp;
+                }
+                else
+                    return default(string);
         }
         public string PopRandom()
         {
-            if (items.Count > 0)
-            {
-                Random rng = new Random();
-                int pick = rng.Next(items.Count - 1);
-                string temp = items[pick];
-                items.RemoveAt(pick);
-                return temp;
-            }
-            else
-                return default(string);
+            lock (loc) if (items.Count > 0)
+                {
+                    Random rng = new Random();
+                    int pick = rng.Next(items.Count - 1);
+                    string temp = items[pick];
+                    items.RemoveAt(pick);
+                    return temp;
+                }
+                else
+                    return default(string);
         }
 
         public int Count
         {
-            get { return items.Count; }
+            get { lock (loc) return items.Count; }
         }
         public void Clear()
         {
-            items.Clear();
+            lock (loc) items.Clear();
         }
+
+        private object loc
+        {
+            get { return items; }
+        }
+
         public bool Contains(string s)
         {
-            return items.Contains(s);
+            lock (loc) return items.Contains(s);
         }
         public void Remove(int itemAtPosition)
         {
-            items.RemoveAt(itemAtPosition);
-         }
+            lock (loc) items.RemoveAt(itemAtPosition);
+        }
         public void RemoveAny(string item)
         {
-            int index = items.FindLastIndex(delegate(string s) { return s == item; });
-            if (index > 0)
+            lock (loc)
             {
-                items.RemoveAt(index);
+                int index = items.FindLastIndex(delegate(string s) { return s == item; });
+                if (index > 0)
+                    items.RemoveAt(index);
             }
         }
+
         public void Enqueue(string item)
         {
-            items.Insert(0, item);
+            lock (loc) items.Insert(0, item);
         }
         override public string ToString()
         {
             string result = "[";
-            foreach (string x in items)
+            lock (loc) foreach (string x in items)
             {
                 result += x + "|";
             }
