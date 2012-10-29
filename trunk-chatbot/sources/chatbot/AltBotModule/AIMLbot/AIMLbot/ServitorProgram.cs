@@ -36,7 +36,7 @@ namespace AltAIMLbot
             MyBot = bot;
             myName = myName0;
         }
-        public void StartupListener00(AltBot bot)
+        public void StartupListener00()
         {
             try
             {
