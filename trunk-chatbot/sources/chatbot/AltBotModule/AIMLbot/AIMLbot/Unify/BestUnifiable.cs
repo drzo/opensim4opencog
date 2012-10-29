@@ -43,6 +43,7 @@ namespace RTParser
             }
             else
             {
+                inlist = inlist.Replace("<ligt", "<li>");
                 strings = inlist.Split(new[] { "<xor><li>", "</li><li>", "</li></xor>" },
                                                 StringSplitOptions.RemoveEmptyEntries);
             }

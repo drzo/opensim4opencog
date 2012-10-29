@@ -394,7 +394,7 @@ namespace RTParser
             string servitorbin = GlobalSettings.grabSetting("servitorbin");
             if (!File.Exists(servitorbin))
             {
-                servitor.saveToBinaryFile(servitorbin);
+                if (servitorbin!=null) servitor.saveToBinaryFile(servitorbin);
                 servitor.skiploading = true;
             }
             else
