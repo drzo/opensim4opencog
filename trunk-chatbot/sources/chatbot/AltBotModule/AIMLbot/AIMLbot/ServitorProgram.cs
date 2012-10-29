@@ -31,8 +31,12 @@ namespace AltAIMLbot
         }
 
         string myName = "kotoko irata";
-
-        public void StartupListener00()
+        public ChatProgram(AltBot bot, string myName0, Servitor present)
+        {
+            MyBot = bot;
+            myName = myName0;
+        }
+        public void StartupListener00(AltBot bot)
         {
             try
             {
@@ -182,10 +186,7 @@ namespace AltAIMLbot
                 {
                     // Load the AIML then save the binary
                     //servitor.curBot.loadAIMLFromFiles(@"C:\RD4541\Acore\RealBot\RealBot2\RealBot2\RealBot2\bin\Debug\aiml\kotoko_irata");
-                    servitor.curBot.rapStoreDirectory = null;
 
-                    //servitor.curBot.rapStoreDirectory = null;
-                    
                    // servitor.curBot.rapStoreDirectory = null;
                     
                     //servitor.curBot.loadAIMLFromFiles(@"./aiml/chomskyAIML");

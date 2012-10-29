@@ -429,7 +429,14 @@ namespace RTParser
                 Console.WriteLine(" **** ERR : {0} {1} " , e.Message , e.StackTrace);
             }
         }
+
+
         public void updateServitor2RTP()
+        {
+            startServitor();
+            reloadServitor();
+        }
+        public void startServitor()
         {
             if (useServitor == false) return;
             if (servitor == null)
@@ -693,6 +700,7 @@ namespace RTParser
                 loadAIMLAndSettings(HostSystem.Combine(PathToAIML, "shared_aiml"));
                 this.StartHttpServer();
                 EnsureDefaultUsers();
+                startServitor();
             }
             //MyBot.GlobalSettings.addSetting("name", client.BotLoginParams.FirstName+ " " + client.BotLoginParams.LastName);
         }
@@ -717,6 +725,7 @@ namespace RTParser
         {
             if (useServitor)
             {
+                if (servitor == null) startServitor();
                 if (HostSystem.FileOrDirExists(path))
                 {
                     servitor.loadAIMLFromFiles(path);
@@ -758,6 +767,7 @@ namespace RTParser
                 if (HostSystem.FileExists(settings)) loadSettingsFile(settings, request);
                 if (useServitor)
                 {
+                    if (servitor == null) startServitor();
                     if (HostSystem.FileOrDirExists(settings))
                     {
                         servitor.curBot.loadSettings(settings);
