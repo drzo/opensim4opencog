@@ -82,10 +82,10 @@ namespace RTParser
             }
             set
             {
-                if (BotAsUser != null)
+                if (_botAsUser != null)
                 {
-                    if (value == BotAsUser) return;
-                    BotAsUser.LastResponder = value;
+                    if (value == _botAsUser) return;
+                    _botAsUser.LastResponder = value;
                 }
                 //User LU = LastUser;
                 if (!IsInteractiveUser(_lastUser) || IsInteractiveUser(value))

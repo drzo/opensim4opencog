@@ -79,7 +79,7 @@ namespace AltAIMLbot
         public Servitor servitor = null;
         public bool useServitor = true;
         public string servitorbin = "";
-        public string userID = "consoleUser";
+        //public string userID = "consoleUser";
         public string PathToWordNet = null;
         private RTParser.AltBot MyBot;
 
@@ -133,7 +133,7 @@ namespace AltAIMLbot
 
                 MyBot = MyBot ?? AltBot.FindRobot(myName) ?? new AltBot();
                 MyBot.useServitor = true;
-                servitor = MyBot.servitor ?? new Servitor(MyBot, userID, null, true, true, true);
+                servitor = MyBot.servitor ?? new Servitor(MyBot, null, true, true, true);
                 Console.WriteLine("*** Created WN ***");
 
                 servitor.curBot.isAcceptingUserInput = false;

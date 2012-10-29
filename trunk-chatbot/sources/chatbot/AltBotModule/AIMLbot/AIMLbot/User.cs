@@ -667,10 +667,11 @@ namespace RTParser
                 this.Predicates = new SettingsDictionary(userID + ".predicates", this.bot, provider);
                 this.Predicates.IsTraced = qsbase.IsTraced;
                 this.Predicates.AddPrefix("user.", () => this);
-                this.bot.DefaultPredicates.Clone(this.Predicates);
+                bool isUser = (this.bot.DefaultPredicates != null);
+                if (isUser) this.bot.DefaultPredicates.Clone(this.Predicates);
                 //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
                 this.Predicates.addSetting("topic", rbot.NOTOPIC);
-                this.Predicates.InsertFallback(() => bot.AllUserPreds);
+                if (isUser) this.Predicates.InsertFallback(() => bot.AllUserPreds);
                 UserID = userID;
                 UserName = userID;
                 blackBoardThat = "";

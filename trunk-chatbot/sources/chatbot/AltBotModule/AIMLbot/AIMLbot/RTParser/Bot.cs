@@ -146,7 +146,18 @@ namespace RTParser
         /// </summary>
         public bool StaticLoader = true;
 
-        public User BotAsUser;
+        private User _botAsUser;
+        public User BotAsUser
+        {
+            get
+            {
+                if (_botAsUser == null)
+                {
+                    _botAsUser = FindOrCreateUser(NameAsSet);
+                } 
+                return _botAsUser;
+            }
+        }
         public User ExemplarUser;
         public string NamePath;
         public string NameAsSet;
@@ -442,7 +453,7 @@ namespace RTParser
             if (servitor == null)
             {
 
-                servitor = new Servitor(this, this.UserID, null);
+                servitor = new Servitor(this, null);
                 servitor.curBot = this;
                 servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
                 //servitor.curBot.wordNetEngine = wordNetEngine;
@@ -578,8 +589,8 @@ namespace RTParser
         public  AltBot()
             : base()
         {
-            AltBotcommands = new AltBotCommands(this);
             qsbase = QuerySettings.CogbotDefaults;
+            AltBotcommands = new AltBotCommands(this);
             _RuntimeDirectories = new List<string>();
             PushSearchPath(HostSystem.GetAbsolutePath(AppDomain.CurrentDomain.RelativeSearchPath));
             PushSearchPath(HostSystem.GetAbsolutePath(AppDomain.CurrentDomain.DynamicDirectory));
@@ -875,6 +886,7 @@ namespace RTParser
 
 
                 User guser = ExemplarUser = LastUser = new MasterUser("globalPreds", this);
+                _botAsUser = _botAsUser ?? new MasterUser(NameAsSet ?? ("Bot" + GetHashCode()), this);
                 lock (microBotUsersLock)
                 {
                     BotUsers["globalpreds"] = guser;
@@ -1704,7 +1716,7 @@ The AIMLbot program.
         {
             loadGlobalBotSettings();
 
-            if (IsNameSet == myName && BotAsUser != null)
+            if (IsNameSet == myName && _botAsUser != null)
             {
                 return BotAsUser.UserDirectory;
             }
@@ -1715,7 +1727,7 @@ The AIMLbot program.
             NameAsSet = myName;
             //new AIMLbot.User("heardselfsay", this)
             var thisBotAsUser = FindOrCreateUser(myName);
-            this.BotAsUser = thisBotAsUser;
+            this.BotAsUser.UserName = myName;// thisBotAsUser;
             if (useServitor) { updateRTP2Sevitor(); }
 
             ExternalIntern("BotAsUser", thisBotAsUser);

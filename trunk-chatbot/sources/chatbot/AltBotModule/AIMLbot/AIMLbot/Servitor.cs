@@ -51,7 +51,10 @@ namespace AltAIMLbot
         //   - WorldObjectsForAimLBot.cs StartupListener00()
 
         public  AltBot curBot;
-        public  User curUser;
+        public  User curUser
+        {
+            get { return curBot.LastUser; }
+        }
         public  Thread tmTalkThread = null;
         public bool tmTalkEnabled = true;
         public  Thread tmFSMThread = null;
@@ -129,18 +132,18 @@ namespace AltAIMLbot
             set { _rapStoreTrunkLevel = value; }
         }
 
-        public Servitor(AltBot aimlBot, string UserID, sayProcessorDelegate outputDelegate)
+        public Servitor(AltBot aimlBot, sayProcessorDelegate outputDelegate)
         {
             curBot = aimlBot;
-            Start(UserID, outputDelegate);
+            Start( outputDelegate);
         }
-        public Servitor(AltBot aimlBot, string UserID, sayProcessorDelegate outputDelegate, bool skipLoading, bool skippersonalitycheck, bool initialcritical)
+        public Servitor(AltBot aimlBot, sayProcessorDelegate outputDelegate, bool skipLoading, bool skippersonalitycheck, bool initialcritical)
         {
             curBot = aimlBot;
             skiploading = skipLoading;
             skipPersonalityCheck = skippersonalitycheck;
             initialCritical = initialcritical;
-            Start(UserID, outputDelegate);
+            Start(outputDelegate);
         }
 
         public string GetCoppeliaAgentNameByID(int queryID)
@@ -295,14 +298,14 @@ namespace AltAIMLbot
 
         }
 
-        public void Start(string UserID, sayProcessorDelegate outputDelegate)
+        public void Start(sayProcessorDelegate outputDelegate)
         {
             Servitor.LastServitor = this;
             Console.WriteLine("RealBot operating in :" + Environment.CurrentDirectory);
             Console.WriteLine("       ProcessorCount:" + Environment.ProcessorCount);
             Console.WriteLine("             UserName:" + Environment.UserName);
             Console.WriteLine("            TickCount:" + Environment.TickCount);
-            Console.WriteLine("            UserID:" + UserID);
+            Console.WriteLine("            UserID:" + curUser.UserID);
             if (curBot.servitor != null)
             {
 
@@ -331,9 +334,9 @@ namespace AltAIMLbot
             myBot.loadSettings();
 
             Console.WriteLine("Servitor User");
-            var myUser = new MasterUser(UserID, myBot);
+            //var myUser = new MasterUser(UserID, myBot);
 
-            curUser = myUser;
+            //curUser = myUser;
             //myBot.isAcceptingUserInput = false;
             myBot.inCritical = initialCritical;
 
@@ -582,7 +585,7 @@ namespace AltAIMLbot
         */
         public void Main(string[] args)
         {
-            Start("consoleUser", new sayProcessorDelegate(sayResponse));
+            Start(new sayProcessorDelegate(sayResponse));
 
             while (true)
             {
