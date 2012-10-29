@@ -424,8 +424,8 @@ namespace AIMLBotModule
         {
             if (MyBotNullWarning()) return;
             MyBot.SetName(myName);
-            MyBot.BotAsUser.Predicates.InsertOverrides(() => provideWorldBotVars);
-            MyBot.BotAsUser.Predicates.InsertListener(() => provideWorldBotVars);
+            //MyBot.BotAsUser.Predicates.InsertOverrides(() => provideWorldBotVars);
+            //MyBot.BotAsUser.Predicates.InsertListener(() => provideWorldBotVars);
         }
 
         public void SetChatOnOff(string username, bool value)
@@ -449,7 +449,7 @@ namespace AIMLBotModule
             User user = MyBot.FindOrCreateUser(fromname, out newlyCreated);
             if (newlyCreated)
             {
-                user.InsertProvider(() => this.provideWorldUserVars);
+                //user.InsertProvider(() => this.provideWorldUserVars);
                 user.RespondToChat = RespondToChatByDefaultAllUsers;
             }
             user.MaxRespondToChatPerMinute = DefaultMaxRespondToChatPerMinute;
@@ -1456,6 +1456,7 @@ namespace AIMLBotModule
                 CheckName(name); 
                 if (FakeClientVars) if (name == "cogvar") return "botmody";
                 int argsUsed;
+                if (!WorldVar(name)) return null;
                 ICollection v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, PluginModule.provideAIMLVars);
                 if (v == null) return String.Empty;
                 if (v.Count == 0) return SUnifiable.Empty;
@@ -1471,6 +1472,11 @@ namespace AIMLBotModule
                 if (c == 1) return List[0];
                 if (List.Count > 5) List.RemoveRange(0, List.Count - 5);
                 return new BestUnifiable(List);
+            }
+
+            private bool WorldVar(string name)
+            {
+                return false;
             }
 
             private SUnifiable ObjectUnifiable(object o)
