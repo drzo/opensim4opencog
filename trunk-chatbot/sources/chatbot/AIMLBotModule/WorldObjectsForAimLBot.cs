@@ -1457,6 +1457,7 @@ namespace AIMLBotModule
                 if (FakeClientVars) if (name == "cogvar") return "botmody";
                 int argsUsed;
                 if (!WorldVar(name)) return null;
+                name = name.Substring(wrldVar.Length);
                 ICollection v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, PluginModule.provideAIMLVars);
                 if (v == null) return String.Empty;
                 if (v.Count == 0) return SUnifiable.Empty;
@@ -1474,9 +1475,10 @@ namespace AIMLBotModule
                 return new BestUnifiable(List);
             }
 
+            public string wrldVar = "world.";
             private bool WorldVar(string name)
             {
-                return false;
+                return name.StartsWith(wrldVar);
             }
 
             private SUnifiable ObjectUnifiable(object o)
