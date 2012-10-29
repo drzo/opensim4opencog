@@ -3704,6 +3704,7 @@ namespace AltAIMLbot
                     int stateIndex = bot.servitor.CoppeliaStateDictionary[state];
                     Global.SetState(stateIndex, isTrue);
                 }
+                Console.WriteLine("coppelia ProcessUpdateCoppeliaFromMt :{0}", myNode.OuterXml);
                 rs = RunStatus.Success;
             }
             catch (Exception e)
@@ -3954,11 +3955,17 @@ namespace AltAIMLbot
                 string btxmlCode="";
                 btxmlCode += "<aiml version=\"1.0\">\n";
                 btxmlCode += " <state name=\"*\">\n";
+                btxmlCode += "  <btxml>\n";
                 btxmlCode += xcode;
+                btxmlCode += "  </btxml>\n";
                 btxmlCode += " </state>\n";
                 btxmlCode += "</aiml>\n";
                 XmlDocument coppeliaDoc = new XmlDocument ();
                 coppeliaDoc.LoadXml (btxmlCode);
+                Console.WriteLine("-------------------------------------");
+                Console.WriteLine("------ GenCoppeliaFromMt:{0} --------", mtName);
+                Console.WriteLine(btxmlCode);
+                Console.WriteLine("-------------------------------------");
                 bot.loadAIMLFromXML(coppeliaDoc, "mt:"+mtName +DateTime.Now.ToString());
             
                 rs = RunStatus.Success;
@@ -4026,6 +4033,7 @@ namespace AltAIMLbot
                     {
                         Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
                         a1.SetFeature(featureID, fValue);
+                        Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
                 }
             }
@@ -4073,6 +4081,7 @@ namespace AltAIMLbot
                                 Agent target = bot.servitor.CoppeliaAgentDictionary[cTarget];
                                 int state = bot.servitor.CoppeliaStateDictionary[cState];
                                 a1.SetFeatureBelief(featureID, state, target.AgentID, fValue);
+                                Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                             }
                         }
                     }
@@ -4116,6 +4125,7 @@ namespace AltAIMLbot
                                 Agent target = bot.servitor.CoppeliaAgentDictionary[cTarget];
                                 int state = bot.servitor.CoppeliaStateDictionary[cState];
                                 a1.SetAgentResponsibleBelief(target.AgentID, state,  fValue);
+                                Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                             }
                         }
                     }
@@ -4156,6 +4166,7 @@ namespace AltAIMLbot
                             Agent target = bot.servitor.CoppeliaAgentDictionary[cTarget];
                             AgentAction action= bot.servitor.CoppeliaActionDictionary[cAction];
                             a1.SetExpectedSatisfaction(target.AgentID, action.GlobalIndex , fValue);
+                            Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                         }
                 }
             }
@@ -4192,6 +4203,7 @@ namespace AltAIMLbot
                         Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
                         Agent target = bot.servitor.CoppeliaAgentDictionary[cTarget];
                         a1.SetAnger(target.AgentID, fValue);
+                        Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
                 }
             }
@@ -4227,6 +4239,7 @@ namespace AltAIMLbot
                         Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
                         Agent target = bot.servitor.CoppeliaAgentDictionary[cTarget];
                         a1.SetPraiseworthy(target.AgentID, fValue);
+                        Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
                 }
             }
@@ -4262,6 +4275,7 @@ namespace AltAIMLbot
                     {
                         Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
                         a1.SetEmotion(iEmotion, fValue);
+                        Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
                 }
             }
@@ -4298,6 +4312,7 @@ namespace AltAIMLbot
                     {
                         Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
                         a1.SetDesired(iEmotion, fValue);
+                        Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
                 }
             }
@@ -4339,7 +4354,7 @@ namespace AltAIMLbot
                             Agent a2 = bot.servitor.CoppeliaAgentDictionary[cTarget];
                             AgentAction act = bot.servitor.CoppeliaActionDictionary[cAction];
                             a1.SetAT(a2.AgentID, act.GlobalIndex, fValue);
-
+                            Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                         }
                     }
                 }
@@ -4383,6 +4398,7 @@ namespace AltAIMLbot
                         {
                             Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
                             a1.SetFeatureEmotionBelief(iFeature,iEmotion, fValue);
+                            Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                         }
                     }
                 }
@@ -4425,6 +4441,7 @@ namespace AltAIMLbot
                 {
                     bot.servitor.CoppeliaActionDictionary[cAction].SetValence(fPositivity, fNegativity);
                 }
+                Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
             }
             catch
             {
@@ -4453,6 +4470,7 @@ namespace AltAIMLbot
                 {
                     int newState = Global.AddState(bState);
                     bot.servitor.CoppeliaStateDictionary[cState] = newState;
+                    Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                 }
             }
             catch
@@ -4490,6 +4508,7 @@ namespace AltAIMLbot
                         Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
                         int state = bot.servitor.CoppeliaStateDictionary[cState];
                         a1.SetStateLikelihood(state, pStateProb);
+                        Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
                 }
             }
@@ -4522,6 +4541,7 @@ namespace AltAIMLbot
                         AgentAction a1 = bot.servitor.CoppeliaActionDictionary[cAct];
                         AgentAction a2 = bot.servitor.CoppeliaActionDictionary[cResponse];
                         a1.AddResponse(a2.GlobalIndex);
+                        Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
                 }
             }
@@ -4559,6 +4579,7 @@ namespace AltAIMLbot
                         Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
                         int state = bot.servitor.CoppeliaStateDictionary[cState];
                         a1.AddAmbition(state, fValue);
+                        Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
                 }
             }
@@ -4591,6 +4612,7 @@ namespace AltAIMLbot
                 {
                     int newMoral = Global.AddMoralPrinciple(bState);
                     bot.servitor.CoppeliaMoralsDictionary[cMoral] = newMoral;
+                    Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                 }
             }
             catch
@@ -4625,6 +4647,7 @@ namespace AltAIMLbot
                         Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
                         int moral = bot.servitor.CoppeliaStateDictionary[cMoral];
                         a1.AddMoralAmbition(moral, fValue);
+                        Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
                 }
             }
@@ -4666,6 +4689,7 @@ namespace AltAIMLbot
                             Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
                             int moral = bot.servitor.CoppeliaMoralsDictionary[cMoral];
                             a1.SetActionMoralPrincipleBelief(act.GlobalIndex, moral, fValue);
+                            Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                         }
                     }
                 }
@@ -4708,6 +4732,7 @@ namespace AltAIMLbot
                             Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
                             int state = bot.servitor.CoppeliaStateDictionary[cState];
                             a1.SetActionStateBelief(act.GlobalIndex ,state, fValue);
+                            Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                         }
                     }
                 }
@@ -4751,6 +4776,7 @@ namespace AltAIMLbot
                             int stateSrc = bot.servitor.CoppeliaStateDictionary[cStateSrc];
                             int stateDest = bot.servitor.CoppeliaStateDictionary[cStateDest];
                             a1.SetStateFacStateBelief(stateSrc, stateDest, fValue);
+                            Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                         }
                     }
                 }
@@ -4791,9 +4817,21 @@ namespace AltAIMLbot
                             Agent agent = bot.servitor.CoppeliaAgentDictionary[cAgent];
                             Agent recipent = bot.servitor.CoppeliaAgentDictionary[cRecipient];
                             agent.ManualPerform(act, recipent);
-
+                            Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
+                        }
+                        else
+                        {
+                            Console.WriteLine("!bot.servitor.CoppeliaAgentDictionary.ContainsKey(cRecipient)");
                         }
                     }
+                    else
+                    {
+                        Console.WriteLine("!bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent)");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("!bot.servitor.CoppeliaActionDictionary.ContainsKey(cAct)");
                 }
 
             }
@@ -4838,6 +4876,7 @@ namespace AltAIMLbot
                             Agent agent = bot.servitor.CoppeliaAgentDictionary[cAgent];
                             Agent recipent = bot.servitor.CoppeliaAgentDictionary[cRecipient];
                             agent.SetRelation(recipent.AgentID,relationID,fValue);
+                            Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
 
                         }
                     }
@@ -5034,6 +5073,7 @@ namespace AltAIMLbot
                     valid = false;
                 }
             }
+            Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
 
             if (varName == "TRUE") valid = true;
             // The return

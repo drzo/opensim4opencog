@@ -25,6 +25,7 @@ namespace CAMeRAVUEmotion
     /// </summary>
     public class Model
     {
+        static Random rng = new Random();
         static int nextAgentID = 0;
         static List<Agent> agents = new List<Agent>();
         /// <summary>
@@ -146,7 +147,7 @@ namespace CAMeRAVUEmotion
             string tempmove = "";
             int ok = 0;
             int cf = 1;
-            float max_esat;
+            float max_esat=-9999;
             int action = -1;
             int target = -1;
             float max2;
@@ -608,6 +609,9 @@ namespace CAMeRAVUEmotion
 
                     //****************Calculated the maximum expected satisfaction for each agent and performing an Action***************
                     //TODO: FIND OUT IF THIS IS A VALID BASE-NUMBER!!!
+                    
+                    // Original
+                    /*
                     max2 = -1;
                     foreach (int response in agent1.possibleResponses)
                     {
@@ -621,11 +625,51 @@ namespace CAMeRAVUEmotion
                                 max_response = response;
                                 max_agentid = agent2id;
                             }
+
+
                         }
-                        max_esat = max2;
-                        action = max_response;
-                        target = max_agentid;
+                        if (max2 > max_esat)
+                        {
+                            max_esat = max2;
+                            action = max_response;
+                            target = max_agentid;
+                        }
                     }
+                    */
+
+                    // Random selection amongst best options
+                    max2 = -1;
+                    int actCount1 = 0;
+                    foreach (int response in agent1.possibleResponses)
+                    {
+
+                        foreach (int agent2id in agent1.perceivedAgents)
+                        {
+                            float temp_esat = agent1.GetExpectedSatisfaction(agent2id, response);
+
+                            // probablistically choose amongst equals
+                            if (temp_esat == max2)
+                            {
+                                actCount1++;
+                                double replaceP = 1 / (double)actCount1;
+                                if (rng.NextDouble() < replaceP)
+                                {
+                                    max_response = response;
+                                    max_agentid = agent2id;
+                                }
+                            }
+                            if (temp_esat > max2)
+                            {
+                                actCount1 = 1;
+                                max2 = temp_esat;
+                                max_response = response;
+                                max_agentid = agent2id;
+                            }
+                        }
+                    }
+                    max_esat = max2;
+                    action = max_response;
+                    target = max_agentid;
 
                     //*******Queue the selected action for performance after this timestep *************
                     //Console.WriteLine("queueing action: " + action + " towards agent: " + target);

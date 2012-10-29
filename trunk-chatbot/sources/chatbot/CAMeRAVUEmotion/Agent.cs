@@ -1657,6 +1657,7 @@ namespace CAMeRAVUEmotion
             //sanity check
             if (!perceivedAgents.Contains(sender.ID))
             {
+                return;
                 throw new Exception("The method of unregistering agents doesn't appear to work... Receiving action: "+performed.Name+" | from agent: "+sender.ID);
             }
 

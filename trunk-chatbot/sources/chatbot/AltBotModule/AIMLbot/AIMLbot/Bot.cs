@@ -1310,9 +1310,17 @@ namespace RTParser
                                     }
                                 }
                             }
+                            // we should have filled in the inner text by now
+                            string resultNodeInnerXML = tagHandler.Transform();
+
+                            //string resultNodeInnerXML = node.InnerXml;
+                            Console.WriteLine(" -- Result1 {0} : {1}", tagName, resultNodeInnerXML);
+                            return resultNodeInnerXML;
+
                         }
                         else
                         {
+                            // tagHandler.isRecursive && !node.HasChildNodes
                             if (tagHandler.IsStarAtomically)
                             {
                                 string debug = node.OuterXml;
@@ -1320,9 +1328,14 @@ namespace RTParser
                                 var TemplateNodeInnerText0 = tagHandler.GetStarContent();
                                 node.InnerXml = TemplateNodeInnerText0;
                             }
+                            string resultNodeInnerXML = tagHandler.Transform();
+                            Console.WriteLine(" -- Result1b {0} : {1}", tagName, resultNodeInnerXML);
+                            return resultNodeInnerXML;
+
                         }
                     }
                     //else
+                    else
                     {
                         string resultNodeInnerXML = tagHandler.Transform();
 
@@ -1353,6 +1366,9 @@ namespace RTParser
                     }
                 }
             }
+            Console.WriteLine(" -- Result3 default exit {0} : {1}", tagName, node.OuterXml);
+            return string.Empty;
+
         }
 
         public string GetOutputSentence(string template, XmlNode resultNode, SubQuery query, Request request, AltAIMLbot.Result result, AltAIMLbot.User user, bool allowProcess)

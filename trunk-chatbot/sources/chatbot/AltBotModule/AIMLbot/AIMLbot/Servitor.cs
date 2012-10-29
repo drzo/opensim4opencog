@@ -231,7 +231,7 @@ namespace AltAIMLbot
                 string query = String.Format("performed({0})", Global.GetActionByID(a2.PossibleResponses[i]).Name);
                 if (this.prologEngine.isTrueIn(query, "coppeliaInputMt"))
                 {
-                    responseID = i;
+                    responseID = a2.PossibleResponses[i];
                 }
                 //Console.WriteLine("" + i + ": " + Global.GetActionByID(a2.PossibleResponses[i]).Name);
             }
@@ -242,7 +242,11 @@ namespace AltAIMLbot
             {
                 // since we're looking an an MT we may want to give some time back
                 // so someone else can post to it
-                Thread.Sleep(100);
+                Thread.Sleep(1000);
+            }
+            else
+            {
+                Thread.Sleep(1000);
             }
             return responseID;
         }
@@ -264,13 +268,16 @@ namespace AltAIMLbot
            //     Global.SetState(STATE_LOST_THE_GAME, true);
            // }
             string mt = "coppeliaOutputMt";
-            string actionReport = String.Format("performedAction({0},{1},{2}).", GetCoppeliaAgentNameByID(sender), Global.GetActionByID(action).Name, GetCoppeliaAgentNameByID(target));
-            this.prologEngine.appendKB(actionReport, mt);
+            string actionReport = "";
             if (GetCoppeliaAgentNameByID(sender) == "self")
             {
+                this.prologEngine.insertKB("", mt);
+                this.prologEngine.insertKB("", "coppeliaInputMt");
                 actionReport = String.Format("selfAct({0},{1}).", Global.GetActionByID(action).Name, GetCoppeliaAgentNameByID(target));
                 this.prologEngine.appendKB(actionReport, mt);
             }
+            actionReport = String.Format("performedAction({0},{1},{2}).", GetCoppeliaAgentNameByID(sender), Global.GetActionByID(action).Name, GetCoppeliaAgentNameByID(target));
+            this.prologEngine.appendKB(actionReport, mt);
 
         }
 
@@ -362,7 +369,14 @@ namespace AltAIMLbot
             InitCoppelia();
             Console.WriteLine(" Servitor startup complete");
         }
+        public void loadComplete()
+        {
+            if ((myScheduler != null) && curBot.myBehaviors.definedBehavior("startup"))
+            {
+                myScheduler.ActivateBehaviorTask("startup");
+            }
 
+        }
         public void initWordNet(string wordNetPath)
         {
             Console.WriteLine("*** Servitor init WN-Load ***");

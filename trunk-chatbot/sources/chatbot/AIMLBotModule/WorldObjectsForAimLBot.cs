@@ -310,6 +310,7 @@ namespace AIMLBotModule
                 {
                     MyBot.updateRTP2Sevitor();
                     MyBot.servitor.curBot.sayProcessor = new sayProcessorDelegate(TalkActive);
+                    MyBot.servitor.loadComplete();
                 }
             }
             catch (Exception e)

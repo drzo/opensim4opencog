@@ -308,7 +308,7 @@ namespace AltAIMLbot.Utils
                 processImmediate(thisNode, filename);
                 return true;
             }
-            if (named == "scxml")
+            if ((named == "scxml")||(named == "btxml"))
             {
                 processImmediate(thisNode, filename);
                 return true;
@@ -324,6 +324,8 @@ namespace AltAIMLbot.Utils
                 return true;
 
             }
+
+
             return false;
         }
 

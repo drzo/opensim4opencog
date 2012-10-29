@@ -161,9 +161,12 @@ namespace AltAIMLbot
             // having lost more than one minute to unavailable processor time
            // for (int minute = (lastMinute == 59 ? 0 : lastMinute + 1); minute <= now.Minute; minute++)
            // {
-            IEnumerable<object> lockInfoCopyOf = null;
-            lock (crontab) lockInfoCopyOf = LockInfo.CopyOf<string>(crontab.Keys);
-            foreach (String cronKey in lockInfoCopyOf)
+           // IEnumerable<object> lockInfoCopyOf = null;
+           // lock (crontab) lockInfoCopyOf = LockInfo.CopyOf<string>(crontab.Keys);
+            string [] cronKeyList = new string [crontab.Keys.Count];
+            lock (crontab) crontab.Keys.CopyTo(cronKeyList, 0);
+            //foreach (String cronKey in lockInfoCopyOf)
+            foreach (String cronKey in cronKeyList)
                 {
                     ArrayList entry = (ArrayList) crontab[cronKey];
                     String timeMode = (String)entry[6];

@@ -72,7 +72,15 @@ namespace AltAIMLbot.AIMLTagHandlers
 
                 try
                 {
-                    String templateNodeInnerValue = this.TemplateNodeInnerText;
+                    String templateNodeInnerValue = this.TemplateNodeInnerText0;
+                    // is it a prolog query or just text ?
+                   
+                    if (!templateNodeInnerValue.Contains("("))
+                    {
+                        // just text , so return
+                        return templateNodeInnerValue;
+                    }
+                    //String templateNodeInnerValue = this.TemplateNodeInnerText;
                     //String templateNodeInnerValue = this.templateNode.InnerText;
 
                    string myMt = TemplateNodeAttributes["mt"].Value;
@@ -137,6 +145,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                                 //Console.WriteLine("BINDING {0} = {1}", k, v);
                                 if (k == "TEXT")
                                 {
+                                    v = v.Replace("\"", "");
                                     finalSay = v;
                                     Console.WriteLine("ANSMOD = '{1}'", k, v);
 
@@ -154,6 +163,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                                     //Console.WriteLine("BINDING {0} = {1}", k, v);
                                     if (k == "TEXT")
                                     {
+                                        v = v.Replace("\"", "");
                                         finalSay += v +"\n";
                                         Console.WriteLine("ANSMOD = '{1}'", k, v);
 

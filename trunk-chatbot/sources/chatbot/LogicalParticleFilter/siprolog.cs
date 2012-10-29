@@ -359,12 +359,8 @@ namespace LogicalParticleFilter1
             }
             return bestGuess;
         }
-
-        public void postListPredToMt(string pred, string text, string mt)
+        public string convertTextToProlist(string text)
         {
-            // will take text, convert to a list, place inside pred and
-            // assert to mt
-
             text = text.Replace("?", " questionmark ");
             text = text.Replace("!", " exclamationmark ");
             text = text.Replace(".", " periodmark ");
@@ -373,8 +369,23 @@ namespace LogicalParticleFilter1
             while (text.Contains("[,")) text = text.Replace("[,", "[");
             while (text.Contains(",]")) text = text.Replace(",]", "]");
             while (text.Contains(",,")) text = text.Replace(",,", ",");
-            string gaf = String.Format("{0}({1}).", pred, text);
+            return text;
+        }
+        public void postListPredToMt(string pred, string text, string mt)
+        {
+            // will take text, convert to a list, place inside pred and
+            // assert to mt
+
+            string gaf = String.Format("{0}({1}).", pred, convertTextToProlist(text));
             insertKB(gaf, mt);
+        }
+        public void appendListPredToMt(string pred, string text, string mt)
+        {
+            // will take text, convert to a list, place inside pred and
+            // assert to mt
+
+            string gaf = String.Format("{0}({1}).", pred, convertTextToProlist(text));
+            appendKB(gaf, mt);
         }
 
         #endregion
@@ -1649,6 +1660,17 @@ namespace LogicalParticleFilter1
 
                 // Decimal numbers
                 r = Regex.Match(this.remainder, @"^([0-9]*\.[0-9]*)(.*)$");
+                //r = this.remainder.match(/^(-[0-9][0-9]*)(.*)$/);
+                if (r.Success)
+                {
+                    this.remainder = r.Groups[2].Value;
+                    this.current = r.Groups[1].Value;
+                    this.type = "id";
+                    return;
+                }
+
+                // Negative Decimal numbers
+                r = Regex.Match(this.remainder, @"^(\-[0-9]*\.[0-9]*)(.*)$");
                 //r = this.remainder.match(/^(-[0-9][0-9]*)(.*)$/);
                 if (r.Success)
                 {
