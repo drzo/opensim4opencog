@@ -31,6 +31,10 @@ namespace AltAIMLbot
         }
 
         string myName = "kotoko irata";
+        public ChatProgram()
+        {
+            
+        }
         public ChatProgram(AltBot bot, string myName0, Servitor present)
         {
             MyBot = bot;
