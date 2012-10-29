@@ -168,6 +168,8 @@
     </Compile>
     <Compile Include="Cron.cs">
     </Compile>
+    <Compile Include="GraphInfo\CategoryInfo.cs" />
+    <Compile Include="GraphInfo\TemplateInfo.cs" />
     <Compile Include="MicroThreader.cs">
     </Compile>
     <Compile Include="PorterStemmer.cs">
