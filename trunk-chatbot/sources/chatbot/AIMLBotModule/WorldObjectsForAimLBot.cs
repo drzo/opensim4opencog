@@ -1420,21 +1420,29 @@ namespace AIMLBotModule
 
             public ICollection GetGroup(ICollectionRequester requester, string name)
             {
+                if (!WorldVar(name)) return null;
+                name = name.Substring(wrldVar.Length);
                 return ScriptManager.GetGroup(requester, NameSpace, name);
             }
 
             public bool addSetting(string name, Unifiable value)
             {
+                if (!WorldVar(name)) return false;
+                name = name.Substring(wrldVar.Length);
                 return ScriptManager.AddSetting(client, NameSpace, name, FromUnifiable(name, value));
             }
 
             public bool removeSetting(string name)
             {
+                if (!WorldVar(name)) return false;
+                name = name.Substring(wrldVar.Length);
                 return ScriptManager.AddSetting(client, NameSpace, name, null);
             }
 
             public bool updateSetting(string name, Unifiable value)
             {
+                if (!WorldVar(name)) return false;
+                name = name.Substring(wrldVar.Length);
                 return ScriptManager.AddSetting(client, NameSpace, name, FromUnifiable(name, value));
             }
 
