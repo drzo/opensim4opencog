@@ -897,15 +897,15 @@ namespace Cogbot
 
         public SimObject GetSimObject(uint sittingOn, Simulator simulator)
         {
-            Simulator sim1 = null;
-            if (m_TheSimAvatar != null)
-            {
-                sim1 = m_TheSimAvatar.GetSimulator();
-                var o = GetSimObject(sittingOn, sim1);
-                if (o != null) return o;
-            }
             if (simulator == null)
             {
+                Simulator sim1 = null;
+                if (m_TheSimAvatar != null)
+                {
+                    sim1 = m_TheSimAvatar.GetSimulator();
+                    var o = GetSimObject(sittingOn, sim1);
+                    if (o != null) return o;
+                }
                 foreach (var sim in AllSimulators)
                 {
                     if (sim == sim1) continue;
@@ -920,7 +920,7 @@ namespace Cogbot
             }
             EnsureRequested(sittingOn, simulator);
             Primitive p = GetPrimitive(sittingOn, simulator);
-            int maxTries = 10;
+            int maxTries = 5;
             while (p == null && maxTries-- > 0)
             {
                 Thread.Sleep(1000);
