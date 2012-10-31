@@ -85,7 +85,7 @@ namespace MushDLR223.Utilities
             {
                 _listener.Start(10);
                 LogInfo("Ready for HTTPD port " + _port);
-                new SystemHttpServer(clientManager, _port + 10, "the_robot_name_10");
+                new SystemHttpServer(clientManager, _port + 10, "first_robot_name");
                 WriteLine("Ready for HTTPD port " + _port);
             }
             catch (Exception e)
