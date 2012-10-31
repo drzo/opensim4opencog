@@ -404,9 +404,7 @@ namespace AIMLBotModule
 
             if (MyBot.useServitor)
             {
-                MyBot.updateRTP2Sevitor();
                 MyBot.servitor.curBot.sayProcessor = new sayProcessorDelegate(TalkActive);
-                MyBot.servitor.loadComplete();
             }
             MyBot.GlobalSettings.addSetting("name", String.Format("{0}", myName));
             String[] sname = myName.Split(' ');
@@ -418,6 +416,13 @@ namespace AIMLBotModule
             ScriptManager.AddGroupProvider(client, this.provideAIMLVars);
             //MyBot.BotAsUser.Predicates.InsertOverrides(() => provideWorldBotVars);
             //MyBot.BotAsUser.Predicates.InsertListener(() => provideWorldBotVars);
+            MyBot.WriteConfig();
+
+            if (MyBot.useServitor)
+            {
+                MyBot.updateRTP2Sevitor();
+                MyBot.servitor.loadComplete();
+            }
         }
 
         public void SetChatOnOff(string username, bool value)

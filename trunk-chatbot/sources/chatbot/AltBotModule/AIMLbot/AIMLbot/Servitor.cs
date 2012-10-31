@@ -59,7 +59,7 @@ namespace AltAIMLbot
         }
         public  Thread tmTalkThread = null;
         public bool tmTalkEnabled = true;
-        public bool mPersonalityShouldBeDefined = false;
+        public bool mLoadCompleteAndPersonalityShouldBeDefined = false;
         public  Thread tmFSMThread = null;
         public bool tmFSMEnabled = true;
         public  Thread tmBehaveThread = null;
@@ -360,6 +360,9 @@ namespace AltAIMLbot
         }
         public void loadComplete()
         {
+            curBot.isAcceptingUserInput = true;
+            if (mLoadCompleteAndPersonalityShouldBeDefined) return;
+            mLoadCompleteAndPersonalityShouldBeDefined = true;
             string servRoot = curBot.GlobalSettings.grabSetting("serverRoot", false);
             if ((servRoot != null) && (servRoot.Length > 7))
             {
@@ -395,8 +398,6 @@ namespace AltAIMLbot
             {
                 myScheduler.ActivateBehaviorTask("startup");
             }
-            curBot.isAcceptingUserInput = true;
-            mPersonalityShouldBeDefined = true;
 
         }
         public void initWordNet(string wordNetPath)
@@ -849,7 +850,7 @@ namespace AltAIMLbot
                 updateTime();
                 // Tick the microThreader
 
-                if (!mPersonalityShouldBeDefined) continue;
+                if (!mLoadCompleteAndPersonalityShouldBeDefined) continue;
                 if (myScheduler != null && tmTalkEnabled)
                 {
                     myScheduler.Run();
@@ -1108,7 +1109,7 @@ namespace AltAIMLbot
 
         public void shutdown()
         {
-            mPersonalityShouldBeDefined = false;
+            mLoadCompleteAndPersonalityShouldBeDefined = false;
             if (tmTalkThread != null) tmTalkThread.Abort();
             if (tmFSMThread != null) tmFSMThread.Abort();
             if (tmBehaveThread != null) tmBehaveThread.Abort();
