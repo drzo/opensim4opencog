@@ -211,8 +211,11 @@ namespace LogicalParticleFilter1
                         }
 
                         writer.WriteLine("<h2>Siprolog Mt {0}</h2>", query);
+                        writer.WriteLine("<h3> OutgoingEdges </h3>");
                         PNode qnode = KBGraph.Contains(query);
                         KBGraph.PrintToWriter(qnode, 0, writer, serverRoot);
+                        writer.WriteLine("<h3> IncomingEdges </h3>");
+                        KBGraph.PrintToWriterInEdges(qnode, 0, writer, serverRoot);
                         writer.WriteLine("<br/>");
                         ArrayList kbContents = findVisibleKBRulesSorted(query);
                         foreach (Rule r in kbContents)
@@ -2693,7 +2696,32 @@ namespace LogicalParticleFilter1
                 }
                 writer.WriteLine("</ul>");
             }
+            public void PrintToWriterInEdges(StreamWriter writer, string serverRoot)
+            {
+                writer.WriteLine("<ul>");
+                foreach (PNode node in SortedTopLevelNodes)
+                {
+                    PrintToWriterInEdges(node, 0, writer, serverRoot);
 
+                }
+                writer.WriteLine("</ul>");
+            }
+
+            public void PrintToWriterInEdges(PNode node, int indentation, StreamWriter writer, string serverRoot)
+            {
+                if (node == null) return;
+                if (indentation > 4) return;
+                //writer.Write("<p>");
+                //for (int i = 0; i < indentation; ++i) writer.Write(" ");
+                //Console.WriteLine(node.Id);
+                writer.WriteLine("<li><a href='{1}siprolog/?q={0}'>{0}  (prob={2})</a></li>", node.Id, serverRoot, node.probability);
+                writer.WriteLine("<ul>");
+                foreach (PEdge e in node.IncomingEdges )
+                {
+                    PrintToWriterInEdges(e.EndNode, indentation + 1, writer, serverRoot);
+                }
+                writer.WriteLine("</ul>");
+            }
         }
         #endregion
         #region rdfEndpoint
