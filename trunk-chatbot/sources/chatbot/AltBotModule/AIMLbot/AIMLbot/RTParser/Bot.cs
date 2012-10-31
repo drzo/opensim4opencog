@@ -301,7 +301,7 @@ namespace RTParser
             if (servitor.skiploading) return;
 
             string graphcache = GlobalSettings.grabSetting("graphcache");
-            if (File.Exists(graphcache))
+            if (false && File.Exists(graphcache))
             {
                 try
                 {

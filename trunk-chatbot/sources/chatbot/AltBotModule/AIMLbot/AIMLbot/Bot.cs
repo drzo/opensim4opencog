@@ -507,8 +507,8 @@ namespace RTParser
             {
                 lock (_RuntimeDirectories)
                 {
-                    if (_PathToUserFiles != null) _RuntimeDirectories.Remove(_PathToUserFiles);
-                    _PathToUserFiles = value;
+                    if (_PathToBotPersonalFiles != null) _RuntimeDirectories.Remove(_PathToBotPersonalFiles);
+                    _PathToBotPersonalFiles = value;
                     _RuntimeDirectories.Remove(value);
                     _RuntimeDirectories.Insert(0, value);
                 }
