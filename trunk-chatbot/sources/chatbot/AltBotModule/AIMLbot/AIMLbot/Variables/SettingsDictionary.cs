@@ -2389,7 +2389,7 @@ namespace RTParser.Variables
                     }
                     if (inner == dictionary)
                     {
-                        writeToLog("WARN: alread contains inner " + inner);
+                       // writeToLog("WARN: alread contains inner " + inner);
                         //cols.Remove(deep);
                         return false;
                     }

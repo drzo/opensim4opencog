@@ -400,7 +400,6 @@ namespace AIMLBotModule
             if (MyBotNullWarning()) return;
             MyBot.SetName(myName);
             MyBot.isAcceptingUserInput = true;
-            MyBot.WriteConfig();
 
             if (MyBot.useServitor)
             {

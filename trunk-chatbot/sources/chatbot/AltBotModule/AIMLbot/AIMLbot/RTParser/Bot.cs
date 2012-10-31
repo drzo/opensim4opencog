@@ -358,6 +358,7 @@ namespace RTParser
             //servitor.curBot.Graphmaster.collectPaths("",allPaths);
             //File.WriteAllLines(@"./aiml/graphmap.txt", allPaths.ToArray());
             string graphcache = GlobalSettings.grabSetting("graphcache");
+            graphcache = PersonalizePath(graphcache);
             if (false && File.Exists(graphcache)) // Always write for now
             {
                 Console.WriteLine("***** saveServitor():{0} SKIPPING ******", graphcache);
@@ -457,7 +458,7 @@ namespace RTParser
             if (_myServitor == null)
             {
 
-                servitor = new Servitor(this, null);
+                _myServitor = new Servitor(this, null);
                 servitor.curBot = this;
                 servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
             }
@@ -734,7 +735,7 @@ namespace RTParser
         /// <summary>
         /// Loads AIML from .aiml files into the graphmaster "brain" of the Proccessor
         /// </summary>
-        public void loadAIMLAndSettings(string path, bool skipSettings)
+        private void loadAIMLAndSettings(string path, bool skipSettings)
         {
             Request request = GetBotRequest("-loadAIMLAndSettings-" + path + "-");
             request.LoadingFrom = null;
@@ -744,15 +745,7 @@ namespace RTParser
                 request.GraphsAcceptingUserInput = false;
                 // maybe loads settings files if they are there
                 string settings = HostSystem.Combine(path, "Settings.xml");
-                if (HostSystem.FileExists(settings)) loadSettingsFile(settings, request);
-                if (useServitor)
-                {
-                    if (servitor == null) startServitor();
-                    if (HostSystem.FileOrDirExists(settings))
-                    {
-                        if (!skipSettings) servitor.curBot.loadSettings(settings);
-                    }
-                }
+                if (HostSystem.FileExists(settings)) loadSettings(settings, request);
                 //loading settings first
                 if (!skipSettings) loadConfigs(this, path, request);
 
@@ -875,10 +868,10 @@ namespace RTParser
                 string pathToSettings = HostSystem.Combine(RuntimeDirectory,
                                                            HostSystem.Combine("config", "Settings.xml"));
                 Request request = GetBotRequest("<!-- Loads settings from: '" + pathToSettings + "' -->");
-                loadSettingsFile(pathToSettings, request);
+                loadSettings(pathToSettings, request);
                 // RE-Checks for some important default settings
                 SetSaneGlobals(GlobalSettings);
-                SetupConveration();
+                //SetupConveration();
                 GlobalSettings.IsIdentityReadOnly = true;
             }
             finally
@@ -993,8 +986,11 @@ namespace RTParser
 
 
             User guser = thiz.FindUser("globalPreds");
-            SettingsDictionary.loadSettingsNow(guser.Predicates, pathToSettings, "globalpreds.xml",
-                                            SettingsPolicy.Default, request);
+            if (HostSystem.FileExists(HostSystem.Combine(pathToSettings, "globalpreds.xml")))
+            {
+                SettingsDictionary.loadSettingsNow(guser.Predicates, pathToSettings, "globalpreds.xml",
+                                                   SettingsPolicy.Default, request);
+            }
             thiz.writeToLog("Files left to process = " + files.Count);
             foreach (string list in files)
             {
@@ -1009,18 +1005,10 @@ namespace RTParser
         /// Also generates some default values if such values have not been set by the settings file.
         /// </summary>
         /// <param name="pathToSettings">Path to the settings xml file</param>
-        public void loadSettingsFile(string pathToSettings, Request request)
+        public void loadSettings(string pathToSettings, Request request)
         {
             if (request == null) request = GetBotRequest("<!-- Loads settings from: '" + pathToSettings + "' -->");
-            ReloadHooks.Add(() => loadSettingsFile(pathToSettings, request));
-            if (useServitor)
-            {
-                startServitor();
-                if (HostSystem.FileOrDirExists(pathToSettings))
-                {
-                    servitor.curBot.loadSettings(pathToSettings);
-                }
-            }
+            ReloadHooks.Add(() => loadSettings(pathToSettings, request));
             GlobalSettings.loadSettings(pathToSettings, request);
         }
 
@@ -1575,6 +1563,7 @@ The AIMLbot program.
                 TheCyc.WriteConfig();
                 DefaultStartGraph.WriteConfig();
                 writeDebugLine("Bot loaded");
+                updateRTP2Sevitor();
                 saveServitor();
             }
         }
@@ -1623,7 +1612,7 @@ The AIMLbot program.
         {
             writeToLog("LoadPersonalDirectories: '{0}'", file);
             if (loadXML) loadConfigs(this, file, request);
-            if (loadSets) loadSettingsFile(HostSystem.Combine(file, "Settings.xml"), request);
+            if (loadSets) loadSettings(HostSystem.Combine(file, "Settings.xml"), request);
         }
 
         public void UsePersonalDir(string file, bool loadXML, bool loadAiml)
@@ -1647,7 +1636,7 @@ The AIMLbot program.
                 if (loadAiml) loadAIMLFromURI(file, request);
                 foreach (string s1 in HostSystem.GetFiles(file, "Settings*.xml"))
                 {
-                    if (loadXML) loadSettingsFile(s1, request);
+                    if (loadXML) loadSettings(s1, request);
                 }
                 if (loadXML) loadConfigs(this, file, request);
                 lock (RuntimeDirectoriesLock)
@@ -1665,9 +1654,10 @@ The AIMLbot program.
         {
             lock (IsNameSetLock) lock (OnBotCreatedHooks)
             {
-                return SetName0(myName);
+                return SetNameForConfig(myName);
                 //return UserOper(() => SetName0(myName), writeDebugLine);
             }
+            LoadPersonality();
             if (useServitor)
             {
                 saveServitor();
@@ -1676,19 +1666,21 @@ The AIMLbot program.
 
         private string IsNameSet = null;
         private object IsNameSetLock = new object();
-        private string SetName0(string myName)
+        private string SetNameForConfig(string myName)
         {
             if (IsNameSet == myName && _botAsUser != null)
             {
                 return BotAsUser.UserDirectory;
             }
             IsNameSet = myName;
-            loadGlobalBotSettings();            
-            //char s1 = myName[1];
             Robots[myName] = this;
             NameAsSet = myName;
+            NamePath = ToScriptableName(NameAsSet);
+
+            loadGlobalBotSettings();            
+            //char s1 = myName[1];
             //new AIMLbot.User("heardselfsay", this)
-            var thisBotAsUser = FindOrCreateUser(myName);
+            var thisBotAsUser = _botAsUser = BotAsUser ?? FindOrCreateUser(myName);
             this.BotAsUser.UserName = myName;// thisBotAsUser;
 
             ExternalIntern("BotAsUser", thisBotAsUser);
@@ -1707,7 +1699,7 @@ The AIMLbot program.
             thisBotAsUser.UserName = myName;
             AllDictionaries["bot"] = thisBotAsUser.Predicates;
             thisBotAsUser.removeSetting("userdir");
-            NamePath = ToScriptableName(NameAsSet);
+
             thisBotAsUser.UserID = NamePath;
             GlobalSettings.addSetting("name", String.Format("{0}", myName));
 
@@ -1716,7 +1708,21 @@ The AIMLbot program.
 
             //thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
 
+            string shared = LoadPersonalDirectory("shared_aiml", true, false);
+            string official = LoadPersonalDirectory(NamePath, true, false);
+            if (string.IsNullOrEmpty(official))
+            {
+                official = LoadPersonalDirectory("default_bot", true, false);
+            }
+            PersonalAiml = official;
+            thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
+            AddExcuteHandler(NamePath, ChatWithThisBot);
+            RunOnBotCreatedHooks();
+            return official ?? thisBotAsUser.UserDirectory;
+        }
 
+        private void RunOnBotCreatedHooks()
+        {
             lock (OnBotCreatedHooks)
             {
                 foreach (Action list in OnBotCreatedHooks)
@@ -1732,26 +1738,22 @@ The AIMLbot program.
                 }
                 OnBotCreatedHooks.Clear();
             }
+        }
 
-            string shared = LoadPersonalDirectory("shared_aiml", true, false);
-            string scriptableName = ToScriptableName(myName);
-            string official = LoadPersonalDirectory(scriptableName, true, false);
-            if (string.IsNullOrEmpty(official))
-            {
-                official = LoadPersonalDirectory("default_bot", true, false);
-            }
+        public bool needAimlFilesLoaded = true;
+        public void LoadPersonality()
+        {
+            if (!needAimlFilesLoaded) return;
+            needAimlFilesLoaded = false;
             if (useServitor) { updateRTP2Sevitor(); }
-            PersonalAiml = official;
+            string official =  PersonalAiml;
             LoadPersonalDirectory("shared_aiml", false, true);
             if (!string.IsNullOrEmpty(official))
             {
                 loadAIMLFromFiles(official);
             }
-            thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
-            AddExcuteHandler(NamePath, ChatWithThisBot);
-            return official ?? thisBotAsUser.UserDirectory;
+            RunOnBotCreatedHooks();
         }
-
         public static bool StaticInitStarted;
         public static object OneAtATime = new object();
 
@@ -1901,7 +1903,7 @@ The AIMLbot program.
             set { throw new NotImplementedException(); }
         }
         */
-        public string UserID
+        public string BotUserID
         {
             get
             {
@@ -1921,7 +1923,7 @@ The AIMLbot program.
             get
             {
                 if (BotAsUser != null) return BotAsUser.UserID;
-                return UserID ?? "-BOT-ID-NULL-";
+                return BotUserID ?? "-BOT-ID-NULL-";
             }
             set { throw new NotImplementedException(); }
         }

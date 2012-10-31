@@ -194,10 +194,7 @@ namespace RTParser
         {
             AltBot myBot = null;
             TaskQueueHandler.TimeProcess("ROBOTCONSOLE: STARTUP", () => { myBot = Startup(args); });
-            if (myBot.useServitor)
-            {
-                myBot.saveServitor();
-            }
+
             if (new List<string>(args).Contains("--gui"))
             {
                 TaskQueueHandler.TimeProcess("ROBOTCONSOLE: RUN", () => RunGUI(args, myBot, MainConsoleWriteLn));
@@ -222,8 +219,7 @@ namespace RTParser
 
         public static void Prepare(string[] args)
         {
-            ConsoleRobot = new Bot();
-            AltBot myBot = ConsoleRobot;
+            AltBot myBot = ConsoleRobot = ConsoleRobot ?? new Bot();
             OutputDelegate writeLine = MainConsoleWriteLn;
             for (int index = 0; index < args.Length; index++)
             {
@@ -259,7 +255,7 @@ namespace RTParser
             if (UseHttpd > 0 && this.HttpTextServer == null)
             {
                 ScriptExecutorGetter geter = new WebScriptExecutor(this);
-                HttpTextServer = MushDLR223.Utilities.HttpServerUtil.CreateHttpServer(geter, UseHttpd, UserID);
+                HttpTextServer = MushDLR223.Utilities.HttpServerUtil.CreateHttpServer(geter, UseHttpd, BotUserID);
             }
         }
 
@@ -332,10 +328,7 @@ namespace RTParser
             //myBot.isAcceptingUserInput = false;
             writeLine("-----------------------------------------------------------------");
             myBot.SetName(myName);
-
-            if (myBot.useServitor) myBot.updateRTP2Sevitor();
-
-            myBot.isAcceptingUserInput = true;
+            myBot.servitor.loadComplete();
         }
         public static void RunGUI(string[] args, AltBot myBot, OutputDelegate writeLine)
         {

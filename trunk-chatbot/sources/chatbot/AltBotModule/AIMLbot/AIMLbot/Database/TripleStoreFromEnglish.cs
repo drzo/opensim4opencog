@@ -186,7 +186,7 @@ namespace RTParser.Database
         {
             string pred = Entify(relation);
 
-            string botName = !IsBotRobot(subj) ? Entify(TheBot.UserID) : Entify(TheBot.LastUser.UserID);
+            string botName = !IsBotRobot(subj) ? Entify(TheBot.BotUserID) : Entify(TheBot.LastUser.UserID);
             {
 
                 var whword = GetDictValue(dictionary, relation, "format-whword");

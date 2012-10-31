@@ -205,13 +205,24 @@ namespace RTParser
         /// </summary>
         private List<string> LogBuffer = new List<string>();
 
+
+        public string PersonalizePath(string path)
+        {
+            if (String.IsNullOrEmpty(path)) return path;
+            if (path.Contains(BotUserID)) return path;
+            if (path.Contains(BotID)) return path;
+            if (path.Contains(NamePath)) return path;
+            path = path.Replace("\\", "/");
+            if (path.StartsWith("./")) path = path.Substring(2);
+            if (path.StartsWith("aiml/")) path = path.Substring(5);
+            return HostSystem.Combine(PersonalAiml, path);
+        }
         private string _rapStoreDirectory;
         public string rapStoreDirectory
         {
             get
             {
-                if (String.IsNullOrEmpty(_rapStoreDirectory)) return _rapStoreDirectory;
-                return Path.Combine(PersonalAiml, _rapStoreDirectory);
+                return PersonalizePath(_rapStoreDirectory);
             }
             set
             {

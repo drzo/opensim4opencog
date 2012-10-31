@@ -30,30 +30,6 @@ namespace AltAIMLbot
             }
         }
 
-        public void StartupListener00()
-        {
-            try
-            {
-                MyBot = MyBot ?? new Bot();
-                MyBot.ObjectRequester = (ICollectionRequester)colreq;
-                MyBot.outputDelegate = WriteLine;
-                if (MyBot.useServitor)
-                {
-                    MyBot.servitor.curBot.sayProcessor = new sayProcessorDelegate(TalkActive);
-                }
-                MyBot.SetName(MyBot.NameAsSet);
-                if (MyBot.useServitor)
-                {
-                    MyBot.updateRTP2Sevitor();
-                }
-                MyBot.WriteConfig();
-            }
-            catch (Exception e)
-            {
-                WriteLine("ERROR {0}", e);
-            }
-        }
-
         public void TalkActive(string message)
         {
             Console.WriteLine("TalkActive: " + message);
@@ -101,15 +77,8 @@ namespace AltAIMLbot
             servitor.curBot.saveServitor();
         }
 
-        public void startRobot()
+        public void startRobot(string myName)
         {
-            startServitor00();
-            servitor.DontSkiploading(StartupListener00);
-        }
-
-        public void startServitor00()
-        {
-            if (useServitor == false) return;
             //if (servitor == null)
             {
                 WebServitor.kpfile = @"./wikilink/phraseScore";
@@ -120,7 +89,25 @@ namespace AltAIMLbot
                 RaptorDB.Global.SaveTimerSeconds = 60000;
                 Console.WriteLine("*** Create servitor ***");
 
-                MyBot = MyBot ?? new AltBot();
+                MyBot = MyBot ?? new Bot();
+                try
+                {
+                    MyBot.ObjectRequester = (ICollectionRequester)colreq;
+                    MyBot.outputDelegate = WriteLine;
+                    MyBot.SetName(myName);
+                    if (MyBot.useServitor)
+                    {
+                        MyBot.servitor.curBot.sayProcessor = new sayProcessorDelegate(TalkActive);
+                    }
+                    if (MyBot.useServitor)
+                    {
+                        MyBot.updateRTP2Sevitor();
+                    }
+                }
+                catch (Exception e)
+                {
+                    WriteLine("ERROR {0}", e);
+                }
     
                 servitor = MyBot.servitor ?? new Servitor(MyBot, null, true, true, true);
                 Console.WriteLine("*** Created WN ***");
@@ -188,7 +175,8 @@ namespace AltAIMLbot
                     // servitor.saveToBinaryFile(servitorbin);
                     servitor.skiploading = true;
                 }
-
+                MyBot.WriteConfig();
+                MyBot.servitor.loadComplete();
                 //reloadServitor();
             }
             servitor.curBot.useMemcache = true;
@@ -206,9 +194,9 @@ namespace AltAIMLbot
             return true;
         }
 
-        public void RunMain(Action<string> ConsoleWrite, Func<string> ConsoleReadLine, bool sayReposeServ)
+        public void RunMain(string robotName, string consoleUserName, Action<string> ConsoleWrite, Func<string> ConsoleReadLine, bool sayReposeServ)
         {
-            startRobot();
+            startRobot(robotName);
             servitor.curBot.sayProcessor = (s) => ConsoleWrite(s);
             SetForegrounded(true);
             //saveServitor();

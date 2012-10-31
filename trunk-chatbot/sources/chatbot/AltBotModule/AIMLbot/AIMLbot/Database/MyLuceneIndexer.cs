@@ -712,8 +712,8 @@ namespace RTParser.Database
                 {
                     userCachedPending = true;
                     string personDef = WordNetExpand("person", true);
-                    WNExpandCache.Add(TheBot.UserID, personDef.Trim());
-                    WNExpandCache[TripleStoreProxy.Entify(TheBot.UserID)] = personDef.Trim();
+                    WNExpandCache.Add(TheBot.BotUserID, personDef.Trim());
+                    WNExpandCache[TripleStoreProxy.Entify(TheBot.BotUserID)] = personDef.Trim();
                     userCached = true;
                     userCachedPending = false;
                 }
@@ -827,7 +827,7 @@ namespace RTParser.Database
             string onlyUserStr = AltBot.GetAttribValue(templateNode, "onlyUser", "false").ToLower();
             if (onlyUserStr.Equals("true"))
             {
-                userFilter = TripleStoreProxy.Entify(TheBot.UserID);
+                userFilter = TripleStoreProxy.Entify(TheBot.BotUserID);
             }
             string res = callDbQueryStatic(SearchSources, searchTerm1, dbgLog, templateNode, threshold, out reliablity,
                                            userFilter, wordNetExpander);

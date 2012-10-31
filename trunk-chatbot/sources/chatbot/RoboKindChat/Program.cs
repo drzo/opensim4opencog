@@ -19,14 +19,14 @@ namespace RoboKindChat
             _theChatProg = new AltAIMLbot.ChatProgram();
             //_theRoboKindEventModule.Spy();
             //_theRoboKindEventModule.Block();
-            _theChatProg.startRobot();
+         
             _theChatProg.SetForegrounded(true);
             //_theChatProg.LoadDataset("justine_degurl");
             //_theChatProg.LoadDataset("kotoko_irata");
             //_theChatProg.LoadDataset("test_suite/ProgramD/AIML.aiml");
             //_theChatProg.LoadDataset("special/blackjack.aiml");
             // _theChatProg.LoadDataset("special/lesson_template.aiml"); 
-            _theChatProg.RunMain((s) => Console.Write(s), () =>
+            _theChatProg.RunMain("Nephrael Rae","consoleUser",(s) => Console.Write(s), () =>
                                                               {
                                                                   Console.Write("You: ");
                                                                   return Console.ReadLine();
