@@ -43,37 +43,32 @@ namespace AltAIMLbot.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
-            IsStarAtomically = false;
         }
 
         protected override string ProcessChange()
         {
-            if (this.TemplateNodeName == "set")
-            {
-                string name = GetAttribValue("name,var", null);
-                string type0 = GetAttribValue("type,dict", "user");
-                string returnn = GetAttribValue("ret,return", null);
-                ISettingsDictionary dict = request.GetDictionary(type0) ?? this.user.Predicates;
-                string settingValue = TemplateNodeInnerText;
- 
-                if (settingValue.Length > 0)
-                {
-                    dict.addSetting(name, settingValue);
-                    if (name != "coins") bot.writeToLog("SET " + name + "=" + settingValue);
-                    if (returnn != null) return returnn;
-                    return dict.grabSetting(name);
+            string name = GetAttribValue("name,var", null);
+            string type0 = GetAttribValue("type,dict", "user");
+            string returnn = GetAttribValue("ret,return", null);
+            ISettingsDictionary dict = request.GetDictionary(type0) ?? this.user.Predicates;
+            string settingValue = TemplateNodeInnerText;
 
-                }
-                else
-                {
-                    //dict.removeSetting(name);
-                    dict.updateSetting(name, "");
-                    bot.writeToLog("SET " + name + "=<BLANK>");
-                    string res = dict.grabSetting(name);
-                    return " , ";
-                }
+            if (settingValue.Length > 0)
+            {
+                dict.addSetting(name, settingValue);
+                //if (name != "coins") bot.writeToLog("SET " + name + "=" + settingValue);
+                if (returnn != null) return returnn;
+                return dict.grabSetting(name);
+
             }
-            return string.Empty;
+            else
+            {
+                //dict.removeSetting(name);
+                dict.updateSetting(name, "");
+                bot.writeToLog("SET " + name + "=<BLANK>");
+                string res = dict.grabSetting(name);
+                return " , ";
+            }
         }
     }
 }

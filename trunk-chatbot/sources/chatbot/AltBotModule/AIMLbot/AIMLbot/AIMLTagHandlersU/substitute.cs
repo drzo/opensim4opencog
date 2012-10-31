@@ -72,7 +72,7 @@ namespace RTParser.AIMLTagHandlers
 
         private string GetSubstutionName()
         {
-            return GetAttribValue("dict,substitutions,subst,use,file", null);
+            return GetAttribValue("dict,substitutions,subst,use,file", () => TemplateNodeName);
         }
 
         /// <summary>

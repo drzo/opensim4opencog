@@ -234,8 +234,6 @@
     </Compile>
     <Compile Include="AIMLTagHandlers\format.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\gender.cs">
-    </Compile>
     <Compile Include="AIMLTagHandlers\get.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\gossip.cs">
@@ -257,10 +255,6 @@
     <Compile Include="AIMLTagHandlers\nop.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\pannouserver.cs">
-    </Compile>
-    <Compile Include="AIMLTagHandlers\person.cs">
-    </Compile>
-    <Compile Include="AIMLTagHandlers\person2.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\pop.cs">
     </Compile>
@@ -419,10 +413,6 @@
     <Compile Include="AIMLTagHandlersU\or.cs">
     </Compile>
     <Compile Include="AIMLTagHandlersU\peekstack.cs">
-    </Compile>
-    <Compile Include="AIMLTagHandlersU\person.cs">
-    </Compile>
-    <Compile Include="AIMLTagHandlersU\person2.cs">
     </Compile>
     <Compile Include="AIMLTagHandlersU\pop.cs">
     </Compile>

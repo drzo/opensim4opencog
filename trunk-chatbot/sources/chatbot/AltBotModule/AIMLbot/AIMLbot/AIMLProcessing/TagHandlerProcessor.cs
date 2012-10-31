@@ -181,10 +181,10 @@ namespace RTParser
                         tagHandlerU = new lowercase(targetBot, user, query, request, result, node);
                         break;
                     case "person":
-                        tagHandlerU = new person(targetBot, user, query, request, result, node);
+                        tagHandlerU = new substitute(targetBot, user, query, request, result, node);
                         break;
                     case "person2":
-                        tagHandlerU = new person2(targetBot, user, query, request, result, node);
+                        tagHandlerU = new substitute(targetBot, user, query, request, result, node);
                         break;
                     case "random":
                         tagHandlerU = new random(targetBot, user, query, request, result, node);

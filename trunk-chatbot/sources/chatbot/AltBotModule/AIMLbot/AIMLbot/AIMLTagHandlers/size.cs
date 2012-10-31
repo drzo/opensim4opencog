@@ -31,16 +31,11 @@ namespace AltAIMLbot.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
-            IsStarAtomically = false;
         }
 
         protected override string ProcessChange()
         {
-            if (this.TemplateNodeName == "size")
-            {
-                return Convert.ToString(this.bot.Size);
-            }
-            return string.Empty;
+            return Convert.ToString(this.bot.Size);
         }
     }
 }

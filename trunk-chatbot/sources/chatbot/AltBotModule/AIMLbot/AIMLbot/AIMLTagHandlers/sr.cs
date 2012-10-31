@@ -33,19 +33,14 @@ namespace AltAIMLbot.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
             isRecursive = false;
-            IsStarAtomically = false;
         }
 
         protected override string ProcessChange()
         {
-            if (this.TemplateNodeName == "sr")
-            {
-                string starContent = GetStarContent();
-                XmlNode sraiNode = Utils.AIMLTagHandler.getNode("<srai>" + starContent + "</srai>");
-                srai sraiHandler = new srai(this.bot, this.user, this.query, this.request, this.result, sraiNode);
-                return sraiHandler.Transform();
-            }
-            return string.Empty;
+            string starContent = GetStarContent();
+            XmlNode sraiNode = Utils.AIMLTagHandler.getNode("<srai>" + starContent + "</srai>");
+            srai sraiHandler = new srai(this.bot, this.user, this.query, this.request, this.result, sraiNode);
+            return sraiHandler.Transform();
         }
     }
 }

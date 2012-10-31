@@ -29,8 +29,17 @@ namespace AltAIMLbot.Utils
             double timeInterval;
             double LastUpdate = 0;
 
-            try { LastUpdate = myMem[choice]; }
-            catch { LastUpdate =0; }
+            if (myMem.ContainsKey(choice))
+            {
+                try
+                {
+                    LastUpdate = myMem[choice];
+                }
+                catch
+                {
+                    LastUpdate = 0;
+                }
+            }
 
             timeInterval = Environment.TickCount - LastUpdate;
             double CV = Math.Pow(0.5, (timeInterval / Halflife));

@@ -1369,9 +1369,11 @@ namespace RTParser
                             {
                                 if (childNode.NodeType == XmlNodeType.Element)
                                 {
+                                    string debug = childNode.OuterXml;
+                                    string debug1 = childNode.InnerXml;
+                                    string debug2 = childNode.InnerText;
                                     try
                                     {
-                                        string debug = childNode.OuterXml;
                                         string value = this.processNode(childNode, query, request, result, user, allowProcess);
                                         if (value == null)
                                         {
@@ -1380,7 +1382,7 @@ namespace RTParser
                                         if (!allowProcess)
                                         {
                                             continue;
-                                        }
+                                        }                                        
                                         if (value.Contains("<"))
                                         {
                                             childNode.InnerXml = value;
@@ -1389,11 +1391,16 @@ namespace RTParser
                                         {
                                             childNode.InnerXml = value;
                                         }
+                                        string debug3 = childNode.OuterXml;
+                                        if (false && (!MustSame(debug2, childNode.InnerText) || !MustSame(debug1, childNode.InnerXml) || !MustSame(debug, childNode.OuterXml)))
+                                        {
+                                            Console.WriteLine("AIML processNodeChild changed {0} -> {1}", debug, debug3);
+                                        }
                                     }
                                     catch (Exception e)
                                     {
                                         Console.WriteLine("AIML processNode ERR {0}: {1}", tagName, e.Message);
-                                        Console.WriteLine("AIML processNode OuterXML: {0}", node.OuterXml);
+                                        Console.WriteLine("AIML processNode OuterXML: {0}", debug);
                                         childNode.InnerXml = childNode.InnerText;
                                     }
                                 }
@@ -1457,6 +1464,12 @@ namespace RTParser
             Console.WriteLine(" -- Result3 default exit {0} : {1}", tagName, node.OuterXml);
             return string.Empty;
 
+        }
+
+        bool MustSame(string s1, string s2)
+        {
+            if (s1 == s2) return true;
+            return false;
         }
 
         public string GetOutputSentence(string template, XmlNode resultNode000, SubQuery query, Request request, AltAIMLbot.Result result, AltAIMLbot.User user, bool allowProcess)
@@ -1545,7 +1558,7 @@ namespace RTParser
                         return new AltAIMLbot.AIMLTagHandlers.formal(this, user, query, request, result, node);
                         
                     case "gender":
-                        return new AltAIMLbot.AIMLTagHandlers.gender(this, user, query, request, result, node);
+                        return new substitute(this, user, query, request, result, node);
                         
                     case "get":
                         return new AltAIMLbot.AIMLTagHandlers.get(this, user, query, request, result, node);
@@ -1569,10 +1582,10 @@ namespace RTParser
                         return new AltAIMLbot.AIMLTagHandlers.lowercase(this, user, query, request, result, node);
                         
                     case "person":
-                        return new AltAIMLbot.AIMLTagHandlers.person(this, user, query, request, result, node);
+                        return new substitute(this, user, query, request, result, node);
                         
                     case "person2":
-                        return new AltAIMLbot.AIMLTagHandlers.person2(this, user, query, request, result, node);
+                        return new substitute(this, user, query, request, result, node);
                         
                     case "random":
                         return new AltAIMLbot.AIMLTagHandlers.random(this, user, query, request, result, node);

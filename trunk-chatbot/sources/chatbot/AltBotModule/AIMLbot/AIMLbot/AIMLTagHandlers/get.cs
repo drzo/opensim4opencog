@@ -43,25 +43,20 @@ namespace AltAIMLbot.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
-            IsStarAtomically = false;
         }
 
         protected override string ProcessChange()
         {
-            if (this.TemplateNodeName == "get")
-            {
-                string name = GetAttribValue("name,var", () => TemplateNodeInnerText);
-                string type0 = GetAttribValue("type,dict", "user");
-                ISettingsDictionary dict = request.GetDictionary(type0) ?? this.user.Predicates;
+            string name = GetAttribValue("name,var", () => TemplateNodeInnerText);
+            string type0 = GetAttribValue("type,dict", "user");
+            ISettingsDictionary dict = request.GetDictionary(type0) ?? this.user.Predicates;
 
-                var r = dict.grabSetting(name);
-                if (r == null)
-                {
-                    return string.Empty;
-                }
-                return r;
+            var r = dict.grabSetting(name);
+            if (r == null)
+            {
+                return string.Empty;
             }
-            return string.Empty;
+            return r;
         }
     }
 }
