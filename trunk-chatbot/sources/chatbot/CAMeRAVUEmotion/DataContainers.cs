@@ -160,6 +160,21 @@ namespace CAMeRAVUEmotion
             return -1;
         }
 
+        public static string StringFor(int emotion)
+        {
+            switch (emotion)
+            {
+                case HOPE: return "hope";
+                case FEAR: return "fear";
+                case JOY: return "joy";
+                case DISTRESS: return "distress";
+                case SURPRISE: return "surprise";
+                case ANGER: return "anger";
+                case GUILT: return "guilt";
+            }
+            return "unknown";
+        }
+
     }
 
     /// <summary>

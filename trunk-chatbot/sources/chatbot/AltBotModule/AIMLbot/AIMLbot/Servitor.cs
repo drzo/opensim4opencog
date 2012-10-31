@@ -251,6 +251,9 @@ namespace AltAIMLbot
 
         int RequestingInputFromMt()
         {
+            // System has a preference for those actions it expects
+            //  but is able to recognize others it knows about
+
             int responseID = -1;
             for (int i = 0; i < a2.PossibleResponses.Count; ++i)
             {
@@ -261,7 +264,47 @@ namespace AltAIMLbot
                 }
                 //Console.WriteLine("" + i + ": " + Global.GetActionByID(a2.PossibleResponses[i]).Name);
             }
+            if (responseID == -1)
+            {
+                //Not expected but maybe an unexpected reaction
+                // iterative deepening
+                int testdepth = 64;
+                string query = "performed(ACTION)";
+                List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
+                while ((bingingsList.Count == 0) && (testdepth < 256))
+                {
+                    testdepth = (int)(testdepth * 1.5);
+                    //Console.WriteLine("Trying depth {0}", testdepth);
+                    //prologEngine.maxdepth = testdepth;
+                    this.prologEngine.askQuery(query, "coppeliaInputMt", out bingingsList);
+                }
+                if (bingingsList.Count > 0)
+                {
+                    string finalAction = "";
+                    // Pick one at random
+                    Random rgen = new Random();
+                    int randomBinding = rgen.Next(0, bingingsList.Count);
+                    Dictionary<string, string> bindings = bingingsList[randomBinding];
+                    foreach (string k in bindings.Keys)
+                    {
+                        string v = bindings[k];
+                        //Console.WriteLine("BINDING {0} = {1}", k, v);
+                        if (k == "ACTION")
+                        {
+                            v = v.Replace("\"", "");
+                            finalAction = v;
+                            Console.WriteLine("ACTION = '{1}'", k, v);
 
+                        }
+                    }
+                    if (CoppeliaActionDictionary.ContainsKey(finalAction))
+                    {
+                        responseID = CoppeliaActionDictionary[finalAction].GlobalIndex;
+                    }
+                }
+
+            }
+            postCoppeliaAgentsMts();
             //Return the selected response
             //-1 is an invalid ActionID and will constitute "no action"
             if (responseID == -1)
@@ -275,7 +318,7 @@ namespace AltAIMLbot
                 Thread.Sleep(1000);
             }
             return responseID;
-        }
+         }
 
         /// <summary>
         /// This function is called when any agent performs any action.
@@ -293,10 +336,11 @@ namespace AltAIMLbot
            //     Console.WriteLine("Setting state STATE_LOST_THE_GAME to true");
            //     Global.SetState(STATE_LOST_THE_GAME, true);
            // }
-            string mt = "coppeliaOutputMt";
+            string mt = "coppeliaLastOutputMt";
             string actionReport = "";
             if (GetCoppeliaAgentNameByID(sender) == "self")
             {
+                this.prologEngine.connectMT("coppeliaOutputMt", "coppeliaLastOutputMt");
                 this.prologEngine.insertKB("", mt);
                 this.prologEngine.insertKB("", "coppeliaInputMt");
                 actionReport = String.Format("selfAct({0},{1}).", Global.GetActionByID(action).Name, GetCoppeliaAgentNameByID(target));
@@ -304,7 +348,34 @@ namespace AltAIMLbot
             }
             actionReport = String.Format("performedAction({0},{1},{2}).", GetCoppeliaAgentNameByID(sender), Global.GetActionByID(action).Name, GetCoppeliaAgentNameByID(target));
             this.prologEngine.appendKB(actionReport, mt);
+            postCoppeliaAgentsMts();
+        }
 
+        public void postCoppeliaAgentsMts()
+        {
+            foreach (string ak in CoppeliaAgentDictionary.Keys)
+            {
+                Agent a1 = CoppeliaAgentDictionary[ak];
+                string agentMt = "coppeliaAgent_" + ak;
+                this.prologEngine.connectMT("coppeliaAgentEmotionsMt", agentMt);
+                string gaf = "";
+                this.prologEngine.insertKB("", agentMt);
+                gaf = String.Format("agentID({0},{1}).",ak,a1.AgentID); this.prologEngine.appendKB(gaf, agentMt);
+
+                for (int e = 0; e < AgentEmotions.NUM_VALUES; e++)
+                {
+                    float v = a1.GetEmotion(e);
+                    string emotionSymbol = AgentEmotions.StringFor(e);
+                    gaf = String.Format("agentEmotion({0},{1},{2}).", ak, emotionSymbol,v); this.prologEngine.appendKB(gaf, agentMt);
+                }
+                for (int e = 0; e < AgentEmotions.NUM_VALUES; e++)
+                {
+                    float v = a1.GetDesired(e);
+                    string emotionSymbol = AgentEmotions.StringFor(e);
+                    gaf = String.Format("agentEmotionalDesire({0},{1},{2}).", ak, emotionSymbol, v); this.prologEngine.appendKB(gaf, agentMt);
+                }
+
+            }
         }
 
         public void Start(sayProcessorDelegate outputDelegate)

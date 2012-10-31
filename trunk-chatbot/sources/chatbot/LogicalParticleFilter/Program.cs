@@ -221,7 +221,7 @@ namespace LogicalParticleFilter1
             while ((bingingsList.Count == 0)&& (testdepth < 256))
             {
                 testdepth = (int) ( testdepth * 1.5);
-                Console.WriteLine("Trying depth {0}", testdepth);
+               // Console.WriteLine("Trying depth {0}", testdepth);
                 prologEngine.maxdepth = testdepth;
                 prologEngine.askQuery(CemaQuery, "testCema", out bingingsList);
             }

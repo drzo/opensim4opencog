@@ -122,7 +122,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     while ((bingingsList.Count == 0) && (testdepth < 256))
                     {
                         testdepth = (int)(testdepth * 1.5);
-                        Console.WriteLine("Trying depth {0}", testdepth);
+                        //Console.WriteLine("Trying depth {0}", testdepth);
                         //prologEngine.maxdepth = testdepth;
                         bot.servitor.prologEngine.askQuery(query, myMt, out bingingsList);
                     }

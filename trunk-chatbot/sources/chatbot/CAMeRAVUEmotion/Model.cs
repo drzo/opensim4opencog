@@ -1080,7 +1080,7 @@ namespace CAMeRAVUEmotion
                                         if (threadResponse >= 0)
                                         {
                                             agent1.queuedAction = threadResponse;
-                            agent1.queuedTarget = agent1.receivedAgent;
+                                            agent1.queuedTarget = agent1.receivedAgent;
                                         }
 
                                         runningThread = false;

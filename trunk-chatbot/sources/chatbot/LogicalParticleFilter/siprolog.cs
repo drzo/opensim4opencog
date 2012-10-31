@@ -42,7 +42,7 @@ namespace LogicalParticleFilter1
         /// </summary>
         public string ruleset;
         public string query;
-        public bool show = true;
+        public bool show = false; //true;
         public bool trace = false;
         public int maxdepth = 20;
         public int deepest = 1;
@@ -189,6 +189,37 @@ namespace LogicalParticleFilter1
             return VKB;
         }
 
+        public void webWriter(StreamWriter writer,string action,string query,string serverRoot)
+        {
+            if (action == null)
+            {
+                if (query != null)
+                {
+                    if (query.ToLower() == "list")
+                    {
+                        writer.WriteLine("<h2>Siprolog Mt List</h2>");
+                        foreach (PNode p in KBGraph.SortedTopLevelNodes)
+                        {
+                            string pname = p.id;
+                            writer.WriteLine("<a href='{1}siprolog/?q={0}'>{0}  (prob={2})</a><br/>", pname, serverRoot, p.probability);
+                        }
+                        writer.WriteLine("<h2>Siprolog Mt Treed</h2>");
+                        KBGraph.PrintToWriter(writer, serverRoot);
+                        return;
+                    }
+
+                    writer.WriteLine("<h2>Siprolog Mt {0}</h2>",query);
+                    ArrayList kbContents = findVisibleKBRulesSorted(query);
+                    foreach (Rule r in kbContents)
+                    {
+                        writer.WriteLine("{0}<br/>", r.ToString());
+                    }
+                    return;
+                }
+            }
+
+
+        }
         public ArrayList collectKBRules(ArrayList kbList)
         {
             ArrayList VKB = new ArrayList ();
@@ -1603,6 +1634,17 @@ namespace LogicalParticleFilter1
                     Console.WriteLine(".");
                 }
             }
+            public string ToString()
+            {
+                if (this.body == null)
+                {
+                    return this.head.ToString() + ".";
+                }
+                else
+                {
+                    return this.head.ToString() + " :- " + this.body.ToString() + ".";
+                }
+            }
         }
 
         public class Body
@@ -1622,6 +1664,18 @@ namespace LogicalParticleFilter1
                     if (i < this.plist.list.Count - 1)
                         Console.Write(", ");
                 }
+            }
+            public string ToString()
+            {
+                string result = "";
+
+                for (var i = 0; i < this.plist.list.Count; i++)
+                {
+                    result += ((Term)this.plist.list[i]).ToString();
+                    if (i < this.plist.list.Count - 1)
+                        result += ", ";
+                }
+                return result;
             }
         }
     #endregion
@@ -1669,16 +1723,6 @@ namespace LogicalParticleFilter1
                     return;
                 }
 
-                // Negative Decimal numbers
-                r = Regex.Match(this.remainder, @"^(\-[0-9]*\.[0-9]*)(.*)$");
-                //r = this.remainder.match(/^(-[0-9][0-9]*)(.*)$/);
-                if (r.Success)
-                {
-                    this.remainder = r.Groups[2].Value;
-                    this.current = r.Groups[1].Value;
-                    this.type = "id";
-                    return;
-                }
 
 
                 r = Regex.Match(this.remainder, @"^([\(\)\.,\[\]\|\!]|\:\-)(.*)$");
@@ -1745,6 +1789,16 @@ namespace LogicalParticleFilter1
                     return;
                 }
 
+                // Negative Decimal numbers
+                r = Regex.Match(this.remainder, @"^(-?[\d\.]+)(.*)$");
+                //r = this.remainder.match(/^(-[0-9][0-9]*)(.*)$/);
+                if (r.Success)
+                {
+                    this.remainder = r.Groups[2].Value;
+                    this.current = r.Groups[1].Value;
+                    this.type = "id";
+                    return;
+                }
 
                 this.current = null;
                 this.type = "eof";
@@ -2465,12 +2519,26 @@ namespace LogicalParticleFilter1
                     destNode = new PNode(idDest);
                     AddNode(destNode);
                 }
-                srcNode.CreateEdgeTo(destNode);
+                if (!srcNode.EdgeAlreadyExists(destNode))
+                    srcNode.CreateEdgeTo(destNode);
             }
 
             public PNode[] TopLevelNodes
             {
                 get { return topLevelNodes.ToArray(); }
+            }
+           public PNode[] SortedTopLevelNodes
+            {
+                get {
+                    //return 
+                    //    topLevelNodes.ToArray();
+                    PNode[] temp = topLevelNodes.ToArray();
+                    Array.Sort(temp, delegate(PNode p1, PNode p2)
+                    {
+                        return p1.id.CompareTo(p2.id );
+                    });
+                    return temp;
+                }
             }
 
             public void AddNode(PNode node)
@@ -2571,7 +2639,7 @@ namespace LogicalParticleFilter1
 
             public void PrintToConsole()
             {
-                foreach (PNode node in topLevelNodes)
+                foreach (PNode node in SortedTopLevelNodes)
                 {
                     PrintToConsole(node, 0);
 
@@ -2588,6 +2656,32 @@ namespace LogicalParticleFilter1
                     PrintToConsole(e.EndNode, indentation + 1);
                 }
             }
+
+            public void PrintToWriter(StreamWriter writer, string serverRoot)
+            {
+                writer.WriteLine("<ul>");
+                foreach (PNode node in SortedTopLevelNodes)
+                {
+                    PrintToWriter(node, 0, writer, serverRoot);
+
+                }
+                writer.WriteLine("</ul>");
+            }
+
+            private void PrintToWriter(PNode node, int indentation, StreamWriter writer, string serverRoot)
+            {
+                //writer.Write("<p>");
+                //for (int i = 0; i < indentation; ++i) writer.Write(" ");
+                //Console.WriteLine(node.Id);
+                writer.WriteLine("<li><a href='{1}siprolog/?q={0}'>{0}  (prob={2})</a></li>", node.Id, serverRoot, node.probability );
+                writer.WriteLine("<ul>");
+                foreach (PEdge e in node.OutgoingEdges)
+                {
+                    PrintToWriter(e.EndNode, indentation + 1, writer, serverRoot);
+                }
+                writer.WriteLine("</ul>");
+            }
+
         }
         #endregion
         #region rdfEndpoint

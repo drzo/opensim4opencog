@@ -269,6 +269,15 @@ namespace AltAIMLbot
                     ourServitor.myScheduler.performAction(writer,action,query, behaviorName);
                 return;
             }
+            if (path.Contains("./siprolog/"))
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.OK;
+                using (Stream s = context.Response.OutputStream)
+                using (StreamWriter writer = new StreamWriter(s))
+                    ourServitor.prologEngine.webWriter(writer, action, query, serverRoot);
+                return;
+            }
+
             if (path.Contains("./analysis/"))
             {
                 path.Replace("./analysis/", behaviorDir);
