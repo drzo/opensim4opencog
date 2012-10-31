@@ -273,21 +273,11 @@ namespace AIMLBotModule
             EnsureRegisteredTalkCommand();
             try
             {
-                var MyBot = new Bot();
+                MyBot = _MyBot ?? new Bot();
                 MyBot.ObjectRequester = client;
                 MyBot.outputDelegate = WriteLine;
                 MyBot.isAcceptingUserInput = false;
-                MyBot.useServitor = UseServitorEngine;
-                MyBot.loadGlobalBotSettings();
-                //MyBot.GlobalSettings.addSetting("name", client.BotLoginParams.FirstName+ " " + client.BotLoginParams.LastName);
-                MyBot.loadAIMLFromDefaults();
-                MyBot.isAcceptingUserInput = true;
-                MyBot.outputDelegate = WriteLine;
-                String ss = client.GetName();
-                this.MyBot = MyBot;
-                LoadPersonalConfig();
-                MyBot.WriteConfig();
-                // wont get here unless there was no problem
+
                 client.Self.ChatFromSimulator += AIML_OnChat;
                 client.Self.IM += AIML_OnInstantMessage;
                 client.Network.LoginProgress += AIML_OnLogin;
@@ -305,12 +295,6 @@ namespace AIMLBotModule
                 {
                     SimEventSubscriber evtSub = new AIMLEventSubscriber(MyBot, this);
                     client.AddBotMessageSubscriber(evtSub);
-                }
-                if (MyBot.useServitor)
-                {
-                    MyBot.updateRTP2Sevitor();
-                    MyBot.servitor.curBot.sayProcessor = new sayProcessorDelegate(TalkActive);
-                    MyBot.servitor.loadComplete();
                 }
             }
             catch (Exception e)
@@ -395,35 +379,43 @@ namespace AIMLBotModule
         private void ReadSimSettings0()
         {
             client.InternType(this.GetType());
-            string myName = GetName().Trim();
-            String[] sname = myName.Split(' ');
+            LoadPersonalConfig();
+
+        }
+        private object loadingPersonl = new object();
+        private void LoadPersonalConfig()
+        {
             if (MyBotNullWarning()) return;
+            lock(loadingPersonl)
+            {
+                if (!NeedPersonalConfig) return;
+                NeedPersonalConfig = false;
+            }
+            string myName = GetName().Trim().Replace(".", " ");
+            SetBotName(myName);
+        }
+
+        private void SetBotName(string myName)
+        {
+            if (MyBotNullWarning()) return;
+            MyBot.SetName(myName);
+            MyBot.isAcceptingUserInput = true;
+            MyBot.WriteConfig();
+
+            if (MyBot.useServitor)
+            {
+                MyBot.updateRTP2Sevitor();
+                MyBot.servitor.curBot.sayProcessor = new sayProcessorDelegate(TalkActive);
+                MyBot.servitor.loadComplete();
+            }
             MyBot.GlobalSettings.addSetting("name", String.Format("{0}", myName));
+            String[] sname = myName.Split(' ');
             MyBot.GlobalSettings.addSetting("firstname", sname[0]);
             MyBot.GlobalSettings.addSetting("lastname", sname[1]);
             MyBot.GlobalSettings.addSetting("master", client.MasterName);
             client.WorldSystem.TheSimAvatar["AIMLBotModule"] = this;
             client.WorldSystem.TheSimAvatar["MyBot"] = MyBot;
             ScriptManager.AddGroupProvider(client, this.provideAIMLVars);
-
-            LoadPersonalConfig();
-
-        }
-
-        private void LoadPersonalConfig()
-        {
-            if (MyBotNullWarning()) return;
-            if (!NeedPersonalConfig) return;
-            string myName = GetName().ToLower().Trim().Replace("_", " ");
-            if (string.IsNullOrEmpty(myName)) return;
-            NeedPersonalConfig = false;
-            LoadPersonalDirectories(myName);
-        }
-
-        private void LoadPersonalDirectories(string myName)
-        {
-            if (MyBotNullWarning()) return;
-            MyBot.SetName(myName);
             //MyBot.BotAsUser.Predicates.InsertOverrides(() => provideWorldBotVars);
             //MyBot.BotAsUser.Predicates.InsertListener(() => provideWorldBotVars);
         }

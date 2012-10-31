@@ -36,7 +36,6 @@ namespace AltAIMLbot
             {
                 MyBot = MyBot ?? new Bot();
                 MyBot.ObjectRequester = (ICollectionRequester)colreq;
-                MyBot.useServitor = useServitor;
                 MyBot.outputDelegate = WriteLine;
                 if (MyBot.useServitor)
                 {
@@ -122,7 +121,7 @@ namespace AltAIMLbot
                 Console.WriteLine("*** Create servitor ***");
 
                 MyBot = MyBot ?? new AltBot();
-                MyBot.useServitor = true;
+    
                 servitor = MyBot.servitor ?? new Servitor(MyBot, null, true, true, true);
                 Console.WriteLine("*** Created WN ***");
 

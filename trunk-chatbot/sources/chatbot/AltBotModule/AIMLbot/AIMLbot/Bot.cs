@@ -21,8 +21,10 @@ using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
+using org.opencyc.api;
 using RTParser;
 using RTParser.AIMLTagHandlers;
+using RTParser.Database;
 using RTParser.Normalize;
 using RTParser.Utils;
 using RTParser.Variables;
@@ -99,7 +101,16 @@ namespace RTParser
         public object guestEvalObject = null;
         public Queue<string> outputQueue = new Queue<string>();
 
-        public Servitor myServitor = null;
+        private Servitor _myServitor;
+        public Servitor myServitor
+        {
+            get
+            {
+                if (_myServitor != null) return _myServitor;
+                return _myServitor;
+            }
+            set { _myServitor = value; }
+        }
 
         /// <summary>
         /// A dictionary object that looks after all the settings associated with this bot
@@ -199,14 +210,11 @@ namespace RTParser
         {
             get
             {
-                return _rapStoreDirectory;
+                if (String.IsNullOrEmpty(_rapStoreDirectory)) return _rapStoreDirectory;
+                return Path.Combine(PersonalAiml, _rapStoreDirectory);
             }
             set
             {
-                if (Environment.MachineName == "ENKI")
-                {
-                   // return;
-                }
                 _rapStoreDirectory = value;
             }
         }
@@ -637,7 +645,23 @@ namespace RTParser
         private void setup()
         {
             this.myCron = new Cron(this);
+            //LocalGraphsByName["default"] =
+            //EnsureLocalGraphs();
+            TheNLKB = TheNLKB ?? new NatLangDb(this);
+            //            BotAsRequestUsed = new AIMLbot.Request("-bank-input-", BotAsUser, this, null);
+            AddExcuteHandler("aiml", EvalAIMLHandler);
+            AddExcuteHandler("bot", LightWeigthBotDirective);
+            AddExcuteHandler("csharp", CSharpExec);
+            AddExcuteHandler("cs", CSharpExec);
 
+            testCaseRunner = testCaseRunner ?? new TestCaseRunner(null);
+            XmlNodeEvaluators.Add(testCaseRunner);
+
+            if (TheCycS == null)
+            {
+                TheCycS = new CycDatabase(this);
+            }
+            CycAccess v = TheCyc.GetCycAccess;
             SettingsDictionary.WarnOnNull = false;
             this.RelationMetaProps = new SettingsDictionary("chat.relationprops", this);
             SettingsDictionary.WarnOnNull = true;
@@ -655,6 +679,7 @@ namespace RTParser
             this.Graphs.Add("*", this.Graphmaster);
             this.DefaultHeardSelfSayGraph = new GraphMaster("heardselfsay");
             this.setupDictionaries();
+            GlobalSettings.IsTraced = true;
         }
 
         /// <summary>

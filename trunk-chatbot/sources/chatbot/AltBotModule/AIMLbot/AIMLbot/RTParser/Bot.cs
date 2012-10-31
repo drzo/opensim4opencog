@@ -258,7 +258,10 @@ namespace RTParser
             get { return myServitor; }
             set { myServitor = value; }
         }
-        public bool useServitor = false;
+        public bool useServitor
+        {
+            get { return true; }
+        }
         public bool useNonServitor = false;
         public void sayConsole(string message)
         {
@@ -267,6 +270,7 @@ namespace RTParser
         }
         public void reloadServitor()
         {
+            servitor.NeedsLoad = false;
             string rapDir = GlobalSettings.grabSetting("rapstore");
             servitor.rapStoreDirectory = rapDir;
 
@@ -406,10 +410,7 @@ namespace RTParser
         public void updateServitor2RTP(User activeUser)
         {
             if (useServitor == false) return;
-            if (servitor == null)
-            {
-                updateServitor2RTP();
-            }
+            updateServitor2RTP();
             //User specific code (ALTBOT USER->RTPUSER  )
             try
             {
@@ -445,29 +446,26 @@ namespace RTParser
         public void updateServitor2RTP()
         {
             startServitor();
-            reloadServitor();
+            if (servitor.NeedsLoad)
+            {
+                reloadServitor();
+            }
         }
         public void startServitor()
         {
             if (useServitor == false) return;
-            if (servitor == null)
+            if (_myServitor == null)
             {
 
                 servitor = new Servitor(this, null);
                 servitor.curBot = this;
                 servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
-                //servitor.curBot.wordNetEngine = wordNetEngine;
-                reloadServitor();
             }
 
         }
         public void updateRTP2Sevitor(User activeUser)
         {
             if (useServitor == false) return;
-            if (servitor == null)
-            {
-                updateServitor2RTP();
-            }
             updateRTP2Sevitor();
             try
             {
@@ -509,15 +507,12 @@ namespace RTParser
         public void updateRTP2Sevitor()
         {
             if (useServitor == false) return;
-            if (servitor == null)
-            {
-                updateServitor2RTP();
-            }
+            updateServitor2RTP();            
             // fill in the blanks
-            servitor.curBot.AdminEmail = this.AdminEmail;
+            //servitor.curBot.AdminEmail = this.AdminEmail;
             //servitor.curBot.conversationStack = this.conversationStack;
-            servitor.curBot.isAcceptingUserInput = this.isAcceptingUserInput;
-            servitor.curBot.LastLogMessage = this.LastLogMessage;
+            //servitor.curBot.isAcceptingUserInput = this.isAcceptingUserInput;
+            //servitor.curBot.LastLogMessage = this.LastLogMessage;
             //servitor.curBot.MaxThatSize = this.MaxThatSize;
             //servitor.curBot.StartedOn = this.StartedOn;
             //servitor.curBot.TrustAIML = this.TrustAIML;
@@ -528,7 +523,7 @@ namespace RTParser
             foreach (string key in SharedGlobalSettings.Keys)
             {
                 string v = SharedGlobalSettings[key];
-                servitor.curBot.GlobalSettings.updateSetting(key, v);
+               // servitor.curBot.GlobalSettings.updateSetting(key, v);
                 servitor.setBBHash(key, v);
             }
 
@@ -536,12 +531,11 @@ namespace RTParser
             foreach (string key in GlobalSettings.Keys)
             {
                 string v = GlobalSettings[key];
-                servitor.curBot.GlobalSettings.updateSetting(key, v);
+                //servitor.curBot.GlobalSettings.updateSetting(key, v);
                 servitor.setBBHash(key, v);
             }
 
-            if ((GenderSubstitutions != null) 
-                && (servitor.curBot.GenderSubstitutions.Count != GenderSubstitutions.Count))
+            /*if ((GenderSubstitutions != null) && (servitor.curBot.GenderSubstitutions.Count != GenderSubstitutions.Count))
             foreach (string key in GenderSubstitutions.Keys)
             {
                 string v = GenderSubstitutions[key];
@@ -579,6 +573,7 @@ namespace RTParser
                 string v = DefaultPredicates[key];
                 servitor.curBot.DefaultPredicates.updateSetting(key, v);
             }
+             * */
 
             
         }
@@ -602,13 +597,8 @@ namespace RTParser
             lock (OneAtATime)
             {
                 EnsureStaticInit();
-                BotNumberCreated++;
-                EnsureBotInit(BotNumberCreated == 1);
             }
         }
-
-
-        public static int BotNumberCreated;
                 
 
         public string PopSearchPath(string directory)
@@ -654,31 +644,6 @@ namespace RTParser
             }
         }
 
-        public void EnsureBotInit(bool wasFirst)
-        {
-            //LocalGraphsByName["default"] =
-            //EnsureLocalGraphs();
-            TheNLKB = new NatLangDb(this);
-            //            BotAsRequestUsed = new AIMLbot.Request("-bank-input-", BotAsUser, this, null);
-            AddExcuteHandler("aiml", EvalAIMLHandler);
-            AddExcuteHandler("bot", LightWeigthBotDirective);
-            AddExcuteHandler("csharp", CSharpExec);
-            AddExcuteHandler("cs", CSharpExec);
-
-            testCaseRunner = new TestCaseRunner(null);
-            XmlNodeEvaluators.Add(testCaseRunner);
-
-            if (TheCycS == null)
-            {
-                TheCycS = new CycDatabase(this);
-            }
-            CycAccess v = TheCyc.GetCycAccess;
-
-
-            setup();
-            GlobalSettings.IsTraced = true;
-        }
-
         protected bool IsMonoRuntime
         {
             get { return true; }
@@ -707,11 +672,13 @@ namespace RTParser
             {
                 if (initialSettingsLoaded) return;
                 initialSettingsLoaded = true;
-                loadConfigs(this, PathToConfigFiles, GetBotRequest("-loadAimlFromDefaults-"));
-                loadAIMLAndSettings(HostSystem.Combine(PathToAIML, "shared_aiml"));
+                setup();
+                Request globalSettingsRequest = GetBotRequest("-loadAimlFromDefaults-");
+                loadConfigs(this, PathToConfigFiles, globalSettingsRequest);
+                loadConfigs(this, HostSystem.Combine(PathToAIML, "shared_aiml"), globalSettingsRequest);
+                startServitor();
                 this.StartHttpServer();
                 EnsureDefaultUsers();
-                startServitor();
             }
             //MyBot.GlobalSettings.addSetting("name", client.BotLoginParams.FirstName+ " " + client.BotLoginParams.LastName);
         }
@@ -736,7 +703,7 @@ namespace RTParser
         {
             if (useServitor)
             {
-                if (servitor == null) startServitor();
+                updateServitor2RTP();
                 if (HostSystem.FileOrDirExists(path))
                 {
                     servitor.loadAIMLFromFiles(path);
@@ -765,7 +732,7 @@ namespace RTParser
         /// <summary>
         /// Loads AIML from .aiml files into the graphmaster "brain" of the Proccessor
         /// </summary>
-        public void loadAIMLAndSettings(string path)
+        public void loadAIMLAndSettings(string path, bool skipSettings)
         {
             Request request = GetBotRequest("-loadAIMLAndSettings-" + path + "-");
             request.LoadingFrom = null;
@@ -781,11 +748,11 @@ namespace RTParser
                     if (servitor == null) startServitor();
                     if (HostSystem.FileOrDirExists(settings))
                     {
-                        servitor.curBot.loadSettings(settings);
+                        if (!skipSettings) servitor.curBot.loadSettings(settings);
                     }
                 }
                 //loading settings first
-                loadConfigs(this, path, request);
+                if (!skipSettings) loadConfigs(this, path, request);
 
                 //this loads into servator
                 loadAIMLFromURI(path, request);
@@ -1044,6 +1011,14 @@ namespace RTParser
         {
             if (request == null) request = GetBotRequest("<!-- Loads settings from: '" + pathToSettings + "' -->");
             ReloadHooks.Add(() => loadSettingsFile(pathToSettings, request));
+            if (useServitor)
+            {
+                startServitor();
+                if (HostSystem.FileOrDirExists(pathToSettings))
+                {
+                    servitor.curBot.loadSettings(pathToSettings);
+                }
+            }
             GlobalSettings.loadSettings(pathToSettings, request);
         }
 
@@ -1602,15 +1577,9 @@ The AIMLbot program.
             }
         }
 
-        public string LoadPersonalDirectory(string myName)
+        public string LoadPersonalDirectory(string myName, bool loadXML, bool loadAiml)      
         {
-            return LoadPersonalDirectory0(myName);
-            //return UserOper(() => LoadPersonalDirectory0(myName), QuietLogger);
-        }
-
-        private string LoadPersonalDirectory0(string myName)
-        {
-            ReloadHooks.Add(() => LoadPersonalDirectory(myName));
+            ReloadHooks.Add(() => LoadPersonalDirectory(myName, loadXML, loadAiml));
             string loaded = null;
 
             // this is the personal "config file" only.. aiml stored elsewhere
@@ -1619,13 +1588,13 @@ The AIMLbot program.
             if (HostSystem.DirExists(file))
             {
                 loaded = file;
-                loadSettingsFileAndDir(HostSystem.Combine(file, "Settings.xml"), request);
+                loadSettingsFileAndDir(file, request, loadXML, loadXML);
             }
 
             file = HostSystem.Combine("aiml", myName);
             if (HostSystem.DirExists(file))
             {
-                UsePersonalDir(file);
+                UsePersonalDir(file, loadXML, loadAiml);
                 ;
                 loaded = file;
             }
@@ -1635,33 +1604,27 @@ The AIMLbot program.
             if (HostSystem.DirExists(file))
             {
                 loaded = file;
-                loadSettingsFileAndDir(HostSystem.Combine(file, "Settings.xml"), request);
+                loadSettingsFileAndDir(file, request, loadXML, loadXML);
             }
 
             file = HostSystem.Combine(myName, "aiml");
             if (HostSystem.DirExists(file))
             {
-                UsePersonalDir(file);
+                UsePersonalDir(file, loadXML, loadAiml);
                 ;
                 loaded = file;
             }
             return loaded;
         }
 
-        private void loadSettingsFileAndDir(string file, Request request)
+        private void loadSettingsFileAndDir(string file, Request request, bool loadSets, bool loadXML)
         {
             writeToLog("LoadPersonalDirectories: '{0}'", file);
-            loadSettingsFile(HostSystem.Combine(file, "Settings.xml"), request);
-            loadConfigs(this, file, request);
+            if (loadXML) loadConfigs(this, file, request);
+            if (loadSets) loadSettingsFile(HostSystem.Combine(file, "Settings.xml"), request);
         }
 
-        public void UsePersonalDir(string file)
-        {
-            //lock (BotUsers) lock (OnBotCreatedHooks) 
-            UsePersonalDir0(file);
-        }
-
-        private void UsePersonalDir0(string file)
+        public void UsePersonalDir(string file, bool loadXML, bool loadAiml)
         {
             if (!HostSystem.DirExists(file))
             {
@@ -1669,7 +1632,6 @@ The AIMLbot program.
                 return;
             }
             PushSearchPath(file);
-            _PathToBotPersonalFiles = file;
             string s = string.Format("-LoadPersonalDirectories: '{0}'-", file);
             Request request = GetBotRequest(s);
             request.LoadingFrom = file;
@@ -1678,14 +1640,14 @@ The AIMLbot program.
             try
             {
                 // loading of personal configs must be done before and after the AIML files
-                loadConfigs(this, file, request);
+                if (loadXML) loadConfigs(this, file, request);
                 request.GraphsAcceptingUserInput = false;
-                loadAIMLFromURI(file, request);
+                if (loadAiml) loadAIMLFromURI(file, request);
                 foreach (string s1 in HostSystem.GetFiles(file, "Settings*.xml"))
                 {
-                    loadSettingsFile(s1, request);
+                    if (loadXML) loadSettingsFile(s1, request);
                 }
-                loadConfigs(this, file, request);
+                if (loadXML) loadConfigs(this, file, request);
                 lock (RuntimeDirectoriesLock)
                 {
                     _RuntimeDirectories = RuntimeDirectories;
@@ -1694,10 +1656,6 @@ The AIMLbot program.
             finally
             {
                 request.GraphsAcceptingUserInput = prev;
-            }
-            if (useServitor)
-            {
-                saveServitor();
             }
         }
 
@@ -1708,20 +1666,22 @@ The AIMLbot program.
                 return SetName0(myName);
                 //return UserOper(() => SetName0(myName), writeDebugLine);
             }
+            if (useServitor)
+            {
+                saveServitor();
+            }
         }
 
         private string IsNameSet = null;
         private object IsNameSetLock = new object();
         private string SetName0(string myName)
         {
-            loadGlobalBotSettings();
-
             if (IsNameSet == myName && _botAsUser != null)
             {
                 return BotAsUser.UserDirectory;
             }
             IsNameSet = myName;
-
+            loadGlobalBotSettings();            
             //char s1 = myName[1];
             Robots[myName] = this;
             NameAsSet = myName;
@@ -1772,7 +1732,19 @@ The AIMLbot program.
                 OnBotCreatedHooks.Clear();
             }
 
-            string official = LoadPersonalDirectories(NamePath);
+            string shared = LoadPersonalDirectory("shared_aiml", true, false);
+            string scriptableName = ToScriptableName(myName);
+            string official = LoadPersonalDirectory(scriptableName, true, false);
+            if (string.IsNullOrEmpty(official))
+            {
+                official = LoadPersonalDirectory("default_bot", true, false);
+            }
+            PersonalAiml = official;
+            LoadPersonalDirectory("shared_aiml", false, true);
+            if (!string.IsNullOrEmpty(official))
+            {
+                loadAIMLFromFiles(official);
+            }
             thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
             AddExcuteHandler(NamePath, ChatWithThisBot);
             return official ?? thisBotAsUser.UserDirectory;
@@ -1815,31 +1787,6 @@ The AIMLbot program.
         private static void AddSettingsAliases(string real, string aliases)
         {
             SettingsAliases.Add(real, aliases.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries));
-        }
-
-        public string LoadPersonalDirectories(string myName)
-        {
-            return LoadPersonalDirectories0(myName);
-        }
-
-        public string LoadPersonalDirectories0(string myName)
-        {
-            string loaded = LoadPersonalDirectory(myName);
-            if (string.IsNullOrEmpty(loaded))
-            {
-                myName = ToScriptableName(myName);
-                loaded = LoadPersonalDirectory(myName);
-            }
-            if (string.IsNullOrEmpty(loaded))
-            {
-                myName = "default_bot";
-                loaded = LoadPersonalDirectory(myName);
-            }
-            if (string.IsNullOrEmpty(loaded))
-            {
-                writeToLog("Didnt find personal directories with stem: '{0}'", myName);
-            }
-            return loaded;
         }
 
         readonly public static OutputDelegate writeDebugLine = writeDebugLine_0_;

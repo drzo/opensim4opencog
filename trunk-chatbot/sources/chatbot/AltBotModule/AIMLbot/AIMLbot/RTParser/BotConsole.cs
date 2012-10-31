@@ -269,7 +269,7 @@ namespace RTParser
 
             // writeLine = MainConsoleWriteLn;
             bool gettingUsername = false;
-            myBot.loadGlobalBotSettings();
+            //myBot.loadGlobalBotSettings();
             string myName = "BinaBot Daxeline";
             //myName = "Test Suite";
             //myName = "Kotoko Irata";
@@ -286,7 +286,7 @@ namespace RTParser
                     }
                     if (s == "--servitor")
                     {
-                        myBot.useServitor = true;
+                        //myBot.useServitor = true;
                         continue;
                     }
                     if (s == "--cycon")

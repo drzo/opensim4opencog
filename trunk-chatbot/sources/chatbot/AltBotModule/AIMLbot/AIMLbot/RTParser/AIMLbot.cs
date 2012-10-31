@@ -19,7 +19,7 @@ namespace AIMLbot
         }
         public void loadAIMLFromFiles()
         {
-            base.loadGlobalBotSettings();
+            base.loadAIMLFromFiles();
         }
         
     }

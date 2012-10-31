@@ -51,7 +51,9 @@ namespace AltAIMLbot
         //   - WorldObjectsForAimLBot.cs StartupListener00()
 
         public  AltBot curBot;
-        public  User curUser
+
+        public bool NeedsLoad = true;
+        public User curUser
         {
             get { return curBot.LastUser; }
         }
@@ -111,7 +113,11 @@ namespace AltAIMLbot
 
         public string rapStoreDirectory
         {
-            get { return _rapStoreDirectory; }
+            get
+            {
+                if (curBot != null) return curBot.rapStoreDirectory;                
+                return _rapStoreDirectory;
+            }
             set
             {
                 if (curBot != null)
@@ -135,11 +141,13 @@ namespace AltAIMLbot
         public Servitor(AltBot aimlBot, sayProcessorDelegate outputDelegate)
         {
             curBot = aimlBot;
+            curBot.myServitor = this;
             Start( outputDelegate);
         }
         public Servitor(AltBot aimlBot, sayProcessorDelegate outputDelegate, bool skipLoading, bool skippersonalitycheck, bool initialcritical)
         {
             curBot = aimlBot;
+            curBot.myServitor = this;
             skiploading = skipLoading;
             skipPersonalityCheck = skippersonalitycheck;
             initialCritical = initialcritical;
@@ -306,39 +314,32 @@ namespace AltAIMLbot
             Console.WriteLine("             UserName:" + Environment.UserName);
             Console.WriteLine("            TickCount:" + Environment.TickCount);
             Console.WriteLine("            UserID:" + curUser.UserID);
-            if (curBot.servitor != null)
-            {
-
-            }
-            AltBot myBot = curBot;// ?? new AltBot();
+            curBot.myServitor = this;
             myScheduler = myScheduler ?? new Scheduler(this);
             myIndex = myIndex ?? new InvertedIndex();
             rapStoreDirectory = ".//rapstore//";
-            myBot.bbSafe = true;
-
-            curBot = myBot;
-            curBot.myServitor = this;
+            curBot.bbSafe = true;
             outputDelegate = outputDelegate ?? curBot.sayProcessor;
             if (outputDelegate == null)
             {
-                myBot.sayProcessor = new sayProcessorDelegate(sayResponse);
+                curBot.sayProcessor = new sayProcessorDelegate(sayResponse);
                 Console.WriteLine(" using default sayProcessorDelegate");
             }
             else
             {
-                myBot.sayProcessor = outputDelegate;
+                curBot.sayProcessor = outputDelegate;
                 Console.WriteLine(" using external sayProcessorDelegate");
             }
-            Console.WriteLine("Servitor loadSettings");
+            //Console.WriteLine("Servitor loadSettings");
 
-            myBot.loadSettings();
+            //curBot.loadSettings();
 
-            Console.WriteLine("Servitor User");
+            //Console.WriteLine("Servitor User");
             //var myUser = new MasterUser(UserID, myBot);
 
             //curUser = myUser;
             //myBot.isAcceptingUserInput = false;
-            myBot.inCritical = initialCritical;
+            curBot.inCritical = initialCritical;
 
             Console.WriteLine("Servitor startMtalkWatcher");
             startMtalkWatcher();
@@ -348,7 +349,7 @@ namespace AltAIMLbot
             bool personDefined=false;
             if (!skipPersonalityCheck) personDefined= checkNewPersonality();
 
-            lock (myBot)
+            lock (curBot)
             {
                 if ((personDefined == false) && (lastAIMLInstance.Length == 0))
                 {
@@ -356,7 +357,7 @@ namespace AltAIMLbot
                 }
             }
 
-            myBot.isAcceptingUserInput = true;
+            curBot.isAcceptingUserInput = true;
 
             Console.WriteLine("Servitor startFSMEngine");
             startFSMEngine();
@@ -366,8 +367,15 @@ namespace AltAIMLbot
             startCronEngine();
             curBot.myBehaviors.keepTime("activation", RunStatus.Success);
             curBot.myBehaviors.activationTime("activation", RunStatus.Success);
-            string servRoot = curBot.GlobalSettings.grabSetting("serverRoot",false);
-            if ((servRoot != null) && (servRoot.Length >7))
+
+            Console.WriteLine(" Servitor beginning Coppelia");
+            InitCoppelia();
+            Console.WriteLine(" Servitor startup complete");
+        }
+        public void loadComplete()
+        {
+            string servRoot = curBot.GlobalSettings.grabSetting("serverRoot", false);
+            if ((servRoot != null) && (servRoot.Length > 7))
             {
                 WebServitor.serverRoot = servRoot;
             }
@@ -383,16 +391,11 @@ namespace AltAIMLbot
 
             Console.WriteLine("Servitor WebServitor.beginService");
             WebServitor.beginService(this);
-            Console.WriteLine(" Servitor beginning Coppelia");
-            InitCoppelia();
-            Console.WriteLine(" Servitor startup complete");
-        }
-        public void loadComplete()
-        {
             if ((myScheduler != null) && curBot.myBehaviors.definedBehavior("startup"))
             {
                 myScheduler.ActivateBehaviorTask("startup");
             }
+            curBot.isAcceptingUserInput = true;
 
         }
         public void initWordNet(string wordNetPath)
