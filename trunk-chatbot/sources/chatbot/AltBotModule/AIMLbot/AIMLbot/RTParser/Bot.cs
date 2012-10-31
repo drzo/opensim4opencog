@@ -458,7 +458,7 @@ namespace RTParser
             if (_myServitor == null)
             {
 
-                _myServitor = new Servitor(this, null);
+                myServitor = new Servitor(this, null);
                 servitor.curBot = this;
                 servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
             }
@@ -679,7 +679,7 @@ namespace RTParser
                 Request globalSettingsRequest = GetBotRequest("-loadAimlFromDefaults-");
                 loadConfigs(this, PathToConfigFiles, globalSettingsRequest);
                 loadConfigs(this, HostSystem.Combine(PathToAIML, "shared_aiml"), globalSettingsRequest);
-                startServitor();
+                //startServitor();
                 this.StartHttpServer();
                 EnsureDefaultUsers();
             }
@@ -1652,16 +1652,19 @@ The AIMLbot program.
 
         public string SetName(string myName)
         {
+            string ret;
             lock (IsNameSetLock) lock (OnBotCreatedHooks)
             {
-                return SetNameForConfig(myName);
+                ret = SetNameForConfig(myName);
                 //return UserOper(() => SetName0(myName), writeDebugLine);
             }
+            startServitor();
             LoadPersonality();
             if (useServitor)
             {
                 saveServitor();
             }
+            return ret;
         }
 
         private string IsNameSet = null;
