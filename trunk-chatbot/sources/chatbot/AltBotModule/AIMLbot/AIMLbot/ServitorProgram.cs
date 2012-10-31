@@ -68,6 +68,7 @@ namespace AltAIMLbot
                     MyBot.ObjectRequester = (ICollectionRequester)colreq;
                     MyBot.outputDelegate = WriteLine;
                     MyBot.SetName(myName);
+                    servitor = MyBot.servitor;
                     MyBot.sayProcessor = new sayProcessorDelegate(TalkActive);
                 }
                 catch (Exception e)
@@ -75,19 +76,19 @@ namespace AltAIMLbot
                     WriteLine("ERROR {0}", e);
                 }
    
-                servitor = MyBot.servitor ?? new Servitor(MyBot, null, true, true, true);
-                Console.WriteLine("*** Created WN ***");
+                //servitor = MyBot.servitor ?? new Servitor(MyBot, null, true, true, true);
+                //Console.WriteLine("*** Created WN ***");
 
-                servitor.curBot.isAcceptingUserInput = false;
-                servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
-                servitor.curBot.useMemcache = true;
+                MyBot.isAcceptingUserInput = false;
+                MyBot.sayProcessor = new sayProcessorDelegate(sayConsole);
+                MyBot.useMemcache = true;
  
                 Console.WriteLine("WebServitor.serverRoot ={0}", WebServitor.serverRoot);
                 Console.WriteLine("servitor.rapStoreDirectory ={0}", servitor.rapStoreDirectory);
 
                 //servitorbin = @"C:\RD4541\Acore\RealBot\RealBot2\RealBot2\RealBot2\bin\Debug\aiml\kotoko_irata\bin\ki.kvt";
                 servitorbin = @".\aiml\kotoko_irata\bin\ki.kvt";
-                servitor.curBot.myBehaviors.persistantDirectory = @"./BHTrees/";
+                //MyBot.myBehaviors.persistantDirectory = @"./BHTrees/";
                 //servitor.setBBHash("aimlinstancedir", @"C:\RD4541\Acore\RealBot\RealBot2\RealBot2\RealBot2\bin\Debug\aiml\kotoko_irata");
                 // if (File.Exists(servitorbin))
                 if (0 == 1)
@@ -99,39 +100,39 @@ namespace AltAIMLbot
                 else
                 {
                     // Load the AIML then save the binary
-                    //servitor.curBot.loadAIMLFromFiles(@"C:\RD4541\Acore\RealBot\RealBot2\RealBot2\RealBot2\bin\Debug\aiml\kotoko_irata");
+                    //MyBot.loadAIMLFromFiles(@"C:\RD4541\Acore\RealBot\RealBot2\RealBot2\RealBot2\bin\Debug\aiml\kotoko_irata");
 
-                   // servitor.curBot.rapStoreDirectory = null;
+                   // MyBot.rapStoreDirectory = null;
                     
-                    //servitor.curBot.loadAIMLFromFiles(@"./aiml/chomskyAIML");
-                    //servitor.curBot.loadAIMLFromFile(@"./aiml/special/blackjack.aiml");
-                    //servitor.curBot.loadAIMLFromFiles(@"./aiml/guest_gurl");
+                    //MyBot.loadAIMLFromFiles(@"./aiml/chomskyAIML");
+                    //MyBot.loadAIMLFromFile(@"./aiml/special/blackjack.aiml");
+                    //MyBot.loadAIMLFromFiles(@"./aiml/guest_gurl");
                     // servitor.saveToBinaryFile(servitorbin);
-                    servitor.skiploading = true;
+                    //servitor.skiploading = true;
                 }
                 //reloadServitor();
             }
-            servitor.curBot.useMemcache = true;
+            MyBot.useMemcache = true;
             // FOR DEBUG
-            servitor.curBot.inCritical = true;
-            servitor.curBot.isAcceptingUserInput = true;
+            MyBot.inCritical = true;
+            MyBot.isAcceptingUserInput = true;
             // FOR TESTING
-            servitor.curBot.inCritical = false;
-            servitor.curBot.blockCron = false;
+            MyBot.inCritical = false;
+            MyBot.blockCron = false;
             MyBot.WriteConfig();
             MyBot.servitor.loadComplete();
 
         }
         public bool LoadDataset(string datasetName)
         {
-            servitor.DontSkiploading(() => servitor.curBot.loadAIMLFromFiles(@"./aiml/" + datasetName));
+            servitor.DontSkiploading(() => MyBot.loadAIMLFromFiles(@"./aiml/" + datasetName));
             return true;
         }
 
         public void RunMain(string robotName, string consoleUserName, Action<string> ConsoleWrite, Func<string> ConsoleReadLine, bool sayReposeServ)
         {
             startRobot(robotName);
-            servitor.curBot.sayProcessor = (s) => ConsoleWrite(s);
+            MyBot.sayProcessor = (s) => ConsoleWrite(s);
             SetForegrounded(true);
             //saveServitor();
             while (true)
