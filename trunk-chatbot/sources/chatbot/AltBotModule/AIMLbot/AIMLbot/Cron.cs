@@ -473,5 +473,36 @@ namespace AltAIMLbot
             }
             return XList ;
         }
+
+        public Dictionary<string,string> cronXmlDictionary()
+        {
+            Dictionary<string, string> XDict = new Dictionary<string, string>();
+            lock (crontab) foreach (String cronKey in crontab.Keys)
+                {
+                    ArrayList entry = (ArrayList)crontab[cronKey];
+                    string dat = String.Format("<crontag timeline=\"{5} {4} {3} {2} {1} {0}\" mode=\"{6}\" id=\"{7}\"> {8} </crontag>",
+                      decodeList(entry[0]), decodeList(entry[1]),
+                      decodeList(entry[2]), decodeList(entry[3]),
+                      decodeList(entry[4]), decodeList(entry[5]),
+                      entry[6], cronKey, entry[8]);
+                    XDict[cronKey] = dat;
+                }
+            return XDict;
+        }
+        public Dictionary<string, string> cronLinesDictionary()
+        {
+            Dictionary<string, string> XDict = new Dictionary<string, string>();
+            lock (crontab) foreach (String cronKey in crontab.Keys)
+                {
+                    ArrayList entry = (ArrayList)crontab[cronKey];
+                    string dat = String.Format("{5} {4} {3} {2} {1} {0} {6} {7} {8}",
+                      decodeList(entry[0]), decodeList(entry[1]),
+                      decodeList(entry[2]), decodeList(entry[3]),
+                      decodeList(entry[4]), decodeList(entry[5]),
+                      entry[6], cronKey, entry[8]);
+                    XDict[cronKey] = dat;
+                }
+            return XDict;
+        }
     }
 }

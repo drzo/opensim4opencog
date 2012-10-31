@@ -298,7 +298,8 @@ namespace RTParser
                 servitor.curBot.myBehaviors.persistantDirectory = behaviorcache;
             }
 
-            if (servitor.skiploading)
+            servitor.curBot.loadCrons();
+           if (servitor.skiploading)
             {
                 return;
             }
@@ -360,6 +361,8 @@ namespace RTParser
             List<string> allBehaviors = new List<string>();
             //servitor.curBot.Graphmaster.collectPaths("",allPaths);
             //File.WriteAllLines(@"./aiml/graphmap.txt", allPaths.ToArray());
+            servitor.curBot.saveCrons();
+            
             string graphcache = GlobalSettings.grabSetting("graphcache");
             graphcache = PersonalizePath(graphcache);
             if (false && File.Exists(graphcache)) // Always write for now
@@ -373,6 +376,7 @@ namespace RTParser
             servitor.curBot.Graphmaster.collectFullPaths("", allPaths);
             allCrons = servitor.curBot.myCron.cronXmlList();
             allBehaviors = servitor.curBot.myBehaviors.behaviorXmlList();
+
             //StreamWriter sw = File.CreateText(@"./aiml/servitorgraphmap.aiml");
             StreamWriter sw = File.CreateText(graphcache);
             foreach (string line in header)
@@ -1751,6 +1755,7 @@ The AIMLbot program.
         {
             if (!needAimlFilesLoaded) return;
             needAimlFilesLoaded = false;
+            PersonalAiml = official;
             if (useServitor) { updateRTP2Sevitor(); }
             string official =  PersonalAiml;
             LoadPersonalDirectory("shared_aiml", false, true);

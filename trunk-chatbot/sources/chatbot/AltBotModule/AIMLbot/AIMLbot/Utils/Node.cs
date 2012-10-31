@@ -1526,6 +1526,8 @@ namespace AltAIMLbot.Utils
         public RaptorDB.RaptorDBString[] filenamedb = null;
         public RaptorDB.RaptorDBString[] worddb = null;
         public RaptorDB.RaptorDBString loadeddb;
+        public RaptorDB.RaptorDBString crondb;
+
         public Dictionary<string, string> childcache = new Dictionary<string, string>();
         public Dictionary<string, Node> nodecache = new Dictionary<string, Node>();
 
@@ -1545,7 +1547,8 @@ namespace AltAIMLbot.Utils
             
             string ourPath = Directory.CreateDirectory(dbdirectory).FullName;
             string ourDirectory = Path.GetDirectoryName(ourPath);
-            loadeddb = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar+"loadeddb", false);
+            loadeddb = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "loadeddb", false);
+            crondb = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "crondbdb", false);
             templatedb = new RaptorDBString[slices];
             childdb = new RaptorDBString[slices];
             childtrunkdb = new RaptorDBString[slices];
@@ -1563,6 +1566,7 @@ namespace AltAIMLbot.Utils
             string ourDirectory = Path.GetDirectoryName(ourPath);
 
             loadeddb = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "loadeddb", false);
+            crondb = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "crondbdb", false);
             templatedb = new RaptorDBString[slices];
             childdb = new RaptorDBString[slices];
             childtrunkdb = new RaptorDBString[slices];
@@ -1615,6 +1619,7 @@ namespace AltAIMLbot.Utils
 
             }
             loadeddb.Shutdown();
+            crondb.Shutdown();
         }
 
         public void logText(string msg)
@@ -1698,6 +1703,7 @@ namespace AltAIMLbot.Utils
                 }
             }
             if (loadeddb != null) loadeddb.Shutdown();
+            if (crondb != null) crondb.Shutdown();
             GC.Collect();
         }
         public void prune(int prunelimit)
@@ -1750,6 +1756,40 @@ namespace AltAIMLbot.Utils
             Console.WriteLine("\nwasLoaded:{0}  {1}<=>{2}", filename, reftime,lf);
             return (reftime == lf);
         }
+
+        public void saveCronList(Cron sourceCron)
+        {
+            Dictionary<string,string> cronDict = sourceCron.cronLinesDictionary();
+            string keylist = "";
+            foreach (string cronID in cronDict.Keys)
+            {
+                string cronCode = cronDict[cronID];
+                crondb.Set(cronID, cronCode);
+                keylist += cronID + "|";
+            }
+            crondb.Set("savedCronKeys8123", keylist);
+        }
+
+        public void loadCronList(Cron sourceCron)
+        {
+            string keylistStr = "";
+            bool keysFound = crondb.Get("savedCronKeys8123", out keylistStr);
+            if (keysFound)
+            {
+                string[] cronIDs = keylistStr.Split('|');
+                foreach (string cronID in cronIDs)
+                {
+                    string cronCode = "";
+                    bool ret = crondb.Get(cronID, out cronCode);
+                    if (ret)
+                    {
+                        sourceCron.addLine(cronCode);
+                    }
+
+                }
+            }
+        }
+
         public bool isTrunk(string absPath)
         {
             string[] s = absPath.Split(' ');

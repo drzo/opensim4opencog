@@ -997,6 +997,54 @@ namespace RTParser
             }
             return outmsg;
         }
+
+       public void loadCrons()
+       {
+          lock (ExternDB.mylock)
+            {
+
+                if (rapStoreDirectory != null)
+                {
+                    if (chatDB == null)
+                    {
+                        chatDB = new ExternDB(rapStoreDirectory);
+                        chatDB.bot = this;
+                        chatDB._dbdir = rapStoreDirectory;
+                        if (rapStoreSlices > 0) chatDB.slices = rapStoreSlices;
+                        if (rapStoreSlices > 0) chatDB.trunkLevel = rapStoreTrunkLevel;
+                        chatDB.OpenAll();
+                    }
+                    chatDB.loadCronList(myCron);
+                    chatDB.Close();
+                    chatDB = null;
+                }
+           }
+       }
+       public void saveCrons()
+       {
+           lock (ExternDB.mylock)
+           {
+
+               if (rapStoreDirectory != null)
+               {
+                   if (chatDB == null)
+                   {
+                       chatDB = new ExternDB(rapStoreDirectory);
+                       chatDB.bot = this;
+                       chatDB._dbdir = rapStoreDirectory;
+                       if (rapStoreSlices > 0) chatDB.slices = rapStoreSlices;
+                       if (rapStoreSlices > 0) chatDB.trunkLevel = rapStoreTrunkLevel;
+                       chatDB.OpenAll();
+                   }
+                   chatDB.saveCronList(myCron);
+                   chatDB.Close();
+                   chatDB = null;
+
+               }
+           }
+       }
+
+
         /// <summary>
         /// Given some raw input and a unique ID creates a response for a new user
         /// </summary>
