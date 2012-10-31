@@ -1755,8 +1755,6 @@ The AIMLbot program.
         {
             if (!needAimlFilesLoaded) return;
             needAimlFilesLoaded = false;
-            PersonalAiml = official;
-            if (useServitor) { updateRTP2Sevitor(); }
             string official =  PersonalAiml;
             LoadPersonalDirectory("shared_aiml", false, true);
             if (!string.IsNullOrEmpty(official))
