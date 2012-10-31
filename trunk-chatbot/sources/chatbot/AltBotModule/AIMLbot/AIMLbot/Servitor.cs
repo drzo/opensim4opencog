@@ -342,6 +342,7 @@ namespace AltAIMLbot
             {
                 this.prologEngine.connectMT("coppeliaOutputMt", "coppeliaLastOutputMt");
                 this.prologEngine.insertKB("", mt);
+                this.prologEngine.insertKB("", "lastinputMt");
                 this.prologEngine.insertKB("", "coppeliaInputMt");
                 actionReport = String.Format("selfAct({0},{1}).", Global.GetActionByID(action).Name, GetCoppeliaAgentNameByID(target));
                 this.prologEngine.appendKB(actionReport, mt);

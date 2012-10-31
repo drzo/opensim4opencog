@@ -191,31 +191,42 @@ namespace LogicalParticleFilter1
 
         public void webWriter(StreamWriter writer,string action,string query,string serverRoot)
         {
-            if (action == null)
+            try
             {
-                if (query != null)
+                if (action == null)
                 {
-                    if (query.ToLower() == "list")
+                    if (query != null)
                     {
-                        writer.WriteLine("<h2>Siprolog Mt List</h2>");
-                        foreach (PNode p in KBGraph.SortedTopLevelNodes)
+                        if (query.ToLower() == "list")
                         {
-                            string pname = p.id;
-                            writer.WriteLine("<a href='{1}siprolog/?q={0}'>{0}  (prob={2})</a><br/>", pname, serverRoot, p.probability);
+                            writer.WriteLine("<h2>Siprolog Mt List</h2>");
+                            foreach (PNode p in KBGraph.SortedTopLevelNodes)
+                            {
+                                string pname = p.id;
+                                writer.WriteLine("<a href='{1}siprolog/?q={0}'>{0}  (prob={2})</a><br/>", pname, serverRoot, p.probability);
+                            }
+                            writer.WriteLine("<h2>Siprolog Mt Treed</h2>");
+                            KBGraph.PrintToWriter(writer, serverRoot);
+                            return;
                         }
-                        writer.WriteLine("<h2>Siprolog Mt Treed</h2>");
-                        KBGraph.PrintToWriter(writer, serverRoot);
+
+                        writer.WriteLine("<h2>Siprolog Mt {0}</h2>", query);
+                        PNode qnode = KBGraph.Contains(query);
+                        KBGraph.PrintToWriter(qnode, 0, writer, serverRoot);
+                        writer.WriteLine("<br/>");
+                        ArrayList kbContents = findVisibleKBRulesSorted(query);
+                        foreach (Rule r in kbContents)
+                        {
+                            writer.WriteLine("{0}<br/>", r.ToString());
+                        }
                         return;
                     }
-
-                    writer.WriteLine("<h2>Siprolog Mt {0}</h2>",query);
-                    ArrayList kbContents = findVisibleKBRulesSorted(query);
-                    foreach (Rule r in kbContents)
-                    {
-                        writer.WriteLine("{0}<br/>", r.ToString());
-                    }
-                    return;
                 }
+            }
+            catch (Exception e)
+            {
+
+                return;
             }
 
 
@@ -2668,8 +2679,9 @@ namespace LogicalParticleFilter1
                 writer.WriteLine("</ul>");
             }
 
-            private void PrintToWriter(PNode node, int indentation, StreamWriter writer, string serverRoot)
+            public void PrintToWriter(PNode node, int indentation, StreamWriter writer, string serverRoot)
             {
+                if (node == null) return;
                 //writer.Write("<p>");
                 //for (int i = 0; i < indentation; ++i) writer.Write(" ");
                 //Console.WriteLine(node.Id);
