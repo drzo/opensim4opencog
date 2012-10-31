@@ -59,6 +59,7 @@ namespace AltAIMLbot
         }
         public  Thread tmTalkThread = null;
         public bool tmTalkEnabled = true;
+        public bool mPersonalityShouldBeDefined = false;
         public  Thread tmFSMThread = null;
         public bool tmFSMEnabled = true;
         public  Thread tmBehaveThread = null;
@@ -343,21 +344,6 @@ namespace AltAIMLbot
 
             Console.WriteLine("Servitor startMtalkWatcher");
             startMtalkWatcher();
-            Thread.Sleep(600);
-            Console.WriteLine("Servitor checkNewPersonality");
-
-            bool personDefined=false;
-            if (!skipPersonalityCheck) personDefined= checkNewPersonality();
-
-            lock (curBot)
-            {
-                if ((personDefined == false) && (lastAIMLInstance.Length == 0))
-                {
-                    //myBot.loadAIMLFromFiles();
-                }
-            }
-
-            curBot.isAcceptingUserInput = true;
 
             Console.WriteLine("Servitor startFSMEngine");
             startFSMEngine();
@@ -391,11 +377,26 @@ namespace AltAIMLbot
 
             Console.WriteLine("Servitor WebServitor.beginService");
             WebServitor.beginService(this);
+            Thread.Sleep(600);
+            Console.WriteLine("Servitor checkNewPersonality");
+
+            bool personDefined = false;
+            if (!skipPersonalityCheck) personDefined = checkNewPersonality();
+
+            lock (curBot)
+            {
+                if ((personDefined == false) && (lastAIMLInstance.Length == 0))
+                {
+                    //myBot.loadAIMLFromFiles();
+                }
+            }
+            
             if ((myScheduler != null) && curBot.myBehaviors.definedBehavior("startup"))
             {
                 myScheduler.ActivateBehaviorTask("startup");
             }
             curBot.isAcceptingUserInput = true;
+            mPersonalityShouldBeDefined = true;
 
         }
         public void initWordNet(string wordNetPath)
@@ -847,6 +848,8 @@ namespace AltAIMLbot
                 Thread.Sleep(interval);
                 updateTime();
                 // Tick the microThreader
+
+                if (!mPersonalityShouldBeDefined) continue;
                 if (myScheduler != null && tmTalkEnabled)
                 {
                     myScheduler.Run();
@@ -1105,6 +1108,7 @@ namespace AltAIMLbot
 
         public void shutdown()
         {
+            mPersonalityShouldBeDefined = false;
             if (tmTalkThread != null) tmTalkThread.Abort();
             if (tmFSMThread != null) tmFSMThread.Abort();
             if (tmBehaveThread != null) tmBehaveThread.Abort();
