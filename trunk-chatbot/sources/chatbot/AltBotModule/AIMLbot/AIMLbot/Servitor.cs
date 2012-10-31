@@ -354,10 +354,37 @@ namespace AltAIMLbot
 
         public void postCoppeliaAgentsMts()
         {
+            //Actions
+            foreach (string ak in CoppeliaActionDictionary.Keys)
+            {
+                AgentAction a1 = CoppeliaActionDictionary[ak];
+                string actionDescMt = "coppeliaActionDescription_" + ak;
+                string actionDescription = this.prologEngine.describeObject(ak, a1);
+                this.prologEngine.connectMT("coppeliaActionDescriptionMt", actionDescMt);
+                this.prologEngine.insertKB(actionDescription, actionDescMt); 
+            }
+            //State
+            foreach (string sk in CoppeliaStateDictionary.Keys)
+            {
+                int cstate = CoppeliaStateDictionary[sk];
+                bool stateV = Global.GetState(cstate);
+                string stateDescMt = "coppeliaStateDescription_" + sk;
+                //string stateDescription = this.prologEngine.describeObject(ak, a1);
+                string stateDescription = String.Format("triple({0},{1},{2}).", sk, "value", stateV);
+                this.prologEngine.connectMT("coppeliaStateDescriptionMt", stateDescMt);
+                this.prologEngine.insertKB(stateDescription, stateDescMt);
+            }
+            //Agents
             foreach (string ak in CoppeliaAgentDictionary.Keys)
             {
                 Agent a1 = CoppeliaAgentDictionary[ak];
                 string agentMt = "coppeliaAgent_" + ak;
+
+                string agentDescMt = "coppeliaAgentDescription_" + ak;
+                string agentDescription = this.prologEngine.describeObject(ak, a1);
+                this.prologEngine.connectMT("coppeliaAgentDescriptionMt", agentDescMt);
+                this.prologEngine.insertKB(agentDescription, agentDescMt); 
+                
                 this.prologEngine.connectMT("coppeliaAgentEmotionsMt", agentMt);
                 string gaf = "";
                 this.prologEngine.insertKB("", agentMt);

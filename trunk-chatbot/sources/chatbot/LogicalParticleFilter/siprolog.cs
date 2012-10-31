@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions ;
 using System.IO;
+using System.Reflection;
 using Mono.CSharp;
 
 
@@ -1693,6 +1694,50 @@ namespace LogicalParticleFilter1
             }
         }
     #endregion
+
+        public string describeObject(string objname,object o)
+        {
+            string result = "";
+            Type type = o.GetType();
+            PropertyInfo [] properties = type.GetProperties();
+            foreach (PropertyInfo pi in properties)
+            {
+                if (pi.CanRead)
+                {
+                    if (
+                           (pi.PropertyType == typeof(string))
+                        || (pi.PropertyType == typeof(string))
+                        || (pi.PropertyType == typeof(float))
+                        || (pi.PropertyType == typeof(double))
+                        || (pi.PropertyType == typeof(int))
+                        || (pi.PropertyType == typeof(bool))
+                        || (pi.PropertyType == typeof(Int16))
+                        || (pi.PropertyType == typeof(Int32))
+                        || (pi.PropertyType == typeof(Int64))
+                        )
+                    {
+                        object propertyValue = pi.GetValue(o, null);
+                        string pname = pi.Name;
+                        string pval = propertyValue.ToString().Trim();
+                        string frag = "";
+                        if (pval.Contains(" "))
+                        {
+                            frag = String.Format("triple({0},{1},\"{2}\").\n", objname, pname, pval);
+
+                        }
+                        else
+                        {
+                            frag = String.Format("triple({0},{1},{2}).\n", objname, pname, pval);
+                        }
+                        
+                        result += frag;
+                    }
+                }
+            }
+            return result;
+        }
+
+
         #region prologParser
         // The Tiny-Prolog parser goes here.
         public class Tokeniser
