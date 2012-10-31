@@ -844,7 +844,7 @@ namespace RTParser.Utils
             bool templateNodeHasChildNodes = templateNode.HasChildNodes;
             // pre textualized ?
             var innerText = this.templateNodeInnerText;
-            if (!templateNodeHasChildNodes && IsStarAtomically)
+            if (!templateNodeHasChildNodes && IsStillStarAtomically)
             {
                 // atomic version of the node
                 Unifiable templateResult = GetStarContent();
@@ -1338,7 +1338,7 @@ namespace RTParser.Utils
                 Unifiable real = RecurseReal(templateNode, false);
                 if (IsNullOrEmpty(real))
                 {
-                    if (IsStarAtomically)
+                    if (IsStillStarAtomically)
                     {
                         if (IsNull(real)) return null;
                     }
@@ -1462,7 +1462,7 @@ namespace RTParser.Utils
             }
             else
             {
-                if (IsStarAtomically)
+                if (IsStillStarAtomically)
                 {
                     try
                     {

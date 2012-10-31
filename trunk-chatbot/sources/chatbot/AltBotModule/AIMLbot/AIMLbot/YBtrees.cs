@@ -82,8 +82,9 @@ namespace AltAIMLbot
 
         // Kinda based on the idea at ...
         // http://www.garagegames.com/community/blogs/view/21143
-        public BehaviorTree()
+        public BehaviorTree(AltBot bot)
         {
+            _bot = bot;
             treeDoc = new XmlDocument();
             restorePoint = new Dictionary<string, int>();
 

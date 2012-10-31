@@ -73,7 +73,7 @@ namespace RTParser
         public RChem myChemistry = null;
         public Qchem realChem = null;
         public QfsmSet myFSMS = new QfsmSet();
-        public BehaviorSet myBehaviors = new BehaviorSet();
+        public BehaviorSet myBehaviors;
         public Cron myCron = null;
         public bool inCritical = false;
         public bool blockCron = false;
@@ -1310,13 +1310,12 @@ namespace RTParser
                                 {
                                     try
                                     {
+                                        string debug = childNode.OuterXml;
                                         string value = this.processNode(childNode, query, request, result, user, allowProcess);
                                         if (value == null)
                                         {
-                                            value = this.processNode(childNode, query, request, result, user, allowProcess);
                                             value = String.Empty;
                                         }
-                                        string debug = childNode.OuterXml;
                                         if (!allowProcess)
                                         {
                                             continue;
@@ -1349,7 +1348,7 @@ namespace RTParser
                         else
                         {
                             // tagHandler.isRecursive && !node.HasChildNodes
-                            if (tagHandler.IsStarAtomically)
+                            if (tagHandler.IsStillStarAtomically)
                             {
                                 string debug = node.OuterXml;
                                 // atomic tag?!
@@ -1399,19 +1398,36 @@ namespace RTParser
 
         }
 
-        public string GetOutputSentence(string template, XmlNode resultNode, SubQuery query, Request request, AltAIMLbot.Result result, AltAIMLbot.User user, bool allowProcess)
+        public string GetOutputSentence(string template, XmlNode resultNode000, SubQuery query, Request request, AltAIMLbot.Result result, AltAIMLbot.User user, bool allowProcess)
         {
-            if (template == null) template = resultNode.OuterXml;
+
+            if (template == null)
+            {
+                template = resultNode000.OuterXml;
+            }
             if (!StaticXMLUtils.ContainsXml(template))
             {
                 return template;
             }
-            while (template.Contains("<template><template>"))
+            XmlNode resultNode = AIMLTagHandler.getNode("<node>" + template + "</node>");
+            while (true)
             {
-                template = template.Replace("<template><template>", "<template>");
-                template = template.Replace("</template></template>", "</template>");
+                if (resultNode.HasChildNodes)
+                {
+                    if (resultNode.ChildNodes.Count == 1)
+                    {
+                        var cn = resultNode.FirstChild;
+                        string cnName = cn.Name;
+                        if (cnName == "template" || cnName == "li")
+                        {
+                            resultNode = cn;
+                            continue;
+                        }
+                    }
+                }
+                break;
             }
-            resultNode = resultNode ?? AIMLTagHandler.getNode("<node>" + template + "</node>");
+
             if (resultNode.HasChildNodes)
             {
                 StringBuilder recursiveResult = new StringBuilder();

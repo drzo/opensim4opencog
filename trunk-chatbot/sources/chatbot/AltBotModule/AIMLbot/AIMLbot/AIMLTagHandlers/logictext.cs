@@ -72,7 +72,7 @@ namespace AltAIMLbot.AIMLTagHandlers
 
                 try
                 {
-                    String templateNodeInnerValue = this.TemplateNodeInnerText0;
+                    String templateNodeInnerValue = this.TemplateNodeInnerText;
                     // is it a prolog query or just text ?
                    
                     if (!templateNodeInnerValue.Contains("("))

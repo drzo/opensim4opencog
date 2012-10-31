@@ -584,6 +584,8 @@ namespace RTParser
         public  AltBot()
             : base()
         {
+            myBehaviors = new BehaviorSet(this);
+
             qsbase = QuerySettings.CogbotDefaults;
             AltBotcommands = new AltBotCommands(this);
             _RuntimeDirectories = new List<string>();

@@ -57,6 +57,18 @@ namespace AltAIMLbot.Utils
         /// </summary>
         public bool IsStarAtomically = false;
 
+        public bool IsStillStarAtomically
+        {
+            get
+            {
+                if (!IsStarAtomically) return false;
+                if (!templateNode.InnerXml.Contains("<"))
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
         /// <summary>
         /// A flag to denote if just the innertext should be used instead of full recrusive processing
         /// </summary>
@@ -96,7 +108,7 @@ namespace AltAIMLbot.Utils
         /// <returns>The XML node</returns>
         public static XmlNode getNode(string outerXML)
         {
-            XmlDocument temp = new XmlDocument();
+            XmlDocument temp = new XmlDocument/*LineInfo*/();
             temp.PreserveWhitespace = true;
             temp.LoadXml(outerXML);
             return temp.FirstChild;
@@ -135,7 +147,7 @@ namespace AltAIMLbot.Utils
 
         protected string RecurseStar()
         {
-            this.TemplateNodeInnerText0 = GetStarContent();
+            this.TemplateNodeInnerText = GetStarContent();
             if (this.TemplateNodeHasText)
             {
                 return this.Transform();
@@ -166,36 +178,10 @@ namespace AltAIMLbot.Utils
         {
             get
             {
-                if (innerTextOverride != null) return innerTextOverride;
-                var ret = TemplateNodeInnerText0;
-                if (isBoring)
-                {
-                    return ret;
-                }
-
-                if (TemplateNodeInnerXml.Contains("<") && innerTextOverride == null)
-                {
-                    if (templateNode.HasChildNodes && isRecursive)
-                    {
-                        // recursively check
-                        var outp = bot.GetOutputSentence(null, templateNode, query, request, result, user, false);
-                        return outp;
-                    }
-                    throw new NotSupportedException("Template Node XML");
-                }
-                return ret;
-            }
-        }
-        protected string TemplateNodeInnerText0
-        {
-            get
-            {
-                if (innerTextOverride != null) return innerTextOverride;
                 return templateNode.InnerText;
             }
             set
             {
-                innerTextOverride = value;
                 templateNode.InnerText = value;
             }
         }
@@ -209,7 +195,6 @@ namespace AltAIMLbot.Utils
             get { return false; }
         }
 
-        private string innerTextOverride = null;
         #endregion
         internal static string GetNameOfDict(SubQuery query, string dictName, XmlNode templateNode, out ISettingsDictionary dict)
         {
@@ -290,7 +275,7 @@ namespace AltAIMLbot.Utils
 
         protected override Unifiable ProcessChangeU()
         {
-            return ProcessChange();
+            return TransformU();
         }
     }
 }

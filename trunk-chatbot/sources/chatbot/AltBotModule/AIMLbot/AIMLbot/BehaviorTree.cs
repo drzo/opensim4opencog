@@ -328,8 +328,9 @@ namespace AltAIMLbot
         private AltBot _bot;
 
         
-        public BehaviorSet()
+        public BehaviorSet(AltBot bot)
         {
+            _bot = bot;
             //behaveTrees = new Hashtable();
             behaveTrees = new Dictionary<string, BehaviorTree>();
             runState = new Dictionary<string, RunStatus>();
@@ -420,7 +421,7 @@ namespace AltAIMLbot
         {
             try
             {
-                BehaviorTree newTree = new BehaviorTree();
+                BehaviorTree newTree = new BehaviorTree(bot);
                 newTree.defineBehavior(treeName, behaviorDef);
                 behaveTrees[treeName] = newTree;
                 if (_bot != null) behaveTrees[treeName].bot = _bot;
@@ -514,7 +515,7 @@ namespace AltAIMLbot
         public RunStatus runBTXML(string BTXML)
         {
             RunStatus result = RunStatus.Failure;
-            BehaviorTree newTree = new BehaviorTree();
+            BehaviorTree newTree = new BehaviorTree(bot);
             string treeName = "temptree123" +newTree.rgen.Next();
             newTree.defineBehavior(treeName, BTXML);
             //result = newTree.runBehaviorTree(this.bot);
@@ -532,7 +533,7 @@ namespace AltAIMLbot
         public RunStatus runBTXML(XmlNode BTXML)
         {
             RunStatus result = RunStatus.Failure;
-            BehaviorTree newTree = new BehaviorTree();
+            BehaviorTree newTree = new BehaviorTree(bot);
             newTree.bot = bot;
             //result = newTree.processNode(BTXML);
 
@@ -609,7 +610,7 @@ namespace AltAIMLbot
 
         public void defineSubAIML(XmlNode xnode)
         {
-            BehaviorTree newTree = new BehaviorTree();
+            BehaviorTree newTree = new BehaviorTree(bot);
             newTree.bot = bot;
             newTree.ProcessStateAiml(xnode);
         }
