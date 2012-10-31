@@ -212,7 +212,9 @@ namespace RTParser
             if (path.Contains(BotUserID)) return path;
             if (path.Contains(BotID)) return path;
             if (path.Contains(NamePath)) return path;
+            string orig = path;
             path = path.Replace("\\", "/");
+            path = path.Replace("//", "/");
             if (path.StartsWith("./")) path = path.Substring(2);
             if (path.StartsWith("aiml/")) path = path.Substring(5);
             return HostSystem.Combine(PersonalAiml, path);
