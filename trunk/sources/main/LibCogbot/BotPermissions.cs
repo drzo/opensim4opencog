@@ -147,7 +147,11 @@ namespace Cogbot
                         string maybe = WorldSystem.GetUserName(value);
                         if (!string.IsNullOrEmpty(maybe)) MasterName = maybe;
                     }
-                    lock (SecurityLevels) SecurityLevels[value] |= BotPermissions.Master;
+                    lock (SecurityLevels)
+                    {
+                        if (!SecurityLevels.ContainsKey(value)) SecurityLevels[value] = BotPermissions.Master;
+                        else SecurityLevels[value] |= BotPermissions.Master;
+                    }
                 }
             }
         }
