@@ -271,7 +271,7 @@ namespace RTParser
         public void reloadServitor()
         {
             servitor.NeedsLoad = false;
-            string rapDir = GlobalSettings.grabSetting("rapstore");
+            string rapDir = PersonalizePath(GlobalSettings.grabSetting("rapstore"));
             servitor.rapStoreDirectory = rapDir;
 
             string servRoot = GlobalSettings.grabSetting("serverRoot");
@@ -292,16 +292,19 @@ namespace RTParser
             }
 
 
-            string behaviorcache = GlobalSettings.grabSetting("behaviorcache");
+            string behaviorcache = PersonalizePath(GlobalSettings.grabSetting("behaviorcache"));
             if ((behaviorcache != null) && (behaviorcache.Length > 0))
             {
                 servitor.curBot.myBehaviors.persistantDirectory = behaviorcache;
             }
 
-            if (servitor.skiploading) return;
+            if (servitor.skiploading)
+            {
+                return;
+            }
 
-            string graphcache = GlobalSettings.grabSetting("graphcache");
-            if (false && File.Exists(graphcache))
+            string graphcache = PersonalizePath(GlobalSettings.grabSetting("graphcache"));
+            if (File.Exists(graphcache))
             {
                 try
                 {
