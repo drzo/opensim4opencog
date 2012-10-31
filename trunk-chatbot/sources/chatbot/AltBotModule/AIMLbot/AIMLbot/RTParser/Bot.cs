@@ -1688,7 +1688,6 @@ The AIMLbot program.
             //new AIMLbot.User("heardselfsay", this)
             var thisBotAsUser = FindOrCreateUser(myName);
             this.BotAsUser.UserName = myName;// thisBotAsUser;
-            if (useServitor) { updateRTP2Sevitor(); }
 
             ExternalIntern("BotAsUser", thisBotAsUser);
             thisBotAsUser.IsRoleAcct = true;
@@ -1739,6 +1738,7 @@ The AIMLbot program.
             {
                 official = LoadPersonalDirectory("default_bot", true, false);
             }
+            if (useServitor) { updateRTP2Sevitor(); }
             PersonalAiml = official;
             LoadPersonalDirectory("shared_aiml", false, true);
             if (!string.IsNullOrEmpty(official))
