@@ -358,11 +358,18 @@ namespace AltAIMLbot
             InitCoppelia();
             Console.WriteLine(" Servitor startup complete");
         }
+
+        private bool LoadCompleteOnce = false;
+        private object LoadCompleteLock = new object();
         public void loadComplete()
         {
             curBot.isAcceptingUserInput = true;
-            if (mLoadCompleteAndPersonalityShouldBeDefined) return;
-            mLoadCompleteAndPersonalityShouldBeDefined = true;
+            lock (LoadCompleteLock)
+            {
+                if (LoadCompleteOnce) return;
+                LoadCompleteOnce = true;
+            }
+
             string servRoot = curBot.GlobalSettings.grabSetting("serverRoot", false);
             if ((servRoot != null) && (servRoot.Length > 7))
             {
@@ -398,6 +405,7 @@ namespace AltAIMLbot
             {
                 myScheduler.ActivateBehaviorTask("startup");
             }
+            mLoadCompleteAndPersonalityShouldBeDefined = true;
 
         }
         public void initWordNet(string wordNetPath)
