@@ -352,7 +352,7 @@ namespace RTParser
         public void saveServitor0()
         {
             if (servitor == null) return;
-            string rapDir = GlobalSettings.grabSetting("rapstore");
+            string rapDir = PersonalizePath(GlobalSettings.grabSetting("rapstore"));
             servitor.rapStoreDirectory = rapDir;
 
             List<string> allPaths = new List<string>();
