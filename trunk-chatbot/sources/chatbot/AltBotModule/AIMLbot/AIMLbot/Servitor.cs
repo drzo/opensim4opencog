@@ -383,18 +383,18 @@ namespace AltAIMLbot
                 string agentDescMt = "coppeliaAgentDescription_" + ak;
                 string agentDescription = this.prologEngine.describeObject(ak, a1);
                 this.prologEngine.connectMT("coppeliaAgentDescriptionMt", agentDescMt);
-                this.prologEngine.insertKB(agentDescription, agentDescMt); 
-                
+                this.prologEngine.insertKB(agentDescription, agentDescMt);
+
                 this.prologEngine.connectMT("coppeliaAgentEmotionsMt", agentMt);
                 string gaf = "";
                 this.prologEngine.insertKB("", agentMt);
-                gaf = String.Format("agentID({0},{1}).",ak,a1.AgentID); this.prologEngine.appendKB(gaf, agentMt);
+                gaf = String.Format("agentID({0},{1}).", ak, a1.AgentID); this.prologEngine.appendKB(gaf, agentMt);
 
                 for (int e = 0; e < AgentEmotions.NUM_VALUES; e++)
                 {
                     float v = a1.GetEmotion(e);
                     string emotionSymbol = AgentEmotions.StringFor(e);
-                    gaf = String.Format("agentEmotion({0},{1},{2}).", ak, emotionSymbol,v); this.prologEngine.appendKB(gaf, agentMt);
+                    gaf = String.Format("agentEmotion({0},{1},{2}).", ak, emotionSymbol, v); this.prologEngine.appendKB(gaf, agentMt);
                 }
                 for (int e = 0; e < AgentEmotions.NUM_VALUES; e++)
                 {
@@ -402,7 +402,23 @@ namespace AltAIMLbot
                     string emotionSymbol = AgentEmotions.StringFor(e);
                     gaf = String.Format("agentEmotionalDesire({0},{1},{2}).", ak, emotionSymbol, v); this.prologEngine.appendKB(gaf, agentMt);
                 }
+                for (int i = 0; i < a1.PossibleResponses.Count; ++i)
+                {
+                    gaf = String.Format("possibleResponse({0},{1})", ak,Global.GetActionByID(a2.PossibleResponses[i]).Name);
+                    this.prologEngine.appendKB(gaf, agentMt);
+                }
+                foreach (string otherName in CoppeliaAgentDictionary.Keys)
+                {
+                    Agent otherAgent = CoppeliaAgentDictionary[otherName];
+                    float v = 0;
+                    v= a1.GetAnger(otherAgent.AgentID);
+                    gaf = String.Format("anger({0},{1},{2})", ak, otherName,v);
+                    this.prologEngine.appendKB(gaf, agentMt);
+                    v = a1.GetPraiseworthy (otherAgent.AgentID);
+                    gaf = String.Format("praiseworthy({0},{1},{2})", ak, otherName, v);
+                    this.prologEngine.appendKB(gaf, agentMt);
 
+                }
             }
         }
 

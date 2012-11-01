@@ -3417,7 +3417,10 @@ namespace AltAIMLbot
             {
                 if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
                 SymbolicParticleFilter myFilter = findOrCreatePF(filter);
-                myFilter.constraintSet.Add(innerStr);
+                if (!myFilter.constraintSet.Contains(innerStr))
+                {
+                    myFilter.constraintSet.Add(innerStr);
+                }
                 rs = RunStatus.Success;
             }
             catch (Exception e)
@@ -3565,12 +3568,16 @@ namespace AltAIMLbot
             string innerStr = myNode.InnerXml;
             double threshold = 0.5;
             string filter = "basic";
-
+            string spindle = "";
+            string common = "";
             try
             {
                 if (myNode.Attributes["threshold"] != null) probStr = myNode.Attributes["threshold"].Value;
                 if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
                 if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                if (myNode.Attributes["spindle"] != null) spindle = myNode.Attributes["spindle"].Value;
+                if (myNode.Attributes["common"] != null) common = myNode.Attributes["common"].Value;
+                
                 SymbolicParticleFilter myFilter = findOrCreatePF(filter);
                 threshold = Double.Parse(probStr);
 
@@ -3578,7 +3585,19 @@ namespace AltAIMLbot
                 myFilter.meanParticle.normalize(myFilter.constraintSet);
                 string meanDMT = myFilter.meanParticle.asDataMt(threshold);
                 bot.servitor.prologEngine.insertKB(meanDMT, mtName);
-
+                if ((spindle != "")||(common != ""))
+                {
+                   int plen = myFilter.particles.Length;
+                   for (int i = 0; i < plen; i++)
+                   {
+                       string partDMT = myFilter.particles[i].asDataMt(threshold);
+                       string particleMt = String.Format("{0}_particle_{1}", filter, i);
+                       bot.servitor.prologEngine.insertKB(partDMT, particleMt);
+                       bot.servitor.prologEngine.setMtProbability(particleMt, myFilter.particles[i].prob);
+                       if (spindle != "") { bot.servitor.prologEngine.connectMT(spindle, particleMt); }
+                       if (common != "") { bot.servitor.prologEngine.connectMT(particleMt, common); }
+                   }
+                }
                 rs = RunStatus.Success;
             }
             catch (Exception e)

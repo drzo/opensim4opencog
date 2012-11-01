@@ -217,7 +217,8 @@ namespace LogicalParticleFilter1
                         KBGraph.PrintToWriter(qnode, 0, writer, serverRoot);
                         writer.WriteLine("<h3> IncomingEdges </h3>");
                         KBGraph.PrintToWriterInEdges(qnode, 0, writer, serverRoot);
-                        writer.WriteLine("<br/>");
+                        writer.WriteLine("<h3> KB Contents </h3>");
+                        writer.WriteLine("<hr/>");
                         ArrayList kbContents = findVisibleKBRulesSorted(query);
                         foreach (Rule r in kbContents)
                         {
@@ -1717,7 +1718,7 @@ namespace LogicalParticleFilter1
                         )
                     {
                         object propertyValue = pi.GetValue(o, null);
-                        string pname = pi.Name;
+                        string pname = pi.Name.ToLower();
                         string pval = propertyValue.ToString().Trim();
                         string frag = "";
                         if (pval.Contains(" "))
@@ -2763,7 +2764,7 @@ namespace LogicalParticleFilter1
                 writer.WriteLine("<ul>");
                 foreach (PEdge e in node.IncomingEdges )
                 {
-                    PrintToWriterInEdges(e.EndNode, indentation + 1, writer, serverRoot);
+                    PrintToWriterInEdges(e.StartNode , indentation + 1, writer, serverRoot);
                 }
                 writer.WriteLine("</ul>");
             }
