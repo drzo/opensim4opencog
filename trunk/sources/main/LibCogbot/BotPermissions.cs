@@ -505,6 +505,7 @@ namespace Cogbot
                             whisper.currentSession = IMSessionID;
                         }
                     }
+                    var cea = origin as ChatEventArgs;
                     if ((perms & BotPermissions.ExecuteCommands) != 0)
                     {
                         OutputDelegate WriteLine;
@@ -551,6 +552,7 @@ namespace Cogbot
                             WriteLine("iresult='" + res + "'");
                         }
                     }
+                    if (cea != null && cea.AudibleLevel == ChatAudibleLevel.Barely) return;
                     break;
                 default:
                     break;

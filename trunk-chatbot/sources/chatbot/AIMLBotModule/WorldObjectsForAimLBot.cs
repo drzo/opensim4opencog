@@ -671,6 +671,8 @@ namespace AIMLBotModule
             {
                 pCode = PCode.Prim;
             }
+            if (e.AudibleLevel == ChatAudibleLevel.Barely) return;
+
             AttendTo(fromname, id, pCode);
             if (string.IsNullOrEmpty(fromname))
             {
