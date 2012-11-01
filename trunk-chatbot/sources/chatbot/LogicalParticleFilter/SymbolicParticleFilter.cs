@@ -80,13 +80,20 @@ namespace LogicalParticleFilter1
             {
                 string[] clist = constraint.Split('|');
                 double psum = 0;
-                foreach (string key in clist)
+                for (int i = 0; i < clist.Length; i++)
                 {
+                    string key = clist[i];
+                    if (!variables.ContainsKey(key))
+                    {
+                        clist[i] = null;
+                        continue;
+                    }
                     psum += variables[key];
                 }
-                    if (psum <= 0) continue;
+                if (psum <= 0) continue;
                 foreach (string key in clist)
                 {
+                    if (key == null) continue;
                     variables[key] = variables[key] / psum;
                 }
                
@@ -208,7 +215,9 @@ namespace LogicalParticleFilter1
             {
                 foreach (string k in prototype.variables.Keys )
                 {
-                    meanParticle.variables [k]= meanParticle.variables [k] + particles[i].variables[k];
+                    var particlesvariables = particles[i].variables;
+                    if (!particlesvariables.ContainsKey(k)) continue;
+                    meanParticle.variables[k] = meanParticle.variables[k] + particlesvariables[k];
                 }
             }
             foreach (string k in prototype.variables.Keys )
