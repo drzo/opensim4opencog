@@ -325,13 +325,16 @@ namespace AltAIMLbot.Utils
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
         /// <param name="score"> computed score for the path so far</param>
-        public static Node addCategoryDB(string myWord, string path, string template, string filename, double score, double scale, string absPath, ExternDB pathDB)
+        public static void addCategoryDB(string myWord, string path, string template, string filename, double score, double scale, string absPath, ExternDB pathDB)
         {
             if (template.Length == 0)
             {
                 throw new XmlException("The category with a pattern: " + path + " found in file: " + filename + " has an empty template tag. ABORTING");
             }
-
+            lock (ExternDB.mylock) addCategoryDB0(myWord, path, template, filename, score, scale, absPath, pathDB);
+        }
+        public static Node addCategoryDB0(string myWord, string path, string template, string filename, double score, double scale, string absPath, ExternDB pathDB)
+        {
             Node myNode = pathDB.fetchNode(absPath,false);
             myNode.word = myWord;
 
@@ -384,7 +387,7 @@ namespace AltAIMLbot.Utils
             {
                 //Node childNode = myNode.this.ChildNode(firstWord);
 
-                var retNode = addCategoryDB(firstWord, newPath, template, filename, newScore, newScale, newdAbsPath, pathDB);
+                var retNode = addCategoryDB0(firstWord, newPath, template, filename, newScore, newScale, newdAbsPath, pathDB);
                 retNode.Parent = myNode;
                 return retNode;
             }
@@ -392,7 +395,7 @@ namespace AltAIMLbot.Utils
             {
                 //Node childNode = new Node();
                 //childNode.word = firstWord;
-                var retNode = addCategoryDB(firstWord, newPath, template, filename, newScore, newScale, newdAbsPath, pathDB);
+                var retNode = addCategoryDB0(firstWord, newPath, template, filename, newScore, newScale, newdAbsPath, pathDB);
                 //myNode.children.Add(childNode.word, childNode);
                 //myNode.children.Add(firstWord,null);
                 //myNode.childrenList.Add(firstWord);
@@ -942,6 +945,14 @@ namespace AltAIMLbot.Utils
         /// <returns>The template to process to generate the output</returns>
         public string evaluateDB(string path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard, string absPath, ExternDB pathDB)
         {
+            lock (ExternDB.mylock)
+            {
+                return evaluateDB0(path, query, request, matchstate, wildcard, absPath, pathDB);
+            }
+        }
+
+        public string evaluateDB0(string path, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcard, string absPath, ExternDB pathDB)
+        {
             // check for timeout
             if (request.StartedOn.AddMilliseconds(request.bot.TimeOut) < DateTime.Now)
             {
@@ -1190,10 +1201,13 @@ namespace AltAIMLbot.Utils
 
             }
             string childPath = (myPath + " " + childWord).Trim();
-            Node childNode = pathDB.fetchNode(childPath, true);
-            childNode.word = childWord;
-            childNode.Parent = this;
-            return childNode;
+            lock (ExternDB.mylock)
+            {
+                Node childNode = pathDB.fetchNode(childPath, true);
+                childNode.word = childWord;
+                childNode.Parent = this;
+                return childNode;
+            }
         }
  
         // does the dictionary contain any patterns like "*dog" or "*canine:syno:n"
@@ -1480,7 +1494,7 @@ namespace AltAIMLbot.Utils
 
         public string GetPath()
         {
-            if (absPath != null) return absPath;
+            //if (absPath != null) return absPath;
             var p = Parent;
             if (p == null)
             {
@@ -1496,7 +1510,7 @@ namespace AltAIMLbot.Utils
                 sb.Insert(0, p.word);
                 p = p.Parent;
             }
-            return absPath = sb.ToString();
+            return sb.ToString();
         }
 
 

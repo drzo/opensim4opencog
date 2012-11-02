@@ -372,7 +372,7 @@ namespace RTParser
             }
             string[] header = { "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "<aiml version=\"1.0\">", " <state name=\"*\">" };
             string[] footer = { " </state>", "</aiml>" };
-            servitor.curBot.Graphmaster.collectFullPaths("", allPaths);
+            //@todo fix servitor.curBot.Graphmaster.collectFullPaths("", allPaths);
             allCrons = servitor.curBot.myCron.cronXmlList();
             allBehaviors = servitor.curBot.myBehaviors.behaviorXmlList();
 
