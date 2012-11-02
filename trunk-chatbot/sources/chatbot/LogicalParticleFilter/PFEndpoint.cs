@@ -45,7 +45,7 @@ namespace LogicalParticleFilter1
             startUpPath = startUpPath ??
                           System.IO.Path.GetDirectoryName(
                               (Assembly.GetEntryAssembly() ?? typeof(PFEndpoint).Assembly).Location);
-
+            
             if (!HttpListener.IsSupported)
             {
                 Console.WriteLine("***** HttpListener is not supported on this platform. *****");

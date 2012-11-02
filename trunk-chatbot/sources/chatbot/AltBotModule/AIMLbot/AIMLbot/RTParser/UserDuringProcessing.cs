@@ -25,7 +25,7 @@ namespace RTParser
 #endif
         //int depth { get; set; }
 
-        Unifiable grabSettingNoDebug(string arg);
+        string grabSettingNoDebug(string arg);
         void Enter(ConversationScopeHolder srai);
         void Exit(ConversationScopeHolder srai);
 

@@ -387,7 +387,7 @@ namespace RTParser.GUI
                 var value = user.Predicates.grabSetting(name);
                 if (value != null)
                 {
-                    InvokeIfNeeded(box, () => box.Text = value.AsString());
+                    InvokeIfNeeded(box, () => box.Text =  robot.ToValueString(value));
                 }
             }
         }

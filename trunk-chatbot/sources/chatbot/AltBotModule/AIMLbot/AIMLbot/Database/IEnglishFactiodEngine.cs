@@ -24,6 +24,6 @@ namespace RTParser.Database
         int DeleteTopScoring(string myText, XmlNode templateNode, bool mustContainExact);
         long LoadDocuments(string file, XmlNode templateNode);
         bool IsDbPresent { get; }
-        string FixPronouns(string myText, Func<string, Unifiable> getOrNullIfMissing);
+        string FixPronouns(string myText, Func<string, string> getOrNullIfMissing);
     }
 }

@@ -184,6 +184,7 @@
     </Compile>
     <Compile Include="Servitor.cs">
     </Compile>
+    <Compile Include="ServitorEndpoint.cs" />
     <Compile Include="ServitorProgram.cs">
     </Compile>
     <Compile Include="TextRanker.cs">
@@ -578,40 +579,6 @@
     </Compile>
     <Compile Include="RTParser\CycNLTagHandlers\OptionalOne.cs">
     </Compile>
-    <Compile Include="RTParser\Prolog\Builtins.cs">
-    </Compile>
-    <Compile Include="RTParser\Prolog\CSProlog.cs">
-    </Compile>
-    <Compile Include="RTParser\Prolog\Engine.cs">
-    </Compile>
-    <Compile Include="RTParser\Prolog\Ext.cs">
-    </Compile>
-    <Compile Include="RTParser\Prolog\IO.cs">
-    </Compile>
-    <Compile Include="RTParser\Prolog\Main.cs">
-    </Compile>
-    <Compile Include="RTParser\Prolog\Operator.cs">
-    </Compile>
-    <Compile Include="RTParser\Prolog\Persistent.cs">
-    </Compile>
-    <Compile Include="RTParser\Prolog\PL.cs">
-    </Compile>
-    <Compile Include="RTParser\Prolog\PredDescr.cs">
-    </Compile>
-    <Compile Include="RTParser\Prolog\PredStorage.cs">
-    </Compile>
-    <Compile Include="RTParser\Prolog\PrologConsole.cs">
-    </Compile>
-    <Compile Include="RTParser\Prolog\SimpleDOMParser.cs">
-    </Compile>
-    <Compile Include="RTParser\Prolog\Term.cs">
-    </Compile>
-    <Compile Include="RTParser\Prolog\TermNodeList.cs">
-    </Compile>
-    <Compile Include="RTParser\Prolog\TermSet.cs">
-    </Compile>
-    <Compile Include="RTParser\Prolog\Utils.cs">
-    </Compile>
     <Compile Include="RTParser\Utils\CustomTag.cs">
     </Compile>
     <Compile Include="RTParser\Utils\Gender.cs">
@@ -707,10 +674,6 @@
     <Compile Include="Variables\GetSetProperty.cs">
     </Compile>
     <Compile Include="Variables\ObjectPropertyDictionary.cs">
-    </Compile>
-    <Compile Include="Variables\PrefixProvider.cs">
-    </Compile>
-    <Compile Include="Variables\ProvidedSettingsDictionary.cs">
     </Compile>
     <Compile Include="Variables\SettingsDictionary.cs">
     </Compile>

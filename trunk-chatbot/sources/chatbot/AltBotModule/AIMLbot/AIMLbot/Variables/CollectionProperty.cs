@@ -4,23 +4,23 @@ using RTParser.Utils;
 
 namespace RTParser.Variables
 {
-    public class CollectionProperty
+    public class CollectionProperty<T>
     {
-        Unifiable _lastSetTopic;
-        private readonly List<Unifiable> list;
-        private readonly GetSetProperty provider;
-        private readonly GetUnifiable EmptyResult;
+        T _lastSetTopic;
+        private readonly List<T> list;
+        private readonly GetSetProperty<T> provider;
+        private readonly GetUnifiable<T> EmptyResult;
 
-        public CollectionProperty(List<Unifiable> unifiables, GetUnifiable noResult)
+        public CollectionProperty(List<T> unifiables, GetUnifiable<T> noResult)
         {
             list = unifiables;
             EmptyResult = noResult;
-            provider = new GetSetProperty(GetTopicInt, SetTopicInt);
+            provider = new GetSetProperty<T>(GetTopicInt, SetTopicInt);
         }
 
-        private void SetTopicInt(Unifiable obj)
+        private void SetTopicInt(T obj)
         {
-            if (obj == EmptyResult())
+            if (Object.Equals(obj, EmptyResult()))
             {
                 list.Clear();
                 return;
@@ -43,7 +43,7 @@ namespace RTParser.Variables
             list.Insert(0, obj);
         }
 
-        private int RemoveTopicInt(Unifiable obj)
+        private int RemoveTopicInt(T obj)
         {
             if (Unifiable.IsNullOrEmpty(obj))
             {
@@ -55,7 +55,7 @@ namespace RTParser.Variables
             return indexOf;
         }
 
-        private Unifiable GetTopicInt()
+        private T GetTopicInt()
         {
             if (list.Count == 0)
             {
@@ -64,9 +64,9 @@ namespace RTParser.Variables
             return list[0];
         }
 
-        public GetSetProperty GetProvider()
+        public GetSetProperty<T> GetProvider()
         {
-            return provider;
+            return (GetSetProperty<T>)provider;
         }
     }
 }

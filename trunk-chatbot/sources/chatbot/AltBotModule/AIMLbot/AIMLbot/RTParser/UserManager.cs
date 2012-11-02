@@ -198,7 +198,7 @@ namespace RTParser
                 console(name + " NOUSER");
                 return;
             }
-            string uname = user.Predicates.grabSettingNoDebug("name");
+            string uname = user.Predicates.grabSetting("name");
 
             console(name
                     + " UserID='" + user.UserID
@@ -404,9 +404,9 @@ namespace RTParser
         {
             {
                 SetupUserWithGraph(fullname, key, myUser);
-                GlobalSettings.AddChild("user." + key + ".", () => myUser.Predicates);
+                //GlobalSettings.AddChild("user." + key + ".", () => myUser.Predicates);
 
-                OnBotCreated(() => { myUser.Predicates.AddChild("bot.", () => BotAsUser.Predicates); });
+                //OnBotCreated(() => { myUser.Predicates.AddChild("bot.", () => BotAsUser.Predicates); });
 
 
                 string userdir = GetUserDir(key);
@@ -707,7 +707,7 @@ namespace RTParser
                     // remove old acct from dict
                     lock (microBotUsersLock) BotUsers.Remove(oldkey);
                     // grab it into new user
-                    olduser.Predicates.AddMissingKeys(newuser.Predicates);
+                    SettingsDictionaryReal.AddMissingKeys(olduser.Predicates, newuser.Predicates, ObjectRequester);
                     newuser = olduser;
                     lock (microBotUsersLock) BotUsers[newkey] = newuser;
                     newuser.IsRoleAcct = false;
@@ -949,11 +949,11 @@ namespace RTParser
         private string SettingPath0(string namePath, string defaultVal)
         {
             string prefix;
-            string res = ToPath(GlobalSettings.grabSettingOrDefault(namePath, null), out prefix);
+            string res = ToPath(GlobalSettings.grabSetting(namePath), out prefix);
             if (res != null) return res;
             if (defaultVal != null)
             {
-                res = ToPath(GlobalSettings.grabSettingOrDefault(defaultVal, null), out prefix);
+                res = ToPath(GlobalSettings.grabSetting(defaultVal), out prefix);
                 if (res != null) return res;
             }
             return defaultVal;

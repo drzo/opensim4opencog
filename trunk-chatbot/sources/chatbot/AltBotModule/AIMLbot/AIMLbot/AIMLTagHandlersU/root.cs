@@ -51,7 +51,7 @@ namespace RTParser.AIMLTagHandlers
                 var prevDict = request.TargetSettings;
                 try
                 {
-                    SettingsDictionary.loadSettingNode(GetTargetSettings(), templateNode, SettingsPolicy.Default, request);
+                    SettingsDictionaryReal.loadSettingNode((ISettingsDictionary)GetTargetSettings(), templateNode, SettingsPolicy.Default, request);
                 }
                 finally
                 {

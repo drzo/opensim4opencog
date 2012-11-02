@@ -59,7 +59,7 @@ namespace RTParser.AIMLTagHandlers
                 try
                 {
                     request.TargetSettings = request.TargetBot.InputSubstitutions;
-                    SettingsDictionary.loadSettingNode(request.TargetSettings, templateNode, SettingsPolicy.Default, request);
+                    SettingsDictionaryReal.loadSettingNode(request.TargetSettings, templateNode, SettingsPolicy.Default, request);
                 }
                 finally
                 {
@@ -125,13 +125,13 @@ namespace RTParser.AIMLTagHandlers
             }
             if (currentNodeName == "item")
             {
-                SettingsDictionary.loadSettingNode(request.TargetSettings, templateNode, SettingsPolicy.Default, request);
+                SettingsDictionaryReal.loadSettingNode(request.TargetSettings, templateNode, SettingsPolicy.Default, request);
                 return ProcessSucceed();
 
             }
             if (currentNodeName == "bot")
             {
-                SettingsDictionary.loadSettingNode(request.TargetBot.Settings, templateNode, SettingsPolicy.Default, request);
+                SettingsDictionaryReal.loadSettingNode(request.TargetBot.Settings, templateNode, SettingsPolicy.Default, request);
                 return ProcessSucceed();
             }
             string currentNodeOuterXml = templateNode.OuterXml;

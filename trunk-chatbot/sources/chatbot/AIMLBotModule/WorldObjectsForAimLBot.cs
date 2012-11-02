@@ -1423,7 +1423,7 @@ namespace AIMLBotModule
                 return ScriptManager.GetGroup(requester, NameSpace, name);
             }
 
-            public bool addSetting(string name, Unifiable value)
+            public bool addSetting(string name, object value)
             {
                 if (!WorldVar(name)) return false;
                 name = name.Substring(wrldVar.Length);
@@ -1437,18 +1437,19 @@ namespace AIMLBotModule
                 return ScriptManager.AddSetting(client, NameSpace, name, null);
             }
 
-            public bool updateSetting(string name, Unifiable value)
+            public bool updateSetting(string name, object value)
             {
                 if (!WorldVar(name)) return false;
                 name = name.Substring(wrldVar.Length);
                 return ScriptManager.AddSetting(client, NameSpace, name, FromUnifiable(name, value));
             }
 
-            private object FromUnifiable(string named, Unifiable unifiable)
+            private object FromUnifiable(string named, object unifiable)
             {
-                string ret = unifiable.AsString();
+                return MyBot.ToValue(unifiable);
+                /*string ret = unifiable.AsString();
                 CheckName(named);
-                return ret;
+                return ret;*/
             }
 
             private void CheckName(string named)
@@ -1457,7 +1458,7 @@ namespace AIMLBotModule
                 named.ToLower();
             }
 
-            public Unifiable grabSetting(string name)
+            public string grabSetting(string name)
             {
                 CheckName(name); 
                 if (FakeClientVars) if (name == "cogvar") return "botmody";

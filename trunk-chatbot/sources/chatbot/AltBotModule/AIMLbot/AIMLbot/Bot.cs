@@ -115,7 +115,7 @@ namespace RTParser
         /// <summary>
         /// A dictionary object that looks after all the settings associated with this bot
         /// </summary>
-        public SettingsDictionary GlobalSettings;
+        public SettingsDictionaryReal GlobalSettings;
 
         public SettingsDictionary AllUserPreds
         {
@@ -143,12 +143,12 @@ namespace RTParser
         /// <summary>
         /// Generic substitutions that take place during the normalization process
         /// </summary>
-        public SettingsDictionary InputSubstitutions;
+        public SettingsDictionaryReal InputSubstitutions;
 
         /// <summary>
         /// The default predicates to set up for a user
         /// </summary>
-        public SettingsDictionary DefaultPredicates;
+        public SettingsDictionaryReal DefaultPredicates;
 
         /// <summary>
         /// Holds information about the available custom tag handling classes (if loaded)
@@ -171,7 +171,7 @@ namespace RTParser
 
         public void RegisterDictionary(string key, ISettingsDictionary dict, bool always)
         {
-            SettingsDictionary.AddPseudonym(dict, key);
+            SettingsDictionaryReal.AddPseudonym(dict, key);
             Action needsExit = LockInfo.MonitorTryEnter("RegisterDictionary " + key, AllDictionaries, MaxWaitTryEnter);
             try
             {
@@ -296,7 +296,7 @@ namespace RTParser
                 {
                     return 2000000;
                 }
-                String s = GlobalSettings.grabSettingNoDebug("timeout").ToValue(null);
+                String s = ToValueString(GlobalSettings.grabSetting("timeout"));
                 return Convert.ToDouble(s);
             }
         }
@@ -488,7 +488,7 @@ namespace RTParser
                 if (_PathToUserFiles != null) return _PathToUserFiles;
                 if (GlobalSettings.containsSettingCalled("userdirectory"))
                 {
-                    Unifiable dir = GlobalSettings.grabSettingNoDebug("userdirectory");
+                    Unifiable dir = GlobalSettings.grabSetting("userdirectory");
                     HostSystem.CreateDirectory(dir);
                     _PathToUserFiles = dir;
                     return HostSystem.ToRelativePath(dir, RuntimeDirectory);
@@ -675,16 +675,16 @@ namespace RTParser
                 TheCycS = new CycDatabase(this);
             }
             CycAccess v = TheCyc.GetCycAccess;
-            SettingsDictionary.WarnOnNull = false;
-            this.RelationMetaProps = new SettingsDictionary("chat.relationprops", this);
-            SettingsDictionary.WarnOnNull = true;
-            this.GlobalSettings = new SettingsDictionary("bot", this);
-            this.GenderSubstitutions = new SettingsDictionary("substituions.gender", this);
-            this.Person2Substitutions = new SettingsDictionary("substituions.person2", this);
-            this.PersonSubstitutions = new SettingsDictionary("substituions.person", this);
-            this.InputSubstitutions = new SettingsDictionary("substituions.input", this);
-            this.DefaultPredicates = new SettingsDictionary("allusers",this);
-            this.HeardPredicates = new SettingsDictionary("chat.heardpredicates", this);
+            SettingsDictionaryReal.WarnOnNull = false;
+            this.RelationMetaProps = MakeSettingsDictionary("chat.relationprops");
+            SettingsDictionaryReal.WarnOnNull = true;
+            this.GlobalSettings = MakeSettingsDictionary("bot");
+            this.GenderSubstitutions = MakeSettingsDictionary("substituions.gender");
+            this.Person2Substitutions = MakeSettingsDictionary("substituions.person2");
+            this.PersonSubstitutions = MakeSettingsDictionary("substituions.person");
+            this.InputSubstitutions = MakeSettingsDictionary("substituions.input");
+            this.DefaultPredicates = MakeSettingsDictionary("allusers");
+            this.HeardPredicates = MakeSettingsDictionary("chat.heardpredicates");
             RegisterDictionary("bot.alluserpred", this.AllUserPreds);
             this.CustomTags = new Dictionary<string, TagHandler>();
             this.Graphs = new Dictionary<string, GraphMaster>();
@@ -693,6 +693,11 @@ namespace RTParser
             this.DefaultHeardSelfSayGraph = new GraphMaster("heardselfsay");
             this.setupDictionaries();
             GlobalSettings.IsTraced = true;
+        }
+
+        public SettingsDictionaryReal MakeSettingsDictionary(string named)
+        {
+            return new SettingsDictionaryReal(named, this);
         }
 
         /// <summary>
@@ -2244,7 +2249,7 @@ The AltAIMLbot program.
                 User pu = o as User;
                 if (pp != null)
                 {
-                    pi = pp();
+                    pi = (ISettingsDictionary) pp();
                 }
                 if (pi != null)
                 {
@@ -2260,7 +2265,7 @@ The AltAIMLbot program.
 
         public ISettingsDictionary GetDictionary0(string named)
         {
-            Func<ISettingsDictionary, SettingsDictionary> SDCAST = SettingsDictionary.ToSettingsDictionary;
+            Func<ISettingsDictionary, SettingsDictionaryReal> SDCAST = SettingsDictionaryReal.ToSettingsDictionary;
             //dict = FindDict(type, query, dict);
             if (named == null) return null;
             string key = named.ToLower().Trim();
@@ -2305,11 +2310,11 @@ The AltAIMLbot program.
                     ISettingsDictionary f = GetDictionary(path[0]);
                     if (f != null)
                     {
-                        SettingsDictionary sd = SDCAST(f);
+                        SettingsDictionaryReal sd = SDCAST(f);
                         ParentProvider pp = sd.FindDictionary(string.Join(".", path, 1, path.Length - 1), null);
                         if (pp != null)
                         {
-                            ISettingsDictionary pi = pp();
+                            ISettingsDictionary pi = (ISettingsDictionary) pp();
                             if (pi != null) return SDCAST(pi);
                         }
                     }
@@ -2330,7 +2335,7 @@ The AltAIMLbot program.
                     if (sdict != null) return sdict;
                     if (createIfMissing)
                     {
-                        dict = AllDictionaries[key] = AllDictionaries[named] = new SettingsDictionary(named, this, null);
+                        dict = AllDictionaries[key] = AllDictionaries[named] = MakeSettingsDictionary(named);
                         User user = ExemplarUser ?? BotAsUser;
                         Request r = //user.CurrentRequest ??
                                     user.CreateRequest(
@@ -2344,6 +2349,17 @@ The AltAIMLbot program.
 
         public Dictionary<string, ISettingsDictionary> AllDictionaries = new Dictionary<string, ISettingsDictionary>();
         public bool noSerialzation = true;
+        public string ToValueString(object vv)
+        {
+            var v = ToValue(vv);
+            if (vv == null) return null;
+            return "" + v;
+        }
+
+        public object ToValue(object v)
+        {
+            return v;
+        }
     }
 }
 

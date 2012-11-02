@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text;
 using MushDLR223.ScriptEngines;
 using RTParser.Variables;
+using DataUnifiable = RTParser.Unifiable;
+
 
 namespace RTParser.Variables
 {
-    public class ProvidedSettingsDictionary : ISettingsDictionary
+    public class ProvidedSettingsDictionary : ISettingsDictionaryT<DataUnifiable>, ISettingsDictionary
     {
         internal Func<ParentProvider> provider;
 

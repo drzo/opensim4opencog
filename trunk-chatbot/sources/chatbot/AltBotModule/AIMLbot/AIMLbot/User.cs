@@ -288,7 +288,7 @@ namespace RTParser
         private GraphMaster FindGraphLocally(string varname)
         {
             //Predicates.IsTraced = false;
-            var v = Predicates.grabSettingNoDebug(varname);
+            var v = Predicates.grabSetting(varname);
             if (Unifiable.IsMissing(v)) return null;
             if (Unifiable.IsNullOrEmpty(v)) return null;
             GraphMaster _Graph = rbot.GetGraph(v, null);
@@ -366,7 +366,7 @@ namespace RTParser
                 {
                     var mi = Predicates.grabSetting("maxinputs");
                     int miv;
-                    if (int.TryParse(mi.AsString(), out miv))
+                    if (int.TryParse(mi.ToString(), out miv))
                     {
                         return miv;
                     }
@@ -387,7 +387,7 @@ namespace RTParser
                 string uid = this.id;
                 if (string.IsNullOrEmpty(uid))
                 {
-                    uid = Predicates.grabSettingNoDebug("id");
+                    uid = Predicates.grabSetting("id");
                 }
                 return uid;
             }
@@ -402,16 +402,7 @@ namespace RTParser
                 if (!LegalNameCheck(value)) return;
                 this.id = value;
                 if (Predicates == null) return;
-                var prev = Predicates.IsIdentityReadOnly;
-                try
-                {
-                    Predicates.IsIdentityReadOnly = false;
-                    Predicates.addSetting("id", value);
-                }
-                finally
-                {
-                    Predicates.IsIdentityReadOnly = prev;
-                }
+                Predicates.addSetting("id", value);
             }
         }
 
@@ -454,11 +445,11 @@ namespace RTParser
             string saved = value.Replace("_", " ").Trim(" ,".ToCharArray());
             if (saved.Length == 0) return;
             if (Predicates == null) return;
-            var prev = Predicates.IsIdentityReadOnly;
+            //var prev = Predicates.IsIdentityReadOnly;
             try
             {
                 string[] split = value.Split(new[] { " ", "-", "_" }, StringSplitOptions.RemoveEmptyEntries);
-                Predicates.IsIdentityReadOnly = false;
+                //Predicates.IsIdentityReadOnly = false;
                 Predicates["id"] = UserID;
                 if (IsIncomplete(value))
                 {
@@ -489,7 +480,7 @@ namespace RTParser
             }
             finally
             {
-                Predicates.IsIdentityReadOnly = prev;
+              //  Predicates.IsIdentityReadOnly = prev;
             }
         }
 
@@ -631,17 +622,6 @@ namespace RTParser
         /// <param name="UserID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
         internal UserImpl(string userID, AltBot bot)
-            : this(userID, bot, null)
-        {
-        }
-
-        /// <summary>
-        /// Ctor
-        /// </summary>
-        /// <param name="userID">The GUID of the user</param>
-        /// <param name="bot">the bot the user is connected to</param>
-        protected internal UserImpl(string userID, AltBot bot, ParentProvider provider)
-        // : base(bot)
         {
             this.bot = bot;
             IsValid = true;
@@ -664,9 +644,9 @@ namespace RTParser
                 qsbase.IsTraced = IsTraced = rbot.IsTraced;
                 // we dont inherit the BotAsUser we inherit the bot's setings
                 // ApplySettings(bot.BotAsUser, this);
-                this.Predicates = new SettingsDictionary(userID + ".predicates", this.bot, provider);
+                this.Predicates = bot.MakeSettingsDictionary(userID + ".predicates");
                 this.Predicates.IsTraced = qsbase.IsTraced;
-                this.Predicates.AddPrefix("user.", () => this);
+                //this.Predicates.AddPrefix("user.", () => this);
                 bool isUser = (this.bot.DefaultPredicates != null);
                 if (isUser) this.bot.DefaultPredicates.Clone(this.Predicates);
                 //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
@@ -990,7 +970,7 @@ namespace RTParser
                 }
                 if (Predicates != null)
                 {
-                    var tt = Predicates.grabSettingNoDebug("that");
+                    var tt = Predicates.grabSetting("that");
                     if (IsSomething(tt, out something)) return something;
                 }
                 Result r = GetResult(0, true) ?? GetResult(0, false, lastResponder);
@@ -1138,7 +1118,7 @@ namespace RTParser
                     if (Unifiable.IsMulti(vv))
                     {
                         AltBot.writeDebugLine("WARNING ONLY USING ONE Result: " + Unifiable.DescribeUnifiable(vv));
-                        vv = vv.Possibles[0];
+                        vv = ((Unifiable)vv).Possibles[0];
                     }
                     Unifiable output;
                     if (IsSomething(vv, out output))
@@ -1188,7 +1168,7 @@ namespace RTParser
                                  () =>
                                  {
                                      string realName;
-                                     return SettingsDictionary.grabSettingDefaultDict(Predicates, name1,
+                                     return SettingsDictionaryReal.grabSettingDefaultDict(Predicates, name1,
                                                                                       out realName);
                                  });
                 if (!string.IsNullOrEmpty(lname))
@@ -1300,7 +1280,7 @@ namespace RTParser
                 AltBot.WriteUserInfo(console, "", this);
                 return true;
             }
-            return Predicates.DoSettingsCommand(input, console);
+            return ((SettingsDictionaryReal)Predicates).DoSettingsCommand(input, console);
         }
 
         public OutputDelegate userTrace { get; set; }
@@ -1523,7 +1503,7 @@ namespace RTParser
             // or WriteLine but this is spammy 
             OutputDelegate logger = DEVNULL;
             logger("DEBUG9 Saving User Directory {0}", userdir);
-            Predicates.SaveTo(userdir, "user.predicates", "UserPredicates.xml");
+            ((SettingsDictionaryReal)Predicates).SaveTo(userdir, "user.predicates", "UserPredicates.xml");
             GraphMaster gm = rbot.GetGraph(UserID, StartGraph);
             gm.WriteToFile(UserID, HostSystem.Combine(userdir, UserID) + ".saved", PrintOptions.SAVE_TO_FILE, logger);
         }
@@ -1582,7 +1562,7 @@ namespace RTParser
                 }
                 if (userdir.EndsWith("Predicates.xml"))
                 {
-                    SettingsDictionary.loadSettingsNow(Predicates, null, userdir, new SettingsPolicy(true, true), null);
+                    SettingsDictionaryReal.loadSettingsNow(Predicates, null, userdir, new SettingsPolicy(true, true), null);
                 }
                 return;
             }
@@ -1615,7 +1595,7 @@ namespace RTParser
             {
                 if (rbot.BotAsUser == this)
                 {
-                    bot.GlobalSettings = Predicates;
+                    bot.GlobalSettings = SettingsDictionaryReal.ToSettingsDictionary(Predicates);
                 }
                 request.Loader.loadAIMLURI(userdir, options.Value);
             }
@@ -1681,7 +1661,7 @@ namespace RTParser
         /// </summary>
         /// <param name="name">The name of the new setting</param>
         /// <param name="value">The value associated with this setting</param>
-        public bool addSetting(string name, Unifiable value)
+        public bool addSetting(string name, object value)
         {
             return Predicates.addSetting(name, value);
         }
@@ -1701,7 +1681,7 @@ namespace RTParser
         /// </summary>
         /// <param name="name">the name of the setting</param>
         /// <param name="value">the new value</param>
-        public bool updateSetting(string name, Unifiable value)
+        public bool updateSetting(string name, object value)
         {
             return Predicates.updateSetting(name, value);
         }
@@ -1711,7 +1691,7 @@ namespace RTParser
         /// </summary>
         /// <param name="name">the name of the setting whose value we're interested in</param>
         /// <returns>the value of the setting</returns>
-        public Unifiable grabSetting(string name)
+        public string grabSetting(string name)
         {
             return Predicates.grabSetting(name);
         }
@@ -1837,9 +1817,9 @@ namespace RTParser
                 var roles = this.Predicates.grabSetting("roles");
                 if (!IsMissing(roles) && !IsNullOrEmpty(roles))
                 {
-                    foreach (var role in roles.ToArray())
+                    foreach (var role in SingleNameValue.AsCollection(roles))
                     {
-                        request.AddGraph(rbot.GetUserGraph(role));
+                        request.AddGraph(rbot.GetUserGraph( bot.ToValueString(role)));
                     }
                 }
             }
@@ -1886,9 +1866,9 @@ namespace RTParser
             }
         }
 
-        public Unifiable grabSettingNoDebug(string settingName)
+        public string grabSettingNoDebug(string settingName)
         {
-            return Predicates.grabSettingNoDebug(settingName);
+            return Predicates.grabSetting(settingName);
         }
 
         public User Value
@@ -2012,7 +1992,7 @@ namespace RTParser
         SituationInConversation ContextScope { get; }
     }
 }
-
+/*
 namespace AltAIMLbotFOO
 {
     /// <summary>
@@ -2320,3 +2300,4 @@ namespace AltAIMLbotFOO
         }
     }
 }
+*/

@@ -867,7 +867,7 @@ namespace RTParser.Utils
                 ISettingsDictionary dict = IsSettingsTag(currentNodeName, request);
                 if (dict != null)
                 {
-                    SettingsDictionary.loadSettingNode(dict, currentNode, SettingsPolicy.Default,
+                    SettingsDictionaryReal.loadSettingNode(dict, currentNode, SettingsPolicy.Default,
                                                        request);
                 }
                 else

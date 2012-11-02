@@ -11,6 +11,8 @@ using RTParser.Variables;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 //using List<Unifiable> = System.Collections.Generic.List<string>;
+using DataUnifiable = System.String;
+using DataUnifiableYY = RTParser.Unifiable;
 
 namespace AltAIMLbot.Utils
 {
@@ -326,7 +328,7 @@ namespace AltAIMLbot.Utils
         /// <param name="name">The name of the setting to remove</param>
         public bool removeSetting(string name)
         {
-            return SettingsDictionary.removeSettingWithUndoCommit(this, TargetSettings, name);
+            return SettingsDictionaryReal.removeSettingWithUndoCommit(this, TargetSettings, name);
         }
 
         /// <summary>
@@ -335,9 +337,9 @@ namespace AltAIMLbot.Utils
         /// </summary>
         /// <param name="name">the name of the setting</param>
         /// <param name="value">the new value</param>
-        public bool updateSetting(string name, Unifiable value)
+        public bool updateSetting(string name, object value)
         {
-            return SettingsDictionary.addSettingWithUndoCommit(this, TargetSettings, TargetSettings.updateSetting, name, value);
+            return SettingsDictionaryReal.addSettingWithUndoCommit(this, TargetSettings, TargetSettings.updateSetting, name, value);
         }
 
         /// <summary>
@@ -392,14 +394,14 @@ namespace AltAIMLbot.Utils
 
         public SituationInConversation ContextScope { get; set; }
 
-        public Unifiable grabSetting(string name)
+        public DataUnifiable grabSetting(string name)
         {
             string realName;
             ISettingsDictionary dict = Request.TargetSettings;
             bool succeed;
             Unifiable v;
             if (!UseLuceneForGet)
-                v = SettingsDictionary.grabSettingDefaultDict(dict, name, out realName);
+                v = SettingsDictionaryReal.grabSettingDefaultDict(dict, name, out realName);
             else
             {
                 v = NamedValuesFromSettings.GetSettingForType(dict.NameSpace, this, dict, name, out realName, name, null,
@@ -415,12 +417,12 @@ namespace AltAIMLbot.Utils
         /// </summary>
         /// <param name="name">The name of the new setting</param>
         /// <param name="value">The value associated with this setting</param>
-        public bool addSetting(string name, Unifiable value)
+        public bool addSetting(string name, object value)
         {
             ISettingsDictionary dict = Request.TargetSettings;
             if (!UseLuceneForSet)
             {
-                return SettingsDictionary.addSettingWithUndoCommit(this, dict, dict.addSetting, name, value);
+                return SettingsDictionaryReal.addSettingWithUndoCommit(this, dict, dict.addSetting, name, value);
             }
             else
             {

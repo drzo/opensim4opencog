@@ -93,7 +93,7 @@ namespace RTParser.Database
             return EnglishFactiodStore.DeleteTopScoring(factoidSR, templateNode, true);
         }
 
-        public int updateTriple(string subject, string relation, string value)
+        public int updateTriple(string subject, string relation, object value)
         {
             var templateNode = templateNodeInit;
             string factoidSRV = GenFormatFactoid(subject, relation, value, templateNode);
@@ -138,22 +138,22 @@ namespace RTParser.Database
             return String.Empty;
         }
 
-        public int assertDictionary(string subject, SettingsDictionary dictionary)
+        public int assertDictionary(string subject, ISettingsDictionary dictionary)
         {
             int asserts = 0;
-            foreach (var relation in dictionary.SettingNames(dictionary.ObjectRequester, 1))
+            foreach (var relation in dictionary.SettingNames(TheBot.ObjectRequester, 1))
             {
-                Unifiable value = dictionary.grabSettingNoDebug(relation);
+                Unifiable value = dictionary.grabSetting(relation);
                 asserts += updateTriple(subject, relation, value);
             }
             return asserts;
         }
-        public string GenFormatFactoid(string subject, string relation, string value, XmlNode templateNode)
+        public string GenFormatFactoid(string subject, string relation, object value, XmlNode templateNode)
         {
             string subj = Entify(subject);
             var dictionary = TheBot.GetDictionary(subj) as SettingsDictionary;
 
-            bool noValue = string.IsNullOrEmpty(value);
+            bool noValue = Unifiable.IsNullOrEmpty(value);
             Unifiable formatter;
             {
                 if (noValue)
@@ -182,7 +182,7 @@ namespace RTParser.Database
             return ExpandFormat(subj, relation, value, noValue, dictionary, formatter, templateNode);
         }
 
-        public string ExpandFormat(string subj, string relation, string value, bool isQuery, SettingsDictionary dictionary, Unifiable formatter, XmlNode templateNode)
+        public string ExpandFormat(string subj, string relation, object value, bool isQuery, SettingsDictionary dictionary, Unifiable formatter, XmlNode templateNode)
         {
             string pred = Entify(relation);
 
@@ -209,8 +209,8 @@ namespace RTParser.Database
                 formatter = ReplaceWord(formatter, "$predicate", pred);
 
                 formatter = ReplaceWord(formatter, "$set-return",
-                                        TheBot.RelationMetaProps.grabSettingNoDebug(relation + "." + "set-return"));
-                formatter = ReplaceWord(formatter, "$default", TheBot.DefaultPredicates.grabSettingNoDebug(relation));
+                                        TheBot.RelationMetaProps.grabSetting(relation + "." + "set-return"));
+                formatter = ReplaceWord(formatter, "$default", TheBot.DefaultPredicates.grabSetting(relation));
 
                 formatter = ReplaceWord(formatter, "$botname", botName);
                 formatter = ReplaceWord(formatter, "$bot", botName);
@@ -267,8 +267,9 @@ namespace RTParser.Database
         }
 
 
-        public string Entify(string subject)
+        public string Entify(object subject0)
         {
+            var subject = TheBot.ToValueString(subject0);
             if (string.IsNullOrEmpty(subject)) return "";
             string subj = subject.Replace("_", " ");
             subj = subject.Replace(".", " ");
@@ -399,7 +400,7 @@ namespace RTParser.Database
             DLRConsole.DebugWriteLine("TRIPLESTORE: " + s);
         }
 
-        internal string FixPronouns(string englishIn, Func<string, Unifiable> whoAmI)
+        internal string FixPronouns(string englishIn, Func<string, string> whoAmI)
         {
             var pns = new[]
                           {

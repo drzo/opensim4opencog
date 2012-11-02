@@ -52,7 +52,7 @@ namespace RTParser.Database
                     }
                 }
             }
-            Unifiable resultGet = SettingsDictionary.grabSettingDefaultDict(udict, name, out realName0);
+            Unifiable resultGet = SettingsDictionaryReal.grabSettingDefaultDict(udict, name, out realName0);
 
             if (ReferenceEquals(resultGet, null))
             {
@@ -63,7 +63,7 @@ namespace RTParser.Database
 
             String realNameG;
             // try to use a global blackboard predicate
-            Unifiable gResult = SettingsDictionary.grabSettingDefaultDict(gUser.Predicates, gName, out realNameG);
+            Unifiable gResult = SettingsDictionaryReal.grabSettingDefaultDict(gUser.Predicates, gName, out realNameG);
 
             if ((Unifiable.IsUnknown(resultGet)) && (!Unifiable.IsUnknown(gResult)))
             {
@@ -151,7 +151,7 @@ namespace RTParser.Database
             //return defaultVal;
         }
 
-        static public Unifiable SetSettingForType(string subject, SubQuery query, ISettingsDictionary dict, string name, string gName, Unifiable value, string setReturn, XmlNode templateNode)
+        static public Unifiable SetSettingForType(string subject, SubQuery query, ISettingsDictionary dict, string name, string gName, object value, string setReturn, XmlNode templateNode)
         {
             string _sreturn = setReturn;
             setReturn = StaticXMLUtils.GetAttribValue<string>(templateNode, "set-return", () => _sreturn, query.ReduceStarAttribute<string>);
@@ -162,8 +162,7 @@ namespace RTParser.Database
             User gUser = TargetBot.ExemplarUser;
 
             string realName;
-            Unifiable resultGet = SettingsDictionary.grabSettingDefaultDict(dict, name, out realName);
-
+            Unifiable resultGet = SettingsDictionaryReal.grabSettingDefaultDict(dict, name, out realName);
             bool shouldSet = ShouldSet(templateNode, dict, realName, value, resultGet, query);
 
             User user = query.CurrentUser;
@@ -178,18 +177,18 @@ namespace RTParser.Database
             if (IsIncomplete(value))
             {
                 if (UseLuceneForSet && userbotLuceneIndexer != null) userbotLuceneIndexer.retractAllTriple(userName, name);
-                SettingsDictionary.removeSettingWithUndoCommit(query, dict, name);
-                if (!IsNullOrEmpty(gName)) SettingsDictionary.removeSettingWithUndoCommit(query, gUser, gName);
+                SettingsDictionaryReal.removeSettingWithUndoCommit(query, dict, name);
+                if (!IsNullOrEmpty(gName)) SettingsDictionaryReal.removeSettingWithUndoCommit(query, gUser, gName);
             }
             else
             {
                 if (UseLuceneForSet && userbotLuceneIndexer != null) userbotLuceneIndexer.updateTriple(userName, name, value);
                 if (!String.IsNullOrEmpty(gName))
                 {
-                    SettingsDictionary.addSettingWithUndoCommit(query, gUser.Predicates, gUser.addSetting, gName, value);
+                    SettingsDictionaryReal.addSettingWithUndoCommit(query, gUser.Predicates, gUser.addSetting, gName, value);
                 }
                 query.SetDictValue++;
-                SettingsDictionary.addSettingWithUndoCommit(query, dict, dict.addSetting, name, value);
+                SettingsDictionaryReal.addSettingWithUndoCommit(query, dict, dict.addSetting, name, value);
             }
             var retVal = ReturnSetSetting(dict, name, setReturn);
             if (!IsIncomplete(retVal) || !IsNullOrEmpty(retVal))
@@ -215,7 +214,7 @@ namespace RTParser.Database
             }
         }
 
-        private static bool ShouldSet(XmlNode templateNode, ISettingsDictionary dictionary, string name, Unifiable newValue, Unifiable oldValue, SubQuery query)
+        private static bool ShouldSet(XmlNode templateNode, ISettingsDictionary dictionary, string name, object newValue, Unifiable oldValue, SubQuery query)
         {
             if (templateNode == null) return true;
             bool canSet = query.UseDictionaryForSet(dictionary);
@@ -244,11 +243,12 @@ namespace RTParser.Database
                     shouldSet = false;
                 }
             }
+            var newValueU = Unifiable.Create(newValue);
             string newMatch = StaticXMLUtils.GetAttribValue(templateNode, "matches", null);
 
             if (newMatch != null)
             {
-                if (!IsPredMatch(newMatch, newValue, null))
+                if (!IsPredMatch(newMatch, newValueU, null))
                 {
                     shouldSet = false;
                 }
@@ -257,7 +257,7 @@ namespace RTParser.Database
 
             if (wontvalue != null)
             {
-                if (IsPredMatch(wontvalue, newValue, null))
+                if (IsPredMatch(wontvalue, newValueU, null))
                 {
                     shouldSet = false;
                 }
@@ -271,7 +271,7 @@ namespace RTParser.Database
             string realName;
             if (setReturn == null)
             {
-                setReturn = SettingsDictionary.ToSettingsDictionary(dict).GetSetReturn(name, out realName);
+                setReturn = SettingsDictionaryReal.ToSettingsDictionary(dict).GetSetReturn(name, out realName);
             }
             if (string.IsNullOrEmpty(setReturn))
             {
@@ -281,7 +281,7 @@ namespace RTParser.Database
             if (defRet == "name") return name;
             if (defRet == "value")
             {
-                Unifiable resultGet = SettingsDictionary.grabSettingDefaultDict(dict, name, out realName);
+                Unifiable resultGet = SettingsDictionaryReal.grabSettingDefaultDict(dict, name, out realName);
                 return resultGet;
             }
             return setReturn;

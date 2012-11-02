@@ -22,7 +22,6 @@ using org.opencyc.api;
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using RTParser.GUI;
-using RTParser.Prolog;
 using RTParser.Utils;
 using RTParser.Variables;
 using RTParser.Web;
@@ -399,8 +398,8 @@ namespace RTParser
                 }
                 try
                 {
-                    Unifiable cmdprefix = myUser.Predicates.grabSettingNoDebug("cmdprefix");
-                    if (cmdprefix == null) cmdprefix = myBot.GlobalSettings.grabSettingNoDebug("cmdprefix");
+                    Unifiable cmdprefix = myUser.Predicates.grabSetting("cmdprefix");
+                    if (cmdprefix == null) cmdprefix = myBot.GlobalSettings.grabSetting("cmdprefix");
                     if (!input.Contains("@") && !IsNullOrEmpty(cmdprefix))
                     {
                         input = cmdprefix.AsString() + " " + input;
@@ -578,7 +577,7 @@ namespace RTParser
                 return true;
             }
             SystemExecHandler handler;
-            if (SettingsDictionary.TryGetValue(ExecuteHandlers, cmd, out handler))
+            if (SettingsDictionaryReal.TryGetValue(ExecuteHandlers, cmd, out handler))
             {
                 object result = handler(args, request);
                 console("" + result);
@@ -730,7 +729,7 @@ namespace RTParser
                 console("Done with " + args);
                 return true;
             }
-
+            /*
             if (showHelp) console("@prolog <load.pl>");
             if (cmd == "prolog")
             {
@@ -747,7 +746,7 @@ namespace RTParser
                                 "'],Out),writeq('----------------------------------------------'),writeq(Out),nl,halt.";
                 CSPrologMain.Main(new[] {callme});
                 return true;
-            }
+            }*/
 
             if (showHelp) console("@reload -- reloads any changed files ");
             if (cmd == "reload")
@@ -917,7 +916,7 @@ namespace RTParser
             if (cmd == "bot")
             {
                 console(robot.HeardPredicates.ToDebugString());
-                console(robot.RelationMetaProps.ToDebugString());
+                console(((SettingsDictionaryReal) robot.RelationMetaProps).ToDebugString());
                 return targetBotUser.DoUserCommand(args, console);
             }
             return false;
@@ -1147,7 +1146,7 @@ namespace RTParser
             if (cmd == "eval")
             {
                 cmd = "call";
-                args = "@" + myUser.Predicates.grabSettingOrDefault("interp", "cloj") + " " + args;
+                args = "@" + (myUser.Predicates.grabSetting("interp") ?? "cloj") + " " + args;
             }
 
             AltBot robot = request.TargetBot;

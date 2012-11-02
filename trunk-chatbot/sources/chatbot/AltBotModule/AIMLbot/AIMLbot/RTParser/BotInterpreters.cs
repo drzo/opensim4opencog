@@ -21,7 +21,6 @@ using PrologScriptEngine;
 #endif
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
-using RTParser.Prolog;
 using RTParser.Utils;
 using RTParser.Variables;
 using RTParser.Web;
@@ -55,7 +54,7 @@ namespace RTParser
         {
             if (IsNullOrEmpty(langu))
             {
-                langu = GlobalSettings.grabSettingOrDefault("systemlang", "bot");
+                langu = GlobalSettings.grabSetting("systemlang") ?? "bot";
             }
             else
             {
@@ -64,7 +63,7 @@ namespace RTParser
             Unifiable s = "The system tag should be doing '" + cmd + "' lang=" + langu;
             writeToLog(s.AsString());
             SystemExecHandler handler;
-            if (SettingsDictionary.TryGetValue(ExecuteHandlers, langu, out handler))
+            if (SettingsDictionaryReal.TryGetValue(ExecuteHandlers, langu, out handler))
             {
                 try
                 {

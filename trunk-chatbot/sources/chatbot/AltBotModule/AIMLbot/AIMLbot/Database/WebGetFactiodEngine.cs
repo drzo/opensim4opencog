@@ -114,7 +114,7 @@ namespace RTParser.Database
             get { return MayAsk("What is 1 plus 1?", null) != null; }
         }
 
-        public string FixPronouns(string myText, Func<string ,Unifiable> templateNode)
+        public string FixPronouns(string myText, Func<string ,string> templateNode)
         {
             return assertTo.FixPronouns(myText, templateNode);
         }

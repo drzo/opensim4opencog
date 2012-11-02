@@ -79,7 +79,7 @@ namespace RTParser.Normalize
                 var grabSetting = dictionary.grabSetting(settingName);
 
                 string fromValue = settingName;
-                string toValue = grabSetting.AsString();
+                string toValue = grabSetting.ToString();
 
                 // reverse the to/from
                 if (backwards)

@@ -6,7 +6,7 @@ using RTParser.Utils;
 
 namespace RTParser.Variables
 {
-    internal class ObjectPropertyDictionary : ISettingsDictionary
+    internal class ObjectPropertyDictionary<T> : ISettingsDictionaryT<T>
     {
         public bool IsTraced { get; set; }
         public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
@@ -43,7 +43,7 @@ namespace RTParser.Variables
 
         #region ISettingsDictionary Members
 
-        public bool addSetting(string name, Unifiable value)
+        public bool addSetting(string name, object value)
         {
             if (!containsLocalCalled(name)) return false;
             oldValue = propGet();
@@ -58,7 +58,7 @@ namespace RTParser.Variables
             return true;
         }
 
-        public bool updateSetting(string name, Unifiable value)
+        public bool updateSetting(string name, object value)
         {
             if (containsLocalCalled(name))
             {
@@ -69,13 +69,13 @@ namespace RTParser.Variables
             return false;
         }
 
-        public Unifiable grabSetting(string name)
+        public T grabSetting(string name)
         {
             if (containsLocalCalled(name))
             {
-                return Unifiable.Create(propGet());
+                return (T)MushDLR223.ScriptEngines.ScriptManager.ChangeType(propGet(), typeof(T));
             }
-            return Unifiable.Empty;
+            return (T)MushDLR223.ScriptEngines.ScriptManager.ChangeType(Unifiable.Empty, typeof(T));
         }
 
         public bool containsLocalCalled(string name)

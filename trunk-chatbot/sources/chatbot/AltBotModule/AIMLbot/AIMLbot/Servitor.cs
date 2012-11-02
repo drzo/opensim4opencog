@@ -100,7 +100,8 @@ namespace AltAIMLbot
         public Dictionary<string, SymbolicParticleFilter> partFilterDict = new Dictionary<string, SymbolicParticleFilter>();
         //[NonSerialized]
         //public SymbolicParticleFilter partFilter = new SymbolicParticleFilter();
-
+        [NonSerialized]
+        public ServitorEndpoint myServitorEndpoint;
         [NonSerialized]
         HumanAgent a2;
         [NonSerialized]
@@ -431,6 +432,9 @@ namespace AltAIMLbot
             Console.WriteLine("            TickCount:" + Environment.TickCount);
             Console.WriteLine("            UserID:" + curUser.UserID);
             curBot.myServitor = this;
+            
+            myServitorEndpoint = new ServitorEndpoint(curBot, this, prologEngine);
+
             myScheduler = myScheduler ?? new Scheduler(this);
             myIndex = myIndex ?? new InvertedIndex();
             rapStoreDirectory = ".//rapstore//";
@@ -520,6 +524,9 @@ namespace AltAIMLbot
             {
                 myScheduler.ActivateBehaviorTask("startup");
             }
+
+            myServitorEndpoint.StartServer();
+            
             mLoadCompleteAndPersonalityShouldBeDefined = true;
 
         }

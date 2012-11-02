@@ -135,7 +135,7 @@ namespace RTParser.Web
 
         public string GetName()
         {
-            return TheBot.GlobalSettings.grabSettingNoDebug("NAME");
+            return TheBot.GlobalSettings.grabSetting("NAME");
         }
 
         public object getPosterBoard(object slot)
@@ -145,7 +145,7 @@ namespace RTParser.Web
             var u = TheBot.GlobalSettings.grabSetting(sslot);
             if (Unifiable.IsNull(u)) return null;
             if (TextPatternUtils.IsNullOrEmpty(u)) return "";
-            return u.ToValue(null);
+            return u;//.ToValue(null);
         }
 
         #endregion

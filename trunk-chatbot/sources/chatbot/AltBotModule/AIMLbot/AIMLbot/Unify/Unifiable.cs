@@ -1275,7 +1275,7 @@ namespace RTParser
             return i - 1;
         }
 
-        public static bool IsMulti(Unifiable value)
+        public static bool IsMulti(object value)
         {
             return value is BestUnifiable;
         }
@@ -1689,8 +1689,9 @@ namespace RTParser
             return str;
         }
 
-        public override string ToString()
+        sealed public override string ToString()
         {
+            return AsString();
             return SpecialCache + "-" + DescribeUnifiable(this);
         }
 

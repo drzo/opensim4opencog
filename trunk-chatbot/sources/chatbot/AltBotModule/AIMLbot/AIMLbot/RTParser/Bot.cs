@@ -22,7 +22,6 @@ using PrologScriptEngine;
 #endif
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
-using RTParser.Prolog;
 using RTParser.Utils;
 using RTParser.Variables;
 using RTParser.Web;
@@ -100,7 +99,7 @@ namespace RTParser
                 return true;
                 if (GlobalSettings != null)
                 {
-                    Unifiable lts = GlobalSettings.grabSettingNoDebug("ListeningToSelf");
+                    Unifiable lts = GlobalSettings.grabSetting("ListeningToSelf");
                     if (IsUnknown(lts)) return false;
                     if (IsFalse(lts)) return false;
                     if (IsTrue(lts)) return true;
@@ -118,7 +117,7 @@ namespace RTParser
                 return true;
                 if (GlobalSettings != null)
                 {
-                    Unifiable lts = GlobalSettings.grabSettingNoDebug("ProcessHeardPreds");
+                    Unifiable lts = GlobalSettings.grabSetting("ProcessHeardPreds");
                     if (IsUnknown(lts)) return false;
                     if (IsFalse(lts)) return false;
                     if (IsTrue(lts)) return true;
@@ -135,7 +134,7 @@ namespace RTParser
             if (!string.IsNullOrEmpty(NameAsSet)) return s + " nameAsSet=" + NameAsSet;
             if (GlobalSettings != null)
             {
-                s += " name=" + GlobalSettings.grabSettingNoDebug("name") + " (" + NamePath + ")";
+                s += " name=" + GlobalSettings.grabSetting("name") + " (" + NamePath + ")";
             }
             if (!string.IsNullOrEmpty(NamePath)) return s + " NamePath=" + NamePath;
             return s;
@@ -832,10 +831,10 @@ namespace RTParser
                 RegisterSubstitutions("gender", GenderSubstitutions);
                 RegisterSubstitutions("person2", Person2Substitutions);
                 RegisterSubstitutions("person", PersonSubstitutions);
-                InputSubstitutions.IsSubsts = true;
+                InputSubstitutions["issubsts"] = true.ToString();
                 InputSubstitutions.IsTraced = true;
                 RegisterSubstitutions("input", InputSubstitutions);
-                OutputSubstitutions = new SettingsDictionary("nl.substitutions.output", this, null);
+                OutputSubstitutions = MakeSettingsDictionary("nl.substitutions.output");
                 RegisterSubstitutions("output", OutputSubstitutions);
 
 
@@ -864,13 +863,13 @@ namespace RTParser
                 guser.Predicates.clearSettings();
                 guser.Predicates.clearHierarchy();
                 guser.Predicates.InsertFallback(() => HeardPredicates);
-                guser.Predicates.maskSetting("name");
+                //guser.Predicates.maskSetting("name");
                 ///guser.Predicates.maskSetting("currentaction");
-                guser.Predicates.maskSetting("id");
+                //guser.Predicates.maskSetting("id");
 
                 // try a safe default setting for the settings xml file
                 // Checks for some important default settings
-                GlobalSettings.IsIdentityReadOnly = false;
+                //GlobalSettings.IsIdentityReadOnly = false;
                 SetSaneGlobals(GlobalSettings);
                 string pathToSettings = HostSystem.Combine(RuntimeDirectory,
                                                            HostSystem.Combine("config", "Settings.xml"));
@@ -995,7 +994,7 @@ namespace RTParser
             User guser = thiz.FindUser("globalPreds");
             if (HostSystem.FileExists(HostSystem.Combine(pathToSettings, "globalpreds.xml")))
             {
-                SettingsDictionary.loadSettingsNow(guser.Predicates, pathToSettings, "globalpreds.xml",
+                SettingsDictionaryReal.loadSettingsNow(guser.Predicates, pathToSettings, "globalpreds.xml",
                                                    SettingsPolicy.Default, request);
             }
             thiz.writeToLog("Files left to process = " + files.Count);
@@ -1349,7 +1348,7 @@ The AIMLbot program.
             get
             {
                 if (!GlobalSettings.containsSettingCalled("notopic")) return Unifiable.EnglishNothing;
-                return GlobalSettings.grabSettingNoDebug("notopic");
+                return GlobalSettings.grabSetting("notopic");
             }
         }
 
@@ -1553,7 +1552,7 @@ The AIMLbot program.
 
         public string GetUserMt(User user, SubQuery subquery)
         {
-            Unifiable ret = user.Predicates.grabSettingNoDebug("mt");
+            Unifiable ret = user.Predicates.grabSetting("mt");
             if (!IsNullOrEmpty(ret))
             {
                 string v = ret.ToValue(subquery);
@@ -1920,7 +1919,7 @@ The AIMLbot program.
                 SettingsDictionary dict = GlobalSettings;
                 if (dict != null)
                 {
-                    Unifiable botid = dict.grabSettingNoDebug("id");
+                    Unifiable botid = dict.grabSetting("id");
                     return botid;
                 }
                 return null;
@@ -1965,7 +1964,7 @@ The AIMLbot program.
                         {
                             try
                             {
-                                SettingsDictionary.loadSettingsNow(dictionary, null, named, SettingsPolicy.Default, r);
+                                SettingsDictionaryReal.loadSettingsNow(dictionary, null, named, SettingsPolicy.Default, r);
                                 loaded++;
                                 break;
                             }
@@ -1986,8 +1985,9 @@ The AIMLbot program.
             }
         }
 
-        private void RegisterSubstitutions(string named, SettingsDictionary dict)
+        private void RegisterSubstitutions(string named, SettingsDictionary dict0)
         {
+            SettingsDictionaryReal dict = SettingsDictionaryReal.ToSettingsDictionary(dict0);
             dict.IsTraced = false;
             dict.IsSubsts = true;
             RegisterDictionary("substitutions" + "." + named, dict);
