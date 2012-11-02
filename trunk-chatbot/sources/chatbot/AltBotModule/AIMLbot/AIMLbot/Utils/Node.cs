@@ -17,6 +17,17 @@ using System.Linq;
 using RTParser;
 using RTParser.Normalize;
 using Unifiable = System.String;
+using UPath = RTParser.Unifiable;
+using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
+//using CategoryInfo = RTParser.Utils.TemplateInfo;
+//using StringAppendableUnifiable = System.Text.StringBuilder;
+using PatternInfo = RTParser.Unifiable;
+using ThatInfo = RTParser.Unifiable;
+using TopicInfo = RTParser.Unifiable;
+using GuardInfo = RTParser.Unifiable;
+using ResponseInfo = RTParser.Unifiable;
+using SNode = AltAIMLbot.Utils.Node;
+using TemplateInfo = RTParser.Utils.TemplateInfo;
 
 namespace AltAIMLbot.Utils
 {
@@ -26,6 +37,89 @@ namespace AltAIMLbot.Utils
     [Serializable]
     public class Node
     {
+        internal RTParser.Utils.UUNode ToUUNode()
+        {
+            throw new NotImplementedException();
+        }
+
+        public RTParser.Utils.GraphMaster Graph
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public int TemplateInfoCount
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public bool disabled
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
+        public UList TemplateInfoCopy
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public Node[] AllDecendants
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public void SetDisabled(TemplateInfo impl, bool value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Node addPathNodeChilds(Unifiable unifiable, RTParser.Utils.NodeAdder adder)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<RTParser.Utils.CategoryInfo> addTerminal(XmlNode node, XmlNode cateNode, Unifiable unifiable, Unifiable info, Unifiable thatInfo, RTParser.Utils.LoaderOptions options, Unifiable patternInfo, List<RTParser.Utils.ConversationCondition> conditions, out bool removal)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsSatisfied(SubQuery query)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RotateTemplate(TemplateInfo info)
+        {
+            throw new NotImplementedException();
+        }
+
+        public long RunLowMemHooks()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Node evaluateU(string s, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcardsb)
+        {
+            throw new NotImplementedException();
+        }
+        public TemplateInfo[] AllDecendantTemplates
+        {
+            get
+            {
+                List<TemplateInfo> TIs = new List<TemplateInfo>();
+                foreach (var node in AllDecendants)
+                {
+                    TIs.AddRange(node.TemplateInfos);
+                }
+                return TIs.ToArray();
+            }
+        }
+
+        protected List<TemplateInfo> TemplateInfos
+        {
+            get { throw new NotImplementedException(); }
+        }
+
         #region Attributes
 
         /// <summary>

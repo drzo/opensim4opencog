@@ -563,9 +563,6 @@ namespace RTParser
         /// </summary>
         public bool saySapi = false;
 
-
-        public ExternDB chatDB = null;
-
         #endregion
 
         #region Delegates
@@ -688,9 +685,11 @@ namespace RTParser
             RegisterDictionary("bot.alluserpred", this.AllUserPreds);
             this.CustomTags = new Dictionary<string, TagHandler>();
             this.Graphs = new Dictionary<string, GraphMaster>();
-            this.Graphmaster = new GraphMaster("default");
-            this.Graphs.Add("*", this.Graphmaster);
-            this.DefaultHeardSelfSayGraph = new GraphMaster("heardselfsay");
+            this.Graphmaster = new GraphMaster("base", this);
+            Graphmaster.AddName("*");
+            Graphmaster.AddName("default");
+            Graphmaster.AddName("base");
+            this.DefaultHeardSelfSayGraph = new GraphMaster("heardselfsay", this);
             this.setupDictionaries();
             GlobalSettings.IsTraced = true;
         }
@@ -1010,18 +1009,11 @@ namespace RTParser
 
                 if (rapStoreDirectory != null)
                 {
-                    if (chatDB == null)
-                    {
-                        chatDB = new ExternDB(rapStoreDirectory);
-                        chatDB.bot = this;
-                        chatDB._dbdir = rapStoreDirectory;
-                        if (rapStoreSlices > 0) chatDB.slices = rapStoreSlices;
-                        if (rapStoreSlices > 0) chatDB.trunkLevel = rapStoreTrunkLevel;
-                        chatDB.OpenAll();
-                    }
+                    var GM = Graphmaster ?? GetGraph("default");
+                    var chatDB = GM.ensureEdb();
+ 
                     chatDB.loadCronList(myCron);
-                    chatDB.Close();
-                    chatDB = null;
+                    GM.Close();
                 }
            }
        }
@@ -1032,19 +1024,10 @@ namespace RTParser
 
                if (rapStoreDirectory != null)
                {
-                   if (chatDB == null)
-                   {
-                       chatDB = new ExternDB(rapStoreDirectory);
-                       chatDB.bot = this;
-                       chatDB._dbdir = rapStoreDirectory;
-                       if (rapStoreSlices > 0) chatDB.slices = rapStoreSlices;
-                       if (rapStoreSlices > 0) chatDB.trunkLevel = rapStoreTrunkLevel;
-                       chatDB.OpenAll();
-                   }
+                   var GM = Graphmaster;
+                   var chatDB = GM.ensureEdb();                   
                    chatDB.saveCronList(myCron);
-                   chatDB.Close();
-                   chatDB = null;
-
+                   GM.Close();
                }
            }
        }
@@ -1097,15 +1080,7 @@ namespace RTParser
 
                     if (rapStoreDirectory != null)
                     {
-                        if (chatDB == null)
-                        {
-                            chatDB = new ExternDB(rapStoreDirectory);
-                            chatDB.bot = this;
-                            chatDB._dbdir = rapStoreDirectory;
-                            if (rapStoreSlices > 0) chatDB.slices = rapStoreSlices;
-                            if (rapStoreSlices > 0) chatDB.trunkLevel = rapStoreTrunkLevel;
-                            chatDB.OpenAll();
-                        }
+                        ourGraphMaster.ensureEdb();
                     }
                     if (user.Qstate.Count == 0)
                     {
@@ -1182,15 +1157,9 @@ namespace RTParser
                     foreach (string path in result.NormalizedPaths)
                     {
                         AltAIMLbot.Utils.SubQuery query = new SubQuery(path, result, request);
-                        if (chatDB == null)
-                        {
-                            query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.Pattern, new StringBuilder());
-                        }
-                        else
-                        {
-                            Node dbGraphMaster = chatDB.fetchNode("", true);
-                            query.Template = dbGraphMaster.evaluateDB(path, query, request, MatchState.Pattern, new StringBuilder(), "", chatDB);
-                        }
+
+                        query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.Pattern, new StringBuilder());
+
                         //query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                         //query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                         Console.WriteLine("DEBUG: TemplatePath = " + query.TemplatePath);
@@ -1204,6 +1173,7 @@ namespace RTParser
                     }
                     if (rapStoreDirectory != null)
                     {
+                        var chatDB = ourGraphMaster.chatDB;
                         if (chatDB != null)
                         {
                             chatDB.prune(1024);

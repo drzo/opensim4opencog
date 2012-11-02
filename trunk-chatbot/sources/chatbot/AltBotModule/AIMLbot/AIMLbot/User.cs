@@ -14,7 +14,8 @@ using RTParser.Database;
 using RTParser.Utils;
 using RTParser.Variables;
 using MasterRequest = AltAIMLParser.Request;
-
+using DataUnifiableXXX = System.String;
+using DataUnifiable = RTParser.Unifiable;
 namespace AltAIMLbot
 {
     public interface User : IUser, UserStaticModel, RTParser.UserConversationScope, RTParser.UserDuringProcessing
@@ -1691,7 +1692,7 @@ namespace RTParser
         /// </summary>
         /// <param name="name">the name of the setting whose value we're interested in</param>
         /// <returns>the value of the setting</returns>
-        public string grabSetting(string name)
+        public DataUnifiable grabSetting(string name)
         {
             return Predicates.grabSetting(name);
         }

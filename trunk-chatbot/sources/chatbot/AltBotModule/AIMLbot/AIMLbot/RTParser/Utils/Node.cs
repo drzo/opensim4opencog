@@ -17,14 +17,15 @@ using ThatInfo = RTParser.Unifiable;
 using TopicInfo = RTParser.Unifiable;
 using GuardInfo = RTParser.Unifiable;
 using ResponseInfo = RTParser.Unifiable;
-
+using Node = RTParser.Utils.UUNode;
+using SNode = AltAIMLbot.Utils.Node;
 namespace RTParser.Utils
 {
     /// <summary>
     /// Encapsulates a node in the graphmaster tree structure
     /// </summary>
     [Serializable]
-    public class Node : IComparable<Node>, ParentChild
+    public class UUNode : IComparable<Node>, ParentChild
     {
         [NonSerialized]
         private bool inLowMemoryHooks = false;
@@ -112,7 +113,7 @@ namespace RTParser.Utils
         }
         
 
-        public Node(Node P, Unifiable W)
+        public UUNode(Node P, Unifiable W)
         {
             _parentObject = P;
             if (W != null && W.IsEmpty)
@@ -573,7 +574,7 @@ namespace RTParser.Utils
             ResponseInfo responseInfo = templateNode.InnerXml;
             TemplateInfo newTemplateInfo =
                 (TemplateInfo)CategoryInfoImpl1.GetCategoryInfo(patternInfo, cateNode, loaderOptions, templateNode,
-                                                            responseInfo, guard, topicInfo, this, thatInfo,
+                                                            responseInfo, guard, topicInfo, this.ToUNode(), thatInfo,
                                                             additionalRules);
             /*
             Unifiable categoryPath = GetPath();
@@ -624,7 +625,7 @@ namespace RTParser.Utils
                         return null;
                     }
                 }
-                category.GraphmasterNode = this;
+                category.GraphmasterNode = this.ToUNode();
                 if (category != null) pat.AddCategory(category);
             }
 
@@ -637,6 +638,11 @@ namespace RTParser.Utils
             TemplateInfos.Insert(0, newTemplateInfo);
             newTemplateInfo.BuildIndexes();
             return newTemplateInfo;
+        }
+
+        private SNode ToUNode()
+        {
+            throw new NotImplementedException();
         }
 
         private void DeleteTemplates(bool onlyNonSilent)
@@ -670,7 +676,7 @@ namespace RTParser.Utils
             {
                 //writeToLog("DeleteTemplate: " + info);
                 info.IsTraced = true;
-                Node prevNode = info.GraphmasterNode;
+                Node prevNode = info.GraphmasterNode.ToUUNode();
                 if (prevNode == this)
                 {
                     info.GraphmasterNode = null;
@@ -712,7 +718,7 @@ namespace RTParser.Utils
                     Graph.RemoveTemplate(info);
                 }
                 info.RemoveIndexes();
-                info.GraphmasterNode = prevNode;
+                info.GraphmasterNode = prevNode.ToUNode();
             }
         }
 
@@ -1348,7 +1354,7 @@ namespace RTParser.Utils
             string fs = ToKey(firstWord);
             if (TryGetValueChild(fs, out childNode))
             {
-                if (query.CanUseNode(childNode))
+                if (query.CanUseNode(childNode.ToUNode()))
                 {
                     //newPath = string.Join(" ", splitPath, rw, splitPath.Length - rw);
                     newAt = at + 1;
@@ -1368,7 +1374,7 @@ namespace RTParser.Utils
                 // if (childNodeWord.IsLongWildCard()) continue;
                 //if (childNodeWord.IsWildCard) continue;
                 childNode = childNodeKV.Value;
-                if (!query.CanUseNode(childNode))
+                if (!query.CanUseNode(childNode.ToUNode()))
                 {
                     continue;
                 }

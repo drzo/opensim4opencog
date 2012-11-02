@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Xml;
+using AltAIMLbot.Utils;
 using MushDLR223.Utilities;
 using PatternInfo = RTParser.Unifiable;
 using ThatInfo = RTParser.Unifiable;

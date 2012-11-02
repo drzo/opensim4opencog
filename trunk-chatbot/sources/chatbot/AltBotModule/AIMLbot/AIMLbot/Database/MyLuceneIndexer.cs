@@ -772,7 +772,10 @@ namespace RTParser.Database
         public string FixPronouns(string myText, XmlNode templateNode)
         {
             var dict = TheBot.GetDictionary(templateNode.LocalName);
-            return TripleStoreProxy.FixPronouns(myText, dict == null ? (Func<string, string>) null : dict.grabSetting);
+            return TripleStoreProxy.FixPronouns(myText,
+                                                dict == null
+                                                    ? (Func<string, string>) null
+                                                    : ((i) => dict.grabSetting(i)));
         }
 
         public string FixPronouns(string english, Func<string ,string> whoAmI)

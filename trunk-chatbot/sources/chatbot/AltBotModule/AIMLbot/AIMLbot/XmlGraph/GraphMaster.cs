@@ -24,6 +24,7 @@ using GuardInfo = RTParser.Unifiable;
 using ResponseInfo = RTParser.Unifiable;
 using System.Threading;
 using System.Text;
+using UNode = AltAIMLbot.Utils.Node;
 
 //using StringAppendableUnifiable = System.Text.StringBuilder;
 
@@ -34,6 +35,7 @@ namespace RTParser.Utils
     {
         private static string _STAR_PATH;
 
+        public ExternDB chatDB = null;
         /// <summary>
         /// Should tags that make no output be placed in parallel Graphmaster
         /// </summary>
@@ -43,7 +45,7 @@ namespace RTParser.Utils
         /// <summary>
         /// Should template Objects be stored in graphmasters
         /// </summary>
-        [UserScopedSettingAttribute]
+        [UserScopedSetting]
         public bool TrackTemplates { get { return StaticAIMLUtils.TrackTemplates; } }
 
         public List<string> GraphNames
@@ -51,9 +53,9 @@ namespace RTParser.Utils
             get
             {
                 var names = new List<string>();
-                lock (AltBot.GraphsByName)
+                //lock (AltBot.GraphsByName)
                 {
-                    foreach (KeyValuePair<string, GraphMaster> pair in AltBot.GraphsByName)
+                    foreach (KeyValuePair<string, GraphMaster> pair in LockInfo.CopyOf(AltBot.GraphsByName))
                     {
                         if (pair.Value == this)
                         {
@@ -83,7 +85,7 @@ namespace RTParser.Utils
         /// <summary>
         /// All the &lt;guard&gt;s (if any) associated with this database
         /// </summary>
-        private readonly List<GuardInfo> Guards = new List<GuardInfo>();
+        private readonly List<Unifiable> Guards = new List<Unifiable>();
 
         private readonly Dictionary<string, DateTime> LoadedFiles = new Dictionary<string, DateTime>();
 
@@ -92,22 +94,22 @@ namespace RTParser.Utils
         /// <summary>
         /// All the &lt;pattern&gt;s (if any) associated with this database
         /// </summary>
-        private readonly Dictionary<String, PatternInfo> Patterns = new Dictionary<string, PatternInfo>();
+        private readonly Dictionary<String, Unifiable> Patterns = new Dictionary<string, Unifiable>();
 
         /// <summary>
         /// All the &lt;templates&gt;s (if any) associated with this database
         /// </summary>
-        internal readonly Dictionary<string, ResponseInfo> ResponseInfos = new Dictionary<string, ResponseInfo>();
+        internal readonly Dictionary<string, Unifiable> ResponseInfos = new Dictionary<string, Unifiable>();
 
         /// <summary>
         /// All the &lt;that&gt;s (if any) associated with this database
         /// </summary>
-        internal readonly Dictionary<String, ThatInfo> Thats = new Dictionary<string, ThatInfo>();
+        internal readonly Dictionary<String, Unifiable> Thats = new Dictionary<string, Unifiable>();
 
         /// <summary>
         /// All the &lt;topic&gt;s (if any) associated with this database
         /// </summary>
-        internal readonly Dictionary<String, TopicInfo> Topics = new Dictionary<string, TopicInfo>();
+        internal readonly Dictionary<String, Unifiable> Topics = new Dictionary<string, Unifiable>();
 
         private GraphMaster _parallel;
 
@@ -129,8 +131,10 @@ namespace RTParser.Utils
         private int parallel0;
         //private Node PostParallelRootNode;
 
-        [NonSerialized]
-        private Node RootNode;
+        private UNode RootNode
+        {
+            get { throw new NotImplementedException("use ExternDB"); }
+        }
         [UserScopedSetting]
         public bool SilentTagsInPutParallel { get; set; }
         public int Size;
@@ -162,11 +166,14 @@ namespace RTParser.Utils
         {
             DefaultSilentTagsInPutParallel = false;
         }
-        public GraphMaster(string gn)
+
+        private AltBot theBot = null;
+        public GraphMaster(string gn, AltBot _bot)
             : this(gn, null, false)
         {
+            theBot = _bot;
         }
-        public GraphMaster(string gn, GraphMaster child, bool isParallel)
+        private GraphMaster(string gn, GraphMaster child, bool isParallel)
         //: base(bot)
         {
             AltBot.GraphsByName[gn] = this;
@@ -179,8 +186,8 @@ namespace RTParser.Utils
 
             // most graphs try to recuse on themselves until otehrwise stated (like in make-parallel)
             Srai = gn;
-            RootNode = new Node(null, Unifiable.Empty);
-            RootNode.Graph = this;
+            //RootNode = new Node(null, Unifiable.Empty);
+            //RootNode.Graph = this;
             //PostParallelRootNode = new Node(this, Unifiable.Empty);
             if (!TrackTemplates)
             {
@@ -289,7 +296,7 @@ namespace RTParser.Utils
             }
         }
 
-        public PatternInfo FindPattern(XmlNode pattern, Unifiable unifiable)
+        public Unifiable FindPattern(XmlNode pattern, Unifiable unifiable)
         {
             if (NoIndexing) return null;
             string pats = unifiable;
@@ -329,7 +336,7 @@ namespace RTParser.Utils
 #endif
         }
 
-        public ResponseInfo FindResponse(XmlNode responseNode, Unifiable responseText)
+        public Unifiable FindResponse(XmlNode responseNode, Unifiable responseText)
         {
 #if false
             if (NoIndexing) return null;
@@ -356,7 +363,7 @@ namespace RTParser.Utils
             return responseText;
         }
 
-        public ThatInfo FindThat(XmlNode thatNode, Unifiable topicName)
+        public Unifiable FindThat(XmlNode thatNode, Unifiable topicName)
         {
             if (NoIndexing) return null;
             return topicName;
@@ -385,7 +392,7 @@ namespace RTParser.Utils
 
         private string MakeMatchKey(string pattern)
         {
-            string v = TextPatternUtils.ToUpper(TextPatternUtils.MatchKeyClean(pattern).ToUpper());
+            string v = StaticXMLUtils.ToUpper(TextPatternUtils.MatchKeyClean(pattern).ToUpper());
             if (v.Length < 1)
             {
                 return "*";
@@ -415,7 +422,7 @@ namespace RTParser.Utils
         private XmlNode GetMatchableXMLNode0(string nodeName, string topicName)
         {
             if (NoIndexing) return null;
-            if (string.IsNullOrEmpty(topicName))
+            if (String.IsNullOrEmpty(topicName))
             {
                 topicName = "*";
             }
@@ -438,7 +445,7 @@ namespace RTParser.Utils
             }
         }
 
-        public TopicInfo FindTopic(Unifiable topicName)
+        public Unifiable FindTopic(Unifiable topicName)
         {
             if (NoIndexing) return null;
             return topicName;
@@ -466,10 +473,10 @@ namespace RTParser.Utils
 #endif
         }
 
-        public CategoryInfo FindCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename, XmlNode templateNode,
-            ResponseInfo template, GuardInfo guard, TopicInfo topicInfo, Node patternNode, ThatInfo thatInfo, IEnumerable<ConversationCondition> conds)
+        public CategoryInfo FindCategoryInfo(Unifiable info, XmlNode node, LoaderOptions filename, XmlNode templateNode,
+            Unifiable template, Unifiable guard, Unifiable topicInfo, Node patternNode, Unifiable thatInfo, IEnumerable<ConversationCondition> conds)
         {
-            return TemplateInfoImpl.MakeCategoryInfo(info, node, filename, templateNode, template, guard, topicInfo, patternNode,
+            return CategoryInfoImpl1.MakeCategoryInfo(info, node, filename, templateNode, template, guard, topicInfo, patternNode,
                                                  thatInfo, conds);
         }
 
@@ -524,14 +531,15 @@ namespace RTParser.Utils
         /// <param name="path">the path to the dump file</param>
         public void loadFromBinaryFile(string path, BinaryFormatter bf)
         {
+            var r = this.RootNode; // throw the not impl
             Stream loadFile = HostSystem.OpenRead(path);
-            this.RootNode = (Node)bf.Deserialize(loadFile);
-            //this.PostParallelRootNode = (Node)bf.Deserialize(loadFile);
+            //this.RootNode = (Node)bf.Deserialize(loadFile);
+            ////this.PostParallelRootNode = (Node)bf.Deserialize(loadFile);
             loadFile.Close();
         }
 
-        public List<CategoryInfo> addCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, // out CategoryInfo category,
-                                   XmlNode categoryNode, XmlNode templateNode, GuardInfo guard, TopicInfo topicInfo, ThatInfo thatInfo,
+        public List<CategoryInfo> addCategoryTag(Unifiable generatedPath, Unifiable patternInfo, // out CategoryInfo category,
+                                   XmlNode categoryNode, XmlNode templateNode, Unifiable guard, Unifiable topicInfo, Unifiable thatInfo,
                                    List<ConversationCondition> additionalRules, out bool wouldBeRemoval, LoaderOptions loaderOptions)
         {
             lock (LockerObject)
@@ -541,8 +549,8 @@ namespace RTParser.Utils
             }
         }
 
-        private List<CategoryInfo> addCategoryTag0(Unifiable generatedPath, PatternInfo patternInfo,// CategoryInfo category,
-                                   XmlNode categoryNode, XmlNode templateNode, GuardInfo guard, TopicInfo topicInfo, ThatInfo thatInfo,
+        private List<CategoryInfo> addCategoryTag0(Unifiable generatedPath, Unifiable patternInfo,// CategoryInfo category,
+                                   XmlNode categoryNode, XmlNode templateNode, Unifiable guard, Unifiable topicInfo, Unifiable thatInfo,
                                    List<ConversationCondition> additionalRules, out bool wouldBeRemoval, LoaderOptions loaderOptions)
         {
             if (SilentTagsInPutParallel && !StaticAIMLUtils.IsEmptyTemplate(templateNode) && StaticAIMLUtils.IsSilentTag(templateNode))
@@ -556,7 +564,7 @@ namespace RTParser.Utils
                                                 additionalRules, out wouldBeRemoval, loaderOptions);
             }
 
-            Node rootNode = this.RootNode;
+            UNode rootNode = this.RootNode;
             if (IsStarStarStar(generatedPath))
             {
               //  rootNode = this.PostParallelRootNode;
@@ -571,7 +579,7 @@ namespace RTParser.Utils
                 //writeToLog("Putting at end of queue " + generatedPath);
             }
             NodeAdder nodeAdder = null;
-            Node thiz = rootNode.addPathNodeChilds(generatedPath, nodeAdder);
+            UNode thiz = rootNode.addPathNodeChilds(generatedPath, nodeAdder);
 
             int countBefore = thiz.TemplateInfoCount;
 
@@ -580,8 +588,8 @@ namespace RTParser.Utils
                                                  additionalRules, out wouldBeRemoval);
             if (wouldBeRemoval)
             {
-                Node other = rootNode;// == this.RootNode ? this.PostParallelRootNode : this.RootNode;
-                Node thatz = other.addPathNodeChilds(generatedPath, nodeAdder);
+                UNode other = rootNode;// == this.RootNode ? this.PostParallelRootNode : this.RootNode;
+                UNode thatz = other.addPathNodeChilds(generatedPath, nodeAdder);
                 //writeToLog("Doing other removal: " + generatedPath);
                 info0 = thatz.addTerminal(templateNode, cateNode, guard, topicInfo, thatInfo, loaderOptions, patternInfo,
                                           additionalRules, out wouldBeRemoval);
@@ -721,7 +729,7 @@ namespace RTParser.Utils
             if (bubble == null) return false;
             string s = bubble;
 
-            bool b = TextPatternUtils.Trim(s).StartsWith(STAR_PATH);
+            bool b = StaticXMLUtils.Trim(s).StartsWith(STAR_PATH);
             if (!b) return false;
             return b;
         }
@@ -783,7 +791,7 @@ namespace RTParser.Utils
             }
             var Prf = request.Proof = request.Proof ?? new Proof();
 
-            Node toplevelBubble;
+            UNode toplevelBubble;
             try
             {
                 while (!toplevel.NoMoreResults)
@@ -792,7 +800,11 @@ namespace RTParser.Utils
                     toplevelBubble = null;
                     SubQuery query = new SubQuery(upath, request.CurrentResult, request);
                     query.TopLevel = toplevel;
-                    Node pattern = rootNode.evaluate(Unifiable.ToVMString(upath), query, request, matchstate, wildcard);
+                    var wildcardsb = new StringBuilder();
+                    wildcardsb.Append(wildcard.AsString());
+                    UNode pattern = rootNode.evaluateU(Unifiable.ToVMString(upath), query, request, matchstate, wildcardsb);
+                    wildcard = new StringAppendableUnifiableImpl();
+                    wildcard.Append(wildcardsb.ToString());
                     if (pattern != null)
                     {
                         pattern.disabled = true;
@@ -871,7 +883,7 @@ namespace RTParser.Utils
             {
                 var PU = toplevel.PatternsUsed;
                 if (PU != null)
-                    foreach (Node list in PU)
+                    foreach (UNode list in PU)
                     {
                         list.disabled = false;
                     }
@@ -883,9 +895,9 @@ namespace RTParser.Utils
             }
         }
 
-        private void clearDiabled(Node rootNode)
+        private void clearDiabled(UNode rootNode)
         {
-            foreach (Node list in rootNode.AllDecendants)
+            foreach (UNode list in rootNode.AllDecendants)
             {
                 if (list.disabled)
                 {
@@ -1171,12 +1183,12 @@ namespace RTParser.Utils
             lock (LockerObject)
             {
                 lock (Topics)
-                    foreach (KeyValuePair<string, TopicInfo> info in Topics)
+                    foreach (KeyValuePair<string, Unifiable> info in Topics)
                     {
                         writeToLog("topic = " + info.Key);
                     }
                 lock (Thats)
-                    foreach (KeyValuePair<string, ThatInfo> info in Thats)
+                    foreach (KeyValuePair<string, Unifiable> info in Thats)
                     {
                         writeToLog("that = " + info.Key);
                     }
@@ -1245,7 +1257,7 @@ namespace RTParser.Utils
                 string graphName = ci.Graph.graphName;
                 if (printOptions.DontPrint(ci)) continue;
                 string c = ci.ToFileString(printOptions);
-                string cws = TextPatternUtils.CleanWhitepaces(c);
+                string cws = StaticXMLUtils.CleanWhitepaces(c);
                 if (printOptions.DontPrint(cws)) continue;
 
                 if (printOptions.RemoveDuplicates)
@@ -1618,22 +1630,23 @@ namespace RTParser.Utils
             return false;
         }
 
-        public GuardInfo GetGuardInfo(XmlNode guardnode)
+        public Unifiable GetGuardInfo(XmlNode guardnode)
         {
             return guardnode.InnerXml;
         }
 
         public ParentChild ParentObject { get; set; }
 
-        public static GraphMaster FindOrCreate(string dgn)
+        public static GraphMaster FindOrCreate(string dgn, AltBot theBot)
         {
+            dgn = DeAliasGraphName(dgn);
             var gbn = AltBot.GraphsByName;
             lock (gbn)
             {
                 GraphMaster v;
                 if (!gbn.TryGetValue(dgn, out v))
                 {
-                    v = gbn[dgn] = new GraphMaster(dgn);
+                    v = gbn[dgn] = new GraphMaster(dgn, theBot);
                 }
                 return v;
             }
@@ -1652,10 +1665,59 @@ namespace RTParser.Utils
         }
 
         public static string[] StarTypes = new[] { "state", "topic", "pattern", "that", };
-        public AltAIMLbot.Utils.Node root = new AltAIMLbot.Utils.Node();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public AltAIMLbot.Utils.Node root
+        {
+            get
+            {
+                lock (ExternDB.mylock)
+                {
+                    if (_root == null)
+                    {
+                        _root = ensureEdb().fetchNode("", true);
+                    }
+                    return _root;
+                }
+            }
+        }
+        public bool useChatDB = true;
+        private Node _root;
+
         public string evaluate(string path, SubQuery query, Request request, MatchState state, StringBuilder builder)
         {
-            return root.evaluate(path, query, request, state, builder);
+            ensureEdb();
+            if (!useChatDB)
+            {
+                //root = root ?? RootNode;
+                return root.evaluate(path, query, request, state, builder); 
+            }
+            else
+            {
+                return root.evaluateDB(path, query, request, state, builder, "", chatDB);
+            }
+        }
+
+        public ExternDB ensureEdb()
+        {
+            lock (ExternDB.mylock)
+            {
+                if (chatDB == null)
+                {
+
+                    string rapStoreDirectory = theBot.rapStoreDirectory.TrimEnd("/\\".ToCharArray()) + "_" + graphName +
+                                               "/";
+                    chatDB = new ExternDB(rapStoreDirectory);
+                    chatDB.bot = this.theBot;
+                    chatDB._dbdir = rapStoreDirectory;
+                    if (theBot.rapStoreSlices > 0) chatDB.slices = theBot.rapStoreSlices;
+                    if (theBot.rapStoreTrunkLevel > 0) chatDB.trunkLevel = theBot.rapStoreTrunkLevel;
+                    chatDB.OpenAll();
+                }
+            }
+            return chatDB;
         }
 
         public double getPathScore(string path)
@@ -1693,5 +1755,36 @@ namespace RTParser.Utils
             root.WithFilename(filename, true, false);
         }
 
+        public void Close()
+        {
+            lock (ExternDB.mylock)
+            {
+                if (chatDB != null)
+                {
+                    chatDB.Close();
+                    chatDB = null;
+                    _root = null;
+                }
+            }
+        }
+
+        internal void AddName(string alias)
+        {
+            theBot.Graphs[alias] = this;
+        }
+
+        public static string DeAliasGraphName(string graphPath)
+        {
+            if (String.IsNullOrEmpty(graphPath) || graphPath == "*")
+            {
+                throw new NullReferenceException("graphPath=" + graphPath);
+            }
+            graphPath = AltBot.ToScriptableName(graphPath);
+            if (graphPath == "default")
+            {
+                graphPath = "base";
+            }
+            return graphPath;
+        }
     }
 }

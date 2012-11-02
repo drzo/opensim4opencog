@@ -1397,8 +1397,9 @@ The AIMLbot program.
 
         public GraphMaster GetUserGraph(string graphPath)
         {
-            //graphPath = "default";
-            if (!graphPath.Contains("_to_"))
+            graphPath = "default";
+            graphPath = GraphMaster.DeAliasGraphName(graphPath);
+            if (false && !graphPath.Contains("_to_"))
             {
                 graphPath = ToLower(ConsolidSpaces(Trim(graphPath + "_to_" + this.NamePath)));
             }
@@ -1409,9 +1410,9 @@ The AIMLbot program.
                 {
                     return g;
                 }
-                g = GraphsByName[graphPath] = GraphMaster.FindOrCreate(graphPath);
-                GraphMaster dtob = Utils.GraphMaster.FindOrCreate("default_to_" + this.NamePath);
-                g.AddGenlMT(dtob, writeToLog);
+                g = GraphsByName[graphPath] = GraphMaster.FindOrCreate(graphPath, this);
+                //GraphMaster dtob = Utils.GraphMaster.FindOrCreate("default_to_" + this.NamePath);
+                //g.AddGenlMT(dtob, writeToLog);
                 //ㄴdtob.AddGenlMT(Utils.GraphMaster.FindOrCreate("default"), writeToLog);
             } 
             return g;
@@ -1419,6 +1420,7 @@ The AIMLbot program.
         
         static public GraphMaster FindGlobalGraph(string graphPath)
         {
+            graphPath = GraphMaster.DeAliasGraphName(graphPath);
             GraphMaster g;
             lock (GraphsByName) GraphsByName.TryGetValue(graphPath, out g);
             return g;
@@ -1432,10 +1434,12 @@ The AIMLbot program.
             {
                 if (current == null)
                 {
+                    throw new NullReferenceException("graphPath=" + graphPath);
                 }
                 return current;
             }
 
+            graphPath = GraphMaster.DeAliasGraphName(graphPath); 
             string lower = graphPath.ToLower();
             int graphPathLength = graphPath.IndexOf(".");
             if (graphPathLength > 0)
@@ -1455,7 +1459,7 @@ The AIMLbot program.
                 }
                 if (!GraphsByName.TryGetValue(graphPath, out g))
                 {
-                    g = GraphsByName[graphPath] = GraphMaster.FindOrCreate(graphPath);
+                    g = GraphsByName[graphPath] = GraphMaster.FindOrCreate(graphPath, this);
                 }
             }
             return g;
@@ -1463,6 +1467,8 @@ The AIMLbot program.
 
         public GraphMaster FindGraph(string graphPath, GraphMaster current)
         {
+            if (string.IsNullOrEmpty(graphPath) || graphPath == "*") return current;
+            graphPath = GraphMaster.DeAliasGraphName(graphPath);
             if (graphPath == null)
             {
                 return current;
@@ -1665,6 +1671,7 @@ The AIMLbot program.
                 //return UserOper(() => SetName0(myName), writeDebugLine);
             }
             startServitor();
+            updateServitor2RTP();
             LoadPersonality();
             if (useServitor)
             {
@@ -1784,7 +1791,7 @@ The AIMLbot program.
 
                 if (StaticInitStarted) return;
                 StaticInitStarted = true;
-                TheListenerGraph = GraphMaster.FindOrCreate("listener");
+                TheListenerGraph = GraphMaster.FindOrCreate("listener", null);
                 TheListenerGraph.SilentTagsInPutParallel = false;
                 // var defaultGraph = GraphsByName["default"] = GraphMaster.FindOrCreate("default");
                 // defaultGraph.RemovePreviousTemplatesFromNodes = false;               

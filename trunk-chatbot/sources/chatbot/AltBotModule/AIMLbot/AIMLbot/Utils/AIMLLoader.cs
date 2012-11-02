@@ -28,7 +28,7 @@ namespace AltAIMLbot.Utils
         private string stateNamePre = "*";
         private string stateNamePost = "*";
         private string currentThat = "*";
-        ExternDB extDB = null;
+        ExternDB extDBCached = null;
         private static bool SeekOutAndRepair = false;
 
         #endregion
@@ -93,16 +93,9 @@ namespace AltAIMLbot.Utils
                 this.bot.writeToLog("Processing AIML file(2): " + filename);
                 if (this.bot.rapStoreDirectory != null)
                 {
-                    if (extDB != null)
-                    {
-                        extDB.Close();
-                        extDB = null;
-                    }
-                    if (extDB == null)
-                    {
-                        extDB = new ExternDB(this.bot.rapStoreDirectory);
-                        extDB.bot = this.bot;
-                    }
+                    var extDB = bot.GetGraph(graphName);
+                    extDB.Close();
+                    extDB.ensureEdb();
                 }
                 XmlTextReader reader = new XmlTextReader(filename);
                 XmlDocumentLineInfo doc = new XmlDocumentLineInfo(filename, true);
@@ -167,10 +160,10 @@ namespace AltAIMLbot.Utils
                     Thread.Sleep(5000);
                 }
                 //extDB.SaveIndex();
-                if (extDB != null)
+                var extDB0 = bot.GetGraph(graphName);
+                if (extDB0 != null)
                 {
-                    extDB.Close();
-                    extDB = null;
+                    extDB0.Close();
                 }
             }
         }
@@ -188,16 +181,9 @@ namespace AltAIMLbot.Utils
 
                 if (this.bot.rapStoreDirectory != null)
                 {
-                    if (extDB != null)
-                    {
-                        //     extDB.Close();
-                        //     extDB = null;
-                    }
-                    if (extDB == null)
-                    {
-                        extDB = new ExternDB(this.bot.rapStoreDirectory);
-                        extDB.bot = this.bot;
-                    }
+                    var extDB = bot.GetGraph(graphName);
+                    extDB.Close();
+                    extDB.ensureEdb();
                 }
                 // Get a list of the nodes that are children of the <aiml> tag
                 // these nodes should only be either <topic> or <category>
@@ -217,19 +203,17 @@ namespace AltAIMLbot.Utils
 
                 if (this.bot.rapStoreDirectory != null)
                 {
-                    if ((filename.Contains("\\") || filename.Contains("/")) && (!filename.Contains("servitorgraphmap")) && (extDB.wasLoaded(filename)))
+                    var extDB0 = bot.GetGraph(graphName);
+                    if ((filename.Contains("\\") || filename.Contains("/")) && (!filename.Contains("servitorgraphmap")) && (extDB0.ensureEdb().wasLoaded(filename)))
                     {
                         // We loaded that file
-                        extDB.Close();
-                        extDB = null;
+                        extDB0.Close();
                         return;
                     }
                     else
                     {
-                        extDB._dbdir = this.bot.rapStoreDirectory;
-                        if (this.bot.rapStoreSlices > 0) extDB.slices = this.bot.rapStoreSlices;
-                        if (this.bot.rapStoreTrunkLevel > 0) extDB.trunkLevel = this.bot.rapStoreTrunkLevel;
-                        extDB.OpenAll();
+                        extDB0.ensureEdb();
+                        //extDB._dbdir = this.bot.rapStoreDirectory;
                     }
                 }
                 else
@@ -241,9 +225,10 @@ namespace AltAIMLbot.Utils
                 LoadBXML(doc, filename);
                 if (this.bot.rapStoreDirectory != null)
                 {
+                    var extDB0 = bot.GetGraph(graphName);
+                    var extDB = extDB0.ensureEdb();
                     extDB.rememberLoaded(filename);
-                    extDB.Close();
-                    extDB = null;
+                    extDB0.Close();
                 }
             }
         }
@@ -486,6 +471,7 @@ namespace AltAIMLbot.Utils
 
                     if (this.bot.rapStoreDirectory != null)
                     {
+                        var extDB = bot.GetGraph(graphName).ensureEdb();
                         Node.addCategoryDB("", categoryPath, template.OuterXml, filename, 1, 1, "", extDB);
                     }
                     else
@@ -566,6 +552,7 @@ namespace AltAIMLbot.Utils
                     //this.bot.Graphmaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
                     if (this.bot.rapStoreDirectory != null)
                     {
+                        var extDB = bot.GetGraph(graphName).ensureEdb();
                         Node.addCategoryDB("", categoryPath, templateXML, filename, 1, 1, "", extDB);
                     }
                     else

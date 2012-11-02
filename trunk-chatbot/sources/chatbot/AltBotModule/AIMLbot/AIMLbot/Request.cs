@@ -618,7 +618,7 @@ namespace AltAIMLParser
             {
                 // when we change to s struct, lastOptions will never be null
                 // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                if (lastOptions == null || lastOptions.TheRequest != null)
+                if (lastOptions == null || lastOptions.TheRequest != thisRequest)
                     // ReSharper restore ConditionIsAlwaysTrueOrFalse
                 {
                     lastOptions = new LoaderOptions(thisRequest, Graph);
@@ -726,7 +726,7 @@ namespace AltAIMLParser
             if (master == null) return;
             if (master.AlsoKnownAs("listener"))
             {
-                ///  throw new NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 

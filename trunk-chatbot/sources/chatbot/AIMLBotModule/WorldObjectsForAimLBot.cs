@@ -26,6 +26,8 @@ using Thread=System.Threading.Thread;
 using PathSystem3D.Navigation;
 using SUnifiable=System.String;
 using User=AltAIMLbot.User;
+using DataUnifiableXXX = System.String;
+using DataUnifiable = RTParser.Unifiable;
 
 namespace AIMLBotModule
 {
@@ -1458,7 +1460,7 @@ namespace AIMLBotModule
                 named.ToLower();
             }
 
-            public string grabSetting(string name)
+            public DataUnifiable grabSetting(string name)
             {
                 CheckName(name); 
                 if (FakeClientVars) if (name == "cogvar") return "botmody";

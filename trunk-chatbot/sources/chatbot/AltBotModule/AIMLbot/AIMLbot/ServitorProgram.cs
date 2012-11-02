@@ -41,7 +41,10 @@ namespace AltAIMLbot
             Console.WriteLine("BWL: " + s, args);
         }
 
-        public Servitor servitor = null;
+        public Servitor servitor
+        {
+            get { return MyBot.servitor; }
+        }
         public bool useServitor = true;
         public string servitorbin = "";
         //public string userID = "consoleUser";
@@ -68,7 +71,6 @@ namespace AltAIMLbot
                     MyBot.ObjectRequester = (ICollectionRequester)colreq;
                     MyBot.outputDelegate = WriteLine;
                     MyBot.SetName(myName);
-                    servitor = MyBot.servitor;
                     MyBot.sayProcessor = new sayProcessorDelegate(TalkActive);
                 }
                 catch (Exception e)

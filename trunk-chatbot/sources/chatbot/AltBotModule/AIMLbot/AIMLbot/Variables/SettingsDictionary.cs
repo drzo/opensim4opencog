@@ -18,8 +18,8 @@ using RTParser.Database;
 using RTParser.Normalize;
 using RTParser.Utils;
 
-using DataUnifiable = System.String;
-using DataUnifiableYY = RTParser.Unifiable;
+using DataUnifiableXXX = System.String;
+using DataUnifiable = RTParser.Unifiable;
 
 namespace RTParser.Variables
 {

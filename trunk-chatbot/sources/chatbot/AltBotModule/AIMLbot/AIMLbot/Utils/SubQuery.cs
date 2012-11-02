@@ -11,8 +11,8 @@ using RTParser.Variables;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 //using List<Unifiable> = System.Collections.Generic.List<string>;
-using DataUnifiable = System.String;
-using DataUnifiableYY = RTParser.Unifiable;
+using DataUnifiableXX = System.String;
+using DataUnifiable = RTParser.Unifiable;
 
 namespace AltAIMLbot.Utils
 {
@@ -125,7 +125,7 @@ namespace AltAIMLbot.Utils
         private AltBot ov_TargetBot;
         public TemplateInfo CurrentTemplate;
         public RTParser.Utils.AIMLTagHandlerU LastTagHandlerU;
-        public RTParser.Utils.Node Pattern;
+        public Node Pattern;
         public string prefix;
         public Request Request;
         public Result Result;
@@ -631,7 +631,7 @@ namespace AltAIMLbot.Utils
             }
         }
 
-        public bool CanUseNode(RTParser.Utils.Node node)
+        public bool CanUseNode(Node node)
         {
             return TopLevel.CanUseNode(node);
         }
