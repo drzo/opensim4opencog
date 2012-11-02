@@ -389,23 +389,26 @@ namespace AltAIMLbot
                 this.prologEngine.connectMT("coppeliaAgentEmotionsMt", agentMt);
                 string gaf = "";
                 this.prologEngine.insertKB("", agentMt);
-                gaf = String.Format("agentID({0},{1}).", ak, a1.AgentID); this.prologEngine.appendKB(gaf, agentMt);
+                gaf = String.Format("agentID({0},{1}).", ak, a1.AgentID); 
+                this.prologEngine.appendKB(gaf, agentMt);
 
                 for (int e = 0; e < AgentEmotions.NUM_VALUES; e++)
                 {
                     float v = a1.GetEmotion(e);
                     string emotionSymbol = AgentEmotions.StringFor(e);
-                    gaf = String.Format("agentEmotion({0},{1},{2}).", ak, emotionSymbol, v); this.prologEngine.appendKB(gaf, agentMt);
+                    gaf = String.Format("agentEmotion({0},{1},{2}).", ak, emotionSymbol, v);
+                    this.prologEngine.appendKB(gaf, agentMt);
                 }
                 for (int e = 0; e < AgentEmotions.NUM_VALUES; e++)
                 {
                     float v = a1.GetDesired(e);
                     string emotionSymbol = AgentEmotions.StringFor(e);
-                    gaf = String.Format("agentEmotionalDesire({0},{1},{2}).", ak, emotionSymbol, v); this.prologEngine.appendKB(gaf, agentMt);
+                    gaf = String.Format("agentEmotionalDesire({0},{1},{2}).", ak, emotionSymbol, v);
+                    this.prologEngine.appendKB(gaf, agentMt);
                 }
                 for (int i = 0; i < a1.PossibleResponses.Count; ++i)
                 {
-                    gaf = String.Format("possibleResponse({0},{1})", ak,Global.GetActionByID(a2.PossibleResponses[i]).Name);
+                    gaf = String.Format("possibleResponse({0},{1}).", ak,Global.GetActionByID(a1.PossibleResponses[i]).Name);
                     this.prologEngine.appendKB(gaf, agentMt);
                 }
                 foreach (string otherName in CoppeliaAgentDictionary.Keys)
@@ -413,13 +416,52 @@ namespace AltAIMLbot
                     Agent otherAgent = CoppeliaAgentDictionary[otherName];
                     float v = 0;
                     v= a1.GetAnger(otherAgent.AgentID);
-                    gaf = String.Format("anger({0},{1},{2})", ak, otherName,v);
+                    gaf = String.Format("anger({0},{1},{2}).", ak, otherName,v);
                     this.prologEngine.appendKB(gaf, agentMt);
                     v = a1.GetPraiseworthy (otherAgent.AgentID);
-                    gaf = String.Format("praiseworthy({0},{1},{2})", ak, otherName, v);
+                    gaf = String.Format("praiseworthy({0},{1},{2}).", ak, otherName, v);
                     this.prologEngine.appendKB(gaf, agentMt);
+                    foreach (string actName in CoppeliaActionDictionary.Keys)
+                    {
+                        AgentAction act = CoppeliaActionDictionary[actName];
+                        
+                        v= a1.GetAT(otherAgent.AgentID, act.GlobalIndex);
+                        gaf = String.Format("actionTendency({0},{1},{2},{3}).", ak, otherName,actName,v);
+                        this.prologEngine.appendKB(gaf, agentMt);
+                        
+                        v = a1.GetExpectedSatisfaction(otherAgent.AgentID, act.GlobalIndex);
+                        gaf = String.Format("expectedSatisfaction({0},{1},{2},{3}).", ak, otherName, actName, v);
+                        this.prologEngine.appendKB(gaf, agentMt);
 
+                        v = a1.GetGMoralityAction(otherAgent.AgentID, act.GlobalIndex);
+                        gaf = String.Format("moralityAction({0},{1},{2},{3}).", ak, otherName, actName, v);
+                        this.prologEngine.appendKB(gaf, agentMt);
+
+                        
+                    }
+                    foreach (string sk in CoppeliaStateDictionary.Keys)
+                    {
+                        int cstate = CoppeliaStateDictionary[sk];
+
+                        v = a1.GetStateLikelihood(cstate);
+                        gaf = String.Format("stateLikelihood({0},{1},{2}).", ak, sk, v);
+                        this.prologEngine.appendKB(gaf, agentMt);
+
+                        v = a1.GetStateBelieved(cstate);
+                        gaf = String.Format("stateBelieved({0},{1},{2}).", ak, sk, v);
+                        this.prologEngine.appendKB(gaf, agentMt);
+
+                        v = a1.GetStateBelief(cstate);
+                        gaf = String.Format("stateBelief({0},{1},{2}).", ak, sk, v);
+                        this.prologEngine.appendKB(gaf, agentMt);
+
+                        v = a1.GetAmbition(cstate);
+                        gaf = String.Format("ambition({0},{1},{2}).", ak, sk, v);
+                        this.prologEngine.appendKB(gaf, agentMt);
+
+                    }
                 }
+
             }
         }
 

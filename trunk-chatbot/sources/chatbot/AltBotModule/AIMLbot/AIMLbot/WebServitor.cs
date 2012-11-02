@@ -259,6 +259,7 @@ namespace AltAIMLbot
             string path = "." + justURL;
             string query = context.Request.QueryString["q"];
             string action = context.Request.QueryString["a"];
+            string mt = context.Request.QueryString["mt"];
             Console.WriteLine("WEBGET path={0},action={1},query={2}", path, action, query);
 
             if (path.Contains("./scheduler/"))
@@ -274,7 +275,7 @@ namespace AltAIMLbot
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
                 using (Stream s = context.Response.OutputStream)
                 using (StreamWriter writer = new StreamWriter(s))
-                    ourServitor.prologEngine.webWriter(writer, action, query, serverRoot);
+                    ourServitor.prologEngine.webWriter(writer, action, query,mt, serverRoot);
                 return;
             }
 

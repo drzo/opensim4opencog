@@ -190,10 +190,16 @@ namespace LogicalParticleFilter1
             return VKB;
         }
 
-        public void webWriter(StreamWriter writer,string action,string query,string serverRoot)
+        public void webWriter(StreamWriter writer,string action,string query,string mt, string serverRoot)
         {
             try
             {
+                if ((action==null) && (query==null) && (mt==null))
+                {
+                    query="list";
+                }
+
+
                 if (action == null)
                 {
                     if (query != null)
@@ -204,28 +210,47 @@ namespace LogicalParticleFilter1
                             foreach (PNode p in KBGraph.SortedTopLevelNodes)
                             {
                                 string pname = p.id;
-                                writer.WriteLine("<a href='{1}siprolog/?q={0}'>{0}  (prob={2})</a><br/>", pname, serverRoot, p.probability);
+                                writer.WriteLine("<a href='{1}siprolog/?mt={0}'>{0}  (prob={2})</a><br/>", pname, serverRoot, p.probability);
                             }
                             writer.WriteLine("<h2>Siprolog Mt Treed</h2>");
                             KBGraph.PrintToWriter(writer, serverRoot);
                             return;
                         }
-
-                        writer.WriteLine("<h2>Siprolog Mt {0}</h2>", query);
+                    }
+                    if (mt != null)
+                    {
+                        writer.WriteLine("<h2>Siprolog Mt {0}</h2>", mt);
                         writer.WriteLine("<h3> OutgoingEdges </h3>");
-                        PNode qnode = KBGraph.Contains(query);
+                        PNode qnode = KBGraph.Contains(mt);
                         KBGraph.PrintToWriter(qnode, 0, writer, serverRoot);
                         writer.WriteLine("<h3> IncomingEdges </h3>");
                         KBGraph.PrintToWriterInEdges(qnode, 0, writer, serverRoot);
                         writer.WriteLine("<h3> KB Contents </h3>");
                         writer.WriteLine("<hr/>");
-                        ArrayList kbContents = findVisibleKBRulesSorted(query);
+                        ArrayList kbContents = findVisibleKBRulesSorted(mt);
                         foreach (Rule r in kbContents)
                         {
                             writer.WriteLine("{0}<br/>", r.ToString());
                         }
+                        interactFooter(writer, mt, serverRoot);
                         return;
                     }
+                 }
+                else
+                {
+                    switch (action.ToLower())
+                    {
+                        case "append":
+                            appendKB(query, mt);
+                            break;
+                        case "insert":
+                            insertKB(query, mt);
+                            break;
+                        case "query":
+                            interactQuery(writer, query, mt, serverRoot);
+                            break;
+                    }
+                    webWriter(writer, null, null, mt, serverRoot);
                 }
             }
             catch (Exception e)
@@ -236,6 +261,67 @@ namespace LogicalParticleFilter1
 
 
         }
+        public void interactQuery(StreamWriter writer, string query, string mt, string serverRoot)
+        {
+            int testdepth = 64;
+
+            List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
+            while ((bingingsList.Count == 0) && (testdepth < 256))
+            {
+                testdepth = (int)(testdepth * 1.5);
+                //Console.WriteLine("Trying depth {0}", testdepth);
+                //prologEngine.maxdepth = testdepth;
+                askQuery(query, mt, out bingingsList);
+            }
+            writer.WriteLine("<h3>Query:'{0}' in mt={1}</h3>", query, mt);
+            if (bingingsList.Count == 0)
+            {
+                writer.WriteLine("No bindings found at depth {0} in {1}", testdepth,mt);
+            }
+            else
+            {
+                writer.WriteLine("{2} bindings found at depth {0} in {1}", testdepth,mt, bingingsList.Count);
+                int index = 0;
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    index++;
+                    writer.Write("{0}: ", index);
+                    foreach (string k in bindings.Keys)
+                    {
+                        string v = bindings[k];
+                        writer.Write("{0}={1} ",k,v);
+                    }
+                    writer .WriteLine("<br/>");
+                }
+                writer.WriteLine("<hr/>");
+
+            }
+        }
+        public void interactFooter(StreamWriter writer, string mt, string serverRoot)
+        {
+            writer.WriteLine("<hr/>");
+
+            writer.WriteLine(" <form method='get' ACTION='{1}siprolog/'>", mt, serverRoot);
+            writer.WriteLine(" Query: <INPUT TYPE='text' name='q'/>");
+            writer.WriteLine(" <INPUT TYPE='hidden' name='mt' VALUE='{0}'/>",mt);
+            writer.WriteLine(" <INPUT TYPE='hidden' name='a' VALUE='query'/>");
+            writer.WriteLine(" <INPUT TYPE='submit' VALUE='submit'/>");
+            writer.WriteLine(" </FORM>");
+            writer.WriteLine(" <form method='get' ACTION='{1}siprolog/'>",mt,serverRoot );
+            writer.WriteLine(" Append: <INPUT TYPE='text' name='q'/>");
+            writer.WriteLine(" <INPUT TYPE='hidden' name='mt' VALUE='{0}'/>", mt);
+            writer.WriteLine(" <INPUT TYPE='hidden' name='a' VALUE='append'/>");
+            writer.WriteLine(" <INPUT TYPE='submit' VALUE='submit'/>");
+            writer.WriteLine(" </FORM>");
+            writer.WriteLine(" <form method='get' ACTION='{1}siprolog/'>", mt, serverRoot);
+            writer.WriteLine(" Overwrite: <INPUT TYPE='text' name='q'/>");
+            writer.WriteLine(" <INPUT TYPE='hidden' name='mt' VALUE='{0}'/>", mt);
+            writer.WriteLine(" <INPUT TYPE='hidden' name='a' VALUE='insert'/>");
+            writer.WriteLine(" <INPUT TYPE='submit' VALUE='submit'/>");
+            writer.WriteLine(" </FORM>");
+
+        }
+
         public ArrayList collectKBRules(ArrayList kbList)
         {
             ArrayList VKB = new ArrayList ();
@@ -2734,7 +2820,7 @@ namespace LogicalParticleFilter1
                 //writer.Write("<p>");
                 //for (int i = 0; i < indentation; ++i) writer.Write(" ");
                 //Console.WriteLine(node.Id);
-                writer.WriteLine("<li><a href='{1}siprolog/?q={0}'>{0}  (prob={2})</a></li>", node.Id, serverRoot, node.probability );
+                writer.WriteLine("<li><a href='{1}siprolog/?mt={0}'>{0}  (prob={2})</a></li>", node.Id, serverRoot, node.probability );
                 writer.WriteLine("<ul>");
                 foreach (PEdge e in node.OutgoingEdges)
                 {
@@ -2760,7 +2846,7 @@ namespace LogicalParticleFilter1
                 //writer.Write("<p>");
                 //for (int i = 0; i < indentation; ++i) writer.Write(" ");
                 //Console.WriteLine(node.Id);
-                writer.WriteLine("<li><a href='{1}siprolog/?q={0}'>{0}  (prob={2})</a></li>", node.Id, serverRoot, node.probability);
+                writer.WriteLine("<li><a href='{1}siprolog/?mt={0}'>{0}  (prob={2})</a></li>", node.Id, serverRoot, node.probability);
                 writer.WriteLine("<ul>");
                 foreach (PEdge e in node.IncomingEdges )
                 {
