@@ -77,6 +77,7 @@ namespace RTParser
         public Cron myCron = null;
         public bool inCritical = false;
         public bool blockCron = false;
+        public bool loadChanging = true;
         public RandomMemory myRandMem = new RandomMemory();
 
         static private WordNetEngine _wordNetEngine;

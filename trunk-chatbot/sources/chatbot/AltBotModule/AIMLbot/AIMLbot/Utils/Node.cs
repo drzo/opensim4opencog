@@ -1196,7 +1196,7 @@ namespace AltAIMLbot.Utils
 
         public Node fetchChild(string myPath, string childWord, ExternDB pathDB)
         {
-            if (myPath != GetPath())
+            if (myPath != GetPath().Trim())
             {
 
             }

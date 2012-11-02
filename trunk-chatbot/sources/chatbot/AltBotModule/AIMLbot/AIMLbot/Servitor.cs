@@ -568,7 +568,7 @@ namespace AltAIMLbot
             }
 
             myServitorEndpoint.StartServer();
-            
+            curBot.loadChanging = false;
             mLoadCompleteAndPersonalityShouldBeDefined = true;
 
         }

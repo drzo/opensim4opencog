@@ -94,7 +94,7 @@ namespace AltAIMLbot
                         if (Cron.SuspendCrons) continue;
                         if (myBot.isAcceptingUserInput)
                         {
-                            if ((!myBot.inCritical) && (!myBot.blockCron ))
+                            if ((!myBot.inCritical) && (!myBot.blockCron) && (myBot.servitor.mLoadCompleteAndPersonalityShouldBeDefined))
                             {
                                 now = DateTime.Now;
                                 checkProcesses(now);
