@@ -159,7 +159,7 @@ namespace AltAIMLbot.Utils
             get
             {
                 if (NumberOfChildNodes == 0) return EmptyKeys;
-                return children.Keys;
+                lock (children) return LockInfo.CopyOf(children.Keys);
             }
         }
         public static IEnumerable<Node> EmptyNodes = new Node[0];
@@ -168,7 +168,16 @@ namespace AltAIMLbot.Utils
             get
             {
                 if (NumberOfChildNodes == 0) return EmptyNodes;
-                return children.Values;
+                lock (children)
+                {
+                    string absPath = GetPath();
+                    var cl = new List<Node>();
+                    foreach (Unifiable key in ChildKeys)
+                    {
+                        cl.Add(ChildNode(key));
+                    }
+                    return cl;
+                }
             }
         }
         public bool ContainsChildKey(string s)
@@ -182,7 +191,15 @@ namespace AltAIMLbot.Utils
             {
                 return null;
             }
-            return children[s];
+            lock (children)
+            {
+                var node = children[s];
+                if (node == null)
+                {
+                    children[s] = node = fetchChild(GetPath(), s, extDB);
+                }
+                return node;
+            }
         }
         /// <summary>
         /// The template (if any) associated with this node
@@ -205,6 +222,11 @@ namespace AltAIMLbot.Utils
         public string word=string.Empty;
 
         public bool fullChildSet = false;
+        [NonSerialized]
+        public ExternDB extDB;
+
+        public string absPath;
+
         #endregion
 
         #region Methods
@@ -284,6 +306,8 @@ namespace AltAIMLbot.Utils
             else
             {
                 Node childNode = new Node();
+                childNode.extDB = extDB;
+                childNode.Parent = this;
                 childNode.word = firstWord;
                 childNode.addCategory(newPath, template, filename, newScore,newScale);
                 lock (children)
@@ -301,7 +325,7 @@ namespace AltAIMLbot.Utils
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
         /// <param name="score"> computed score for the path so far</param>
-        public static void addCategoryDB(string myWord, string path, string template, string filename, double score, double scale, string absPath, ExternDB pathDB)
+        public static Node addCategoryDB(string myWord, string path, string template, string filename, double score, double scale, string absPath, ExternDB pathDB)
         {
             if (template.Length == 0)
             {
@@ -317,7 +341,7 @@ namespace AltAIMLbot.Utils
                 myNode.AddTemplate(template, filename);
                 myNode.score = score;
                 pathDB.saveNode(absPath, myNode);
-                return;
+                return myNode;
             }
 
 
@@ -360,22 +384,25 @@ namespace AltAIMLbot.Utils
             {
                 //Node childNode = myNode.this.ChildNode(firstWord);
 
-                addCategoryDB(firstWord, newPath, template, filename, newScore, newScale, newdAbsPath, pathDB);
+                var retNode = addCategoryDB(firstWord, newPath, template, filename, newScore, newScale, newdAbsPath, pathDB);
+                retNode.Parent = myNode;
+                return retNode;
             }
             else
             {
                 //Node childNode = new Node();
                 //childNode.word = firstWord;
-                addCategoryDB(firstWord, newPath, template, filename, newScore, newScale, newdAbsPath, pathDB);
+                var retNode = addCategoryDB(firstWord, newPath, template, filename, newScore, newScale, newdAbsPath, pathDB);
                 //myNode.children.Add(childNode.word, childNode);
                 //myNode.children.Add(firstWord,null);
                 //myNode.childrenList.Add(firstWord);
+
                 myNode.addChild(firstWord, null);
 
                 // We only need to save it if we updated it with a child
                 pathDB.saveNode(absPath, myNode);
+                return retNode;
             }
-
         }
 
         public void AddTemplate(string template, string filename1)
@@ -442,7 +469,7 @@ namespace AltAIMLbot.Utils
             return string.Empty;
         }
 
-        public void collectFullPaths(string inpath, List<string> collector)
+        public void collectFullPaths(string inpath, List<string> collector, ExternDB pathDB)
         {
             string curWord = this.word;
             string ourPath = inpath + " " + curWord;
@@ -455,7 +482,7 @@ namespace AltAIMLbot.Utils
             }
             foreach (var childNode in ChildNodes)
             {
-                childNode.collectFullPaths(ourPath, collector);
+                childNode.collectFullPaths(ourPath, collector, pathDB);
             }
 
         }
@@ -1158,9 +1185,14 @@ namespace AltAIMLbot.Utils
 
         public Node fetchChild(string myPath, string childWord, ExternDB pathDB)
         {
+            if (myPath != GetPath())
+            {
+
+            }
             string childPath = (myPath + " " + childWord).Trim();
             Node childNode = pathDB.fetchNode(childPath, true);
             childNode.word = childWord;
+            childNode.Parent = this;
             return childNode;
         }
  
@@ -1362,10 +1394,20 @@ namespace AltAIMLbot.Utils
         public void addChild(string childWord,Node nd)
         {
             lock (children)
-            {
+            {                
                 childmax++;
-                if (!children.ContainsKey(childWord)) children.Add(childWord, nd);
-                if (nd!=null) nd.Parent = this;
+                bool ndNull = nd == null;
+                if (!children.ContainsKey(childWord))
+                {
+                    children.Add(childWord, nd);
+                }
+                else
+                {
+                    if (ndNull)
+                    {
+                    }
+                }
+                if (!ndNull) nd.Parent = this;
                 childrenStr += "(" + childWord + ")";
                 if (fullChildSet) return;
                 if ((childnum + NumberOfChildNodes) != childmax)
@@ -1400,7 +1442,7 @@ namespace AltAIMLbot.Utils
 
         public void WithFilename(string filename, bool remove, bool enable)
         {
-            if (children != null)
+            if (_c0 != null)
                 foreach (var c in ChildNodes)
                 {
                     c.WithFilename(filename, remove, enable);
@@ -1438,6 +1480,7 @@ namespace AltAIMLbot.Utils
 
         public string GetPath()
         {
+            if (absPath != null) return absPath;
             var p = Parent;
             if (p == null)
             {
@@ -1453,7 +1496,7 @@ namespace AltAIMLbot.Utils
                 sb.Insert(0, p.word);
                 p = p.Parent;
             }
-            return sb.ToString();
+            return absPath = sb.ToString();
         }
 
 
@@ -1914,6 +1957,8 @@ namespace AltAIMLbot.Utils
                 }
 
                 Node myNode = new Node();
+                myNode.extDB = this;
+                myNode.absPath = absPath;
                 myNode.fullChildSet = full;
                 bool trunk = isTrunk(absPath);
 

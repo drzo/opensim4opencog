@@ -1727,7 +1727,7 @@ namespace RTParser.Utils
 
         public void collectFullPaths(string inpath, List<string> collector)
         {
-            root.collectFullPaths(inpath, collector);
+            root.collectFullPaths(inpath, collector, ensureEdb());
         }
 
         public void searchFullPaths(string targetPath, string inpath, List<string> collector)
