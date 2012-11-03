@@ -189,22 +189,27 @@ namespace LogicalParticleFilter1
             //}
             return VKB;
         }
-
         public void webWriter(StreamWriter writer,string action,string query,string mt, string serverRoot)
+        {
+            writer.WriteLine("<a href='siprolog/?q=list'>List Mts</a><br/>");
+            writer.WriteLine("<a href='siprolog/?q=listing'>List All Rules</a><br/>");
+            webWriter0(writer, action, query, mt, serverRoot, true);
+        }
+        public void webWriter0(StreamWriter writer, string action, string queryv, string mt, string serverRoot, bool toplevel)
         {
             try
             {
-                if ((action==null) && (query==null) && (mt==null))
+                if ((action==null) && (queryv==null) && (mt==null))
                 {
-                    query="list";
+                    queryv="list";
                 }
 
 
                 if (action == null)
                 {
-                    if (query != null)
+                    if (queryv != null)
                     {
-                        if (query.ToLower() == "list")
+                        if (queryv.ToLower() == "list")
                         {
                             writer.WriteLine("<h2>Siprolog Mt List</h2>");
                             foreach (PNode p in KBGraph.SortedTopLevelNodes)
@@ -214,6 +219,26 @@ namespace LogicalParticleFilter1
                             }
                             writer.WriteLine("<h2>Siprolog Mt Treed</h2>");
                             KBGraph.PrintToWriter(writer, serverRoot);
+                            return;
+                        }
+                        if (queryv.ToLower() == "listing")
+                        {
+                            List<string> allMts = new List<string>();
+                            writer.WriteLine("<h2>Siprolog Mt List</h2>");
+                            foreach (PNode p in KBGraph.SortedTopLevelNodes)
+                            {
+                                string pname = p.id;
+                                allMts.Add(pname);
+                                //writer.WriteLine("<a href='{1}siprolog/?mt={0}'>{0}  (prob={2})</a><br/>", pname, serverRoot, p.probability);
+                            }
+                            writer.WriteLine("<h2>Siprolog Mt Treed</h2>");
+                            KBGraph.PrintToWriter(writer, serverRoot);
+                            foreach (var list in allMts)
+                            {
+                                writer.WriteLine("<hr/>");
+                                webWriter0(writer, action, null, list, null, false);                                
+                            }
+                            interactFooter(writer, "", serverRoot);
                             return;
                         }
                     }
@@ -226,13 +251,13 @@ namespace LogicalParticleFilter1
                         writer.WriteLine("<h3> IncomingEdges </h3>");
                         KBGraph.PrintToWriterInEdges(qnode, 0, writer, serverRoot);
                         writer.WriteLine("<h3> KB Contents </h3>");
-                        writer.WriteLine("<hr/>");
+                        if (toplevel) writer.WriteLine("<hr/>");
                         ArrayList kbContents = findVisibleKBRulesSorted(mt);
                         foreach (Rule r in kbContents)
                         {
-                            writer.WriteLine("{0}<br/>", r.ToString());
+                            WriteRule(writer, r);
                         }
-                        interactFooter(writer, mt, serverRoot);
+                        if (toplevel) interactFooter(writer, mt, serverRoot);
                         return;
                     }
                  }
@@ -241,13 +266,13 @@ namespace LogicalParticleFilter1
                     switch (action.ToLower())
                     {
                         case "append":
-                            appendKB(query, mt);
+                            appendKB(queryv, mt);
                             break;
                         case "insert":
-                            insertKB(query, mt);
+                            insertKB(queryv, mt);
                             break;
                         case "query":
-                            interactQuery(writer, query, mt, serverRoot);
+                            interactQuery(writer, queryv, mt, serverRoot);
                             break;
                     }
                     webWriter(writer, null, null, mt, serverRoot);
@@ -255,12 +280,18 @@ namespace LogicalParticleFilter1
             }
             catch (Exception e)
             {
-
+                writer.WriteLine("<font color='red'>{0} {1} {2}</font>", e.GetType(), e.Message, e.StackTrace);                
                 return;
             }
 
 
         }
+
+        private void WriteRule(StreamWriter writer, Rule r)
+        {
+            writer.WriteLine("{0}<br/>", r.ToString());
+        }
+
         public void interactQuery(StreamWriter writer, string query, string mt, string serverRoot)
         {
             int testdepth = 64;
@@ -303,23 +334,35 @@ namespace LogicalParticleFilter1
 
             writer.WriteLine(" <form method='get' ACTION='{1}siprolog/'>", mt, serverRoot);
             writer.WriteLine(" Query: <INPUT TYPE='text' name='q'/>");
-            writer.WriteLine(" <INPUT TYPE='hidden' name='mt' VALUE='{0}'/>",mt);
+            MtSelector(writer, mt);
             writer.WriteLine(" <INPUT TYPE='hidden' name='a' VALUE='query'/>");
             writer.WriteLine(" <INPUT TYPE='submit' VALUE='submit'/>");
             writer.WriteLine(" </FORM>");
             writer.WriteLine(" <form method='get' ACTION='{1}siprolog/'>",mt,serverRoot );
             writer.WriteLine(" Append: <INPUT TYPE='text' name='q'/>");
-            writer.WriteLine(" <INPUT TYPE='hidden' name='mt' VALUE='{0}'/>", mt);
+            MtSelector(writer, mt);
             writer.WriteLine(" <INPUT TYPE='hidden' name='a' VALUE='append'/>");
             writer.WriteLine(" <INPUT TYPE='submit' VALUE='submit'/>");
             writer.WriteLine(" </FORM>");
             writer.WriteLine(" <form method='get' ACTION='{1}siprolog/'>", mt, serverRoot);
             writer.WriteLine(" Overwrite: <INPUT TYPE='text' name='q'/>");
-            writer.WriteLine(" <INPUT TYPE='hidden' name='mt' VALUE='{0}'/>", mt);
+            MtSelector(writer, mt);
             writer.WriteLine(" <INPUT TYPE='hidden' name='a' VALUE='insert'/>");
             writer.WriteLine(" <INPUT TYPE='submit' VALUE='submit'/>");
             writer.WriteLine(" </FORM>");
 
+        }
+
+        private void MtSelector(StreamWriter writer, string mt)
+        {
+            if (string.IsNullOrEmpty(mt))
+            {
+                writer.WriteLine(" MT: <INPUT TYPE='text' name='mt' VALUE='{0}'/>", mt);
+            }
+            else
+            {
+                writer.WriteLine(" MT: <INPUT TYPE='text' name='mt' VALUE='{0}'/>", mt);
+            }
         }
 
         public ArrayList collectKBRules(ArrayList kbList)
