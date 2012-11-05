@@ -91,20 +91,46 @@ namespace AltAIMLbot.Utils
                 var fn = filename;
                 filename = filename.Replace("\\", "/");// new FileInfo(fn).FullName;
                 this.bot.writeToLog("Processing AIML file(2): " + filename);
+                if (!File.Exists(filename))
+                {
+                    Console.WriteLine("WARNING: '{0}' does not exist", filename);
+                }
                 if (this.bot.rapStoreDirectory != null)
                 {
                     var extDB = bot.GetGraph(graphName);
                     extDB.Close();
                     extDB.ensureEdb();
                 }
-                XmlTextReader reader = new XmlTextReader(filename);
-                XmlDocumentLineInfo doc = new XmlDocumentLineInfo(filename, true);
+                XmlTextReader reader = null;
+                XmlDocumentLineInfo doc = null; 
                 try
                 {
-                    // load the document
-                    //doc.Load(filename);
-                    doc.Load(reader);
-                    this.loadAIMLFromXML(doc, filename);
+                    reader = new XmlTextReader(filename);
+                    if (reader != null)
+                    {
+                        doc = new XmlDocumentLineInfo(filename, true);
+                        if (doc != null)
+                        {
+                            // load the document
+                            //doc.Load(filename);
+                            reader.MoveToContent();                // Skip over the XML declaration
+                            doc.Load(reader);
+                            this.loadAIMLFromXML(doc, filename);
+                            XmlNodeList rootChildren = doc.ChildNodes;
+                            foreach (XmlNode currentNode in rootChildren)
+                            {
+                                loadAIMLFromXML(currentNode, filename);
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("WARNING: XmlDocumentLineInfo({0}) == null !", filename);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("WARNING: XmlTextReader({0}) == null !" , filename);
+                    }
                 }
 
                 catch (XmlException e)
@@ -175,7 +201,17 @@ namespace AltAIMLbot.Utils
         /// <param name="filename">Where the XML document originated</param>
         private void loadAIMLFromXMLDoc(XmlDocument doc, string filename)
         {
-            doc.DocumentElement.Attributes.RemoveNamedItem("xmlns");          
+            if (doc.DocumentElement != null)
+            {
+                if (doc.DocumentElement.Attributes != null)
+                {
+                    if (doc.DocumentElement.Attributes.Count > 0)
+                    {
+                        doc.DocumentElement.Attributes.RemoveNamedItem("xmlns");
+                    }
+                }
+            }
+            //Console.WriteLine("Check: loadAIMLFromXMLDoc");
             lock (ExternDB.mylock)
             {
 
@@ -188,23 +224,50 @@ namespace AltAIMLbot.Utils
                 // Get a list of the nodes that are children of the <aiml> tag
                 // these nodes should only be either <topic> or <category>
                 // the <topic> nodes will contain more <category> nodes
-                loadAIMLFromXML(doc.DocumentElement, filename);
+                //Console.WriteLine("Check: loadAIMLFromXML enter(2)");
+                //Console.WriteLine("Check: OUTER XML :{0}", doc.OuterXml);
+                //Console.WriteLine("Check: doc.ChildNodes.Count :{0}", doc.ChildNodes.Count);
+                //Console.WriteLine("Check: loadAIMLFromXML Code={0}", doc.DocumentElement.OuterXml);
+                if (doc.DocumentElement != null)
+                {
+                    //Console.WriteLine("Check: Has DocumentElement: {0}", doc.DocumentElement.OuterXml);
+                    loadAIMLFromXML(doc.DocumentElement, filename);
+                }
             }
         }
 
         public void loadAIMLFromXML(XmlNode doc, string filename)
         {
-            if (doc is XmlDocument)
+            if (doc == null)
             {
-                loadAIMLFromXMLDoc((XmlDocument) doc, filename);
+                Console.WriteLine("Check: loadAIMLFromXML : (doc is NULL) filename={0}", filename);
                 return;
             }
+            if (doc is XmlDocument)
+            {
+                //Console.WriteLine("Check: loadAIMLFromXML : (doc is XmlDocument) filename={0}", filename);
+                loadAIMLFromXMLDoc((XmlDocument)doc, filename);
+                return;
+            }
+
+            if (doc is XmlDeclaration)
+            {
+                Console.WriteLine("Check: loadAIMLFromXML : (doc is XmlDeclaration (0)) filename={0}", filename);
+                return;
+
+            }
+            //Console.WriteLine("Check: loadAIMLFromXML : (doc isNOT XmlDocument) filename={0}", filename);
             {
 
                 if (this.bot.rapStoreDirectory != null)
                 {
                     var extDB0 = bot.GetGraph(graphName);
-                    if ((filename.Contains("\\") || filename.Contains("/")) && (!filename.Contains("servitorgraphmap")) && (extDB0.ensureEdb().wasLoaded(filename)))
+
+                    //if ((filename.Contains("\\") || filename.Contains("/")) && (!filename.Contains("servitorgraphmap")) && (extDB0.ensureEdb().wasLoaded(filename)))
+                    if ((extDB0.ensureEdb().wasLoaded(filename))
+                         && (!filename.Contains("servitorgraphmap"))
+                         && (filename.Contains(Path.DirectorySeparatorChar.ToString()))
+                        )
                     {
                         // We loaded that file
                         extDB0.Close();
@@ -218,7 +281,7 @@ namespace AltAIMLbot.Utils
                 }
                 else
                 {
-                    Console.WriteLine(" this.bot.rapStoreDirectory == null");
+                    Console.WriteLine("Check: this.bot.rapStoreDirectory == null");
                 }
 
                 cleanXMLNS(doc);
@@ -242,6 +305,10 @@ namespace AltAIMLbot.Utils
 
         private void processAiml(XmlNode doc, string filename)
         {
+            if (doc == null)
+            {
+                return;
+            }
             XmlNodeList rootChildren = doc.ChildNodes;
             // find the name of the graph or set to default "*"
             string oldGraph = graphName;
@@ -259,7 +326,9 @@ namespace AltAIMLbot.Utils
 
         private bool processBXML(XmlNode thisNode, string filename)
         {
+            if (thisNode == null) return false;
             if (StaticXMLUtils.IsBlank(thisNode)) return true;
+            if (thisNode.Name == null) return false;
             string named = thisNode.Name.ToLower();
             if (named == "ser")
             {
@@ -358,6 +427,8 @@ namespace AltAIMLbot.Utils
 
         private void processImmediate(XmlNode node, string filename)
         {
+            if (node == null) return;
+
             try
             {
                 this.bot.evalTemplateNode(node);
