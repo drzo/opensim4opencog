@@ -11,7 +11,8 @@ namespace RaptorDB
         {
             _FileName = Path.GetFileNameWithoutExtension(filename);
             _Path = path;
-            if (_Path.EndsWith("\\") == false) _Path += "\\";
+            if (_Path.EndsWith(Path.DirectorySeparatorChar.ToString()) == false) _Path += Path.DirectorySeparatorChar;
+            //if (_Path.EndsWith("\\") == false) _Path += "\\";
 
             _recordFileRead = new FileStream(_Path + _FileName + _recExt, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
             _recordFileWrite = new FileStream(_Path + _FileName + _recExt, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);

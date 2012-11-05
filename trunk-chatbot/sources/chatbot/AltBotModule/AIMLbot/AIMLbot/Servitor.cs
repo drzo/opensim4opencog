@@ -472,7 +472,14 @@ namespace AltAIMLbot
             Console.WriteLine("       ProcessorCount:" + Environment.ProcessorCount);
             Console.WriteLine("             UserName:" + Environment.UserName);
             Console.WriteLine("            TickCount:" + Environment.TickCount);
-            Console.WriteLine("            UserID:" + curUser.UserID);
+            if ((curUser != null) && (curUser.UserID != null))
+            {
+                Console.WriteLine("            UserID:" + curUser.UserID);
+            }
+            else
+            {
+                Console.WriteLine("            UserID: UNDEFINED");
+            }
             curBot.myServitor = this;
             
             myServitorEndpoint = new ServitorEndpoint(curBot, this, prologEngine);

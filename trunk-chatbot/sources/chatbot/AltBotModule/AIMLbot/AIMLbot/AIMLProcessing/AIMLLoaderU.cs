@@ -786,6 +786,8 @@ namespace RTParser.Utils
         {
             if (request.bot.useServitor)
             {
+                Console.WriteLine("Check: loadAIMLFromXML enter(3)");
+
                 newLoader.loadAIMLFromXML(currentNode, loadOpts.CurrentFilename);
                 return 1;
             }

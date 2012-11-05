@@ -304,14 +304,14 @@ namespace LogicalParticleFilter1
                 //prologEngine.maxdepth = testdepth;
                 askQuery(query, mt, out bingingsList);
             }
-            writer.WriteLine("<h3>Query:'{0}' in mt={1}</h3>", query, mt);
+            writer.WriteLine("<h3>Query:'{0}' in mt={1}</h3><br/>", query, mt);
             if (bingingsList.Count == 0)
             {
-                writer.WriteLine("No bindings found at depth {0} in {1}", testdepth,mt);
+                writer.WriteLine("No bindings found at depth {0} in {1}}<br/>", testdepth, mt);
             }
             else
             {
-                writer.WriteLine("{2} bindings found at depth {0} in {1}", testdepth,mt, bingingsList.Count);
+                writer.WriteLine("{2} bindings found at depth {0} in {1}<br/>", testdepth,mt, bingingsList.Count);
                 int index = 0;
                 foreach (Dictionary<string, string> bindings in bingingsList)
                 {
@@ -2738,8 +2738,10 @@ namespace LogicalParticleFilter1
             public PNode Contains(string id)
             {
                 List<PNode> visitedNodes = new List<PNode>();
+                PNode[] tempTopLevelNodes;
+                lock (topLevelNodes) { tempTopLevelNodes = topLevelNodes.ToArray(); }
 
-                foreach (PNode node in topLevelNodes)
+                foreach (PNode node in tempTopLevelNodes)
                 {
                     PNode retNode = FindNode(id, node, visitedNodes);
                     if (retNode != null)

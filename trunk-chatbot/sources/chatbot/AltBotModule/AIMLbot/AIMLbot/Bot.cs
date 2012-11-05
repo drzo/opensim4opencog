@@ -630,6 +630,7 @@ namespace RTParser
         /// <param name="filename">The originator of the XML document</param>
         public void loadAIMLFromXML(XmlNode newAIML, string filename)
         {
+            Console.WriteLine("Check:loadAIMLFromXML(0)");
             AIMLLoader loader = new AIMLLoader(this);
             loader.loadAIMLFromXML(newAIML, filename);
         }

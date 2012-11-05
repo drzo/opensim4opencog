@@ -1699,7 +1699,10 @@ namespace RTParser.Utils
                 return root.evaluateDB(path, query, request, state, builder, "", chatDB);
             }
         }
-
+        public bool IsMicrosoftCLR()
+        {
+            return (Type.GetType("Mono.Runtime") == null);
+        }
         public ExternDB ensureEdb()
         {
             lock (ExternDB.mylock)
@@ -1707,8 +1710,16 @@ namespace RTParser.Utils
                 if (chatDB == null)
                 {
 
-                    string rapStoreDirectory = theBot.rapStoreDirectory.TrimEnd("/\\".ToCharArray()) + "_" + graphName +
-                                               "/";
+                    string rapStoreDirectory = "";
+                    if (IsMicrosoftCLR())
+                    {
+                        rapStoreDirectory = theBot.rapStoreDirectory.TrimEnd("/\\".ToCharArray()) + "_" + graphName + "/";
+                    }
+                    else
+                    {
+                        rapStoreDirectory = theBot.rapStoreDirectory.TrimEnd(Path.DirectorySeparatorChar) + "_" + graphName + Path.DirectorySeparatorChar;
+                    }
+
                     chatDB = new ExternDB(rapStoreDirectory);
                     chatDB.bot = this.theBot;
                     chatDB._dbdir = rapStoreDirectory;
