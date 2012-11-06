@@ -1688,6 +1688,7 @@ namespace AltAIMLbot.Utils
         public AltBot bot = null;
         public string _dbdir = "";
         public static object mylock = new object ();
+        public bool allLoaded = false;
 
         public ExternDB()
         {
@@ -1707,6 +1708,7 @@ namespace AltAIMLbot.Utils
             scoredb = new RaptorDBString[slices];
             filenamedb = new RaptorDBString[slices];
             worddb = new RaptorDBString[slices];
+            allLoaded = false;
         }
 
         public ExternDB(string dbdirectory)
@@ -1725,6 +1727,7 @@ namespace AltAIMLbot.Utils
             scoredb = new RaptorDBString[slices];
             filenamedb = new RaptorDBString[slices];
             worddb = new RaptorDBString[slices];
+            allLoaded = false;
         }
 
         public void OpenAll()
@@ -1753,7 +1756,7 @@ namespace AltAIMLbot.Utils
 
                 Console.WriteLine("OpenAll {0}:'{1}'", i,ourDirectory + Path.DirectorySeparatorChar + "templatedb" + i.ToString());
             }
-            
+            allLoaded = true;
         }
         public void SaveIndex()
         {
@@ -1855,7 +1858,8 @@ namespace AltAIMLbot.Utils
             }
             if (loadeddb != null) loadeddb.Shutdown();
             if (crondb != null) crondb.Shutdown();
-            GC.Collect();
+            //GC.Collect();
+            Console.WriteLine("ExternDB.Close()");
         }
         public void prune(int prunelimit)
         {
@@ -1960,6 +1964,7 @@ namespace AltAIMLbot.Utils
         }
         public Node fetchNode(string absPath,bool full)
         {
+            //Console.WriteLine("Check: fetchNode({0}) in _dbdir='{1}'", absPath, _dbdir);
             try
             {
                 int pslice = pathToSlice(absPath);
@@ -2101,6 +2106,7 @@ namespace AltAIMLbot.Utils
 
         public void saveNode(string absPath, Node myNode)
         {
+            //Console.WriteLine("Check: saveNode({0})", absPath);
             saveNode(absPath, myNode, false);
         }
 

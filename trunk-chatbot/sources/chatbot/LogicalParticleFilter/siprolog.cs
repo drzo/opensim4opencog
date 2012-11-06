@@ -307,7 +307,7 @@ namespace LogicalParticleFilter1
             writer.WriteLine("<h3>Query:'{0}' in mt={1}</h3><br/>", query, mt);
             if (bingingsList.Count == 0)
             {
-                writer.WriteLine("No bindings found at depth {0} in {1}}<br/>", testdepth, mt);
+                writer.WriteLine("No bindings found at depth {0} in {1}<br/>", testdepth, mt);
             }
             else
             {

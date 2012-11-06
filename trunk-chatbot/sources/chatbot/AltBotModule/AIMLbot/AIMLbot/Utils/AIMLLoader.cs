@@ -98,6 +98,7 @@ namespace AltAIMLbot.Utils
                 if (this.bot.rapStoreDirectory != null)
                 {
                     var extDB = bot.GetGraph(graphName);
+                    if (extDB.wasloaded(filename)) return;
                     extDB.Close();
                     extDB.ensureEdb();
                 }
@@ -116,11 +117,11 @@ namespace AltAIMLbot.Utils
                             reader.MoveToContent();                // Skip over the XML declaration
                             doc.Load(reader);
                             this.loadAIMLFromXML(doc, filename);
-                            XmlNodeList rootChildren = doc.ChildNodes;
-                            foreach (XmlNode currentNode in rootChildren)
-                            {
-                                loadAIMLFromXML(currentNode, filename);
-                            }
+                           // XmlNodeList rootChildren = doc.ChildNodes;
+                           // foreach (XmlNode currentNode in rootChildren)
+                           // {
+                           //     loadAIMLFromXML(currentNode, filename);
+                          //  }
                         }
                         else
                         {
@@ -217,9 +218,9 @@ namespace AltAIMLbot.Utils
 
                 if (this.bot.rapStoreDirectory != null)
                 {
-                    var extDB = bot.GetGraph(graphName);
-                    extDB.Close();
-                    extDB.ensureEdb();
+                    //var extDB = bot.GetGraph(graphName);
+                    //extDB.Close();
+                   // extDB.ensureEdb();
                 }
                 // Get a list of the nodes that are children of the <aiml> tag
                 // these nodes should only be either <topic> or <category>
@@ -264,13 +265,15 @@ namespace AltAIMLbot.Utils
                     var extDB0 = bot.GetGraph(graphName);
 
                     //if ((filename.Contains("\\") || filename.Contains("/")) && (!filename.Contains("servitorgraphmap")) && (extDB0.ensureEdb().wasLoaded(filename)))
-                    if ((extDB0.ensureEdb().wasLoaded(filename))
+                    //if ((extDB0.ensureEdb().wasLoaded(filename))
+                    if ((extDB0.wasloaded(filename))
                          && (!filename.Contains("servitorgraphmap"))
                          && (filename.Contains(Path.DirectorySeparatorChar.ToString()))
                         )
                     {
                         // We loaded that file
                         extDB0.Close();
+                        Console.WriteLine("Check: loadAIMLFromXML skipping {0}", filename);
                         return;
                     }
                     else
@@ -283,7 +286,7 @@ namespace AltAIMLbot.Utils
                 {
                     Console.WriteLine("Check: this.bot.rapStoreDirectory == null");
                 }
-
+                Console.WriteLine("Check: loadAIMLFromXML processing {0}",filename);
                 cleanXMLNS(doc);
                 LoadBXML(doc, filename);
                 if (this.bot.rapStoreDirectory != null)

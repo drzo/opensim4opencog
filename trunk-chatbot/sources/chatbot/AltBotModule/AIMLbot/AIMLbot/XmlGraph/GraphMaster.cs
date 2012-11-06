@@ -1703,6 +1703,36 @@ namespace RTParser.Utils
         {
             return (Type.GetType("Mono.Runtime") == null);
         }
+        public bool wasloaded(string filename)
+        {
+            lock (ExternDB.mylock)
+            {
+
+                if (chatDB == null)
+                {
+
+                    string rapStoreDirectory = "";
+                    if (IsMicrosoftCLR())
+                    {
+                        rapStoreDirectory = theBot.rapStoreDirectory.TrimEnd("/\\".ToCharArray()) + "_" + graphName + "/";
+                    }
+                    else
+                    {
+                        rapStoreDirectory = theBot.rapStoreDirectory.TrimEnd(Path.DirectorySeparatorChar) + "_" + graphName + Path.DirectorySeparatorChar;
+                    }
+
+                    chatDB = new ExternDB(rapStoreDirectory);
+                    chatDB.bot = this.theBot;
+                    chatDB._dbdir = rapStoreDirectory;
+                    if (theBot.rapStoreSlices > 0) chatDB.slices = theBot.rapStoreSlices;
+                    if (theBot.rapStoreTrunkLevel > 0) chatDB.trunkLevel = theBot.rapStoreTrunkLevel;
+                    //chatDB.OpenAll();
+                }
+                return chatDB.wasLoaded(filename);
+
+            }
+
+        }
         public ExternDB ensureEdb()
         {
             lock (ExternDB.mylock)
@@ -1725,7 +1755,7 @@ namespace RTParser.Utils
                     chatDB._dbdir = rapStoreDirectory;
                     if (theBot.rapStoreSlices > 0) chatDB.slices = theBot.rapStoreSlices;
                     if (theBot.rapStoreTrunkLevel > 0) chatDB.trunkLevel = theBot.rapStoreTrunkLevel;
-                    chatDB.OpenAll();
+                    if (!chatDB.allLoaded) chatDB.OpenAll();
                 }
             }
             return chatDB;

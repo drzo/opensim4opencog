@@ -347,6 +347,7 @@ namespace AltAIMLbot
                 this.prologEngine.insertKB("", "coppeliaInputMt");
                 actionReport = String.Format("selfAct({0},{1}).", Global.GetActionByID(action).Name, GetCoppeliaAgentNameByID(target));
                 this.prologEngine.appendKB(actionReport, mt);
+                this.prologEngine.appendKB(actionReport, "lastCoppeliaActMt");
             }
             actionReport = String.Format("performedAction({0},{1},{2}).", GetCoppeliaAgentNameByID(sender), Global.GetActionByID(action).Name, GetCoppeliaAgentNameByID(target));
             this.prologEngine.appendKB(actionReport, mt);

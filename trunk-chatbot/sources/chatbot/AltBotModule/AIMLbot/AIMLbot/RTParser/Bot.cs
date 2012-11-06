@@ -377,40 +377,46 @@ namespace RTParser
             allBehaviors = servitor.curBot.myBehaviors.behaviorXmlList();
 
             //StreamWriter sw = File.CreateText(@"./aiml/servitorgraphmap.aiml");
-            StreamWriter sw = File.CreateText(graphcache);
-            foreach (string line in header)
+            if (graphcache != null)
             {
-                sw.WriteLine(line);
-            }
-            foreach (string line in allCrons)
-            {
-                sw.WriteLine(line);
-            }
-            foreach (string line in allPaths.ToArray())
-            {
-                sw.WriteLine(line);
-            }
-            foreach (string line in allBehaviors)
-            {
-                //    sw.WriteLine(line);
-            }
+                StreamWriter sw = File.CreateText(graphcache);
+                foreach (string line in header)
+                {
+                    sw.WriteLine(line);
+                }
+                foreach (string line in allCrons)
+                {
+                    sw.WriteLine(line);
+                }
+                foreach (string line in allPaths.ToArray())
+                {
+                    sw.WriteLine(line);
+                }
+                foreach (string line in allBehaviors)
+                {
+                    //    sw.WriteLine(line);
+                }
 
-            foreach (string line in footer)
-            {
-                sw.WriteLine(line);
+                foreach (string line in footer)
+                {
+                    sw.WriteLine(line);
+                }
+                sw.Flush();
+                sw.Close();
             }
-            sw.Flush();
-            sw.Close();
 
             string servitorbin = GlobalSettings.grabSetting("servitorbin");
-            if (!File.Exists(servitorbin))
+            if (servitorbin != null)
             {
-                if (servitorbin!=null) servitor.saveToBinaryFile(servitorbin);
-                servitor.skiploading = true;
-            }
-            else
-            {
-                Console.WriteLine("Skipping saveServitor(): already exists!!!");
+                if (!File.Exists(servitorbin))
+                {
+                    if (servitorbin != null) servitor.saveToBinaryFile(servitorbin);
+                    servitor.skiploading = true;
+                }
+                else
+                {
+                    Console.WriteLine("Skipping saveServitor(): already exists!!!");
+                }
             }
 
         }
