@@ -258,8 +258,31 @@ namespace RaptorDB
 
         private ILog log = LogManager.GetLogger(typeof(KeyStore<T>));
 
-        private string _Path = "";
-        private string _FileName = "";
+        private string __Path = "";
+        private string _Path
+        {
+            get
+            {
+                return __Path;
+            }
+            set
+            {
+                __Path = RaptorFileUtil.FileSystemPath(value);
+            }
+        }
+        private string __FileName = "";
+        private string _FileName
+        {
+            get
+            {
+                return __FileName;
+            }
+            set
+            {
+                __FileName = RaptorFileUtil.FileSystemPath(value);
+            }
+        }
+
         private byte _MaxKeySize;
         private StorageFile<T> _archive;
         private MGIndex<T> _index;
@@ -421,6 +444,7 @@ namespace RaptorDB
 
         private void Initialize(string filename, byte maxkeysize, bool AllowDuplicateKeys)
         {
+            filename = RaptorFileUtil.FileSystemPath(filename);
             _MaxKeySize = RDBDataType<T>.GetByteSize(maxkeysize);
 
             _Path = Path.GetDirectoryName(filename);

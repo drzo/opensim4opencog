@@ -40,6 +40,7 @@ namespace RaptorDB
 
         public void Init(string filename, int sizelimitKB, bool showmethodnames)
         {
+            filename = RaptorFileUtil.FileSystemPath(filename);
             _que = new Queue();
             _showMethodName = showmethodnames;
             _sizeLimit = sizelimitKB;
@@ -49,9 +50,12 @@ namespace RaptorDB
             if (_FilePath != "")
             {
                 _FilePath = Directory.CreateDirectory(_FilePath).FullName;
-                if (_FilePath.EndsWith("\\") == false)
-                    _FilePath += "\\";
+                string dirSep = "" + Path.DirectorySeparatorChar;
+                if (_FilePath.EndsWith(dirSep) == false)
+                    _FilePath += dirSep;
             }
+            filename = RaptorFileUtil.FileSystemPath(filename);
+
             if (!File.Exists(filename))
             {
                 File.WriteAllText(filename, "");
@@ -141,10 +145,10 @@ namespace RaptorDB
                                     _output.Flush();
                                     _output.Close();
                                     int count = 1;
-                                    while (File.Exists(_FilePath + Path.GetFileNameWithoutExtension(_filename) + "." + count.ToString("0000")))
+                                    while (RaptorFileUtil.FileExists(_FilePath + Path.GetFileNameWithoutExtension(_filename) + "." + count.ToString("0000")))
                                         count++;
 
-                                    File.Move(_filename,
+                                    RaptorFileUtil.FileMove(_filename,
                                         _FilePath +
                                         Path.GetFileNameWithoutExtension(_filename) +
                                         "." + count.ToString("0000"));
@@ -160,16 +164,16 @@ namespace RaptorDB
                                 _output.Flush();
                                 _output.Close();
                                 int count = 1;
-                                while (File.Exists(_FilePath + Path.GetFileNameWithoutExtension(_filename) + "." + count.ToString("0000")))
+                                while (RaptorFileUtil.FileExists(_FilePath + Path.GetFileNameWithoutExtension(_filename) + "." + count.ToString("0000")))
                                 {
-                                    File.Move(_FilePath + Path.GetFileNameWithoutExtension(_filename) + "." + count.ToString("0000"),
+                                    RaptorFileUtil.FileMove(_FilePath + Path.GetFileNameWithoutExtension(_filename) + "." + count.ToString("0000"),
                                        _FilePath +
                                        Path.GetFileNameWithoutExtension(_filename) +
                                        "." + count.ToString("0000") +
                                        "." + _lastFileDate.ToString("yyyy-MM-dd"));
                                     count++;
                                 }
-                                File.Move(_filename,
+                                RaptorFileUtil.FileMove(_filename,
                                    _FilePath +
                                    Path.GetFileNameWithoutExtension(_filename) +
                                    "." + count.ToString("0000") +

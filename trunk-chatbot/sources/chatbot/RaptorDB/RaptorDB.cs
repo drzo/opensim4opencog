@@ -7,6 +7,34 @@ using System.Collections;
 
 namespace RaptorDB
 {
+    public class RaptorFileUtil
+    {
+        public static void FileMove(string from, string to)
+        {
+            File.Move(RaptorFileUtil.FileSystemPath(from), RaptorFileUtil.FileSystemPath(to));
+        }
+        public static bool FileExists(string file)
+        {
+            return File.Exists(RaptorFileUtil.FileSystemPath(file));
+        }
+
+        public static string FileSystemPath(string file)
+        {
+            if (IsOnMonoUnix)
+            {
+                if (file.Contains("\\"))
+                {
+                    file = file.Replace('\\', Path.DirectorySeparatorChar);
+                }
+            }
+            return file;
+        }
+
+        protected static bool IsOnMonoUnix
+        {
+            get { return Type.GetType("Mono.Runtime") != null && Environment.OSVersion.Platform == PlatformID.Unix; }
+        }
+    }
     public class RaptorDB<T> : KeyStore<T> where T : IComparable<T>
     {
         public RaptorDB(string Filename, byte MaxKeySize, bool AllowDuplicateKeys) : base(Filename, MaxKeySize, AllowDuplicateKeys)
