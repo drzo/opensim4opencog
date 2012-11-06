@@ -149,7 +149,7 @@ namespace RTParser
         /// <summary>
         /// The default predicates to set up for a user
         /// </summary>
-        public SettingsDictionaryReal DefaultPredicates;
+        public SettingsDictionary DefaultPredicates;
 
         /// <summary>
         /// Holds information about the available custom tag handling classes (if loaded)
@@ -2127,6 +2127,11 @@ The AltAIMLbot program.
         public Dictionary<string, string> BBDict = new Dictionary<string, string>();
         public void setBBHash(string key, string data)
         {
+            GlobalSettings.addSetting(key, data);
+            setBBHash0(key, data);
+        }
+        public void setBBHash0(string key, string data)
+        {
             //curBot.myChemistry.m_cBus.setHash(key,data);
             lock (BBDict) BBDict[key] = data;
             if (useMemcache)
@@ -2138,6 +2143,13 @@ The AltAIMLbot program.
             }
         }
         public string getBBHash(string key)
+        {
+            string gs = getBBHash0(key);
+            if (!string.IsNullOrEmpty(gs)) return gs;
+            return GlobalSettings.grabSetting(key, false);
+        }
+
+        public string getBBHash0(string key)
         {
             try
             {
@@ -2157,7 +2169,6 @@ The AltAIMLbot program.
                 return "";
             }
         }
-
         #endregion
 
         #region FSM

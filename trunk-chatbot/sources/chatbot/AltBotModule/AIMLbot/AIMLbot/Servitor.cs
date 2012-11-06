@@ -607,8 +607,7 @@ namespace AltAIMLbot
             }
             if (input.StartsWith("<"))
             {
-                curBot.myBehaviors.runBTXML(input);
-                return "@<>";
+                return "@<>=" + curBot.myBehaviors.runBTXML(input);
             }
             curBot.isPerformingOutput = true;
             if (curBot.myBehaviors.waitingForChat)
@@ -1138,14 +1137,14 @@ namespace AltAIMLbot
         }
         public void setBBHash(string key, string data)
         {
-            //curBot.myChemistry.m_cBus.setHash(key,data);
+            //curbot.bbSetHash(key,data);
             curBot.setBBHash(key, data);
         }
         public string getBBHash(string key)
         {
             try
             { 
-                //BBDict[key] =curBot.myChemistry.m_cBus.getHash(key)
+                //BBDict[key] =curbot.bbGetHash(key)
                 return curBot.getBBHash(key);
             }
             catch
@@ -1165,7 +1164,7 @@ namespace AltAIMLbot
                 Random Rgen = new Random();
            
                 int myUUID = Rgen.Next(Int32.MaxValue);
-                //curBot.myChemistry.m_cBus.setHash("TTSuuid", lastuutid.ToString());
+                //curbot.bbSetHash("TTSuuid", lastuutid.ToString());
                 setBBHash("TTSuuid", myUUID.ToString());
                 Console.WriteLine("sayResponse :{0}:{1}", myUUID.ToString(), message);
 

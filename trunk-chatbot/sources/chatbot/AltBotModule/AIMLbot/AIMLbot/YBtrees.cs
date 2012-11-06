@@ -2028,7 +2028,7 @@ namespace AltAIMLbot
             try
             {
                 //sv = myChemistry.m_cBus.getHash("mdollhearduuid");
-                sv = bot.myChemistry.m_cBus.getHash(varName);
+                sv = bot.getBBHash(varName) ?? "0.0";
                 bbVal = double.Parse(sv);
             }
             catch (Exception e) { }
@@ -2509,11 +2509,11 @@ namespace AltAIMLbot
                     bot.myActiveModel = MiniModel;
                     miniPostives = MiniModel.strPositives();
                     myReport = answer;
-                    bot.myChemistry.m_cBus.setHash("foundSATModel", "True");
+                    bot.setBBHash("foundSATModel", "True");
                 }
                 else
                 {
-                    bot.myChemistry.m_cBus.setHash("foundSATModel", "False");
+                    bot.setBBHash("foundSATModel", "False");
                 }
 
                 //
@@ -2539,7 +2539,7 @@ namespace AltAIMLbot
                     Console.WriteLine("NO SAT MODEL FOUND");
                     if (bot.myActiveModel == null)
                     {
-                        bot.myChemistry.m_cBus.setHash("activeModel", "(NOT sat)");
+                        bot.setBBHash("activeModel", "(NOT sat)");
                     }
                     try
                     {
@@ -2567,8 +2567,8 @@ namespace AltAIMLbot
                 string totalModel = bot.myModel.AsSentenceString();
                 string postPositives = bot.myModel.strPositives();
                 bot.myPositiveSATModleString = postPositives;
-                //bot.myChemistry.m_cBus.setHash("activeModel", totalModel);
-                bot.myChemistry.m_cBus.setHash("activeModel", postPositives);
+                //bot.bbSetHash("activeModel", totalModel);
+                bot.setBBHash("activeModel", postPositives);
                 Console.WriteLine("SAT MODEL FOUND:{0}", postPositives);
                 try
                 {
@@ -4986,7 +4986,7 @@ namespace AltAIMLbot
             try
             {
                 //sv = myChemistry.m_cBus.getHash("mdollhearduuid");
-                sv = bot.myChemistry.m_cBus.getHash(varName);
+                sv = bot.getBBHash(varName) ?? "0.0";
                 bbVal = double.Parse(sv);
             }
             catch (Exception e) { }

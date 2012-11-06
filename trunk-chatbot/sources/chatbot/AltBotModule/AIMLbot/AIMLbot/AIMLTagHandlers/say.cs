@@ -64,10 +64,10 @@ namespace AltAIMLbot.AIMLTagHandlers
                         Console.WriteLine("  SayA msg1:{0}", message);
                         //if (message.Length > 0) this.user.bot.sayProcessor(message);
                         this.bot.setBBHash("TTSText", message);
-                        //this.user.bot.myChemistry.m_cBus.setHash("TTSText", message);
+                        //this.user.bot.bbSetHash("TTSText", message);
                         Random Rgen = new Random();
                         int myUUID = Rgen.Next(Int32.MaxValue);
-                        //this.user.bot.myChemistry.m_cBus.setHash("TTSuuid", myUUID.ToString());
+                        //this.user.bot.bbSetHash("TTSuuid", myUUID.ToString());
                         this.bot.setBBHash("TTSuuid", myUUID.ToString());
                         Console.WriteLine("sayResponse :{0}:{1}", myUUID.ToString(), message);
                         if ((message.Length > 0) && (this.user.bot.sayProcessor != null))

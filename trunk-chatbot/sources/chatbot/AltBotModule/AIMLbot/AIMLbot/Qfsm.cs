@@ -151,7 +151,7 @@ namespace AltAIMLbot
                 try
                 {
                     //sv = myChemistry.m_cBus.getHash("mdollhearduuid");
-                    sv = bot.myChemistry.m_cBus.getHash(varName);
+                    sv = bot.getBBHash(varName);
                     bbVal = double.Parse(sv);
                 }
                 catch (Exception e) { }
@@ -231,7 +231,7 @@ namespace AltAIMLbot
             // Transition
             curState = nextState;
             transitionTime = Environment.TickCount;
-            bot.myChemistry.m_cBus.setHash("fsmstate",curState);
+            bot.setBBHash("fsmstate",curState);
         }
 
         public void processTransition(XmlNode transitionNode, AltBot bot)

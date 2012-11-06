@@ -73,6 +73,8 @@ namespace RTParser.Variables
         void InsertProvider(ParentProvider provider);
         string ToDebugString();
         string GetMeta(string name, string prop);
+        string bbPrefix { get; set; }
+        void Clone(ISettingsDictionary settingsDictionary);
     }
     /// <summary>
     /// A bespoke Dictionary<,> for loading, adding, checking, removing and extracting
@@ -1223,10 +1225,10 @@ namespace RTParser.Variables
                     return true;
                 }
                 // check blackboard
-                if ((bbPrefix != null) && (this.bot.myChemistry != null))
+                if ((bbPrefix != null))
                 {
                     string bbKey = bbPrefix + MakeCaseInsensitive.TransformInput(name).ToLower(); ;
-                    this.bot.myChemistry.m_cBus.setHash(bbKey, value);
+                    this.bot.setBBHash(bbKey, value);
                 }
                 SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
                 value = MakeLocalValue(name, value);
@@ -1735,7 +1737,7 @@ namespace RTParser.Variables
                             if ((bbPrefix != null) && (this.bot.myChemistry != null))
                             {
                                 string bbKey = bbPrefix + MakeCaseInsensitive.TransformInput(name).ToLower(); ;
-                                this.bot.myChemistry.m_cBus.setHash(bbKey, value);
+                                this.bot.setBBHash(bbKey, value);
                             }
                             SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
                             return true;
@@ -1946,7 +1948,7 @@ namespace RTParser.Variables
                     string bbKey = bbPrefix + normalizedName.ToLower();
                     if (!bbKey.Contains(" "))
                     {
-                        string bbValue = this.bot.myChemistry.m_cBus.getHash(bbKey);
+                        string bbValue = this.bot.getBBHash(bbKey);
                         //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
                         if (bbValue.Length > 0)
                         {
@@ -1992,7 +1994,7 @@ namespace RTParser.Variables
                 string bbKey = bbPrefix + normalizedName.ToLower();
                 if (!bbKey.Contains(" "))
                 {
-                    string bbValue = this.bot.myChemistry.m_cBus.getHash(bbKey);
+                    string bbValue = this.bot.getBBHash0(bbKey);
                     //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
                     if (bbValue.Length > 0 && false)
                     {
@@ -2477,7 +2479,7 @@ namespace RTParser.Variables
         public static bool NoSettingsAliaes = true;
         public static bool UseUndoPush = false;
         private bool mayUseOverides;
-        public string bbPrefix;
+        public string bbPrefix { get; set; }
 
         public DataUnifiable GetSetReturn(string name, out string realName)
         {

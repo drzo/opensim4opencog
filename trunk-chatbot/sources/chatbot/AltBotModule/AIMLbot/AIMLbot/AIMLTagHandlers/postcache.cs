@@ -49,7 +49,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     String queueName = TemplateNodeAttributes["key"].Value;
                     String templateNodeInnerValue = this.TemplateNodeInnerText;
                     Console.WriteLine("PostCache [{0}] = {1}", queueName, templateNodeInnerValue);
-                    this.user.bot.myChemistry.m_cBus.setHash(queueName, (string)templateNodeInnerValue);
+                    this.user.bot.setBBHash(queueName, (string)templateNodeInnerValue);
                 }
                 catch
                 {

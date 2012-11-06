@@ -186,7 +186,7 @@ namespace AltAIMLbot.Utils
                 if ((bbPrefix != null) && (this.bot.myChemistry != null))
                 {
                     string bbKey = bbPrefix + MakeCaseInsensitive.TransformInput(key).ToLower(); ;
-                    this.bot.myChemistry.m_cBus.setHash(bbKey, value);
+                    this.bot.bbSetHash(bbKey, value);
                 }
             }
 
@@ -231,7 +231,7 @@ namespace AltAIMLbot.Utils
                 if ((bbPrefix != null) && (this.bot.myChemistry != null))
                 {
                     string bbKey = bbPrefix + MakeCaseInsensitive.TransformInput(key).ToLower();
-                    this.bot.myChemistry.m_cBus.setHash(bbKey, value);
+                    this.bot.bbSetHash(bbKey, value);
                 }
             }
             else
@@ -261,7 +261,7 @@ namespace AltAIMLbot.Utils
             if ((bbPrefix != null) && (this.bot.myChemistry != null))
             {
                 string bbKey = bbPrefix + normalizedName.ToLower();
-                string bbValue = this.bot.myChemistry.m_cBus.getHash(bbKey);
+                string bbValue = this.bot.bbGetHash(bbKey);
                 //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
                 if (bbValue.Length > 0)
                 {
@@ -301,7 +301,7 @@ namespace AltAIMLbot.Utils
                 if ((bbPrefix != null) && (this.bot.myChemistry != null))
                 {
                     string bbKey = bbPrefix + normalizedName.ToLower();
-                    string bbValue = this.bot.myChemistry.m_cBus.getHash(bbKey);
+                    string bbValue = this.bot.bbGetHash(bbKey);
                     //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
                     if (bbValue.Length > 0)
                     {
