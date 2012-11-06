@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
@@ -6,7 +7,8 @@
     <ProjectGuid>{B4527C7B-8CCD-491D-A313-D56EC6395B32}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ApplicationIcon></ApplicationIcon>
+    <ApplicationIcon>
+    </ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
     <AssemblyName>RaptorDB</AssemblyName>
@@ -16,90 +18,69 @@
     <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder></AppDesignerFolder>
+    <AppDesignerFolder>
+    </AppDesignerFolder>
     <RootNamespace>RaptorDB</RootNamespace>
-    <StartupObject></StartupObject>
+    <StartupObject>
+    </StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BaseAddress>285212672</BaseAddress>
-    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;VISUAL_STUDIO</DefineConstants>
     <DocumentationFile>RaptorDB.XML</DocumentationFile>
-    <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
-    <Optimize>True</Optimize>
+    <Optimize>true</Optimize>
     <OutputPath>..\..\..\bin\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
-    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>3</WarningLevel>
-    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BaseAddress>285212672</BaseAddress>
-    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;VISUAL_STUDIO</DefineConstants>
     <DocumentationFile>AltAIMLbot.XML</DocumentationFile>
-    <DebugSymbols>True</DebugSymbols>
+    <DebugSymbols>true</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
-    <Optimize>False</Optimize>
+    <Optimize>false</Optimize>
     <OutputPath>..\..\..\bin\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
-    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>3</WarningLevel>
-    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System">
-        <Name>System</Name>
-    </Reference>
+    <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.cs">
-    </Compile>
-    <Compile Include="Global.cs">
-    </Compile>
-    <Compile Include="KeyStore.cs">
-    </Compile>
-    <Compile Include="mylogger.cs">
-    </Compile>
-    <Compile Include="RaptorDB.cs">
-    </Compile>
-    <Compile Include="SafeDictionary.cs">
-    </Compile>
-    <Compile Include="DataTypes\DataTypes.cs">
-    </Compile>
-    <Compile Include="Indexes\BitmapIndex.cs">
-    </Compile>
-    <Compile Include="Indexes\IndexFile.cs">
-    </Compile>
-    <Compile Include="Indexes\MGIndex.cs">
-    </Compile>
-    <Compile Include="Indexes\MurMurHash2.cs">
-    </Compile>
-    <Compile Include="Indexes\WAHBitarray2.cs">
-    </Compile>
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Global.cs" />
+    <Compile Include="KeyStore.cs" />
+    <Compile Include="mylogger.cs" />
+    <Compile Include="RaptorDB.cs" />
+    <Compile Include="SafeDictionary.cs" />
+    <Compile Include="DataTypes\DataTypes.cs" />
+    <Compile Include="Indexes\BitmapIndex.cs" />
+    <Compile Include="Indexes\IndexFile.cs" />
+    <Compile Include="Indexes\MGIndex.cs" />
+    <Compile Include="Indexes\MurMurHash2.cs" />
+    <Compile Include="Indexes\WAHBitarray2.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Storage\StorageFile.cs">
-    </Compile>
+    <Compile Include="Storage\StorageFile.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

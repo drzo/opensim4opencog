@@ -434,7 +434,7 @@ namespace AIMLBotModule
 
         private User GetMyUser(string fromname)
         {
-            bool newlyCreated;
+            bool newlyCreated = false;
             if (MyBotNullWarning()) return MyUser;
             if (String.IsNullOrEmpty(fromname))
             {

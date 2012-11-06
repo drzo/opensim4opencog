@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -23,6 +23,10 @@
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <EnvironmentVariables>
+      <EnvironmentVariables />
+    </EnvironmentVariables>
+    <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,12 +37,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\bin\log4net.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=3.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL" />
     <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -48,8 +49,6 @@
     <Reference Include="System.Data.DataSetExtensions">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -57,7 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
-      <Project>{19A1AA71-F91B-4846-9D93-882FB2992048}</Project>
+      <Project>{E64505B9-62DE-4AF1-93C6-DDDB42B7D4E7}</Project>
       <Name>MushDLR223</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\RoboKindAvroQPID.csproj">
@@ -65,15 +64,15 @@
       <Name>RoboKindAvroQPID</Name>
     </ProjectReference>
     <ProjectReference Include="..\AltBotModule\AIMLbot\AIMLbot\AltAIMLbot.csproj">
-      <Project>{1B0D3922-C6FB-47C0-A688-2773C002955A}</Project>
+      <Project>{B797836E-9464-470F-A214-BBB8BDED9D1C}</Project>
       <Name>AltAIMLbot</Name>
     </ProjectReference>
     <ProjectReference Include="..\LAIR.ResourceAPIs\WordNet\WordNet\LAIR.ResourceAPIs.WordNet.csproj">
-      <Project>{84F11AF8-D72B-47D3-A087-9B428E593332}</Project>
+      <Project>{C3E5E5FD-77E2-4F2C-8BAF-C6C2542BB82D}</Project>
       <Name>LAIR.ResourceAPIs.WordNet</Name>
     </ProjectReference>
     <ProjectReference Include="..\RaptorDB\RaptorDB.csproj">
-      <Project>{10A8E1BB-F7E9-4EE5-8A56-3832A451C1EB}</Project>
+      <Project>{B4527C7B-8CCD-491D-A313-D56EC6395B32}</Project>
       <Name>RaptorDB</Name>
     </ProjectReference>
   </ItemGroup>

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -33,42 +33,52 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.JScript" />
-    <Reference Include="Newtonsoft.Json, Version=3.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL" />
     <Reference Include="System" />
-    <Reference Include="System.XML" />
+    <Reference Include="System.Xml" />
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=null">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\bin\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json.Net20, Version=3.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\bin\Newtonsoft.Json.Net20.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=4.0.8.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\bin\Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
-      <Project>{5EC8E3B9-57B8-4D8C-B9CE-C64D53D15D37}</Project>
+      <Project>{E64505B9-62DE-4AF1-93C6-DDDB42B7D4E7}</Project>
       <Name>MushDLR223</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\qpid-avro-cs\avro-src-1.7.0\lang\csharp\src\apache\main\Avro.main.csproj">
+    <ProjectReference Include="qpid-avro-cs\avro-src-1.7.0\lang\csharp\src\apache\main\Avro.main.csproj">
       <Project>{A0A5CA3C-F58C-4D07-98B0-2C7B62AB20F0}</Project>
       <Name>Avro.main</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\qpid-avro-cs\dotnet\Qpid.Buffer\Qpid.Buffer.csproj">
+    <ProjectReference Include="qpid-avro-cs\dotnet\Qpid.Buffer\Qpid.Buffer.csproj">
       <Project>{44384DF2-B0A4-4580-BDBC-EE4BAA87D995}</Project>
       <Name>Qpid.Buffer</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\qpid-avro-cs\dotnet\Qpid.Client\Qpid.Client.csproj">
+    <ProjectReference Include="qpid-avro-cs\dotnet\Qpid.Client\Qpid.Client.csproj">
       <Project>{68987C05-3768-452C-A6FC-6BA1D372852F}</Project>
       <Name>Qpid.Client</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\qpid-avro-cs\dotnet\Qpid.Codec\Qpid.Codec.csproj">
+    <ProjectReference Include="qpid-avro-cs\dotnet\Qpid.Codec\Qpid.Codec.csproj">
       <Project>{22D0D0C2-77AF-4DE3-B456-7FF3893F9F88}</Project>
       <Name>Qpid.Codec</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\qpid-avro-cs\dotnet\Qpid.Common\Qpid.Common.csproj">
+    <ProjectReference Include="qpid-avro-cs\dotnet\Qpid.Common\Qpid.Common.csproj">
       <Project>{77064C42-24D2-4CEB-9EA2-0EF481A43205}</Project>
       <Name>Qpid.Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\qpid-avro-cs\dotnet\Qpid.Messaging\Qpid.Messaging.csproj">
+    <ProjectReference Include="qpid-avro-cs\dotnet\Qpid.Messaging\Qpid.Messaging.csproj">
       <Project>{6688F826-C58E-4C1B-AA1F-22AFAB4B7D07}</Project>
       <Name>Qpid.Messaging</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\modules\RoboKindAvroQPIDModule\qpid-avro-cs\dotnet\Qpid.Sasl\Qpid.Sasl.csproj">
+    <ProjectReference Include="qpid-avro-cs\dotnet\Qpid.Sasl\Qpid.Sasl.csproj">
       <Project>{1465B0EE-6452-42A6-AB73-B2F9EABEEE75}</Project>
       <Name>Qpid.Sasl</Name>
     </ProjectReference>
@@ -380,8 +390,12 @@
     <Compile Include="org\robokind\avrogen\vision\ImageRegionRecord.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="RoboKindAvroQPIDModule.cs" />
-    <Compile Include="RoboKindConnectorQPID.cs" />
+    <Compile Include="RoboKindAvroQPIDModule.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="RoboKindConnectorQPID.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

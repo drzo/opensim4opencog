@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
@@ -6,7 +7,8 @@
     <ProjectGuid>{613157F4-3F7C-4758-A28B-D0A089426F6B}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ApplicationIcon></ApplicationIcon>
+    <ApplicationIcon>
+    </ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
     <AssemblyName>LAIR.ResourceAPIs.PennBank</AssemblyName>
@@ -16,161 +18,116 @@
     <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder></AppDesignerFolder>
+    <AppDesignerFolder>
+    </AppDesignerFolder>
     <RootNamespace>LAIR.ResourceAPIs.PennBank</RootNamespace>
-    <StartupObject></StartupObject>
+    <StartupObject>
+    </StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BaseAddress>285212672</BaseAddress>
-    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;VISUAL_STUDIO</DefineConstants>
     <DocumentationFile>LAIR.ResourceAPIs.PennBank.XML</DocumentationFile>
-    <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
-    <Optimize>True</Optimize>
+    <Optimize>true</Optimize>
     <OutputPath>..\..\..\..\..\bin\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
-    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>3</WarningLevel>
-    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BaseAddress>285212672</BaseAddress>
-    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;VISUAL_STUDIO</DefineConstants>
     <DocumentationFile>LAIR.ResourceAPIs.PennBank.XML</DocumentationFile>
-    <DebugSymbols>True</DebugSymbols>
+    <DebugSymbols>true</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
-    <Optimize>False</Optimize>
+    <Optimize>false</Optimize>
     <OutputPath>..\..\..\..\..\bin\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
-    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>3</WarningLevel>
-    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System">
-        <Name>System</Name>
-    </Reference>
-    <Reference Include="System.Core">
-        <Name>System.Core</Name>
-    </Reference>
-    <Reference Include="System.Xml">
-        <Name>System.Xml</Name>
-    </Reference>
-    <Reference Include="System.Data">
-        <Name>System.Data</Name>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-        <Name>System.Data.DataSetExtensions</Name>
-    </Reference>
-    <Reference Include="log4net.dll">
-        <Name>log4net.dll</Name>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Data" />
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\..\..\..\bin\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="MySql.Data.dll">
-        <Name>MySql.Data.dll</Name>
+    <Reference Include="MySql.Data, Version=6.0.4.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d">
       <HintPath>..\..\..\..\..\bin\MySql.Data.dll</HintPath>
     </Reference>
-    <Reference Include="LAIR.ResourceAPIs.NomBank.dll">
-        <Name>LAIR.ResourceAPIs.NomBank.dll</Name>
+    <Reference Include="LAIR.ResourceAPIs.NomBank, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\..\..\..\bin\LAIR.ResourceAPIs.NomBank.dll</HintPath>
     </Reference>
-    <Reference Include="LAIR.Collections">
-        <Name>LAIR.Collections</Name>
+    <Reference Include="LAIR.Collections, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\..\..\..\bin\LAIR.Collections.dll</HintPath>
     </Reference>
-    <Reference Include="LAIR.Extensions">
-        <Name>LAIR.Extensions</Name>
+    <Reference Include="LAIR.Extensions, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\..\..\..\bin\LAIR.Extensions.dll</HintPath>
     </Reference>
-    <Reference Include="LAIR.GraphViz">
-        <Name>LAIR.GraphViz</Name>
+    <Reference Include="LAIR.GraphViz, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\..\..\..\bin\LAIR.GraphViz.dll</HintPath>
     </Reference>
-    <Reference Include="LAIR.IO">
-        <Name>LAIR.IO</Name>
+    <Reference Include="LAIR.IO, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\..\..\..\bin\LAIR.IO.dll</HintPath>
     </Reference>
-    <Reference Include="LAIR.MachineLearning">
-        <Name>LAIR.MachineLearning</Name>
+    <Reference Include="LAIR.MachineLearning, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\..\..\..\bin\LAIR.MachineLearning.dll</HintPath>
     </Reference>
-    <Reference Include="LAIR.XML">
-        <Name>LAIR.XML</Name>
+    <Reference Include="LAIR.XML, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\..\..\..\bin\LAIR.XML.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\LAIR.CommonPort\LAIR.CommonPort.csproj">
-      <Name>LAIR.CommonPort</Name>
       <Project>{DD695CEB-D5D6-40A9-98AD-84E3FC255957}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Name>LAIR.CommonPort</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DiscourseBank\DiscourseBankEngine.cs">
-    </Compile>
-    <Compile Include="DiscourseBank\DiscourseBankRelation.cs">
-    </Compile>
-    <Compile Include="DiscourseBank\Span.cs">
-    </Compile>
-    <Compile Include="PropBank\Frame.cs">
-    </Compile>
-    <Compile Include="PropBank\LabeledNodeCollection.cs">
-    </Compile>
-    <Compile Include="PropBank\PropBankEngine.cs">
-    </Compile>
-    <Compile Include="PropBank\PropBankLabeledNodeCollection.cs">
-    </Compile>
-    <Compile Include="PropBank\PropBankNode.cs">
-    </Compile>
-    <Compile Include="PropBank\PropBankNodeLabel.cs">
-    </Compile>
-    <Compile Include="PropBank\PropBankPredicateTreeInstanceProvider.cs">
-    </Compile>
-    <Compile Include="PropBank\Role.cs">
-    </Compile>
-    <Compile Include="PropBank\RoleSet.cs">
-    </Compile>
-    <Compile Include="PropBank\VerbInfo.cs">
-    </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs">
-    </Compile>
-    <Compile Include="TreeBank\ChildSearch.cs">
-    </Compile>
-    <Compile Include="TreeBank\NodeHierarchyPositionComparer.cs">
-    </Compile>
-    <Compile Include="TreeBank\NodePositionComparer.cs">
-    </Compile>
-    <Compile Include="TreeBank\ParseTextStartLength.cs">
-    </Compile>
-    <Compile Include="TreeBank\RawParseText.cs">
-    </Compile>
-    <Compile Include="TreeBank\TreeBankEngine.cs">
-    </Compile>
-    <Compile Include="TreeBank\TreeBankInstanceProvider.cs">
-    </Compile>
-    <Compile Include="TreeBank\TreeBankNode.cs">
-    </Compile>
-    <Compile Include="TreeBank\TreeBankNodeList.cs">
-    </Compile>
-    <Compile Include="TreeBank\TreeBankParseTreeInstanceProvider.cs">
-    </Compile>
+    <Compile Include="DiscourseBank\DiscourseBankEngine.cs" />
+    <Compile Include="DiscourseBank\DiscourseBankRelation.cs" />
+    <Compile Include="DiscourseBank\Span.cs" />
+    <Compile Include="PropBank\Frame.cs" />
+    <Compile Include="PropBank\LabeledNodeCollection.cs" />
+    <Compile Include="PropBank\PropBankEngine.cs" />
+    <Compile Include="PropBank\PropBankLabeledNodeCollection.cs" />
+    <Compile Include="PropBank\PropBankNode.cs" />
+    <Compile Include="PropBank\PropBankNodeLabel.cs" />
+    <Compile Include="PropBank\PropBankPredicateTreeInstanceProvider.cs" />
+    <Compile Include="PropBank\Role.cs" />
+    <Compile Include="PropBank\RoleSet.cs" />
+    <Compile Include="PropBank\VerbInfo.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TreeBank\ChildSearch.cs" />
+    <Compile Include="TreeBank\NodeHierarchyPositionComparer.cs" />
+    <Compile Include="TreeBank\NodePositionComparer.cs" />
+    <Compile Include="TreeBank\ParseTextStartLength.cs" />
+    <Compile Include="TreeBank\RawParseText.cs" />
+    <Compile Include="TreeBank\TreeBankEngine.cs" />
+    <Compile Include="TreeBank\TreeBankInstanceProvider.cs" />
+    <Compile Include="TreeBank\TreeBankNode.cs" />
+    <Compile Include="TreeBank\TreeBankNodeList.cs" />
+    <Compile Include="TreeBank\TreeBankParseTreeInstanceProvider.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

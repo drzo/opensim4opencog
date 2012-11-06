@@ -87,10 +87,22 @@ namespace RaptorDB
         {
             WriteData();
         }
-
         public void ShutDown()
         {
-            WriteData();
+            lock (_writelock)
+            {
+                WriteData();
+                try
+                {
+                    ShutDown0();
+                }                 
+                catch (Exception)
+                {
+                }
+            }
+        }
+        private void ShutDown0()
+        {
             if (_output != null)
             {
                 _output.Flush();
