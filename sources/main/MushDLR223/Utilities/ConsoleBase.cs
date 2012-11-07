@@ -432,7 +432,10 @@ namespace MushDLR223.Utilities
                 return false;
             }
         }
-
+        static DLRConsole()
+        {
+            SafelyRun(() => DetectMainEnv(null));
+        }
         public static void DetectMainEnv(TextWriter Console)
         {
             var osv = Environment.OSVersion;

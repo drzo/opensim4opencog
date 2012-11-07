@@ -1009,14 +1009,15 @@ namespace MushDLR223.Virtualization
 
         public static string FileSystemPath(string file)
         {
-            if (DLRConsole.IsOnMonoUnix)
+            if (DLRConsole.IsOnMonoUnix || true)
             {
                 if (file.Contains("\\"))
                 {
                     file = file.Replace('\\', Path.DirectorySeparatorChar);
                 }
             }
-            return file;
+            // works everywhere
+            return file.Replace("\\","/");
         }
     }
 }
