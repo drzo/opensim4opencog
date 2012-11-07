@@ -64,20 +64,22 @@ namespace RTParser
         //public Unifiable responderJustSaid;
 
         // last user talking to bot besides itself
+        [ThreadStatic]
         private User _lastUser;
+        private User _slastUser;
         public User LastUser
         {
             get
             {
-                if (BotAsUser != null)
+                if (_botAsUser != null)
                 {
-                    var LR = BotAsUser.LastResponder;
+                    var LR = _botAsUser.LastResponder;
                     if (LR != null) return LR.Value;
                 }
                 if (IsInteractiveUser(_lastUser)) return _lastUser;
                 //User LU = _lastResult != null ? _lastResult.Requester.Value : null;
                 //if (IsInteractiveUser(LU)) return LU;
-                return _lastUser;
+                return _lastUser ?? ExemplarUser ?? _slastUser;
                 //return null;
             }
             set
@@ -87,10 +89,12 @@ namespace RTParser
                     if (value == _botAsUser) return;
                     _botAsUser.LastResponder = value;
                 }
+                _slastUser = value ?? _lastUser ??  _slastUser;
                 //User LU = LastUser;
                 if (!IsInteractiveUser(_lastUser) || IsInteractiveUser(value))
                 {
                     _lastUser = value;
+                    return;
                 }
             }
         }

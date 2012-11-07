@@ -38,6 +38,8 @@ using Node=AltAIMLbot.Utils.Node;
 using recursiveVerbatum=AltAIMLbot.AIMLTagHandlers.recursiveVerbatum;
 using TagHandler=AltAIMLbot.Utils.TagHandler;
 using verbatum=AltAIMLbot.AIMLTagHandlers.verbatum;
+using LogicalParticleFilter1;
+using Action=System.Action;
 
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
@@ -80,6 +82,9 @@ namespace RTParser
         public bool loadChanging = true;
         public RandomMemory myRandMem = new RandomMemory();
 
+        [NonSerialized] 
+        public SIProlog prologEngine = new SIProlog();
+
         static private WordNetEngine _wordNetEngine;
         public WordNetEngine wordNetEngine
         {
@@ -118,13 +123,7 @@ namespace RTParser
         /// </summary>
         public SettingsDictionary GlobalSettings;
 
-        public SettingsDictionary AllUserPreds
-        {
-            get
-            {
-                return DefaultPredicates;
-            }
-        }
+        public SettingsDictionary AllUserPreds;
 
         /// <summary>
         /// A dictionary of all the gender based substitutions used by this bot
@@ -218,7 +217,7 @@ namespace RTParser
             path = path.Replace("//", "/");
             if (path.StartsWith("./")) path = path.Substring(2);
             if (path.StartsWith("aiml/")) path = path.Substring(5);
-            return HostSystem.Combine(PersonalAiml, path);
+            return HostSystem.FileSystemPath(HostSystem.Combine(PersonalAiml, path));
         }
         private string _rapStoreDirectory;
         public string rapStoreDirectory
@@ -243,7 +242,8 @@ namespace RTParser
             get
             {
                 if (GlobalSettings == null) return 1000;
-                return Convert.ToInt32(this.GlobalSettings.grabSetting("maxlogbuffersize"));
+                string size = this.GlobalSettings.grabSetting("maxlogbuffersize");
+                return Convert.ToInt32(size);
             }
         }
 
@@ -382,6 +382,7 @@ namespace RTParser
             get
             {
                 if (GlobalSettings == null) return true;
+                return true;
                 string islogging = ((string) GlobalSettings.grabSetting("islogging")) ?? "true";
                 if (islogging.ToLower() == "true")
                 {
@@ -675,15 +676,30 @@ namespace RTParser
             }
             CycAccess v = TheCyc.GetCycAccess;
             SettingsDictionaryReal.WarnOnNull = false;
-            this.RelationMetaProps = MakeSettingsDictionary("chat.relationprops");
+            this.RelationMetaProps = MakeSettingsDictionary("RelationMetaPropsMt");
+            RegisterDictionary("chat.relationprops",RelationMetaProps);
             SettingsDictionaryReal.WarnOnNull = true;
-            this.GlobalSettings = MakeSettingsDictionary("bot");
             this.GenderSubstitutions = MakeSubstsDictionary("substituions.gender");
             this.Person2Substitutions = MakeSubstsDictionary("substituions.person2");
             this.PersonSubstitutions = MakeSubstsDictionary("substituions.person");
             this.InputSubstitutions = MakeSubstsDictionary("substituions.input");
-            this.DefaultPredicates = MakeSettingsDictionary("allusers");
-            this.HeardPredicates = MakeSettingsDictionary("chat.heardpredicates");
+            this.DefaultPredicates = MakeSettingsDictionary("DefaultPredicatesMt");
+            this.AllUserPreds = MakeSettingsDictionary("AllUserPredsMt");
+            RegisterDictionary("allusers", AllUserPreds);
+            User guser =
+                ExemplarUser =
+                LastUser =
+                ExemplarUser ??
+                FindUser("ExemplarUser") ?? new MasterUser("ExemplarUser", "ExemplarUser", this, DefaultPredicates);
+            RegisterDictionary("defaults", DefaultPredicates);
+            this.GlobalSettings = MakeSettingsDictionary("GlobalSettingsMt");
+            this.GlobalSettings.bbPrefix = "bot";
+            RegisterDictionary("bot", GlobalSettings);
+            _botAsUser = _botAsUser ??
+                         FindUser(NameAsSet ?? ("Bot" + GetHashCode())) ??
+                         new MasterUser(NamePath, NameAsSet, this, GlobalSettings);            
+            this.HeardPredicates = MakeSettingsDictionary("HeardPredicatesMt");
+            RegisterDictionary("chat.heardpredicates", HeardPredicates);
             RegisterDictionary("bot.alluserpred", this.AllUserPreds);
             this.CustomTags = new Dictionary<string, TagHandler>();
             this.Graphs = new Dictionary<string, GraphMaster>();
@@ -696,9 +712,23 @@ namespace RTParser
             GlobalSettings.IsTraced = true;
         }
 
+        public static string ToMtCase(string fullname)
+        {
+            string fn2 = Parser.ToCamelCase(fullname.Replace(" ", "_").Replace(".", "_").Replace("-", "_")).Replace(
+                "_", "");
+            return fn2;
+        }
         public SettingsDictionaryReal MakeSettingsDictionary(string named)
         {
-            return new SettingsDictionaryReal(named, this, new KeyValueListCSharp(null, new Dictionary<string, string>()));
+            if (named.ToUpper().EndsWith("MT")) named = named.Substring(0, named.Length - 2);
+            named = ToMtCase(named);
+            string mtName = "chat" + named + "Mt";
+            KeyValueListSIProlog v = new KeyValueListSIProlog(prologEngine,
+                                                              mtName, "chatVar");
+            var dict = new SettingsDictionaryReal(mtName, this,
+                                              (KeyValueList) v ?? new KeyValueListCSharp(null, new Dictionary<string, string>()));
+            dict.bbPrefix = "user";
+            return dict;
         }
         public SettingsDictionaryReal MakeSubstsDictionary(string named)
         {
@@ -1289,7 +1319,7 @@ namespace RTParser
         public void evalTemplateNode(XmlNode templateNode)
         {
             if (StaticXMLUtils.IsBlank(templateNode)) return;
-            var imaginaryUser = FindOrCreateUser("evalTemplateNode User");
+            var imaginaryUser = LastUser;
             Request request = new Request("evalTemplateNode Request", imaginaryUser, this);
             AltAIMLbot.Result result = new MasterResult(request.user, this, request);
             AltAIMLbot.Utils.SubQuery query = new SubQuery("evalTemplateNode SubQuery", result, request);
@@ -2131,9 +2161,23 @@ The AltAIMLbot program.
         public Dictionary<string, string> BBDict = new Dictionary<string, string>();
         public void setBBHash(string key, string data)
         {
+            string okey = key;
             //(SettingsDictionaryReal)
-            GlobalSettings.addSetting(key, data);
-            setBBHash0(key, data);
+            if (key.StartsWith("bot"))
+            {
+                key = key.Substring(3);
+                _botAsUser.Predicates.addSetting(key, data);
+            }
+            else if (key.StartsWith("user"))
+            {
+                key = key.Substring(4);
+                LastUser.Predicates.addSetting(key, data);
+            }
+            else
+            {
+                GlobalSettings.addSetting(key, data);                
+            }
+            setBBHash0(okey, data);
         }
         public void setBBHash0(string key, string data)
         {
@@ -2152,7 +2196,19 @@ The AltAIMLbot program.
             string gs = getBBHash0(key);
             if (!string.IsNullOrEmpty(gs)) return gs;
             gs = GlobalSettings.grabSetting(key, false);
-            if (!string.IsNullOrEmpty(gs)) return gs;
+            if (!string.IsNullOrEmpty( gs)) return gs;
+            if (key.StartsWith("bot"))
+            {
+                key = key.Substring(3);
+                gs = _botAsUser.Predicates.grabSetting(key, false);
+                if (!string.IsNullOrEmpty(gs)) return gs;
+            }
+            else if (key.StartsWith("user"))
+            {
+                key = key.Substring(4);
+                gs = LastUser.Predicates.grabSetting(key, true);
+                if (!string.IsNullOrEmpty(gs)) return gs;
+            }
             return "";
         }
 
@@ -2227,7 +2283,7 @@ The AltAIMLbot program.
 
         public ISettingsDictionary GetDictionary(string name)
         {
-            var idict = GetDictionary0(name);
+            var idict = GetDictionary0(name, false);
             if (idict != null) return idict;
             var AltBotobjCol = ScriptManager.ResolveToObject(this, name);
             if (AltBotobjCol == null || AltBotobjCol.Count == 0)
@@ -2256,7 +2312,7 @@ The AltAIMLbot program.
             return null;
         }
 
-        public ISettingsDictionary GetDictionary0(string named)
+        public ISettingsDictionary GetDictionary0(string named, bool createUser)
         {
             Func<ISettingsDictionary, SettingsDictionaryReal> SDCAST = SettingsDictionaryReal.ToSettingsDictionary;
             //dict = FindDict(type, query, dict);
@@ -2282,8 +2338,9 @@ The AltAIMLbot program.
             var path = named.Split(new[] { '.' });
             if (path.Length == 1)
             {
-                User user = FindOrCreateUser(key);
+                User user = FindUser(key);
                 if (user != null) return user;
+                return null;
             }
             else
             {
@@ -2295,7 +2352,7 @@ The AltAIMLbot program.
                 if (path[0] == "substitutions")
                 {
                     ISettingsDictionary f = GetDictionary(string.Join(".", path, 1, path.Length - 1), "substitutions",
-                                                          true);
+                                                          true, true);
                     if (f != null) return SDCAST(f);
                 }
                 else
@@ -2316,7 +2373,7 @@ The AltAIMLbot program.
             return null;
         }
 
-        public ISettingsDictionary GetDictionary(string named, string type, bool createIfMissing)
+        public ISettingsDictionary GetDictionary(string named, string type, bool createIfMissing, bool isSubsts)
         {
             lock (AllDictionaries)
             {
@@ -2328,7 +2385,10 @@ The AltAIMLbot program.
                     if (sdict != null) return sdict;
                     if (createIfMissing)
                     {
-                        dict = AllDictionaries[key] = AllDictionaries[named] = MakeSettingsDictionary(named);
+                        dict = AllDictionaries[key] = AllDictionaries[named] =
+                                                      (isSubsts
+                                                           ? MakeSubstsDictionary(key)
+                                                           : MakeSettingsDictionary(named));
                         User user = ExemplarUser ?? BotAsUser;
                         Request r = //user.CurrentRequest ??
                                     user.CreateRequest(

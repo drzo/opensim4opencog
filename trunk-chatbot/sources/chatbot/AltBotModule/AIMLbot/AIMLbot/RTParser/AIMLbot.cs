@@ -4,6 +4,7 @@ using System.Text;
 using AltAIMLParser;
 using RTParser;
 using RTParser.Utils;
+using RTParser.Variables;
 using Result=AltAIMLbot.Result;
 using User=AltAIMLbot.User;
 
@@ -25,12 +26,8 @@ namespace AIMLbot
     }
     public class MasterUser : RTParser.UserImpl
     {
-        public MasterUser(string UserID, Bot bot)
-            : base(UserID, bot)
-        {
-        }
-        public MasterUser(string UserID, AltBot bot)
-            : base(UserID, bot)
+        public MasterUser(string UserID, string fullname, AltBot bot, SettingsDictionary dict)
+            : base(UserID, fullname, bot, dict)
         {
         }
     }

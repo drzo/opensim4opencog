@@ -1368,9 +1368,14 @@ namespace AltAIMLParser
 
         public SideEffectStage Stage { get; set; }
 
-        public ISettingsDictionary GetSubstitutions(string named, bool createIfMissing)
+        public SettingsDictionary GetSubstitutions(string named, bool createIfMissing)
         {
-            return TargetBot.GetDictionary(named, "substitutions", createIfMissing);
+            var subst = TargetBot.GetDictionary(named, "substitutions", createIfMissing, true);
+            if (subst == null || subst is User)
+            {
+
+            }
+            return (SettingsDictionary) subst;
         }
 
         public ISettingsDictionary GetDictionary(string named)

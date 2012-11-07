@@ -442,11 +442,11 @@ namespace RTParser
             }
         }
 
-        public void SetMeMyselfAndI(string value)
+        public bool SetMeMyselfAndI(string value)
         {
             string saved = value.Replace("_", " ").Trim(" ,".ToCharArray());
-            if (saved.Length == 0) return;
-            if (Predicates == null) return;
+            if (saved.Length == 0) return false;
+            if (Predicates == null) return false;
             //var prev = Predicates.IsIdentityReadOnly;
             try
             {
@@ -456,7 +456,7 @@ namespace RTParser
                 if (IsIncomplete(value))
                 {
                     throw new NullReferenceException("SetMeMyselfAndI: " + value);
-                    return;
+                    return false;
                 }
                 Predicates["name"] = value;
                 Predicates["me"] = value;
@@ -466,7 +466,7 @@ namespace RTParser
                 if (IsIncomplete(split[0]))
                 {
                     throw new NullReferenceException("SetMeMyselfAndI: " + split[0]);
-                    return;
+                    return false;
                 }
                 Predicates["firstname"] = split[0];
                 if (split.Length > 1)
@@ -479,6 +479,7 @@ namespace RTParser
                         Predicates["lastname"] = split[2];
                     }
                 }
+                return true;
             }
             finally
             {
@@ -623,7 +624,7 @@ namespace RTParser
         /// </summary>
         /// <param name="UserID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-        internal UserImpl(string userID, AltBot bot)
+        internal UserImpl(string userID,string fullname, AltBot bot, SettingsDictionary dict)
         {
             this.bot = bot;
             IsValid = true;
@@ -641,23 +642,29 @@ namespace RTParser
             PrintOptions = new PrintOptions("PO_" + userID);
             if (userID.Length > 0)
             {
+                bool isUser = dict == null;
                 WriterOptions = new PrintOptions("PW_" + userID);
                 this.id = userID;
                 qsbase.IsTraced = IsTraced = rbot.IsTraced;
                 // we dont inherit the BotAsUser we inherit the bot's setings
                 // ApplySettings(bot.BotAsUser, this);
-                this.Predicates = bot.MakeSettingsDictionary(userID + ".predicates");
+                string parserToCamelCase = AltBot.ToMtCase(fullname);
+                string predMtName = parserToCamelCase + "Predicates";
+                this.Predicates = dict ?? bot.MakeSettingsDictionary(predMtName);
                 this.Predicates.IsTraced = qsbase.IsTraced;
-                //this.Predicates.AddPrefix("user.", () => this);
-                bool isUser = (this.bot.DefaultPredicates != null);
-                if (isUser) this.bot.DefaultPredicates.Clone(this.Predicates);
-                //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
-                this.Predicates.addSetting("topic", rbot.NOTOPIC);
-                if (isUser) this.Predicates.InsertFallback(() => bot.AllUserPreds);
+                //this.Predicates.AddPrefix("user.", () => this);      
+                if (isUser)
+                {
+                    this.bot.DefaultPredicates.Clone(this.Predicates);
+
+                    //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
+                    this.Predicates.addSetting("topic", rbot.NOTOPIC);
+                    this.Predicates.InsertFallback(() => bot.AllUserPreds);
+                }
                 UserID = userID;
-                UserName = userID;
+                UserName = fullname;
                 blackBoardThat = "";
-                SetMeMyselfAndI(UserName);
+                WithoutTrace(Predicates,() => SetMeMyselfAndI(fullname));
                 //this.Predicates.addSetting("topic", "NOTOPIC");
                 if (false && SaveTimer == null)
                 {

@@ -25,11 +25,11 @@ using RTParser.Database;
 using RTParser.Utils;
 using RTParser.Variables;
 using RTParser.Web;
-using Console=System.Console;
+using Console = System.Console;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 using AltAIMLbot;
-using Gender=RTParser.Utils.Gender;
+using Gender = RTParser.Utils.Gender;
 using MasterRequest = AltAIMLParser.Request;
 
 namespace RTParser
@@ -48,15 +48,15 @@ namespace RTParser
     /// </summary>
     public partial class AltBot : StaticAIMLUtils, IChatterBot
     {
-       /* public static implicit operator AltBot(AltBot ab)
-        {
-            return ab.TheAltBot;
-        }
-        public static implicit operator AltBot(AltBot rtp)
-        {
-            return rtp.TheAltBot ?? rtp.servitor.curBot;
-        }
-        */
+        /* public static implicit operator AltBot(AltBot ab)
+         {
+             return ab.TheAltBot;
+         }
+         public static implicit operator AltBot(AltBot rtp)
+         {
+             return rtp.TheAltBot ?? rtp.servitor.curBot;
+         }
+         */
         public static bool IncludeMeNeValue;
         public static Dictionary<string, AltBot> Robots = new Dictionary<string, AltBot>();
 
@@ -153,7 +153,7 @@ namespace RTParser
                 if (_botAsUser == null)
                 {
                     _botAsUser = FindOrCreateUser(NameAsSet);
-                } 
+                }
                 return _botAsUser;
             }
         }
@@ -175,10 +175,10 @@ namespace RTParser
             //Result res = new AIMLbot.MasterRequest(s, botAsUser1, this, r, null, null);            
             //r.CurrentQuery = new SubQuery(s, res, r);
             OnBotCreated(() =>
-                             {
-                                 User BotAsUser1 = this.BotAsUser;
-                                 ((Request)r).SetSpeakerAndResponder(BotAsUser1, BotAsUser1);
-                             });
+            {
+                User BotAsUser1 = this.BotAsUser;
+                ((Request)r).SetSpeakerAndResponder(BotAsUser1, BotAsUser1);
+            });
             r.IsTraced = this.IsTraced;
             r.depth = 0;
             // times out in 15 minutes
@@ -298,7 +298,7 @@ namespace RTParser
             }
 
             servitor.curBot.loadCrons();
-           if (servitor.skiploading)
+            if (servitor.skiploadingServitorState)
             {
                 return;
             }
@@ -330,10 +330,11 @@ namespace RTParser
             if (File.Exists(servitorbin))
             {
                 servitor.loadFromBinaryFile(servitorbin);
-                servitor.skiploading = true;
+                servitor.skiploadingServitorState = true;
             }
             else
             {
+                servitor.skiploadingAimlFiles = false;
                 Console.WriteLine("No file exists for reloadServitor()");
             }
         }
@@ -361,13 +362,13 @@ namespace RTParser
             //servitor.curBot.Graphmaster.collectPaths("",allPaths);
             //File.WriteAllLines(@"./aiml/graphmap.txt", allPaths.ToArray());
             servitor.curBot.saveCrons();
-            
+
             string graphcache = GlobalSettings.grabSetting("graphcache");
             graphcache = PersonalizePath(graphcache);
-            if (false && File.Exists(graphcache)) // Always write for now
+            if (File.Exists(graphcache)) // Always not overwrite for now
             {
                 Console.WriteLine("***** saveServitor():{0} SKIPPING ******", graphcache);
-                if (servitor != null) servitor.skiploading = true;
+                if (servitor != null) servitor.skiploadingServitorState = true;
                 return;
             }
             string[] header = { "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "<aiml version=\"1.0\">", " <state name=\"*\">" };
@@ -377,32 +378,45 @@ namespace RTParser
             allBehaviors = servitor.curBot.myBehaviors.behaviorXmlList();
 
             //StreamWriter sw = File.CreateText(@"./aiml/servitorgraphmap.aiml");
-            if (graphcache != null)
+            if (graphcache != null && !File.Exists(graphcache))
             {
-                StreamWriter sw = File.CreateText(graphcache);
-                foreach (string line in header)
+                StreamWriter sw = null;
+                try
                 {
-                    sw.WriteLine(line);
-                }
-                foreach (string line in allCrons)
-                {
-                    sw.WriteLine(line);
-                }
-                foreach (string line in allPaths.ToArray())
-                {
-                    sw.WriteLine(line);
-                }
-                foreach (string line in allBehaviors)
-                {
-                    //    sw.WriteLine(line);
-                }
+                    sw = File.CreateText(graphcache);
+                    foreach (string line in header)
+                    {
+                        sw.WriteLine(line);
+                    }
+                    foreach (string line in allCrons)
+                    {
+                        sw.WriteLine(line);
+                    }
+                    foreach (string line in allPaths.ToArray())
+                    {
+                        sw.WriteLine(line);
+                    }
+                    foreach (string line in allBehaviors)
+                    {
+                        //    sw.WriteLine(line);
+                    }
 
-                foreach (string line in footer)
-                {
-                    sw.WriteLine(line);
+                    foreach (string line in footer)
+                    {
+                        sw.WriteLine(line);
+                    }
+                    sw.Flush();
+                    sw.Close();
                 }
-                sw.Flush();
-                sw.Close();
+                catch (Exception e)
+                {
+
+                }
+                finally
+                {
+                    if (sw != null)
+                        sw.Dispose();
+                }
             }
 
             string servitorbin = GlobalSettings.grabSetting("servitorbin");
@@ -411,7 +425,7 @@ namespace RTParser
                 if (!File.Exists(servitorbin))
                 {
                     if (servitorbin != null) servitor.saveToBinaryFile(servitorbin);
-                    servitor.skiploading = true;
+                    servitor.skiploadingServitorState = true;
                 }
                 else
                 {
@@ -432,7 +446,7 @@ namespace RTParser
                     {
                         string v = servitor.curUser.Predicates.grabSetting(key);
                         activeUser.Predicates.updateSetting(key, v);
-                       /// Console.WriteLine("ALT->RTP Predicates[{0}] = {1}", key, v);
+                        /// Console.WriteLine("ALT->RTP Predicates[{0}] = {1}", key, v);
                     }
 
                 int rcount = servitor.curUser.SailentResultCount;
@@ -445,13 +459,13 @@ namespace RTParser
                     {
                         string data = historicResult.OutputSentences[sent];
                         activeUser.setOutputSentence(n, sent, data);
-                        Console.WriteLine("ALT->RTP setOutputSentence[{0},{1}] = {2}",n,sent,data);
+                        Console.WriteLine("ALT->RTP setOutputSentence[{0},{1}] = {2}", n, sent, data);
                     }
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine(" **** ERR : {0} {1} " , e.Message , e.StackTrace);
+                Console.WriteLine(" **** ERR : {0} {1} ", e.Message, e.StackTrace);
             }
         }
 
@@ -513,14 +527,14 @@ namespace RTParser
             }
             catch (Exception e)
             {
-                Console.WriteLine(" **** ERR : {0} {1} ", e.Message , e.StackTrace);
+                Console.WriteLine(" **** ERR : {0} {1} ", e.Message, e.StackTrace);
             }
 
         }
         public void updateRTP2Sevitor()
         {
             if (useServitor == false) return;
-            updateServitor2RTP();            
+            updateServitor2RTP();
             // fill in the blanks
             //servitor.curBot.AdminEmail = this.AdminEmail;
             //servitor.curBot.conversationStack = this.conversationStack;
@@ -532,21 +546,21 @@ namespace RTParser
             //servitor.curBot.StartedOn = this.StartedOn;
             servitor.curBot.GlobalSettings.updateSetting("aimldirectory", PathToAIML);
 
-            if (SharedGlobalSettings !=null)
+            if (SharedGlobalSettings != null)
                 foreach (string key in LockInfo.CopyOf(SharedGlobalSettings.Keys))
-            {
-                string v = SharedGlobalSettings[key];
-               // servitor.curBot.GlobalSettings.updateSetting(key, v);
-                servitor.setBBHash(key, v);
-            }
+                {
+                    string v = SharedGlobalSettings[key];
+                    // servitor.curBot.GlobalSettings.updateSetting(key, v);
+                    servitor.setBBHash(key, v);
+                }
 
-            if (GlobalSettings != null && GlobalSettings!=SharedGlobalSettings)
+            if (GlobalSettings != null && GlobalSettings != SharedGlobalSettings)
                 foreach (string key in LockInfo.CopyOf(GlobalSettings.Keys))
-            {
-                string v = GlobalSettings[key];
-                //servitor.curBot.GlobalSettings.updateSetting(key, v);
-                servitor.setBBHash(key, v);
-            }
+                {
+                    string v = GlobalSettings[key];
+                    //servitor.curBot.GlobalSettings.updateSetting(key, v);
+                    servitor.setBBHash(key, v);
+                }
 
             /*if ((GenderSubstitutions != null) && (servitor.curBot.GenderSubstitutions.Count != GenderSubstitutions.Count))
             foreach (string key in GenderSubstitutions.Keys)
@@ -588,13 +602,13 @@ namespace RTParser
             }
              * */
 
-            
+
         }
         /// <summary>
         /// Ctor
         /// </summary>
         //protected AltBot()
-        public  AltBot()
+        public AltBot()
             : base()
         {
             myBehaviors = new BehaviorSet(this);
@@ -614,7 +628,7 @@ namespace RTParser
                 EnsureStaticInit();
             }
         }
-                
+
 
         public string PopSearchPath(string directory)
         {
@@ -825,7 +839,7 @@ namespace RTParser
             bool prev = isAcceptingUserInput;
             try
             {
- 
+
                 //isAcceptingUserInput = false;
                 RegisterDictionary("chat.relationprops", RelationMetaProps);
                 RegisterDictionary("meta", RelationMetaProps);
@@ -851,7 +865,7 @@ namespace RTParser
                 RegisterDictionary("defaults", DefaultPredicates);
                 DefaultPredicates.InsertMetaProvider(GetRelationMetaProps);
                 RegisterDictionary("heard", HeardPredicates);
-                
+
                 RegisterDictionary("predicates", AllUserPreds);
                 EnginePreds = AllUserPreds;
                 RegisterDictionary("enginepreds", EnginePreds);
@@ -859,11 +873,10 @@ namespace RTParser
                 AllUserPreds.InsertMetaProvider(GetRelationMetaProps);
 
 
-                User guser = ExemplarUser = LastUser = new MasterUser("globalPreds", this);
-                _botAsUser = _botAsUser ?? new MasterUser(NameAsSet ?? ("Bot" + GetHashCode()), this);
+                User guser = ExemplarUser = LastUser = ExemplarUser ?? FindOrCreateUser("Default");
                 lock (microBotUsersLock)
                 {
-                    BotUsers["globalpreds"] = guser;
+                    AllDictionaries["globalpreds"] = guser;
                 }
                 guser.IsRoleAcct = true;
                 guser.Predicates.clearSettings();
@@ -924,26 +937,26 @@ namespace RTParser
             var files = new List<string>(HostSystem.GetFiles(pathToSettings, "*.xml"));
 
             var HostSystemCombine = new Func<string, string, string>((arg1, arg2) =>
-                                                                         {
-                                                                             if (arg2 == null) return null;
-                                                                             string s = HostSystem.Combine(arg1, arg2);
-                                                                             int i =
-                                                                                 files.RemoveAll(
-                                                                                     obj =>
-                                                                                     obj.ToLower().Replace("\\", "/").
-                                                                                         EndsWith("/" + arg2.ToLower()));
-                                                                             if (i == 0)
-                                                                             {
-                                                                                 return null;
-                                                                             }
-                                                                             if (i == 1)
-                                                                             {
-                                                                                 //good
-                                                                                 return s;
-                                                                             }
-                                                                             //not so good
-                                                                             return s;
-                                                                         });
+            {
+                if (arg2 == null) return null;
+                string s = HostSystem.Combine(arg1, arg2);
+                int i =
+                    files.RemoveAll(
+                        obj =>
+                        obj.ToLower().Replace("\\", "/").
+                            EndsWith("/" + arg2.ToLower()));
+                if (i == 0)
+                {
+                    return null;
+                }
+                if (i == 1)
+                {
+                    //good
+                    return s;
+                }
+                //not so good
+                return s;
+            });
 
             SettingsDictionary GlobalSettings = thiz.GlobalSettings;
             GlobalSettings.IsTraced = true;
@@ -997,10 +1010,10 @@ namespace RTParser
             thiz.RelationMetaProps.loadSettings(HostSystemCombine(pathToSettings, "genformat.xml"), request);
 
 
-            User guser = thiz.FindUser("globalPreds");
-            if (HostSystem.FileExists(HostSystem.Combine(pathToSettings, "globalpreds.xml")))
+            User guser = thiz.ExemplarUser ?? thiz.FindUser("Default");
+            if (HostSystem.FileExists(HostSystem.Combine(pathToSettings, "globalpred" + "s.xml")))
             {
-                SettingsDictionaryReal.loadSettingsNow(guser.Predicates, pathToSettings, "globalpreds.xml",
+                SettingsDictionaryReal.loadSettingsNow(guser.Predicates, pathToSettings, "globalpred" + "s.xml",
                                                    SettingsPolicy.Default, request);
             }
             thiz.writeToLog("Files left to process = " + files.Count);
@@ -1353,7 +1366,7 @@ The AIMLbot program.
         {
             get
             {
-                if (!GlobalSettings.containsSettingCalled("notopic")) return Unifiable.EnglishNothing;
+                if (GlobalSettings==null || !GlobalSettings.containsSettingCalled("notopic")) return Unifiable.EnglishNothing;
                 return GlobalSettings.grabSetting("notopic");
             }
         }
@@ -1381,7 +1394,7 @@ The AIMLbot program.
         {
             get { return Graphs; }
         }
-         
+
         public static CycDatabase TheCycS;
         public CycDatabase TheCyc
         {
@@ -1420,10 +1433,10 @@ The AIMLbot program.
                 //GraphMaster dtob = Utils.GraphMaster.FindOrCreate("default_to_" + this.NamePath);
                 //g.AddGenlMT(dtob, writeToLog);
                 //ㄴdtob.AddGenlMT(Utils.GraphMaster.FindOrCreate("default"), writeToLog);
-            } 
+            }
             return g;
         }
-        
+
         static public GraphMaster FindGlobalGraph(string graphPath)
         {
             graphPath = GraphMaster.DeAliasGraphName(graphPath);
@@ -1431,7 +1444,7 @@ The AIMLbot program.
             lock (GraphsByName) GraphsByName.TryGetValue(graphPath, out g);
             return g;
         }
-        
+
         public GraphMaster GetGraph(string graphPath, GraphMaster current)
         {
             GraphMaster g = FindGraph(graphPath, current);
@@ -1445,7 +1458,7 @@ The AIMLbot program.
                 return current;
             }
 
-            graphPath = GraphMaster.DeAliasGraphName(graphPath); 
+            graphPath = GraphMaster.DeAliasGraphName(graphPath);
             string lower = graphPath.ToLower();
             int graphPathLength = graphPath.IndexOf(".");
             if (graphPathLength > 0)
@@ -1581,12 +1594,17 @@ The AIMLbot program.
                 TheCyc.WriteConfig();
                 DefaultStartGraph.WriteConfig();
                 writeDebugLine("Bot loaded");
+                prologEngine.connectMT(GlobalSettings.NameSpace, AllUserPreds.NameSpace);
+                prologEngine.connectMT(BotAsUser.Predicates.NameSpace, AllUserPreds.NameSpace);
+                prologEngine.connectMT(BotAsUser.Predicates.NameSpace, GlobalSettings.NameSpace);
+                prologEngine.connectMT(LastUser.Predicates.NameSpace, AllUserPreds.NameSpace);
+                prologEngine.connectMT(DefaultPredicates.NameSpace, AllUserPreds.NameSpace);
                 updateRTP2Sevitor();
                 saveServitor();
             }
         }
 
-        public string LoadPersonalDirectory(string myName, bool loadXML, bool loadAiml)      
+        public string LoadPersonalDirectory(string myName, bool loadXML, bool loadAiml)
         {
             ReloadHooks.Add(() => LoadPersonalDirectory(myName, loadXML, loadAiml));
             string loaded = null;
@@ -1672,10 +1690,10 @@ The AIMLbot program.
         {
             string ret;
             lock (IsNameSetLock) lock (OnBotCreatedHooks)
-            {
-                ret = SetNameForConfig(myName);
-                //return UserOper(() => SetName0(myName), writeDebugLine);
-            }
+                {
+                    ret = SetNameForConfig(myName);
+                    //return UserOper(() => SetName0(myName), writeDebugLine);
+                }
             startServitor();
             updateServitor2RTP();
             LoadPersonality();
@@ -1699,7 +1717,7 @@ The AIMLbot program.
             NameAsSet = myName;
             NamePath = ToScriptableName(NameAsSet);
 
-            loadGlobalBotSettings();            
+            loadGlobalBotSettings();
             //char s1 = myName[1];
             //new AIMLbot.User("heardselfsay", this)
             var thisBotAsUser = _botAsUser = BotAsUser ?? FindOrCreateUser(myName);
@@ -1707,10 +1725,13 @@ The AIMLbot program.
 
             ExternalIntern("BotAsUser", thisBotAsUser);
             thisBotAsUser.IsRoleAcct = true;
-            SharedGlobalSettings = this.GlobalSettings;
+            SharedGlobalSettings = AllUserPreds;// this.GlobalSettings;
             thisBotAsUser.Predicates.InsertFallback(() => SharedGlobalSettings);
             thisBotAsUser.Predicates.InsertFallback(() => AllUserPreds);
-            AllUserPreds.InsertFallback(() => SharedGlobalSettings);
+            if (SharedGlobalSettings != GlobalSettings && SharedGlobalSettings != AllUserPreds)
+            {
+                AllUserPreds.InsertFallback(() => SharedGlobalSettings);
+            }
 
             GlobalSettings.IsTraced = true;
             thisBotAsUser.Predicates.InsertProvider(() => GlobalSettings);
@@ -1767,7 +1788,7 @@ The AIMLbot program.
         {
             if (!needAimlFilesLoaded) return;
             needAimlFilesLoaded = false;
-            string official =  PersonalAiml;
+            string official = PersonalAiml;
             LoadPersonalDirectory("shared_aiml", false, true);
             if (!string.IsNullOrEmpty(official))
             {
@@ -1900,14 +1921,14 @@ The AIMLbot program.
                 _objr = value;
                 if (value != null)
                 {
-                   lock(PostObjectRequesterSet)
-                   {
-                       foreach (var set in PostObjectRequesterSet)
-                       {
-                           set();
-                       }
-                       PostObjectRequesterSet.Clear();
-                   }
+                    lock (PostObjectRequesterSet)
+                    {
+                        foreach (var set in PostObjectRequesterSet)
+                        {
+                            set();
+                        }
+                        PostObjectRequesterSet.Clear();
+                    }
                 }
             }
         }
@@ -1958,10 +1979,10 @@ The AIMLbot program.
 
         private void loadDictionary(ISettingsDictionary dictionary, string path, string type, Request r0)
         {
-            User user = LastUser ?? 
+            User user = LastUser ??
                 ExemplarUser ?? BotAsUser;
             Request r = r0 ??
-                        //user.CurrentRequest ??
+                //user.CurrentRequest ??
                         user.CreateRequest(
                             "@echo <!-- loadDictionary '" + dictionary + "' from '" + type + "' -->", Unifiable.EnglishNothing,
                             BotAsUser);
@@ -2045,11 +2066,11 @@ The AIMLbot program.
         {
             User theUser = FindOrCreateUser(userName);
             return (txt, req) =>
-                       {
-                           req.SetSpeakerAndResponder(theUser, BotAsUser);
-                           var ret = ChatWithThisBot(txt, req);
-                           return ret;
-                       };
+            {
+                req.SetSpeakerAndResponder(theUser, BotAsUser);
+                var ret = ChatWithThisBot(txt, req);
+                return ret;
+            };
         }
         #endregion
 

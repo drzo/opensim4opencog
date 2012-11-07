@@ -28,6 +28,7 @@ using GuardInfo = RTParser.Unifiable;
 using ResponseInfo = RTParser.Unifiable;
 using SNode = AltAIMLbot.Utils.Node;
 using TemplateInfo = RTParser.Utils.TemplateInfo;
+using MushDLR223.Virtualization;
 
 namespace AltAIMLbot.Utils
 {
@@ -1713,6 +1714,7 @@ namespace AltAIMLbot.Utils
 
         public ExternDB(string dbdirectory)
         {
+            dbdirectory = HostSystem.FileSystemPath(dbdirectory);
             Console.WriteLine("ExternDB({0})", dbdirectory);
             string _dbdir = dbdirectory;
             string ourPath = Directory.CreateDirectory(dbdirectory).FullName;
@@ -1734,6 +1736,7 @@ namespace AltAIMLbot.Utils
         {
             Console.WriteLine("OpenAll()");
             string dbdirectory = _dbdir;
+            dbdirectory = HostSystem.FileSystemPath(dbdirectory);
             string ourPath = Directory.CreateDirectory(dbdirectory).FullName;
             string ourDirectory = Path.GetDirectoryName(ourPath);
 
@@ -1784,6 +1787,7 @@ namespace AltAIMLbot.Utils
                 try
                 {
                     string miniLog = String.Format(@"./aiml/BTTrace.txt");
+                    miniLog = HostSystem.FileSystemPath(miniLog);
                     System.IO.File.AppendAllText(miniLog, msg + "\n");
                     Console.WriteLine(msg);
                 }
@@ -1887,8 +1891,11 @@ namespace AltAIMLbot.Utils
         }
         public void rememberLoaded(string filename)
         {
+            bool isMt = IsMt(filename);
+            string orig = filename;
+            if (!isMt) filename = HostSystem.FileSystemPath(filename);
             string reftime = DateTime.Now.ToUniversalTime().ToString(); // "indefinite";
-            if (File.Exists(filename))
+            if (!isMt && File.Exists(filename))
             {
                 DateTime lastWriteTimeUtc = File.GetLastWriteTimeUtc(filename);
                 reftime = lastWriteTimeUtc.ToString();
@@ -1899,9 +1906,12 @@ namespace AltAIMLbot.Utils
         }
         public bool wasLoaded(string filename)
         {
+            bool isMt = IsMt(filename);
+            string orig = filename;
+            if (!isMt) filename = HostSystem.FileSystemPath(filename);
             string lf = "";
             string reftime = "indefinite";
-            if (File.Exists(filename))
+            if (!isMt && File.Exists(filename))
             {
                 DateTime lastWriteTimeUtc = File.GetLastWriteTimeUtc(filename);
                 reftime = lastWriteTimeUtc.ToString();
@@ -1910,6 +1920,11 @@ namespace AltAIMLbot.Utils
             //return (filename == lf);
             Console.WriteLine("\nwasLoaded:{0}  {1}<=>{2}", filename, reftime,lf);
             return (reftime == lf);
+        }
+
+        private bool IsMt(string filename)
+        {
+            return (filename.StartsWith("mt:"));
         }
 
         public void saveCronList(Cron sourceCron)

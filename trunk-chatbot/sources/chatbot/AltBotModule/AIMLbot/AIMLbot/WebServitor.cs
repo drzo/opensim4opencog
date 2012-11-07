@@ -9,6 +9,7 @@ using System.IO;
 using System.Threading;
 using System.Xml;
 using System.Web;
+using MushDLR223.Virtualization;
 
 namespace AltAIMLbot
 {
@@ -584,6 +585,7 @@ namespace AltAIMLbot
 
         public static void loadAnalyzer()
         {
+            kpfile = HostSystem.FileSystemPath(kpfile);
             if (File.Exists(kpfile))
             {
                 string[] lines = System.IO.File.ReadAllLines(kpfile);
@@ -596,6 +598,7 @@ namespace AltAIMLbot
                 }
             }
             phraseScore["zeno"] = 8;
+            wsfile = HostSystem.FileSystemPath(wsfile);
             if (File.Exists(wsfile))
             {
                 string[] lines = System.IO.File.ReadAllLines(wsfile);
@@ -619,6 +622,9 @@ namespace AltAIMLbot
                     }
                 }
             }
+
+            bslfile = HostSystem.FileSystemPath(bslfile);
+
             if (File.Exists(bslfile))
             {
                 behaviorStoplist = System.IO.File.ReadAllLines(bslfile);
@@ -700,6 +706,7 @@ namespace AltAIMLbot
             StreamWriter writer, string path, string behaviorName,string rawURL)
         {
             Console.WriteLine("analyse path={0},behaviorName={1},rawURL={2}", path, behaviorName, rawURL);
+            path = HostSystem.FileSystemPath(path);
             if (!File.Exists(path))
             {
                 writer.WriteLine("<fin/>");

@@ -97,7 +97,7 @@ namespace AltAIMLbot
                 {
                     // Load the previous binary data
                     servitor.loadFromBinaryFile(servitorbin);
-                    servitor.skiploading = true;
+                    servitor.skiploadingAimlFiles = true;
                 }
                 else
                 {

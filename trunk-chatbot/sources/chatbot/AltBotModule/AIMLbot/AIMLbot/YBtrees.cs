@@ -2030,7 +2030,7 @@ namespace AltAIMLbot
             {
                 //sv = myChemistry.m_cBus.getHash("mdollhearduuid");
                 sv = bot.getBBHash(varName) ?? "0.0";
-                bbVal = double.Parse(sv);
+                if (!string.IsNullOrEmpty(sv)) bbVal = double.Parse(sv);
             }
             catch (Exception e) { }
 
@@ -4994,7 +4994,7 @@ namespace AltAIMLbot
             {
                 //sv = myChemistry.m_cBus.getHash("mdollhearduuid");
                 sv = bot.getBBHash(varName) ?? "0.0";
-                bbVal = double.Parse(sv);
+                if (!string.IsNullOrEmpty(sv)) bbVal = double.Parse(sv);
             }
             catch (Exception e) { }
 

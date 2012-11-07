@@ -403,7 +403,7 @@ namespace AltAIMLbot
                 {
                     int start, end, interval;
 
-                    parts = entry.Split(new char[] { '-', '/' });
+                    parts = entry.Split(new char[] {'-', '/'}, StringSplitOptions.RemoveEmptyEntries);
 
                     if (parts[0].Equals("*"))
                     {

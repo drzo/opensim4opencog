@@ -10,6 +10,7 @@ using System.Xml.Serialization;
 using AltAIMLbot;
 using AltAIMLbot.Utils;
 using AltAIMLParser;
+using LogicalParticleFilter1;
 using Lucene.Net.Store;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -91,71 +92,182 @@ namespace RTParser.Variables
         void Clear();
         void Remove(string name);
 
-        string getValue(string normalizedName);
+        string GetValue(string normalizedName);
         void AddKey(string name);
+
+        void AddFallback(string p);
     }
+
     public class KeyValueListSIProlog : KeyValueList
     {
+        public string dictMt;
+        public string predicateName;
+        public string arg1Name;
+        private LogicalParticleFilter1.SIProlog prologEngine;
+
+        public KeyValueListSIProlog(SIProlog pl, string mtName, string predicate)
+        {
+            prologEngine = pl;
+            dictMt = mtName;
+            predicateName = predicate;
+        }
+
         public bool ContainsKey(string name)
         {
-            throw new NotImplementedException();
+            return GetArgVal(name, false) != null;
         }
 
         public ICollection<string> Values
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                List<string> values = new List<string>();
+                foreach (var key in Keys)
+                {
+                    values.Add(GetValue(key));
+                }
+                return values;
+            }
         }
 
         public int Count
         {
-            get { throw new NotImplementedException(); }
+            get {
+                List<Dictionary<string, string>> bingingsList;
+                this.prologEngine.askQuery(QueryForNameValue("KEY", "VALUE"), dictMt, out bingingsList);
+                return bingingsList.Count;
+            }
         }
 
         public ICollection<string> Keys
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                List<Dictionary<string, string>> bingingsList;
+                this.prologEngine.askQuery(QueryForNameValue("KEY", "VALUE"), dictMt, out bingingsList);
+                if (bingingsList.Count == 0) return new string[0];
+                List<string> keys = new List<string>();
+                foreach (var list in bingingsList)
+                {
+                    keys.Add(ArgToValue(list["KEY"]));
+                }
+                return keys;
+            }
+
         }
 
         public bool IsOrdered
         {
-            get { throw new NotImplementedException(); }
+            get { return true;  }
             set { throw new NotImplementedException(); }
         }
 
         public void Add(string name, string value)
         {
-            throw new NotImplementedException();
+            string valArg = MakeArg(value);
+            Remove(name);
+            string before = GetArgVal(name, false);
+            prologEngine.appendKB(QueryForNameValue(MakeArg(name), valArg) + ".\n", dictMt);
+            string now = GetArgVal(name, false);
+            if (before != null || now != valArg)
+            {
+                throw new NotImplementedException("asserting " + valArg);
+            }
+        }
+
+        private string MakeArg(string value)
+        {
+            value = value.Replace("\\", "\\\\").Replace("\"", "\\\"");            
+            return "\"" + value + "\"";
         }
 
         public void Clear()
         {
-            throw new NotImplementedException();
+            prologEngine.clearKB(dictMt);
         }
 
         public void Remove(string name)
         {
-            throw new NotImplementedException();
+            string valArg = GetArgVal(name, false);
+            if (valArg == null) return;
+            string remove = QueryForNameValue(MakeArg(name), valArg);
+            var didit = prologEngine.retractKB(remove, dictMt);
+            var valarg2 = GetArgVal(name, false);
+            if (null != valarg2)
+            {
+                throw new NotImplementedException("retracting " + valArg);
+            }
+
         }
 
-        public string getValue(string normalizedName)
+        public string GetArgVal(string normalizedName, bool followGenlMt)
         {
-            throw new NotImplementedException();
+            List<Dictionary<string, string>> bingingsList;
+            this.prologEngine.askQuery(QueryForNameValue(MakeArg(normalizedName), "VALUE"), dictMt, followGenlMt, out bingingsList);
+            int cnt = bingingsList.Count;
+            if (cnt == 0) return null;
+            string res;
+            if (cnt == 1 || true)
+            {
+                res = bingingsList[0]["VALUE"];
+            }
+            else
+            {
+                res = bingingsList[cnt - 1]["VALUE"];
+            }
+            int len = res.Length;
+            return res;
+        }
+
+        public string GetValue(string normalizedName)
+        {
+            var res = GetArgVal(normalizedName, true);
+            return ArgToValue(res);
+        }
+
+        private string ArgToValue(string res)
+        {
+            if (res == null) return null;
+            int len = res.Length;
+            if (res.StartsWith("\"") && res.EndsWith("\""))
+            {
+                res = res.Substring(1, len - 2);
+            }
+            return res;
+        }
+
+        private string QueryForNameValue(string name, string value)
+        {
+            return predicateName + "(" + name + "," + value + ")";
         }
 
         public void AddKey(string name)
         {
-            throw new NotImplementedException();
+            string before = GetValue(name);
+            if (before == null)
+            {
+                Add(name, "");
+            }
+        }
+
+        public void AddFallback(string p)
+        {
+            if (Equals(p,dictMt))
+            {
+                return;
+            }
+            prologEngine.connectMT(dictMt, p);
         }
     }
     public class KeyValueListCSharp : KeyValueList
     {
-        public readonly KeyValueList settingsHash0;// = new Dictionary<string, DataUnifiable>();
-        public readonly Dictionary<string, DataUnifiable> settingsHash;// = new Dictionary<string, DataUnifiable>();
+        public KeyValueList settingsHash0;// = new Dictionary<string, DataUnifiable>();
+        public Dictionary<string, DataUnifiable> settingsHash;// = new Dictionary<string, DataUnifiable>();
         public IList<string> orderedKeys = new List<string>();
 
-        public string getValue(string key)
+        public string GetValue(string key)
         {
-            if (settingsHash0 != null) return settingsHash0.getValue(key);
+            if (settingsHash0 != null) return settingsHash0.GetValue(key);
             return settingsHash[key];
         }
 
@@ -183,7 +295,7 @@ namespace RTParser.Variables
 
         public bool IsOrdered
         {
-            get { throw new NotImplementedException(); }
+            get { return orderedKeys != null || (settingsHash0 != null && settingsHash0.IsOrdered); }
             set { throw new NotImplementedException(); }
         }
 
@@ -260,6 +372,11 @@ namespace RTParser.Variables
                     }
                 }
             }
+        }
+
+        public void AddFallback(string p)
+        {
+            //throw new NotImplementedException();
         }
     }
     /// <summary>
@@ -594,7 +711,7 @@ namespace RTParser.Variables
                         XmlAttribute name = result.CreateAttribute("name");
                         name.Value = n; ;
                         XmlAttribute value = result.CreateAttribute("value");
-                        value.Value = this.settingsHash.getValue(TransformKey(n));
+                        value.Value = this.settingsHash.GetValue(TransformKey(n));
                         item.Attributes.Append(name);
                         item.Attributes.Append(value);
                         root.AppendChild(item);
@@ -631,7 +748,7 @@ namespace RTParser.Variables
         {
             settingsHash = list;
             IsTraced = true;
-            theNameSpace = ScriptManager.ToKey(name).ToLower();
+            theNameSpace = name;// ScriptManager.ToKey(name);//.ToLower();
             this.bot = bot;
             IsSubsts = name.Contains("subst");
             TrimKeys = !name.Contains("subst");
@@ -696,6 +813,7 @@ namespace RTParser.Variables
             if (request == null)
                 request = bot.GetBotRequest("<!-- Loads Config to " + this + " from: '" + pathToSettings + "' -->"); 
              pathToSettings = HostSystem.ResolveToExistingPath(pathToSettings);
+             pathToSettings = HostSystem.FileSystemPath(pathToSettings);
              OutputDelegate writeToLog = this.writeToLog;
              if (request != null) writeToLog = request.writeToLog;
             if (pathToSettings == null) return;
@@ -746,8 +864,9 @@ namespace RTParser.Variables
         public static void loadSettingsNow(ISettingsDictionary dict0, string prefix, string pathToSettings0,
             SettingsPolicy settingsPolicy, Request request)
         {
-            string pathToSettings = HostSystem.Combine(prefix, pathToSettings0);
             if (pathToSettings0 == null) return;
+            string pathToSettings = HostSystem.Combine(prefix, pathToSettings0);
+            pathToSettings = HostSystem.FileSystemPath(pathToSettings);
             SettingsDictionaryReal dict = ToSettingsDictionary(dict0);
             OutputDelegate writeToLog = dict.writeToLog;
             // or else
@@ -819,19 +938,6 @@ namespace RTParser.Variables
         /// <item name="name" value="value"/>
         /// </summary>
         /// <param name="settingsAsXML">The settings as an XML document</param>
-        public void loadSettingsNotUsed(XmlDocument settingsAsXML, Request request)
-        {
-            lock (orderedKeyLock)
-            {
-                if (settingsAsXML.DocumentElement == null)
-                {
-                    writeToLog("ERROR no doc element in " + settingsAsXML);
-                }
-                loadSettingNode(this, settingsAsXML.Attributes, SettingsPolicy.Default, request);
-                loadSettingNode(this, settingsAsXML.DocumentElement, SettingsPolicy.Default, request);
-            }
-        }
-
         static public void loadSettingNode(ISettingsDictionary dict, IEnumerable Attributes, SettingsPolicy settingsPolicy, Request request)
         {
             if (Attributes == null) return;
@@ -1014,7 +1120,7 @@ namespace RTParser.Variables
                 //loadSettingNode(dict, myNode.Attributes, false, true, request);
                 SettingsDictionaryReal substDict = ToSettingsDictionary(dict);
                 string substName = StaticXMLUtils.GetAttribValue(myNode, "name,dict,value", "input");
-                var chdict = request.GetSubstitutions(substName, true);
+                SettingsDictionary chdict = request.GetSubstitutions(substName, true);
                 foreach (XmlNode n in myNode.ChildNodes)
                 {
                     substName = n.Name.ToLower();
@@ -1403,10 +1509,10 @@ namespace RTParser.Variables
                     return true;
                 }
                 // check blackboard
-                if ((bbPrefix != null))
+                if ((isBBPrefixCorrect()))
                 {
                     string bbKey = bbPrefix + MakeCaseInsensitive.TransformInput(name).ToLower(); ;
-                    this.bot.setBBHash(bbKey, value);
+                    this.bot.setBBHash0(bbKey, value);
                 }
                 SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
                 value = MakeLocalValue(name, value);
@@ -1414,11 +1520,21 @@ namespace RTParser.Variables
                 if (value != null)
                 {
                     this.settingsHash.Add(normalizedName, value);
-                    this.settingsHash.AddKey(name);
+                    //this.settingsHash.AddKey(name);
                 }
                 updateListeners(name, value, true, !found);
             }
             return !found;
+        }
+
+        private bool isBBPrefixCorrect()
+        {
+            if (bbPrefix == null) return false;
+            if (bbPrefix == "user")
+            {
+                return rbot.LastUser == null || rbot.LastUser.Predicates == this;
+            }
+            return true;
         }
 
         private bool IsMaskedVar(string name)
@@ -1921,7 +2037,7 @@ namespace RTParser.Variables
                 string normalizedName = TransformKey(name);
                 if (this.settingsHash.ContainsKey(normalizedName))
                 {
-                    var old = this.settingsHash.getValue(normalizedName);
+                    var old = this.settingsHash.GetValue(normalizedName);
 
                     updateListeners(name, value, true, false);
                     if (IsMaskedVar(normalizedName))
@@ -1938,10 +2054,10 @@ namespace RTParser.Variables
                             SettingsLog("UPDATE Setting Local '" + name + "'=" + str(value));
                             this.settingsHash.Add(normalizedName, value);
                             // check blackboard
-                            if ((bbPrefix != null) && (this.bot.myChemistry != null))
+                            if ((isBBPrefixCorrect()) && (this.bot.myChemistry != null))
                             {
                                 string bbKey = bbPrefix + MakeCaseInsensitive.TransformInput(name).ToLower(); ;
-                                this.bot.setBBHash(bbKey, value);
+                                this.bot.setBBHash0(bbKey, value);
                             }
                             SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
                             return true;
@@ -2063,7 +2179,7 @@ namespace RTParser.Variables
 
                 if (this.settingsHash.ContainsKey(normalizedName))
                 {
-                    string v = this.settingsHash.getValue(normalizedName);
+                    string v = this.settingsHash.GetValue(normalizedName);
                     if (IsMaskedVar(normalizedName))
                     {
                         SettingsLog("MASKED RETURNLOCAL '" + name + "=NULL instead of" + str(v));
@@ -2147,12 +2263,12 @@ namespace RTParser.Variables
             // check blackboard
             if (useBlackboard)
             {
-                if ((bbPrefix != null) && (this.bot.myChemistry != null))
+                if ((isBBPrefixCorrect()) && (this.bot.myChemistry != null))
                 {
                     string bbKey = bbPrefix + normalizedName.ToLower();
                     if (!bbKey.Contains(" "))
                     {
-                        string bbValue = this.bot.getBBHash(bbKey);
+                        string bbValue = this.bot.getBBHash0(bbKey);
                         //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
                         if (bbValue.Length > 0)
                         {
@@ -2193,7 +2309,7 @@ namespace RTParser.Variables
             bool needsUnlock = System.Threading.Monitor.TryEnter(orderedKeyLock, TimeSpan.FromSeconds(2));
             //string normalizedName = TransformKey(name);
             // check blackboard
-            if ((bbPrefix != null) && (this.bot.myChemistry != null))
+            if ((isBBPrefixCorrect()) && (this.bot.myChemistry != null))
             {
                 string bbKey = bbPrefix + normalizedName.ToLower();
                 if (!bbKey.Contains(" "))
@@ -2260,6 +2376,10 @@ namespace RTParser.Variables
                         }
                     }
                 }
+                if (IsSubsts) return Unifiable.MISSING;
+                if (name == "maxlogbuffersize")
+                {
+                }
                 SettingsLog("MISSING '" + name + "'");
                 return Unifiable.MISSING;
             }
@@ -2278,7 +2398,7 @@ namespace RTParser.Variables
         {
             if (this.settingsHash.ContainsKey(normalizedName))
             {
-                DataUnifiable v = this.settingsHash.getValue(normalizedName);
+                DataUnifiable v = this.settingsHash.GetValue(normalizedName);
                 v = TransformValueOut(v);
                 if (IsMaskedVar(normalizedName))
                 {
@@ -2306,6 +2426,7 @@ namespace RTParser.Variables
                 writeToLog("ERROR DICTLOG ???????: " + NameSpace + " (" + fmt + ")   " + message, args);
             }
             if (!IsTraced) return;
+            IsTraced = false;
             var fc = new StackTrace().FrameCount;
             writeToLog("DICTLOG: " + NameSpace + " (" + fc + ")   " + message, args);
             if (fc > 200)
@@ -2396,7 +2517,7 @@ namespace RTParser.Variables
                     int i = 0;
                     foreach (var s in LocalKeys)
                     {
-                        list[i++] = s;
+                        list.Add(s);
                     }
                     return list;
                 }
@@ -2767,6 +2888,10 @@ namespace RTParser.Variables
         public void Clone(ISettingsDictionary target)
         {
             var dt = ToSettingsDictionary(target);
+            if (dt == this)
+            {
+                return;
+            }
             lock (LockInfo.Watch(MetaProviders)) foreach (var pp in MetaProviders)
                 {
                     dt.InsertMetaProvider(pp);
@@ -2825,6 +2950,9 @@ namespace RTParser.Variables
 
         public void InsertFallback(ParentProvider provider)
         {
+            var providerD = provider();
+            string pn = providerD.NameSpace;
+            settingsHash.AddFallback(pn);
             AddSettingToCollection(provider, _fallbacks);
         }
 

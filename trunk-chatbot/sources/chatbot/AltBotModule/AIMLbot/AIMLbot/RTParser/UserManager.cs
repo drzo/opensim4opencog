@@ -388,9 +388,9 @@ namespace RTParser
                     throw new InvalidCastException("fullname=" + fullname);
                 }
                 key = key.ToLower();
-                User myUser = new MasterUser(key, this);
+                User myUser = new MasterUser(key, username, this, null);
                 myUser.userTrace = writeToUserLog;
-                myUser.UserName = fullname;
+                myUser.UserName = username;
                 writeToUserLog("New User " + fullname + " -DEBUG9");
                 if (key != null) lock (microBotUsersLock) BotUsers[key] = myUser;
                 bool roleAcct = IsRoleAcctName(fullname);
@@ -440,6 +440,7 @@ namespace RTParser
 
         private void EnsureDefaultUsers0()
         {
+            return;
             LastUser = FindOrCreateUser0(UNKNOWN_PARTNER);
             LastUser.IsRoleAcct = true;
             LoadUsers(".*");
@@ -1043,7 +1044,7 @@ namespace RTParser
 
         public bool IsInteractiveUser(IUser value)
         {
-            return value != null && value != BotAsUser && value != ExemplarUser;
+            return value != null && value != _botAsUser && value != ExemplarUser;
         }
     }
 }

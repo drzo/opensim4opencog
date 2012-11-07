@@ -20,7 +20,6 @@ using VDS.RDF.Writing;
 
 namespace LogicalParticleFilter1
 {
-
     public class SIProlog
     {
         // SIProlog : Simple Interpreted Prolog
@@ -38,11 +37,30 @@ namespace LogicalParticleFilter1
         // https://github.com/abresas/prologjs
         // https://github.com/crcx/chrome_prolog
 
+        public class QueryContext
+        {
+            //public string ruleset;
+            //public string query;
+            readonly public PDB db = new PDB();
+            //public readonly PartList context = new PartList();
+
+            public QueryContext(PartList list)
+            {
+                //context = list;
+            }
+
+            public void InitContext()
+            {
+                
+            }
+        }
+
+        //public QueryContext test; 
         /// <summary>
         ///  A plain old super simple prolog interpreter
         /// </summary>
-        public string ruleset;
-        public string query;
+        public string testruleset;
+        public string testquery;
         public bool show = false; //true;
         public bool trace = false;
         public int maxdepth = 20;
@@ -50,10 +68,9 @@ namespace LogicalParticleFilter1
         public string deepestName = "nil";
         public bool lazyTranslate = false; // translate KB text to internal on entry or on first use
 
-        public PartList context = new PartList();
         public PGraph KBGraph = new PGraph();
-        public PDB db = new PDB();
-        private Dictionary<string, string> bindingsDict = new Dictionary<string, string>();
+        readonly public PDB testdb = new PDB();
+        //was unused :  private Dictionary<string, string> bindingsDict = new Dictionary<string, string>();
         
         // natural language to MT name
         public Dictionary<string, string> aliasMap = new Dictionary<string, string>();
@@ -64,8 +81,7 @@ namespace LogicalParticleFilter1
         {
             defineBuiltIns();
             connectMT("stdlib", "root");
-            insertKB(standardLib(),"stdlib");
-            
+            insertKB(standardLib(),"stdlib");            
         }
 
         #region babyMT
@@ -136,11 +152,10 @@ namespace LogicalParticleFilter1
 
         public ArrayList findVisibleKBRules(string startMT)
         {
-            return findVisibleKBRules(startMT, new ArrayList());
+            return findVisibleKBRules(startMT, new ArrayList(), true);
         }
 
-       
-        public ArrayList findVisibleKBRules(string startMT,ArrayList vlist)
+        public ArrayList findVisibleKBRules(string startMT,ArrayList vlist, bool followGenlMt)
         {
             if (vlist.Contains(startMT)) return null;
             vlist.Add(startMT);
@@ -159,10 +174,11 @@ namespace LogicalParticleFilter1
             {
                 VKB.Add(r);
             }
+            if (!followGenlMt) return VKB;
             foreach (PEdge E in focus.OutgoingEdges)
             {
                 string parentMT = E.EndNode.Id;
-                ArrayList collectedKB = findVisibleKBRules(parentMT, vlist);
+                ArrayList collectedKB = findVisibleKBRules(parentMT, vlist, true);
                 if (collectedKB != null)
                 {
                     foreach (Rule r in collectedKB)
@@ -204,8 +220,7 @@ namespace LogicalParticleFilter1
                             writer.WriteLine("<h2>Siprolog Mt List</h2>");
                             foreach (PNode p in KBGraph.SortedTopLevelNodes)
                             {
-                                string pname = p.id;
-                                writer.WriteLine("<a href='{1}siprolog/?mt={0}'>{0}  (prob={2})</a><br/>", pname, serverRoot, p.probability);
+                                writer.WriteLine(p.ToLink(serverRoot) + "<br/>");
                             }
                             writer.WriteLine("<h2>Siprolog Mt Treed</h2>");
                             KBGraph.PrintToWriter(writer, serverRoot);
@@ -389,6 +404,7 @@ namespace LogicalParticleFilter1
         public void clearKB(string focusMT)
         {
             PNode focus = KBGraph.Contains(focusMT);
+            if (focus == null) return;
             focus.ruleset = "";
             focus.dirty = true;
             ensureCompiled(focus);
@@ -396,6 +412,7 @@ namespace LogicalParticleFilter1
 
         private void ensureCompiled(PNode focus)
         {
+            if (focus == null) return;
             if (focus.dirty)
             {
                 ArrayList outr = parseRuleset(focus.ruleset);
@@ -404,33 +421,55 @@ namespace LogicalParticleFilter1
             }
         }
 
-        public bool retractKB(string fact, string focusMT)
+        public string retractKB(string fact, string focusMT)
         {
             PNode focus = KBGraph.Contains(focusMT);
+            if (focus == null) return null;
             ensureCompiled(focus);
             string ruleSet = "";
-            bool fnd = false;
+            string fnd = null;
+            fact = fact.Replace(", ", ",");
             foreach (Rule r in focus.pdb.rules)
             {
                 string val = r.ToString();
-                if (val == fact)
+                if (val.Replace(", ", ",").StartsWith(fact))
                 {
-                    fnd = true;
+                    fnd = val;
                     continue;
                 }
-                ruleSet += r.ToString() + ".\n";
+                ruleSet += val + "\n";
             }
-            if (fnd)
-            {
-                focus.ruleset = ruleSet;
-                focus.dirty = true;
-            }
-
+            if (fnd == null) return null;
+            focus.ruleset = ruleSet;
+            focus.dirty = true;
             if (!lazyTranslate)
                 ensureCompiled(focus);
             return fnd;
-
-            throw new NotImplementedException();
+        }
+        public string replaceInKB(string fact, string replace, string focusMT)
+        {
+            PNode focus = KBGraph.Contains(focusMT);
+            if (focus == null) return null;
+            ensureCompiled(focus);
+            string ruleSet = "";
+            string fnd = null;
+            fact = fact.Replace(", ", ",");
+            foreach (Rule r in focus.pdb.rules)
+            {
+                string val = r.ToString();
+                if (val.Replace(", ", ",").StartsWith(fact))
+                {
+                    fnd = val;
+                    val = replace;
+                }
+                ruleSet += val + "\n";
+            }
+            if (fnd == null) return null;
+            focus.ruleset = ruleSet;
+            focus.dirty = true;
+            if (!lazyTranslate)
+                ensureCompiled(focus);
+            return fnd;
         }
 
         public void insertKB(string ruleSet,string startMT )
@@ -597,8 +636,9 @@ namespace LogicalParticleFilter1
         #region interpreterInterface 
         public void parseRuleset()
         {
-            ArrayList outr = parseRuleset(ruleset);
-            db.rules = outr;
+            inGlobalTest();
+            ArrayList outr = parseRuleset(testruleset);
+            testdb.rules = outr;
         }
         public ArrayList parseRuleset(string rulesIn)
         {
@@ -621,16 +661,22 @@ namespace LogicalParticleFilter1
             }
             return outr;
         }
+
         public void defineBuiltIns()
         {
-            db.builtin = new Hashtable();
-            db.builtin["compare/3"] = new builtinDelegate(Comparitor);
-            db.builtin["cut/0"] = new builtinDelegate(Cut);
-            db.builtin["call/1"] = new builtinDelegate(Call);
-            db.builtin["fail/0"] = new builtinDelegate(Fail);
-            db.builtin["bagof/3"] = new builtinDelegate(BagOf);
-            db.builtin["external/3"] = new builtinDelegate(External);
-            db.builtin["external2/3"] = new builtinDelegate(ExternalAndParse);
+            lock (PDB.builtin) defineBuiltIns0();
+        }
+
+        public void defineBuiltIns0()
+        {
+            if (PDB.builtin.Count > 0) return;
+            PDB.builtin["compare/3"] = new builtinDelegate(Comparitor);
+            PDB.builtin["cut/0"] = new builtinDelegate(Cut);
+            PDB.builtin["call/1"] = new builtinDelegate(Call);
+            PDB.builtin["fail/0"] = new builtinDelegate(Fail);
+            PDB.builtin["bagof/3"] = new builtinDelegate(BagOf);
+            PDB.builtin["external/3"] = new builtinDelegate(External);
+            PDB.builtin["external2/3"] = new builtinDelegate(ExternalAndParse);
         }
 
         public string standardLib()
@@ -676,7 +722,7 @@ namespace LogicalParticleFilter1
             List<Dictionary<string, string>> bindingList = new List<Dictionary<string, string>>();
 
             Dictionary<string, string> bindingsDict = new Dictionary<string, string>();
-            query = inQuery;
+            string query = inQuery;
             PartList qlist = ParseBody(new Tokeniser(query));
             if (qlist == null)
             {
@@ -692,7 +738,8 @@ namespace LogicalParticleFilter1
             }
 
             var vs = varNames(q.plist);
-            context = vs;
+            var ctx = new QueryContext(vs);
+            var db = ctx.db;
             // db.rules = findVisibleKBRules(queryMT);
             db.rules = findVisibleKBRulesSorted(queryMT);
             db.index.Clear();
@@ -712,7 +759,7 @@ namespace LogicalParticleFilter1
         }
         public void askQuery(string inQuery,string queryMT)
         {
-            query = inQuery;
+            var query = inQuery;
             PartList qlist = ParseBody(new Tokeniser(query));
             if (qlist == null)
             {
@@ -728,7 +775,8 @@ namespace LogicalParticleFilter1
             }
 
             var vs = varNames(q.plist);
-            context = vs;
+            var ctx = new QueryContext(vs);
+            var db = ctx.db;
             // db.rules = findVisibleKBRules(queryMT);
             db.rules = findVisibleKBRulesSorted(queryMT);
             db.index.Clear();
@@ -736,20 +784,23 @@ namespace LogicalParticleFilter1
             // Prove the query.
             prove(
                 renameVariables(q.plist, 0, null),
-                    new PEnv(),
+                new PEnv(),
                 db,
                 1,
-                printContext
+                (env) => printContext(vs, env)
                 );
 
         }
-
         public void askQuery(string inQuery, string queryMT, out List <Dictionary <string,string>> outBindings)
+        {
+            askQuery(inQuery, queryMT, true, out outBindings);
+        }
+        public void askQuery(string inQuery, string queryMT, bool followGenlMt, out List<Dictionary<string, string>> outBindings)
         {
             List<Dictionary<string, string>> bindingList = new List<Dictionary<string, string>>();
 
             Dictionary<string, string> bindingsDict = new Dictionary<string, string>();
-            query = inQuery;
+            var query = inQuery;
             PartList qlist = ParseBody(new Tokeniser(query));
             if (qlist == null)
             {
@@ -766,9 +817,22 @@ namespace LogicalParticleFilter1
             }
 
             var vs = varNames(q.plist);
-            context = vs;
-           // db.rules = findVisibleKBRules(queryMT);
-            db.rules = findVisibleKBRulesSorted(queryMT);
+            var ctx = new QueryContext(vs);
+            var context = vs;
+            var db = ctx.db;
+            if (!followGenlMt)
+            {
+                db.rules = findVisibleKBRules(queryMT, new ArrayList(), false);
+            }
+            else
+            {
+                db.rules = findVisibleKBRulesSorted(queryMT);
+            }
+            if (db.rules == null)
+            {
+                outBindings = bindingList;
+                return;
+            }
             db.index.Clear();
             
             // Prove the query.
@@ -802,10 +866,11 @@ namespace LogicalParticleFilter1
 
         public void parseQuery()
         {
-            PartList qlist = ParseBody(new Tokeniser(query));
+            inGlobalTest();
+            PartList qlist = ParseBody(new Tokeniser(testquery));
             if (qlist == null)
             {
-                Console.WriteLine("An error occurred parsing the query '{0}.\n", query);
+                Console.WriteLine("An error occurred parsing the query '{0}.\n", testquery);
                 return;
             }
             Body q = new Body(qlist);
@@ -817,24 +882,30 @@ namespace LogicalParticleFilter1
             }
 
             var vs = varNames(q.plist);
-            context = vs;
+            var test = new QueryContext(vs);
 
-            db.index.Clear();
+            testdb.index.Clear();
 
             // Prove the query.
             prove(
                 renameVariables(q.plist, 0, null),
-                    new PEnv(),
-                db,
+                new PEnv(),
+                test.db,
                 1,
-                printContext
+                (env) => printContext(vs, env)
                 );
 
         }
 
-        public void printContext(PEnv env)
+        public void printContext(PartList which, PEnv env)
         {
-            printVars(context, env);
+            inGlobalTest();
+            printVars(which, env);
+        }
+
+        private void inGlobalTest()
+        {
+            throw new NotImplementedException();
         }
         #endregion
         #region interfaceUtils
@@ -989,7 +1060,7 @@ namespace LogicalParticleFilter1
 
             // Do we have a builtin?
             
-	   builtinDelegate builtin = (builtinDelegate) db.builtin[thisTerm.name+"/"+((PartList)((PartList)thisTerm.partlist.list[0]).list[0]).list.Count];
+	   builtinDelegate builtin = (builtinDelegate) PDB.builtin[thisTerm.name+"/"+((PartList)((PartList)thisTerm.partlist.list[0]).list[0]).list.Count];
 
        //if (trace) { Console.Write("Debug: searching for builtin " + thisTerm.name + "/" + ((PartList)((PartList)thisTerm.partlist).list).length + "\n"); }
 		if (builtin != null) {
@@ -1577,7 +1648,7 @@ namespace LogicalParticleFilter1
 
         public class PDB
         {
-            public Hashtable builtin = new Hashtable();
+            static public Hashtable builtin = new Hashtable();
             public ArrayList rules = new ArrayList();
 
             // A fast index for the database
@@ -1604,14 +1675,15 @@ namespace LogicalParticleFilter1
         {
             public string name;
             public abstract string type { get; }
-            public void print()
+
+            virtual public void print()
             {
                 if (type == "Atom") Console.Write(((Atom)this).name);
                 if (type == "Variable") Console.Write(((Variable)this).name);
                 if (type == "Term") ((Term)this).print();
                 if (type == "PartList") ((PartList)this).print();
             }
-            public string  ToString()
+            public override string  ToString()
             {
                 if (type == "Atom") return (((Atom)this).ToString());
                 if (type == "Variable") return (((Variable)this).ToString());
@@ -1625,7 +1697,7 @@ namespace LogicalParticleFilter1
         {
             // Parameters {Partlist} = [Part]
             // Part = Variable | Atom | Term
-            public string name;
+            //public string name;
             public override string type { get { return "PartList"; } }
             public ArrayList list = new ArrayList();
             public int renumber=0;
@@ -1633,7 +1705,7 @@ namespace LogicalParticleFilter1
             public PartList(string head) { name = head; }
             public PartList(Part l) { list.Insert(0, l); }
             public PartList() { }
-            public new void print()
+            public override void print()
             {
                 bool com = false;
                 // Console.Write("plist(");
@@ -1645,7 +1717,7 @@ namespace LogicalParticleFilter1
                 }
               //  Console.Write(")");
             }
-            public string ToString()
+            public override string ToString()
             {
                 string result = "";
                 bool com = false;
@@ -1663,24 +1735,24 @@ namespace LogicalParticleFilter1
 
         public class Atom : Part
         {
-            public string name;
+            //public string name;
             public int hash = 0;
             public override string type { get { return "Atom"; } }
             public Atom(string head) { name = head; hash = name.GetHashCode(); }
-            public new void print() { Console.Write(this.name); }
-            public string ToString() { return this.name; }
+            public override void print() { Console.Write(this.name); }
+            public override string ToString() { return this.name; }
         }
         public class Variable : Part
         {
-            public string name;
+            //public string name;
             public override string type { get { return "Variable"; } }
             public Variable(string head) { name = head; }
-            public new void print() { Console.Write(this.name); }
-            public string ToString() { return this.name; }
+            public override void print() { Console.Write(this.name); }
+            public override string ToString() { return this.name; }
         }
         public class Term : Part
         {
-            public string name;
+            //public string name;
             public override string type { get { return "Term"; } }
             public PartList partlist;
             public bool excludeThis = false;
@@ -1698,7 +1770,7 @@ namespace LogicalParticleFilter1
                 name = head;
                 partlist = new PartList(list);
             }
-            public new void print()
+            public override void print()
             {
                 if (this.name == "cons")
                 {
@@ -1734,7 +1806,7 @@ namespace LogicalParticleFilter1
             }
 
 
-            public new string ToString()
+            public override string ToString()
             {
                 string result = "";
                 if (this.name == "cons")
@@ -1807,7 +1879,7 @@ namespace LogicalParticleFilter1
                     Console.WriteLine(".");
                 }
             }
-            public string ToString()
+            public override string ToString()
             {
                 if (this.body == null)
                 {
@@ -1838,7 +1910,7 @@ namespace LogicalParticleFilter1
                         Console.Write(", ");
                 }
             }
-            public string ToString()
+            public override string ToString()
             {
                 string result = "";
 
@@ -2650,6 +2722,11 @@ namespace LogicalParticleFilter1
                 get { return outgoingEdgeList.ToArray(); }
             }
 
+            public string DebugInfo
+            {
+                get { return string.Format("prob={0} size={1}", probability, pdb.rules.Count); }
+            }
+
             public bool EdgeAlreadyExists(PNode otherNode)
             {
                 foreach (PEdge e in this.OutgoingEdges)
@@ -2678,6 +2755,11 @@ namespace LogicalParticleFilter1
                 throw new ArgumentException("object is not a PNode");
             }
 
+
+            internal string ToLink(string serverRoot)
+            {
+                return string.Format("<a href='{1}siprolog/?mt={0}'>{0}  ({2})</a>", id, serverRoot, DebugInfo);
+            }
         }
 
         public class PEdge
@@ -2735,6 +2817,12 @@ namespace LogicalParticleFilter1
                 {
                     destNode = new PNode(idDest);
                     AddNode(destNode);
+                } else
+                {
+                    if (destNode == srcNode)
+                    {
+                        return;
+                    }
                 }
                 if (!srcNode.EdgeAlreadyExists(destNode))
                     srcNode.CreateEdgeTo(destNode);
@@ -2867,6 +2955,8 @@ namespace LogicalParticleFilter1
 
             private void PrintToConsole(PNode node, int indentation)
             {
+                if (node == null) return;
+                if (indentation > 4) return; 
                 for (int i = 0; i < indentation; ++i) Console.Write(" ");
                 Console.WriteLine(node.Id);
 
@@ -2893,11 +2983,11 @@ namespace LogicalParticleFilter1
                 //writer.Write("<p>");
                 //for (int i = 0; i < indentation; ++i) writer.Write(" ");
                 //Console.WriteLine(node.Id);
-                writer.WriteLine("<li><a href='{1}siprolog/?mt={0}'>{0}  (prob={2})</a></li>", node.Id, serverRoot, node.probability );
+                writer.WriteLine("<li>{0}</li>", node.ToLink(serverRoot));
                 writer.WriteLine("<ul>");
                 foreach (PEdge e in node.OutgoingEdges)
                 {
-                    PrintToWriter(e.EndNode, indentation + 1, writer, serverRoot);
+                    if (indentation < 10) PrintToWriter(e.EndNode, indentation + 1, writer, serverRoot);
                 }
                 writer.WriteLine("</ul>");
             }
@@ -2919,7 +3009,7 @@ namespace LogicalParticleFilter1
                 //writer.Write("<p>");
                 //for (int i = 0; i < indentation; ++i) writer.Write(" ");
                 //Console.WriteLine(node.Id);
-                writer.WriteLine("<li><a href='{1}siprolog/?mt={0}'>{0}  (prob={2})</a></li>", node.Id, serverRoot, node.probability);
+                writer.WriteLine("<li>{0}</li>", node.ToLink(serverRoot));
                 writer.WriteLine("<ul>");
                 foreach (PEdge e in node.IncomingEdges )
                 {

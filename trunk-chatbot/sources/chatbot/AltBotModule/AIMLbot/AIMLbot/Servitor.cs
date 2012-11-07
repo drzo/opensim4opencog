@@ -68,18 +68,19 @@ namespace AltAIMLbot
         public  Thread myCronThread = null;
         public  string lastAIMLInstance = "";
         public bool traceServitor = true;
-        public bool skiploading = false;
+        public bool skiploadingAimlFiles = false;
+        public bool skiploadingServitorState = true;
         public void DontSkiploading(System.Action act)
         {
-            var sl = skiploading;
-            skiploading = false;
+            var sl = skiploadingAimlFiles;
+            skiploadingAimlFiles = false;
             try
             {
                 act();
             }
             finally
             {
-                skiploading = sl;
+                skiploadingAimlFiles = sl;
             }
         }
 
@@ -94,8 +95,10 @@ namespace AltAIMLbot
         public int _rapStoreTrunkLevel;
         public static Servitor LastServitor;
 
-        [NonSerialized]
-        public SIProlog prologEngine = new SIProlog();
+        public SIProlog prologEngine
+        {
+            get { return curBot.prologEngine; }
+        }
         [NonSerialized]
         public Dictionary<string, SymbolicParticleFilter> partFilterDict = new Dictionary<string, SymbolicParticleFilter>();
         //[NonSerialized]
@@ -150,7 +153,7 @@ namespace AltAIMLbot
         {
             curBot = aimlBot;
             curBot.myServitor = this;
-            skiploading = skipLoading;
+            skiploadingServitorState = skipLoading;
             skipPersonalityCheck = skippersonalitycheck;
             initialCritical = initialcritical;
             Start(outputDelegate);
@@ -530,6 +533,8 @@ namespace AltAIMLbot
 
         private bool LoadCompleteOnce = false;
         private object LoadCompleteLock = new object();
+        
+
         public void loadComplete()
         {
             curBot.isAcceptingUserInput = true;
@@ -846,14 +851,14 @@ namespace AltAIMLbot
                 if (!tmFSMEnabled) continue;
                 try
                 {
-                    if ((curBot.myFSMS != null) && (curBot.isAcceptingUserInput))
+                    if ((curBot.myFSMS != null) && (curBot.isAcceptingUserInput) && mLoadCompleteAndPersonalityShouldBeDefined)
                     {
                         curBot.myFSMS.runBotMachines(curBot);
                     }
                     string tickrateStr = getBBHash("tickrate");
                     tickrate = interval;
 
-                    tickrate = int.Parse(tickrateStr);
+                    if (!string.IsNullOrEmpty(tickrateStr)) tickrate = int.Parse(tickrateStr);
                 }
                 catch
                 {
@@ -895,8 +900,8 @@ namespace AltAIMLbot
                 if (!tmBehaveEnabled) continue;
                 try
                 {
-                    
-                    if ((curBot.myBehaviors != null) && (curBot.isAcceptingUserInput))
+
+                    if ((curBot.myBehaviors != null) && (curBot.isAcceptingUserInput) && mLoadCompleteAndPersonalityShouldBeDefined)
                     {
                         try
                         {
@@ -911,7 +916,7 @@ namespace AltAIMLbot
                     string tickrateStr = getBBHash("tickrate");
                     tickrate = interval;
 
-                    tickrate = int.Parse(tickrateStr);
+                    if (!string.IsNullOrEmpty(tickrateStr)) tickrate = int.Parse(tickrateStr);
                 }
                 catch
                 {
@@ -1057,7 +1062,7 @@ namespace AltAIMLbot
                     {
                         //sv = myChemistry.m_cBus.getHash("mdollhearduuid");
                         sv = getBBHash("uttid");
-                        uutid = int.Parse(sv);
+                        if (!string.IsNullOrEmpty(sv)) uutid = int.Parse(sv);
                     }
                     catch (Exception e) { }
                     if (uutid == lastuutid) { continue; }
@@ -1192,8 +1197,9 @@ namespace AltAIMLbot
         public void loadAIMLFromFile(string path)
         {
             Thread.Sleep(10);
-            if (skiploading)
+            if (skiploadingAimlFiles)
             {
+                throw new NotSupportedException(path);
                 Console.WriteLine(" - WARNING: SERVITOR SKIPLOADING: {0}", path);
                 return;
             }
@@ -1209,8 +1215,9 @@ namespace AltAIMLbot
         public void loadAIMLFromFiles(string path)
         {
             Thread.Sleep(10);
-            if (skiploading)
+            if (skiploadingAimlFiles)
             {
+                throw new NotSupportedException(path);
                 Console.WriteLine(" - WARNING: SERVITOR SKIPLOADING: {0}", path);
                 return;
             }
