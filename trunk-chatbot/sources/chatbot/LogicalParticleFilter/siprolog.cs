@@ -109,12 +109,7 @@ namespace LogicalParticleFilter1
            {
                if (focus.probability > 0)
                {
-                   if (focus.dirty)
-                   {
-                       ArrayList outr = parseRuleset(focus.ruleset);
-                       focus.pdb.rules = outr;
-                       focus.dirty = false;
-                   }
+                   ensureCompiled(focus);
                    foreach (Rule r in focus.pdb.rules)
                    {
                        VKB.Add(r);
@@ -156,12 +151,7 @@ namespace LogicalParticleFilter1
             // should have one that takes a KB shopping list
             PNode focus = KBGraph.Contains(startMT);
             if (focus == null) return null;
-            if (focus.dirty)
-            {
-                ArrayList outr = parseRuleset(focus.ruleset);
-                focus.pdb.rules = outr;
-                focus.dirty = false;
-            }
+            ensureCompiled(focus);
 
             ArrayList VKB = new ArrayList ();
             // Prefix
@@ -372,12 +362,7 @@ namespace LogicalParticleFilter1
             {
                 PNode focus = KBGraph.Contains(focusMT);
                 if (focus == null)  continue;
-                if (focus.dirty)
-                {
-                    ArrayList outr = parseRuleset(focus.ruleset);
-                    focus.pdb.rules = outr;
-                    focus.dirty = false;
-                }
+                ensureCompiled(focus);
                 foreach (Rule r in focus.pdb.rules)
                 {
                     VKB.Add(r);
@@ -398,7 +383,54 @@ namespace LogicalParticleFilter1
         {
             PNode focus = KBGraph.Contains(focusMT);
             if (focus == null) return 0;
-            return focus.Probability ;
+            return focus.Probability;
+        }
+
+        public void clearKB(string focusMT)
+        {
+            PNode focus = KBGraph.Contains(focusMT);
+            focus.ruleset = "";
+            focus.dirty = true;
+            ensureCompiled(focus);
+        }
+
+        private void ensureCompiled(PNode focus)
+        {
+            if (focus.dirty)
+            {
+                ArrayList outr = parseRuleset(focus.ruleset);
+                focus.pdb.rules = outr;
+                focus.dirty = false;
+            }
+        }
+
+        public bool retractKB(string fact, string focusMT)
+        {
+            PNode focus = KBGraph.Contains(focusMT);
+            ensureCompiled(focus);
+            string ruleSet = "";
+            bool fnd = false;
+            foreach (Rule r in focus.pdb.rules)
+            {
+                string val = r.ToString();
+                if (val == fact)
+                {
+                    fnd = true;
+                    continue;
+                }
+                ruleSet += r.ToString() + ".\n";
+            }
+            if (fnd)
+            {
+                focus.ruleset = ruleSet;
+                focus.dirty = true;
+            }
+
+            if (!lazyTranslate)
+                ensureCompiled(focus);
+            return fnd;
+
+            throw new NotImplementedException();
         }
 
         public void insertKB(string ruleSet,string startMT )
@@ -414,9 +446,7 @@ namespace LogicalParticleFilter1
             focus.dirty = true;
 
             if (lazyTranslate) return;
-            ArrayList outr = parseRuleset(focus.ruleset);
-            focus.pdb.rules = outr;
-            focus.dirty = false;
+            ensureCompiled(focus);
         }
 
         public void appendKB(string ruleSet, string startMT)
@@ -432,9 +462,7 @@ namespace LogicalParticleFilter1
             focus.dirty = true;
 
             if (lazyTranslate) return;
-            ArrayList outr = parseRuleset(focus.ruleset);
-            focus.pdb.rules = outr;
-            focus.dirty = false;
+            ensureCompiled(focus);
         }
 
         public void loadKB(string filename, string startMT)
