@@ -300,7 +300,7 @@ namespace AltAIMLbot
         public Dictionary<string, string> eventTable = new Dictionary<string, string>();
         public ValenceSet VSoup;
         public Stack handlerStack;
-        public string persistantDirectory;
+        public string persistantDirectory=null;
         public List<string> invisiblePatterns;
         public bool waitingForChat = false;
 
@@ -368,14 +368,14 @@ namespace AltAIMLbot
 
         public string behaviorDiskName(string behaviorName)
         {
-            return String.Format("{0}/{1}.BTX", persistantDirectory, behaviorName);
+            return String.Format("{0}{1}{2}.BTX", persistantDirectory,Path.DirectorySeparatorChar , behaviorName);
         }
         public void persistToFile(string treeName)
         {
             if (persistantDirectory == null) return;
             if (!Directory.Exists(persistantDirectory)) return;
 
-            string diskName = String.Format("{0}/{1}.BTX", persistantDirectory, behaveTrees[treeName].name);
+            string diskName = String.Format("{0}{1}{2}.BTX", persistantDirectory, Path.DirectorySeparatorChar, behaveTrees[treeName].name);
             //if (File.Exists(diskName)) return;
             StreamWriter outfile = new StreamWriter(diskName);
             string docText = behaveTrees[treeName].treeDoc.OuterXml;
@@ -404,7 +404,7 @@ namespace AltAIMLbot
                     return;
                 }
             }
-            string diskName = String.Format("{0}/{1}.BTX", persistantDirectory, behaveTrees[ID].name);
+            string diskName = String.Format("{0}{1}{2}.BTX", persistantDirectory, Path.DirectorySeparatorChar, ,behaveTrees[ID].name);
             if (!File.Exists(diskName))
             {
                 //defineBehavior(ID, "");
@@ -598,7 +598,8 @@ namespace AltAIMLbot
         {
             if (!visibleBehavior(behaviorName)) return false;
             if (behaveTrees.ContainsKey(behaviorName)) return true;
-            string diskName = String.Format("{0}/{1}.BTX", persistantDirectory, behaviorName);
+            string diskName = String.Format("{0}{1}{2}.BTX", persistantDirectory,Path.DirectorySeparatorChar, behaviorName);
+            //Console.WriteLine("definedBehavior( {0} -> {1})",behaviorName, diskName);
             if (!File.Exists(diskName))
             {
                 return false;
@@ -894,8 +895,8 @@ namespace AltAIMLbot
             {
                 return runBotBehavior(eventTable[behaviorName], deBot);
             }
-
-            if (behaveTrees.ContainsKey(behaviorName))
+            bool known= definedBehavior(behaviorName);
+            if (known || (behaveTrees.ContainsKey(behaviorName)))
             {
                 try
                 {

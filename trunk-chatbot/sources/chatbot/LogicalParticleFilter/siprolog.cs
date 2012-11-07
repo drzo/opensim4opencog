@@ -794,69 +794,74 @@ namespace LogicalParticleFilter1
         public void askQuery(string inQuery, string queryMT, bool followGenlMt, out List<Dictionary<string, string>> outBindings)
         {
             List<Dictionary<string, string>> bindingList = new List<Dictionary<string, string>>();
-
             Dictionary<string, string> bindingsDict = new Dictionary<string, string>();
-            var query = inQuery;
-            PartList qlist = ParseBody(new Tokeniser(query));
-            if (qlist == null)
+            try
             {
-                Console.WriteLine("An error occurred parsing the query '{0}.\n", query);
-                outBindings = bindingList;
-                return;
-            }
-            Body q = new Body(qlist);
-            if (show)
-            {
-                Console.Write("Query is: ");
-                q.print();
-                Console.WriteLine("\n\n");
-            }
-
-            var vs = varNames(q.plist);
-            var ctx = new QueryContext(vs);
-            var context = vs;
-            var db = ctx.db;
-            if (!followGenlMt)
-            {
-                db.rules = findVisibleKBRules(queryMT, new ArrayList(), false);
-            }
-            else
-            {
-                db.rules = findVisibleKBRulesSorted(queryMT);
-            }
-            if (db.rules == null)
-            {
-                outBindings = bindingList;
-                return;
-            }
-            db.index.Clear();
-            
-            // Prove the query.
-            prove(
-                renameVariables(q.plist, 0, null),
-                    new PEnv(),
-                db,
-                1,
-                delegate(PEnv env)
+                var query = inQuery;
+                PartList qlist = ParseBody(new Tokeniser(query));
+                if (qlist == null)
                 {
-                    if (context.list.Count == 0)
-                    {
-                        //TRUE
-                    }
-                    else
-                    {
-                        bindingsDict = new Dictionary<string, string>();
-                        for (var i = 0; i < context.list.Count; i++)
-                        {
-                            string k = (((Variable)context.list[i]).name);
-                            //string v = ((Atom)value(new Variable(((Variable)context.list[i]).name + ".0"), env)).ToString();
-                            string v = value(new Variable(((Variable)context.list[i]).name + ".0"), env).ToString();
-                            bindingsDict[k] = v;
-                        }
-                        bindingList.Add(bindingsDict);
-                    }
+                    Console.WriteLine("An error occurred parsing the query '{0}.\n", query);
+                    outBindings = bindingList;
+                    return;
                 }
-                );
+                Body q = new Body(qlist);
+                if (show)
+                {
+                    Console.Write("Query is: ");
+                    q.print();
+                    Console.WriteLine("\n\n");
+                }
+
+                var vs = varNames(q.plist);
+                var ctx = new QueryContext(vs);
+                var context = vs;
+                var db = ctx.db;
+                if (!followGenlMt)
+                {
+                    db.rules = findVisibleKBRules(queryMT, new ArrayList(), false);
+                }
+                else
+                {
+                    db.rules = findVisibleKBRulesSorted(queryMT);
+                }
+                if (db.rules == null)
+                {
+                    outBindings = bindingList;
+                    return;
+                }
+                db.index.Clear();
+
+                // Prove the query.
+                prove(
+                    renameVariables(q.plist, 0, null),
+                        new PEnv(),
+                    db,
+                    1,
+                    delegate(PEnv env)
+                    {
+                        if (context.list.Count == 0)
+                        {
+                            //TRUE
+                        }
+                        else
+                        {
+                            bindingsDict = new Dictionary<string, string>();
+                            for (var i = 0; i < context.list.Count; i++)
+                            {
+                                string k = (((Variable)context.list[i]).name);
+                                //string v = ((Atom)value(new Variable(((Variable)context.list[i]).name + ".0"), env)).ToString();
+                                string v = value(new Variable(((Variable)context.list[i]).name + ".0"), env).ToString();
+                                bindingsDict[k] = v;
+                            }
+                            bindingList.Add(bindingsDict);
+                        }
+                    }
+                    );
+            }
+            catch (Exception e)
+            {
+            }
             outBindings = bindingList;
         }
 

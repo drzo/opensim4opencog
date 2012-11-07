@@ -354,7 +354,7 @@ namespace AltAIMLbot
             }
             actionReport = String.Format("performedAction({0},{1},{2}).", GetCoppeliaAgentNameByID(sender), Global.GetActionByID(action).Name, GetCoppeliaAgentNameByID(target));
             this.prologEngine.appendKB(actionReport, mt);
-            postCoppeliaAgentsMts();
+            //postCoppeliaAgentsMts();
         }
 
         public void postCoppeliaAgentsMts()
@@ -366,8 +366,9 @@ namespace AltAIMLbot
                 string actionDescMt = "coppeliaActionDescription_" + ak;
                 string actionDescription = this.prologEngine.describeObject(ak, a1);
                 this.prologEngine.connectMT("coppeliaActionDescriptionMt", actionDescMt);
-                this.prologEngine.insertKB(actionDescription, actionDescMt); 
+                this.prologEngine.insertKB(actionDescription, actionDescMt);
             }
+            Thread.Sleep(10);
             //State
             foreach (string sk in CoppeliaStateDictionary.Keys)
             {
@@ -379,9 +380,11 @@ namespace AltAIMLbot
                 this.prologEngine.connectMT("coppeliaStateDescriptionMt", stateDescMt);
                 this.prologEngine.insertKB(stateDescription, stateDescMt);
             }
+            Thread.Sleep(10);
             //Agents
             foreach (string ak in CoppeliaAgentDictionary.Keys)
             {
+                Thread.Sleep(10);
                 Agent a1 = CoppeliaAgentDictionary[ak];
                 string agentMt = "coppeliaAgent_" + ak;
 
@@ -574,10 +577,20 @@ namespace AltAIMLbot
                     //myBot.loadAIMLFromFiles();
                 }
             }
-            
+
             if ((myScheduler != null) && curBot.myBehaviors.definedBehavior("startup"))
             {
                 myScheduler.ActivateBehaviorTask("startup");
+                Console.WriteLine("*** ActivateBehaviorTask startup ***");
+            }
+            else
+            {
+                Console.WriteLine("*** ActivateBehaviorTask startup NOT EXECUTED ***");
+                if (myScheduler == null)
+                    Console.WriteLine("(myScheduler == null)");
+
+                if (!curBot.myBehaviors.definedBehavior("startup"))
+                    Console.WriteLine("startup not in definedBehavior");
             }
 
             myServitorEndpoint.StartServer();
