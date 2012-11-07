@@ -11,8 +11,8 @@ using RTParser.Variables;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 //using List<Unifiable> = System.Collections.Generic.List<string>;
-using DataUnifiableXX = System.String;
-using DataUnifiable = RTParser.Unifiable;
+using DataUnifiable = System.String;
+using DataUnifiableYYY = RTParser.Unifiable;
 
 namespace AltAIMLbot.Utils
 {

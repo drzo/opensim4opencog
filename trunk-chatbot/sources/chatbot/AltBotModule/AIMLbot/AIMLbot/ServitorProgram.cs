@@ -86,7 +86,7 @@ namespace AltAIMLbot
                 MyBot.useMemcache = true;
  
                 Console.WriteLine("WebServitor.serverRoot ={0}", WebServitor.serverRoot);
-                Console.WriteLine("servitor.rapStoreDirectory ={0}", servitor.rapStoreDirectory);
+                Console.WriteLine("servitor.rapStoreDirectory (STEM) ={0}", servitor.rapStoreDirectory);
 
                 //servitorbin = @"C:\RD4541\Acore\RealBot\RealBot2\RealBot2\RealBot2\bin\Debug\aiml\kotoko_irata\bin\ki.kvt";
                 servitorbin = @".\aiml\kotoko_irata\bin\ki.kvt";

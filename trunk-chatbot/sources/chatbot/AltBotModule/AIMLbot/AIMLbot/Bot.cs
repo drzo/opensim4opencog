@@ -116,7 +116,7 @@ namespace RTParser
         /// <summary>
         /// A dictionary object that looks after all the settings associated with this bot
         /// </summary>
-        public SettingsDictionaryReal GlobalSettings;
+        public SettingsDictionary GlobalSettings;
 
         public SettingsDictionary AllUserPreds
         {
@@ -144,7 +144,7 @@ namespace RTParser
         /// <summary>
         /// Generic substitutions that take place during the normalization process
         /// </summary>
-        public SettingsDictionaryReal InputSubstitutions;
+        public SettingsDictionary InputSubstitutions;
 
         /// <summary>
         /// The default predicates to set up for a user
@@ -678,10 +678,10 @@ namespace RTParser
             this.RelationMetaProps = MakeSettingsDictionary("chat.relationprops");
             SettingsDictionaryReal.WarnOnNull = true;
             this.GlobalSettings = MakeSettingsDictionary("bot");
-            this.GenderSubstitutions = MakeSettingsDictionary("substituions.gender");
-            this.Person2Substitutions = MakeSettingsDictionary("substituions.person2");
-            this.PersonSubstitutions = MakeSettingsDictionary("substituions.person");
-            this.InputSubstitutions = MakeSettingsDictionary("substituions.input");
+            this.GenderSubstitutions = MakeSubstsDictionary("substituions.gender");
+            this.Person2Substitutions = MakeSubstsDictionary("substituions.person2");
+            this.PersonSubstitutions = MakeSubstsDictionary("substituions.person");
+            this.InputSubstitutions = MakeSubstsDictionary("substituions.input");
             this.DefaultPredicates = MakeSettingsDictionary("allusers");
             this.HeardPredicates = MakeSettingsDictionary("chat.heardpredicates");
             RegisterDictionary("bot.alluserpred", this.AllUserPreds);
@@ -698,7 +698,11 @@ namespace RTParser
 
         public SettingsDictionaryReal MakeSettingsDictionary(string named)
         {
-            return new SettingsDictionaryReal(named, this);
+            return new SettingsDictionaryReal(named, this, new KeyValueListCSharp(null, new Dictionary<string, string>()));
+        }
+        public SettingsDictionaryReal MakeSubstsDictionary(string named)
+        {
+            return new SettingsDictionaryReal(named, this, new KeyValueListCSharp(new List<string>(), new Dictionary<string, string>())) { IsSubsts = true, TrimKeys = false };           
         }
 
         /// <summary>
@@ -2127,6 +2131,7 @@ The AltAIMLbot program.
         public Dictionary<string, string> BBDict = new Dictionary<string, string>();
         public void setBBHash(string key, string data)
         {
+            //(SettingsDictionaryReal)
             GlobalSettings.addSetting(key, data);
             setBBHash0(key, data);
         }
@@ -2146,21 +2151,26 @@ The AltAIMLbot program.
         {
             string gs = getBBHash0(key);
             if (!string.IsNullOrEmpty(gs)) return gs;
-            return GlobalSettings.grabSetting(key, false);
+            gs = GlobalSettings.grabSetting(key, false);
+            if (!string.IsNullOrEmpty(gs)) return gs;
+            return "";
         }
 
         public string getBBHash0(string key)
         {
             try
             {
+                string val;
                 if (useMemcache)
                 {
                     if ((myChemistry != null) && (myChemistry.m_cBus != null))
                     {
-                        lock (BBDict) BBDict[key] = myChemistry.m_cBus.getHash(key);
+                        val = myChemistry.m_cBus.getHash(key);
+                        lock (BBDict) BBDict[key] = val;
+                        if (!string.IsNullOrEmpty(val)) return val;
+                        return "";
                     }
                 }
-                string val;
                 lock (BBDict) if (BBDict.TryGetValue(key, out val)) return val;
                 return "";
             }

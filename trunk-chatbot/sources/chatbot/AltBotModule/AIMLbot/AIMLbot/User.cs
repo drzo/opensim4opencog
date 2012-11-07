@@ -14,8 +14,9 @@ using RTParser.Database;
 using RTParser.Utils;
 using RTParser.Variables;
 using MasterRequest = AltAIMLParser.Request;
-using DataUnifiableXXX = System.String;
-using DataUnifiable = RTParser.Unifiable;
+using DataUnifiable = System.String;
+using DataUnifiableYYY = RTParser.Unifiable;
+
 namespace AltAIMLbot
 {
     public interface User : IUser, UserStaticModel, RTParser.UserConversationScope, RTParser.UserDuringProcessing

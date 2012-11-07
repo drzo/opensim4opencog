@@ -930,8 +930,15 @@ namespace AltAIMLbot
         {
             if (curBot.myChemistry == null)
             {
-                curBot.realChem = new Qchem(myConst.MEMHOST);
-                curBot.myChemistry = new RChem(myConst.MEMHOST, true);
+                try
+                {
+                    curBot.realChem = new Qchem(myConst.MEMHOST);
+                    curBot.myChemistry = new RChem(myConst.MEMHOST, true);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(" - myChem is not operational " + e);
+                }
             }
             //Start our own chem thread
             try

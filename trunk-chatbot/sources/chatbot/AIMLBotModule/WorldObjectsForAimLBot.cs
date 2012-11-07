@@ -26,8 +26,8 @@ using Thread=System.Threading.Thread;
 using PathSystem3D.Navigation;
 using SUnifiable=System.String;
 using User=AltAIMLbot.User;
-using DataUnifiableXXX = System.String;
-using DataUnifiable = RTParser.Unifiable;
+using DataUnifiable = System.String;
+using DataUnifiableYYY = RTParser.Unifiable;
 
 namespace AIMLBotModule
 {

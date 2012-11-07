@@ -532,16 +532,16 @@ namespace RTParser
             //servitor.curBot.StartedOn = this.StartedOn;
             servitor.curBot.GlobalSettings.updateSetting("aimldirectory", PathToAIML);
 
-            if (SharedGlobalSettings !=null) 
-            foreach (string key in SharedGlobalSettings.Keys)
+            if (SharedGlobalSettings !=null)
+                foreach (string key in LockInfo.CopyOf(SharedGlobalSettings.Keys))
             {
                 string v = SharedGlobalSettings[key];
                // servitor.curBot.GlobalSettings.updateSetting(key, v);
                 servitor.setBBHash(key, v);
             }
 
-            if (GlobalSettings != null)
-            foreach (string key in GlobalSettings.Keys)
+            if (GlobalSettings != null && GlobalSettings!=SharedGlobalSettings)
+                foreach (string key in LockInfo.CopyOf(GlobalSettings.Keys))
             {
                 string v = GlobalSettings[key];
                 //servitor.curBot.GlobalSettings.updateSetting(key, v);
@@ -840,7 +840,7 @@ namespace RTParser
                 InputSubstitutions["issubsts"] = true.ToString();
                 InputSubstitutions.IsTraced = true;
                 RegisterSubstitutions("input", InputSubstitutions);
-                OutputSubstitutions = MakeSettingsDictionary("nl.substitutions.output");
+                OutputSubstitutions = MakeSubstsDictionary("nl.substitutions.output");
                 RegisterSubstitutions("output", OutputSubstitutions);
 
 
@@ -884,7 +884,7 @@ namespace RTParser
                 // RE-Checks for some important default settings
                 SetSaneGlobals(GlobalSettings);
                 //SetupConveration();
-                GlobalSettings.IsIdentityReadOnly = true;
+                //GlobalSettings.SetReadonly( = true;
             }
             finally
             {

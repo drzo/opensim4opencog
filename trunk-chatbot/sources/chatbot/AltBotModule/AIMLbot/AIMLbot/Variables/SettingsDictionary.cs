@@ -18,8 +18,8 @@ using RTParser.Database;
 using RTParser.Normalize;
 using RTParser.Utils;
 
-using DataUnifiableXXX = System.String;
-using DataUnifiable = RTParser.Unifiable;
+using DataUnifiable = System.String;
+using DataUnifiableYYY = RTParser.Unifiable;
 
 namespace RTParser.Variables
 {
@@ -75,6 +75,192 @@ namespace RTParser.Variables
         string GetMeta(string name, string prop);
         string bbPrefix { get; set; }
         void Clone(ISettingsDictionary settingsDictionary);
+        string grabSetting(string name, bool searchUpMt);
+    }
+
+    public interface KeyValueList
+    {
+        //ICollection<string> Keys { get; }
+        bool ContainsKey(string name);
+        ICollection<string> Values { get; }
+        int Count { get; }
+        ICollection<string> Keys { get; }
+        bool IsOrdered { get; set; }
+        void Add(string name, string value);
+        //string this[string name] { get; }
+        void Clear();
+        void Remove(string name);
+
+        string getValue(string normalizedName);
+        void AddKey(string name);
+    }
+    public class KeyValueListSIProlog : KeyValueList
+    {
+        public bool ContainsKey(string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ICollection<string> Values
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public int Count
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public ICollection<string> Keys
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public bool IsOrdered
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
+        public void Add(string name, string value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Clear()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Remove(string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string getValue(string normalizedName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddKey(string name)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    public class KeyValueListCSharp : KeyValueList
+    {
+        public readonly KeyValueList settingsHash0;// = new Dictionary<string, DataUnifiable>();
+        public readonly Dictionary<string, DataUnifiable> settingsHash;// = new Dictionary<string, DataUnifiable>();
+        public IList<string> orderedKeys = new List<string>();
+
+        public string getValue(string key)
+        {
+            if (settingsHash0 != null) return settingsHash0.getValue(key);
+            return settingsHash[key];
+        }
+
+        public ICollection<string> Values
+        {
+            get
+            {
+                if (settingsHash0 != null) return settingsHash0.Values;
+                return settingsHash.Values;
+            }
+        }
+
+        public ICollection<string> Keys
+        {
+            get
+            {
+                if (orderedKeys == null)
+                {
+                    if (settingsHash0 != null) return settingsHash0.Keys;
+                    return settingsHash.Keys;
+                }
+                return orderedKeys;
+            }
+        }
+
+        public bool IsOrdered
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
+        public int Count
+        {
+            get
+            {
+                if (orderedKeys == null)
+                {
+                    if (settingsHash0 != null) return settingsHash0.Count;
+                    return settingsHash.Count;
+                }
+                return orderedKeys.Count;
+            }
+        }
+
+        public bool ContainsKey(string name)
+        {
+            if (orderedKeys != null && orderedKeys.Contains(name)) return true;
+            if (settingsHash0 != null && settingsHash0.ContainsKey(name)) return true;
+            if (settingsHash != null && settingsHash.ContainsKey(name)) return true;
+            return false;
+        }
+
+        public void Add(string name, string value)
+        {
+            if (orderedKeys != null)
+            {
+                if (!orderedKeys.Contains(name)) orderedKeys.Add(name);
+            } 
+            if (settingsHash0 != null) settingsHash0.Add(name, value);
+            if (settingsHash != null) settingsHash.Add(name, value);
+        }
+
+        public KeyValueListCSharp(IList<string> list, Dictionary<System.String, System.String> dictionary)
+        {
+            orderedKeys = list;
+            settingsHash = dictionary;
+        }
+        public void Remove(string name)
+        {
+            if (orderedKeys != null) orderedKeys.Remove(name);
+            if (settingsHash != null) settingsHash.Remove(name);
+            if (settingsHash0 != null) settingsHash0.Remove(name);
+        }
+
+        public void Clear()
+        {
+            if (orderedKeys != null) orderedKeys.Clear();
+            if (settingsHash != null) settingsHash.Clear();
+            if (settingsHash0 != null) settingsHash0.Clear();
+        }
+
+        public void AddKey(string name)
+        {
+            if (orderedKeys != null)
+            {
+                orderedKeys.Add(name);
+            }
+            else
+            {
+                if (settingsHash != null)
+                {
+                    if (!settingsHash.ContainsKey(name))
+                    {
+                        settingsHash.Add(name, null);
+                    }
+                }
+                if (settingsHash0 != null)
+                {
+                    if (!settingsHash0.ContainsKey(name))
+                    {
+                        settingsHash0.Add(name, null);
+                    }
+                }
+            }
+        }
     }
     /// <summary>
     /// A bespoke Dictionary<,> for loading, adding, checking, removing and extracting
@@ -87,13 +273,16 @@ namespace RTParser.Variables
         /// <summary>
         /// Holds a dictionary of settings
         /// </summary>
-        readonly public Dictionary<string, DataUnifiable> settingsHash = new Dictionary<string, DataUnifiable>();
+        public readonly KeyValueList settingsHash;
 
         /// <summary>
         /// Contains an ordered collection of all the keys (unfortunately Dictionary<,>s are
         /// not ordered)
         /// </summary>
-        readonly private List<string> orderedKeys = new List<string>();
+        KeyValueList KeyZ
+        {
+            get { return settingsHash; }
+        }
 
         // prechecks and uses if settings exist
         private List<ParentProvider> _overides = new List<ParentProvider>();
@@ -230,7 +419,7 @@ namespace RTParser.Variables
         {
             get
             {
-                return this.orderedKeys.Count;
+                return this.orderedKeysCount;
             }
         }
 
@@ -399,13 +588,13 @@ namespace RTParser.Variables
                         item.Attributes.Append(name);
                         root.AppendChild(item);
                     }
-                    foreach (string n in this.orderedKeys)
+                    foreach (string n in this.LocalKeys)
                     {
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "item", "");
                         XmlAttribute name = result.CreateAttribute("name");
                         name.Value = n; ;
                         XmlAttribute value = result.CreateAttribute("value");
-                        value.Value = this.settingsHash[TransformKey(n)];
+                        value.Value = this.settingsHash.getValue(TransformKey(n));
                         item.Attributes.Append(name);
                         item.Attributes.Append(value);
                         root.AppendChild(item);
@@ -433,38 +622,27 @@ namespace RTParser.Variables
 
         #endregion
 
-        public SettingsDictionaryReal(String name, AltBot bot)
-            : this(name, bot, null)
-        {
-
-        }
 
         /// <summary>
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot for whom this is a settings dictionary</param>
-        public SettingsDictionaryReal(String name, AltBot bot, ParentProvider parent)
+        public SettingsDictionaryReal(String name, AltBot bot, KeyValueList list)
         {
-            this.bot = bot;
+            settingsHash = list;
+            IsTraced = true;
             theNameSpace = ScriptManager.ToKey(name).ToLower();
+            this.bot = bot;
             IsSubsts = name.Contains("subst");
             TrimKeys = !name.Contains("subst");
-            IsTraced = true;
             bot.RegisterDictionary(name, this);
-            if (parent != null) _fallbacks.Add(parent);
-            //prefixProvider = new PrefixProvider();
-            //string prefixName = name + ".prefixProvider";
-            //prefixProvider.NameSpace = prefixName;
-            //ParentProvider pp = () => prefixProvider;
-            //bot.RegisterDictionary(prefixName, prefixProvider);
-            //var dict = FindDictionary(prefixName, () => this);
+            if (!IsSubsts) this.InsertMetaProvider(bot.GetRelationMetaProps);
             IsTraced = false;
-            //AddSettingToCollection(null, pp, _fallbacks);
-            //AddSettingToCollection(null, pp, _listeners);
-            if (!IsSubsts)
-            {
-                this.InsertMetaProvider(bot.GetRelationMetaProps);
-            }
+        }
+
+        public bool IsOrdered
+        {
+            get { return settingsHash.IsOrdered;}  set { settingsHash.IsOrdered = value; }
         }
 
         #region Methods
@@ -576,7 +754,7 @@ namespace RTParser.Variables
             // ReSharper disable ConstantNullColescingCondition
             writeToLog = writeToLog ?? request.writeToLog;
             // ReSharper restore ConstantNullColescingCondition
-            lock (LockInfo.Watch(dict.orderedKeys))
+            lock (LockInfo.Watch(dict.orderedKeyLock))
             {
                 if (pathToSettings.Length > 0)
                 {
@@ -1235,8 +1413,8 @@ namespace RTParser.Variables
                 found = this.removeSettingReal(name);
                 if (value != null)
                 {
-                    this.orderedKeys.Add(name);
                     this.settingsHash.Add(normalizedName, value);
+                    this.settingsHash.AddKey(name);
                 }
                 updateListeners(name, value, true, !found);
             }
@@ -1597,12 +1775,38 @@ namespace RTParser.Variables
                 if (normalizedName.Length > 0)
                 {
                     this.removeSetting(name);
-                    this.orderedKeys.Add(name);
                     this.settingsHash.Add(normalizedName, value);
                 }
             }
             return true;
         }
+
+        ICollection<string> LocalKeys 
+        {
+            get { return KeyZ.Keys; }
+        }
+
+        protected int orderedKeysCount
+        {
+            get { lock (KeyZ) return KeyZ.Count; }
+        }
+
+        private bool orderedKeysContains(string name)
+        {
+            lock (KeyZ) return KeyZ.ContainsKey(name);
+        }
+
+        private void orderedKeysRemove(string name)
+        {
+            lock (KeyZ) KeyZ.Remove(name);
+
+        }
+
+        private void orderedKeysClear()
+        {
+            lock (KeyZ) KeyZ.Clear();
+        }
+
 
         internal string TransformName(string name)
         {
@@ -1626,10 +1830,10 @@ namespace RTParser.Variables
                 if (SuspendUpdates) return true;
                 name = TransformName(name);
                 string normalizedName = TransformKey(name);
-                bool ret = orderedKeys.Contains(name);
-                this.orderedKeys.Remove(name);
+                bool ret = orderedKeysContains(name);
+                this.orderedKeysRemove(name);
                 // shouldnt need this next one (but just in case)
-                this.orderedKeys.Remove(normalizedName);
+                this.orderedKeysRemove(normalizedName);
                 this.removeFromHash(name);
                 if (ret)
                 {
@@ -1717,7 +1921,7 @@ namespace RTParser.Variables
                 string normalizedName = TransformKey(name);
                 if (this.settingsHash.ContainsKey(normalizedName))
                 {
-                    var old = this.settingsHash[normalizedName];
+                    var old = this.settingsHash.getValue(normalizedName);
 
                     updateListeners(name, value, true, false);
                     if (IsMaskedVar(normalizedName))
@@ -1779,7 +1983,7 @@ namespace RTParser.Variables
         {
             lock (orderedKeyLock)
             {
-                this.orderedKeys.Clear();
+                this.orderedKeysClear();
                 this.settingsHash.Clear();
             }
         }
@@ -1859,7 +2063,7 @@ namespace RTParser.Variables
 
                 if (this.settingsHash.ContainsKey(normalizedName))
                 {
-                    string v = this.settingsHash[normalizedName];
+                    string v = this.settingsHash.getValue(normalizedName);
                     if (IsMaskedVar(normalizedName))
                     {
                         SettingsLog("MASKED RETURNLOCAL '" + name + "=NULL instead of" + str(v));
@@ -1953,7 +2157,7 @@ namespace RTParser.Variables
                         if (bbValue.Length > 0)
                         {
                             // update local value
-                            if (this.orderedKeys.Contains(normalizedName))
+                            if (this.orderedKeysContains(normalizedName))
                             {
                                 this.removeFromHash(normalizedName);
                                 this.settingsHash.Add(normalizedName, bbValue);
@@ -1986,7 +2190,7 @@ namespace RTParser.Variables
                 }
             }
             bool isMaskedVar = IsMaskedVar(name);
-            bool needsUnlock = System.Threading.Monitor.TryEnter(orderedKeys, TimeSpan.FromSeconds(2));
+            bool needsUnlock = System.Threading.Monitor.TryEnter(orderedKeyLock, TimeSpan.FromSeconds(2));
             //string normalizedName = TransformKey(name);
             // check blackboard
             if ((bbPrefix != null) && (this.bot.myChemistry != null))
@@ -1999,7 +2203,7 @@ namespace RTParser.Variables
                     if (bbValue.Length > 0 && false)
                     {
                         // update local value
-                        if (this.orderedKeys.Contains(normalizedName))
+                        if (this.orderedKeysContains(normalizedName))
                         {
                             this.removeFromHash(normalizedName);
                             this.settingsHash.Add(normalizedName, bbValue);
@@ -2061,7 +2265,7 @@ namespace RTParser.Variables
             }
             finally
             {
-                if (needsUnlock) System.Threading.Monitor.Exit(orderedKeys);
+                if (needsUnlock) System.Threading.Monitor.Exit(orderedKeyLock);
             }
         }
 
@@ -2074,7 +2278,7 @@ namespace RTParser.Variables
         {
             if (this.settingsHash.ContainsKey(normalizedName))
             {
-                DataUnifiable v = this.settingsHash[normalizedName];
+                DataUnifiable v = this.settingsHash.getValue(normalizedName);
                 v = TransformValueOut(v);
                 if (IsMaskedVar(normalizedName))
                 {
@@ -2135,14 +2339,14 @@ namespace RTParser.Variables
 
             if (normalizedName.Length > 0)
             {
-                bool needsUnlock = System.Threading.Monitor.TryEnter(orderedKeys, TimeSpan.FromSeconds(2));
+                bool needsUnlock = System.Threading.Monitor.TryEnter(orderedKeyLock, TimeSpan.FromSeconds(2));
                 try
                 {
                     return settingsHash.ContainsKey(normalizedName);
                 }
                 finally
                 {
-                    if (needsUnlock) System.Threading.Monitor.Exit(orderedKeys);
+                    if (needsUnlock) System.Threading.Monitor.Exit(orderedKeyLock);
                 }
             }
             return false;
@@ -2188,9 +2392,13 @@ namespace RTParser.Variables
                         list.AddRange(orderedKeys);
                         return list.ToArray();
                     }*/
-                    string[] result = new string[this.orderedKeys.Count];
-                    this.orderedKeys.CopyTo(result, 0);
-                    return result;
+                    List<string> list = new List<string>();
+                    int i = 0;
+                    foreach (var s in LocalKeys)
+                    {
+                        list[i++] = s;
+                    }
+                    return list;
                 }
             }
         }
@@ -2199,8 +2407,8 @@ namespace RTParser.Variables
         {
             get
             {
-                return new object();
-                return LockInfo.Watch(orderedKeys);
+               // return new object();
+                return LockInfo.Watch(KeyZ);
             }
         }
 
@@ -2286,7 +2494,7 @@ namespace RTParser.Variables
         /// </returns>
         public ICollection<string> Keys
         {
-            get { return orderedKeys; }
+            get { lock (orderedKeyLock) return LocalKeys; }
         }
 
         /// <summary>
@@ -2317,7 +2525,16 @@ namespace RTParser.Variables
 
         public static IEnumerable<string> NO_SETTINGS = new string[0];
         public static IEnumerable<string> TOO_DEEP = new string[0];
-        public bool IsSubsts;
+        private bool _isSubsts;
+        public bool IsSubsts
+        {
+            get { return _isSubsts; }
+            set
+            {
+                _isSubsts = value;
+                if (value) TrimKeys = false;
+            }
+        }
 
 
         public void InsertMetaProvider(ParentProvider pp)
@@ -2556,7 +2773,7 @@ namespace RTParser.Variables
                 }
             lock (orderedKeyLock)
             {
-                foreach (string name in this.orderedKeys)
+                foreach (string name in LocalKeys)
                 {
                     target.addSetting(name, grabSetting(name));
                 }

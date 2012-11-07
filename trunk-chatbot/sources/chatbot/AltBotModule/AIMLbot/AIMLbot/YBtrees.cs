@@ -16,6 +16,7 @@ using Aima.Core.Logic.Propositional.Visitors;
 using AltAIMLParser;
 using MiniSatCS;
 using System.Reflection;
+using MushDLR223.Virtualization;
 using RTParser;
 using VDS.RDF.Parsing;
 using LogicalParticleFilter1;
@@ -113,7 +114,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + EMsg(e));
                 Console.WriteLine("ERR:" + e.StackTrace);
                 Console.WriteLine("ERR XML:" + behaviorDef);
             }
@@ -145,7 +146,7 @@ namespace AltAIMLbot
             catch (Exception e)
             {
                 Console.WriteLine("ERR: SourceTree =", mname);
-                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + EMsg(e));
                 Console.WriteLine("ERR:" + e.StackTrace);
                 Console.WriteLine("ERR XML:" + behaviorDef);
             }
@@ -1118,7 +1119,7 @@ namespace AltAIMLbot
                 bot.inCritical = origCritical;
                 myResult = RunStatus .Failure ;
                 Console.WriteLine("### BNODE ERR:{0} {1} {2}", myNode.Name.ToLower(), nodeID, myResult);
-                Console.WriteLine("### BNODE ERR:" + e.Message);
+                Console.WriteLine("### BNODE ERR:" + EMsg(e));
                 Console.WriteLine("### BNODE ERR:" + e.StackTrace);
                 Console.WriteLine("### BNODE ERR NODE XML:" + myNode.OuterXml);
                 if (myNode.ParentNode != null)
@@ -1454,7 +1455,7 @@ namespace AltAIMLbot
             catch (Exception e)
             {
                 Console.WriteLine("ERR: ProcessBraker");
-                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + EMsg(e));
                 Console.WriteLine("ERR:" + e.StackTrace);
                 Console.WriteLine("ERR XML:" + myNode.OuterXml);
             }
@@ -1720,7 +1721,7 @@ namespace AltAIMLbot
             catch (Exception e)
             {
                 Console.WriteLine("ERR: ProcessSubBehavior");
-                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + EMsg(e));
                 Console.WriteLine("ERR:" + e.StackTrace);
                 Console.WriteLine("ERR XML:" + myNode.OuterXml);
             }
@@ -1758,7 +1759,7 @@ namespace AltAIMLbot
             catch (Exception e)
             {
                 Console.WriteLine("ERR: ProcessSubBehavior");
-                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + EMsg(e));
                 Console.WriteLine("ERR:" + e.StackTrace);
                 Console.WriteLine("ERR XML:" + myNode.OuterXml);
             }
@@ -1788,7 +1789,7 @@ namespace AltAIMLbot
             catch (Exception e)
             {
                 Console.WriteLine("ERR: ProcessSubBehavior");
-                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + EMsg(e));
                 Console.WriteLine("ERR:" + e.StackTrace);
                 Console.WriteLine("ERR XML:" + myNode.OuterXml);
             }
@@ -1814,7 +1815,7 @@ namespace AltAIMLbot
             catch (Exception e)
             {
                 Console.WriteLine("ERR: ProcessEnqueue");
-                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + EMsg(e));
                 Console.WriteLine("ERR:" + e.StackTrace);
                 Console.WriteLine("ERR XML:" + myNode.OuterXml);
             }
@@ -1836,7 +1837,7 @@ namespace AltAIMLbot
             catch (Exception e)
             {
                 Console.WriteLine("ERR: ProcessFlushQueue");
-                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + EMsg(e));
                 Console.WriteLine("ERR:" + e.StackTrace);
                 Console.WriteLine("ERR XML:" + myNode.OuterXml);
             }
@@ -1876,7 +1877,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("*** DRIVE EXCEPTION : {0} {1}", e.Message, e.StackTrace);
+                Console.WriteLine("*** DRIVE EXCEPTION : {0} {1}", EMsg(e), e.StackTrace);
             }
 
                 if (curV > threshold)
@@ -1914,7 +1915,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("*** DRIVE EXCEPTION : {0} {1}", e.Message, e.StackTrace);
+                Console.WriteLine("*** DRIVE EXCEPTION : {0} {1}", EMsg(e), e.StackTrace);
             }
             yield return result;
             yield break;
@@ -1953,7 +1954,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("*** Motive EXCEPTION : {0} {1}", e.Message, e.StackTrace);
+                Console.WriteLine("*** Motive EXCEPTION : {0} {1}", EMsg(e), e.StackTrace);
             }
 
                 if (curV < threshold)
@@ -1991,7 +1992,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("*** Motive EXCEPTION : {0} {1}", e.Message, e.StackTrace);
+                Console.WriteLine("*** Motive EXCEPTION : {0} {1}", EMsg(e), e.StackTrace);
             }
             yield return result;
             yield break;
@@ -2212,7 +2213,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessAssertGuest '{0}':{1}", condition, e.Message);
+                Console.WriteLine("Error ProcessAssertGuest '{0}':{1}", condition, EMsg(e));
                 r = RunStatus.Failure;
             }
 
@@ -2242,7 +2243,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessAssertGuest '{0}':{1}", condition, e.Message);
+                Console.WriteLine("Error ProcessAssertGuest '{0}':{1}", condition, EMsg(e));
                 r= RunStatus.Failure;
             }
 
@@ -2338,7 +2339,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessChat '{0}' '{1}':{2}", sentStr, bot.lastBehaviorChatInput, e.Message);
+                Console.WriteLine("Error ProcessChat '{0}' '{1}':{2}", sentStr, bot.lastBehaviorChatInput, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -2362,11 +2363,17 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessTellKB '{0}':{1}", sentStr, e.Message);
+                Console.WriteLine("Error ProcessTellKB '{0}':{1}", sentStr, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
             yield break;
+        }
+
+        private string EMsg(Exception exception)
+        {
+            return ""
+                   + exception;
         }
 
 
@@ -2385,7 +2392,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessTellBaseKB '{0}':{1}", sentStr, e.Message);
+                Console.WriteLine("Error ProcessTellBaseKB '{0}':{1}", sentStr, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -2401,7 +2408,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessTellKBOCC '{0}':{1}", myNode.InnerXml, e.Message);
+                Console.WriteLine("Error ProcessTellKBOCC '{0}':{1}", myNode.InnerXml, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -2418,7 +2425,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessClearKB '{0}':{1}", myNode.InnerXml, e.Message);
+                Console.WriteLine("Error ProcessClearKB '{0}':{1}", myNode.InnerXml, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -2434,7 +2441,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessClearBaseKB '{0}':{1}", myNode.InnerXml, e.Message);
+                Console.WriteLine("Error ProcessClearBaseKB '{0}':{1}", myNode.InnerXml, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -2528,7 +2535,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessKBModel '{0}':{1}\n{2}", myNode.InnerXml, e.Message, e.StackTrace);
+                Console.WriteLine("Error ProcessKBModel '{0}':{1}\n{2}", myNode.InnerXml, EMsg(e), e.StackTrace);
                 rs = RunStatus.Failure;
             }
 
@@ -2586,7 +2593,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessKBModel '{0}':{1}\n{2}", myNode.InnerXml, e.Message, e.StackTrace);
+                Console.WriteLine("Error ProcessKBModel '{0}':{1}\n{2}", myNode.InnerXml, EMsg(e), e.StackTrace);
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -2950,7 +2957,7 @@ namespace AltAIMLbot
             catch (Exception e)
             {
                 Console.WriteLine("ERR: ProcessTask");
-                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + EMsg(e));
                 Console.WriteLine("ERR:" + e.StackTrace);
                 Console.WriteLine("ERR XML:" + myNode.OuterXml);
                 //result = RunStatus.Failure;
@@ -2970,7 +2977,7 @@ namespace AltAIMLbot
                 catch (Exception e)
                 {
                     Console.WriteLine("ERR: ProcessTask");
-                    Console.WriteLine("ERR:" + e.Message);
+                    Console.WriteLine("ERR:" + EMsg(e));
                     Console.WriteLine("ERR:" + e.StackTrace);
                     Console.WriteLine("ERR XML:" + templateNode.OuterXml);
                     //result = RunStatus.Failure;
@@ -3028,7 +3035,7 @@ namespace AltAIMLbot
             catch (Exception e)
             {
                 Console.WriteLine("ERR: ProcessStateAiml");
-                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + EMsg(e));
                 Console.WriteLine("ERR:" + e.StackTrace);
                 Console.WriteLine("ERR XML:" + myNode.OuterXml);
                 //result = RunStatus.Failure;
@@ -3048,7 +3055,7 @@ namespace AltAIMLbot
                 catch (Exception e)
                 {
                     Console.WriteLine("ERR: ProcessTask");
-                    Console.WriteLine("ERR:" + e.Message);
+                    Console.WriteLine("ERR:" + EMsg(e));
                     Console.WriteLine("ERR:" + e.StackTrace);
                     Console.WriteLine("ERR XML:" + templateNode.OuterXml);
                     //result = RunStatus.Failure;
@@ -3089,7 +3096,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessClearProKB '{0}':{1}", mtName, e.Message);
+                Console.WriteLine("Error ProcessClearProKB '{0}':{1}", mtName, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -3115,7 +3122,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessConnectMt '{0}', '{1}':{2}", childMtName, parentMtName, e.Message);
+                Console.WriteLine("Error ProcessConnectMt '{0}', '{1}':{2}", childMtName, parentMtName, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -3139,7 +3146,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessTellProKB '{0}':{1}", mtName, e.Message);
+                Console.WriteLine("Error ProcessTellProKB '{0}':{1}", mtName, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -3162,7 +3169,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessLoadKEKB '{0}':{1}", path, e.Message);
+                Console.WriteLine("Error ProcessLoadKEKB '{0}':{1}", path, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -3185,7 +3192,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessInsertKB '{0}':{1}", mtName, e.Message);
+                Console.WriteLine("Error ProcessInsertKB '{0}':{1}", mtName, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -3209,7 +3216,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessAppendKB '{0}':{1}", mtName, e.Message);
+                Console.WriteLine("Error ProcessAppendKB '{0}':{1}", mtName, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -3237,7 +3244,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessAssertGuest '{0}':{1}", condition, e.Message);
+                Console.WriteLine("Error ProcessAssertGuest '{0}':{1}", condition, EMsg(e));
                 r = RunStatus.Failure;
             }
 
@@ -3333,7 +3340,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessPrologBehaveMacro '{0}','{1}','{2}','{3}','{4}':'{5}'", var, innerCmd, outerCmd, innerStr, mtName, e.Message);
+                Console.WriteLine("Error ProcessPrologBehaveMacro '{0}','{1}','{2}','{3}','{4}':'{5}'", var, innerCmd, outerCmd, innerStr, mtName, EMsg(e));
                 r = RunStatus.Failure;
             }
 
@@ -3397,7 +3404,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessDefineState '{0}','{1}':{2}", probStr, innerStr, e.Message);
+                Console.WriteLine("Error ProcessDefineState '{0}','{1}':{2}", probStr, innerStr, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -3425,7 +3432,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessConstraintSet '{0}':{1}", innerStr, e.Message);
+                Console.WriteLine("Error ProcessConstraintSet '{0}':{1}", innerStr, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -3459,7 +3466,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessStateSense '{0}','{1}':{2}", probStr, innerStr, e.Message);
+                Console.WriteLine("Error ProcessStateSense '{0}','{1}':{2}", probStr, innerStr, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -3495,7 +3502,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessStateActTransition '{0}','{1}':{2}", probStr, innerStr, e.Message);
+                Console.WriteLine("Error ProcessStateActTransition '{0}','{1}':{2}", probStr, innerStr, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -3546,7 +3553,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessQuickFilter '{0}','{1}':{2}", senseMt, actMt, e.Message);
+                Console.WriteLine("Error ProcessQuickFilter '{0}','{1}':{2}", senseMt, actMt, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -3602,7 +3609,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessMeanParticle '{0}','{1}':{2}", threshold, mtName, e.Message);
+                Console.WriteLine("Error ProcessMeanParticle '{0}','{1}':{2}", threshold, mtName, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -3685,7 +3692,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessGenFilterFromMt '{0}','{1}':{2}", threshold, mtName,filter, e.Message);
+                Console.WriteLine("Error ProcessGenFilterFromMt '{0}','{1}':{2}", threshold, mtName,filter, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -3729,7 +3736,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessUpdateCoppeliaFromMt '{0}','{1}':{2}", threshold, mtName, filter, e.Message);
+                Console.WriteLine("Error ProcessUpdateCoppeliaFromMt '{0}','{1}':{2}", threshold, mtName, filter, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -3926,7 +3933,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessGenCoppeliaFromMt '{0}','{1}':{2}", threshold, mtName, filter, e.Message);
+                Console.WriteLine("Error ProcessGenCoppeliaFromMt '{0}','{1}':{2}", threshold, mtName, filter, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -3992,7 +3999,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessGenCoppeliaFromMt '{0}',{1}", mtName, e.Message);
+                Console.WriteLine("Error ProcessGenCoppeliaFromMt '{0}',{1}", mtName, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -4023,7 +4030,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error kbToBTXML '{0}':{1}",  mtName,  e.Message);
+                Console.WriteLine("Error kbToBTXML '{0}':{1}",  mtName,  EMsg(e));
             }
             return code;
         }
@@ -5127,6 +5134,7 @@ namespace AltAIMLbot
                 string myCodes = myTranslator.btxmlCode;
                 XmlDocument chatDoc = new XmlDocument ();
                 string destFile = srcFile.Replace(".xml", ".btxml");
+                destFile = HostSystem.FileSystemPath(destFile);
                 System.IO.File.WriteAllText(destFile, myCodes);
                 chatDoc.LoadXml (myCodes);
                 bot.loadAIMLFromXML(chatDoc, srcFile +DateTime.Now.ToString());
@@ -5135,7 +5143,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessDefineState '{0}','{1}':{2}", srcFile, innerStr, e.Message);
+                Console.WriteLine("Error ProcessLoadChatMapper '{0}','{1}':{2}", srcFile, innerStr, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -5181,7 +5189,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessAssertGuest '{0}':{1}", condition, e.Message);
+                Console.WriteLine("Error ProcessAssertGuest '{0}':{1}", condition, EMsg(e));
                 r = RunStatus.Failure;
             }
             if (r == RunStatus.Success)
@@ -5478,6 +5486,7 @@ namespace AltAIMLbot
 
         public void defineChatTreeFile(string filename)
         {
+            filename = HostSystem.FileSystemPath(filename);
             string chatXML = System.IO.File.ReadAllText(filename);
             btxmlCode = "";
             //btxmlCode += "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";

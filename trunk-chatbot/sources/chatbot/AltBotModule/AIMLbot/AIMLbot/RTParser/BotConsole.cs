@@ -902,7 +902,7 @@ namespace RTParser
             if (cmd == "setvar")
             {
                 myUser.DoUserCommand(args, console);
-                robot.GlobalSettings.DoSettingsCommand(input, console); ;
+                ((SettingsDictionaryReal)robot.GlobalSettings).DoSettingsCommand(input, console); ;
                 return myUser.DoUserCommand(args, console);
             }
             return false;
