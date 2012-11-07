@@ -1006,5 +1006,17 @@ namespace MushDLR223.Virtualization
             if (string.IsNullOrEmpty(newPath)) return path;
             return newPath;
         }
+
+        public static string FileSystemPath(string file)
+        {
+            if (DLRConsole.IsOnMonoUnix)
+            {
+                if (file.Contains("\\"))
+                {
+                    file = file.Replace('\\', Path.DirectorySeparatorChar);
+                }
+            }
+            return file;
+        }
     }
 }
