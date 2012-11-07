@@ -165,11 +165,20 @@ namespace RTParser.Variables
         public void Add(string name, string value)
         {
             string valArg = MakeArg(value);
-            Remove(name);
+            //Remove(name);
             string before = GetArgVal(name, false);
-            prologEngine.appendKB(QueryForNameValue(MakeArg(name), valArg) + ".\n", dictMt);
+            if (valArg == before) return;
+            if (before != null)
+            {
+                prologEngine.replaceInKB(QueryForNameValue(MakeArg(name), before) + ".",
+                                         QueryForNameValue(MakeArg(name), valArg) + ".", dictMt);
+            }
+            else
+            {
+                prologEngine.appendKB(QueryForNameValue(MakeArg(name), valArg) + ".\n", dictMt);
+            }
             string now = GetArgVal(name, false);
-            if (before != null || now != valArg)
+            if (now != valArg)
             {
                 throw new NotImplementedException("asserting " + valArg);
             }
@@ -327,7 +336,7 @@ namespace RTParser.Variables
                 if (!orderedKeys.Contains(name)) orderedKeys.Add(name);
             } 
             if (settingsHash0 != null) settingsHash0.Add(name, value);
-            if (settingsHash != null) settingsHash.Add(name, value);
+            if (settingsHash != null) settingsHash[name] = value;
         }
 
         public KeyValueListCSharp(IList<string> list, Dictionary<System.String, System.String> dictionary)
@@ -1516,7 +1525,7 @@ namespace RTParser.Variables
                 }
                 SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
                 value = MakeLocalValue(name, value);
-                found = this.removeSettingReal(name);
+                //found = this.removeSettingReal(name);
                 if (value != null)
                 {
                     this.settingsHash.Add(normalizedName, value);

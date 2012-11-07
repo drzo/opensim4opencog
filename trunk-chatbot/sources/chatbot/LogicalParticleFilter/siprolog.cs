@@ -139,9 +139,9 @@ namespace LogicalParticleFilter1
         public ArrayList findVisibleKBS(string startMT, ArrayList vlist)
         {
             PNode focus = KBGraph.Contains(startMT);
+            if (focus == null) return null;
             if (vlist.Contains(focus)) return null;
             vlist.Add(focus);
-            if (focus == null) return null;
             foreach (PEdge E in focus.OutgoingEdges)
             {
                 string parentMT = E.EndNode.Id;
@@ -197,8 +197,9 @@ namespace LogicalParticleFilter1
         }
         public void webWriter(StreamWriter writer,string action,string query,string mt, string serverRoot)
         {
-            writer.WriteLine("<a href='siprolog/?q=list'>List Mts</a><br/>");
-            writer.WriteLine("<a href='siprolog/?q=listing'>List All Rules</a><br/>");
+            serverRoot = "/";
+            writer.WriteLine("<a href='{0}siprolog/?q=list'>List Mts</a><br/>", serverRoot);
+            writer.WriteLine("<a href='{0}siprolog/?q=listing'>List All Rules</a><br/>", serverRoot);
             webWriter0(writer, action, query, mt, serverRoot, true);
         }
         public void webWriter0(StreamWriter writer, string action, string queryv, string mt, string serverRoot, bool toplevel)
@@ -406,6 +407,9 @@ namespace LogicalParticleFilter1
             PNode focus = KBGraph.Contains(focusMT);
             if (focus == null) return;
             focus.ruleset = "";
+            focus.pdb.rules.Clear();
+            focus.pdb.rules.Clear();
+           
             focus.dirty = true;
             ensureCompiled(focus);
         }
@@ -423,64 +427,41 @@ namespace LogicalParticleFilter1
 
         public string retractKB(string fact, string focusMT)
         {
-            PNode focus = KBGraph.Contains(focusMT);
-            if (focus == null) return null;
-            ensureCompiled(focus);
-            string ruleSet = "";
-            string fnd = null;
-            fact = fact.Replace(", ", ",");
-            foreach (Rule r in focus.pdb.rules)
-            {
-                string val = r.ToString();
-                if (val.Replace(", ", ",").StartsWith(fact))
-                {
-                    fnd = val;
-                    continue;
-                }
-                ruleSet += val + "\n";
-            }
-            if (fnd == null) return null;
-            focus.ruleset = ruleSet;
-            focus.dirty = true;
-            if (!lazyTranslate)
-                ensureCompiled(focus);
-            return fnd;
+            return replaceInKB(fact, "", focusMT);
         }
         public string replaceInKB(string fact, string replace, string focusMT)
         {
             PNode focus = KBGraph.Contains(focusMT);
             if (focus == null) return null;
             ensureCompiled(focus);
-            string ruleSet = "";
-            string fnd = null;
             fact = fact.Replace(", ", ",");
-            foreach (Rule r in focus.pdb.rules)
+            ArrayList rules = focus.pdb.rules;
+            for (int i = 0; i < rules.Count; i++)
             {
+                Rule r = (Rule) rules[i];
                 string val = r.ToString();
                 if (val.Replace(", ", ",").StartsWith(fact))
                 {
-                    fnd = val;
-                    val = replace;
+                    // we null out ruleset so that the accessor knows all rules are in the PDB
+                    focus.ruleset = null;
+                    focus.pdb.index.Clear();
+                    if (String.IsNullOrEmpty(replace))
+                    {
+                        rules.RemoveAt(i);
+                        return val;
+                    }
+                    var or = ParseRule(new Tokeniser(replace));
+                    rules[i] = or;
+                    return val;
                 }
-                ruleSet += val + "\n";
             }
-            if (fnd == null) return null;
-            focus.ruleset = ruleSet;
-            focus.dirty = true;
-            if (!lazyTranslate)
-                ensureCompiled(focus);
-            return fnd;
+            return null;
         }
 
         public void insertKB(string ruleSet,string startMT )
         {
             //replaces KB with a fresh rule set
-            PNode focus = KBGraph.Contains(startMT);
-            if (focus == null)
-            {
-                focus = new PNode(startMT);
-                KBGraph.AddNode(focus);
-            }
+            PNode focus = FindOrCreateKB(startMT);
             focus.ruleset = ruleSet;
             focus.dirty = true;
 
@@ -491,17 +472,32 @@ namespace LogicalParticleFilter1
         public void appendKB(string ruleSet, string startMT)
         {
             // Adds a string rule set
+            PNode focus = FindOrCreateKB(startMT);
+            if (!focus.dirty)
+            {
+                focus.ruleset = focus.ruleset + "\n" + ruleSet + "\n";
+                focus.pdb.index.Clear();
+                ArrayList outr = parseRuleset(ruleSet);
+                foreach (var r in outr)
+                {
+                    focus.pdb.rules.Add(r);
+                }
+                return;
+            }
+            focus.ruleset = focus.ruleset + "\n" + ruleSet + "\n";
+            if (lazyTranslate) return;
+            ensureCompiled(focus);
+        }
+
+        private PNode FindOrCreateKB(string startMT)
+        {
             PNode focus = KBGraph.Contains(startMT);
             if (focus == null)
             {
                 focus = new PNode(startMT);
                 KBGraph.AddNode(focus);
             }
-            focus.ruleset = focus.ruleset + "\n" + ruleSet + "\n";
-            focus.dirty = true;
-
-            if (lazyTranslate) return;
-            ensureCompiled(focus);
+            return focus;
         }
 
         public void loadKB(string filename, string startMT)
@@ -2664,9 +2660,13 @@ namespace LogicalParticleFilter1
 
             public PNode(string id)
                 : this(id, null)
-            {
+            {            
             }
-
+            public override int GetHashCode()
+            {
+                return base.GetHashCode();
+                return id.GetHashCode();
+            }
             public override bool Equals(object obj)
             {
                 PNode otherNode = obj as PNode;
@@ -2694,6 +2694,11 @@ namespace LogicalParticleFilter1
             {
                 this.id = id;
                 this.info = info;
+            }
+
+            public override string ToString()
+            {
+                return "mt:" + Id + " " + DebugInfo;
             }
 
             public PEdge CreateEdgeTo(PNode otherNode)
