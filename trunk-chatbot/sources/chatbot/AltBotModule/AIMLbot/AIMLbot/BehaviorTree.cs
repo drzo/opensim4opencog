@@ -404,7 +404,7 @@ namespace AltAIMLbot
                     return;
                 }
             }
-            string diskName = String.Format("{0}{1}{2}.BTX", persistantDirectory, Path.DirectorySeparatorChar, ,behaveTrees[ID].name);
+            string diskName = String.Format("{0}{1}{2}.BTX", persistantDirectory, Path.DirectorySeparatorChar, behaveTrees[ID].name);
             if (!File.Exists(diskName))
             {
                 //defineBehavior(ID, "");
