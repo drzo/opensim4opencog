@@ -7,6 +7,8 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using DcBus;
+using LogicalParticleFilter1;
+
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 
@@ -61,6 +63,8 @@ namespace AltAIMLbot
         Timer Clock = null;
         [NonSerialized]
         public ListBox myWatchBox = null;
+        [NonSerialized]
+        public SIProlog prologEngine = null;
 
         string cacheIP = "127.0.0.1";
 
@@ -987,7 +991,83 @@ namespace AltAIMLbot
             tickBiochemistry();
         }
 
+        public void webWriter(StreamWriter writer, string action, string query, string mt, string serverRoot)
+        {
+            serverRoot = "/";
+            //webWriter0(writer, action, query, mt, serverRoot, true);
+            writer.WriteLine("<html>");
+            writer.WriteLine("<head>");
+            writer.WriteLine("<script type=\"text/javascript\"");
+            writer.WriteLine("  src=\"http://localhost:8123/jsbin/dygraph-combined.js\"></script>");
+            writer.WriteLine("</head>");
+            writer.WriteLine("<body>");
+            writer.WriteLine("<a href='{0}siprolog/?q=list'>List Mts</a><br/>", serverRoot);
+            writer.WriteLine("<a href='{0}siprolog/?q=listing'>List All Rules</a><br/>", serverRoot);
+            writer.WriteLine("<div id=\"graphdiv2\");");
+            writer.WriteLine("  style=\"width:500px; height:300px;\"></div>");
+            writer.WriteLine("<script type=\"text/javascript\">");
+            writer.WriteLine("  g2 = new Dygraph(");
+            writer.WriteLine("    document.getElementById(\"graphdiv2\"),");
+            if ((query!=null) && (mt!=null))
+            {
+            string csvText = kbToCsv(query, mt);
+            writer.WriteLine(csvText);
+            }
+            else
+            {
+            writer.WriteLine("    \"Date,Temperature\\n\" +");
+            writer.WriteLine("        \"2008-05-07,75\\n\" +");
+            writer.WriteLine("        \"2008-05-08,70\\n\" +");
+            writer.WriteLine("        \"2008-05-09,80\\n\" , ");
+            }
+            writer.WriteLine("    ,{}          // options");
+            writer.WriteLine("  );");
+            writer.WriteLine("</script>");
+            writer.WriteLine("</body>");
+            writer.WriteLine("</html>");
 
+        }
+
+        public string kbToCsv(string query, string mtName)
+        {
+            // A query like coppeliaAnger(AGENT,TARGET,VALUE) might return 
+            // AGENT,TARGET,VALUE
+            // self, other,0.8
+            string code = "";
+            string header = "";
+            try
+            {
+                List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
+                string[] part = query.Split('(');
+                string head = part[0].Trim();
+                prologEngine.askQuery(query, mtName, out bingingsList);
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    string frag = "\"";
+                    header = "\"";
+                    int cnt = 0;
+                    foreach (string key in bindings.Keys)
+                    {
+                        cnt++;
+                        header += key.ToLower();
+                        frag +=  bindings[key].Trim();
+                        if (cnt < bindings.Count)
+                        {
+                            header += ",";
+                            frag += ",";
+                        }
+                    }
+                    frag += "\\n\" + \n";
+                    header += "\\n\" + \n";
+                    code += frag;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error kbToBTXML '{0}':{1}", mtName, e.Message );
+            }
+            return header + code+ "\"\"";
+        }
     }
 
     public class SoupIORule
@@ -1107,7 +1187,29 @@ namespace AltAIMLbot
             {
                 // From the BlackBoard to the soup
                 if ((soup.biochemticks % (int)rate) != 0) return;
-                if (!soup.BlackBoard.ContainsKey(Locus)) return;
+
+                bool prologPass=true;
+                if (soup.prologEngine != null)
+                {
+                    // Prolog should be in the format of <mt>:<query>
+
+                    if (Locus.Contains("("))
+                    {
+                        string[] parms = Locus.Split(':');
+                        string mt = parms[0];
+                        string query = parms[1];
+                        prologPass = soup.prologEngine.isTrueIn(query, mt);
+                        if (prologPass)
+                        {
+                            soup.BlackBoard[Locus] = 255;
+                        }
+                        else
+                        {
+                            soup.BlackBoard[Locus] = 0;
+                        }
+                    }
+                }
+                if (!soup.BlackBoard.ContainsKey(Locus))  return;
                 int f = (int)soup.BlackBoard[Locus];
                 if (clear) soup.BlackBoard[Locus] = (int)0;
                 if (invert) f = 255 - f;
@@ -1160,10 +1262,29 @@ namespace AltAIMLbot
                 f = r;
                 // send it out
                 soup.BlackBoard[Locus] = (int)f;
-                
+                if (soup.prologEngine != null)
+                {
+                    // Prolog should be in the format of <mt>:<query>
+
+                    if (Locus.Contains("("))
+                    {
+                        string[] parms = Locus.Split(':');
+                        string mt = parms[0];
+                        string query = parms[1];
+                        if (r == 255)
+                        {
+                            soup.prologEngine.appendKB(query, mt);
+                        }
+                        if (r == 0)
+                        {
+                            soup.prologEngine.retractKB(query, mt);
+                        }
+ 
+                    }
+                }              
             }
         }
-
+ 
         static string[] SplitCSV(string inputText)
         {
             return Regex.Split(inputText, ",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");

@@ -952,6 +952,7 @@ namespace AltAIMLbot
                 {
                     curBot.realChem = new Qchem(myConst.MEMHOST);
                     curBot.myChemistry = new RChem(myConst.MEMHOST, true);
+                    curBot.realChem.prologEngine = curBot.prologEngine;
                 }
                 catch (Exception e)
                 {
