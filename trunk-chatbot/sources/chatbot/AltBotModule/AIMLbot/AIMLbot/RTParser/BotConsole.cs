@@ -40,7 +40,7 @@ namespace RTParser
     {
         internal readonly Dictionary<string, SystemExecHandler> ConsoleCommands = new Dictionary<string, SystemExecHandler>();
         int UseHttpd = -1;
-        private static Bot ConsoleRobot;
+        public static AltBot ConsoleRobot;
         public static string AIMLDEBUGSETTINGS =
             "clear -spam +user +bina +error +aimltrace +cyc -dictlog -tscore +loaded";
 
@@ -206,7 +206,7 @@ namespace RTParser
         private static AltBot Startup(string[] args)
         {
             AltBot myBot;
-            lock (typeof(Bot))
+            lock (typeof(AltBot))
             {
                 TaskQueueHandler.TimeProcess("ROBOTCONSOLE: PREPARE", () => Prepare(args));
                 myBot = ConsoleRobot;
@@ -218,7 +218,7 @@ namespace RTParser
 
         public static void Prepare(string[] args)
         {
-            AltBot myBot = ConsoleRobot = ConsoleRobot ?? new Bot();
+            AltBot myBot = ConsoleRobot = ConsoleRobot ?? new AltBot();
             OutputDelegate writeLine = MainConsoleWriteLn;
             for (int index = 0; index < args.Length; index++)
             {
@@ -272,8 +272,9 @@ namespace RTParser
             if (args != null)
             {
                 string newName = "";
-                foreach (string s in args)
+                for (int i = 0; i < args.Length; i++)
                 {
+                    string s = args[i];
                     if (s == "--breakpoints")
                     {
                         UseBreakpointOnError = true;
@@ -286,7 +287,7 @@ namespace RTParser
                     }
                     if (s == "--cycon")
                     {
-                        myBot.CycEnabled  = true;
+                        myBot.CycEnabled = true;
                         continue;
                     }
                     if (s == "--cycoff")
@@ -299,7 +300,13 @@ namespace RTParser
                         UseBreakpointOnError = false;
                         continue;
                     }
-                    if (s == "--aiml" || s == "--botname")
+                    if (s == "--cmdprefix")
+                    {
+                        cmdPrefix = args[i + 1];
+                        i++;
+                        continue;
+                    }
+                    if (s == "--aiml" || s == "--botname" || s == "--name")
                     {
                         gettingUsername = true;
                         continue;
@@ -345,6 +352,7 @@ namespace RTParser
             //Added from AIML content now
             // myBot.AddAiml(evidenceCode);
             User myUser = myBot.LastUser;
+            var myUsersname = myUser.UserName;
             Request request = myUser.CreateRequest("current user toplevel", "current bot toplevel", myBot.BotAsUser);
             myUser.LastRequest = request;
             myBot.BotDirective(myUser, request, "@help", writeLine);
@@ -398,7 +406,7 @@ namespace RTParser
                 }
                 try
                 {
-                    Unifiable cmdprefix = myUser.Predicates.grabSetting("cmdprefix");
+                    Unifiable cmdprefix = cmdPrefix ?? myUser.Predicates.grabSetting("cmdprefix");
                     if (cmdprefix == null) cmdprefix = myBot.GlobalSettings.grabSetting("cmdprefix");
                     if (!input.Contains("@") && !IsNullOrEmpty(cmdprefix))
                     {
@@ -414,7 +422,7 @@ namespace RTParser
                     {
                         // See what the servitor says
                         updateRTP2Sevitor(myUser);
-                        BotAsAUser.JustSaid = servitor.respondToChat(input);
+                        servitor.respondToChat(input);
                         updateServitor2RTP(myUser);
                     }
                     else
@@ -541,6 +549,21 @@ namespace RTParser
             if (AltBotCommands.ExecAnyAtAll(this, input, myUser, cmd, console, showHelp, args, targetBotUser, control)) return true;
             if (cmd == "query" || showHelp) if (AltBotcommands.ExecQuery(myUser.LastRequest, cmd, console, showHelp, args, myUser))
                     return true;
+
+            if (cmd == "servitor")
+            {
+                if (showHelp)
+                {
+
+                }
+                else
+                {
+                    // See what the servitor says
+                    updateRTP2Sevitor(myUser);
+                    servitor.respondToChat(input);
+                    updateServitor2RTP(myUser);
+                }
+            }
 
             if (showHelp) console("@user [var [value]] -- lists or changes the current users get/set vars.");
             if (cmd == "user")
@@ -1379,6 +1402,7 @@ namespace RTParser
 
     public partial class AltBot
     {
+        private static string cmdPrefix;
 
         private void AddBotCommand(string s, Action action)
         {

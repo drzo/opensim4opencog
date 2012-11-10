@@ -64,13 +64,11 @@ namespace AltAIMLbot
         {
             //if (servitor == null)
             {
-
-                MyBot = MyBot ?? new Bot();
+                AltBot.ConsoleRobot = MyBot = MyBot ?? AltBot.ConsoleRobot ?? new AltBot();
                 try
                 {
                     MyBot.ObjectRequester = (ICollectionRequester)colreq;
                     MyBot.outputDelegate = WriteLine;
-                    MyBot.SetName(myName);
                     MyBot.sayProcessor = new sayProcessorDelegate(TalkActive);
                 }
                 catch (Exception e)

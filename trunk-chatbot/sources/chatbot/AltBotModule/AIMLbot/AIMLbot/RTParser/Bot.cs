@@ -488,6 +488,10 @@ namespace RTParser
                 servitor.curBot = this;
                 servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
             }
+            if (myServitor.NeedsStarted)
+            {
+                myServitor.Start(sayProcessor);
+            }
 
         }
         public void updateRTP2Sevitor(User activeUser)
@@ -547,20 +551,24 @@ namespace RTParser
             servitor.curBot.GlobalSettings.updateSetting("aimldirectory", PathToAIML);
 
             if (SharedGlobalSettings != null)
+            {
                 foreach (string key in LockInfo.CopyOf(SharedGlobalSettings.Keys))
                 {
                     string v = SharedGlobalSettings[key];
                     // servitor.curBot.GlobalSettings.updateSetting(key, v);
-                    servitor.setBBHash(key, v);
+                    servitor.curBot.setBBHash0(key, v);
                 }
+            }
 
             if (GlobalSettings != null && GlobalSettings != SharedGlobalSettings)
+            {
                 foreach (string key in LockInfo.CopyOf(GlobalSettings.Keys))
                 {
                     string v = GlobalSettings[key];
                     //servitor.curBot.GlobalSettings.updateSetting(key, v);
-                    servitor.setBBHash(key, v);
+                    servitor.curBot.setBBHash0(key, v);
                 }
+            }
 
             /*if ((GenderSubstitutions != null) && (servitor.curBot.GenderSubstitutions.Count != GenderSubstitutions.Count))
             foreach (string key in GenderSubstitutions.Keys)
@@ -612,7 +620,8 @@ namespace RTParser
             : base()
         {
             myBehaviors = new BehaviorSet(this);
-
+            servitor = new Servitor(this, null);
+            
             qsbase = QuerySettings.CogbotDefaults;
             AltBotcommands = new AltBotCommands(this);
             _RuntimeDirectories = new List<string>();

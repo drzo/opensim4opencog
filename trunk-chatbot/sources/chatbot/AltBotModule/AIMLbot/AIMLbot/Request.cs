@@ -1217,7 +1217,7 @@ namespace AltAIMLParser
             get
             {
                 Unifiable something;
-                if (UserImpl.ThatIsStoredBetweenUsers)
+                if (MasterUser.ThatIsStoredBetweenUsers)
                 {
                     if (Requester != null && IsSomething(Requester.That, out something)) return something;
                     if (Responder != null && IsSomething(Responder.JustSaid, out something)) return something;
@@ -1284,7 +1284,7 @@ namespace AltAIMLParser
                 {
                     ithat = value;
                 }
-                if (UserImpl.ThatIsStoredBetweenUsers)
+                if (MasterUser.ThatIsStoredBetweenUsers)
                 {
                     var responder = Responder;
                     if (responder != null) responder.JustSaid = ithat;
@@ -1295,7 +1295,7 @@ namespace AltAIMLParser
 
         public Unifiable RequestThat()
         {
-            if (UserImpl.ThatIsStoredBetweenUsers) throw new InvalidOperationException("must User.get_That()");
+            if (MasterUser.ThatIsStoredBetweenUsers) throw new InvalidOperationException("must User.get_That()");
             var req = this;
             while (req != null)
             {

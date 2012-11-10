@@ -691,6 +691,7 @@ namespace RTParser
                 LastUser =
                 ExemplarUser ??
                 FindUser("ExemplarUser") ?? new MasterUser("ExemplarUser", "ExemplarUser", this, DefaultPredicates);
+            guser.SetMeMyselfAndI("ExemplarUser");
             RegisterDictionary("defaults", DefaultPredicates);
             this.GlobalSettings = MakeSettingsDictionary("GlobalSettingsMt");
             this.GlobalSettings.bbPrefix = "bot";

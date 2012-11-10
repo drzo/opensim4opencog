@@ -99,8 +99,8 @@ namespace RTParser
             Utterance spoken = log.AddSpoken(this, theFactSpeaker, toWhom, message);
             Result res = HeardSome1Say11Sentence(theFactSpeaker, toWhom, spoken, message, result, control);
             if (toWhomNonNull) toWhom.ResponderJustSaid = message;
-            ((UserImpl)theFactSpeaker).JustSaid = message;
-            if (toWhomNonNull) ((UserImpl)toWhom)._JustSaid = whatListenerLastSaid;
+            ((MasterUser)theFactSpeaker).JustSaid = message;
+            if (toWhomNonNull) ((MasterUser)toWhom)._JustSaid = whatListenerLastSaid;
             return res;
         }
 

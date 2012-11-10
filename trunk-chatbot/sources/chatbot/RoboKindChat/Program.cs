@@ -3,6 +3,7 @@ using System.IO;
 using AltAIMLbot;
 using LAIR.ResourceAPIs.WordNet;
 using RoboKindAvroQPID;
+using RTParser;
 
 namespace RoboKindChat
 {
@@ -26,20 +27,34 @@ namespace RoboKindChat
             //_theChatProg.LoadDataset("test_suite/ProgramD/AIML.aiml");
             //_theChatProg.LoadDataset("special/blackjack.aiml");
             // _theChatProg.LoadDataset("special/lesson_template.aiml"); 
+            
+            // for now lets use the old interactor for texting
+            try
+            {
+                AltBot.Main(args);
+            } finally
+            {
+                _theChatProg.Terminate();
+                
+            }
+            return;
             _theChatProg.RunMain("Nephrael Rae","consoleUser",(s) => Console.Write(s), () =>
                                                               {
                                                                   Console.Write("You: ");
                                                                   return Console.ReadLine();
                                                               }, true);
-            _theChatProg.Terminate();
         }
 
         private static void DeletePreArtifacts()
         {
-            var sgm = "./aiml/servitorgraphmap.aiml";
+            DeleteArtifact("./aiml/servitorgraphmap.aiml");
+            DeleteArtifact("./rapstore/");
+        }
+
+        private static void DeleteArtifact(string sgm)
+        {
             if (File.Exists(sgm)) File.Delete(sgm);
-            string rapStoreDir = "./rapstore";
-            if (Directory.Exists(rapStoreDir)) Directory.Delete(rapStoreDir, true);
+            if (Directory.Exists(sgm)) Directory.Delete(sgm, true);
         }
     }
 }

@@ -9,7 +9,7 @@ using Result=AltAIMLbot.Result;
 using User=AltAIMLbot.User;
 
 namespace AIMLbot
-{
+{/*
     public class Bot : RTParser.AltBot
     {
          
@@ -23,14 +23,14 @@ namespace AIMLbot
             base.loadAIMLFromFiles();
         }
         
-    }
-    public class MasterUser : RTParser.UserImpl
+    }*/
+/*    public class MasterUser : RTParser.UserImpl
     {
         public MasterUser(string UserID, string fullname, AltBot bot, SettingsDictionary dict)
             : base(UserID, fullname, bot, dict)
         {
         }
-    }
+    }*/
 #if false
     sealed public class MasterRequest :
 #if interface

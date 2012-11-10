@@ -147,7 +147,6 @@ namespace AltAIMLbot
         {
             curBot = aimlBot;
             curBot.myServitor = this;
-            Start( outputDelegate);
         }
         public Servitor(AltBot aimlBot, sayProcessorDelegate outputDelegate, bool skipLoading, bool skippersonalitycheck, bool initialcritical)
         {
@@ -156,7 +155,6 @@ namespace AltAIMLbot
             skiploadingServitorState = skipLoading;
             skipPersonalityCheck = skippersonalitycheck;
             initialCritical = initialcritical;
-            Start(outputDelegate);
         }
 
         public string GetCoppeliaAgentNameByID(int queryID)
@@ -474,6 +472,8 @@ namespace AltAIMLbot
 
         public void Start(sayProcessorDelegate outputDelegate)
         {
+            if (!NeedsStarted) return;
+            NeedsStarted = false;
             Servitor.LastServitor = this;
             Console.WriteLine("RealBot operating in :" + Environment.CurrentDirectory);
             Console.WriteLine("       ProcessorCount:" + Environment.ProcessorCount);
@@ -536,7 +536,8 @@ namespace AltAIMLbot
 
         private bool LoadCompleteOnce = false;
         private object LoadCompleteLock = new object();
-        
+        public bool NeedsStarted = true;
+
 
         public void loadComplete()
         {
@@ -621,11 +622,11 @@ namespace AltAIMLbot
             if (input.StartsWith("@"))
             {
                 curBot.AcceptInput(Console.WriteLine, input, curUser);
-                return "@@";
+                return "@rem " + input;
             }
             if (input.StartsWith("<"))
             {
-                return "@<>=" + curBot.myBehaviors.runBTXML(input);
+                return "@rem <>=" + curBot.myBehaviors.runBTXML(input);
             }
             curBot.isPerformingOutput = true;
             if (curBot.myBehaviors.waitingForChat)
@@ -679,6 +680,7 @@ namespace AltAIMLbot
             // else try the named behavior
             if (doHaviours && curBot.myBehaviors.definedBehavior("chatRoot"))
             {
+                curUser.JustSaid = input;
                 curUser.Predicates.updateSetting("lastinput", input);
                 prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
                 //curBot.lastBehaviorChatInput = input;

@@ -39,6 +39,7 @@ namespace AltAIMLbot
         IEnumerable<string> getPreStates();
         IEnumerable<string> getPostStates();
         void setUserID(string id);
+        bool SetMeMyselfAndI(string fullname);
     }
 }
 
@@ -99,7 +100,7 @@ namespace RTParser
     /// <summary>
     /// Encapsulates information and history of a user who has interacted with the bot
     /// </summary>
-    public abstract class UserImpl : StaticAIMLUtils, IUser, IDisposable, ISettingsDictionary, UserConversationScope,
+    public class MasterUser : StaticAIMLUtils, IUser, IDisposable, ISettingsDictionary, UserConversationScope,
                                      UserDuringProcessing,
                                      User
     {
@@ -624,7 +625,7 @@ namespace RTParser
         /// </summary>
         /// <param name="UserID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-        internal UserImpl(string userID,string fullname, AltBot bot, SettingsDictionary dict)
+        internal MasterUser(string userID,string fullname, AltBot bot, SettingsDictionary dict)
         {
             this.bot = bot;
             IsValid = true;
@@ -661,7 +662,7 @@ namespace RTParser
                     this.Predicates.addSetting("topic", rbot.NOTOPIC);
                     this.Predicates.InsertFallback(() => bot.AllUserPreds);
                 }
-                UserID = userID;
+                UserID = userID;                
                 UserName = fullname;
                 blackBoardThat = "";
                 WithoutTrace(Predicates,() => SetMeMyselfAndI(fullname));
