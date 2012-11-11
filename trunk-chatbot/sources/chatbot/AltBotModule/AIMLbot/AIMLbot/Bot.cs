@@ -74,6 +74,7 @@ namespace RTParser
         //public Qchem realChem = new Qchem(myConst.MEMHOST);
         public RChem myChemistry = null;
         public Qchem realChem = null;
+        public ChemTrace myChemTrace = null;
         public QfsmSet myFSMS = new QfsmSet();
         public BehaviorSet myBehaviors;
         public Cron myCron = null;

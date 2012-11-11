@@ -6,6 +6,7 @@ using System.Collections;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Timers;
 using DcBus;
 using LogicalParticleFilter1;
 
@@ -31,7 +32,106 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 namespace AltAIMLbot
 {
     [Serializable]
-
+    public class ChemTrace
+    {
+        public Qchem ourSoup = null;
+        System.Timers.Timer Clock = null;
+        public Hashtable trace = new Hashtable();
+        public SIProlog prologEngine = null;
+        public ChemTrace(Qchem _soup)
+        {
+            ourSoup = _soup;
+        }
+        public void startMonitor()
+        {
+                    if (Clock == null)
+            {
+                Clock = new System.Timers.Timer();
+                Clock.Elapsed += new ElapsedEventHandler(Timer_Tick);
+            }
+            Clock.Interval =1000;
+            Clock.Enabled = true;
+            tickMonitor();
+            updateProlog();
+        }
+        public void stopMonitor()
+        {
+            Clock.Enabled = false;
+            Clock.Stop();
+        }
+        public void Timer_Tick(object sender, EventArgs eArgs)
+        {
+            if (sender == Clock)
+            {
+                tickMonitor();
+                updateProlog();
+            }
+        }
+        public void tickMonitor()
+        {
+            lock (trace)
+            {
+                lock (ourSoup.Chemicals)
+                {
+                    foreach (string ID in ourSoup.Chemicals.Keys)
+                    {
+                        double v1 = (double)ourSoup.Chemicals[ID];
+                        if (!trace.ContainsKey(ID))
+                        {
+                            //double[] timeseries = new double[100];
+                            Queue<double> new_timeseries = new Queue<double>();
+                            trace[ID] = new_timeseries;
+                        }
+                        Queue<double> timeseries = (Queue<double>)trace[ID];
+                        timeseries.Enqueue(v1);
+                        while (timeseries.Count > 120)
+                        {
+                            timeseries.Dequeue();
+                        }
+                    }
+                }
+            }
+        }
+        public void updateProlog()
+        {
+            if (prologEngine ==null) return;
+            string spindle = "bioTraceMt";
+            string commonMt = "bioCommonMt";
+            string bioNow = "bioNowMt";
+            prologEngine.insertKB("plot(X,Y):-trace(ID,X,Y).\n",commonMt);
+            lock (trace)
+            {
+                foreach (string ID in trace.Keys)
+                {
+                    Queue<double> timeseries = (Queue<double>)trace[ID];
+                    double[] Vlist = timeseries.ToArray();
+                    string tlog ="" ;
+                    string mt = String.Format("biotrace_{0}", ID);
+                    for (int i = 0; i < Vlist.Length; i++)
+                    {
+                        double v1 = Vlist[i];
+                        string point = String.Format("trace({0},{1},{2}).\n", ID, i, v1);
+                        tlog += point;
+                    }
+                    prologEngine.insertKB(tlog, mt);
+                    prologEngine.connectMT(spindle, mt);
+                    prologEngine.connectMT(mt, commonMt );
+                }
+                string tlog2 = "";
+                lock(ourSoup.Chemicals)
+                {
+                    foreach (string ID in ourSoup.Chemicals.Keys)
+                    {
+                        double v1 = (double)ourSoup.Chemicals[ID];
+                        string point = String.Format("bioNow({0},{1}).\n", ID, v1);
+                        tlog2 += point;
+                    }
+                    prologEngine.insertKB(tlog2, bioNow);
+                    prologEngine.connectMT(spindle, bioNow);
+                }
+            }
+        }
+    }
     public class Qchem
     {
         public HashtableSerailizable Reactions = new HashtableSerailizable();
@@ -60,11 +160,13 @@ namespace AltAIMLbot
         public RChem m_RChem = null;
 
         [NonSerialized]
-        Timer Clock = null;
+        System.Timers.Timer Clock = null;
         [NonSerialized]
         public ListBox myWatchBox = null;
         [NonSerialized]
         public SIProlog prologEngine = null;
+        [NonSerialized]
+        public ChemTrace tracer = null;
 
         string cacheIP = "127.0.0.1";
 
@@ -114,17 +216,25 @@ namespace AltAIMLbot
         {
             if (Clock == null)
             {
-                Clock = new Timer();
-                Clock.Tick += new EventHandler(Timer_Tick);
+                Clock = new System.Timers.Timer();
+                Clock.Elapsed += new ElapsedEventHandler(Timer_Tick);
             }
             Clock.Interval =50;
             Clock.Enabled = true;
+            if (tracer != null)
+            {
+                tracer.startMonitor();
+            }
             update_Rchem(true);
         }
         public void stopEngine()
         {
             Clock.Enabled = false;
             Clock.Stop();
+            if (tracer != null)
+            {
+                tracer.stopMonitor();
+            }
         }
 
         public void Timer_Tick(object sender, EventArgs eArgs)
@@ -182,13 +292,17 @@ namespace AltAIMLbot
         public double getChem(String ID)
         {
             double v1 = 0;
-            try
+            lock (Chemicals)
             {
-                v1 = (double)Chemicals[ID];
-            }
-            catch (Exception e)
-            {
-                Chemicals[ID] = (double)0; 
+                try
+                {
+                    if (!Chemicals.ContainsKey(ID)) Chemicals[ID] = v1;
+                    v1 = (double)Chemicals[ID];
+                }
+                catch (Exception e)
+                {
+                    Chemicals[ID] = (double)0;
+                }
             }
             return v1;
         }
@@ -200,28 +314,31 @@ namespace AltAIMLbot
         {
             if (ID.Length == 0) return;
             double v1 = 0;
-            try
-            {
-                v1 = (double)Chemicals[ID];
-            }
-            catch (Exception e)
-            {
-            }
-            v1 = v1 - v;
-            if (v1<0) v1=0;
-            if (v1 > 255) v1 = 255;
-            Chemicals[ID] = v1;
-            if (myWatchBox != null)
+            lock (Chemicals)
             {
                 try
                 {
-                    if (myWatchBox.Tag.ToString().Contains(ID))
-                    {
-                        myWatchBox.Items.Add(biochemticks + ": " + ID + " -" + v + "(" + note + ")");
-                    }
+                    v1 = (double)Chemicals[ID];
                 }
                 catch (Exception e)
                 {
+                }
+                v1 = v1 - v;
+                if (v1 < 0) v1 = 0;
+                if (v1 > 255) v1 = 255;
+                Chemicals[ID] = v1;
+                if (myWatchBox != null)
+                {
+                    try
+                    {
+                        if (myWatchBox.Tag.ToString().Contains(ID))
+                        {
+                            myWatchBox.Items.Add(biochemticks + ": " + ID + " -" + v + "(" + note + ")");
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                    }
                 }
             }
         }
@@ -235,28 +352,33 @@ namespace AltAIMLbot
         {
             if (ID.Length == 0) return;
             double v1 = 0;
-            try
+            lock (Chemicals)
             {
-                v1=(double)Chemicals[ID];
-            }
-            catch (Exception e)
-            {
-            }
-            v1 = v1 + v;
-            if (v1 < 0) v1 = 0;
-            if (v1 > 255) v1 = 255;
-            Chemicals[ID] = v1;
-            if (myWatchBox != null)
-            {
+
                 try
                 {
-                    if (myWatchBox.Tag.ToString().Contains(ID))
-                    {
-                        myWatchBox.Items.Add(biochemticks + ": " + ID + " +" + v + "(" + note + ")");
-                    }
+                    if (!Chemicals.ContainsKey(ID)) Chemicals[ID] = v1;
+                    v1 = (double)Chemicals[ID];
                 }
-                catch (Exception E)
+                catch (Exception e)
                 {
+                }
+                v1 = v1 + v;
+                if (v1 < 0) v1 = 0;
+                if (v1 > 255) v1 = 255;
+                Chemicals[ID] = v1;
+                if (myWatchBox != null)
+                {
+                    try
+                    {
+                        if (myWatchBox.Tag.ToString().Contains(ID))
+                        {
+                            myWatchBox.Items.Add(biochemticks + ": " + ID + " +" + v + "(" + note + ")");
+                        }
+                    }
+                    catch (Exception E)
+                    {
+                    }
                 }
             }
         }
@@ -278,7 +400,9 @@ namespace AltAIMLbot
 
         public void tickBiochemistry()
         {
-            // Emitters and Receptors don't need permutation since they
+            lock (Chemicals)
+            {
+             // Emitters and Receptors don't need permutation since they
             // don't potentially deadlock by starvation (you sense or add chems)
             // it is possible for process A to starve process B if proc A is faster and uses
             // up all the chemicals used by B. So you need to randomize the order a bit to be fair
@@ -373,9 +497,11 @@ namespace AltAIMLbot
             //Update the Cache
             postChemsToCache();
         }
+        }
 
         public void update_Rchem(bool full)
         {
+            if (m_RChem == null) return;
                // Update the world
                 m_RChem.BlackBoard = BlackBoard;
                 m_RChem.Chemicals = Chemicals;
@@ -388,6 +514,7 @@ namespace AltAIMLbot
 
         public void postChemsToCache()
         {
+            if (m_RChem == null) return;
             foreach (string key in BlackBoard.Keys)
             {
                 int v = (int)BlackBoard[key];
@@ -408,6 +535,7 @@ namespace AltAIMLbot
         }
         public void fetchChemsFromCache()
         {
+            if (m_RChem == null) return;
             // Process emitters (Inputs go in)
             foreach (String RuleID in IORules.Keys)
             {
@@ -797,47 +925,52 @@ namespace AltAIMLbot
         }
         public void interpertGLine(string altstr)
         {
-            altstr = altstr.Replace(";", ","); // Escape ";" into "," before processing
-            string[] cmdArgs = SplitCSV(altstr);
-            string cmd = cmdArgs[0].ToLower();
+            lock (Chemicals)
+            {
 
-            if (cmd.Equals("animfeel"))
+                altstr = altstr.Replace(";", ","); // Escape ";" into "," before processing
+                string[] cmdArgs = SplitCSV(altstr);
+                string cmd = cmdArgs[0].ToLower();
+
+                if (cmd.Equals("animfeel"))
                 {
                     animFeel(cmdArgs[1], cmdArgs[2], cmdArgs[3]);
                 }
-            if (cmd.Equals("genlfeel"))
+                if (cmd.Equals("genlfeel"))
                 {
                     genlFeel(cmdArgs[1], cmdArgs[2]);
                 }
-            if (cmd.Equals("normaldrive"))
+                if (cmd.Equals("normaldrive"))
                 {
                     normalDrive(cmdArgs[1], Int32.Parse(cmdArgs[2]), Int32.Parse(cmdArgs[3]));
                 }
-            if (cmd.Equals("addchemical"))
+                if (cmd.Equals("addchemical"))
                 {
                     addChemical(cmdArgs[1], Int32.Parse(cmdArgs[2]));
                 }
-            if (cmd.Equals("subchemical"))
-            {
-                subChemical(cmdArgs[1], Int32.Parse(cmdArgs[2]));
-            }
-            if (cmd.Equals("driveset"))
+                if (cmd.Equals("subchemical"))
+                {
+                    subChemical(cmdArgs[1], Int32.Parse(cmdArgs[2]));
+                }
+                if (cmd.Equals("driveset"))
                 {
                     DriveSet[cmdArgs[1]] = Int32.Parse(cmdArgs[2]);
+                    addChemical(cmdArgs[1], 0);
                 }
-            if (cmd.Equals("halflifes"))
+                if (cmd.Equals("halflifes"))
                 {
                     Halflifes[cmdArgs[1]] = Int32.Parse(cmdArgs[2]);
+                    addChemical(cmdArgs[1], 0);
                 }
-            if (cmd.Equals("semset"))
+                if (cmd.Equals("semset"))
                 {
                     SemSet[cmdArgs[1]] = Int32.Parse(cmdArgs[2]);
                 }
-            if (cmd.Equals("emotiveset"))
-            {
-                EmotiveSet [cmdArgs[1]] = Int32.Parse(cmdArgs[2]);
-            }
-            if (cmd.Equals("monitor"))
+                if (cmd.Equals("emotiveset"))
+                {
+                    EmotiveSet[cmdArgs[1]] = Int32.Parse(cmdArgs[2]);
+                }
+                if (cmd.Equals("monitor"))
                 {
                     //KHC:FIX
                     //if (outForm != null)
@@ -846,64 +979,72 @@ namespace AltAIMLbot
                     //}
                 }
 
-            if (cmd.Equals("addreaction"))
+                if (cmd.Equals("addreaction"))
                 {
                     AddReaction(cmdArgs[1], new Reaction(Int32.Parse(cmdArgs[2]), cmdArgs[3], Int32.Parse(cmdArgs[4]), cmdArgs[5], Int32.Parse(cmdArgs[6]), cmdArgs[7], Int32.Parse(cmdArgs[8]), cmdArgs[9], Int32.Parse(cmdArgs[10])));
                 }
-            if (cmd.Equals("addiorule"))
+                if (cmd.Equals("addiorule"))
                 {
                     if (cmdArgs[1].Length == 0)
                     {
                         cmdArgs[1] = String.Format("GR{0}", (genID++));
                     }
                     SoupIORule R = new SoupIORule(cmdArgs[1], cmdArgs[2], cmdArgs[3], cmdArgs[4], Double.Parse(cmdArgs[5]), Double.Parse(cmdArgs[6]), Double.Parse(cmdArgs[7]), Double.Parse(cmdArgs[8]));
-                   // R.emitter = true;
+                    // R.emitter = true;
                     AddLink(R.ID, R);
- 
+
                 }
-            if (cmd.Equals("addiorulecmd"))
+                if (cmd.Equals("addiorulecmd"))
                 {
                     if (IORules.ContainsKey(cmdArgs[1]))
                     {
-                    SoupIORule R = (SoupIORule)IORules[cmdArgs[1]];
-                    R.cmd = cmdArgs[2];
-                    IORules[cmdArgs[1]]=R;
+                        SoupIORule R = (SoupIORule)IORules[cmdArgs[1]];
+                        R.cmd = cmdArgs[2];
+                        IORules[cmdArgs[1]] = R;
                     }
                 }
-            if (cmd.Equals("setinterface"))
+                if (cmd.Equals("setinterface"))
                 {
                     setBlackBoard(cmdArgs[1], Int32.Parse(cmdArgs[2]));
                 }
-            if (cmd.Equals("setblackboard"))
+                if (cmd.Equals("setblackboard"))
                 {
                     setBlackBoard(cmdArgs[1], Int32.Parse(cmdArgs[2]));
                 }
-            if (cmd.Equals("setting"))
+                if (cmd.Equals("setting"))
                 {
-                    Settings[cmdArgs[1]]=cmdArgs[2];
+                    Settings[cmdArgs[1]] = cmdArgs[2];
                 }
-           
 
-            if (cmd.Equals("loaddir"))
+
+                if (cmd.Equals("loaddir"))
                 {
                     loadDir(cmdArgs[1]);
                 }
-            if (cmd.Equals("loadfile"))
+                if (cmd.Equals("loadfile"))
                 {
                     interpretSpec(cmdArgs[1]);
                 }
-            if (cmd.Equals("gengraph"))
-            {
-                genGraph(cmdArgs[1]);
-            }
-            if (cmd.Equals("loadbreath"))
-            {
-               // if (myBreather != null)
-               // {
+                if (cmd.Equals("gengraph"))
+                {
+                    genGraph(cmdArgs[1]);
+                }
+                if (cmd.Equals("loadbreath"))
+                {
+                    // if (myBreather != null)
+                    // {
                     //myBreather.loadDir(cmdArgs[1]);
-               // }
+                    // }
+                }
+                if (cmd.Equals("start"))
+                {
+                    startEngine();
+                }
+                if (cmd.Equals("stop"))
+                {
+                    stopEngine();
+                }
             }
-
          }
 
         public void interepretCmdList(string cmdLines)
@@ -1003,6 +1144,8 @@ namespace AltAIMLbot
             writer.WriteLine("<body>");
             writer.WriteLine("<a href='{0}siprolog/?q=list'>List Mts</a><br/>", serverRoot);
             writer.WriteLine("<a href='{0}siprolog/?q=listing'>List All Rules</a><br/>", serverRoot);
+            writer.WriteLine("<h3>Mt:{0}</h3>",mt);
+            writer.WriteLine("<h3>Query:{0}</h3>", query);
             writer.WriteLine("<div id=\"graphdiv2\");");
             writer.WriteLine("  style=\"width:500px; height:300px;\"></div>");
             writer.WriteLine("<script type=\"text/javascript\">");

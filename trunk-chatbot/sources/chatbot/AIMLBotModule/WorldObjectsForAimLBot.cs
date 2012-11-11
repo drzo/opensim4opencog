@@ -59,7 +59,7 @@ namespace AIMLBotModule
             }
         }
 
-        public static string UNKNOWN_PARTNER = Bot.UNKNOWN_PARTNER;
+        public static string UNKNOWN_PARTNER = AltBot.UNKNOWN_PARTNER;
         /// <summary>
         ///  false = wont respond to user until they say something like "turn chat on" 
         ///  See next function to change the keywords
@@ -223,7 +223,7 @@ namespace AIMLBotModule
             StringChat(str);
         }
 
-        public Bot _MyBot;
+        public AltBot _MyBot;
         private User _MyUser;
 
         readonly TaskQueueHandler AimlBotReadSimData;
@@ -275,7 +275,7 @@ namespace AIMLBotModule
             EnsureRegisteredTalkCommand();
             try
             {
-                MyBot = _MyBot ?? new Bot();
+                MyBot = _MyBot ?? new AltBot();
                 MyBot.ObjectRequester = client;
                 MyBot.outputDelegate = WriteLine;
                 MyBot.isAcceptingUserInput = false;
@@ -1237,7 +1237,7 @@ namespace AIMLBotModule
             set { _MyUser = value ?? MyUser; }
         }
 
-        public Bot MyBot
+        public AltBot MyBot
         {
             get
             {
@@ -1320,7 +1320,7 @@ namespace AIMLBotModule
         /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public class ProvideAIMLVars : ICollectionProvider
         {
-            public Bot MyBot
+            public AltBot MyBot
             {
                 get { return PluginModule.MyBot; }
             }
@@ -1398,7 +1398,7 @@ namespace AIMLBotModule
             {
                 get { return PluginModule.WorldSystem; }
             }
-            public Bot MyBot
+            public AltBot MyBot
             {
                 get { return PluginModule.MyBot; }
             }

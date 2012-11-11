@@ -22,11 +22,16 @@ namespace AIMLBotModule
             : base(testClient)
         {
             Name = "aiml";
-            TheBotClient = testClient;
-        }
-
-        override public void MakeInfo()
-        {
+            TheBotClient = testClient;
+
+        }
+
+
+
+        override public void MakeInfo()
+
+        {
+
 			            Description = "Usage: aiml [@[[on|off|reload|learn]|text|setuser]] [operands]";
             Category = CommandCategory.Communication;
         }
@@ -160,9 +165,9 @@ namespace AIMLBotModule
         {
             string setUser;
             DLRConsole.DebugWriteLine("<- SetUser=" + user + " lastKnownUser=" + lastKnownUser);
-            if (Bot.UnknowableName(user))
+            if (AltBot.UnknowableName(user))
             {
-                if (Bot.UnknowableName(lastKnownUser))
+                if (AltBot.UnknowableName(lastKnownUser))
                 {
                     DLRConsole.DebugWriteLine("THEREFORE Same persom with still unknown name (make one up)");
                     setUser = lastKnownUser = UNKNOWN_PARTENER;
@@ -175,7 +180,7 @@ namespace AIMLBotModule
             }
             else
             {
-                if (Bot.UnknowableName(lastKnownUser))
+                if (AltBot.UnknowableName(lastKnownUser))
                 {
                     DLRConsole.DebugWriteLine("THEREFORE Same Person now known name");
                     WorldSystemModule.RenameUser(lastKnownUser, user);
@@ -218,9 +223,9 @@ namespace AIMLBotModule
 
     public class AIMLEventSubscriber : SimEventSubscriber
     {
-        private Bot AimlBot;
+        private AltBot AimlBot;
         private readonly WorldObjectsModule World;
-        public AIMLEventSubscriber(Bot bot, WorldObjectsModule obj)
+        public AIMLEventSubscriber(AltBot bot, WorldObjectsModule obj)
         {
             AimlBot = bot;
             World = obj;

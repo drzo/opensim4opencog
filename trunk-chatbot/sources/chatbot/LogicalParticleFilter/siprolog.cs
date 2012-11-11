@@ -258,6 +258,9 @@ namespace LogicalParticleFilter1
                         KBGraph.PrintToWriterInEdges(qnode, 0, writer, serverRoot);
                         writer.WriteLine("<h3> KB Contents </h3>");
                         if (toplevel) writer.WriteLine("<hr/>");
+                        writer.WriteLine("<h3> Plot KB Contents </h3>");
+                        writer.WriteLine("<a href='{0}plot/?mt={1}&q=plot(X,Y)'>Plot mt {1}</a><br/>", serverRoot,mt);
+
                         ArrayList kbContents = findVisibleKBRulesSorted(mt);
                         foreach (Rule r in kbContents)
                         {
