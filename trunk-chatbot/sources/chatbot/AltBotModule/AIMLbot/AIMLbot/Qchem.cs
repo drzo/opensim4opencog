@@ -422,6 +422,7 @@ namespace AltAIMLbot
             }
   
             // Process receptors (Output come out)
+            if (prologEngine != null) prologEngine.clearKB("chemSimOutMt");
             foreach (String RuleID in IORules.Keys)
             {
                 SoupIORule ER = (SoupIORule)IORules[RuleID];
@@ -925,10 +926,26 @@ namespace AltAIMLbot
         }
         public void interpertGLine(string altstr)
         {
+            string prologCode = null;
+            if (altstr.ToLower().Contains("addiorule") && altstr.Contains("(") && altstr.Contains(")"))
+            {
+                // Guessing it has prolog in format of ",Mt:pred(x,u),"
+                // so keep and replace with ",PROLOGCODE," and replace on aiorule
+                Match match = Regex.Match(altstr, @"\,([^\,]+?\:.*?\(.*?\))\,",
+                    RegexOptions.IgnoreCase);
+                if (match.Success)
+                {
+                    // Finally, we get the Group value and display it.
+                    prologCode = match.Groups[1].Value;
+                    altstr = altstr.Replace(prologCode, "PROLOGCODE");
+                }
+
+            }
             lock (Chemicals)
             {
 
                 altstr = altstr.Replace(";", ","); // Escape ";" into "," before processing
+
                 string[] cmdArgs = SplitCSV(altstr);
                 string cmd = cmdArgs[0].ToLower();
 
@@ -989,10 +1006,18 @@ namespace AltAIMLbot
                     {
                         cmdArgs[1] = String.Format("GR{0}", (genID++));
                     }
+                    if (cmdArgs[1].Contains("pro"))
+                    {
+                        Console.WriteLine(genID);
+                    }
+                    if ((prologCode != null)&&(cmdArgs [2]=="PROLOGCODE"))
+                    {
+                        cmdArgs[2] = prologCode;
+                    }
                     SoupIORule R = new SoupIORule(cmdArgs[1], cmdArgs[2], cmdArgs[3], cmdArgs[4], Double.Parse(cmdArgs[5]), Double.Parse(cmdArgs[6]), Double.Parse(cmdArgs[7]), Double.Parse(cmdArgs[8]));
                     // R.emitter = true;
                     AddLink(R.ID, R);
-
+                    Console.WriteLine("ADDIORULE:{0}", R.ToString());
                 }
                 if (cmd.Equals("addiorulecmd"))
                 {
@@ -1136,6 +1161,11 @@ namespace AltAIMLbot
         {
             serverRoot = "/";
             //webWriter0(writer, action, query, mt, serverRoot, true);
+            if (action == "autorefresh")
+            {
+                writer.WriteLine("<META HTTP-EQUIV=\"REFRESH\" content=\"10\">");
+            }
+
             writer.WriteLine("<html>");
             writer.WriteLine("<head>");
             writer.WriteLine("<script type=\"text/javascript\"");
@@ -1144,7 +1174,8 @@ namespace AltAIMLbot
             writer.WriteLine("<body>");
             writer.WriteLine("<a href='{0}siprolog/?q=list'>List Mts</a><br/>", serverRoot);
             writer.WriteLine("<a href='{0}siprolog/?q=listing'>List All Rules</a><br/>", serverRoot);
-            writer.WriteLine("<h3>Mt:{0}</h3>",mt);
+            writer.WriteLine("<a href='{0}plot/?mt={1}&a=autorefresh&q=plot(X,Y)'>Scope mt {1}</a><br/>", serverRoot, mt);
+            writer.WriteLine("<h3>Mt:{0}</h3>", mt);
             writer.WriteLine("<h3>Query:{0}</h3>", query);
             writer.WriteLine("<div id=\"graphdiv2\");");
             writer.WriteLine("  style=\"width:500px; height:300px;\"></div>");
@@ -1413,14 +1444,14 @@ namespace AltAIMLbot
                     {
                         string[] parms = Locus.Split(':');
                         string mt = parms[0];
-                        string query = parms[1];
-                        if (r == 255)
+                        string query = parms[1] + ".\n";
+                        if (r > 0)
                         {
                             soup.prologEngine.appendKB(query, mt);
                         }
                         if (r == 0)
                         {
-                            soup.prologEngine.retractKB(query, mt);
+                            //soup.prologEngine.retractKB(query, mt);
                         }
  
                     }

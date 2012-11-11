@@ -210,7 +210,11 @@ namespace LogicalParticleFilter1
                 {
                     queryv="list";
                 }
-
+                
+                if (action == "autorefresh")
+                {
+                    writer.WriteLine("<META HTTP-EQUIV=\"REFRESH\" content=\"10\">");
+                }
 
                 if (action == null)
                 {
@@ -260,7 +264,9 @@ namespace LogicalParticleFilter1
                         if (toplevel) writer.WriteLine("<hr/>");
                         writer.WriteLine("<h3> Plot KB Contents </h3>");
                         writer.WriteLine("<a href='{0}plot/?mt={1}&q=plot(X,Y)'>Plot mt {1}</a><br/>", serverRoot,mt);
-
+                        writer.WriteLine("<a href='{0}plot/?mt={1}&a=autorefresh&q=plot(X,Y)'>Scope mt {1}</a><br/>", serverRoot, mt);
+                        writer.WriteLine("<a href='{0}siprolog/?mt={1}&a=autorefresh'>Watch mt {1}</a><br/>", serverRoot, mt);
+                        ensureCompiled(qnode);
                         ArrayList kbContents = findVisibleKBRulesSorted(mt);
                         foreach (Rule r in kbContents)
                         {
@@ -438,6 +444,7 @@ namespace LogicalParticleFilter1
             if (focus == null) return null;
             ensureCompiled(focus);
             fact = fact.Replace(", ", ",");
+            fact = fact.Replace("\n", "");
             ArrayList rules = focus.pdb.rules;
             for (int i = 0; i < rules.Count; i++)
             {
