@@ -541,6 +541,15 @@ namespace AltAIMLbot
                         bot.myBehaviors.runState[nodeID] = RunStatus.Success;
                         { yield return RunStatus.Success; }
                         break;
+                    case "genchemsimfrommt":
+                        foreach (RunStatus result in ProcessGenChemsysFromMt(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
 
                     case "behavior":
                         foreach (RunStatus result in ProcessBehavior(myNode))
@@ -1102,6 +1111,8 @@ namespace AltAIMLbot
                             yield return result;
                         }
                         break;
+
+                        
 
 //DEFAULT
                     default:
@@ -1851,8 +1862,8 @@ namespace AltAIMLbot
             //  halflife in seconds
             //  once it returns success it will reset the timer and
             //   will not try until the estimated timer decay is below threshold
-            // Motive = Threshold.Positive
-            // Drive = Threshold.Negative
+            // Motive = Threshold.Positive (trigger while above threshold)
+            // Drive = Threshold.Negative (trigger when below threshold)
 
             RunStatus result = RunStatus.Failure;
             string driveName = "root";
@@ -1928,8 +1939,8 @@ namespace AltAIMLbot
             //  halflife in seconds
             //  once it returns success it will reset the timer and
             //   will not try until the estimated timer decay is below threshold
-            // Motive = Threshold.Positive
-            // Drive = Threshold.Negative
+            // Motive = Threshold.Positive (trigger while above threshold)
+            // Drive = Threshold.Negative (trigger when below threshold)
 
             RunStatus result = RunStatus.Failure;
             string driveName = "root";
@@ -1998,6 +2009,85 @@ namespace AltAIMLbot
             yield break;
 
         }
+
+        public string kbToTagged(string query, string mtName, string tag, string innerText)
+        {
+            // A query like coppeliaAnger(AGENT,TARGET,VALUE) might return 
+            // <coppeliaAnger agent="self" target="other" value="1" />
+            string code = "";
+            try
+            {
+                List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
+                string[] part = query.Split('(');
+                string head = part[0].Trim();
+                bot.servitor.prologEngine.askQuery(query, mtName, out bingingsList);
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    string frag = "<" + tag + ">";
+                    string innerFrag = innerText;
+                    foreach (string key in bindings.Keys)
+                    {
+                        //frag += String.Format(" {0}=\"{1}\"", key.ToLower(), bindings[key].Trim());
+                        innerFrag = innerFrag.Replace(key.Trim(), bindings[key].Trim());
+                    }
+                    frag += "</" + tag + ">\n";
+                    code += frag;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error kbToTagged '{0}','{1}','{2}','{3}':{4}", mtName, query, tag, innerText, EMsg(e));
+            }
+            return code;
+        }
+        public IEnumerable<RunStatus> ProcessGenChemsysFromMt(XmlNode myNode)
+        {
+            //Queries MT for chemsym related info to create a BTXML fragment
+            // that is then interperted
+            // <genChemSysFromMt query="drive(CHEM)" mt="defChemSimMt" tag="chemsys">normaldrive,CHEM</genChemSysFromMt>
+
+            RunStatus rs = RunStatus.Failure;
+            string mtName = "defChemSimMt";
+            string tag = "chemsyem";
+            string query = "chemsys(CODE)";
+            string innerStr = myNode.InnerXml;
+
+            try
+            {
+                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
+                if (myNode.Attributes["tag"] != null) tag = myNode.Attributes["tag"].Value;
+                if (myNode.Attributes["query"] != null) query = myNode.Attributes["query"].Value;
+                string xcode = "";
+                xcode += kbToTagged(query, mtName, tag, innerStr);
+                string btxmlCode = "";
+                btxmlCode += "<aiml version=\"1.0\">\n";
+                btxmlCode += " <state name=\"*\">\n";
+                btxmlCode += "  <btxml>\n";
+                btxmlCode += "   <task>\n";
+                btxmlCode += xcode;
+                btxmlCode += "   </task>\n";
+                btxmlCode += "  </btxml>\n";
+                btxmlCode += " </state>\n";
+                btxmlCode += "</aiml>\n";
+                XmlDocument chemsymDoc = new XmlDocument();
+                chemsymDoc.LoadXml(btxmlCode);
+                Console.WriteLine("-------------------------------------");
+                Console.WriteLine("------ GenChemsysFromMt:{0} --------", mtName);
+                Console.WriteLine(btxmlCode);
+                Console.WriteLine("-------------------------------------");
+                bot.loadAIMLFromXML(chemsymDoc, "mt:" + mtName + DateTime.Now.ToString());
+
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessGenChemsysFromMt '{0}',{1}", mtName, EMsg(e));
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
+
         public IEnumerable<RunStatus> ProcessAssert(XmlNode myNode)
         {
             string condData = myNode.Attributes["cond"] == null ? null : myNode.Attributes["cond"].Value;
@@ -4034,6 +4124,8 @@ namespace AltAIMLbot
             }
             return code;
         }
+
+ 
 
 
         public IEnumerable<RunStatus> ProcessCoppeliaAgentFeature(XmlNode myNode)
