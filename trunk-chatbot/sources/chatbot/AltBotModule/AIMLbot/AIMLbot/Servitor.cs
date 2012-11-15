@@ -579,6 +579,15 @@ namespace AltAIMLbot
                 }
             }
 
+            mLoadCompleteAndPersonalityShouldBeDefined = true;
+            curBot.useMemcache = true;
+            // FOR DEBUG
+            curBot.inCritical = true;
+            curBot.isAcceptingUserInput = true;
+            // FOR TESTING
+            curBot.inCritical = false;
+            curBot.blockCron = false;
+
             if ((myScheduler != null) && curBot.myBehaviors.definedBehavior("startup"))
             {
                 myScheduler.ActivateBehaviorTask("startup");
@@ -596,7 +605,6 @@ namespace AltAIMLbot
 
             myServitorEndpoint.StartServer();
             curBot.loadChanging = false;
-            mLoadCompleteAndPersonalityShouldBeDefined = true;
 
         }
         public void initWordNet(string wordNetPath)

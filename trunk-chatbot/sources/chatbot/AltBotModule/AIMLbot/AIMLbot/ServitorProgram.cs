@@ -69,6 +69,7 @@ namespace AltAIMLbot
                 {
                     MyBot.ObjectRequester = (ICollectionRequester)colreq;
                     MyBot.outputDelegate = WriteLine;
+                    MyBot.SetName(myName);
                     MyBot.sayProcessor = new sayProcessorDelegate(TalkActive);
                 }
                 catch (Exception e)

@@ -126,7 +126,7 @@ namespace LogicalParticleFilter1
                if (focus.probability > 0)
                {
                    ensureCompiled(focus);
-                   foreach (Rule r in focus.pdb.rules)
+                   lock (focus.pdb.rules) foreach (Rule r in focus.pdb.rules)
                    {
                        VKB.Add(r);
                    }
@@ -170,7 +170,7 @@ namespace LogicalParticleFilter1
 
             ArrayList VKB = new ArrayList ();
             // Prefix
-            foreach (Rule r in focus.pdb.rules)
+            lock (focus.pdb.rules) foreach (Rule r in focus.pdb.rules)
             {
                 VKB.Add(r);
             }
@@ -388,7 +388,7 @@ namespace LogicalParticleFilter1
                 PNode focus = KBGraph.Contains(focusMT);
                 if (focus == null)  continue;
                 ensureCompiled(focus);
-                foreach (Rule r in focus.pdb.rules)
+                lock (focus.pdb.rules) foreach (Rule r in focus.pdb.rules)
                 {
                     VKB.Add(r);
                 }
@@ -416,8 +416,8 @@ namespace LogicalParticleFilter1
             PNode focus = KBGraph.Contains(focusMT);
             if (focus == null) return;
             focus.ruleset = "";
-            focus.pdb.rules.Clear();
-            focus.pdb.rules.Clear();
+            focus.pdb.index.Clear();
+            lock (focus.pdb.rules) focus.pdb.rules.Clear();
            
             focus.dirty = true;
             ensureCompiled(focus);
@@ -446,7 +446,7 @@ namespace LogicalParticleFilter1
             fact = fact.Replace(", ", ",");
             fact = fact.Replace("\n", "");
             ArrayList rules = focus.pdb.rules;
-            for (int i = 0; i < rules.Count; i++)
+            lock (focus.pdb.rules) for (int i = 0; i < rules.Count; i++)
             {
                 Rule r = (Rule) rules[i];
                 string val = r.ToString();
@@ -488,7 +488,7 @@ namespace LogicalParticleFilter1
                 focus.ruleset = focus.ruleset + "\n" + ruleSet + "\n";
                 focus.pdb.index.Clear();
                 ArrayList outr = parseRuleset(ruleSet);
-                foreach (var r in outr)
+                lock (focus.pdb.rules) foreach (var r in outr)
                 {
                     focus.pdb.rules.Add(r);
                 }
@@ -1117,94 +1117,133 @@ namespace LogicalParticleFilter1
 
             if (trace) { Console.Write("Debug: in rule selection. thisTerm = "); thisTerm.print(); Console.Write("\n"); }
             //for (var i = 0; i < db.rules.Count; i++)
-            for (var i = 0; i < localRules.Count; i++)
+            lock (localRules)
             {
-                if (thisTerm.excludeRule == i)
+                for (var i = 0; i < localRules.Count; i++)
                 {
-                    if (trace) { Console.Write("DEBUG: excluding rule number " + i + " in attempt to satisfy "); thisTerm.print(); Console.Write("\n"); }
-                    continue;
-                }
-
-                //var rule = (Rule)db.rules[i];
-                var rule = (Rule)localRules[i];
-
-                // We'll need better unification to allow the 2nd-order
-                // rule matching ... later.
-                bool ruleIsVar = rule.head.headIsVar();
-                if ((termIsVar == false) && (ruleIsVar == false))
-                {
-                    // normal operation, both are atomic
-                    if (rule.head.name != thisTerm.name) continue;
-                }
-                if ((termIsVar == false) && (ruleIsVar == true))
-                {
-                    // TBD:query is atomic, rule is variable
-                    //if (rule.head.name != thisTerm.name) continue;
-                }
-                if ((termIsVar == true) && (ruleIsVar == false))
-                {
-                    // TBD:bind Query variable pred to atomic rule pred
-                    //if (rule.head.name != thisTerm.name) continue;
-                }
-                if ((termIsVar == true) && (ruleIsVar == true))
-                {
-                    // TBD:both are variables
-                    //if (rule.head.name != thisTerm.name) continue;
-                }
-
-                if (trace) { Console.Write("Debug: in rule selection[{0} of {1}]. rule = ", i, localRules.Count); rule.print(); Console.Write("\n"); }
-
-                // Rename the variables in the head and body
-                Term renamedHead = new Term(rule.head.name, renameVariables((Part)rule.head.partlist, level, thisTerm));
-                // renamedHead.ruleNumber = i;
-                if (trace) { Console.Write("DEBUG:  renamedHead = "); renamedHead.print(); Console.Write("\n"); }
-
-                var env2 = unify(thisTerm, renamedHead, environment);
-                if (env2 == null)
-                {
-                    if (trace) { Console.Write("DEBUG:  unify( thisTerm="); thisTerm.print(); Console.Write(", renamedHead = "); renamedHead.print(); Console.Write(" in Env:"); environment.print(); Console.Write(") failed \n"); }
-                    continue;
-                }
-
-                var body = rule.body;
-                if (body != null)
-                {
-                    Part newFirstGoals = renameVariables((Part)rule.body.plist, level, renamedHead);
-                    // Stick the new body list
-                    PartList newGoals = new PartList();
-                    newGoals.list = new ArrayList();
-                    int j, k;
-                    for (j = 0; j < ((PartList)newFirstGoals).list.Count; j++)
+                    if (thisTerm.excludeRule == i)
                     {
-                        newGoals.list.Insert(j, ((PartList)newFirstGoals).list[j]);
-                        if (((Term)rule.body.plist.list[j]).excludeThis) ((Term)newGoals.list[j]).excludeRule = i;
+                        if (trace)
+                        {
+                            Console.Write("DEBUG: excluding rule number " + i + " in attempt to satisfy ");
+                            thisTerm.print();
+                            Console.Write("\n");
+                        }
+                        continue;
                     }
-                    for (k = 1; k < goalList.list.Count; k++) newGoals.list.Insert(j++, goalList.list[k]);
-                    var ret = prove(newGoals, env2, db, level + 1, reportFunction);
-                    if (ret != null)
-                        return ret;
-                }
-                else
-                {
-                    // Just prove the rest of the goallist, recursively.
-                    PartList newGoals = new PartList();
-                    newGoals.list = new ArrayList();
-                    int j;
-                    for (j = 1; j < goalList.list.Count; j++) newGoals.list.Insert(j - 1, goalList.list[j]);
-                    var ret = prove(newGoals, env2, db, level + 1, reportFunction);
-                    if (ret != null)
-                        return ret;
-                }
 
-                if (renamedHead.cut)
-                {
-                    if (trace) { Console.Write("Debug: this goal "); thisTerm.print(); Console.Write(" has been cut.\n");}
-                    break;
-                }
-                if ((thisTerm.parent != null) && (thisTerm.parent.cut))
-                {
-                    if (trace) { Console.Write("Debug: parent goal "); thisTerm.parent.print(); Console.Write(" has been cut.\n"); ;}
-                    break;
+                    //var rule = (Rule)db.rules[i];
+                    var rule = (Rule) localRules[i];
+
+                    // We'll need better unification to allow the 2nd-order
+                    // rule matching ... later.
+                    bool ruleIsVar = rule.head.headIsVar();
+                    if ((termIsVar == false) && (ruleIsVar == false))
+                    {
+                        // normal operation, both are atomic
+                        if (rule.head.name != thisTerm.name) continue;
+                    }
+                    if ((termIsVar == false) && (ruleIsVar == true))
+                    {
+                        // TBD:query is atomic, rule is variable
+                        //if (rule.head.name != thisTerm.name) continue;
+                    }
+                    if ((termIsVar == true) && (ruleIsVar == false))
+                    {
+                        // TBD:bind Query variable pred to atomic rule pred
+                        //if (rule.head.name != thisTerm.name) continue;
+                    }
+                    if ((termIsVar == true) && (ruleIsVar == true))
+                    {
+                        // TBD:both are variables
+                        //if (rule.head.name != thisTerm.name) continue;
+                    }
+
+                    if (trace)
+                    {
+                        Console.Write("Debug: in rule selection[{0} of {1}]. rule = ", i, localRules.Count);
+                        rule.print();
+                        Console.Write("\n");
+                    }
+
+                    // Rename the variables in the head and body
+                    Term renamedHead = new Term(rule.head.name,
+                                                renameVariables((Part) rule.head.partlist, level, thisTerm));
+                    // renamedHead.ruleNumber = i;
+                    if (trace)
+                    {
+                        Console.Write("DEBUG:  renamedHead = ");
+                        renamedHead.print();
+                        Console.Write("\n");
+                    }
+
+                    var env2 = unify(thisTerm, renamedHead, environment);
+                    if (env2 == null)
+                    {
+                        if (trace)
+                        {
+                            Console.Write("DEBUG:  unify( thisTerm=");
+                            thisTerm.print();
+                            Console.Write(", renamedHead = ");
+                            renamedHead.print();
+                            Console.Write(" in Env:");
+                            environment.print();
+                            Console.Write(") failed \n");
+                        }
+                        continue;
+                    }
+
+                    var body = rule.body;
+                    if (body != null)
+                    {
+                        Part newFirstGoals = renameVariables((Part) rule.body.plist, level, renamedHead);
+                        // Stick the new body list
+                        PartList newGoals = new PartList();
+                        newGoals.list = new ArrayList();
+                        int j, k;
+                        for (j = 0; j < ((PartList) newFirstGoals).list.Count; j++)
+                        {
+                            newGoals.list.Insert(j, ((PartList) newFirstGoals).list[j]);
+                            if (((Term) rule.body.plist.list[j]).excludeThis) ((Term) newGoals.list[j]).excludeRule = i;
+                        }
+                        for (k = 1; k < goalList.list.Count; k++) newGoals.list.Insert(j++, goalList.list[k]);
+                        var ret = prove(newGoals, env2, db, level + 1, reportFunction);
+                        if (ret != null)
+                            return ret;
+                    }
+                    else
+                    {
+                        // Just prove the rest of the goallist, recursively.
+                        PartList newGoals = new PartList();
+                        newGoals.list = new ArrayList();
+                        int j;
+                        for (j = 1; j < goalList.list.Count; j++) newGoals.list.Insert(j - 1, goalList.list[j]);
+                        var ret = prove(newGoals, env2, db, level + 1, reportFunction);
+                        if (ret != null)
+                            return ret;
+                    }
+
+                    if (renamedHead.cut)
+                    {
+                        if (trace)
+                        {
+                            Console.Write("Debug: this goal ");
+                            thisTerm.print();
+                            Console.Write(" has been cut.\n");
+                        }
+                        break;
+                    }
+                    if ((thisTerm.parent != null) && (thisTerm.parent.cut))
+                    {
+                        if (trace)
+                        {
+                            Console.Write("Debug: parent goal ");
+                            thisTerm.parent.print();
+                            Console.Write(" has been cut.\n");
+                            ;
+                        }
+                        break;
+                    }
                 }
             }
 
@@ -1668,7 +1707,7 @@ namespace LogicalParticleFilter1
             public void initIndex()
             {
                 index["_varpred_"] = new ArrayList();
-                for (int i = 0; i < rules.Count; i++)
+                lock (rules) for (int i = 0; i < rules.Count; i++)
                 {
                     Rule rule = (Rule)rules[i];
                     string name = rule.head.name;

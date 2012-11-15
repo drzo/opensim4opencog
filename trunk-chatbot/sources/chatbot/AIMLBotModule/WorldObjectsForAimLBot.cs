@@ -28,6 +28,7 @@ using SUnifiable=System.String;
 using User=AltAIMLbot.User;
 using DataUnifiable = System.String;
 using DataUnifiableYYY = RTParser.Unifiable;
+using Bot = RTParser.AltBot;
 
 namespace AIMLBotModule
 {

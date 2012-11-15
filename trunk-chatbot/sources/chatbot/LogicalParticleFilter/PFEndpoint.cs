@@ -124,8 +124,8 @@ namespace LogicalParticleFilter1
         {
             IGraph g = new Graph();
             TurtleParser parser = new TurtleParser();
-            parser.Load(g, @"..\..\plugins\configuration.ttl");
-            parser.Load(g, @"..\..\plugins\localConfig.ttl");
+            //parser.Load(g, @"..\..\plugins\configuration.ttl");
+            //parser.Load(g, @"..\..\plugins\localConfig.ttl");
 
             //g.Assert(new Triple(endnode, pa, dhh));
             parser.Load(g, new StringReader( @"<dotnetrdf:/*> a <dnr:HttpHandler> ."));

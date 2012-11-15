@@ -18,6 +18,7 @@ using MiniSatCS;
 using System.Reflection;
 using MushDLR223.Utilities;
 using RTParser;
+using NotImplementedException=sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
@@ -119,13 +120,13 @@ namespace AltAIMLbot
     [Serializable]
 
     public class ValenceSet
-    {
-        
-        public Dictionary<string, Valence> Valences = new Dictionary<string, Valence>();
+    {       
+
+        public CIDictionary<string, Valence> Valences = new CIDictionary<string, Valence>();
 
         public ValenceSet()
         {
-            Valences = new Dictionary<string, Valence>();
+            Valences = new CIDictionary<string, Valence>();
         }
 
         public void Add(string ID,double halflife)
@@ -253,7 +254,7 @@ namespace AltAIMLbot
 
         public bool Contains(string s)
         {
-            lock (loc) return items.Contains(s);
+            return GetIndex(s) > -1;
         }
         public void Remove(int itemAtPosition)
         {
@@ -263,10 +264,15 @@ namespace AltAIMLbot
         {
             lock (loc)
             {
-                int index = items.FindLastIndex(delegate(string s) { return s == item; });
-                if (index > 0)
+                int index = GetIndex(item);
+                if (index >= 0)
                     items.RemoveAt(index);
             }
+        }
+
+        private int GetIndex(string item)
+        {
+            lock (loc) return items.FindLastIndex(delegate(string s) { return KeyCase.SameKey(s, item); });
         }
 
         public void Enqueue(string item)
@@ -293,15 +299,15 @@ namespace AltAIMLbot
     public class BehaviorSet
     {
         //public Hashtable behaveTrees;
-        public Dictionary<string, BehaviorTree> behaveTrees;
-        public Dictionary<string, RunStatus > runState;
-        public Dictionary<string, Int32> entryTime = new Dictionary<string, Int32>();
-        public Dictionary<string, Int32> execTime = new Dictionary<string, Int32>();
-        public Dictionary<string, string> eventTable = new Dictionary<string, string>();
+        public CIDictionary<string, BehaviorTree> behaveTrees;
+        public CIDictionary<string, RunStatus> runState;
+        public CIDictionary<string, Int32> entryTime = new CIDictionary<string, Int32>();
+        public CIDictionary<string, Int32> execTime = new CIDictionary<string, Int32>();
+        public CIDictionary<string, string> eventTable = new CIDictionary<string, string>();
         public ValenceSet VSoup;
         public Stack handlerStack;
         public string persistantDirectory=null;
-        public List<string> invisiblePatterns;
+        public CIDictionary<string, bool> invisiblePatterns;
         public bool waitingForChat = false;
 
 
@@ -332,11 +338,11 @@ namespace AltAIMLbot
         {
             _bot = bot;
             //behaveTrees = new Hashtable();
-            behaveTrees = new Dictionary<string, BehaviorTree>();
-            runState = new Dictionary<string, RunStatus>();
+            behaveTrees = new CIDictionary<string, BehaviorTree>();
+            runState = new CIDictionary<string, RunStatus>();
             VSoup = new ValenceSet();
             handlerStack = new Stack();
-            invisiblePatterns = new List<string>();
+            invisiblePatterns = new CIDictionary<string, bool>();
         }
        
         
@@ -375,10 +381,10 @@ namespace AltAIMLbot
             if (persistantDirectory == null) return;
             if (!Directory.Exists(persistantDirectory)) return;
 
-            string diskName = String.Format("{0}{1}{2}.BTX", persistantDirectory, Path.DirectorySeparatorChar, behaveTrees[treeName].name);
+            string diskName = String.Format("{0}{1}{2}.BTX", persistantDirectory, Path.DirectorySeparatorChar, behaveTrees[treeName.ToLower()].name);
             //if (File.Exists(diskName)) return;
             StreamWriter outfile = new StreamWriter(diskName);
-            string docText = behaveTrees[treeName].treeDoc.OuterXml;
+            string docText = behaveTrees[treeName.ToLower()].treeDoc.OuterXml;
             outfile.Write(docText);
             outfile.Flush();
             outfile.Close();
@@ -397,14 +403,14 @@ namespace AltAIMLbot
 
         public void loadFromFiles(string ID)
         {
-            if (behaveTrees.ContainsKey(ID))
+            if (behaveTrees.ContainsKey(ID.ToLower()))
             {
                 if (behaveTrees[ID].treeDoc != null)
                 {
                     return;
                 }
             }
-            string diskName = String.Format("{0}{1}{2}.BTX", persistantDirectory, Path.DirectorySeparatorChar, behaveTrees[ID].name);
+            string diskName = String.Format("{0}{1}{2}.BTX", persistantDirectory, Path.DirectorySeparatorChar, behaveTrees[ID.ToLower()].name);
             if (!File.Exists(diskName))
             {
                 //defineBehavior(ID, "");
@@ -423,8 +429,8 @@ namespace AltAIMLbot
             {
                 BehaviorTree newTree = new BehaviorTree(bot);
                 newTree.defineBehavior(treeName, behaviorDef);
-                behaveTrees[treeName] = newTree;
-                if (_bot != null) behaveTrees[treeName].bot = _bot;
+                behaveTrees[treeName.ToLower()] = newTree;
+                if (_bot != null) behaveTrees[treeName.ToLower()].bot = _bot;
                 persistToFile(treeName);
             }
             catch (Exception e)
@@ -574,11 +580,11 @@ namespace AltAIMLbot
         public void makeInvisible(string pattern)
         {
             if (pattern.Length == 0) return;
-            invisiblePatterns.Add(pattern);
+            invisiblePatterns.Add(pattern, true);
         }
         public void makeVisible(string pattern)
         {
-            if (invisiblePatterns.Contains(pattern))
+            if (invisiblePatterns.ContainsKey(pattern))
             {
                 invisiblePatterns.Remove(pattern);
             }
@@ -586,7 +592,7 @@ namespace AltAIMLbot
         public bool visibleBehavior(string behaviorName)
         {
             
-            foreach (string pattern in invisiblePatterns)
+            foreach (string pattern in invisiblePatterns.Keys)
             {
                 if (Regex.IsMatch(behaviorName,pattern )) return false;
             }
@@ -711,7 +717,7 @@ namespace AltAIMLbot
         {
             // Remember and keep a clone
             handlerStack.Push(eventTable);
-            eventTable = new Dictionary<string, string>(eventTable);
+            eventTable = new CIDictionary<string, string>(eventTable);
         }
 
         public void popHandlers()
@@ -719,7 +725,7 @@ namespace AltAIMLbot
             // Restore the last one
             if (handlerStack.Count > 0)
             {
-                eventTable = (Dictionary<string, string>)handlerStack.Pop();
+                eventTable = (CIDictionary<string, string>)handlerStack.Pop();
             }
         }
 
@@ -931,7 +937,7 @@ namespace AltAIMLbot
         public IEnumerator<RunStatus> getBehaviorEnumerator(string name)
         {
 
-            BehaviorTree curTree = (BehaviorTree)behaveTrees[name];
+            BehaviorTree curTree = (BehaviorTree)behaveTrees[name.ToLower()];
             if (curTree == null)
             {
                 Console.WriteLine("WARN: Tree '{0}' is null", name);
@@ -3112,4 +3118,219 @@ namespace AltAIMLbot
             kb.Tell(string.Format("((selfFeelNaughtyAbout{0}) => selfFeelNaughty)", target));
         }
     }
+
+    public class KeyCase : IEqualityComparer<string>
+    {
+        public static KeyCase Default = new KeyCase();
+        #region Implementation of IEqualityComparer<string>
+
+        /// <summary>
+        /// Determines whether the specified objects are equal.
+        /// </summary>
+        /// <returns>
+        /// true if the specified objects are equal; otherwise, false.
+        /// </returns>
+        /// <param name="x">The first object of type <paramref name="T"/> to compare.
+        ///                 </param><param name="y">The second object of type <paramref name="T"/> to compare.
+        ///                 </param>
+        public bool Equals(string x, string y)
+        {
+            return SameKey(x, y);
+        }
+
+        /// <summary>
+        /// Returns a hash code for the specified object.
+        /// </summary>
+        /// <returns>
+        /// A hash code for the specified object.
+        /// </returns>
+        /// <param name="obj">The <see cref="T:System.Object"/> for which a hash code is to be returned.
+        ///                 </param><exception cref="T:System.ArgumentNullException">The type of <paramref name="obj"/> is a reference type and <paramref name="obj"/> is null.
+        ///                 </exception>
+        public int GetHashCode(string obj)
+        {
+            return NormalizeKey(obj).GetHashCode();
+        }
+
+        public static string NormalizeKey(object s)
+        {
+            return s.ToString().Trim().ToLower().Replace(" ", "_");
+        }
+
+        #endregion
+
+        public static bool SameKey(object u1, object key)
+        {
+            if (Equals(u1, key)) return true;
+            if (u1.GetType().IsValueType)
+            {
+                throw new InvalidOperationException("lcase " + u1.GetType());
+            }
+            if (NormalizeKey(u1) != NormalizeKey(key)) return false;
+            return true;
+        }
+    }
+
+    public class CIDictionary<K, V> : Dictionary<K, V>
+    {
+        static public IEqualityComparer<K> comp
+        {
+            get
+            {
+                return (IEqualityComparer<K>)KeyCase.Default;
+            }
+        }
+        public CIDictionary()
+            : base((IEqualityComparer<K>)comp)
+        {
+
+        }
+        public CIDictionary(IDictionary<K, V> dict)
+            : base(dict, (IEqualityComparer<K>)comp)
+        {
+
+        }
+    }
+    public class CIDictionary2<U1, U2> : IDictionary<U1, U2>
+    {
+
+        private KeyValuePair<U1, U2> GetItem(KeyValuePair<U1, U2> item)
+        {
+            KeyValuePair<U1, U2>? realKeyValue = GetKV(item.Key);
+            if (realKeyValue != null)
+            {
+                item = new KeyValuePair<U1, U2>(realKeyValue.Value.Key, item.Value);
+            }
+            return item;
+        }
+        private KeyValuePair<U1, U2>? GetKV(U1 key)
+        {
+            foreach (var u1 in backing)
+            {
+                if (KeyCase.SameKey(u1.Key, key)) return u1;
+            }
+            return null;
+        }
+
+        readonly IDictionary<U1, U2> backing = new Dictionary<U1, U2>();
+
+        public CIDictionary2()
+        {
+
+        }
+
+        public CIDictionary2(IDictionary<U1, U2> table)
+        {
+            foreach (KeyValuePair<U1, U2> kv in table)
+            {
+                this[kv.Key] = kv.Value;
+            }
+        }
+
+        public IEnumerator<KeyValuePair<U1, U2>> GetEnumerator()
+        {
+            return backing.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return backing.GetEnumerator();
+        }
+
+        public void Add(KeyValuePair<U1, U2> item)
+        {
+            var item2 = GetItem(item);
+            backing.Add(item2);
+        }
+
+        public void Clear()
+        {
+            backing.Clear();
+        }
+
+        public bool Contains(KeyValuePair<U1, U2> item)
+        {
+            item = GetItem(item);
+            return backing.Contains(item);
+        }
+
+        public void CopyTo(KeyValuePair<U1, U2>[] array, int arrayIndex)
+        {
+            backing.CopyTo(array, arrayIndex);
+        }
+
+        public bool Remove(KeyValuePair<U1, U2> item)
+        {
+            item = GetItem(item);
+            return backing.Remove(item);
+        }
+
+        public int Count
+        {
+            get { return backing.Count; }
+        }
+
+        public bool IsReadOnly
+        {
+            get { return backing.IsReadOnly; }
+        }
+
+        public bool ContainsKey(U1 key)
+        {
+            KeyValuePair<U1, U2>? realKeyValue = GetKV(key);
+            return (realKeyValue != null);
+        }
+
+        public void Add(U1 key, U2 value)
+        {
+            KeyValuePair<U1, U2>? realKeyValue = GetKV(key);
+            if (realKeyValue != null)
+            {
+                key = realKeyValue.Value.Key;
+            }
+            backing.Add(key, value);
+        }
+
+        public bool Remove(U1 key)
+        {
+            KeyValuePair<U1, U2>? realKeyValue = GetKV(key);
+            if (realKeyValue == null) return false;
+            return backing.Remove(realKeyValue.Value.Key);
+        }
+
+        public bool TryGetValue(U1 key, out U2 value)
+        {
+            value = default(U2);
+            KeyValuePair<U1, U2>? realKeyValue = GetKV(key);
+            if (realKeyValue == null) return false;
+            value = realKeyValue.Value.Value;
+            return true;
+        }
+
+        public U2 this[U1 key]
+        {
+            get
+            {
+                U2 v;
+                if (TryGetValue(key, out v))
+                {
+                    return v;
+                }
+                return backing[key];
+            }
+
+            set { backing[key] = value; }
+        }
+
+        public ICollection<U1> Keys
+        {
+            get { return backing.Keys; }
+        }
+
+        public ICollection<U2> Values
+        {
+            get { return backing.Values; }
+        }
+    }
+
 }

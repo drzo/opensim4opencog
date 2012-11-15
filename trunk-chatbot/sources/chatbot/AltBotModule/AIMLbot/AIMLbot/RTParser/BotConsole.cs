@@ -334,6 +334,7 @@ namespace RTParser
             //myBot.isAcceptingUserInput = false;
             writeLine("-----------------------------------------------------------------");
             myBot.SetName(myName);
+            myBot.sayProcessor = new sayProcessorDelegate((s) => Console.WriteLine("SP: " + s));
             myBot.servitor.loadComplete();
         }
         public static void RunGUI(string[] args, AltBot myBot, OutputDelegate writeLine)

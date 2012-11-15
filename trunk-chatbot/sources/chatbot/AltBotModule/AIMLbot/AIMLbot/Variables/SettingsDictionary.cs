@@ -164,6 +164,7 @@ namespace RTParser.Variables
 
         public void Add(string name, string value)
         {
+            name = KeyCase.NormalizeKey(name);
             string valArg = MakeArg(value);
             //Remove(name);
             string before = GetArgVal(name, false);
@@ -186,8 +187,15 @@ namespace RTParser.Variables
 
         private string MakeArg(string value)
         {
-            value = value.Replace("\\", "\\\\").Replace("\"", "\\\"");            
-            return "\"" + value + "\"";
+            var value2 = value.Replace("\\", "\\\\").Replace("\"", "\\\"");
+            if (value2 == value)
+            {
+                if (value.ToLower() == value)
+                {
+                   // return value;
+                }
+            }
+            return "\"" + value2 + "\"";
         }
 
         public void Clear()
@@ -197,6 +205,7 @@ namespace RTParser.Variables
 
         public void Remove(string name)
         {
+            name = KeyCase.NormalizeKey(name);
             string valArg = GetArgVal(name, false);
             if (valArg == null) return;
             string remove = QueryForNameValue(MakeArg(name), valArg);
@@ -211,6 +220,7 @@ namespace RTParser.Variables
 
         public string GetArgVal(string normalizedName, bool followGenlMt)
         {
+            normalizedName = KeyCase.NormalizeKey(normalizedName);
             List<Dictionary<string, string>> bingingsList;
             this.prologEngine.askQuery(QueryForNameValue(MakeArg(normalizedName), "VALUE"), dictMt, followGenlMt, out bingingsList);
             int cnt = bingingsList.Count;

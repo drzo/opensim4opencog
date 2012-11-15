@@ -11,6 +11,7 @@ using RTParser;
 using Cogbot.World;
 using OpenMetaverse;
 using AIMLbot;
+using Bot = RTParser.AltBot;
 
 namespace AIMLBotModule
 {

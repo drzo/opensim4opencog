@@ -30,6 +30,11 @@ namespace AltAIMLbot
             this.Scheduler = scheduler;
             this.name = myName;
         }
+
+        public bool IsNamed(string n)
+        {
+            return KeyCase.SameKey(n, name);
+        }
     }
 
     class TaskList
@@ -211,7 +216,7 @@ namespace AltAIMLbot
             var en = sleeping.GetEnumerator();
             while (en.MoveNext())
             {
-                if (en.Current.name == name)
+                if (en.Current.IsNamed(name))
                 {
                     en.RemoveCurrent();
                 }
@@ -219,7 +224,7 @@ namespace AltAIMLbot
             en = active.GetEnumerator();
             while (en.MoveNext())
             {
-                if (en.Current.name == name)
+                if (en.Current.IsNamed(name))
                 {
                     en.RemoveCurrent();
                 }
@@ -230,7 +235,7 @@ namespace AltAIMLbot
             var en = active.GetEnumerator();
             while (en.MoveNext())
             {
-                if (en.Current.name == name)
+                if (en.Current.IsNamed(name))
                 {
                     en.MoveCurrentToList(sleeping);
                 }
@@ -244,7 +249,7 @@ namespace AltAIMLbot
             var en = active.GetEnumerator();
             while (en.MoveNext())
             {
-                if (en.Current.name == name)
+                if (en.Current.IsNamed(name))
                 {
                     en.Current.Data = timeout;
                     en.MoveCurrentToList(sleeping);
@@ -303,16 +308,16 @@ namespace AltAIMLbot
             var en = sleeping.GetEnumerator();
             while (en.MoveNext())
             {
-                if (en.Current.name == nodeID)
+                if (en.Current.IsNamed(nodeID))
                 {
-                    report="sleeping";
+                    report = "sleeping";
                     return report;
                 }
             }
             en = active.GetEnumerator();
             while (en.MoveNext())
             {
-                if (en.Current.name == nodeID)
+                if (en.Current.IsNamed(nodeID))
                 {
                     report = "active";
                     return report;
@@ -330,7 +335,7 @@ namespace AltAIMLbot
         {
             var en = sleeping.GetEnumerator();
             while (en.MoveNext())
-                if (en.Current.name == taskName)
+                if (en.Current.IsNamed(taskName))
                     en.MoveCurrentToList(active);
         }
 
@@ -529,7 +534,7 @@ namespace AltAIMLbot
                     break;
 
                 case "listblocks":
-                    foreach (string p in servitor.curBot.myBehaviors.invisiblePatterns)
+                    foreach (string p in servitor.curBot.myBehaviors.invisiblePatterns.Keys)
                     {
                         writer.WriteLine("<blockBehaviorPattern pattern=\"{0}\" />", p);
                     }
