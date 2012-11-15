@@ -198,7 +198,7 @@ namespace LogicalParticleFilter1
                 ArrayList collectedKB = findVisibleKBRules(parentMT, vlist, true);
                 if (collectedKB != null)
                 {
-                    foreach (Rule r in focus.pdb.rules)
+                    foreach (Rule r in collectedKB)
                     {
                         VKB.Add(r);
                     }

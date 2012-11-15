@@ -2163,23 +2163,30 @@ The AltAIMLbot program.
         public Dictionary<string, string> BBDict = new Dictionary<string, string>();
         public void setBBHash(string key, string data)
         {
+            if (key == null) return;
             string okey = key;
-            //(SettingsDictionaryReal)
-            if (key.StartsWith("bot"))
+            try
             {
-                key = key.Substring(3);
-                _botAsUser.Predicates.addSetting(key, data);
+                //(SettingsDictionaryReal)
+                if (key.StartsWith("bot"))
+                {
+                    key = key.Substring(3);
+                    _botAsUser.Predicates.addSetting(key, data);
+                }
+                else if (key.StartsWith("user"))
+                {
+                    key = key.Substring(4);
+                    LastUser.Predicates.addSetting(key, data);
+                }
+                else
+                {
+                    GlobalSettings.addSetting(key, data);
+                }
+                setBBHash0(okey, data);
             }
-            else if (key.StartsWith("user"))
+            catch (Exception e)
             {
-                key = key.Substring(4);
-                LastUser.Predicates.addSetting(key, data);
             }
-            else
-            {
-                GlobalSettings.addSetting(key, data);                
-            }
-            setBBHash0(okey, data);
         }
         public void setBBHash0(string key, string data)
         {

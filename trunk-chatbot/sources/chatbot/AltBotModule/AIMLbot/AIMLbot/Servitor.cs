@@ -964,7 +964,7 @@ namespace AltAIMLbot
                     curBot.myChemistry = new RChem(myConst.MEMHOST, true);
                     curBot.realChem.prologEngine = curBot.prologEngine;
                     curBot.realChem.prologEngine.chemSysCommandProcessor = curBot.realChem.interepretCmdList;
-                    curBot.realChem.watchMt = "bioLogMt";
+                    //curBot.realChem.watchMt = "bioLogMt";
 
                     curBot.myChemTrace = new ChemTrace(curBot.realChem);
                     curBot.myChemTrace.prologEngine = curBot.prologEngine;

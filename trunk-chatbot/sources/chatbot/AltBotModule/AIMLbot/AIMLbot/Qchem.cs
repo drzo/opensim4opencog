@@ -1214,7 +1214,7 @@ namespace AltAIMLbot
             writer.WriteLine("<html>");
             writer.WriteLine("<head>");
             writer.WriteLine("<script type=\"text/javascript\"");
-            writer.WriteLine("  src=\"http://localhost:8123/jsbin/dygraph-combined.js\"></script>");
+            writer.WriteLine("  src=\"{0}jsbin/dygraph-combined.js\"></script>", serverRoot);
             writer.WriteLine("</head>");
             writer.WriteLine("<body>");
             writer.WriteLine("<a href='{0}siprolog/?q=list'>List Mts</a><br/>", serverRoot);
