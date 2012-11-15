@@ -963,10 +963,13 @@ namespace AltAIMLbot
                     curBot.realChem = new Qchem(myConst.MEMHOST);
                     curBot.myChemistry = new RChem(myConst.MEMHOST, true);
                     curBot.realChem.prologEngine = curBot.prologEngine;
+                    curBot.realChem.prologEngine.chemSysCommandProcessor = curBot.realChem.interepretCmdList;
+                    curBot.realChem.watchMt = "bioLogMt";
 
                     curBot.myChemTrace = new ChemTrace(curBot.realChem);
                     curBot.myChemTrace.prologEngine = curBot.prologEngine;
                     curBot.realChem.tracer = curBot.myChemTrace;
+                    
                 }
                 catch (Exception e)
                 {

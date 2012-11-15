@@ -66,6 +66,11 @@ namespace LogicalParticleFilter1
         public int maxdepth = 20;
         public int deepest = 1;
         public string deepestName = "nil";
+        public int maxMtSize = 64000;
+
+        public delegate void chemSysDelegate(string cmd);
+        public chemSysDelegate chemSysCommandProcessor = null;
+
         public bool lazyTranslate = false; // translate KB text to internal on entry or on first use
 
         public PGraph KBGraph = new PGraph();
@@ -76,6 +81,8 @@ namespace LogicalParticleFilter1
         public Dictionary<string, string> aliasMap = new Dictionary<string, string>();
 
         public IGraph rdfGraph = new Graph();
+
+
 
         public SIProlog()
         {
@@ -126,12 +133,22 @@ namespace LogicalParticleFilter1
                if (focus.probability > 0)
                {
                    ensureCompiled(focus);
-                   lock (focus.pdb.rules) foreach (Rule r in focus.pdb.rules)
-                   {
-                       VKB.Add(r);
-                   }
                }
              
+           }
+           foreach (PNode focus in vlist)
+           {
+               lock (focus.pdb.rules)
+               {
+                   if (focus.probability > 0)
+                   {
+                       foreach (Rule r in focus.pdb.rules)
+                       {
+                           VKB.Add(r);
+                       }
+                   }
+               }
+
            }
            return VKB;
         }
@@ -166,7 +183,7 @@ namespace LogicalParticleFilter1
             // should have one that takes a KB shopping list
             PNode focus = KBGraph.Contains(startMT);
             if (focus == null) return null;
-            ensureCompiled(focus);
+                ensureCompiled(focus);
 
             ArrayList VKB = new ArrayList ();
             // Prefix
@@ -181,13 +198,12 @@ namespace LogicalParticleFilter1
                 ArrayList collectedKB = findVisibleKBRules(parentMT, vlist, true);
                 if (collectedKB != null)
                 {
-                    foreach (Rule r in collectedKB)
+                    foreach (Rule r in focus.pdb.rules)
                     {
                         VKB.Add(r);
                     }
                 }
             }
-
             //Postfix
             //foreach (Rule r in focus.pdb.rules)
             //{
@@ -429,8 +445,11 @@ namespace LogicalParticleFilter1
             if (focus.dirty)
             {
                 ArrayList outr = parseRuleset(focus.ruleset);
-                focus.pdb.rules = outr;
-                focus.dirty = false;
+                lock (focus.pdb.rules)
+                {
+                    focus.pdb.rules = outr;
+                    focus.dirty = false;
+                }
             }
         }
 
@@ -485,12 +504,31 @@ namespace LogicalParticleFilter1
             PNode focus = FindOrCreateKB(startMT);
             if (!focus.dirty)
             {
-                focus.ruleset = focus.ruleset + "\n" + ruleSet + "\n";
-                focus.pdb.index.Clear();
-                ArrayList outr = parseRuleset(ruleSet);
-                lock (focus.pdb.rules) foreach (var r in outr)
+                if ((focus.ruleset != null) && (focus.ruleset.Length > (maxMtSize*1.2)))
                 {
-                    focus.pdb.rules.Add(r);
+                    focus.ruleset = focus.ruleset + "\n" + ruleSet + "\n";
+                    while ((focus.ruleset!=null)&&(focus.ruleset.Length > maxMtSize))
+                    {
+                        int p1 = focus.ruleset.IndexOf("\n");
+                        focus.ruleset = focus.ruleset.Substring(p1 + 1);
+                        focus.dirty = true;
+                    }
+                    if (lazyTranslate) return;
+                    ensureCompiled(focus);
+
+                }
+                else
+                {
+                    focus.ruleset = focus.ruleset + "\n" + ruleSet + "\n";
+                    focus.pdb.index.Clear();
+                    ArrayList outr = parseRuleset(ruleSet);
+                    lock (focus.pdb.rules)
+                    {
+                        foreach (var r in outr)
+                        {
+                            focus.pdb.rules.Add(r);
+                        }
+                    }
                 }
                 return;
             }
@@ -553,6 +591,7 @@ namespace LogicalParticleFilter1
                 foreach (string line in lines)
                 {
                     if (line.StartsWith(";")) continue;
+                    if (line.StartsWith("exit:")) break;
                     if (line.Contains(":") && !line.Contains(":-"))
                     {
                         string[] args = line.Split(':');
@@ -566,7 +605,29 @@ namespace LogicalParticleFilter1
                         if (cmd == "genlmtconst") { connectMT(curKB, curConst); continue; }
                         if (cmd == "alias") { aliasMap[val] = curKB; continue; }
                         if (cmd == "include") { loadKEKB(val); continue; }
+                        if (cmd == "chemsys")
+                        {
+                            string[] sep = { "chemsys:" };
+                            args = line.Split(sep, StringSplitOptions.RemoveEmptyEntries);
+                            val = args[0].Trim();
+                            if (chemSysCommandProcessor != null)
+                            {
+                                chemSysCommandProcessor(val);
+                            }
+                            string [] args2 = val.Split(',');
+                            string head = args2[0];
+                            string newhead = head + "(";
+                            string oldhead = head + ",";
+                            string newPred = val.Replace(oldhead, newhead) + ").\n";
+                            newPred = newPred.Replace(",,", ",0,");
+                            if (!newPred.Contains(":"))
+                            {
+                                if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = "";
+                                tempKB[curKB] = tempKB[curKB] + newPred;
 
+                            }
+                            continue;
+                        }
                         //default is to make a binary pred of "cmd(curConst,val)."
                         val = val.Replace(".", "");
                         if (val.Length > 0)
@@ -677,6 +738,7 @@ namespace LogicalParticleFilter1
         {
             if (PDB.builtin.Count > 0) return;
             PDB.builtin["compare/3"] = new builtinDelegate(Comparitor);
+            PDB.builtin["dcompare/3"] = new builtinDelegate(DoubleComparitor);
             PDB.builtin["cut/0"] = new builtinDelegate(Cut);
             PDB.builtin["call/1"] = new builtinDelegate(Call);
             PDB.builtin["fail/0"] = new builtinDelegate(Fail);
@@ -703,10 +765,17 @@ namespace LogicalParticleFilter1
             slib += "partition(X, [], Before, Before, After, After).\n";
             slib += "partition(X, [Y | Rest], B, [Y | Brest], A, Arest) :- leq(X, Y), partition(X, Rest, B, Brest, A, Arest).\n";
             slib += "partition(X, [Y | Rest], B, Brest, A, [Y | Arest]) :- gtr(X, Y), partition(X, Rest, B, Brest, A, Arest).\n";
-
+            // symbolic or string
             slib += "leq(X, Y) :- compare(X, Y, gt).\n";
             slib += "leq(X, Y) :- compare(X, Y, eq).\n";
             slib += "gtr(X, Y) :- compare(X, Y, lt).\n";
+            // numeric
+            slib += "dleq(X, Y) :- dcompare(X, Y, gt).\n";
+            slib += "dleq(X, Y) :- dcompare(X, Y, eq).\n";
+            slib += "dgtr(X, Y) :- dcompare(X, Y, lt).\n";
+            slib += "dltr(X, Y) :- dcompare(X, Y, gt).\n";
+            slib += "deq(X, Y) :- dcompare(X, Y, eq).\n";
+
             slib += "append([], Z, Z).\n";
             slib += "append([A|B], Z, [A|ZZ]) :- append(B, Z, ZZ).\n";
 
@@ -1303,7 +1372,52 @@ namespace LogicalParticleFilter1
 		// Just prove the rest of the goallist, recursively.
 		return prove(goalList, env2, db, level+1, reportFunction);
 	}
+    public ArrayList DoubleComparitor(Term thisTerm, Part goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+    {
+        //DEBUG print ("in Comparitor.prove()...\n");
+        // Prove the builtin bit, then break out and prove
+        // the remaining goalList.
 
+        // if we were intending to have a resumable builtin (one that can return
+        // multiple bindings) then we'd wrap all of this in a while() loop.
+
+        // Rename the variables in the head and body
+        // var renamedHead = new Term(rule.head.name, renameVariables(rule.head.partlist.list, level));
+
+        var first = value((Part)thisTerm.partlist.list[0], environment);
+        if (!(first is Atom))
+        {
+            //print("Debug: Comparitor needs First bound to an Atom, failing\n");
+            return null;
+        }
+
+        var second = value((Part)thisTerm.partlist.list[1], environment);
+        if (!(second is Atom))
+        {
+            //print("Debug: Comparitor needs Second bound to an Atom, failing\n");
+            return null;
+        }
+
+        var cmp = "eq";
+        double v1 = double.Parse (first.name);
+        double v2 = double.Parse(second.name);
+        int cmpv = v1.CompareTo(v2);
+        if (cmpv < 0) cmp = "lt";
+        if (cmpv > 0) cmp = "gt";
+        //if (first.name < second.name) cmp = "lt";
+        //else if (first.name > second.name) cmp = "gt";
+
+        var env2 = unify((Part)thisTerm.partlist.list[2], new Atom(cmp), environment);
+
+        if (env2 == null)
+        {
+            //print("Debug: Comparitor cannot unify CmpValue with " + cmp + ", failing\n");
+            return null;
+        }
+
+        // Just prove the rest of the goallist, recursively.
+        return prove(goalList, env2, db, level + 1, reportFunction);
+    }
 	public ArrayList Cut(Term thisTerm, Part goalList,PEnv environment,PDB db,int  level, reportDelegate reportFunction) {
 		//DEBUG print ("in Comparitor.prove()...\n");
 		// Prove the builtin bit, then break out and prove

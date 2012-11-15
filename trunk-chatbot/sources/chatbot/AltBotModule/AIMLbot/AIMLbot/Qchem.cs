@@ -107,17 +107,18 @@ namespace AltAIMLbot
                     double[] Vlist = timeseries.ToArray();
                     string tlog ="" ;
                     string mt = String.Format("biotrace_{0}", ID);
-                    for (int i = 0; i < Vlist.Length; i++)
+                    int vlen = Vlist.Length;
+                    for (int i = 0; i < vlen; i++)
                     {
                         double v1 = Vlist[i];
-                        string point = String.Format("trace({0},{1},{2}).\n", ID, i, v1);
+                        string point = String.Format("trace({0},{1},{2}).\n", ID, ourSoup.biochemticks - (vlen-i), v1);
                         tlog += point;
                     }
                     prologEngine.insertKB(tlog, mt);
                     prologEngine.connectMT(spindle, mt);
                     prologEngine.connectMT(mt, commonMt );
                 }
-                string tlog2 = "";
+                string tlog2 = "nowTick("+ourSoup.biochemticks +").\n";
                 lock(ourSoup.Chemicals)
                 {
                     foreach (string ID in ourSoup.Chemicals.Keys)
@@ -169,6 +170,7 @@ namespace AltAIMLbot
         public ChemTrace tracer = null;
 
         string cacheIP = "127.0.0.1";
+        public string watchMt = null;
 
         // References:
         // http://code.google.com/p/openc2e/
@@ -219,7 +221,8 @@ namespace AltAIMLbot
                 Clock = new System.Timers.Timer();
                 Clock.Elapsed += new ElapsedEventHandler(Timer_Tick);
             }
-            Clock.Interval =50;
+            //Clock.Interval = 50;
+            Clock.Interval = 333;
             Clock.Enabled = true;
             if (tracer != null)
             {
@@ -292,6 +295,7 @@ namespace AltAIMLbot
         public double getChem(String ID)
         {
             double v1 = 0;
+            if (ID == "null") return 0;
             lock (Chemicals)
             {
                 try
@@ -313,6 +317,8 @@ namespace AltAIMLbot
         public void subChemical(String ID, double v,String note)
         {
             if (ID.Length == 0) return;
+            if (ID == "null") return;
+
             double v1 = 0;
             lock (Chemicals)
             {
@@ -340,6 +346,19 @@ namespace AltAIMLbot
                     {
                     }
                 }
+                if ((watchMt != null) && (prologEngine != null))
+                {
+                    try
+                    {
+                    string report = "biolog(" + biochemticks + "," + ID + ",sub," + v + "," + note + ").\n";
+                    report = report.Replace(" ", "_");
+                    report = report.Replace(",,", ",null,");
+                    prologEngine.appendKB(report, watchMt);
+                    }
+                    catch (Exception e)
+                    {
+                    }
+                }
             }
         }
 
@@ -351,6 +370,7 @@ namespace AltAIMLbot
         public void addChemical(String ID, double v,String note)
         {
             if (ID.Length == 0) return;
+            if (ID == "null") return;
             double v1 = 0;
             lock (Chemicals)
             {
@@ -381,6 +401,20 @@ namespace AltAIMLbot
                     }
                 }
             }
+            if ((watchMt != null) && (prologEngine != null))
+            {
+                     try
+                    {
+               string report = "biolog(" + biochemticks + "," + ID + ",add," + v + "," + note + ").\n";
+                report = report.Replace(" ", "_");
+                report = report.Replace(",,", ",null,");
+                prologEngine.appendKB(report, watchMt);
+                    }
+                     catch (Exception e)
+                     {
+                     }
+            }
+
         }
         
        public  int calculateTickMask(int rate) {
@@ -400,104 +434,111 @@ namespace AltAIMLbot
 
         public void tickBiochemistry()
         {
-            lock (Chemicals)
+            try
             {
-             // Emitters and Receptors don't need permutation since they
-            // don't potentially deadlock by starvation (you sense or add chems)
-            // it is possible for process A to starve process B if proc A is faster and uses
-            // up all the chemicals used by B. So you need to randomize the order a bit to be fair
-            // Don't think that is required for SoupIORules, except possibly for those that potentially have clear bits
-
-            fetchChemsFromCache();
-
-            // Process emitters (Inputs go in)
-            foreach (String RuleID in IORules.Keys)
-            {
-                SoupIORule ER = (SoupIORule) IORules [RuleID];
-                if (ER.emitter)
+                lock (Chemicals)
                 {
-                    ER.processRule(this);
+                    // Emitters and Receptors don't need permutation since they
+                    // don't potentially deadlock by starvation (you sense or add chems)
+                    // it is possible for process A to starve process B if proc A is faster and uses
+                    // up all the chemicals used by B. So you need to randomize the order a bit to be fair
+                    // Don't think that is required for SoupIORules, except possibly for those that potentially have clear bits
+
+                    fetchChemsFromCache();
+
+                    // Process emitters (Inputs go in)
+                    foreach (String RuleID in IORules.Keys)
+                    {
+                        SoupIORule ER = (SoupIORule)IORules[RuleID];
+                        if (ER.emitter)
+                        {
+                            ER.processRule(this);
+                        }
+
+                    }
+
+                    // Process receptors (Output come out)
+                    if (prologEngine != null) prologEngine.clearKB("chemSimOutMt");
+                    foreach (String RuleID in IORules.Keys)
+                    {
+                        SoupIORule ER = (SoupIORule)IORules[RuleID];
+                        if (!ER.emitter)
+                        {
+                            ER.processRule(this);
+                        }
+
+                    }
+
+                    // Process reactions
+                    // enable a random permutation
+                    ArrayList ReactList = new ArrayList();
+                    foreach (String React in Reactions.Keys)
+                    {
+                        ReactList.Add(React);
+
+                    }
+                    int tnum = ReactList.Count;
+                    for (int i = 0; i < 1000; i++)
+                    {
+                        Random r = new Random();
+
+                        int p1 = r.Next(tnum);
+                        int p2 = r.Next(tnum);
+                        string t = (String)ReactList[p1];
+                        ReactList[p1] = ReactList[p2];
+                        ReactList[p2] = t;
+                    }
+                    foreach (String React in ReactList)
+                    {
+                        if (React == "drive lower - hunger")
+                        {
+                            int x = 0; // breakpoing chance
+                        }
+                        if (React == "drive raise - hunger")
+                        {
+                            int x = 0; // breakpoing chance
+                        }
+                        //ProcessReaction(React);
+                        Reaction R = (Reaction)Reactions[React];
+                        R.processReaction(this);
+                    }
+                    // Process half-lives
+                    //if (!halflives) return; // TODO: correct?
+                    foreach (string ID in Halflifes.Keys)
+                    {
+                        if (ID == "drive lower - hunger")
+                        {
+                            int x = 0; // breakpoing chance
+                        }
+
+
+                        // work out which rate we're dealing with
+                        int rate = (int)((int)Halflifes[ID] / 8);
+
+                        // if the tickmask doesn't want us to change things this tick, don't!
+                        if ((biochemticks & calculateTickMask(rate)) != 0) continue;
+
+                        // do the actual adjustment
+                        Chemicals[ID] = ((double)getChem(ID) * calculateMultiplier(rate)) / 65536;
+
+                    }
+                    biochemticks++;
+                    //Update the SortedBlackBoard
+                    SortedBlackBoard = sortedBlackBoard();
+
+                    if (m_RChem != null)
+                    {
+                        update_Rchem(false);
+                    }
+
+                    //Update the Cache
+                    postChemsToCache();
                 }
-
             }
-  
-            // Process receptors (Output come out)
-            if (prologEngine != null) prologEngine.clearKB("chemSimOutMt");
-            foreach (String RuleID in IORules.Keys)
+            catch (Exception e)
             {
-                SoupIORule ER = (SoupIORule)IORules[RuleID];
-                if (!ER.emitter)
-                {
-                    ER.processRule(this);
-                }
-
+                Console.WriteLine("ERR:tickBioChemistry :{0}", e.Message);
             }
-   
-            // Process reactions
-            // enable a random permutation
-            ArrayList ReactList = new ArrayList();
-            foreach (String React in Reactions.Keys)
-            { 
-                ReactList.Add(React);
-
-            }
-            int tnum = ReactList.Count;
-            for (int i = 0; i < 1000; i++)
-            {
-                Random r = new Random();
-     
-                int p1 = r.Next(tnum);
-                int p2 = r.Next(tnum);
-                string t = (String) ReactList[p1];
-                ReactList[p1] = ReactList[p2];
-                ReactList[p2] = t;
-            }
-            foreach (String React in ReactList) 
-            {
-                if (React == "drive lower - hunger")
-                {
-                    int x = 0; // breakpoing chance
-                }
-                if (React == "drive raise - hunger")
-                {
-                    int x = 0; // breakpoing chance
-                }
-                //ProcessReaction(React);
-                Reaction R = (Reaction)Reactions[React];
-                R.processReaction(this);
-            }
-            // Process half-lives
-            //if (!halflives) return; // TODO: correct?
-            foreach (string ID in Halflifes.Keys)
-            {
-                if (ID == "drive lower - hunger")
-                {
-                    int x = 0; // breakpoing chance
-                }
-
-
-		    // work out which rate we're dealing with
-                int rate = (int)((int)Halflifes[ID] / 8);
-	
-		    // if the tickmask doesn't want us to change things this tick, don't!
-		    if ((biochemticks & calculateTickMask(rate)) != 0) continue;
-
-		    // do the actual adjustment
-		     Chemicals[ID] = ( (double)getChem(ID) * calculateMultiplier(rate)) / 65536;
-
-            }
-            biochemticks++;
-            //Update the SortedBlackBoard
-            SortedBlackBoard = sortedBlackBoard ();
-
-            if (m_RChem != null)
-            {
-                update_Rchem(false);
-            }
-
-            //Update the Cache
-            postChemsToCache();
-        }
         }
 
         public void update_Rchem(bool full)
@@ -670,6 +711,10 @@ namespace AltAIMLbot
                 {
                     shape = "octagon"; color = "yellow";
                 }
+                if (ID.Contains("_incr") || ID.Contains("_dec"))
+                {
+                    shape = "octagon"; color = "yellow";
+                }
                 if (ID.Length > 0)
                 {
                     int v = (int)Halflifes[ID];
@@ -741,15 +786,15 @@ namespace AltAIMLbot
        }
         public void normalDrive(string drive,int reward, int punishment)
         {
-            AddReaction(String.Format("drive cancel - {0}", drive), new Reaction(1, String.Format("{0}++", drive), 1, String.Format("{0}--", drive), 1, "", punishment, "", 8));
-            AddReaction(String.Format("drive raise - {0}", drive), new Reaction(1, String.Format("{0}++", drive), 1, "", 3, drive, punishment, "punishment",32));
-            AddReaction(String.Format("drive lower - {0}", drive), new Reaction(1, String.Format("{0}--", drive), 3, drive, reward, "reward", 1, "", 32));
+            AddReaction(String.Format("drive cancel {0}", drive), new Reaction(1, String.Format("{0}_incr", drive), 1, String.Format("{0}_dec", drive), 1, "", punishment, "", 8));
+            AddReaction(String.Format("drive raise {0}", drive), new Reaction(1, String.Format("{0}_incr", drive), 1, "", 3, drive, punishment, "punishment", 32));
+            AddReaction(String.Format("drive lower {0}", drive), new Reaction(1, String.Format("{0}_dec", drive), 3, drive, reward, "reward", 1, "", 32));
             AddReaction(String.Format("push drive {0}", drive), new Reaction(1, String.Format("{0}", drive), 1, "", 1, String.Format("backup{0}", drive), 1, "", 63));
             AddReaction(String.Format("pop drive {0}", drive), new Reaction(1, String.Format("backup{0}", drive), 1, "", 1, String.Format("{0}", drive), 1, "", 64));
             DriveSet[drive] = 1;
             Halflifes[drive] = (int)128;
-            Halflifes[String.Format("{0}--", drive)] = (int)64;
-            Halflifes[String.Format("{0}++", drive)] = (int)64;
+            Halflifes[String.Format("{0}_dec", drive)] = (int)64;
+            Halflifes[String.Format("{0}_incr", drive)] = (int)64;
             Halflifes[String.Format("backup{0}", drive)] = (int)70;
         }
 
@@ -1536,11 +1581,11 @@ namespace AltAIMLbot
             int ctm = soup.calculateTickMask(myRate);
             if ((soup.biochemticks & ctm) != 0) return;
 
-            if (reactant[0].Length != 0)
+            if ((reactant[0].Length != 0)&&(reactant[0]!="null"))
             {
                 ratio = (double)soup.getChem(reactant[0]) / quantity[0];
             }
-            if (reactant[1].Length != 0)
+            if ((reactant[1].Length != 0)&&(reactant[1]!="null"))
             {
                 ratio2 = (double)soup.getChem(reactant[1]) / quantity[1];
             }
