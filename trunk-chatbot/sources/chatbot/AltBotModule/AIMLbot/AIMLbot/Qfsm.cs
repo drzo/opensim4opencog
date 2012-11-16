@@ -101,8 +101,7 @@ namespace AltAIMLbot
             try
             {
                 name = mname;
-                stateDef = stateDef.Replace("&gt;", ">");
-                stateDef = stateDef.Replace("&lt;", "<");
+                stateDef = BehaviorTree.FixXmlEnitites(stateDef);
 
                 rulesDoc.LoadXml(stateDef);
                 initialState = rulesDoc.FirstChild.Attributes["initialstate"].Value;

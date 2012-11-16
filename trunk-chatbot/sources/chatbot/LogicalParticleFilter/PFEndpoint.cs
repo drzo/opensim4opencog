@@ -31,9 +31,18 @@ namespace LogicalParticleFilter1
         public  HttpListener listener = new HttpListener();
         public  string startUpPath = null;
         public  SIProlog ourEngine = null;
-        public  string serverRoot = "http://localhost:8181/";
-        public  int serverPort = 8181;
+        static public int serverPort = 8181;
+        static public string serverRoot
+        {
+            get
+            {
+                return "http://CogbotServer:" + serverPort + "/";
+            }
+        }
+        [ThreadStatic]
         public  SparqlServerConfiguration _config ;
+        public Dictionary<string, SparqlServerConfiguration> Configs = new Dictionary<string, SparqlServerConfiguration>();
+
 
         public  bool IsMicrosoftCLR()
         {
@@ -124,6 +133,8 @@ namespace LogicalParticleFilter1
         {
             IGraph g = new Graph();
             TurtleParser parser = new TurtleParser();
+            LoadIfExists("configuration.ttl", parser, g);
+            LoadIfExists("localConfig.ttl",parser, g);
             //parser.Load(g, @"..\..\plugins\configuration.ttl");
             //parser.Load(g, @"..\..\plugins\localConfig.ttl");
 
@@ -158,10 +169,19 @@ namespace LogicalParticleFilter1
 
             return g;
         }
-        public  void processRequest(object listenerContext)
+
+        private void LoadIfExists(string path, TurtleParser parser, IGraph graph)
         {
-            var context = (HttpListenerContext)listenerContext;
-            if (this._config == null)
+            if (File.Exists(path))
+            {
+                parser.Load(graph, path);
+            }
+        }
+
+        private bool EnsureConfigLoaded(HttpListenerContext context)
+        {
+            //if (this._config != null) return;
+            lock (Configs)
             {
                 //Generate the expected Path and try and load the Configuration using the appropriate Node
                 String expectedPath = context.Request.Url.AbsolutePath;
@@ -175,15 +195,34 @@ namespace LogicalParticleFilter1
                 }
                 expectedPath += "*";
 
+                SparqlServerConfiguration cfg;
+                if (Configs.TryGetValue(expectedPath, out cfg))
+                {
+                    this._config = cfg;
+                    return true;
+                } 
+                
                 IGraph g = ourConfigGraph();
                 //IUriNode objNode = g.CreateUriNode(UriFactory.Create("dotnetrdf:" + expectedPath));
                 INode objNode = g.GetUriNode(new Uri("dotnetrdf:" + expectedPath));
                 if (objNode == null)
                 {
-                   Console.WriteLine("The Configuration Graph does not contain a URI Node with the expected URI <dotnetrdf:" + expectedPath + ">");
+                    Console.WriteLine("The Configuration Graph does not contain a URI Node with the expected URI <dotnetrdf:" + expectedPath + ">");
+                    return false;
                 }
                 //objNode = g.GetUriNode(new Uri("dotnetrdf:" + expectedPath));
-                this._config = new SparqlServerConfiguration(g, objNode);
+                Configs[expectedPath] = this._config = new SparqlServerConfiguration(g, objNode);
+                return true;
+            }
+        }
+        public  void processRequest(object listenerContext)
+        {
+            var context = (HttpListenerContext)listenerContext;
+            if (!EnsureConfigLoaded(context))
+            {
+                this.ShowQueryForm(context);
+                context.Response.Close();
+                return;
             }
  
 
@@ -205,10 +244,12 @@ namespace LogicalParticleFilter1
                 default:
                     //TODO: Can we easily add Protocol Support or not?
                     //this.ProcessProtocolRequest(context);
-                    context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                    this.ShowQueryForm(context);
+                    //context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                     break;
             }
             context.Response.Close();
+            this._config = null;
             return;
 
 
@@ -471,10 +512,10 @@ namespace LogicalParticleFilter1
                 // KHC: Check our prolog engine graph first and use it as the default
 
                 Object result=null;
-                ourEngine.refreshRDFGraph();
-                if (ourEngine.rdfGraph.Triples.Count > 0)
+                IGraph rdfGraph =  ourEngine.getRefreshedRDFGraph("spindleMT");
+                if (rdfGraph.Triples.Count > 0)
                 {
-                    result = ourEngine.rdfGraph.ExecuteQuery(query);
+                    result = rdfGraph.ExecuteQuery(query);
                 }
                 if (result == null)
                 {

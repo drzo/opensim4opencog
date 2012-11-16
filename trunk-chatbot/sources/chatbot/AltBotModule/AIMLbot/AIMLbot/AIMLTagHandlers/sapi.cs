@@ -51,11 +51,10 @@ namespace AltAIMLbot.AIMLTagHandlers
                     string message = "";
                     if (this.user.bot.saySapi)
                     {
-                         message = this.TemplateNodeOuterXml;
-                         message = message.Replace(@"<sapi>", "");
-                         message = message.Replace(@"</sapi>", "");
-                         message = message.Replace("<", "&lt;");
-                         message = message.Replace(">", "&gt;");
+                        message = this.TemplateNodeOuterXml;
+                        message = message.Replace(@"<sapi>", "");
+                        message = message.Replace(@"</sapi>", "");
+                        message = BehaviorTree.FixXmlEnitites(message);
                     }
                     else
                     {

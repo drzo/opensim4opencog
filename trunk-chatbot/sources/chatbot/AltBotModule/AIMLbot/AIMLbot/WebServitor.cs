@@ -15,11 +15,21 @@ namespace AltAIMLbot
 {
     public class WebServitor
     {
-        public static HttpListener listener = new HttpListener();
+        public static HttpListener listener = null;
 
         public static string startUpPath = null;
         public static Servitor ourServitor = null;
-        public static string serverRoot = "http://CogbotServer:8123/";
+        public static string _serverRoot;
+        public static string serverRoot
+        {
+            get
+            {
+                if (_serverRoot != null) return _serverRoot;
+                return "http://CogbotServer:" + serverPort + "/";
+            }
+            set { _serverRoot = value; }
+        }
+
         public static int serverPort = 8123;
         public static string kpfile = @".\wikilink\phraseScore";
         public static string wsfile = @".\wikilink\count.phrase.sense.txt";
@@ -50,6 +60,7 @@ namespace AltAIMLbot
             
             //listener.Prefixes.Add("http://192.168.2.141:8123/");
             //listener.Prefixes.Add("http://192.168.0.145:8123/");
+            if (listener == null) listener = new HttpListener();
             lock (listener)
             {
                 string pfadd = "";
@@ -104,6 +115,11 @@ namespace AltAIMLbot
             {
                 try
                 {
+                    if (listener == null)
+                    {
+                       Thread.Sleep(1000);
+                        Console.Error.WriteLine("No listener Yet");
+                    }
                     HttpListenerContext request=listener.GetContext ();
                     ThreadPool.QueueUserWorkItem(processRequest, request);
                 }
@@ -268,6 +284,14 @@ namespace AltAIMLbot
                 using (Stream s = context.Response.OutputStream)
                 using (StreamWriter writer = new StreamWriter(s))
                     ourServitor.curBot.realChem.webWriter(writer, action, query, mt, serverRoot);
+                return;
+            }
+            if (path.Contains("./rdfep/"))
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.OK;
+                using (Stream s = context.Response.OutputStream)
+                using (StreamWriter writer = new StreamWriter(s))
+                    ourServitor.myServitorEndpoint.webWriter(context,writer, action, query, path, mt, serverRoot);
                 return;
             }
 

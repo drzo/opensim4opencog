@@ -857,7 +857,7 @@ namespace RTParser
                                              {
                                                  new[] {"&gt;", "<gt />"},
                                                  new[] {"&lt;", "<lt />"},
-                                                 new[] {"&qt;", "<qt />"},
+                                                 new[] {"&quot;", "<qt />"},
                                                  new[] {"&amp;", "<amp />"},
                                              });
                 XmlNode firstChild = StaticAIMLUtils.getDocNode("<li>" + strTrim + "</li>", false, false, StaticAIMLUtils.StringOnlyDoc);

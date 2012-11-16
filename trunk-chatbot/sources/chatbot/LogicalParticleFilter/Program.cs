@@ -304,7 +304,8 @@ namespace LogicalParticleFilter1
         {
             Console.WriteLine("starting testRDFServer");
             PFEndpoint myServer = new PFEndpoint();
-            StringParser.Parse(prologEngine.rdfGraph, "<http://example.org/a1> <http://example.org/b1> <http://example.org/c1> .");
+            var rdfGraph = prologEngine.getRefreshedRDFGraph("spindleMT");
+            StringParser.Parse(rdfGraph, "<http://example.org/a1> <http://example.org/b1> <http://example.org/c1> .");
             prologEngine.connectMT("spindleMT", "rdfMT");
             prologEngine.appendKB("triple(this,can,work).\n", "rdfMT");
 

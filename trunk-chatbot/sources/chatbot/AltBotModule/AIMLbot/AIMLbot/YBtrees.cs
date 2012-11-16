@@ -108,8 +108,7 @@ namespace AltAIMLbot
             try
             {
 
-                behaviorDef = behaviorDef.Replace("&gt;", ">");
-                behaviorDef = behaviorDef.Replace("&lt;", "<");
+                behaviorDef = FixXmlEnitites(behaviorDef);
                 evalDoc.LoadXml(behaviorDef);
             }
             catch (Exception e)
@@ -129,13 +128,25 @@ namespace AltAIMLbot
             yield break;
         }
 
+
+        public static string FixXmlEnitites(string stateDef)
+        {
+            stateDef =
+                stateDef.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&quot;", "\"").Replace("&amp;", "(Zamp)").Replace
+                    ("&apos", "'");
+            if (stateDef.Contains("&"))
+            {
+                throw new NotImplementedException("Fogot to clean some entity? " + stateDef);
+            }
+            return stateDef.Replace("(Zamp)","&");
+        }
+
         public void defineBehavior(string mname, string behaviorDef)
         {
             try
             {
                 name = mname;
-                behaviorDef = behaviorDef.Replace("&gt;", ">");
-                behaviorDef = behaviorDef.Replace("&lt;", "<");
+                behaviorDef = FixXmlEnitites(behaviorDef);
 
                 treeDoc.LoadXml(behaviorDef);
                 //initialState = rulesDoc.FirstChild.Attributes["initialstate"].Value;
