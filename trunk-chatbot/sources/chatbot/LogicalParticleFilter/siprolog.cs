@@ -2025,22 +2025,22 @@ namespace LogicalParticleFilter1
                 string result = "";
                 if (this.name == "cons")
                 {
-                    var x = this;
-                    while (x is Term && x.name == "cons" && x.Arity == 2)
+                    Part x = this;
+                    while (x is Term && x.name == "cons" && ((Term)x).Arity == 2)
                     {
-                        x = (Term)x.ArgList[1];
+                        x = ((Term)x).ArgList[1];
                     }
                     if ((x is Atom && x.name == "nil") || x is Variable)
                     {
                         x = this;
                         result += "[";
                         var com = false;
-                        while (x is Term && x.name == "cons" && x.Arity == 2)
+                        while (x is Term && x.name == "cons" && ((Term)x).Arity == 2)
                         {
                             if (com) result +=", ";
-                            result += ((Term)x.ArgList[0]).ToString(); // May need to case var/atom/term
+                            result += ((Term)x).ArgList[0].ToString(); // May need to case var/atom/term
                             com = true;
-                            x = (Term)x.ArgList[1];
+                            x = ((Term)x).ArgList[1];
                         }
                         if (x is Variable)
                         {
