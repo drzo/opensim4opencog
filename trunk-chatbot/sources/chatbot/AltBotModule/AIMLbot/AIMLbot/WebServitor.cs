@@ -39,6 +39,8 @@ namespace AltAIMLbot
         public static Dictionary<string, int> senseCount = new Dictionary<string, int>();
         public static Dictionary<string, string> senseLink = new Dictionary<string, string>();
         public static string[] behaviorStoplist = null;
+        public static bool provideAnalysis = true;
+        public static Thread listenerThread = null;
 
         public static bool IsMicrosoftCLR()
         {
@@ -103,9 +105,9 @@ namespace AltAIMLbot
                     Console.WriteLine(e.Message);
                 }
 
-                loadAnalyzer();
-                Thread t = new Thread(new ThreadStart(clientListener));
-                t.Start();
+                if (provideAnalysis) loadAnalyzer();
+                listenerThread = new Thread(new ThreadStart(clientListener));
+                listenerThread.Start();
             }
         }
 
@@ -117,15 +119,18 @@ namespace AltAIMLbot
                 {
                     if (listener == null)
                     {
-                       Thread.Sleep(1000);
-                        Console.Error.WriteLine("No listener Yet");
+                        Thread.Sleep(1000);
+                        Console.Error.WriteLine("clientListener : No listener Yet");
                     }
-                    HttpListenerContext request=listener.GetContext ();
-                    ThreadPool.QueueUserWorkItem(processRequest, request);
+                    else
+                    {
+                        HttpListenerContext request = listener.GetContext();
+                        ThreadPool.QueueUserWorkItem(processRequest, request);
+                    }
                 }
                 catch(Exception e)
                 {
-                    Console.WriteLine(e.Message);
+                    Console.WriteLine("EXCEPTION: clientListener :"+e.Message);
                 }
             }
         }

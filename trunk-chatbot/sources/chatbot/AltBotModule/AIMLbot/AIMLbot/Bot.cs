@@ -2171,22 +2171,23 @@ The AltAIMLbot program.
                 if (key.StartsWith("bot"))
                 {
                     key = key.Substring(3);
-                    _botAsUser.Predicates.addSetting(key, data);
+                   if (_botAsUser !=null) _botAsUser.Predicates.addSetting(key, data);
                 }
                 else if (key.StartsWith("user"))
                 {
                     key = key.Substring(4);
-                    LastUser.Predicates.addSetting(key, data);
+                    if (LastUser != null) LastUser.Predicates.addSetting(key, data);
                 }
                 else
                 {
-                    GlobalSettings.addSetting(key, data);
+                    if (GlobalSettings != null) GlobalSettings.addSetting(key, data);
                 }
-                setBBHash0(okey, data);
             }
             catch (Exception e)
             {
+                Console.WriteLine("CHECK setBBHash({0},{1}) ERR:{2}", key,data, e.Message);
             }
+            setBBHash0(okey, data);
         }
         public void setBBHash0(string key, string data)
         {
@@ -2198,6 +2199,14 @@ The AltAIMLbot program.
                 {
                     myChemistry.m_cBus.setHash(key, data);
                 }
+                else
+                {
+ //                   Console.WriteLine("CHECK setBBHash0 :NO BUS ({0},{1})", key,data);
+                }
+            }
+            else
+            {
+//                Console.WriteLine("CHECK setBBHash0: useMemcache=false({0},{1})", key, data);
             }
         }
         public string getBBHash(string key)

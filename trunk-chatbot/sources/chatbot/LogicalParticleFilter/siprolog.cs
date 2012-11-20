@@ -215,8 +215,15 @@ namespace LogicalParticleFilter1
         public void webWriter(StreamWriter writer,string action,string query,string mt, string serverRoot)
         {
             serverRoot = "/";
+            if (action == "autorefresh")
+            {
+                writer.WriteLine("<META HTTP-EQUIV=\"REFRESH\" content=\"10\">");
+            }
+            writer.WriteLine("<html>");
             Menu(writer, serverRoot);
             webWriter0(writer, action, query, mt, serverRoot, true);
+            writer.WriteLine("</html>");
+
         }
 
         private void Menu(StreamWriter writer, string serverRoot)
@@ -234,10 +241,6 @@ namespace LogicalParticleFilter1
                     queryv="list";
                 }
                 
-                if (action == "autorefresh")
-                {
-                    writer.WriteLine("<META HTTP-EQUIV=\"REFRESH\" content=\"10\">");
-                }
 
                 if (action == null)
                 {
@@ -1988,22 +1991,22 @@ namespace LogicalParticleFilter1
             {
                 if (this.name == "cons")
                 {
-                    var x = this;
-                    while (x is Term && x.name == "cons" && x.Arity == 2)
+                    Part x = this;
+                    while (x is Term && x.name == "cons" && ((Term)x).Arity == 2)
                     {
-                        x = (Term)x.ArgList[1];
+                        x = ((Term)x).ArgList[1];
                     }
                     if ((x is Atom && x.name == "nil") || x is Variable )
                     {
                         x = this;
                         Console.Write("[");
                         var com = false;
-                        while (x is Term && x.name == "cons" && x.Arity == 2)
+                        while (x is Term && x.name == "cons" && ((Term)x).Arity == 2)
                         {
                             if (com) Console.Write(", ");
-                            ((Term)x.ArgList[0]).print(); // May need to case var/atom/term
+                            (((Term)x).ArgList[0]).print(); // May need to case var/atom/term
                             com = true;
-                            x = (Term)x.ArgList[1];
+                            x = ((Term)x).ArgList[1];
                         }
                         if (x is Variable )
                         {
