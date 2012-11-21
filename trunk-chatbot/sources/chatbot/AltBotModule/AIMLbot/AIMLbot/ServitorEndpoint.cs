@@ -49,14 +49,18 @@ namespace AltAIMLbot
         public void webWriter(HttpListenerContext context, StreamWriter writer, string action, string query, string path, string mt, string root)
         {
             mt = mt ?? "rdfMT";
-            BeginsWith("./rdfep/", ref path);
-            var rdfKB = prologEngine.getRefreshedRDFGraph(mt);
-            if (BeginsWith("rdfdisplay/", ref path))
+            BeginsWith("./xrdf/", ref path);
+            if (query=="pl2rdf")
             {
-                return;
+                SIProlog.GraphWithDef graph = prologEngine.MakeRepositoryKB(mt);
+            }
+            if (query == "rdf2pl")
+            {
+                SIProlog.GraphWithDef graph = prologEngine.MakeRepositoryKB(mt);
             }
             throw new NotImplementedException();
         }
+
 
         private bool BeginsWith(string value, ref string path)
         {

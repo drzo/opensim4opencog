@@ -1395,7 +1395,7 @@ namespace RTParser
                 //this.Results[n] = new   Result(this, this.bot, new Request("", this, this.bot),this);
             }
             Result historicResult = (Result)this.Results[n];
-            historicResult.OutputSentences[sent] = data;
+            historicResult.SetOutputSentence(sent, data);
 
         }
 

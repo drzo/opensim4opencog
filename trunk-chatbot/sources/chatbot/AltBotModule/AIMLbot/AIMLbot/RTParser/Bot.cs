@@ -455,11 +455,14 @@ namespace RTParser
 
                     AltAIMLbot.Result historicResult = servitor.curUser.GetResult(n);
                     if (historicResult == null) continue;
-                    for (int sent = 0; sent < historicResult.OutputSentences.Count; sent++)
+                    lock (historicResult.OutputSentences)
                     {
-                        string data = historicResult.OutputSentences[sent];
-                        activeUser.setOutputSentence(n, sent, data);
-                        Console.WriteLine("ALT->RTP setOutputSentence[{0},{1}] = {2}", n, sent, data);
+                        for (int sent = 0; sent < historicResult.OutputSentences.Count; sent++)
+                        {
+                            string data = historicResult.OutputSentences[sent];
+                            activeUser.setOutputSentence(n, sent, data);
+                            Console.WriteLine("ALT->RTP setOutputSentence[{0},{1}] = {2}", n, sent, data);
+                        }
                     }
                 }
             }

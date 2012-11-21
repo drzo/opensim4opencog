@@ -2069,6 +2069,7 @@ namespace RTParser.Variables
                         if (AllowedNameValue(name, value))
                         {
                             value = MakeLocalValue(name, value);
+                            if (value == old) return true;
                             this.removeFromHash(name);
                             SettingsLog("UPDATE Setting Local '" + name + "'=" + str(value));
                             this.settingsHash.Add(normalizedName, value);

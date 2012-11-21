@@ -587,7 +587,10 @@ namespace AltAIMLbot
             List<string> sents = StaticAIMLUtils.SentenceBreaker(sentence, null);
             if (sents.Count == 0 && sentence == " , ")
             {
-                if (resultCount == 1) OutputSentences.Add(sentence);
+                if (resultCount == 1)
+                {
+                    OutputSentencesAdd(sentence);
+                }
                 return;
             }
             foreach (var s in sents)
@@ -596,7 +599,7 @@ namespace AltAIMLbot
                 {
 
                 }
-                OutputSentences.Add(s);
+                OutputSentencesAdd(s);
             }            
         }
 
@@ -770,7 +773,7 @@ namespace AltAIMLbot
                 }
                 if (found < 1)
                 {
-                    OutputSentences.Add(unifiable);
+                    OutputSentencesAdd(unifiable);
                     return;
                 }
                 OutputSentences.RemoveAt(found);
@@ -786,13 +789,59 @@ namespace AltAIMLbot
                 EndedOn = AltBot.Now;
                 if (addToFront)
                 {
-                    OutputSentences.Insert(0, unifiable);
+                    OutputSentencesInsert(0, unifiable);
                 }
                 else
                 {
-                    OutputSentences.Add(unifiable);
+                    OutputSentencesAdd(unifiable);
                 }
                 return;
+            }
+        }
+
+
+        public void SetOutputSentence(int sent, string data)
+        {
+            OutputSentencesInsert(sent, data);
+        }
+        private static string oneLastSentence = null;
+        private void OutputSentencesAdd(string unifiable)
+        {
+            lock (OutputSentences)
+            {
+                if (OutputSentences.Contains(unifiable) /*|| oneLastSentence == unifiable*/)
+                {
+                    return;
+                }
+                oneLastSentence = unifiable;
+                OutputSentences.Add(unifiable);
+            }
+        }
+
+        private void OutputSentencesInsert(int i, string unifiable)
+        {
+            lock (OutputSentences)
+            {
+                if (i == OutputSentences.Count)
+                {
+                    OutputSentencesAdd(unifiable);
+                }
+                else
+                {
+                    if (OutputSentences.Contains(unifiable) /*|| oneLastSentence == unifiable*/)
+                    {
+                        if (i < OutputSentences.Count)
+                        {
+                            var prev = OutputSentences[i];
+                            if (prev == unifiable)
+                            {
+                                return;
+                            }
+                        }
+                        return;
+                    }
+                    OutputSentences.Insert(i, unifiable);
+                }
             }
         }
 
@@ -804,10 +853,15 @@ namespace AltAIMLbot
             {
                 AddOutputSentences11(s, false);
             }
-            if (addToFront) OutputSentences.AddRange(OutputSentencesBefore);
+            if (addToFront) OutputSentencesAddRange(OutputSentencesBefore);
         }
 
-        public void AddOutputSentences2(TemplateInfo ti, string unifiable)
+        private void OutputSentencesAddRange(List<Unifiable> l)
+        {
+            OutputSentences.AddRange(l);
+        }
+
+        private void AddOutputSentences2(TemplateInfo ti, string unifiable)
         {
             {
                 bool isComplete = OutputSentences.Count >=
@@ -870,7 +924,7 @@ namespace AltAIMLbot
 
         public void AddResultFormat(string format, params object[] args)
         {
-            lock (OutputSentences) OutputSentences.Add(SafeFormat(format, args));
+            lock (OutputSentences) OutputSentencesAdd(SafeFormat(format, args));
         }
 
         /// <summary>
@@ -1580,7 +1634,7 @@ namespace AltAIMLbot
             List<string> sents = StaticAIMLUtils.SentenceBreaker(sentence, null);
             if (sents.Count == 0 && sentence == " , ")
             {
-                if (resultCount == 1) OutputSentences.Add(sentence);
+                if (resultCount == 1) OutputSentencesAdd(sentence);
                 return;
             }
             foreach (var s in sents)
@@ -1589,7 +1643,7 @@ namespace AltAIMLbot
                 {
                     
                 }
-                OutputSentences.Add(s);
+                OutputSentencesAdd(s);
             }
         }
     }
