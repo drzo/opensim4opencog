@@ -669,23 +669,12 @@ namespace LogicalParticleFilter1
             List<String> userNamedGraphs = new List<String>();
 
             //Get the USING URIs (if any)
-            if (context.Request.QueryString["using-graph-uri"] != null)
-            {
-                userDefaultGraphs.AddRange(context.Request.QueryString.GetValues("using-graph-uri"));
-            }
-            else if (form["using-graph-uri"] != null)
-            {
-                userDefaultGraphs.AddRange(form.GetValues("using-graph-uri"));
-            }
+            var ugs = GetRequestValues("using-graph-uri", context, form);
+            if (ugs != null) userDefaultGraphs.AddRange(ugs);
+
             //Get the USING NAMED URIs (if any)
-            if (context.Request.QueryString["using-named-graph-uri"] != null)
-            {
-                userNamedGraphs.AddRange(context.Request.QueryString.GetValues("using-named-graph-uri"));
-            }
-            else if (form["using-named-graph-uri"] != null)
-            {
-                userNamedGraphs.AddRange(form.GetValues("using-named-graph-uri"));
-            }
+            var ungs = GetRequestValues("using-named-graph-uri", context, form);
+            if (ungs != null) userNamedGraphs.AddRange(ungs);
 
             try
             {
@@ -771,6 +760,20 @@ namespace LogicalParticleFilter1
             }
         }
 
+        private IList<string> GetRequestValues(string name, HttpListenerContext context, FormVars form)
+        {
+            //Get the USING URIs (if any)
+            var query = context.Request.QueryString;
+            if (query[name] != null)
+            {
+                return query.GetValues(name);
+            }
+            else if (form[name] != null)
+            {
+                return form.GetValues(name);
+            }
+            return new string[0];
+        }
 
         #region Error Handling
 

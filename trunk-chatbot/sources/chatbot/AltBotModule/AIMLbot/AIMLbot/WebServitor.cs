@@ -291,7 +291,7 @@ namespace AltAIMLbot
                     ourServitor.curBot.realChem.webWriter(writer, action, query, mt, serverRoot);
                 return;
             }
-            if (path.Contains("./rdfep/"))
+            if (path.Contains("./xrdf/"))
             {
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
                 using (Stream s = context.Response.OutputStream)
