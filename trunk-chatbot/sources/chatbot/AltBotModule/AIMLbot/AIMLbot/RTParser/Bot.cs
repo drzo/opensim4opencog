@@ -158,8 +158,6 @@ namespace RTParser
             }
         }
         public User ExemplarUser;
-        public string NamePath;
-        public string NameAsSet;
 
 
         //public Request BotAsRequestUsed = null;
@@ -1415,7 +1413,7 @@ The AIMLbot program.
                 return TheCycS;
             }
         }
-        public NatLangDb TheNLKB;
+        //public NatLangDb TheNLKB;
         public bool UseInlineThat = true;
 
         public bool CycEnabled
@@ -1722,12 +1720,11 @@ The AIMLbot program.
         {
             if (IsNameSet == myName && _botAsUser != null)
             {
-                return BotAsUser.UserDirectory;
+                return BotAsUser.UserDirectory ?? PersonalAiml;
             }
             IsNameSet = myName;
             Robots[myName] = this;
             NameAsSet = myName;
-            NamePath = ToScriptableName(NameAsSet);
 
             loadGlobalBotSettings();
             //char s1 = myName[1];
@@ -1957,15 +1954,20 @@ The AIMLbot program.
             set { throw new NotImplementedException(); }
         }
         */
+        public string NamePath
+        {
+            get { return ToScriptableName(BotUserID); }
+        }
+        public string NameAsSet;
         public string BotUserID
         {
             get
             {
-                if (BotAsUser != null) return BotAsUser.UserID;
+                if (_botAsUser != null) return BotAsUser.UserID;
                 SettingsDictionary dict = GlobalSettings;
                 if (dict != null)
                 {
-                    Unifiable botid = dict.grabSetting("id");
+                    Unifiable botid = dict.grabSetting("id") ?? ToScriptableName(NameAsSet);
                     return botid;
                 }
                 return null;
@@ -1976,8 +1978,7 @@ The AIMLbot program.
         {
             get
             {
-                if (BotAsUser != null) return BotAsUser.UserID;
-                return BotUserID ?? "-BOT-ID-NULL-";
+                return BotUserID ?? "-BOT-ID-NULL-" + GetHashCode() + "-";
             }
             set { throw new NotImplementedException(); }
         }
@@ -2047,7 +2048,7 @@ The AIMLbot program.
             {
                 var searchWas = RuntimeDirectories;
 
-                PushSearchPath(PathToUserDir);
+                PushSearchPath(PathToUsersDir);
                 PushSearchPath(PathToConfigFiles);
                 PushSearchPath(RuntimeDirectory);
                 PushSearchPath(PathToAIML);

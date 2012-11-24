@@ -23,10 +23,11 @@ namespace RTParser.Database
     {
         private GoogleTranslator googleTranslator = null;
         public static NatLangDb NatLangProc;
-        static AltBot bot;
+        static public AltBot bot;
         public NatLangDb(RTParser.AltBot p)
         {
             bot = p;
+            bot.AddExcuteHandler("pos", (SystemExecHandler)NatLangTestHandler);
             googleTranslator = new GoogleTranslator(p);
             NatLangProc = this;
             initNatLangDb();
@@ -165,7 +166,6 @@ namespace RTParser.Database
                 return; // singleton pattern           
             }
 
-            bot.AddExcuteHandler("pos", (SystemExecHandler)NatLangTestHandler);
             try
             {
                 StringCachePOSWORD["hello"] =

@@ -258,6 +258,7 @@ namespace RTParser
                 foreach (Unifiable sentenceURaw in rawSentences)
                 {
                     string sentenceRaw = sentenceURaw;
+                    NatLangDb.bot = NatLangDb.bot ?? request.bot;
                     if (NatLangDb.WasQuestion(sentenceRaw))
                     {
                         AltBot.writeDebugLine("Question: " + sentenceRaw);

@@ -547,7 +547,8 @@ namespace AltAIMLbot
                 if (LoadCompleteOnce) return;
                 LoadCompleteOnce = true;
             }
-
+            curBot.loadGlobalBotSettings();
+            curBot.startServitor();
             string servRoot = curBot.GlobalSettings.grabSetting("serverRoot", false);
             if ((servRoot != null) && (servRoot.Length > 7))
             {

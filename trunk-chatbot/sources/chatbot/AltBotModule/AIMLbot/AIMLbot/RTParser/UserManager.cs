@@ -448,23 +448,23 @@ namespace RTParser
 
         public int LoadUsers(string key)
         {
-            return UserOper("LoadUsers " + key, () => LoadUsers0(key), QuietLogger);
+            return UserOper("LoadUsers " + key, () => LoadUsers0(key, PathToUsersDir), QuietLogger);
         }
 
-        internal int LoadUsers0(string key)
+        internal int LoadUsers0(string key, string from)
         {
             Regex regex = new Regex(key, RegexOptions.IgnoreCase);
             int users = 0;
             string k1 = key.Replace("_", " ");
-            foreach (string fsn in HostSystem.GetDirectories(PathToUserDir))
+            foreach (string fsn in HostSystem.GetDirectories(from))
             {
                 var files = HostSystem.GetFiles(fsn, "*.xml");
                 if (files == null || files.Length == 0) continue;
 
                 string s = fsn;
-                if (fsn.StartsWith(PathToUserDir))
+                if (fsn.StartsWith(from))
                 {
-                    s = s.Substring(PathToUserDir.Length);
+                    s = s.Substring(from.Length);
                 }
                 if (s.StartsWith("/"))
                 {
@@ -476,8 +476,9 @@ namespace RTParser
                 }
                 if (regex.IsMatch(s))
                 {
-                    s = s.Replace("_", " ").Replace("~", " ").Replace("  ", " ");
-                    User user = FindOrCreateUser(s);
+                    string name = s.Replace("_", " ").Replace("~", " ").Replace("  ", " ");
+                    MasterUser user = (MasterUser) FindOrCreateUser(name);
+                    user.UserDirectory = user.UserDirectory ?? fsn;
                     users++;
                 }
             }
@@ -498,19 +499,19 @@ namespace RTParser
 
         private string GetUserDir0(string key)
         {
-            string userDir = HostSystem.Combine(PathToUserDir, key);
+            string userDir = HostSystem.Combine(PathToUsersDir, key);
             string luserDir = HostSystem.ToRelativePath(userDir, RuntimeDirectory);
             if (HostSystem.DirExists(luserDir))
             {
                 return luserDir;
             }
             string k1 = key.Replace("_", " ");
-            foreach (string fsn in HostSystem.GetDirectories(PathToUserDir))
+            foreach (string fsn in HostSystem.GetDirectories(PathToUsersDir))
             {
                 string s = fsn;
-                if (fsn.StartsWith(PathToUserDir))
+                if (fsn.StartsWith(PathToUsersDir))
                 {
-                    s = s.Substring(PathToUserDir.Length);
+                    s = s.Substring(PathToUsersDir.Length);
                 }
                 if (s.StartsWith("/"))
                 {
@@ -914,7 +915,7 @@ namespace RTParser
 
         public bool IsLastKnownUser(string fromname)
         {
-            //if (LastUser != null && LastUser.IsKnownAs(fromname)) return false;
+            if (LastUser != null && LastUser.IsNamed(fromname)) return false;
             return (string.IsNullOrEmpty(fromname) || Trim(fromname) == "null");
         }
 

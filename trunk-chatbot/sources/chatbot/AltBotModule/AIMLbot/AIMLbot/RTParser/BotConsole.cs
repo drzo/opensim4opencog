@@ -531,7 +531,7 @@ namespace RTParser
                 if (GUIForm != null) GUIForm.Show();               
                 return true;
             }
-            User myUser = user ?? LastUser ?? FindOrCreateUser(UNKNOWN_PARTNER);
+            User myUser = user ?? LastUser ?? FindUser(UNKNOWN_PARTNER) ?? ExemplarUser ?? FindOrCreateUser(UNKNOWN_PARTNER);
             int firstWhite = input.IndexOf(' ');
             if (firstWhite == -1) firstWhite = input.Length - 1;
             string cmd = Trim(ToLower(input.Substring(0, firstWhite + 1)));

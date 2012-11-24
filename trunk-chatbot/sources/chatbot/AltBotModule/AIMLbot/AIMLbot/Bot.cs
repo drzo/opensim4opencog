@@ -484,14 +484,14 @@ namespace RTParser
 
         private string _PathToUserFiles;
 
-        public string PathToUserDir
+        public string PathToUsersDir
         {
             get
             {
                 if (_PathToUserFiles != null) return _PathToUserFiles;
-                if (GlobalSettings.containsSettingCalled("userdirectory"))
+                if (GlobalSettings.containsSettingCalled("usersdirectory"))
                 {
-                    Unifiable dir = GlobalSettings.grabSetting("userdirectory");
+                    Unifiable dir = GlobalSettings.grabSetting("usersdirectory");
                     HostSystem.CreateDirectory(dir);
                     _PathToUserFiles = dir;
                     return HostSystem.ToRelativePath(dir, RuntimeDirectory);
@@ -661,7 +661,7 @@ namespace RTParser
             this.myCron = new Cron(this);
             //LocalGraphsByName["default"] =
             //EnsureLocalGraphs();
-            TheNLKB = TheNLKB ?? new NatLangDb(this);
+            //TheNLKB = TheNLKB ?? new NatLangDb(this);
             //            BotAsRequestUsed = new AIMLbot.Request("-bank-input-", BotAsUser, this, null);
             AddExcuteHandler("aiml", EvalAIMLHandler);
             AddExcuteHandler("bot", LightWeigthBotDirective);
@@ -697,9 +697,10 @@ namespace RTParser
             this.GlobalSettings = MakeSettingsDictionary("GlobalSettingsMt");
             this.GlobalSettings.bbPrefix = "bot";
             RegisterDictionary("bot", GlobalSettings);
+            string botName = NameAsSet ?? BotUserID ?? NamePath ?? BotID;
             _botAsUser = _botAsUser ??
-                         FindUser(NameAsSet ?? ("Bot" + GetHashCode())) ??
-                         new MasterUser(NamePath, NameAsSet, this, GlobalSettings);            
+                         FindUser(botName) ??
+                         new MasterUser(NamePath, botName, this, GlobalSettings);
             this.HeardPredicates = MakeSettingsDictionary("HeardPredicatesMt");
             RegisterDictionary("chat.heardpredicates", HeardPredicates);
             RegisterDictionary("bot.alluserpred", this.AllUserPreds);
