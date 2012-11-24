@@ -138,7 +138,11 @@ namespace RTParser
         {
             get
             {
-                if (_lastRequest == null) return CreateRequest("PING", ResponderJustSaid, rbot.BotAsUser);
+                if (_lastRequest == null)
+                {
+                    return null;
+                    return CreateRequest(/*"PING"*/ null, ResponderJustSaid, rbot.BotAsUser);
+                }
                 return _lastRequest;
             }
             set
@@ -1165,7 +1169,8 @@ namespace RTParser
 
         public bool IsNamed(string lname)
         {
-            return UserName == lname || UserID == lname;
+            lname = lname.ToLower();
+            return UserName.ToLower() == lname || UserID.ToLower() == lname;
         }
 
         private UserConversationScope LastReponderFromDictionary()

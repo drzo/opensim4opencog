@@ -41,11 +41,12 @@ namespace LogicalParticleFilter1
         {
             //public string ruleset;
             public string startMT;
-            readonly public PDB db = new PDB();
+            public readonly PDB db;
             //public readonly PartList context = new PartList();
 
             public QueryContext(string home, PartList list)
             {
+                db = new PDB();
                 startMT = home;
                 //context = list;
             }
@@ -91,6 +92,32 @@ namespace LogicalParticleFilter1
             defineRDFExtensions();
         }
 
+        public static string MakeReadbleString(string value)
+        {
+            var value2 = value.Replace("\\", "\\\\").Replace("\"", "\\\"");
+            if (value2 == value)
+            {
+                if (value.ToLower() == value)
+                {
+                    // return value;
+                }
+            }
+            return "\"" + value2 + "\"";
+        }
+
+        public static string MakeReadbleAtom(string value)
+        {
+            var value2 = value.Replace("\\", "\\\\").Replace("'", "\\'");
+            if (value2 == value)
+            {
+                if (value.ToLower() == value)
+                {
+                    return value;
+                }
+            }
+            return "'" + value2 + "'";
+        }
+
         #region babyMT
         //===================================================
         // The baby MT system. A directed graph of KB fragments
@@ -120,12 +147,12 @@ namespace LogicalParticleFilter1
             return x.CompareTo(y);
         }
 
-        public ArrayList findVisibleKBRulesSorted(string startMT)
+        public RuleList findVisibleKBRulesSorted(string startMT)
         {
             // Returns rules sorted by MT probability
             // Skips those with zero probibility
            ArrayList vlist= findVisibleKBS(startMT, new ArrayList());
-           ArrayList VKB = new ArrayList();
+           RuleList VKB = new RuleList();
            if (vlist == null) vlist = new ArrayList();
            vlist.Sort();
            foreach (PNode focus in vlist)
@@ -167,12 +194,12 @@ namespace LogicalParticleFilter1
             return vlist;
         }
 
-        public ArrayList findVisibleKBRules(string startMT)
+        public RuleList findVisibleKBRules(string startMT)
         {
             return findVisibleKBRules(startMT, new ArrayList(), true);
         }
 
-        public ArrayList findVisibleKBRules(string startMT,ArrayList vlist, bool followGenlMt)
+        public RuleList findVisibleKBRules(string startMT, ArrayList vlist, bool followGenlMt)
         {
             if (vlist.Contains(startMT)) return null;
             vlist.Add(startMT);
@@ -185,7 +212,7 @@ namespace LogicalParticleFilter1
             if (focus == null) return null;
                 ensureCompiled(focus);
 
-            ArrayList VKB = new ArrayList ();
+            RuleList VKB = new RuleList();
             // Prefix
             lock (focus.pdb.rules) foreach (Rule r in focus.pdb.rules)
             {
@@ -196,7 +223,7 @@ namespace LogicalParticleFilter1
             foreach (PEdge E in focus.OutgoingEdges)
             {
                 string parentMT = E.EndNode.Id;
-                ArrayList collectedKB = findVisibleKBRules(parentMT, vlist, true);
+                var collectedKB = findVisibleKBRules(parentMT, vlist, true);
                 if (collectedKB != null)
                 {
                     foreach (Rule r in collectedKB)
@@ -220,16 +247,16 @@ namespace LogicalParticleFilter1
                 writer.WriteLine("<META HTTP-EQUIV=\"REFRESH\" content=\"10\">");
             }
             writer.WriteLine("<html>");
-            Menu(writer, serverRoot);
+            TOCmenu(writer, serverRoot); 
             webWriter0(writer, action, query, mt, serverRoot, true);
             writer.WriteLine("</html>");
 
         }
 
-        private void Menu(StreamWriter writer, string serverRoot)
+        private void TOCmenu(StreamWriter writer, string serverRoot)
         {
-            writer.WriteLine("<a href='{0}siprolog/?q=list'>List Mts</a><br/>", serverRoot);
-            writer.WriteLine("<a href='{0}siprolog/?q=listing'>List All Rules</a><br/>", serverRoot);
+            writer.WriteLine("<a href='{0}siprolog/?q=list'>List Mts</a> ", serverRoot);
+            writer.WriteLine("<a href='{0}siprolog/?q=listing'>List All Rules</a> ", serverRoot);
             writer.WriteLine("<a href='{0}/query'>Sparql Query</a><br/>", PFEndpoint.serverRoot);
         }
         public void webWriter0(StreamWriter writer, string action, string queryv, string mt, string serverRoot, bool toplevel)
@@ -254,13 +281,13 @@ namespace LogicalParticleFilter1
                                 writer.WriteLine(p.ToLink(serverRoot) + "<br/>");
                             }
                             writer.WriteLine("<h2>Siprolog Mt Treed</h2>");
-                            KBGraph.PrintToWriter(writer, serverRoot);
+                            KBGraph.PrintToWriterTreeMts(writer, serverRoot);
                             return;
                         }
                         if (queryv.ToLower() == "listing")
                         {
                             List<string> allMts = new List<string>();
-                            writer.WriteLine("<h2>Siprolog Mt List</h2>");
+                            //writer.WriteLine("<h2>Siprolog Mt List</h2>");
                             foreach (PNode p in KBGraph.SortedTopLevelNodes)
                             {
                                 string pname = p.id;
@@ -268,7 +295,7 @@ namespace LogicalParticleFilter1
                                 //writer.WriteLine("<a href='{1}siprolog/?mt={0}'>{0}  (prob={2})</a><br/>", pname, serverRoot, p.probability);
                             }
                             writer.WriteLine("<h2>Siprolog Mt Treed</h2>");
-                            KBGraph.PrintToWriter(writer, serverRoot);
+                            KBGraph.PrintToWriterTreeMts(writer, serverRoot);
                             foreach (var list in allMts)
                             {
                                 writer.WriteLine("<hr/>");
@@ -280,28 +307,7 @@ namespace LogicalParticleFilter1
                     }
                     if (mt != null)
                     {
-                        writer.WriteLine("<h2>Siprolog Mt {0}</h2>", mt);
-                        writer.WriteLine("<h3> OutgoingEdges </h3>");
-                        PNode qnode = KBGraph.Contains(mt);
-                        KBGraph.PrintToWriter(qnode, 0, writer, serverRoot);
-                        writer.WriteLine("<h3> IncomingEdges </h3>");
-                        KBGraph.PrintToWriterInEdges(qnode, 0, writer, serverRoot);
-                        writer.WriteLine("<h3> KB Operations for {0}</h3>&nbsp;", mt);
-                        writer.WriteLine("<a href='{0}plot/?mt={1}&q=plot(X,Y)'>Plot Mt</a>&nbsp;", serverRoot, mt);
-                        writer.WriteLine("<a href='{0}plot/?mt={1}&a=autorefresh&q=plot(X,Y)'>Scope Mt</a> ", serverRoot, mt);
-                        writer.WriteLine("<a href='{0}siprolog/?mt={1}&a=autorefresh'>Watch Mt</a> ", serverRoot, mt);
-                        writer.WriteLine("<a href='{0}siprolog/?mt={1}&q=clear'>Clear</a> ", serverRoot, mt);
-                        writer.WriteLine("<a href='{0}xrdf/?mt={1}&q=pl2rdf'>Prolog2RDF</a> ", serverRoot, mt);
-                        writer.WriteLine("<a href='{0}xrdf/?mt={1}&q=rdf2pl'>RDF2Prolog</a> ", serverRoot, mt);
-                        writer.WriteLine("<br/>");
-                        writer.WriteLine("<h3> KB Contents </h3>");
-                        if (toplevel) writer.WriteLine("<hr/>"); 
-                        ensureCompiled(qnode);
-                        ArrayList kbContents = findVisibleKBRulesSorted(mt);
-                        foreach (Rule r in kbContents)
-                        {
-                            WriteRule(writer, r, qnode);
-                        }
+                        WriteMtInfo(writer, mt, serverRoot, toplevel);
                         if (toplevel) interactFooter(writer, mt, serverRoot);
                         return;
                     }
@@ -332,10 +338,124 @@ namespace LogicalParticleFilter1
 
         }
 
+
+        public void WriteMtInfo(StreamWriter writer, string mt, string serverRoot, bool toplevel)
+        {
+            writer.WriteLine("<h2>Siprolog Mt {0}</h2>", mt);
+            PNode qnode = KBGraph.Contains(mt);
+            if (qnode != null)
+            {
+                writer.WriteLine("<h3> OutgoingEdges </h3>");
+                KBGraph.PrintToWriterOutEdges(qnode, 0, writer, serverRoot);
+                writer.WriteLine("<h3> IncomingEdges </h3>");
+                KBGraph.PrintToWriterInEdges(qnode, 0, writer, serverRoot);
+                //KBGraph.ShowGenlMts(qnode, null, 0, writer, serverRoot);
+                writer.WriteLine("<h3> KB Operations for {0}</h3>&nbsp;", mt);
+                writer.WriteLine("<a href='{0}plot/?mt={1}&q=plot(X,Y)'>Plot Mt</a>&nbsp;", serverRoot, mt);
+                writer.WriteLine("<a href='{0}plot/?mt={1}&a=autorefresh&q=plot(X,Y)'>Scope Mt</a> ", serverRoot, mt);
+                writer.WriteLine("<a href='{0}siprolog/?mt={1}&a=autorefresh'>Watch Mt</a> ", serverRoot, mt);
+                writer.WriteLine("<a href='{0}siprolog/?mt={1}&q=clear'>Clear</a> ", serverRoot, mt);
+                writer.WriteLine("<a href='{0}xrdf/?mt={1}&q=pl2rdf'>Prolog2RDF</a> ", serverRoot, mt);
+                writer.WriteLine("<a href='{0}xrdf/?mt={1}&q=rdf2pl'>RDF2Prolog</a> ", serverRoot, mt);
+                writer.WriteLine("<br/>");
+                writer.WriteLine("<h3> KB Contents </h3>");
+                if (toplevel) writer.WriteLine("<hr/>");
+                ensureCompiled(qnode);
+            }
+            var kbContents = findVisibleKBRulesSorted(mt);
+            foreach (Rule r in kbContents)
+            {
+                WriteRule(writer, r, qnode);
+            }
+            var gwf = FindRepositoryKB(mt);
+            if (gwf != null)
+            {
+                var trips = gwf.rdfGraph.Triples;
+                writer.WriteLine("<h3> KB Triples {0}</h3>", trips.Count);
+                WriteEnumeration(writer, trips);
+            } else
+            {
+                writer.WriteLine("<h3> KB Triples {0}</h3>", "Not synced");                
+            }
+        }
+
         private void WriteRule(StreamWriter writer, Rule r, PNode qnode)
         {
             var mt = r.optHomeMt;
             writer.WriteLine("{0}{1}<br/>", r.ToString(), qnode.id == mt ? "" : ("&nbsp;&nbsp;% " + mt));
+        }
+
+        public static string StructToString(object t)
+        {
+            return StructToString(t, 2);
+        }
+
+        private static bool HasElements(ICollection props)
+        {
+            return props != null && props.Count > 0;
+        }
+        public static string StructToString(object t, int depth)
+        {
+            if (t == null) return "NULL";
+            Type structType = t.GetType();
+            if (t is IConvertible || t is String || t is Uri || t is Stream ) return "" + t;
+            if (depth < 0) return "^";// +t;
+            StringBuilder result = new StringBuilder();
+            if (t is ICollection)
+            {
+                ICollection ic = t as ICollection;
+                int max = 10;
+                result.Append("CollectionType: " + structType + " Count: " + ic.Count + " " + " Items: [");
+                foreach (var i in ic)
+                {
+                    result.Append(ic.Count + ": " + StructToString(i, depth - 1) + " ");
+                    max--;
+                    if (max < 1)
+                    {
+                        result.Append("...");
+                        break;
+
+                    }
+                }
+                result.Append("]");
+                return result.ToString().TrimEnd();
+            }
+            var fpub = BindingFlags.Public | BindingFlags.Instance;
+            var fpriv = BindingFlags.NonPublic | BindingFlags.Instance;
+            FieldInfo[] fields = structType.GetFields(fpub);
+            PropertyInfo[] props = structType.GetProperties(fpub);
+            bool hasProps = HasElements(props);
+            if (!HasElements(fields) && !hasProps)
+            {
+                fields = structType.GetFields(fpriv);
+            }
+            bool needSimpleToString = true;
+
+            if (!HasElements(fields))
+            {
+                props = hasProps ? props : structType.GetProperties(fpriv);
+                foreach (PropertyInfo prop in props)
+                {
+                    if (prop.GetIndexParameters().Length != 0) continue;
+                    needSimpleToString = false;
+                    result.Append("{" + prop.Name + ": " + StructToString(prop.GetValue(t, null), depth - 1) + "}");
+                }
+            }
+            if (needSimpleToString)
+            {
+                foreach (FieldInfo prop in fields)
+                {
+                    needSimpleToString = false;
+                    result.Append("{" + prop.Name + ": " + StructToString(prop.GetValue(t), depth - 1) + "}");
+                }
+            }
+
+            if (needSimpleToString)
+            {
+                return "" + t;
+            }
+
+            return result.ToString().TrimEnd();
         }
 
         public void interactQuery(StreamWriter writer, string query, string mt, string serverRoot)
@@ -459,7 +579,7 @@ namespace LogicalParticleFilter1
             if (focus == null) return;
             if (focus.dirty)
             {
-                ArrayList outr = parseRuleset(focus.ruleset, focus.Id);
+                var outr = parseRuleset(focus.ruleset, focus.Id);
                 lock (focus.pdb.rules)
                 {
                     focus.pdb.rules = outr;
@@ -480,7 +600,7 @@ namespace LogicalParticleFilter1
             fact = fact.Replace(", ", ",");
             fact = fact.Replace("\n", "");
             focusMT = focus.id;
-            ArrayList rules = focus.pdb.rules;
+            var rules = focus.pdb.rules;
             lock (rules) for (int i = 0; i < rules.Count; i++)
             {
                 Rule r = (Rule) rules[i];
@@ -539,10 +659,10 @@ namespace LogicalParticleFilter1
                 {
                     focus.ruleset = focus.ruleset + "\n" + ruleSet + "\n";
                     focus.pdb.index.Clear();
-                    ArrayList outr = parseRuleset(ruleSet, startMT);
+                    var outr = parseRuleset(ruleSet, startMT);
                     lock (focus.pdb.rules)
                     {
-                        foreach (var r in outr)
+                        foreach (Rule r in outr)
                         {
                             focus.pdb.rules.Add(r);
                         }
@@ -734,13 +854,13 @@ namespace LogicalParticleFilter1
         public void parseRuleset()
         {
             inGlobalTest();
-            ArrayList outr = parseRuleset(testruleset, "");
+            var outr = parseRuleset(testruleset, "");
             testdb.rules = outr;
         }
-        public ArrayList parseRuleset(string rulesIn, string homeMt)
+        public RuleList parseRuleset(string rulesIn, string homeMt)
         {
             string[] rules = rulesIn.Split('\n');
-            ArrayList outr = new ArrayList();
+            RuleList ruleList = new RuleList();
             var outi = 0;
             for (var r = 0; r < rules.Length; r++)
             {
@@ -752,12 +872,12 @@ namespace LogicalParticleFilter1
                     var or = ParseRule(new Tokeniser(rule));
                     if (or == null) continue;
                     or.optHomeMt = homeMt;
-                    outr.Insert(outi++, or);
+                    ruleList.Add(or);
                     // print ("Rule "+outi+" is : ");
                     if (show) or.print();
                 }
             }
-            return outr;
+            return ruleList;
         }
 
         public void defineBuiltIns()
@@ -1198,7 +1318,7 @@ namespace LogicalParticleFilter1
             if (termIsVar)
             {
                 // if its a var then sorry, just do it all ...
-                localRules = db.rules;
+                localRules = db.rules.arrayList;
             }
             else
             {
@@ -1838,29 +1958,111 @@ namespace LogicalParticleFilter1
 
         }
 
+        public class RuleList : IEnumerable
+        {
+            internal ArrayList arrayList = new ArrayList();
+            internal PDB syncPDB;
+
+            public int Count
+            {
+                get { return arrayList.Count; }
+            }
+
+            public void Add(Rule r)
+            {
+                arrayList.Add(r);
+            }
+            public RuleList()
+            {
+
+            }
+
+            public void RemoveAt(int i)
+            {
+                Rule r = this[i];
+                Release(r);
+                arrayList.RemoveAt(i);
+            }
+
+            private void Release(Rule r)
+            {
+                if (r.instanceTriple == null) return;
+                throw new NotImplementedException();
+            }
+
+            public Rule this[int i]
+            {
+                get { return (Rule)arrayList[i]; }
+                set { arrayList[i] = value; }
+            }
+
+            public void Clear()
+            {
+                if (syncPDB != null)
+                {
+                    lock (syncPDB.index)
+                    {
+                        syncPDB.index.Clear();
+                    }
+                }
+                foreach (Rule rule in arrayList)
+                {
+                    Release(rule);
+                }
+                arrayList.Clear();
+            }
+
+            public IEnumerator GetEnumerator()
+            {
+                return arrayList.GetEnumerator();
+            }
+        }
         public class PDB
         {
             static public Hashtable builtin = new Hashtable();
-            public ArrayList rules = new ArrayList();
+            private RuleList _rules;
 
             // A fast index for the database
             public Dictionary<string, ArrayList> index = new Dictionary<string, ArrayList>();
 
+            public PDB()
+            {
+                _rules = new RuleList();
+                _rules.syncPDB = this;
+            }
+
             public void initIndex()
             {
                 index["_varpred_"] = new ArrayList();
+                var rules = this.rules;
                 lock (rules) for (int i = 0; i < rules.Count; i++)
-                {
-                    Rule rule = (Rule)rules[i];
-                    string name = rule.head.name;
-                    if (!index.ContainsKey(name)) { index[name] = new ArrayList(); }
-                    index[name].Add(rule);
-                    if (rule.head.headIsVar())
                     {
-                        index["_varpred_"].Add(rule);
+                        Rule rule = (Rule)rules[i];
+                        string name = rule.head.name;
+                        if (!index.ContainsKey(name)) { index[name] = new ArrayList(); }
+                        index[name].Add(rule);
+                        if (rule.head.headIsVar())
+                        {
+                            index["_varpred_"].Add(rule);
+                        }
                     }
-                }
 
+            }
+            public RuleList rules
+            {
+                get
+                {
+                    return _rules;
+                }
+                set
+                {
+                    if (Object.ReferenceEquals(_rules, value)) return;
+                    if (_rules.Count > 0)
+                    {
+                        _rules.Clear();
+                    }
+                    _rules = value;
+                }
             }
         }
 
@@ -1924,7 +2126,13 @@ namespace LogicalParticleFilter1
                     return tlist.Count;
                 }
             }
-
+            public override TermList ArgList
+            {
+                get
+                {
+                    return tlist;
+                }
+            }
             public TermList list
             {
                 get { return tlist; }
@@ -2131,7 +2339,7 @@ namespace LogicalParticleFilter1
         }
 
 
-        public class Rule
+        public partial class Rule
         {
             public string optHomeMt;
             // Rule = (Head, Body)
@@ -3258,18 +3466,18 @@ namespace LogicalParticleFilter1
                 }
             }
 
-            public void PrintToWriter(StreamWriter writer, string serverRoot)
+            public void PrintToWriterTreeMts(StreamWriter writer, string serverRoot)
             {
                 writer.WriteLine("<ul>");
                 foreach (PNode node in SortedTopLevelNodes)
                 {
-                    PrintToWriter(node, 0, writer, serverRoot);
+                    PrintToWriterOutEdges(node, 0, writer, serverRoot);
 
                 }
                 writer.WriteLine("</ul>");
             }
 
-            public void PrintToWriter(PNode node, int indentation, StreamWriter writer, string serverRoot)
+            public void PrintToWriterOutEdges(PNode node, int indentation, StreamWriter writer, string serverRoot)
             {
                 if (node == null) return;
                 //writer.Write("<p>");
@@ -3279,7 +3487,7 @@ namespace LogicalParticleFilter1
                 writer.WriteLine("<ul>");
                 foreach (PEdge e in node.OutgoingEdges)
                 {
-                    if (indentation < 10) PrintToWriter(e.EndNode, indentation + 1, writer, serverRoot);
+                    if (indentation < 10) PrintToWriterOutEdges(e.EndNode, indentation + 1, writer, serverRoot);
                 }
                 writer.WriteLine("</ul>");
             }

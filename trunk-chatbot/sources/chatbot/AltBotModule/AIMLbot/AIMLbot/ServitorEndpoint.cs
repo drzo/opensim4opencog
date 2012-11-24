@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -46,20 +47,25 @@ namespace AltAIMLbot
             myServer.beginService(prologEngine);
         }
 
-        public void webWriter(HttpListenerContext context, StreamWriter writer, string action, string query, string path, string mt, string root)
+        public void webWriter(HttpListenerContext context, StreamWriter writer, string action, string query, string path, string mt, string serverRoot)
         {
             mt = mt ?? "rdfMT";
             BeginsWith("./xrdf/", ref path);
-            if (query=="pl2rdf")
-            {
-                SIProlog.GraphWithDef graph = prologEngine.MakeRepositoryKB(mt);
-            }
+            SIProlog.GraphWithDef graph = null;
             if (query == "rdf2pl")
             {
-                SIProlog.GraphWithDef graph = prologEngine.MakeRepositoryKB(mt);
-            }
-            throw new NotImplementedException();
+                graph = prologEngine.MakeRepositoryKB(mt);
+                graph.pushGraphToKB();
+            } if (query == "pl2rdf" || true)
+            {
+                graph = prologEngine.MakeRepositoryKB(mt);
+                graph.pushRulesToGraph();
+            }            
+            graph.prologEngine.webWriter(writer, null, null, graph.prologMt, serverRoot);
+            return;
+            ////throw new NotImplementedException();
         }
+
 
 
         private bool BeginsWith(string value, ref string path)

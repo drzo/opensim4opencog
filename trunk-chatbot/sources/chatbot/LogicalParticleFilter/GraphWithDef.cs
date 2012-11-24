@@ -1,15 +1,44 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using LogicalParticleFilter1;
 using VDS.RDF;
+using VDS.RDF.Nodes;
 using VDS.RDF.Parsing;
 using VDS.RDF.Query;
 using VDS.RDF.Writing;
 
+namespace ExtensionMethods
+{
+
+    public static class RDFExtensions
+    {
+        //static public Dictionary<SIProlog.GraphWithDef.Rule, INode> rule2Node = new Dictionary<SIProlog.GraphWithDef.Rule, INode>();
+        static public Dictionary<SIProlog.Rule, INode> rule2Node = new Dictionary<SIProlog.Rule, INode>();
+
+        public static INode instanceTriple(this SIProlog.Rule rule)
+        {
+            INode node;
+            if (rule2Node.TryGetValue(rule, out node))
+            {
+                return node;
+            }
+            return null;
+        }
+        public static int WordCount(this String str)
+        {
+            return str.Split(new char[] { ' ', '.', '?' },
+                             StringSplitOptions.RemoveEmptyEntries).Length;
+        }
+    }
+}
 namespace LogicalParticleFilter1
 {
+    using ExtensionMethods;
     public partial class SIProlog
-    {
+    {       
         readonly private IGraph rdfDefinations = new Graph();
         public Dictionary<string, GraphWithDef> GraphForMT = new Dictionary<string, GraphWithDef>();
         private static Dictionary<string, PredicateProperty> SharedGlobalPredDefs = new Dictionary<string, PredicateProperty>();
@@ -17,7 +46,7 @@ namespace LogicalParticleFilter1
 
         private void defineRDFExtensions()
         {
-            const string rdfDefMT = "rdfDefMT";
+            const string rdfDefMT = "globalRDFDefinationsMT";
             var node = FindOrCreateKB(rdfDefMT);
             GraphForMT[rdfDefMT] = new GraphWithDef(rdfDefMT, this, rdfDefinations, rdfDefinations) {PrologKB = node};
             mtest();
@@ -37,15 +66,39 @@ namespace LogicalParticleFilter1
             }
         }
 
+        public void WriteEnumeration<T>(StreamWriter writer, IEnumerable<T> triple)
+        {
+            writer.WriteLine("<pre>");
+            foreach (var t in triple)
+            {
+                string ts = t.ToString();
+                writer.WriteLine(ts);
+            }
+            writer.WriteLine("</pre>");
+        }
+        public GraphWithDef FindRepositoryKB(string mt)
+        {
+            lock (GraphForMT)
+            {
+                GraphWithDef graph;
+                if (!GraphForMT.TryGetValue(mt, out graph))
+                {
+                    return null;
+                }
+                return graph;
+            }
+        }
+
 
         #region rdfEndpoint
-        public void rdfRemoteEndpointToKB(string endpointURI, string graphKBName, string query)
+        public void rdfRemoteEndpointToKB(string endpointURI, string graphKBName, string query, string assert)
         {
             //Define a remote endpoint
             //Use the DBPedia SPARQL endpoint with the default Graph set to DBPedia
             SparqlRemoteEndpoint endpoint = new SparqlRemoteEndpoint(new Uri(endpointURI));
 
-
+            var gwd = MakeRepositoryKB(graphKBName);
+            ICollection<Triple> neededTriples = new List<Triple>();
             string miniMt = "";
 
             //Use the extension method ExecuteQuery() to make the query against the Graph
@@ -71,11 +124,16 @@ namespace LogicalParticleFilter1
                         foreach (string vname in r.Variables)
                         {
                             INode value = r[vname];
-                            string strVal = value.ToString();
+                            string strVal = gwd.RdfToPart(value, neededTriples).ToPLStringReadable();
                             Console.WriteLine("BIND: {0} = {1}", vname, strVal);
                             outMap[vname] = strVal;
                         }
-                        miniMt += String.Format("triple(\"{0}\",\"{1}\",\"{2}\").\n", outMap["s"].ToString(), outMap["p"].ToString(), outMap["o"].ToString());
+                        var assertIt = assert ?? "triple(?s,?p,?o)";
+                        foreach (KeyValuePair<string, string> map in outMap)
+                        {
+                            assertIt = assertIt.Replace("?" + map.Key, SIProlog.MakeReadbleString(map.Value));
+                        }
+                        miniMt += String.Format("{0}.\n", assertIt);
                     }
                 }
                 else if (results is IGraph)
@@ -164,7 +222,7 @@ namespace LogicalParticleFilter1
             List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
             askQuery("triple(S,P,O)", mt, out bingingsList);
             bool useTripeQuery = true;
-            if (bingingsList == null)
+            if (bingingsList == null || bingingsList.Count <= 0)
             {
                 useTripeQuery = false;
                 var rules = findVisibleKBRulesSorted(mt);
@@ -178,18 +236,28 @@ namespace LogicalParticleFilter1
             var rdfGraph = rdfGraphWithDefs.rdfGraph;
 
             if (!useTripeQuery) return;
-            StringParser.Parse(rdfGraph, "@prefix ourkb: <http://localhost/onto#> .");
+            StringParser.Parse(rdfGraph, "@prefix robokind: <http://localhost/onto#> .");
             foreach (Dictionary<string, string> bindings in bingingsList)
             {
                 //foreach (string k in bindings.Keys)
                 //{
-                rdfGraph.Assert(new Triple(rdfGraphWithDefs.C(bindings["S"]), rdfGraphWithDefs.C(bindings["P"]),
+                rdfGraphAssert(rdfGraph, new Triple(rdfGraphWithDefs.C(bindings["S"]), rdfGraphWithDefs.C(bindings["P"]),
                                            rdfGraphWithDefs.C(bindings["O"])));
                 //string rdfLine = String.Format(@"<{0}> <{1}> <{2}> .", bindings["S"].ToString(), bindings["P"].ToString(), bindings["O"].ToString());
                 //StringParser.Parse(rdfGraph, rdfLine);
                 // }
             }
 
+        }
+
+        static public bool rdfGraphAssert(IGraph rdfGraph, Triple triple)
+        {
+            lock (rdfGraph)
+            {
+                if (rdfGraph.ContainsTriple(triple)) return false;
+                rdfGraph.Assert(triple);
+                return true;
+            }
         }
 
         public void refreshRDFGraphOLD()
@@ -199,12 +267,12 @@ namespace LogicalParticleFilter1
             // Is there anything we want to update rdfGraph with ?
             List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
             askQuery("triple(S,P,O)", "spindleMT", out bingingsList);
-            StringParser.Parse(rdfGraph, "@prefix ourkb: <http://localhost/onto#> .");
+            StringParser.Parse(rdfGraph, "@prefix robokind: <http://localhost/onto#> .");
             foreach (Dictionary<string, string> bindings in bingingsList)
             {
                 //foreach (string k in bindings.Keys)
                 //{
-                string rdfLine = String.Format(@"<ourkb:{0}> <ourkb:{1}> <ourkb:{2}> .", bindings["S"].ToString(), bindings["P"].ToString(), bindings["O"].ToString());
+                string rdfLine = String.Format(@"<robokind:{0}> <robokind:{1}> <robokind:{2}> .", bindings["S"].ToString(), bindings["P"].ToString(), bindings["O"].ToString());
                 StringParser.Parse(rdfGraph, rdfLine);
                 // }
             }
@@ -226,8 +294,8 @@ namespace LogicalParticleFilter1
             ILiteralNode helloWorld = g.CreateLiteralNode("Hello World");
             ILiteralNode bonjourMonde = g.CreateLiteralNode("Bonjour tout le Monde", "fr");
 
-            g.Assert(new Triple(dotNetRDF, says, helloWorld));
-            g.Assert(new Triple(dotNetRDF, says, bonjourMonde));
+            rdfGraphAssert(g, new Triple(dotNetRDF, says, helloWorld));
+            rdfGraphAssert(g, new Triple(dotNetRDF, says, bonjourMonde));
 
             foreach (Triple t in g.Triples)
             {
@@ -242,28 +310,44 @@ namespace LogicalParticleFilter1
             rdfxmlwriter.Save(g, "HelloWorld.rdf");
 
             rdfImportToKB(g, "testRDF", "SELECT * WHERE { ?s ?p ?o }");
-            rdfRemoteEndpointToKB("http://dbpedia.org/sparql", "dbpediaKB", "SELECT DISTINCT ?o WHERE { ?s a ?o } LIMIT 100");
+            rdfRemoteEndpointToKB("http://dbpedia.org/sparql", "dbpediaKB",
+                                  "SELECT DISTINCT ?o WHERE { ?s a ?o } LIMIT 100",
+                                  "isa(?o,\"http://www.w3.org/2002/07/owl#Class\")");
+            rdfRemoteEndpointToKB("http://dbpedia.org/sparql", "dbpediaKB2", "SELECT * WHERE { ?s ?p ?o } LIMIT 1000",
+                                  null);
 
         }
         #endregion
 
+        public partial class Rule
+        {
+            public INode instanceTriple;
+        }
 
         public class PredicateProperty
         {
             public string name;
             public int arity;
             public string classname;
+            public string keyname;
             public int instanceNumber = 1;
             public readonly Dictionary<int, ArgType> argDefs;
             public ILiteralNode classNode;
             public string assertionMt;
-            public List<Triple> inations = new List<Triple>();
+            public ICollection<Triple> inations = new List<Triple>();
+
+            public override string ToString()
+            {
+                return StructToString(this, 2);
+            }
 
             public PredicateProperty(int arity1)
             {
                 arity = arity1;
                 argDefs = new Dictionary<int, ArgType>();
             }
+
+
         }
 
         public class ArgType
@@ -276,28 +360,37 @@ namespace LogicalParticleFilter1
             {
                 return def.CreateLiteralNode(classname);
             }
-
+            public override string ToString()
+            {
+                return StructToString(this, 2);
+            }
             public void AddDomainType(PredicateProperty property)
             {
-                throw new NotImplementedException();
+               // throw new NotImplementedException();
             }
         }
         public partial class GraphWithDef
         {
+            public override string ToString()
+            {
+                return StructToString(this, 1);
+            }
+
             public IGraph rdfGraph;
             public IGraph definations;
             public string prologMt;
-            List<PredicateProperty> localPreds = new List<PredicateProperty>();
-            List<ArgType> localArgTypes = new List<ArgType>();
-            List<Term> localPredInstances = new List<Term>();
+
+            public List<PredicateProperty> localPreds = new List<PredicateProperty>();
+            public List<ArgType> localArgTypes = new List<ArgType>();
+            public List<Term> localPredInstances = new List<Term>();
             private PNode kbNode;
-            private SIProlog prologEngine;
+            public SIProlog prologEngine;
 
             public PNode PrologKB
             {
                 get
                 {
-                    kbNode = kbNode ?? prologEngine.FindOrCreateKB(prologMt);
+                    kbNode = kbNode ?? prologEngine.KBGraph.Contains(prologMt);
                     return kbNode;
                 }
                 set { kbNode = value; }
@@ -337,12 +430,17 @@ namespace LogicalParticleFilter1
                     if (!SharedGlobalPredDefs.TryGetValue(key, out def))
                     {
                         newlyCreated = true;
-                        SharedGlobalPredDefs[key] = def = new PredicateProperty(arity) { name = predName, classname = key };
+                        string predClassName = key + "_PredClass";
+                        SharedGlobalPredDefs[key] =
+                            def = new PredicateProperty(arity) {name = predName, keyname = key, classname = predClassName};
+                    }
+                    //if (newlyCreated)
+                    {
                         var classNode = def.classNode = definations.CreateLiteralNode(def.classname);
                         def.inations.Add(new Triple(classNode, InstanceOf, PrologPredicateClass));
                         for (int i = 0; i < arity; i++)
                         {
-                            string argtypename = key + "_arg" + (1 + i);
+                            string argtypename = key + "_Arg" + (1 + i);
                             ArgType adef;
                             lock (SharedGlobalArgTypeDefs)
                             {
@@ -372,7 +470,7 @@ namespace LogicalParticleFilter1
                 {
                     foreach (Triple t in def.inations)
                     {
-                        definations.Assert(t);
+                        rdfGraphAssert(definations, t);
                     }
                 }
                 return def;
@@ -404,50 +502,57 @@ namespace LogicalParticleFilter1
 
             private void AddData(Rule rule, PredicateProperty headDef)
             {
-                List<Triple> headtriples = new List<Triple>();
-                if (rule.body == null)
+                if (rule.instanceTriple != null) return;
+                ICollection<Triple> headtriples = new List<Triple>();
+                lock (rule)
                 {
-                    CreateSubject(rule.head, headDef, headtriples, false);
-                    foreach (Triple t in headtriples)
+                    if (rule.body == null)
                     {
-                        rdfGraph.Assert(t);
+                        rule.instanceTriple = CreateSubject(rule.head, headDef, headtriples, false);
+                        foreach (Triple t in headtriples)
+                        {
+                            rdfGraphAssert(rdfGraph, t);
+                        }
+                        return;
                     }
-                    return;
                 }
-                CreateSubject(rule.head, headDef, headtriples, true);
-                List<Triple> bodytriples = new List<Triple>();
+                ICollection<Triple> bodytriples = new List<Triple>();
+                rule.instanceTriple = CreateSubject(rule.head, headDef, headtriples, true);
                 foreach (Part p in rule.body.plist.ArgList.ToList())
                 {
                     var t = PartToRdf(p, bodytriples);
+
                 }
                 Triple trule = CreateImplication(bodytriples, headtriples);
-                rdfGraph.Assert(trule);
+                rdfGraphAssert(rdfGraph, trule);
             }
 
-            private Triple CreateImplication(List<Triple> bodytriples, List<Triple> headtriples)
+            private Triple CreateImplication(ICollection<Triple> bodytriples, ICollection<Triple> headtriples)
             {
                 return new Triple(ToBracket(bodytriples), definations.CreateLiteralNode("log:implies"),
-                                  ToBracket(bodytriples));
+                                  ToBracket(headtriples));
             }
 
-            private INode ToBracket(List<Triple> bodytriples)
+            private INode ToBracket(ICollection<Triple> bodytriples)
             {
-                IRdfReader parser = new Notation3Parser();
-                parser.Load(definations, new StringReader("{  ?x a :Person . ?x a :Child .}  => { ?x  :mother [ a :Person] }."));
-                var group = definations.CreateBlankNode();
-
+                Graph subgraph = new Graph();
+                foreach (Triple triple in bodytriples)
+                {
+                    subgraph.Assert(triple);
+                }
+                var group = definations.CreateGraphLiteralNode(subgraph);
                 return group;
             }
 
-            private INode CreateSubject(Term term, PredicateProperty headDefOrNull, List<Triple> triples, bool isVar)
+            private INode CreateSubject(Term term, PredicateProperty headDefOrNull, ICollection<Triple> triples, bool isVar)
             {
                 var headDef = headDefOrNull ?? GetPredicateProperty(term);
-                INode subj = CreateInstance(headDef, triples, true);
+                INode subj = CreateInstance(headDef, triples, isVar);
                 AddTriplesSubject(headDef, term, triples, subj);
                 return subj;
             }
 
-            private void AddTriplesSubject(PredicateProperty headDef, Term term, List<Triple> list, INode subj)
+            private void AddTriplesSubject(PredicateProperty headDef, Term term, ICollection<Triple> list, INode subj)
             {
                 int argNum = 0;
                 foreach (Part part in term.Args)
@@ -459,24 +564,24 @@ namespace LogicalParticleFilter1
                 }
             }
 
-            private INode CreateAntecedantNode(Term term, List<Triple> triples)
+            private INode CreateAntecedantNode(Term term, ICollection<Triple> triples)
             {
                 PredicateProperty pp = GetPredicateProperty(term);
                 return CreateSubject(term, pp, triples, true);
             }
 
-            private INode CreateInstance(PredicateProperty headDef, List<Triple> graph, bool isVar)
+            private INode CreateInstance(PredicateProperty headDef, ICollection<Triple> graph, bool isVar)
             {
                 int nxt = headDef.instanceNumber++;
-                string iname = headDef.classname + "_i" + nxt;
+                string iname = headDef.keyname + "_PredInst" + nxt;
                 INode iln = isVar ? definations.CreateVariableNode(iname) : (INode)definations.CreateLiteralNode(iname);
-                var a = definations.CreateLiteralNode(":a");
+                var a = InstanceOf;
                 var cn = definations.CreateLiteralNode(headDef.classname);
                 graph.Add(new Triple(iln, a, cn));
                 return iln;
             }
 
-            private INode PartToRdf(Part part, List<Triple> triples)
+            private INode PartToRdf(Part part, ICollection<Triple> triples)
             {
                 if (part is Atom)
                 {
@@ -491,6 +596,34 @@ namespace LogicalParticleFilter1
                     return CreateAntecedantNode((Term)part, triples);
                 }
                 throw new NotImplementedException("ToRDF on " + part);
+            }
+
+            public Part RdfToPart(INode node, ICollection<Triple> triples)
+            {
+                if (node is StringNode)
+                {
+                    return new Atom(node.ToString());
+                } 
+                if (node is UriNode)
+                {
+                    return new Atom(node.ToString());
+                }
+                throw new NotImplementedException("ToProlog on " + node);
+            }
+
+            public void pushRulesToGraph()
+            {
+                prologEngine.pushRulesToGraph(prologMt, this);
+            }
+
+            public void pushGraphToKB()
+            {               
+                prologEngine.pushRulesToGraph(prologMt, this);
+            }
+
+            public BaseTripleCollection Triples
+            {
+                get { return rdfGraph.Triples; }
             }
         }
     }
