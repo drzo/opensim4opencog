@@ -387,6 +387,26 @@ namespace LogicalParticleFilter1
             return PrintNode(root, "") + Environment.NewLine + PrologPrintNode(root, "", "result");
 
         }
+
+        public void GenRulesFromMt(SIProlog pEngine, string sourceMt, string destMt)
+        {
+            GenRulesFromMt(pEngine, sourceMt, destMt, "result");
+        }
+        public void GenRulesFromMt(SIProlog pEngine, string sourceMt, string destMt,string targetAttribute)
+        {
+            
+            MtDataSource samples = new MtDataSource(pEngine,sourceMt);
+
+            TreeAttributeCollection attributes = samples.GetValidAttributeCollection();
+
+            DecisionTree id3 = new DecisionTree();
+            TreeNode root = id3.mountTree(samples, targetAttribute, attributes);
+
+            string prologCode = PrologPrintNode(root, "", targetAttribute);
+            pEngine.insertKB(prologCode, destMt);
+
+        }
+
         public string PrintNode(TreeNode root, string tabs)
         {
             string returnString = String.Empty;
