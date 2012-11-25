@@ -95,7 +95,7 @@ namespace AltAIMLbot.Utils
                 {
                     Console.WriteLine("WARNING: '{0}' does not exist", filename);
                 }
-                if (this.bot.rapStoreDirectory != null)
+                if (this.bot.UseRapstoreDB)
                 {
                     var extDB = bot.GetGraph(graphName);
                     if (extDB.wasloaded(filename)) return;
@@ -216,7 +216,7 @@ namespace AltAIMLbot.Utils
             lock (ExternDB.mylock)
             {
 
-                if (this.bot.rapStoreDirectory != null)
+                if (this.bot.UseRapstoreDB)
                 {
                     //var extDB = bot.GetGraph(graphName);
                     //extDB.Close();
@@ -260,7 +260,7 @@ namespace AltAIMLbot.Utils
             //Console.WriteLine("Check: loadAIMLFromXML : (doc isNOT XmlDocument) filename={0}", filename);
             {
 
-                if (this.bot.rapStoreDirectory != null)
+                if (this.bot.UseRapstore(graphName))
                 {
                     var extDB0 = bot.GetGraph(graphName);
 
@@ -282,14 +282,10 @@ namespace AltAIMLbot.Utils
                         //extDB._dbdir = this.bot.rapStoreDirectory;
                     }
                 }
-                else
-                {
-                    Console.WriteLine("Check: this.bot.rapStoreDirectory == null");
-                }
                 Console.WriteLine("Check: loadAIMLFromXML processing {0}",filename);
                 cleanXMLNS(doc);
                 LoadBXML(doc, filename);
-                if (this.bot.rapStoreDirectory != null)
+                if (this.bot.UseRapstore(graphName))
                 {
                     var extDB0 = bot.GetGraph(graphName);
                     var extDB = extDB0.ensureEdb();
@@ -543,7 +539,7 @@ namespace AltAIMLbot.Utils
                     // //this.bot.Graphmaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
                     //ourGraphMaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
 
-                    if (this.bot.rapStoreDirectory != null)
+                    if (this.bot.UseRapstore(graphName))
                     {
                         var extDB = bot.GetGraph(graphName).ensureEdb();
                         Node.addCategoryDB("", categoryPath, template.OuterXml, filename, 1, 1, "", extDB);
@@ -624,7 +620,7 @@ namespace AltAIMLbot.Utils
                 try
                 {
                     //this.bot.Graphmaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
-                    if (this.bot.rapStoreDirectory != null)
+                    if (this.bot.UseRapstore(graphName))
                     {
                         var extDB = bot.GetGraph(graphName).ensureEdb();
                         Node.addCategoryDB("", categoryPath, templateXML, filename, 1, 1, "", extDB);

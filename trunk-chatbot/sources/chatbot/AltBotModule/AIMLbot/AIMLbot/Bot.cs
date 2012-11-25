@@ -221,14 +221,33 @@ namespace RTParser
             return HostSystem.FileSystemPath(HostSystem.Combine(PersonalAiml, path));
         }
         private string _rapStoreDirectory;
-        public string rapStoreDirectory
+        public string rapStoreDirectoryStem
         {
             get
             {
-                return PersonalizePath(_rapStoreDirectory);
+                if (!UseRapstoreDB)
+                {
+                    // legacy behavour
+                    // return null;                   
+                }
+                else
+                {
+                    if (string.IsNullOrEmpty(_rapStoreDirectory))
+                    {
+                        Console.WriteLine(" - WARN - Bot rapStoreDirectory Empty");
+                    }
+                }
+                return PersonalizePath(_rapStoreDirectory) ?? PersonalizePath("./rapstore");
             }
             set
             {
+                if (string.IsNullOrEmpty(value))
+                {
+                    Console.WriteLine("setting Bot rapStoreDirectory Empty");
+                    UseRapstoreDB = false;
+                    _rapStoreDirectory = null;
+                    return;
+                }
                 _rapStoreDirectory = value;
             }
         }
@@ -554,6 +573,28 @@ namespace RTParser
             set { _dataDir = value; }
         }
 
+        internal bool _UseRapstoreDB = true;
+        public bool UseRapstoreDB
+        {
+            get
+            {
+                if (_UseRapstoreDB)
+                {
+                    if (_rapStoreDirectory == null)
+                    {
+                        Console.WriteLine("Check: this.bot.rapStoreDirectory == null");
+                    }
+                }
+                return _UseRapstoreDB;
+            }
+            set { _UseRapstoreDB = value; }
+        }
+        public bool UseRapstore(string graphName)
+        {
+            if (!UseRapstoreDB) return false;
+            // later on decide if we will set some graphs as non rapstoreusing
+            return true;
+        }
 
         /// <summary>
         /// A general stack to remember things to mention later
@@ -1046,7 +1087,7 @@ namespace RTParser
           lock (ExternDB.mylock)
             {
 
-                if (rapStoreDirectory != null)
+                if (UseRapstoreDB)
                 {
                     var GM = Graphmaster ?? GetGraph("default");
                     var chatDB = GM.ensureEdb();
@@ -1061,7 +1102,7 @@ namespace RTParser
            lock (ExternDB.mylock)
            {
 
-               if (rapStoreDirectory != null)
+               if (UseRapstoreDB)
                {
                    var GM = Graphmaster;
                    var chatDB = GM.ensureEdb();                   
@@ -1098,6 +1139,7 @@ namespace RTParser
         {
             GraphMaster ourGraphMaster = this.GetGraph(graphID) ?? Graphmaster;
             request.CurrentGraph = ourGraphMaster;
+            graphID = ourGraphMaster.ScriptingName;
 
             User user = request.user;
             var result = new MasterResult(user, this, request);
@@ -1117,7 +1159,7 @@ namespace RTParser
                     string[] rawSentences = splitter.Transform();
 
 
-                    if (rapStoreDirectory != null)
+                    if (UseRapstore(graphID))
                     {
                         ourGraphMaster.ensureEdb();
                     }
@@ -1210,7 +1252,7 @@ namespace RTParser
 
                         result.SubQueries.Add(query);
                     }
-                    if (rapStoreDirectory != null)
+                    if (UseRapstore(graphID))
                     {
                         var chatDB = ourGraphMaster.chatDB;
                         if (chatDB != null)

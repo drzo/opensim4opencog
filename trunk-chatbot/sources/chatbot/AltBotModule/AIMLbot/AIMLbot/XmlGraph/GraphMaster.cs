@@ -1714,11 +1714,11 @@ namespace RTParser.Utils
                     string rapStoreDirectory = "";
                     if (IsMicrosoftCLR())
                     {
-                        rapStoreDirectory = theBot.rapStoreDirectory.TrimEnd("/\\".ToCharArray()) + "_" + graphName + "/";
+                        rapStoreDirectory = theBot.rapStoreDirectoryStem.TrimEnd("/\\".ToCharArray()) + "_" + graphName + "/";
                     }
                     else
                     {
-                        rapStoreDirectory = theBot.rapStoreDirectory.TrimEnd(Path.DirectorySeparatorChar) + "_" + graphName + Path.DirectorySeparatorChar;
+                        rapStoreDirectory = theBot.rapStoreDirectoryStem.TrimEnd(Path.DirectorySeparatorChar) + "_" + graphName + Path.DirectorySeparatorChar;
                     }
 
                     chatDB = new ExternDB(rapStoreDirectory);
@@ -1743,11 +1743,11 @@ namespace RTParser.Utils
                     string rapStoreDirectory = "";
                     if (IsMicrosoftCLR())
                     {
-                        rapStoreDirectory = theBot.rapStoreDirectory.TrimEnd("/\\".ToCharArray()) + "_" + graphName + "/";
+                        rapStoreDirectory = theBot.rapStoreDirectoryStem.TrimEnd("/\\".ToCharArray()) + "_" + graphName + "/";
                     }
                     else
                     {
-                        rapStoreDirectory = theBot.rapStoreDirectory.TrimEnd(Path.DirectorySeparatorChar) + "_" + graphName + Path.DirectorySeparatorChar;
+                        rapStoreDirectory = theBot.rapStoreDirectoryStem.TrimEnd(Path.DirectorySeparatorChar) + "_" + graphName + Path.DirectorySeparatorChar;
                     }
 
                     chatDB = new ExternDB(rapStoreDirectory);

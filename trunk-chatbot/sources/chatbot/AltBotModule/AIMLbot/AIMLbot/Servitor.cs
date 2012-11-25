@@ -120,14 +120,18 @@ namespace AltAIMLbot
         {
             get
             {
-                if (curBot != null) return curBot.rapStoreDirectory;                
+                if (curBot != null) return curBot.rapStoreDirectoryStem;                
                 return _rapStoreDirectory;
             }
             set
             {
+                if (string.IsNullOrEmpty(value))
+                {
+                    Console.WriteLine("setting Servitor rapStoreDirectory Empty");
+                }
                 if (curBot != null)
                 {
-                    curBot.rapStoreDirectory = value;
+                    curBot.rapStoreDirectoryStem = value;
                 }
                 _rapStoreDirectory = value;
             }
