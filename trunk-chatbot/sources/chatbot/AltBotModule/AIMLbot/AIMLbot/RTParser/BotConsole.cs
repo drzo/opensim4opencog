@@ -390,6 +390,10 @@ namespace RTParser
         public void AcceptInput(OutputDelegate writeLine, string input, User myUser)
         {
             AltBot myBot = this;
+            if (_botAsUser == null)
+            {
+                writeLine("This bot has nopt be constructed correctly!");
+            }
             User BotAsAUser = myBot.BotAsUser;
             myUser = myUser ?? myBot.LastUser;
             if (string.IsNullOrEmpty(input))

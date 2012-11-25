@@ -152,7 +152,7 @@ namespace RTParser
             {
                 if (_botAsUser == null)
                 {
-                    _botAsUser = FindOrCreateUser(NameAsSet);
+                    _botAsUser = FindOrCreateUser(BotUserID);
                 }
                 return _botAsUser;
             }
@@ -1963,13 +1963,14 @@ The AIMLbot program.
         {
             get
             {
-                if (_botAsUser != null) return BotAsUser.UserID;
+                if (_botAsUser != null) return _botAsUser.UserID;
                 SettingsDictionary dict = GlobalSettings;
                 if (dict != null)
                 {
                     Unifiable botid = dict.grabSetting("id") ?? ToScriptableName(NameAsSet);
                     return botid;
                 }
+                if (NameAsSet != null) return ToScriptableName(NameAsSet);
                 return null;
             }
         }
