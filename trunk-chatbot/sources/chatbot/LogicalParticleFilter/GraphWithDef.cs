@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using LogicalParticleFilter1;
@@ -8,6 +9,7 @@ using VDS.RDF;
 using VDS.RDF.Nodes;
 using VDS.RDF.Parsing;
 using VDS.RDF.Query;
+using VDS.RDF.Query.Expressions;
 using VDS.RDF.Writing;
 
 namespace ExtensionMethods
@@ -40,13 +42,13 @@ namespace LogicalParticleFilter1
     public partial class SIProlog
     {       
         readonly private IGraph rdfDefinations = new Graph();
-        public Dictionary<string, GraphWithDef> GraphForMT = new Dictionary<string, GraphWithDef>();
-        private static Dictionary<string, PredicateProperty> SharedGlobalPredDefs = new Dictionary<string, PredicateProperty>();
-        private static Dictionary<string, ArgType> SharedGlobalArgTypeDefs = new Dictionary<string, ArgType>();
+        public Dictionary<string, GraphWithDef> GraphForMT = new CIDictionary<string, GraphWithDef>();
+        private static Dictionary<string, PredicateProperty> SharedGlobalPredDefs = new CIDictionary<string, PredicateProperty>();
+        private static Dictionary<string, RDFArgSpec> SharedGlobalArgTypeDefs = new CIDictionary<string, RDFArgSpec>();
 
         private void defineRDFExtensions()
         {
-            const string rdfDefMT = "globalRDFDefinationsMT";
+            const string rdfDefMT = "rdfGlobalDefsMt";
             var node = FindOrCreateKB(rdfDefMT);
             GraphForMT[rdfDefMT] = new GraphWithDef(rdfDefMT, this, rdfDefinations, rdfDefinations) {PrologKB = node};
             mtest();
@@ -331,8 +333,8 @@ namespace LogicalParticleFilter1
             public string classname;
             public string keyname;
             public int instanceNumber = 1;
-            public readonly Dictionary<int, ArgType> argDefs;
-            public ILiteralNode classNode;
+            public readonly Dictionary<int, RDFArgSpec> argDefs;
+            public INode classNode;
             public string assertionMt;
             public ICollection<Triple> inations = new List<Triple>();
 
@@ -344,18 +346,18 @@ namespace LogicalParticleFilter1
             public PredicateProperty(int arity1)
             {
                 arity = arity1;
-                argDefs = new Dictionary<int, ArgType>();
+                argDefs = new Dictionary<int, RDFArgSpec>(arity1);
             }
 
 
         }
 
-        public class ArgType
+        public class RDFArgSpec
         {
             public string classname;
             public INode predicateNode;
             public List<string> subNames = new List<string>();
-            public string assertionMt;
+            //public string assertionMt;
             public INode GetRefNode(IGraph def)
             {
                 return def.CreateLiteralNode(classname);
@@ -381,7 +383,7 @@ namespace LogicalParticleFilter1
             public string prologMt;
 
             public List<PredicateProperty> localPreds = new List<PredicateProperty>();
-            public List<ArgType> localArgTypes = new List<ArgType>();
+            public List<RDFArgSpec> localArgTypes = new List<RDFArgSpec>();
             public List<Term> localPredInstances = new List<Term>();
             private PNode kbNode;
             public SIProlog prologEngine;
@@ -417,36 +419,35 @@ namespace LogicalParticleFilter1
                 }
                 return headPP;
             }
-
             public PredicateProperty GetPredicateProperty(Term term)
             {
-                string predName = term.name;
-                int arity = term.partlist.list.Count;
-                string key = predName + "_" + arity;
+                return GetPredicateProperty(term.name, term.Arity);
+            }
+            public PredicateProperty GetPredicateProperty(string predName, int arity)
+            {
                 PredicateProperty def;
-                bool newlyCreated = false;
+                bool newlyCreated;
                 lock (SharedGlobalPredDefs)
                 {
-                    if (!SharedGlobalPredDefs.TryGetValue(key, out def))
+                    string key = predName + "_" + arity;
+                    def = GetPredDef(predName, arity, out newlyCreated);
+                    if (newlyCreated)
                     {
-                        newlyCreated = true;
-                        string predClassName = key + "_PredClass";
-                        SharedGlobalPredDefs[key] =
-                            def = new PredicateProperty(arity) {name = predName, keyname = key, classname = predClassName};
-                    }
-                    //if (newlyCreated)
-                    {
-                        var classNode = def.classNode = definations.CreateLiteralNode(def.classname);
+                        var classNode = def.classNode = C(def.classname);
                         def.inations.Add(new Triple(classNode, InstanceOf, PrologPredicateClass));
                         for (int i = 0; i < arity; i++)
                         {
+                            if (def.argDefs.ContainsKey(i)) continue;
                             string argtypename = key + "_Arg" + (1 + i);
-                            ArgType adef;
+                            RDFArgSpec adef;
                             lock (SharedGlobalArgTypeDefs)
                             {
                                 if (!SharedGlobalArgTypeDefs.TryGetValue(argtypename, out adef))
                                 {
-                                    adef = SharedGlobalArgTypeDefs[argtypename] = new ArgType() { classname = argtypename };
+                                    adef = SharedGlobalArgTypeDefs[argtypename] = new RDFArgSpec() { classname = argtypename };
+                                } else
+                                {
+                                    continue;
                                 }
                             }
                             def.argDefs[i] = adef;
@@ -476,8 +477,60 @@ namespace LogicalParticleFilter1
                 return def;
             }
 
+            public static PredicateProperty GetPredDef(string predName, int arity, out bool newlyCreated)
+            {
+                PredicateProperty def;
+                string key = predName + "_" + arity;
+                if (!SharedGlobalPredDefs.TryGetValue(key, out def))
+                {
+                    newlyCreated = true;
+                    string predClassName = key + "_PredClass";
+                    SharedGlobalPredDefs[key] =
+                        def = new PredicateProperty(arity) {name = predName, keyname = key, classname = predClassName};
+                    return def;
+                }
+                newlyCreated = false;
+                return def;
+            }
+
+            private INode CExtracted(string p)
+            {
+                bool colm = p.Contains(":");
+                if (!colm)
+                {
+                    bool decm = p.Contains(".");
+                    long intv;
+                    if (!decm && long.TryParse(p, out intv))
+                    {
+                        return new LongNode(definations, intv);
+                    }
+                    double dbl;
+                    if (decm && double.TryParse(p, out dbl))
+                    {
+                        return new DoubleNode(definations, dbl);
+                    }
+                }
+                return C(p);
+            }
             public INode C(string p)
             {
+                int colm = p.IndexOfAny(": ".ToCharArray());
+                bool uir = p.Contains("#") || p.Contains("/");
+                if (uir)
+                {
+                    try
+                    {
+                        Uri newUri = new Uri(p);
+                        return definations.CreateUriNode(newUri);
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+                if (colm < 1)
+                {
+                    return definations.CreateBlankNode(p);
+                }
                 return definations.CreateLiteralNode(p);
             }
 
@@ -585,7 +638,7 @@ namespace LogicalParticleFilter1
             {
                 if (part is Atom)
                 {
-                    return C(part.name);
+                    return CExtracted(part.name);
                 }
                 if (part is Variable)
                 {
@@ -604,7 +657,11 @@ namespace LogicalParticleFilter1
                 {
                     return new Atom(node.ToString());
                 } 
-                if (node is UriNode)
+                if (node is IUriNode)
+                {
+                    return new Atom(node.ToString());
+                }
+                if (node is IGraphLiteralNode)
                 {
                     return new Atom(node.ToString());
                 }

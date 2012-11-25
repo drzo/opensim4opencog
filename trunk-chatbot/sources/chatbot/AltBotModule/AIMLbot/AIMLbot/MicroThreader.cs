@@ -5,6 +5,7 @@ using System.Text;
 using System.Diagnostics;
 
 using System.IO;
+using LogicalParticleFilter1;
 
 namespace AltAIMLbot
 {

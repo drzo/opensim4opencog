@@ -19,6 +19,7 @@ using System.Reflection;
 using MushDLR223.Utilities;
 using RTParser;
 using NotImplementedException=sun.reflect.generics.reflectiveObjects.NotImplementedException;
+using LogicalParticleFilter1;
 
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
@@ -3118,7 +3119,7 @@ namespace AltAIMLbot
         }
     }
 
-    public class KeyCase : IEqualityComparer<string>
+    public class KeyCaseUseSIPROOGNOW : IEqualityComparer<string>
     {
         public static KeyCase Default = new KeyCase();
         #region Implementation of IEqualityComparer<string>

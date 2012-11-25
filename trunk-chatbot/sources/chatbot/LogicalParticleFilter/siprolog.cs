@@ -3130,6 +3130,7 @@ namespace LogicalParticleFilter1
             public string ruleset = null;
             public bool dirty = false;
             public double probability = 1.0;
+            public string backend = null;
 
             List<PEdge> incomingEdgeList = new List<PEdge>();
             List<PEdge> outgoingEdgeList = new List<PEdge>();
@@ -3306,26 +3307,26 @@ namespace LogicalParticleFilter1
 
             public void Connect(string idSrc, string idDest)
             {
+                PNode srcNode = FindOrCreateNode(idSrc);
+                PNode destNode = FindOrCreateNode(idDest);
+
+                if (destNode == srcNode)
+                {
+                    return;
+                }
+                if (!srcNode.EdgeAlreadyExists(destNode))
+                    srcNode.CreateEdgeTo(destNode);
+            }
+
+            private PNode FindOrCreateNode(string idSrc)
+            {
                 PNode srcNode = Contains(idSrc);
                 if (srcNode == null)
                 {
                     srcNode = new PNode(idSrc);
                     AddNode(srcNode);
                 }
-                PNode destNode = Contains(idDest);
-                if (destNode == null)
-                {
-                    destNode = new PNode(idDest);
-                    AddNode(destNode);
-                } else
-                {
-                    if (destNode == srcNode)
-                    {
-                        return;
-                    }
-                }
-                if (!srcNode.EdgeAlreadyExists(destNode))
-                    srcNode.CreateEdgeTo(destNode);
+                return srcNode;
             }
 
             public PNode[] TopLevelNodes
@@ -3340,7 +3341,7 @@ namespace LogicalParticleFilter1
                     PNode[] temp = topLevelNodes.ToArray();
                     Array.Sort(temp, delegate(PNode p1, PNode p2)
                     {
-                        return p1.id.CompareTo(p2.id );
+                        return CIC.Compare(p1.id,p2.id );
                     });
                     return temp;
                 }
@@ -3366,9 +3367,10 @@ namespace LogicalParticleFilter1
                 return null;
             }
 
-            private PNode FindNode(string id, PNode node, List<PNode> visitedNodes)
+            private static readonly KeyCase CIC = KeyCase.Default;
+            private static PNode FindNode(string id, PNode node, List<PNode> visitedNodes)
             {
-                if (node.Id == id)
+                if (CIC.Compare(node.Id, id) == 0)
                     return node;
 
                 // Recursively reached the same node again, bail out..
@@ -3533,6 +3535,84 @@ namespace LogicalParticleFilter1
                 throw new NotImplementedException(name);
             }
             return name;
+        }
+    }
+
+    public class KeyCase : IEqualityComparer<string>
+    {
+        public static KeyCase Default = new KeyCase();
+        #region Implementation of IEqualityComparer<string>
+
+        /// <summary>
+        /// Determines whether the specified objects are equal.
+        /// </summary>
+        /// <returns>
+        /// true if the specified objects are equal; otherwise, false.
+        /// </returns>
+        /// <param name="x">The first object of type <paramref name="T"/> to compare.
+        ///                 </param><param name="y">The second object of type <paramref name="T"/> to compare.
+        ///                 </param>
+        public bool Equals(string x, string y)
+        {
+            return SameKey(x, y);
+        }
+
+        /// <summary>
+        /// Returns a hash code for the specified object.
+        /// </summary>
+        /// <returns>
+        /// A hash code for the specified object.
+        /// </returns>
+        /// <param name="obj">The <see cref="T:System.Object"/> for which a hash code is to be returned.
+        ///                 </param><exception cref="T:System.ArgumentNullException">The type of <paramref name="obj"/> is a reference type and <paramref name="obj"/> is null.
+        ///                 </exception>
+        public int GetHashCode(string obj)
+        {
+            return NormalizeKey(obj).GetHashCode();
+        }
+
+        public static string NormalizeKey(object s)
+        {
+            return s.ToString().Trim().ToLower().Replace(" ", "_");
+        }
+
+        #endregion
+
+        public static bool SameKey(object u1, object key)
+        {
+            if (Equals(u1, key)) return true;
+            if (u1.GetType().IsValueType)
+            {
+                throw new InvalidOperationException("lcase " + u1.GetType());
+            }
+            if (NormalizeKey(u1) != NormalizeKey(key)) return false;
+            return true;
+        }
+
+        public int Compare(string c1, string c2)
+        {
+            return NormalizeKey(c1).CompareTo(NormalizeKey(c2));
+        }
+    }
+
+    public class CIDictionary<K, V> : Dictionary<K, V>
+    {
+        static public IEqualityComparer<K> comp
+        {
+            get
+            {
+                return (IEqualityComparer<K>)KeyCase.Default;
+            }
+        }
+        public CIDictionary()
+            : base((IEqualityComparer<K>)comp)
+        {
+
+        }
+        public CIDictionary(IDictionary<K, V> dict)
+            : base(dict, (IEqualityComparer<K>)comp)
+        {
+
         }
     }
 
