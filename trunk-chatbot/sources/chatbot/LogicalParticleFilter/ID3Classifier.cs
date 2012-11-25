@@ -390,14 +390,28 @@ namespace LogicalParticleFilter1
 
         public void GenRulesFromMt(SIProlog pEngine, string sourceMt, string destMt)
         {
-            GenRulesFromMt(pEngine, sourceMt, destMt, "result");
+            string targetAttr = "result";
+           
+            List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
+            //Get collection of instances ID's and Attribute Names
+            string query = "targetAttribute(ATTRIBUTE)";
+            pEngine.askQuery(query, sourceMt, out bingingsList);
+            foreach (Dictionary<string, string> bindings in bingingsList)
+            {
+                foreach (string k in bindings.Keys)
+                {
+                    if (k == "ATTRIBUTE") targetAttr = bindings[k];
+                }
+            }
+
+            GenRulesFromMt(pEngine, sourceMt, destMt, targetAttr);
         }
         public void GenRulesFromMt(SIProlog pEngine, string sourceMt, string destMt,string targetAttribute)
         {
             
             MtDataSource samples = new MtDataSource(pEngine,sourceMt);
 
-            TreeAttributeCollection attributes = samples.GetValidAttributeCollection();
+            TreeAttributeCollection attributes = samples.GetValidAttributeCollection(targetAttribute);
 
             DecisionTree id3 = new DecisionTree();
             TreeNode root = id3.mountTree(samples, targetAttribute, attributes);
@@ -672,6 +686,7 @@ namespace LogicalParticleFilter1
         public MtDataSource(SIProlog pengine,string sourceMt)
         {
             _sourceMt = sourceMt;
+            prologEngine = pengine;
             load();
         }
 
@@ -740,7 +755,7 @@ namespace LogicalParticleFilter1
             return returnList;
         }
 
-        public TreeAttributeCollection GetValidAttributeCollection()
+        public TreeAttributeCollection GetValidAttributeCollection(string targetAttribute)
         {
             TreeAttributeCollection returnCollection = new TreeAttributeCollection();
 
@@ -748,7 +763,7 @@ namespace LogicalParticleFilter1
             {
                 TreeAttribute currentAttribute = new TreeAttribute(column.ColumnName, GetValuesFromColumn(column.ColumnName));
 
-                if (returnCollection.ContainsAttribute(currentAttribute) || currentAttribute.AttributeName.ToUpper().Trim() == "RESULT")
+                if (returnCollection.ContainsAttribute(currentAttribute) || currentAttribute.AttributeName.ToUpper().Trim() == targetAttribute.ToUpper().Trim())
                     continue;
                 returnCollection.Add(currentAttribute);
             }

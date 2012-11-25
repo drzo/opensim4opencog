@@ -809,6 +809,18 @@ namespace AltAIMLbot
                             yield return result;
                         }
                         break;
+
+                    case "inducefrommt":
+                        foreach (RunStatus result in ProcessInduceFromMt(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+                         
+
                     //Particle filter interface
                     case "definestate":
                         foreach (RunStatus result in ProcessDefineState(myNode))
@@ -3276,6 +3288,33 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
+
+        public IEnumerable<RunStatus> ProcessInduceFromMt(XmlNode myNode)
+        {
+            // load some KE (which will have MT definitions)
+            RunStatus rs = RunStatus.Failure;
+            string sourceMt = "sourceMt";
+            string resultMt = "resultMt";
+            string innerStr = myNode.InnerXml.Trim();
+
+            try
+            {
+                if (myNode.Attributes["source"] != null) sourceMt = myNode.Attributes["source"].Value;
+                if (myNode.Attributes["result"] != null) resultMt = myNode.Attributes["result"].Value;
+                DecisionTreeImplementation DTI = new DecisionTreeImplementation();
+                DTI.GenRulesFromMt(bot.myServitor.prologEngine, sourceMt, resultMt);
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessLoadKEKB '{0}':'{1}':{2}", sourceMt, resultMt, EMsg(e));
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
+
+
         public IEnumerable<RunStatus> ProcessInsertMt(XmlNode myNode)
         {
             // insert some si_text (overwrite)
