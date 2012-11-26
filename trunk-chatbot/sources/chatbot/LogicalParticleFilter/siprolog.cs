@@ -463,11 +463,11 @@ namespace LogicalParticleFilter1
             int testdepth = 64;
 
             List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
-            while ((bingingsList.Count == 0) && (testdepth < 256))
+            while ((bingingsList.Count == 0) && (testdepth < 1024))
             {
                 testdepth = (int)(testdepth * 1.5);
                 //Console.WriteLine("Trying depth {0}", testdepth);
-                //prologEngine.maxdepth = testdepth;
+                maxdepth = testdepth;
                 askQuery(query, mt, out bingingsList);
             }
             writer.WriteLine("<h3>Query:'{0}' in mt={1}</h3><br/>", query, mt);
@@ -1552,8 +1552,8 @@ namespace LogicalParticleFilter1
         double v1 = double.Parse (first.name);
         double v2 = double.Parse(second.name);
         int cmpv = v1.CompareTo(v2);
-        if (cmpv < 0) cmp = "lt";
-        if (cmpv > 0) cmp = "gt";
+        if (cmpv < 0) cmp = "gt";
+        if (cmpv > 0) cmp = "lt";
         //if (first.name < second.name) cmp = "lt";
         //else if (first.name > second.name) cmp = "gt";
 

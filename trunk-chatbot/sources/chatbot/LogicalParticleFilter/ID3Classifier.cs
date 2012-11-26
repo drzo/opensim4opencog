@@ -120,6 +120,40 @@ namespace LogicalParticleFilter1
 
             }
         }
+        private void getValuesToAttributeContinous(DataTable samples, TreeAttribute attribute, string value, out int positives, out int negatives)
+        {
+            positives = 0;
+            negatives = 0;
+            double refval = double.Parse(value);
+
+            string positveRef = getUniformRefValue(samples, mTargetAttribute);
+
+            foreach (DataRow aRow in samples.Rows)
+            {
+                ///To do:   Figure out if this is correct - it looks bad
+                double rowV = double.Parse((string)aRow[attribute.AttributeName]);
+                if ((rowV <= refval))
+                    if (aRow[mTargetAttribute].ToString().Trim().ToLower() == positveRef)
+                        positives++;
+                    else
+                        negatives++;
+
+            }
+        }
+
+        bool isContinousSet(PossibleValueCollection values)
+        {
+            if (values.Count == 0) return false;
+            for (int i = 0; i < values.Count; i++)
+            {
+                double result;
+                if (Double.TryParse(values[i],out result) ==false)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
         /// <summary>
         /// Calculate the gain of an attribute
         /// </summary>
@@ -128,22 +162,89 @@ namespace LogicalParticleFilter1
         private double gain(DataTable samples, TreeAttribute attribute)
         {
             PossibleValueCollection values = attribute.PossibleValues;
-            double sum = 0.0;
-
-            for (int i = 0; i < values.Count; i++)
+            if (isContinousSet(values))
             {
-                int positives, negatives;
+                double sum = 0.0;
+                double bsum = -9999999.0;
 
-                positives = negatives = 0;
+                // return the value for the best possible split
+                for (int i = 0; i < values.Count; i++)
+                {
+                    int positives, negatives;
 
-                getValuesToAttribute(samples, attribute, values[i], out positives, out negatives);
+                    positives = negatives = 0;
 
-                double entropy = getCalculatedEntropy(positives, negatives);
-                sum += -(double)(positives + negatives) / mTotal * entropy;
+                    getValuesToAttributeContinous(samples, attribute, values[i], out positives, out negatives);
+
+                    double entropy = getCalculatedEntropy(positives, negatives);
+                    sum = -(double)(positives + negatives) / mTotal * entropy;
+                    if (sum > bsum) { bsum = sum; }
+                }
+                return mEntropySet + bsum;
+
             }
-            return mEntropySet + sum;
+            else
+            {
+                double sum = 0.0;
+
+                for (int i = 0; i < values.Count; i++)
+                {
+                    int positives, negatives;
+
+                    positives = negatives = 0;
+
+                    getValuesToAttribute(samples, attribute, values[i], out positives, out negatives);
+                    // does it really split?
+                    int remainder = mTotal - (positives + negatives);
+                    if (remainder > 0)
+                    {
+                        double entropy = getCalculatedEntropy(positives, negatives);
+                        sum += -(double)(positives + negatives) / mTotal * entropy;
+                    }
+                }
+                return mEntropySet + sum;
+            }
         }
 
+        string bestSplitValue(DataTable samples, TreeAttribute attribute)
+        {
+            PossibleValueCollection values = attribute.PossibleValues;
+            if (isContinousSet(values))
+            {
+                double sum = 0.0;
+                double bsum = -9999999.0;
+                string bval = values[0];
+
+                // return the value for the best possible split
+                for (int i = 0; i < values.Count; i++)
+                {
+                    int positives, negatives;
+
+                    positives = negatives = 0;
+
+                    getValuesToAttributeContinous(samples, attribute, values[i], out positives, out negatives);
+                    // does it really split?
+                    int remainder = mTotal - (positives + negatives);
+                    if (remainder > 0)
+                    {
+
+                        double entropy = getCalculatedEntropy(positives, negatives);
+                        sum = -(double)(positives + negatives) / mTotal * entropy;
+                        if (sum > bsum)
+                        {
+                            bval = values[i];
+                            bsum = sum;
+                        }
+                    }
+                }
+                return bval;
+
+            }
+            else
+            {
+                return values[0];
+            }
+        }
         /// <summary>
         ///Returns the best attribute.
         /// </summary>
@@ -151,7 +252,7 @@ namespace LogicalParticleFilter1
         /// <returns>Returns which has higher gain </returns>
         private TreeAttribute getBestAttribute(DataTable samples, TreeAttributeCollection attributes)
         {
-            double maxGain = 0.0;
+            double maxGain = -9999999.0;
             TreeAttribute result = null;
 
             foreach (TreeAttribute attribute in attributes)
@@ -240,7 +341,7 @@ namespace LogicalParticleFilter1
                 if (distinctValues.IndexOf(row[targetAttribute]) == -1)
                     distinctValues.Add(row[targetAttribute]);
             }
-
+            distinctValues.Sort();
             return distinctValues;
         }
 
@@ -286,8 +387,9 @@ namespace LogicalParticleFilter1
         private TreeNode internalMountTree(DataTable samples, string targetAttribute, TreeAttributeCollection attributes)
         {
             if (allSamplesAreUniform(samples, targetAttribute) == true)
+            {
                 return new TreeNode(new OutcomeTreeAttribute(getUniformRefValue(samples, targetAttribute)));
-
+            }
             //if (allSamplesArePositive(samples, targetAttribute) == true)
             //    return new TreeNode(new OutcomeTreeAttribute(true));
 
@@ -296,8 +398,9 @@ namespace LogicalParticleFilter1
 
 
             if (attributes.Count == 0)
+            {
                 return new TreeNode(new OutcomeTreeAttribute(getMostCommonValue(samples, targetAttribute)));
-
+            }
             mTotal = samples.Rows.Count;
             mTargetAttribute = targetAttribute;
             mTotalPositives = countTotalPositives(samples);
@@ -309,44 +412,142 @@ namespace LogicalParticleFilter1
             TreeNode root = new TreeNode(bestAttribute);
 
             if (bestAttribute == null)
-                return root;
-
-            DataTable aSample = samples.Clone();
-
-            foreach (string value in bestAttribute.PossibleValues)
             {
-                // Select all elements with the value of this attribute				
-                aSample.Rows.Clear();
-
-                DataRow[] rows = samples.Select(bestAttribute.AttributeName + " = " + "'" + value + "'");
-
-                foreach (DataRow row in rows)
+                return root;
+            }
+            PossibleValueCollection bestAttrValues = bestAttribute.PossibleValues;
+            bool continousSet = isContinousSet(bestAttrValues);
+            //DataTable aSample = samples.Clone();
+            if (continousSet)
+            {
+                string value = bestSplitValue(samples, bestAttribute);
                 {
-                    aSample.Rows.Add(row.ItemArray);
+                    DataTable aSample = samples.Clone();
+                    //First Below then Above
+                    DataRow[] rows;
+                    string cond = bestAttribute.AttributeName + " <= " + "" + value + "";
+                    rows = samples.Select(cond);
+
+                    aSample.Rows.Clear();
+                    foreach (DataRow row in rows)
+                    {
+                        aSample.Rows.Add(row.ItemArray);
+                        Console.WriteLine(" SPLIT {0} ROW:", cond);
+                        foreach (DataColumn myCol in samples.Columns)
+                        {
+                            Console.WriteLine("  " + row[myCol]);
+                        }
+                    }
+                    // Create a new attribute list unless the attribute which is the current best attribute		
+                    TreeAttributeCollection aAttributes = new TreeAttributeCollection();
+                    //ArrayList aAttributes = new ArrayList(attributes.Count - 1);
+                    for (int i = 0; i < attributes.Count; i++)
+                    {
+                        if (attributes[i].AttributeName != bestAttribute.AttributeName)
+                            aAttributes.Add(attributes[i]);
+                    }
+                    //Recycle the best continous attribute if there are others
+                    if (aAttributes.Count > 0) aAttributes.Add(bestAttribute);
+
+                    // Create a new attribute list unless the attribute which is the current best attribute 
+
+                    if (rows.Length == 0)
+                    {
+                        //return new TreeNode(new OutcomeTreeAttribute(getMostCommonValue(aSample, targetAttribute)));
+                        return new TreeNode(new OutcomeTreeAttribute(getMostCommonValue(samples, targetAttribute)));
+                    }
+                    else
+                    {
+                        DecisionTree dc3 = new DecisionTree();
+                        TreeNode ChildNode = dc3.mountTree(aSample, targetAttribute, aAttributes);
+                        root.AddTreeNode(ChildNode, value, "leq");
+                    }
                 }
-                // Select all elements with the value of this attribute				
+                {
+                    DataTable aSample = samples.Clone();
+                    DataRow[] rows2;
+                    string cond = bestAttribute.AttributeName + " > " + "" + value + "";
+                    rows2 = samples.Select(cond);
 
-                // Create a new attribute list unless the attribute which is the current best attribute		
-                TreeAttributeCollection aAttributes = new TreeAttributeCollection();
-                //ArrayList aAttributes = new ArrayList(attributes.Count - 1);
-                for (int i = 0; i < attributes.Count; i++)
-                {
-                    if (attributes[i].AttributeName != bestAttribute.AttributeName)
-                        aAttributes.Add(attributes[i]);
-                }
-                // Create a new attribute list unless the attribute which is the current best attribute 
+                    aSample.Rows.Clear();
+                    foreach (DataRow row in rows2)
+                    {
+                        aSample.Rows.Add(row.ItemArray);
+                        Console.WriteLine(" SPLIT {0} ROW:", cond);
+                        foreach (DataColumn myCol in samples.Columns)
+                        {
+                            Console.WriteLine("  "+row[myCol]);
+                        }
+                    }
+                    // Create a new attribute list unless the attribute which is the current best attribute		
+                    TreeAttributeCollection aAttributes2 = new TreeAttributeCollection();
+                    //ArrayList aAttributes = new ArrayList(attributes.Count - 1);
+                    for (int i = 0; i < attributes.Count; i++)
+                    {
+                        if (attributes[i].AttributeName != bestAttribute.AttributeName)
+                            aAttributes2.Add(attributes[i]);
+                    }
+                    //Recycle the best continous attribute if there are others
+                    if (aAttributes2.Count > 0) aAttributes2.Add(bestAttribute);
 
-                if (aSample.Rows.Count == 0)
-                {
-                    return new TreeNode(new OutcomeTreeAttribute(getMostCommonValue(aSample, targetAttribute)));
+                    // Create a new attribute list unless the attribute which is the current best attribute 
+
+                    if (rows2.Length == 0)
+                    {
+                        //return new TreeNode(new OutcomeTreeAttribute(getMostCommonValue(aSample, targetAttribute)));
+                        return new TreeNode(new OutcomeTreeAttribute(getMostCommonValue(samples, targetAttribute)));
+                    }
+                    else
+                    {
+                        DecisionTree dc3 = new DecisionTree();
+                        TreeNode ChildNode = dc3.mountTree(aSample, targetAttribute, aAttributes2);
+                        root.AddTreeNode(ChildNode, value, "gt");
+                    }
                 }
-                else
+
+            }
+            else
+            {
+                DataTable aSample = samples.Clone();
+                foreach (string value in bestAttribute.PossibleValues)
                 {
-                    DecisionTree dc3 = new DecisionTree();
-                    TreeNode ChildNode = dc3.mountTree(aSample, targetAttribute, aAttributes);
-                    root.AddTreeNode(ChildNode, value);
+                    // Select all elements with the value of this attribute				
+                    aSample.Rows.Clear();
+
+                    DataRow[] rows;
+
+                    rows = samples.Select(bestAttribute.AttributeName + " = " + "'" + value + "'");
+
+                    foreach (DataRow row in rows)
+                    {
+                        aSample.Rows.Add(row.ItemArray);
+                    }
+                    // Select all elements with the value of this attribute				
+
+                    // Create a new attribute list unless the attribute which is the current best attribute		
+                    TreeAttributeCollection aAttributes = new TreeAttributeCollection();
+                    //ArrayList aAttributes = new ArrayList(attributes.Count - 1);
+                    for (int i = 0; i < attributes.Count; i++)
+                    {
+                        if (attributes[i].AttributeName != bestAttribute.AttributeName)
+                            aAttributes.Add(attributes[i]);
+                    }
+                    // Create a new attribute list unless the attribute which is the current best attribute 
+
+                    if (aSample.Rows.Count == 0)
+                    {
+                        //return new TreeNode(new OutcomeTreeAttribute(getMostCommonValue(aSample, targetAttribute)));
+                        return new TreeNode(new OutcomeTreeAttribute(getMostCommonValue(samples, targetAttribute)));
+                    }
+                    else
+                    {
+                        DecisionTree dc3 = new DecisionTree();
+                        TreeNode ChildNode = dc3.mountTree(aSample, targetAttribute, aAttributes);
+                        root.AddTreeNode(ChildNode, value,"eq");
+                    }
                 }
             }
+
 
             return root;
         }
@@ -418,11 +619,14 @@ namespace LogicalParticleFilter1
 
             string prologCode = PrologPrintNode(root, "", targetAttribute);
             pEngine.insertKB(prologCode, destMt);
-
+            string codeSummary=PrintNode(root, "") + Environment.NewLine + PrologPrintNode(root, "", "result");
+            Console.WriteLine(codeSummary);
         }
 
         public string PrintNode(TreeNode root, string tabs)
         {
+            if (root == null) return "";
+
             string returnString = String.Empty;
             string prefix = "Best Attribute: ";
 
@@ -434,9 +638,20 @@ namespace LogicalParticleFilter1
             {
                 for (int i = 0; i < root.Attribute.PossibleValues.Count; i++)
                 {
-                    returnString += (Environment.NewLine + tabs + "\t" + "Input:  " + root.Attribute.PossibleValues[i]) + Environment.NewLine;
                     TreeNode childNode = root.GetChildByBranchName(root.Attribute.PossibleValues[i]);
+                    string childNodeRelation = root.GetChildRelationByBranchName(root.Attribute.PossibleValues[i]);
+
+                    returnString += (Environment.NewLine + tabs + "\t" + "Input:  " + childNodeRelation + " " + root.Attribute.PossibleValues[i]) + Environment.NewLine;
                     returnString += PrintNode(childNode, "\t" + tabs);
+
+                    if (childNodeRelation != "eq")
+                    {
+                        TreeNode childNode2 = root.GetChildByBranchName2(root.Attribute.PossibleValues[i]);
+                        string childNodeRelation2 = root.GetChildRelationByBranchName2(root.Attribute.PossibleValues[i]);
+
+                        returnString += (Environment.NewLine + tabs + "\t" + "Input:  " + childNodeRelation2 + " " + root.Attribute.PossibleValues[i]) + Environment.NewLine;
+                        returnString += PrintNode(childNode2, "\t" + tabs);
+                    }
                 }
             }
 
@@ -459,9 +674,81 @@ namespace LogicalParticleFilter1
                 for (int i = 0; i < root.Attribute.PossibleValues.Count; i++)
                 {
                     //returnString += (Environment.NewLine + tabs + "\t" + "Input:  " + root.Attribute.PossibleValues[i]) + Environment.NewLine;
-                    string ourPrecond = precond + ",dataset(X," + root.Attribute + "," + root.Attribute.PossibleValues[i] + ")";
                     TreeNode childNode = root.GetChildByBranchName(root.Attribute.PossibleValues[i]);
-                    returnString += PrologPrintNode(childNode, ourPrecond, targetAttribute);
+                    string childNodeRelation = root.GetChildRelationByBranchName(root.Attribute.PossibleValues[i]);
+                    string ourPrecond = "";
+                    string attrVar = "VAL_" + root.Attribute.ToString().ToUpper();
+
+                    switch (childNodeRelation)
+                    {
+                        case "eq":
+                                ourPrecond = precond + ",dataset(X," + root.Attribute + "," + root.Attribute.PossibleValues[i] + ")";
+                            break;
+                        case "gt":
+                            if (precond.Contains(attrVar))
+                            {
+                                ourPrecond = precond + ",dgtr(" + attrVar + "," + root.Attribute.PossibleValues[i] + ")";
+                            }
+                            else
+                            {
+                                ourPrecond = precond + ",dataset(X," + root.Attribute + "," + attrVar + "),dgtr(" + attrVar + "," + root.Attribute.PossibleValues[i] + ")";
+                            }
+                            break;
+                        case "leq":
+                                if (precond.Contains(attrVar))
+                                {
+                                    ourPrecond = precond + ",dleq(" + attrVar + "," + root.Attribute.PossibleValues[i] + ")";
+                                }
+                                else
+                                {
+                                    ourPrecond = precond + ",dataset(X," + root.Attribute + "," + attrVar + "),dleq(" + attrVar + "," + root.Attribute.PossibleValues[i] + ")";
+                                }
+                                break;
+                        default :
+                            ourPrecond = precond + ",dataset(X," + root.Attribute + "," + root.Attribute.PossibleValues[i] + ")";
+                           break;
+                    }
+                    string subcode = PrologPrintNode(childNode, ourPrecond, targetAttribute);
+                    if (subcode.Length >3) returnString += subcode;
+                    if (childNodeRelation!="eq")
+                    {
+                        TreeNode childNode2 = root.GetChildByBranchName2(root.Attribute.PossibleValues[i]);
+
+                        string childNodeRelation2 = root.GetChildRelationByBranchName2(root.Attribute.PossibleValues[i]);
+                        string ourPrecond2 = "";
+                        switch (childNodeRelation2)
+                        {
+                            case "eq":
+                                ourPrecond2 = precond + ",dataset(X," + root.Attribute + "," + root.Attribute.PossibleValues[i] + ")";
+                                break;
+                            case "gt":
+                                if (precond.Contains(attrVar))
+                                {
+                                    ourPrecond2 = precond + ",dgtr(" + attrVar + "," + root.Attribute.PossibleValues[i] + ")";
+                                }
+                                else
+                                {
+                                ourPrecond2 = precond + ",dataset(X," + root.Attribute + "," + attrVar + "),dgtr(" + attrVar + "," + root.Attribute.PossibleValues[i] + ")";
+                                }
+                                break;
+                            case "leq":
+                                if (precond.Contains(attrVar))
+                                {
+                                    ourPrecond2 = precond + ",dleq(" + attrVar + "," + root.Attribute.PossibleValues[i] + ")";
+                                }
+                                else
+                                {
+                                ourPrecond2 = precond + ",dataset(X," + root.Attribute + "," + attrVar + "),dleq(" + attrVar + "," + root.Attribute.PossibleValues[i] + ")";
+                                }
+                                break;
+                            default:
+                                ourPrecond2 = precond + ",dataset(X," + root.Attribute + "," + root.Attribute.PossibleValues[i] + ")";
+                                break;
+                        }
+                        subcode = PrologPrintNode(childNode2, ourPrecond2, targetAttribute);
+                        if (subcode.Length > 3) returnString += subcode;
+                    }
+                
                 }
             }
 
@@ -474,7 +761,11 @@ namespace LogicalParticleFilter1
     public class TreeNode
     {
         TreeNodeCollection _children;
+        TreeNodeCollection _children2;
         private TreeAttribute _attribute;
+        PossibleValueRelationCollection _childRelations;
+        PossibleValueRelationCollection _childRelations2;
+        //public string relation = "eq";
 
         /// <summary>
         /// Initializes a new instance of the TreeNode 
@@ -485,13 +776,27 @@ namespace LogicalParticleFilter1
             if (attribute != null && attribute.PossibleValues != null)
             {
                 _children = new TreeNodeCollection();
+                _children2 = new TreeNodeCollection();
+                _childRelations = new PossibleValueRelationCollection();
+                _childRelations2 = new PossibleValueRelationCollection();
                 for (int i = 0; i < attribute.PossibleValues.Count; i++)
+                {
                     _children.Add(null);
+                    _children2.Add(null);
+                    _childRelations.Add("eq");
+                    _childRelations2.Add("eq");
+                }
             }
             else
             {
                 _children = new TreeNodeCollection();
                 _children.Add(null);
+                _children2 = new TreeNodeCollection();
+                _children2.Add(null);
+                _childRelations = new PossibleValueRelationCollection();
+                _childRelations2 = new PossibleValueRelationCollection();
+                _childRelations.Add("eq");
+                _childRelations2.Add("eq");
             }
             _attribute = attribute;
         }
@@ -501,10 +806,19 @@ namespace LogicalParticleFilter1
         /// </summary>
         /// <param name="treeNode">TreeNode child to be added </param>
         /// <param name="ValueName">name branch where the TreeNode is created </param>
-        public void AddTreeNode(TreeNode treeNode, string ValueName)
+        public void AddTreeNode(TreeNode treeNode, string ValueName,string rel)
         {
             int index = _attribute.indexValue(ValueName);
+            if ((rel =="eq") ||(rel=="leq"))
+            {
             _children[index] = treeNode;
+            _childRelations[index] = rel;
+            }
+            else
+            {
+                _children2[index] = treeNode;
+                _childRelations2[index] = rel;
+            }
         }
 
         /// <summary>
@@ -548,6 +862,21 @@ namespace LogicalParticleFilter1
         {
             int index = _attribute.indexValue(branchName);
             return _children[index];
+        }
+        public string GetChildRelationByBranchName(string branchName)
+        {
+            int index = _attribute.indexValue(branchName);
+            return _childRelations[index];
+        }
+        public TreeNode GetChildByBranchName2(string branchName)
+        {
+            int index = _attribute.indexValue(branchName);
+            return _children2[index];
+        }
+        public string GetChildRelationByBranchName2(string branchName)
+        {
+            int index = _attribute.indexValue(branchName);
+            return _childRelations2[index];
         }
     }
     /// <summary>
@@ -658,6 +987,9 @@ namespace LogicalParticleFilter1
     {
     }
     public class PossibleValueCollection : List<string>
+    {
+    }
+    public class PossibleValueRelationCollection : List<string>
     {
     }
     public class OutcomeTreeAttribute : TreeAttribute
