@@ -138,7 +138,7 @@ namespace LogicalParticleFilter1
             //parser.Load(g, @"..\..\plugins\configuration.ttl");
             //parser.Load(g, @"..\..\plugins\localConfig.ttl");
 
-            //g.Assert(new Triple(endnode, pa, dhh));
+            //g.Assert(MakeTriple(endnode, pa, dhh));
             parser.Load(g, new StringReader( @"<dotnetrdf:/*> a <dnr:HttpHandler> ."));
             parser.Load(g, new StringReader( @"<dotnetrdf:/*> <dnr:type> ""VDS.RDF.Web.SparqlServer"" ."));
             parser.Load(g, new StringReader(@"<dotnetrdf:/*> <dnr:queryProcessor> <dotnetrdf:qProc> ."));

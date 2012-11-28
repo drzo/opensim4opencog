@@ -14,6 +14,7 @@ using VDS.RDF.Parsing;
 using VDS.RDF.Query;
 using VDS.RDF.Writing.Formatting;
 using VDS.RDF.Writing;
+using VDS.RDF.Nodes;
 
 
 
@@ -65,12 +66,13 @@ namespace LogicalParticleFilter1
         public string testquery;
         public bool show = false; //true;
         public bool trace = false;
+        // [ThreadStatic]
         public int maxdepth = 20;
         public int deepest = 1;
         public string deepestName = FUNCTOR_NIL;
         public int maxMtSize = 64000;
-        public const string FUNCTOR_LIST = ".";//const
-        public const string FUNCTOR_NIL = "[]";// "nil";
+        public const string FUNCTOR_CONS = "cons";//const
+        public const string FUNCTOR_NIL = "nil";// "nil";
         public delegate void chemSysDelegate(string cmd);
         public chemSysDelegate chemSysCommandProcessor = null;
 
@@ -88,8 +90,8 @@ namespace LogicalParticleFilter1
         {
             defineBuiltIns();
             connectMT("stdlib", "root");
-            insertKB(standardLib(),"stdlib");
             defineRDFExtensions();
+            insertKB(standardLib(), "stdlib");
         }
 
         public static string MakeReadbleString(string value)
@@ -239,7 +241,7 @@ namespace LogicalParticleFilter1
             //}
             return VKB;
         }
-        public void webWriter(StreamWriter writer,string action,string query,string mt, string serverRoot)
+        public void webWriter(TextWriter writer,string action,string query,string mt, string serverRoot)
         {
             serverRoot = "/";
             if (action == "autorefresh")
@@ -253,13 +255,20 @@ namespace LogicalParticleFilter1
 
         }
 
-        private void TOCmenu(StreamWriter writer, string serverRoot)
+        private void TOCmenu(TextWriter writer, string serverRoot)
         {
             writer.WriteLine("<a href='{0}siprolog/?q=list'>List Mts</a> ", serverRoot);
-            writer.WriteLine("<a href='{0}siprolog/?q=listing'>List All Rules</a> ", serverRoot);
-            writer.WriteLine("<a href='{0}/query'>Sparql Query</a><br/>", PFEndpoint.serverRoot);
+            writer.WriteLine("<a href='{0}siprolog/?q=preds'>List Preds</a> ", serverRoot);
+            writer.WriteLine("<a href='{0}siprolog/?q=listing'>List All KB Rules</a> ", serverRoot);
+            writer.WriteLine("<a href='{0}query'>Sparql Query</a>", PFEndpoint.serverRoot);
+            writer.WriteLine("<a href='{0}list/'>Behavour List</a>", serverRoot);
+            //writer.WriteLine("<a href='{0}processes/list/'>Processes List</a>", serverRoot);
+            writer.WriteLine("<a href='{0}scheduler/?a=liststatus'>Scheduler List</a>", serverRoot);
+            writer.WriteLine("<a href='{0}analysisllist/'>Analysis List</a>", serverRoot);
+            writer.WriteLine("<a href='{0}graphmaster/?a=list'>Graphmaster List</a>", serverRoot);
+            writer.WriteLine("<a href='{0}'>Home</a><br/>", serverRoot);
         }
-        public void webWriter0(StreamWriter writer, string action, string queryv, string mt, string serverRoot, bool toplevel)
+        public void webWriter0(TextWriter writer, string action, string queryv, string mt, string serverRoot, bool toplevel)
         {
             try
             {
@@ -282,6 +291,18 @@ namespace LogicalParticleFilter1
                             }
                             writer.WriteLine("<h2>Siprolog Mt Treed</h2>");
                             KBGraph.PrintToWriterTreeMts(writer, serverRoot);
+                            return;
+                        }
+                        if (queryv.ToLower() == "preds")
+                        {
+                            writer.WriteLine("<h2>Siprolog Preds List</h2>");
+                            lock (SharedGlobalPredDefs)
+                            {
+                                foreach (var kpp in SharedGlobalPredDefs)
+                                {
+                                    kpp.Value.WriteHtmlInfo(writer);
+                                }
+                            }
                             return;
                         }
                         if (queryv.ToLower() == "listing")
@@ -339,7 +360,7 @@ namespace LogicalParticleFilter1
         }
 
 
-        public void WriteMtInfo(StreamWriter writer, string mt, string serverRoot, bool toplevel)
+        public void WriteMtInfo(TextWriter writer, string mt, string serverRoot, bool toplevel)
         {
             writer.WriteLine("<h2>Siprolog Mt {0}</h2>", mt);
             PNode qnode = KBGraph.Contains(mt);
@@ -358,11 +379,18 @@ namespace LogicalParticleFilter1
                 writer.WriteLine("<a href='{0}xrdf/?mt={1}&q=pl2rdf'>Prolog2RDF</a> ", serverRoot, mt);
                 writer.WriteLine("<a href='{0}xrdf/?mt={1}&q=rdf2pl'>RDF2Prolog</a> ", serverRoot, mt);
                 writer.WriteLine("<br/>");
-                writer.WriteLine("<h3> KB Contents </h3>");
-                if (toplevel) writer.WriteLine("<hr/>");
                 ensureCompiled(qnode);
             }
             var kbContents = findVisibleKBRulesSorted(mt);
+            tl_ServerRoot = serverRoot;
+            tl_mt = mt;
+            tl_writer = writer;
+            int total = kbContents.Count;
+            int local = qnode.pdb.rules.Count;
+            writer.WriteLine(
+                "<h3> KB Contents (<font color='blue'>Blue local</font> {0}) (<font color='darkgreen'>Green Inherited</font> {1})</h3>",
+                local, total - local);
+            if (toplevel) writer.WriteLine("<hr/>");
             foreach (Rule r in kbContents)
             {
                 WriteRule(writer, r, qnode);
@@ -370,19 +398,29 @@ namespace LogicalParticleFilter1
             var gwf = FindRepositoryKB(mt);
             if (gwf != null)
             {
-                var trips = gwf.rdfGraph.Triples;
-                writer.WriteLine("<h3> KB Triples {0}</h3>", trips.Count);
-                WriteEnumeration(writer, trips);
-            } else
+                try
+                {
+                    WriteGraph(writer, gwf.rdfGraph, gwf.definations, mt);
+                }
+                catch (Exception e)
+                {
+                    writer.WriteLine("<font color='red'>{0} {1} {2}</font>", e.GetType(), e.Message, e.StackTrace);
+                }
+            }
+            else
             {
-                writer.WriteLine("<h3> KB Triples {0}</h3>", "Not synced");                
+                writer.WriteLine("<h3> KB Triples {1}</h3> Not synced <a href='{0}xrdf/?mt={1}&q=pl2rdf'>Sync Now</a> ", serverRoot, mt);
             }
         }
 
-        private void WriteRule(StreamWriter writer, Rule r, PNode qnode)
-        {
+        private void WriteRule(TextWriter writer, Rule r, PNode qnode)
+        {            
             var mt = r.optHomeMt;
-            writer.WriteLine("{0}{1}<br/>", r.ToString(), qnode.id == mt ? "" : ("&nbsp;&nbsp;% " + mt));
+            bool localMT = qnode.id == mt;
+            string color = localMT ? "blue" : "darkgreen";
+            string ext = localMT ? "" : string.Format("&nbsp;&nbsp;%<a href='{0}xrdf/?mt={1}'>{1}</a>", tl_ServerRoot, mt);
+
+            writer.WriteLine("<font color='{0}'>{1}</font>{2}<br/>", color, r.ToString(), ext);
         }
 
         public static string StructToString(object t)
@@ -458,7 +496,7 @@ namespace LogicalParticleFilter1
             return result.ToString().TrimEnd();
         }
 
-        public void interactQuery(StreamWriter writer, string query, string mt, string serverRoot)
+        public void interactQuery(TextWriter writer, string query, string mt, string serverRoot)
         {
             int testdepth = 64;
 
@@ -494,7 +532,7 @@ namespace LogicalParticleFilter1
 
             }
         }
-        public void interactFooter(StreamWriter writer, string mt, string serverRoot)
+        public void interactFooter(TextWriter writer, string mt, string serverRoot)
         {
             writer.WriteLine("<hr/>");
 
@@ -519,7 +557,7 @@ namespace LogicalParticleFilter1
 
         }
 
-        private void MtSelector(StreamWriter writer, string mt)
+        private void MtSelector(TextWriter writer, string mt)
         {
             if (string.IsNullOrEmpty(mt))
             {
@@ -584,6 +622,9 @@ namespace LogicalParticleFilter1
                 {
                     focus.pdb.rules = outr;
                     focus.dirty = false;
+                    return;
+                    var rkb = MakeRepositoryKB(focus.Id);
+                    rkb.pushRulesToGraph();
                 }
             }
         }
@@ -740,6 +781,13 @@ namespace LogicalParticleFilter1
                 foreach (string line0 in lines)
                 {
                     var line = line0.Trim();
+                    if (line.StartsWith(";doc;"))
+                    {
+                        var line5 = line.Substring(5).Trim() + " .";
+                        Term t = ParseTerm(new Tokeniser(line5)) as Term;
+                        DocumentTerm(t, false);
+                        continue;
+                    }
                     if (line.StartsWith(";")) continue;
                     if (line.StartsWith("exit:")) break;
                     if (line.Contains(":") && !line.Contains(":-"))
@@ -1017,22 +1065,24 @@ namespace LogicalParticleFilter1
                 );
 
         }
-        public void askQuery(string inQuery, string queryMT, out List <Dictionary <string,string>> outBindings)
+        public void askQuery(string inQuery, string queryMT, out List<Dictionary<string, string>> outBindings)
         {
-            askQuery(inQuery, queryMT, true, out outBindings);
+            outBindings = new List<Dictionary<string, string>>();
+            askQuery(inQuery, queryMT, true, null, outBindings);
         }
-        public void askQuery(string inQuery, string queryMT, bool followGenlMt, out List<Dictionary<string, string>> outBindings)
+
+        public void askQuery(string inQuery, string queryMT, bool followGenlMt, List<Dictionary<string, Part>> outBindingParts, List<Dictionary<string, string>> outBindingStrings)
         {
-            List<Dictionary<string, string>> bindingList = new List<Dictionary<string, string>>();
-            Dictionary<string, string> bindingsDict = new Dictionary<string, string>();
-            try
+            //var bindingList = new List<Dictionary<string, Part>>();
+            //var bindingsDict = new Dictionary<string, Part>();
+            //try
             {
                 var query = inQuery;
                 PartList qlist = ParseBody(new Tokeniser(query));
                 if (qlist == null)
                 {
                     Console.WriteLine("An error occurred parsing the query '{0}.\n", query);
-                    outBindings = bindingList;
+                    //outBindings = bindingList;
                     return;
                 }
                 Body q = new Body(qlist);
@@ -1057,11 +1107,13 @@ namespace LogicalParticleFilter1
                 }
                 if (db.rules == null)
                 {
-                    outBindings = bindingList;
+                    //outBindings = bindingList;
                     return;
                 }
                 db.index.Clear();
 
+                bool doParts = outBindingParts != null;
+                bool doStrings = outBindingStrings != null;
                 // Prove the query.
                 prove(
                     renameVariables(q.plist, 0, null),
@@ -1076,23 +1128,43 @@ namespace LogicalParticleFilter1
                         }
                         else
                         {
-                            bindingsDict = new Dictionary<string, string>();
+                            Dictionary<string, Part> bindDictParts = null;
+                            Dictionary<string, string> bindDictStrings = null;
+                            if (doParts)
+                            {
+                                bindDictParts = new Dictionary<string, Part>();
+                                outBindingParts.Add(bindDictParts);
+                            }
+                            if (doStrings)
+                            {
+                                bindDictStrings = new Dictionary<string, string>();
+                                outBindingStrings.Add(bindDictStrings);
+                            }
+
                             for (var i = 0; i < context.Length; i++)
                             {
                                 string k = (((Variable)context.list[i]).name);
                                 //string v = ((Atom)value(new Variable(((Variable)context.alist[i]).name + ".0"), env)).ToString();
-                                string v = value(new Variable(((Variable)context.list[i]).name + ".0"), env).ToPLStringReadable();
-                                bindingsDict[k] = v;
+                                var part = value(new Variable(((Variable) context.list[i]).name + ".0"), env);
+                                if (doParts)
+                                {
+                                    bindDictParts[k] = part;
+                                }
+                                if (doStrings)
+                                {
+                                    string v = part.ToString();
+                                    bindDictStrings[k] = v;
+                                }
+
                             }
-                            bindingList.Add(bindingsDict);
                         }
                     }
                     );
             }
-            catch (Exception e)
-            {
-            }
-            outBindings = bindingList;
+            //catch (Exception e)
+            //{
+            //}
+            //outBindings = bindingList;
         }
 
         public void parseQuery()
@@ -1160,7 +1232,7 @@ namespace LogicalParticleFilter1
             for (var i = 0; i < plist.Length; i++)
             {
                 Part part = termList[i];
-                if (((Part)part) is Atom) continue;
+                if (((Part)part) is IAtomic) continue;
 
                 if (((Part)part) is Variable)
                 {
@@ -1213,7 +1285,7 @@ namespace LogicalParticleFilter1
         {
             object list = list0;
 
-            if (list is Atom)
+            if (list is IAtomic)
             {
                 return (T)list;
             }
@@ -1240,7 +1312,7 @@ namespace LogicalParticleFilter1
             {
                 outl.AddPart(renameVariables((Part) inL.list[i], level, parent));
                 /*
-                        if (list[i] is Atom) {
+                        if (list[i] is IAtomic) {
                             out[i] = list[i];
                         } else if (list[i] is Variable) {
                             out[i] = new Variable(list[i].name + "." + level);
@@ -1293,7 +1365,7 @@ namespace LogicalParticleFilter1
 
             // Do we have a builtin?
 
-            builtinDelegate builtin = (builtinDelegate) PDB.builtin[thisTerm.name + "/" + thisTerm.Arity];
+            builtinDelegate builtin = (builtinDelegate)PDB.builtin[thisTerm.name + "/" + thisTerm.Arity];
 
        //if (trace) { Console.Write("Debug: searching for builtin " + thisTerm.name + "/" + ((PartList)((PartList)thisTerm.partlist).list).length + "\n"); }
 		if (builtin != null) {
@@ -1493,26 +1565,28 @@ namespace LogicalParticleFilter1
 		// Rename the variables in the head and body
 		// var renamedHead = new Term(rule.head.name, renameVariables(rule.head.ArgList, level));
 
-		var first = value((Part)thisTerm.ArgList[0], environment);
-		if (!(first is  Atom)) {
-			//print("Debug: Comparitor needs First bound to an Atom, failing\n");
-			return null;
-		}
+	    var first = value((Part) thisTerm.ArgList[0], environment) as IAtomic;
+        if (first == null)
+        {
+            //print("Debug: Comparitor needs First bound to an Atom, failing\n");
+            return null;
+        }
 
-		var second = value((Part)thisTerm.ArgList[1], environment);
-		if (!(second is Atom)) {
+	    var second = value((Part) thisTerm.ArgList[1], environment) as IAtomic;
+        if (second == null)
+        {
 			//print("Debug: Comparitor needs Second bound to an Atom, failing\n");
 			return null;
 		}
 
 		var cmp = "eq";
-        int cmpv=first.name.CompareTo(second .name);
+        int cmpv=first.CompareTo(second);
         if (cmpv<0) cmp ="lt";
         if (cmpv>0) cmp="gt";
 		//if (first.name < second.name) cmp = "lt";
 		//else if (first.name > second.name) cmp = "gt";
 
-		var env2 = unify((Part)thisTerm.ArgList[2], new Atom(cmp), environment);
+		var env2 = unify((Part)thisTerm.ArgList[2], Atom.Make(cmp), environment);
 
 		if (env2 == null) {
 			//print("Debug: Comparitor cannot unify CmpValue with " + cmp + ", failing\n");
@@ -1534,30 +1608,30 @@ namespace LogicalParticleFilter1
         // Rename the variables in the head and body
         // var renamedHead = new Term(rule.head.name, renameVariables(rule.head.partlist.list, level));
 
-        var first = value((Part)thisTerm.partlist.list[0], environment);
-        if (!(first is Atom))
+        var first = value((Part) thisTerm.partlist.list[0], environment) as IAtomic;
+        if (first == null)
         {
             //print("Debug: Comparitor needs First bound to an Atom, failing\n");
             return null;
         }
 
-        var second = value((Part)thisTerm.partlist.list[1], environment);
-        if (!(second is Atom))
+        var second = value((Part) thisTerm.partlist.list[1], environment) as IAtomic;
+        if (second == null)
         {
             //print("Debug: Comparitor needs Second bound to an Atom, failing\n");
             return null;
         }
 
         var cmp = "eq";
-        double v1 = double.Parse (first.name);
-        double v2 = double.Parse(second.name);
+        double v1 = first.AsDouble();
+        double v2 = second.AsDouble();
         int cmpv = v1.CompareTo(v2);
         if (cmpv < 0) cmp = "gt";
         if (cmpv > 0) cmp = "lt";
         //if (first.name < second.name) cmp = "lt";
         //else if (first.name > second.name) cmp = "gt";
 
-        var env2 = unify((Part)thisTerm.partlist.list[2], new Atom(cmp), environment);
+        var env2 = unify((Part)thisTerm.partlist.list[2], Atom.Make(cmp), environment);
 
         if (env2 == null)
         {
@@ -1639,7 +1713,7 @@ namespace LogicalParticleFilter1
           //  PartList goalList = (PartList)goalIn;
 
 		Part collect0 = value((Part)thisTerm.ArgList[0], environment);
-		Part subgoal =(PartList ) value((Part)thisTerm.ArgList[1], environment);
+		Part subgoal = value((Part)thisTerm.ArgList[1], environment);
 		Part into = value((Part)thisTerm.ArgList[2], environment);
 
 		Part collect = renameVariables(collect0, level, thisTerm);
@@ -1660,7 +1734,7 @@ namespace LogicalParticleFilter1
 		// Turn anslist into a proper list and unify with 'into'
 		
 		// optional here: nil anslist -> fail?
-		Part answers = new Atom(FUNCTOR_NIL);
+		Part answers = Atom.Make(FUNCTOR_NIL);
 
 		/*
 		print("Debug: anslist = [");
@@ -1749,15 +1823,16 @@ namespace LogicalParticleFilter1
 	    PartList ourParList =(PartList) ((PartList)thisTerm.ArgList[0]).list[0];
 	
 		// Get the first term, the template.
-        var first = value((Part)ourParList.list[0], environment);
-		if (!(first is Atom)) {
-			//print("Debug: External needs First bound to a string Atom, failing\n");
-			return null;
-		}
-		//var r = first.name.match(/^"(.*)"$/);
+            var first = value((Part) ourParList.list[0], environment) as IAtomic;
+            if (first == null)
+            {
+                //print("Debug: External needs First bound to a string Atom, failing\n");
+                return null;
+            }
+            //var r = first.name.match(/^"(.*)"$/);
 		//if (! r) return null;
 		//r = r[1];
-        Match rm = Regex.Match(((Atom)first).name, @"^\""(.*)\""$");
+        Match rm = Regex.Match(((Atom)first).AsString(), @"^\""(.*)\""$");
         if (!rm.Success) return null;
         string r = rm.Groups[1].Value;
 
@@ -1770,7 +1845,7 @@ namespace LogicalParticleFilter1
         int i = 1;
 
 
-		while (second is Term && ((Term)second).name == FUNCTOR_LIST) {
+		while (second is Term && IsListName(((Term)second).name)) {
             next = (PartList)((Term)second).ArgList[0];
             next = (Part)((PartList)next).list[0];
             next = (Part)((PartList)next).list[0];
@@ -1789,8 +1864,8 @@ namespace LogicalParticleFilter1
             }
 			// Go through second an argument at a time...
             //Part arg = value((Part)((Term)second).ArgList[0], environment);
-            Part arg = value(argV, environment);
-            if (!(arg is Atom))
+            var arg = value(argV, environment) as IAtomic;
+            if (arg == null)
             {
 				//print("DEBUG: External/3: argument "+i+" must be an Atom, not "); arg.print(); print("\n");
 				return null;
@@ -1798,7 +1873,7 @@ namespace LogicalParticleFilter1
 			//var re = new RegExp("\\$"+i, "g");
 			//print("DEBUG: External/3: RegExp is "+re+", arg is "+arg.name+"\n");
 			//r = r.Replace(re, arg.name);
-            r = Regex .Replace (r,"\\$"+i,((Atom)arg).name);
+            r = Regex .Replace (r,"\\$"+i,((Atom)arg).AsString());
 
 			//print("DEBUG: External/3: r becomes "+r+"\n");
 
@@ -1827,7 +1902,7 @@ namespace LogicalParticleFilter1
 
 
 		// Convert back into an atom...
-        var env2 = unify((Part)ourParList.list[2], new Atom(ret), environment);
+        var env2 = unify((Part)ourParList.list[2], Atom.Make(ret), environment);
 
 		if (env2 == null) {
 			//print("Debug: External/3 cannot unify OutValue with " + ret + ", failing\n");
@@ -1843,13 +1918,13 @@ namespace LogicalParticleFilter1
         PartList ourParList = (PartList)((PartList)thisTerm.ArgList[0]).list[0];
 
         // Get the first term, the template.
-        var first = value((Part)ourParList.list[0], environment);
-        if (!(first is Atom))
+	    var first = value((Part) ourParList.list[0], environment) as IAtomic;
+        if (first == null)
         {
 			//print("Debug: External needs First bound to a string Atom, failing\n");
 			return null;
 		}
-        Match rm = Regex.Match(first.name, @"^\""(.*)\""$");
+        Match rm = Regex.Match(first.AsString(), @"^\""(.*)\""$");
         if (!rm.Success) return null;
         string r = rm.Groups[1].Value;
 
@@ -1859,7 +1934,7 @@ namespace LogicalParticleFilter1
         Part second = (Part)value((Term)ourParList.list[1], environment);
         Part next;
         int i = 1;
-        while (second is Term && second.name == FUNCTOR_LIST)
+        while (second is Term && IsListName(((Term)second).name))
         {
             next = (PartList)((Term)second).ArgList[0];
             next = (Part)((PartList)next).list[0];
@@ -1879,8 +1954,8 @@ namespace LogicalParticleFilter1
             }
             // Go through second an argument at a time...
             //Part arg = value((Part)((Term)second).ArgList[0], environment);
-            Part arg = value(argV, environment);
-            if (!(arg is Atom))
+            var arg = value(argV, environment) as IAtomic;
+            if (arg == null)
             {
                 //print("DEBUG: External/3: argument "+i+" must be an Atom, not "); arg.print(); print("\n");
                 return null;
@@ -1888,7 +1963,7 @@ namespace LogicalParticleFilter1
             //var re = new RegExp("\\$"+i, "g");
             //print("DEBUG: External/3: RegExp is "+re+", arg is "+arg.name+"\n");
             //r = r.Replace(re, arg.name);
-            r = Regex.Replace(r, "\\$" + i, ((Atom)arg).name);
+            r = Regex.Replace(r, "\\$" + i, ((IAtomic)arg).AsString());
 
             //print("DEBUG: External/3: r becomes "+r+"\n");
 
@@ -1965,12 +2040,12 @@ namespace LogicalParticleFilter1
 
             public int Count
             {
-                get { return arrayList.Count; }
+                get { lock (Sync) return arrayList.Count; }
             }
 
             public void Add(Rule r)
             {
-                arrayList.Add(r);
+                lock (Sync) arrayList.Add(r);
             }
             public RuleList()
             {
@@ -1979,9 +2054,12 @@ namespace LogicalParticleFilter1
 
             public void RemoveAt(int i)
             {
-                Rule r = this[i];
-                Release(r);
-                arrayList.RemoveAt(i);
+                lock (Sync)
+                {
+                    Rule r = this[i];
+                    Release(r);
+                    arrayList.RemoveAt(i);
+                }
             }
 
             private void Release(Rule r)
@@ -1992,29 +2070,42 @@ namespace LogicalParticleFilter1
 
             public Rule this[int i]
             {
-                get { return (Rule)arrayList[i]; }
-                set { arrayList[i] = value; }
+                get { lock (Sync) return (Rule)arrayList[i]; }
+                set { lock (Sync) arrayList[i] = value; }
             }
 
+            public object Sync
+            {
+                get
+                {
+                    return arrayList;
+                }
+            }
             public void Clear()
             {
-                if (syncPDB != null)
+                lock (Sync)
                 {
-                    lock (syncPDB.index)
+                    if (syncPDB != null)
                     {
-                        syncPDB.index.Clear();
+                        lock (syncPDB.index)
+                        {
+                            if (syncPDB.index.Count != 0)
+                            {
+                                syncPDB.index.Clear();
+                            }
+                        }
                     }
+                    foreach (Rule rule in arrayList)
+                    {
+                        Release(rule);
+                    }
+                    arrayList.Clear();
                 }
-                foreach (Rule rule in arrayList)
-                {
-                    Release(rule);
-                }
-                arrayList.Clear();
             }
 
             public IEnumerator GetEnumerator()
             {
-                return arrayList.GetEnumerator();
+                lock (Sync) return arrayList.GetEnumerator();
             }
         }
         public class PDB
@@ -2072,11 +2163,10 @@ namespace LogicalParticleFilter1
             {
                 return new NotImplementedException(type + " Missing '" + p + "' for " + this.ToPLStringReadable());
             }
-            public const string LIST_FNAME = "cons";
             public abstract string type { get; }
-            public virtual string name
+            virtual public string name
             {
-                get { throw Missing("name"); }
+                get { throw Missing("Functor/Name"); }
             }
             public virtual int Arity
             {
@@ -2085,10 +2175,6 @@ namespace LogicalParticleFilter1
             public virtual TermList ArgList
             {
                 get { throw Missing("ArgList"); }
-            }
-            public static bool IsListName(string s)
-            {
-                return s == LIST_FNAME || s == ".";
             }
 
             public abstract void print();
@@ -2100,19 +2186,14 @@ namespace LogicalParticleFilter1
                 return ToPLStringReadable();
             }
 
+            public virtual double AsDouble()
+            {
+                throw new NotImplementedException();
+            }
         }
 
         public class PartList : Part
         {
-            public override string name
-            {
-                get
-                {
-                    return base.name; 
-                    return null;
-                }
-            }
-
             // Parameters {Partlist} = [Part]
             // Part = Variable | Atom | Term
             //public string name;
@@ -2189,25 +2270,246 @@ namespace LogicalParticleFilter1
             }
         }
 
-        public class Atom : Part
+        public static Dictionary<string, Atom> AtomTable = new Dictionary<string, Atom>();
+        public interface IAtomic
         {
-            readonly public string _name;
+            int CompareTo(IAtomic atomic);
+            IValuedNode AsValuedNode();
+            string AsString();
+            bool Unify(IAtomic atomic);
+            double AsDouble();
+            object Functor0 { get; }
+        }
+        public class Atom : Part, IAtomic
+        {
+            readonly public INode _name;
+            string aname;
+            string prefix;
+            string uri;
             public override string name
             {
                 get
                 {
-                    return _name;
+                    if (aname != null) return aname;
+                    var f = "" + Functor0;
+                    if (f.Contains("#"))
+                    {
+
+                    }
+                    aname = f;
+                    return f;
+                }
+            }
+            public object Functor0
+            {
+                get
+                {
+                    if (_name is StringNode)
+                    {
+                        return _name.AsValuedNode().AsString();
+                    }
+                    if (_name is BooleanNode)
+                    {
+                        return _name.AsValuedNode().AsBoolean();
+                    }
+                    if (_name is DateTimeNode)
+                    {
+                        return ((DateTimeOffset)_name.AsValuedNode().AsDateTime()).DateTime;
+                    }
+                    if (_name is NumericNode)
+                    {
+                        if (_name is LongNode)
+                        {
+                            return _name.AsValuedNode().AsInteger();
+                        }
+                        if (_name is UnsignedLongNode)
+                        {
+                            return (ulong)_name.AsValuedNode().AsInteger();
+                        }
+                        if (_name is SignedByteNode)
+                        {
+                            return (sbyte)_name.AsValuedNode().AsInteger();
+                        }
+                        if (_name is DoubleNode)
+                        {
+                            return _name.AsValuedNode().AsDouble();
+                        }
+                        if (_name is DecimalNode)
+                        {
+                            return _name.AsValuedNode().AsDecimal();
+                        }
+                        if (_name is FloatNode)
+                        {
+                            return _name.AsValuedNode().AsFloat();
+                        }
+                        if (_name is ByteNode)
+                        {
+                            return (byte)_name.AsValuedNode().AsInteger();
+                        }
+                    }
+                    string localAname;
+                    //if (aname != null) return aname;
+                    string path = _name.AsValuedNode().AsString();
+                    bool devolved = GraphWithDef.DevolveURI(rdfDefinations.NamespaceMap, path, out uri, out prefix, out localAname);
+                    bool noaname = string.IsNullOrEmpty(localAname);
+                    if (devolved && !noaname)
+                    {
+                        if (string.IsNullOrEmpty(prefix))
+                        {
+                            return path;
+                        }
+                        return localAname;
+                    }
+                    return path;
                 }
             }
             public int hash = 0;
+            public string quoted = null;
             public override string type { get { return "Atom"; } }
-            public Atom(string head)
+            public Atom(INode head, string quoting)
             {
-                head = NameCheck(head);
-                _name = head; hash = name.GetHashCode();
+                _name = head;
+                hash = _name.GetHashCode();
+                quoted = quoting;
+                var f = name;
+                if (f.Contains("0"))
+                {
+                    
+                }
             }
-            public override void print() { Console.Write(this.name); }
-            public override string ToPLStringReadable() { return this.name; }
+            public override void print()
+            {
+                Console.Write(this.ToPLStringReadable());
+            }
+
+            public bool IsLiteral
+            {
+                get { return _name is ILiteralNode; }
+            }
+            public bool IsString
+            {
+                get { return !(_name is IUriNode) && !(_name is NumericNode); }
+            }
+            public string IsReadable
+            {
+                get { return ToPLStringReadable() + " as " + _name.GetType(); }
+            }
+            public override string ToPLStringReadable()
+            {
+                string name = this.name;
+                if (quoted == null)
+                {
+                    char fc = name[0];
+                    if (char.IsLetter(fc) && char.IsLower(fc))
+                    {
+                        if (name.IndexOfAny(" ".ToCharArray()) == -1)
+                        {
+                            return name;
+                        }
+                    }
+                    if (_name is NumericNode) return name;
+                    return "\"" + name + "\"";
+                }
+                return quoted[0] + name + quoted[1];
+            }
+
+            public override string ToString()
+            {
+                if (_name is StringNode)
+                {
+                    return name;
+                }
+                return name;
+            }
+            public static Atom Make(string s)
+            {
+                if (s == "[]" || s == FUNCTOR_NIL) s = "'robokind:nil'";
+                if (s == "." || s == FUNCTOR_CONS) s = "'robokind:cons'";
+                char c0 = s[0];
+                int sl = s.Length;
+                char cL = s[sl - 1];
+                string quoting = "\"\"";
+                INode makeNode = null;
+                bool isNumberMaybe = c0 == '+' || c0 == '-' || char.IsDigit(c0);
+                if (isNumberMaybe)
+                {
+                    makeNode = GraphWithDef.CExtracted(rdfDefinations, s);
+                    quoting = null;
+                }
+                if (c0 == '"' && cL == c0)
+                {
+                    s = s.Substring(1, sl - 2);
+                    quoting = "" + c0 + cL;
+                }
+                if (c0 == '\'' && cL == c0)
+                {
+                    s = s.Substring(1, sl - 2);
+                    quoting = "" + c0 + cL;
+                }
+                if (c0 == '<' && cL == '>')
+                {
+                    s = s.Substring(1, sl - 2);
+                    quoting = "" + c0 + cL;
+                }
+                return MakeAtom(s, quoting, makeNode);
+            }
+
+            public static Atom MakeAtom(string s, string quoting, INode makeNode)
+            {
+                lock (AtomTable)
+                {
+                    string atomKey = quoting + s;
+                    Atom atom;
+                    if (!AtomTable.TryGetValue(atomKey, out atom))
+                    {
+                        makeNode = makeNode ?? MakeNode(s, quoting);
+                        atom = AtomTable[atomKey] = new Atom(makeNode, quoting);
+                        return atom;
+                    }
+                    return atom;
+                }
+            }
+
+            public string AsString()
+            { 
+                return AsValuedNode().AsString();
+            }
+
+            public bool Unify(IAtomic atomic)
+            {
+                if (ReferenceEquals(this, atomic))
+                {
+                    return true;
+                }
+                if (AsValuedNode().CompareTo(atomic.AsValuedNode()) == 0)
+                {
+                    if (!Functor0.Equals(atomic.Functor0))
+                    {
+                        return true;
+                    }
+                    return true;
+                }
+                if (Functor0.Equals(atomic.Functor0))
+                {
+                    return true;
+                }
+                return false;
+            }
+
+            public override double AsDouble()
+            {
+                return AsValuedNode().AsDouble();
+            }
+
+            public int CompareTo(IAtomic atomic)
+            {
+                return AsValuedNode().CompareTo(atomic.AsValuedNode());
+            }
+
+            public IValuedNode AsValuedNode()
+            {
+                return _name.AsValuedNode();
+            }
         }
         public class Variable : Part
         {
@@ -2218,13 +2520,21 @@ namespace LogicalParticleFilter1
             public override void print() { Console.Write(this.name); }
             public override string ToPLStringReadable() { return this.name; }
         }
+        public static bool IsListName(string s)
+        {
+            return s == "cons" || s == "." || s == FUNCTOR_CONS;
+        }
+        public static bool IsList(Part x)
+        {
+            return x is Term && IsListName(x.name) && ((Term) x).Arity == 2;
+        }
         public class Term : Part
         {
             public string _name;
             public override string name { get { return _name; } }
             public override string type { get { return "Term"; } }
 
-            public TermList ArgList
+            public override TermList ArgList
             {
                 get { return partlist.list; }
             }
@@ -2234,7 +2544,7 @@ namespace LogicalParticleFilter1
                 get { return partlist.Length; }
             }
 
-            public IEnumerable Args
+            public IEnumerable<Part> Args
             {
                 get { return partlist.list.ToList(); }
             }
@@ -2244,6 +2554,7 @@ namespace LogicalParticleFilter1
             public int excludeRule = -1;
             public bool cut = false;
             public Term parent = null;
+
             public bool headIsVar()
             {
                 // should be [A-Z\_\?]
@@ -2257,19 +2568,19 @@ namespace LogicalParticleFilter1
             }
             public override void print()
             {
-                if (this.name == FUNCTOR_LIST)
+                if (IsListName(this.name))
                 {
                     Part x = this;
-                    while (x is Term && x.name == "cons" && ((Term)x).Arity == 2)
+                    while (IsList(x))
                     {
-                        x = ((Term)x).ArgList[1];
+                        x = ((Term) x).ArgList[1];
                     }
-                    if ((x is Atom && x.name == FUNCTOR_NIL) || x is Variable )
+                    if ((x is IAtomic && ((Atom)x).name == FUNCTOR_NIL) || x is Variable )
                     {
                         x = this;
                         Console.Write("[");
                         var com = false;
-                        while (x is Term && x.name == "cons" && ((Term)x).Arity == 2)
+                        while (IsList(x))
                         {
                             if (com) Console.Write(", ");
                             (((Term)x).ArgList[0]).print(); // May need to case var/atom/term
@@ -2294,17 +2605,17 @@ namespace LogicalParticleFilter1
             public override string ToPLStringReadable()
             {
                 string result = "";
-                if (this.name == FUNCTOR_LIST)
+                if (IsListName(this.name))
                 {
                     Part x = this;
-                    while (x is Term && x.name == FUNCTOR_LIST && x.Arity == 2)
+                    while (IsList(x))
                         x = ((Term)x).ArgList[1];
-                    if ((x is Atom && x.name == FUNCTOR_NIL) || x is Variable)
+                    if ((x is IAtomic && x.name == FUNCTOR_NIL) || x is Variable)
                     {
                         x = this;
                         result += "[";
                         var com = false;
-                        while (x is Term && x.name == FUNCTOR_LIST && x.Arity == 2)
+                        while (IsList(x))
                         {
                             if (com) result +=", ";
                             result += ((Term)x).ArgList[0].ToPLStringReadable(); // May need to case var/atom/term
@@ -2698,11 +3009,11 @@ namespace LogicalParticleFilter1
                 if (tk.type != "punc" || tk.current != "[") return null;
                 // Parse a list (syntactic sugar goes here)
                 tk.consume();
-                // Special case: [] = new atom(nil).
+                // Special case: [] = Atom.Make(nil).
                 if (tk.type == "punc" && tk.current == "]")
                 {
                     tk.consume();
-                    return new Atom(FUNCTOR_NIL);
+                    return Atom.Make(FUNCTOR_NIL);
                 }
 
                 // Get a list of parts into l
@@ -2730,7 +3041,7 @@ namespace LogicalParticleFilter1
                 }
                 else
                 {
-                    append = new Atom(FUNCTOR_NIL);
+                    append = Atom.Make(FUNCTOR_NIL);
                 }
                 if (tk.current != "]") return null;
                 tk.consume();
@@ -2745,7 +3056,7 @@ namespace LogicalParticleFilter1
             var name = tk.current;
             tk.consume();
 
-            if (tk.current != "(") return new Atom(name);
+            if (tk.current != "(") return Atom.Make(name);
             tk.consume();
 
             PartList p = new PartList();
@@ -2773,7 +3084,7 @@ namespace LogicalParticleFilter1
             PartList frag = new PartList();
             frag.AddPart((Part)li);
             frag.AddPart(append);
-            append = new Term(FUNCTOR_LIST, frag);
+            append = new Term(FUNCTOR_CONS, frag);
             return append;
         }
 
@@ -2867,7 +3178,7 @@ namespace LogicalParticleFilter1
         }
 
         // Give a new environment from the old with "n" (a string variable name) bound to "z" (a part)
-        // Part is Atom|Term|Variable
+        // Part is IAtomic|Term|Variable
         public PEnv newEnv(string n, Part z, PEnv e)
         {
             // We assume that n has been 'unwound' or 'followed' as far as possible
@@ -2905,7 +3216,7 @@ namespace LogicalParticleFilter1
                 if (trace) Console.WriteLine("     MATCH");
                 return newEnv(((Variable)y).name, x, env);
              }
-            if (x is Atom || y is Atom)
+            if (x is IAtomic || y is IAtomic)
                 if (x.type == y.type && ((Atom)x).name == ((Atom)y).name)
                 {
                     if (trace) Console.WriteLine("     MATCH");
@@ -2937,12 +3248,12 @@ namespace LogicalParticleFilter1
                 if (!xvar && yvar)
                 {
                     if (trace) Console.WriteLine("     MATCH");
-                    return newEnv(((Term)y).name, new Atom(((Term)x).name), env);
+                    return newEnv(((Term)y).name, Atom.Make(((Term)x).name), env);
                 }
                 if (xvar && !yvar)
                 {
                     if (trace) Console.WriteLine("     MATCH");
-                    return newEnv(((Term)x).name, new Atom(((Term)y).name), env);
+                    return newEnv(((Term)x).name, Atom.Make(((Term)y).name), env);
                 }
                 if (xvar && yvar)
                 {
@@ -2995,9 +3306,9 @@ namespace LogicalParticleFilter1
             if (trace) { Console.Write("     unify X="); x.print(); Console.Write("  Y="); y.print(); Console.WriteLine(); }
 
             // both atoms/constants
-            if (x is Atom && y is Atom)
+            if (x is IAtomic && y is IAtomic)
             {
-                if (((Atom)x).name == ((Atom)y).name)
+                if (((IAtomic)x).Unify((IAtomic)y))
                 {
                     if (trace) Console.WriteLine("     MATCH");
                     return env;
@@ -3049,14 +3360,14 @@ namespace LogicalParticleFilter1
                 }
                 if (xvar && !yvar)
                 {
-                    PEnv subEnv = unify(new Variable(((Term)x).name), new Atom(((Term)y).name), env);
+                    PEnv subEnv = unify(new Variable(((Term)x).name), Atom.Make(((Term)y).name), env);
                     if (subEnv == null)
                         return null;
                     return unify(((Term)x).partlist, ((Term)y).partlist, subEnv);
                 }
                 if (!xvar && yvar)
                 {
-                    PEnv subEnv = unify(new Atom(((Term)x).name), new Variable(((Term)y).name), env);
+                    PEnv subEnv = unify(Atom.Make(((Term)x).name), new Variable(((Term)y).name), env);
                     if (subEnv == null)
                         return null;
                     return unify(((Term)x).partlist, ((Term)y).partlist, subEnv);
@@ -3105,7 +3416,7 @@ namespace LogicalParticleFilter1
 
                 }
                 if (trace) { Console.Write("     inner-unify X="); x.print(); Console.Write("  Y="); y.print(); Console.WriteLine(); }
-                if (false && (((PartList)x).name != ((PartList)y).name))
+                if (false /*&& (((PartList)x).name != ((PartList)y).name)*/)
                     return null;	// Ooh, so first-order.
 
                 for (var i = 0; i < ((PartList)x).Length; i++)
@@ -3341,7 +3652,7 @@ namespace LogicalParticleFilter1
                     PNode[] temp = topLevelNodes.ToArray();
                     Array.Sort(temp, delegate(PNode p1, PNode p2)
                     {
-                        return CIC.Compare(p1.id,p2.id );
+                        return CIC.Compare(p1.id, p2.id);
                     });
                     return temp;
                 }
@@ -3468,7 +3779,7 @@ namespace LogicalParticleFilter1
                 }
             }
 
-            public void PrintToWriterTreeMts(StreamWriter writer, string serverRoot)
+            public void PrintToWriterTreeMts(TextWriter writer, string serverRoot)
             {
                 writer.WriteLine("<ul>");
                 foreach (PNode node in SortedTopLevelNodes)
@@ -3479,7 +3790,7 @@ namespace LogicalParticleFilter1
                 writer.WriteLine("</ul>");
             }
 
-            public void PrintToWriterOutEdges(PNode node, int indentation, StreamWriter writer, string serverRoot)
+            public void PrintToWriterOutEdges(PNode node, int indentation, TextWriter writer, string serverRoot)
             {
                 if (node == null) return;
                 //writer.Write("<p>");
@@ -3493,7 +3804,7 @@ namespace LogicalParticleFilter1
                 }
                 writer.WriteLine("</ul>");
             }
-            public void PrintToWriterInEdges(StreamWriter writer, string serverRoot)
+            public void PrintToWriterInEdges(TextWriter writer, string serverRoot)
             {
                 writer.WriteLine("<ul>");
                 foreach (PNode node in SortedTopLevelNodes)
@@ -3504,7 +3815,7 @@ namespace LogicalParticleFilter1
                 writer.WriteLine("</ul>");
             }
 
-            public void PrintToWriterInEdges(PNode node, int indentation, StreamWriter writer, string serverRoot)
+            public void PrintToWriterInEdges(PNode node, int indentation, TextWriter writer, string serverRoot)
             {
                 if (node == null) return;
                 if (indentation > 4) return;
@@ -3526,15 +3837,46 @@ namespace LogicalParticleFilter1
         {
             if (name == "cons")
             {
-                return ".";
+                return "cons";
                 throw new NotImplementedException(name);
             }
             if (name == "nil")
             {
-                return "[]";
+                return "nil";
                 throw new NotImplementedException(name);
             }
             return name;
+        }
+    }
+
+    public class DontTouchThisTextWriter : TextWriter
+    {
+        private TextWriter noClose;
+        public DontTouchThisTextWriter(TextWriter writer)
+        {
+            noClose = writer;
+        }
+
+        public override Encoding Encoding
+        {
+            get { return noClose.Encoding; }
+        }
+        public override void Flush()
+        {
+            noClose.Flush();
+        }
+        public override void Close()
+        {
+            noClose.Flush();
+        }
+
+        public override void Write(char[] buffer, int index, int count)
+        {
+            noClose.Write(buffer, index, count);
+        }
+        public override void Write(object value)
+        {
+            noClose.Write(value);
         }
     }
 
@@ -3648,9 +3990,14 @@ namespace LogicalParticleFilter1
             throw new NotImplementedException("inserting outof order");
         }
 
-        public IEnumerable ToList()
+        public IEnumerable<SIProlog.Part> ToList()
         {
-            return holder;
+            var nl = new List<SIProlog.Part>();
+            foreach (SIProlog.Part p in holder)
+            {
+                nl.Add(p);
+            }
+            return nl;
         }
     }
 }

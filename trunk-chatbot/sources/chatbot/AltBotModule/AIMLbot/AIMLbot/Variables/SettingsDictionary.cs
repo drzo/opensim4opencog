@@ -221,18 +221,26 @@ namespace RTParser.Variables
         public string GetArgVal(string normalizedName, bool followGenlMt)
         {
             normalizedName = KeyCase.NormalizeKey(normalizedName);
-            List<Dictionary<string, string>> bingingsList;
-            this.prologEngine.askQuery(QueryForNameValue(MakeArg(normalizedName), "VALUE"), dictMt, followGenlMt, out bingingsList);
+            var bingingsList = new List<Dictionary<string, SIProlog.Part>>();
+            this.prologEngine.askQuery(QueryForNameValue(MakeArg(normalizedName), "VALUE"), dictMt, followGenlMt,
+                                       bingingsList, null);
             int cnt = bingingsList.Count;
             if (cnt == 0) return null;
             string res;
-            if (cnt == 1 || true)
+            if (cnt == 1 || !followGenlMt)
             {
-                res = bingingsList[0]["VALUE"];
+                res = bingingsList[0]["VALUE"].ToPLStringReadable();
             }
             else
             {
-                res = bingingsList[cnt - 1]["VALUE"];
+                if (followGenlMt)
+                {
+                    res = bingingsList[0]["VALUE"].ToPLStringReadable();
+                }
+                else
+                {
+                    res = bingingsList[cnt - 1]["VALUE"].ToPLStringReadable();
+                }
             }
             int len = res.Length;
             return res;

@@ -1202,7 +1202,7 @@ namespace AltAIMLbot
             tickBiochemistry();
         }
 
-        public void webWriter(StreamWriter writer, string action, string query, string mt, string serverRoot)
+        public void webWriter(TextWriter writer, string action, string query, string mt, string serverRoot)
         {
             serverRoot = "/";
             //webWriter0(writer, action, query, mt, serverRoot, true);

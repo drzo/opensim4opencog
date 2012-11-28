@@ -612,7 +612,7 @@ namespace AltAIMLbot
                 return false;
             }
             string readText = File.ReadAllText(diskName);
-            defineBehavior(behaviorName, readText);
+            if (!string.IsNullOrEmpty(readText)) defineBehavior(behaviorName, readText);
             return behaveTrees.ContainsKey(behaviorName);
         }
 

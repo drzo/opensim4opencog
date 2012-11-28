@@ -140,6 +140,8 @@ namespace AltAIMLbot
         public static void processRequest(object listenerContext)
         {
                 var context = (HttpListenerContext)listenerContext;
+            tl_context = context;
+            tl_title = context.Request.Url.AbsoluteUri;
             try
             {
 
@@ -238,8 +240,8 @@ namespace AltAIMLbot
                     context.Response.StatusCode = (int)HttpStatusCode.InternalServerError ;
                     report = String.Format("<error msg=\"{0}\" />{1}</error>", e.Message, e.StackTrace); 
                 }
-                using (Stream s = context.Response.OutputStream)
-                using (StreamWriter writer = new StreamWriter(s))
+                //+using (Stream s = context.Response.OutputStream )
+                using (var writer = HtmlStreamWriter(context))
                     writer.WriteLine("<ok/>");
                 return;
 
@@ -269,51 +271,111 @@ namespace AltAIMLbot
 
         public static void READ(HttpListenerContext context)
         {
+            tl_BodyDepth = 0;
             //GET (READ from DB)
             string [] sections = context.Request.RawUrl.Split('?');
             string justURL = sections[0];
             string filename = Path.GetFileName(justURL);
             string behaviorName = filenameToBehaviorname(filename);
+            if (string.IsNullOrEmpty(behaviorName))
+            {
+                behaviorName = context.Request.QueryString["btx"] ?? "";
+            }
             string behaviorFile = ourServitor.curBot.myBehaviors.behaviorDiskName(behaviorName);
+            tl_MultiPage = null;
+            tl_AsHTML = true;
+            string mt = context.Request.QueryString["mt"];
+            if (mt!=null)
+            {
+                // mulitple Mts in one read
+                var mbf = ourServitor.curBot.prologEngine.GatherMts(mt);
+                if (mbf != null && mbf.Count > 0)
+                {
+                    //+using (Stream s = context.Response.OutputStream )
+                    using (var writer = HtmlStreamWriter(context))
+                    {
+                        tl_MultiPage = writer;
+                        foreach (string mtT in mbf)
+                        {
+                            mt = mtT;
+                            WILDCARD_READ(context, justURL, behaviorName, behaviorFile, mt);
+                        }
+                        tl_MultiPage = null;
+                        writer.Close();
+                    }
+                    return;
+                }
+            }
+            if (!File.Exists(behaviorFile))
+            {
+                // mulitple Behavior files in one read
+                var mbf = ourServitor.myScheduler.GatherTaskNames(behaviorName);
+                if (mbf != null && mbf.Count > 0)
+                {
+                    //+using (Stream s = context.Response.OutputStream )
+                    using (var writer = HtmlStreamWriter(context))
+                    {
+                        tl_MultiPage = writer;
+                        foreach (string behaviorT in mbf)
+                        {
+                            behaviorName = behaviorT;
+                            behaviorFile = ourServitor.curBot.myBehaviors.behaviorDiskName(behaviorName);
+                            WILDCARD_READ(context, justURL, behaviorName, behaviorFile, mt);
+                        }
+                        tl_MultiPage = null;
+                        writer.Close();
+                    }
+                    return;
+                }
+            }
+            WILDCARD_READ(context, justURL, behaviorName, behaviorFile, mt);
+        }
+
+        private static void WILDCARD_READ(HttpListenerContext context, string justURL, string behaviorName,
+            string behaviorFile, string mt)
+        {
             string behaviorDir = ourServitor.curBot.myBehaviors.persistantDirectory;
             //string path = Path.Combine(startUpPath, filename);
             //string path = Path.Combine(startUpPath, context.Request.RawUrl);
             string path = "." + justURL;
             string query = context.Request.QueryString["q"];
             string action = context.Request.QueryString["a"];
-            string mt = context.Request.QueryString["mt"];
-            Console.WriteLine("WEBGET path={0},action={1},query={2}", path, action, query);
+            tl_title = path;
+            Console.WriteLine("WEBGET path={0},action={1},query={2},btx={3}", path, action, query, behaviorName);
             if (path.Contains("./plot/"))
             {
-                context.Response.StatusCode = (int)HttpStatusCode.OK;
-                using (Stream s = context.Response.OutputStream)
-                using (StreamWriter writer = new StreamWriter(s))
+                context.Response.StatusCode = (int) HttpStatusCode.OK;
+                //+using (Stream s = context.Response.OutputStream )
+                using (var writer = HtmlStreamWriter(context))
                     ourServitor.curBot.realChem.webWriter(writer, action, query, mt, serverRoot);
                 return;
             }
             if (path.Contains("./xrdf/"))
             {
-                context.Response.StatusCode = (int)HttpStatusCode.OK;
-                using (Stream s = context.Response.OutputStream)
-                using (StreamWriter writer = new StreamWriter(s))
-                    ourServitor.myServitorEndpoint.webWriter(context,writer, action, query, path, mt, serverRoot);
+                // AsHTML = false for when function already understands it is printing HTML
+                tl_AsHTML = false;
+                context.Response.StatusCode = (int) HttpStatusCode.OK;
+                //+using (Stream s = context.Response.OutputStream )
+                using (var writer = HtmlStreamWriter(context))
+                    ourServitor.myServitorEndpoint.webWriter(context, writer, action, query, path, mt, serverRoot);
                 return;
             }
 
             if (path.Contains("./scheduler/"))
             {
-                context.Response.StatusCode = (int)HttpStatusCode.OK;
-                using (Stream s = context.Response.OutputStream)
-                using (StreamWriter writer = new StreamWriter(s))
-                    ourServitor.myScheduler.performAction(writer,action,query, behaviorName);
+                context.Response.StatusCode = (int) HttpStatusCode.OK;
+                //+using (Stream s = context.Response.OutputStream )
+                using (var writer = HtmlStreamWriter(context))
+                    ourServitor.myScheduler.performAction(writer, action, query, behaviorName);
                 return;
             }
             if (path.Contains("./siprolog/"))
             {
-                context.Response.StatusCode = (int)HttpStatusCode.OK;
-                using (Stream s = context.Response.OutputStream)
-                using (StreamWriter writer = new StreamWriter(s))
-                    ourServitor.prologEngine.webWriter(writer, action, query,mt, serverRoot);
+                tl_AsHTML = false;
+                context.Response.StatusCode = (int) HttpStatusCode.OK;
+                //+using (Stream s = context.Response.OutputStream )
+                using (var writer = HtmlStreamWriter(context))
+                    ourServitor.prologEngine.webWriter(writer, action, query, mt, serverRoot);
                 return;
             }
 
@@ -325,9 +387,9 @@ namespace AltAIMLbot
                     path = behaviorFile;
                 }
 
-                context.Response.StatusCode = (int)HttpStatusCode.OK;
-                using (Stream s = context.Response.OutputStream)
-                using (StreamWriter writer = new StreamWriter(s))
+                context.Response.StatusCode = (int) HttpStatusCode.OK;
+                //+using (Stream s = context.Response.OutputStream )
+                using (var writer = HtmlStreamWriter(context))
                     analyse(writer, path, behaviorName, justURL);
                 return;
             }
@@ -340,9 +402,9 @@ namespace AltAIMLbot
                     path = behaviorFile;
                 }
 
-                context.Response.StatusCode = (int)HttpStatusCode.OK;
-                using (Stream s = context.Response.OutputStream)
-                using (StreamWriter writer = new StreamWriter(s))
+                context.Response.StatusCode = (int) HttpStatusCode.OK;
+                //+using (Stream s = context.Response.OutputStream )
+                using (var writer = HtmlStreamWriter(context))
                     if (query != null)
                     {
                         analyseGraphMaster(writer, query, justURL);
@@ -356,34 +418,35 @@ namespace AltAIMLbot
 
             if (path.Contains("./analysisllist/"))
             {
-                string furi = justURL ;
-                using (Stream s = context.Response.OutputStream)
-                using (StreamWriter writer = new StreamWriter(s))
-                try
-                {
-                    context.Response.StatusCode = (int)HttpStatusCode.OK;
-                    string[] fileList = Directory.GetFiles(behaviorDir);
-                    string fileListString = "";
-                    string uriPrefix = serverRoot + "behavior/";
+                tl_AsHTML = true;
+                string furi = justURL;
+                //+using (Stream s = context.Response.OutputStream )
+                using (var writer = HtmlStreamWriter(context))
+                    try
                     {
-                        foreach (string f in fileList)
+                        context.Response.StatusCode = (int) HttpStatusCode.OK;
+                        string[] fileList = Directory.GetFiles(behaviorDir);
+                        string fileListString = "";
+                        string uriPrefix = serverRoot + "behavior/";
                         {
-                            furi = uriPrefix + Path.GetFileName(f);
-                            string behaviorName2 = filenameToBehaviorname(Path.GetFileName(f));
-                            string justURL2 = "";
-                            analyse(writer, f, behaviorName2, furi);
+                            foreach (string f in fileList)
+                            {
+                                furi = uriPrefix + Path.GetFileName(f);
+                                string behaviorName2 = filenameToBehaviorname(Path.GetFileName(f));
+                                string justURL2 = "";
+                                analyse(writer, f, behaviorName2, furi);
+                            }
+                            //msg = System.Text.Encoding.ASCII.GetBytes(fileListString);
+                            writer.Close();
                         }
-                        //msg = System.Text.Encoding.ASCII.GetBytes(fileListString);
+                    }
+                    catch (Exception e)
+                    {
+                        writer.WriteLine("<{0}> <hasErrorMessage> \"{1}\"", furi, e.Message);
+                        writer.WriteLine("<{0}> <hasErrorStackTrace> \"{1}\"", furi,
+                                         e.StackTrace.Replace('\n', ' ').Replace('\r', ' '));
                         writer.Close();
                     }
-                }
-                catch (Exception e)
-                {
-                    writer.WriteLine("<{0}> <hasErrorMessage> \"{1}\"",furi,e.Message);
-                    writer.WriteLine("<{0}> <hasErrorStackTrace> \"{1}\"", furi, 
-                                       e.StackTrace.Replace('\n',' ').Replace ('\r',' '));
-                    writer.Close();
-                }
                 return;
             }
 
@@ -402,14 +465,14 @@ namespace AltAIMLbot
 
                 if (path.EndsWith("/list/"))
                 {
-                    context.Response.StatusCode = (int)HttpStatusCode.OK;
+                    tl_AsHTML = true;
+                    context.Response.StatusCode = (int) HttpStatusCode.OK;
                     //context.Response.ContentLength64 = 0;
-
-                    string [] fileList = Directory.GetFiles(behaviorDir);
+                    string[] fileList = Directory.GetFiles(behaviorDir);
                     string fileListString = "";
-                    string uriPrefix = serverRoot+"behavior/";
-                    using (Stream s = context.Response.OutputStream)
-                    using (StreamWriter writer = new StreamWriter(s))
+                    string uriPrefix = serverRoot + "behavior/";
+                    //+using (Stream s = context.Response.OutputStream )
+                    using (var writer = HtmlStreamWriter(context))
                     {
                         foreach (string f in fileList)
                         {
@@ -540,7 +603,7 @@ namespace AltAIMLbot
             return gmPath;
         }
 
-        public static void fetchGraphMaster(StreamWriter writer, string rawURL)
+        public static void fetchGraphMaster(TextWriter writer, string rawURL)
         {
             //loadAimlIndex();
             string gmPath = URITographMaster(rawURL);
@@ -556,7 +619,7 @@ namespace AltAIMLbot
             
         }
 
-        public static void analyseGraphMaster(StreamWriter writer, string query, string rawURL)
+        public static void analyseGraphMaster(TextWriter writer, string query, string rawURL)
         {
             loadAimlIndex();
             List<string> rawList = query.Split(' ').ToList();
@@ -737,12 +800,80 @@ namespace AltAIMLbot
              return ngrams;
         }
 
+        [ThreadStatic]
+        public static int tl_BodyDepth;
+        [ThreadStatic]
+        public static bool tl_AsHTML;
+        [ThreadStatic]
+        public static HttpListenerContext tl_context;
+        [ThreadStatic]
+        public static string tl_title;
+        [ThreadStatic]
+        public static TextWriter tl_MultiPage;
 
+        private static void WriteHtmlPreBody(TextWriter writer, string title)
+        {
+            if (!tl_AsHTML) return;
+            tl_title = title ?? tl_title;
+            if (tl_BodyDepth == 0)
+            {
+                writer.WriteLine("<html><head><title>{0}</title></head><body>", tl_title);
+            }
+            tl_BodyDepth++;
+        }
+
+        private static void WriteHtmlPostBody(TextWriter writer)
+        {
+            if (!tl_AsHTML) return;
+            tl_BodyDepth--;
+            if (tl_BodyDepth == 0)
+            {
+                writer.WriteLine("</body></html>");
+            }
+        }
+
+        private static TextWriter HtmlStreamWriter(HttpListenerContext context)
+        {
+            if (tl_MultiPage != null) return tl_MultiPage;
+            Stream s = context.Response.OutputStream;
+            TextWriter writer = new StreamWriter(s);
+            if (tl_AsHTML)
+            {
+                var writer1 = writer;
+                WriteHtmlPreBody(writer, tl_title);
+                WriteLinksWriter writer2 = WriteLinksWriter.EnsureWriteLinksWriter(writer);
+                writer = writer2;
+                writer2.OnClose = () =>
+                {
+                    tl_AsHTML = true;
+                    tl_BodyDepth = 1;
+                    WriteHtmlPostBody(writer1);
+                };              
+            }
+            return writer;
+        }
 
         public static void analyse(
-            StreamWriter writer, string path, string behaviorName,string rawURL)
+           TextWriter writer, string path, string behaviorName,string rawURL)
         {
-            Console.WriteLine("analyse path={0},behaviorName={1},rawURL={2}", path, behaviorName, rawURL);
+            var multiBehaviorName = ourServitor.myScheduler.GatherTaskNames(behaviorName);
+            if (multiBehaviorName != null)
+            {
+                if (multiBehaviorName.Count == 0)
+                {
+                    writer.WriteLine("Could not identify tasks or behaviors from :" + behaviorName);
+                    return;
+                }
+                foreach (string behavorT in multiBehaviorName)
+                {
+                    analyse(writer, path, behavorT, rawURL);
+                }
+                return;
+            } 
+            
+            tl_title = string.Format("analyse path={0},behaviorName={1},rawURL={2}", path, behaviorName,
+                                     rawURL);
+            Console.WriteLine(tl_title);
             path = HostSystem.FileSystemPath(path);
             if (!File.Exists(path))
             {
@@ -802,7 +933,7 @@ namespace AltAIMLbot
             return phraseScore[obj2].CompareTo(phraseScore[obj1]);
         }
 
-        public static void relateToRootParent(StreamWriter writer, XmlNode xmlNode, string rootURI, string nodeType,string resourcePrefix,string resourceExtension, string relation)
+        public static void relateToRootParent(TextWriter writer, XmlNode xmlNode, string rootURI, string nodeType,string resourcePrefix,string resourceExtension, string relation)
         {
             string selfURI = "";
             if (xmlNode.Name.ToLower() == nodeType)
@@ -815,5 +946,232 @@ namespace AltAIMLbot
                 relateToRootParent(writer, childNode, rootURI, nodeType, resourcePrefix, resourceExtension, relation);
             }
         }
+    }
+
+    public class WriteLinksWriter : TextWriter
+    {
+        private readonly TextWriter w;
+        public Action OnClose;
+        private bool selfWriting = false;
+
+        public override void Close()
+        {
+            if (KeepOpen) return;
+            ReallyClose();
+        }
+
+        public override void Flush()
+        {
+            w.Flush();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (KeepOpen) return;
+            ReallyClose();
+            if (disposing)
+            {
+                w.Dispose();
+            }
+        }
+
+        private bool IsClosed = false;
+        private void ReallyClose()
+        {
+            lock(this)
+            {
+                if (IsClosed) return;
+                IsClosed = true;
+            }
+            w.Flush();
+            if (OnClose != null)
+            {
+                try
+                {
+                    OnClose();
+                }
+                catch (Exception)
+                {
+                }
+            }
+            w.Close();
+        }
+
+        private bool KeepOpen
+        {
+            get
+            {
+                if (WebServitor.tl_MultiPage != null)
+                {
+                    //Flush();
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        static public WriteLinksWriter EnsureWriteLinksWriter(TextWriter tw)
+        {
+            if (tw is WriteLinksWriter) return (WriteLinksWriter)tw;
+            return new WriteLinksWriter(tw);
+        }
+
+        private WriteLinksWriter(TextWriter writer)
+        {
+            this.w = writer;
+        }
+
+
+        public override void Write(char[] buffer, int index, int count)
+        {
+            w.Write(buffer, index, count);
+        }
+
+        public override void WriteLine(string format)
+        {
+            WriteLineParms("{0}", EntityFormat(format));
+        }
+        public override void WriteLine(object arg0)
+        {
+            WriteLineParms("{0}", arg0);
+        }
+        public override void WriteLine(string format, object arg0)
+        {
+            WriteLineParms(format, arg0);
+        }
+        public override void WriteLine(string format, object arg0, object arg1)
+        {
+            WriteLineParms(format, arg0, arg1);
+        }
+        public override void WriteLine(string format, object arg0, object arg1, object arg2)
+        {
+            WriteLineParms(format, arg0, arg1, arg2);
+        }
+        public override void WriteLine(string format, params object[] arg)
+        {
+            var args = LinkifyArgs(arg);
+            WriteLineParms(format, args);
+        }
+
+        public void WriteLineParms(string format, params object[] arg)
+        {
+            WriteParms(format, arg);
+            w.WriteLine("<br/>");
+        }
+
+        public override void Write(string format)
+        {
+            WriteParms(format);
+        }
+        public override void Write(object arg0)
+        {
+            WriteParms("{0}", arg0);
+        }
+        public override void Write(string format, object arg0)
+        {
+            WriteParms(format, arg0);
+        }
+        public override void Write(string format, object arg0, object arg1)
+        {
+            WriteParms(format, arg0, arg1);
+        }
+        public override void Write(string format, object arg0, object arg1, object arg2)
+        {
+            WriteParms(format, arg0, arg1, arg2);
+        }
+        public override void Write(string format, params object[] arg)
+        {
+            var args = LinkifyArgs(arg);
+            WriteParms(format, args);
+        }
+        public void WriteParms(string format, params object[] arg)
+        {
+            var args = LinkifyArgs(arg);
+            selfWriting = true;
+            try
+            {
+                if (arg.Length > 0)
+                {
+                    format = EntityFormat(format);
+                }
+                else
+                {
+                    string newForm;
+                    if (LinkifyArg(format, out newForm))
+                    {
+                        format = newForm;
+                    }
+                }
+                w.Write(format, args);
+            }
+            finally
+            {
+                selfWriting = false;
+            }
+        }
+
+        private string EntityFormat(string format)
+        {
+            return format.Replace("<", "&lt;").Replace(">", "&gt;");
+        }
+
+
+        public static object[] LinkifyArgs(object[] arg)
+        {
+            for (int i = 0; i < arg.Length; i++)
+            {
+                object o = arg[i];
+                string newVal;
+                if (LinkifyArg(o, out newVal))
+                {
+                    arg[i] = newVal;
+                }
+            }
+            return arg;
+        }
+
+        private static bool LinkifyArg(object o, out string s)
+        {
+            s = "" + o;
+            if (o is Uri)
+            {
+                s = ((Uri) o).AbsoluteUri;
+            }
+            if (s.StartsWith("http"))
+            {
+                s = string.Format("<a href='{0}'>{0}</a>", s);
+                return true;
+            }
+            return false;
+        }
+
+        public override Encoding Encoding
+        {
+            get { return w.Encoding;  }
+        }
+
+        public override int GetHashCode()
+        {
+            return w.GetHashCode();
+        }
+        public override IFormatProvider FormatProvider
+        {
+            get
+            {
+                return w.FormatProvider;
+            }
+        }
+        public override string NewLine
+        {
+            get
+            {
+                return w.NewLine;
+            }
+            set
+            {
+                w.NewLine = value;
+            }
+        }
+
     }
 }

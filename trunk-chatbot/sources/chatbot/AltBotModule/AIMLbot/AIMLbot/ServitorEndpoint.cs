@@ -47,7 +47,7 @@ namespace AltAIMLbot
             myServer.beginService(prologEngine);
         }
 
-        public void webWriter(HttpListenerContext context, StreamWriter writer, string action, string query, string path, string mt, string serverRoot)
+        public void webWriter(HttpListenerContext context, TextWriter writer, string action, string query, string path, string mt, string serverRoot)
         {
             mt = mt ?? "rdfMT";
             BeginsWith("./xrdf/", ref path);

@@ -210,8 +210,9 @@ namespace RTParser
         public string PersonalizePath(string path)
         {
             if (String.IsNullOrEmpty(path)) return path;
-            if (BotUserID != null)
+            if (BotUserID == null)
             {
+                Console.Error.WriteLine("Cant pertsonalize path");
             }
             if (path.Contains(BotUserID)) return path;
             if (path.Contains(BotID)) return path;

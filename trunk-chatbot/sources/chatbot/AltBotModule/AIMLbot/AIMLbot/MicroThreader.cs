@@ -433,8 +433,23 @@ namespace AltAIMLbot
             active.Append(task);
         }
 
-        public void performAction(StreamWriter writer, string action, string query, string behaviorName)
+        public void performAction(TextWriter writer, string action, string query, string behaviorName)
         {
+            var multiBehaviorName = GatherTaskNames(behaviorName);
+            if (multiBehaviorName != null)
+            {
+                if (multiBehaviorName.Count == 0)
+                {
+                    writer.WriteLine("Could not identify tasks or behaviors from :" + behaviorName);
+                    return;
+                }
+                foreach (string behavorT in multiBehaviorName)
+                {
+                    performAction(writer, action, query, behavorT);
+                }
+                return;
+            }
+
             string ids = "";
             string tsk = "";
             TaskList.TaskEnumerator  en = null;
@@ -568,6 +583,97 @@ namespace AltAIMLbot
             }
             writer.WriteLine("<fin/>");
             writer.Close();
+        }
+
+        public HashSet<string> GatherTaskNames(string behaviorName)
+        {
+            if (string.IsNullOrEmpty(behaviorName)) return null;
+            var gatherNames = new HashSet<string>();
+            if (behaviorName.Contains(","))
+            {
+                foreach (var name in behaviorName.Split(',', ' '))
+                {
+                    if (string.IsNullOrEmpty(name)) continue;
+                    gatherNames.Add(name);
+                }
+                return gatherNames;
+            }
+            if(!behaviorName.Contains("*")) return null;
+            TaskList.TaskEnumerator en;
+            behaviorName = behaviorName.ToUpper();
+            bool wasSpeced = false;
+            if (behaviorName.Contains("*VISIBLE*"))
+            {
+                wasSpeced = true;
+                foreach (var behaveT in servitor.curBot.myBehaviors.behaveTrees.Keys)
+                {
+                    gatherNames.Add(behaveT);
+                }
+                foreach (var behaveT in servitor.curBot.myBehaviors.invisiblePatterns.Keys)
+                {
+                    gatherNames.Remove(behaveT);
+                }
+            }
+            if (behaviorName.Contains("*DEFINED*"))
+            {
+                wasSpeced = true;
+                foreach (var behaveT in servitor.curBot.myBehaviors.behaveTrees.Keys)
+                {
+                    gatherNames.Add(behaveT);
+                }
+            }
+            if (behaviorName.Contains("*ALL*"))
+            {
+                string[] fileList = Directory.GetFiles(servitor.curBot.myBehaviors.persistantDirectory);
+                wasSpeced = true;
+                foreach (string f in fileList)
+                {
+                    string behaveT = Path.GetFileNameWithoutExtension(Path.GetFileName(f));
+                    gatherNames.Add(behaveT);
+                }
+            }
+            if (behaviorName.Contains("*INVISIBLE*"))
+            {
+                wasSpeced = true;
+                foreach (var behaveT in servitor.curBot.myBehaviors.invisiblePatterns.Keys)
+                {
+                    gatherNames.Add(behaveT);
+                }
+            }
+            if (behaviorName.Contains("*TASKS*"))
+            {
+                wasSpeced = true;
+                en = sleeping.GetEnumerator();
+                while (en.MoveNext())
+                {
+                    gatherNames.Add(en.Current.name);
+                }
+                en = sleeping.GetEnumerator();
+                while (en.MoveNext())
+                {
+                    gatherNames.Add(en.Current.name);
+                }
+            }
+            if (behaviorName == "*ACTIVE*")
+            {
+                wasSpeced = true;
+                en = active.GetEnumerator();
+                while (en.MoveNext())
+                {
+                    gatherNames.Add(en.Current.name);
+                }
+            }
+            if (behaviorName == "*ASLEEP*")
+            {
+                wasSpeced = true;
+                en = sleeping.GetEnumerator();
+                while (en.MoveNext())
+                {
+                    gatherNames.Add(en.Current.name);
+                }
+            }
+            if (!wasSpeced) return null;
+            return gatherNames;
         }
     }
 
