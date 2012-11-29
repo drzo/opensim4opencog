@@ -164,7 +164,7 @@ namespace RTParser.Variables
 
         public void Add(string name, string value)
         {
-            name = KeyCase.NormalizeKey(name);
+            name = KeyCase.Default.NormalizeKey(name);
             string valArg = MakeArg(value);
             //Remove(name);
             string before = GetArgVal(name, false);
@@ -205,7 +205,7 @@ namespace RTParser.Variables
 
         public void Remove(string name)
         {
-            name = KeyCase.NormalizeKey(name);
+            name = KeyCase.Default.NormalizeKey(name);
             string valArg = GetArgVal(name, false);
             if (valArg == null) return;
             string remove = QueryForNameValue(MakeArg(name), valArg);
@@ -220,7 +220,7 @@ namespace RTParser.Variables
 
         public string GetArgVal(string normalizedName, bool followGenlMt)
         {
-            normalizedName = KeyCase.NormalizeKey(normalizedName);
+            normalizedName = KeyCase.Default.NormalizeKey(normalizedName);
             var bingingsList = new List<Dictionary<string, SIProlog.Part>>();
             this.prologEngine.askQuery(QueryForNameValue(MakeArg(normalizedName), "VALUE"), dictMt, followGenlMt,
                                        bingingsList, null);

@@ -19,17 +19,36 @@ namespace AltAIMLbot
 
         public static string startUpPath = null;
         public static Servitor ourServitor = null;
-        public static string _serverRoot;
+        
+        [ThreadStatic]
+        public static string tl_serverRoot;
+        public static string GlobalServerRoot = null;
         public static string serverRoot
         {
             get
             {
-                if (_serverRoot != null) return _serverRoot;
+                if (tl_serverRoot != null) return tl_serverRoot;
+                if (GlobalServerRoot != null)
+                {
+                    return GlobalServerRoot + ":" + serverPort + "/";
+                }
                 return "http://CogbotServer:" + serverPort + "/";
             }
-            set { _serverRoot = value; }
+            set { GlobalServerRoot = value; }
         }
 
+        public static string GetServerRoot(string hostSuggest)
+        {
+            string sr = GlobalServerRoot;
+            sr = sr.Replace("127.0.0.1:", "locahost:");
+            sr = sr.Replace("+:", "locahost:");
+            sr = sr.Replace("*:", "locahost:");
+            var s = tl_context.Request.UserHostAddress;
+            var s1 = tl_context.Response;
+            sr = sr.Replace("localhost:" + serverPort, hostSuggest);
+            sr = sr.Replace(s, hostSuggest);
+            return sr;
+        }
         public static int serverPort = 8123;
         public static string kpfile = @".\wikilink\phraseScore";
         public static string wsfile = @".\wikilink\count.phrase.sense.txt";
@@ -69,8 +88,8 @@ namespace AltAIMLbot
                 try
                 {
 
-                    //listener.Prefixes.Add(serverRoot);
-                    //Console.WriteLine("Listener Adding:" + serverRoot);
+                    listener.Prefixes.Add(serverRoot);
+                    Console.WriteLine("Listener Adding:" + serverRoot);
                 }
                 catch (Exception e)
                 {
@@ -142,6 +161,7 @@ namespace AltAIMLbot
                 var context = (HttpListenerContext)listenerContext;
             tl_context = context;
             tl_title = context.Request.Url.AbsoluteUri;
+            tl_serverRoot = GetServerRoot(context.Request.UserHostName);
             try
             {
 
@@ -255,7 +275,7 @@ namespace AltAIMLbot
                 //string str = Encoding.UTF8.GetString(PostData);
                 ourServitor.curBot.myBehaviors.defineBehavior(behaviorName, infoBody);
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
-                msg = File.ReadAllBytes(path);
+                lock (BehaviorTree.FileLock) msg = File.ReadAllBytes(path);
                 // return the posted contents if any
             }
             else
@@ -342,6 +362,7 @@ namespace AltAIMLbot
             string action = context.Request.QueryString["a"];
             tl_title = path;
             Console.WriteLine("WEBGET path={0},action={1},query={2},btx={3}", path, action, query, behaviorName);
+            //serverRoot
             if (path.Contains("./plot/"))
             {
                 context.Response.StatusCode = (int) HttpStatusCode.OK;
@@ -468,7 +489,11 @@ namespace AltAIMLbot
                     tl_AsHTML = true;
                     context.Response.StatusCode = (int) HttpStatusCode.OK;
                     //context.Response.ContentLength64 = 0;
-                    string[] fileList = Directory.GetFiles(behaviorDir);
+                    string[] fileList;
+                    lock (BehaviorTree.FileLock)
+                    {
+                        fileList = Directory.GetFiles(behaviorDir);
+                    }
                     string fileListString = "";
                     string uriPrefix = serverRoot + "behavior/";
                     //+using (Stream s = context.Response.OutputStream )
@@ -538,7 +563,7 @@ namespace AltAIMLbot
                 //string str = Encoding.UTF8.GetString(PostData);
                 ourServitor.curBot.myBehaviors.defineBehavior(behaviorName, infoBody);
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
-                msg = File.ReadAllBytes(path);
+                lock (BehaviorTree.FileLock) msg = File.ReadAllBytes(path);
                 // return the posted contents if any
             }
             else
@@ -841,7 +866,7 @@ namespace AltAIMLbot
             {
                 var writer1 = writer;
                 WriteHtmlPreBody(writer, tl_title);
-                WriteLinksWriter writer2 = WriteLinksWriter.EnsureWriteLinksWriter(writer);
+                WriteLinksWriter writer2 = WriteLinksWriter.EnsureWriteLinksWriter(writer, null);
                 writer = writer2;
                 writer2.OnClose = () =>
                 {
@@ -861,7 +886,7 @@ namespace AltAIMLbot
             {
                 if (multiBehaviorName.Count == 0)
                 {
-                    writer.WriteLine("Could not identify tasks or behaviors from :" + behaviorName);
+                    writer.WriteLine("Zero tasks or behaviors from :" + behaviorName);
                     return;
                 }
                 foreach (string behavorT in multiBehaviorName)
@@ -953,6 +978,7 @@ namespace AltAIMLbot
         private readonly TextWriter w;
         public Action OnClose;
         private bool selfWriting = false;
+        public LinkifyArgPred LinkifyArg = LinkifyArgDefault;
 
         public override void Close()
         {
@@ -1010,10 +1036,10 @@ namespace AltAIMLbot
             }
         }
 
-        static public WriteLinksWriter EnsureWriteLinksWriter(TextWriter tw)
+        static public WriteLinksWriter EnsureWriteLinksWriter(TextWriter tw, LinkifyArgPred pred)
         {
             if (tw is WriteLinksWriter) return (WriteLinksWriter)tw;
-            return new WriteLinksWriter(tw);
+            return new WriteLinksWriter(tw) {LinkifyArg = pred ?? LinkifyArgDefault};
         }
 
         private WriteLinksWriter(TextWriter writer)
@@ -1116,7 +1142,7 @@ namespace AltAIMLbot
         }
 
 
-        public static object[] LinkifyArgs(object[] arg)
+        public object[] LinkifyArgs(object[] arg)
         {
             for (int i = 0; i < arg.Length; i++)
             {
@@ -1130,7 +1156,9 @@ namespace AltAIMLbot
             return arg;
         }
 
-        private static bool LinkifyArg(object o, out string s)
+        public delegate bool LinkifyArgPred(object o, out string val);
+
+        private static bool LinkifyArgDefault(object o, out string s)
         {
             s = "" + o;
             if (o is Uri)
@@ -1139,7 +1167,13 @@ namespace AltAIMLbot
             }
             if (s.StartsWith("http"))
             {
-                s = string.Format("<a href='{0}'>{0}</a>", s);
+                string link = s;
+                if (link.ToLower().EndsWith(".btx"))
+                {
+                    link = link.Replace("/behavior/", "/scheduler/");
+                    link = link + "?a=info";
+                }
+                s = string.Format("<a href='{0}'>{1}</a>", link, s);
                 return true;
             }
             return false;

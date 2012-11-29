@@ -664,7 +664,8 @@ namespace AltAIMLbot
                 return "";
             }
             // Try the event first
-            if (doHaviours && curBot.myBehaviors.hasEventHandler("onchat"))
+            string fnd;
+            if (doHaviours && curBot.myBehaviors.hasEventHandler("onchat", out fnd))
             {
                 Console.WriteLine(" ************ FOUND ONCHAT ************");
                 curUser.Predicates.updateSetting("lastinput", input);

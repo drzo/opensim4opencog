@@ -34,7 +34,7 @@ namespace AltAIMLbot
 
         public bool IsNamed(string n)
         {
-            return KeyCase.SameKey(n, name);
+            return KeyCase.DefaultFN.SameKey(n, name);
         }
     }
 
@@ -449,12 +449,52 @@ namespace AltAIMLbot
                 }
                 return;
             }
-
+            if (action != null && action.Contains(","))
+            {
+                foreach (var a in action.Split(' ', ','))
+                {
+                    if (string.IsNullOrEmpty(a)) continue;
+                    performAction(writer, a, query, behaviorName);
+                }
+            }
             string ids = "";
             string tsk = "";
             TaskList.TaskEnumerator  en = null;
+            BehaviorSet myBehaviors = servitor.curBot.myBehaviors;
             switch (action)
             {
+                case "info":
+                    bool v01 = myBehaviors.visibleBehavior(behaviorName);
+                    bool v03 = myBehaviors.definedBehavior(behaviorName);
+                    var treeByTreeName = myBehaviors.GetTreeByName(behaviorName);
+                    writer.WriteLine("<visible name=\"{0}\" value=\"{1}\"/>", behaviorName, v01);
+                    writer.WriteLine("<defined name=\"{0}\" value=\"{1}\"/>", behaviorName, v03);
+                    string eh = myBehaviors.getEventHandler(behaviorName);
+                    if (eh != null && eh != behaviorName)
+                    {
+                        writer.WriteLine("<eventHandler name=\"{0}\" value=\"{1}\"/>", behaviorName, eh);
+                    }
+                    writer.WriteLine(treeByTreeName.treeDoc.OuterXml);
+                    ids = idStatus(behaviorName);
+                    tsk = taskStatus(behaviorName);
+                    writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
+ 
+                    //performAction(writer, "status,source", query, behaviorName);
+                    break;
+
+                case "source":
+                    string behaviorFile = myBehaviors.behaviorDiskName(behaviorName);
+                    string fileReadAllText = "";
+                    lock (BehaviorTree.FileLock)
+                    {
+                        if (File.Exists(behaviorFile))
+                        {
+                            fileReadAllText = File.ReadAllText(behaviorFile);
+                        }
+                    }
+                    writer.WriteLine("{0}", fileReadAllText);
+                    break;
+
                 case "activate":
                     ActivateBehaviorTask(behaviorName);
                      ids = idStatus(behaviorName);
@@ -504,9 +544,9 @@ namespace AltAIMLbot
                     }
                     break;
                 case "listidstatus":
-                    foreach (string key in servitor.curBot.myBehaviors.runState.Keys)
+                    foreach (string key in myBehaviors.runState.Keys)
                     {
-                        string status= servitor.curBot.myBehaviors.runState[key].ToString();
+                        string status= myBehaviors.runState[key].ToString();
                         writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" />", key, status);
                     }
 
@@ -527,8 +567,8 @@ namespace AltAIMLbot
                     break;
 
                 case "block":
-                    servitor.curBot.myBehaviors.makeInvisible(query);
-                    servitor.curBot.myBehaviors.makeInvisible(behaviorName);
+                    myBehaviors.makeInvisible(query);
+                    myBehaviors.makeInvisible(behaviorName);
                     RemoveBehaviorTask(behaviorName);
                     ids = idStatus(behaviorName);
                     tsk = taskStatus(behaviorName);
@@ -536,31 +576,31 @@ namespace AltAIMLbot
                     break;
 
                 case "unblock":
-                    servitor.curBot.myBehaviors.makeVisible(query);
+                    myBehaviors.makeVisible(query);
                     ids = idStatus(behaviorName);
                     tsk = taskStatus(behaviorName);
                     writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
                     break;
 
                 case "unblockall":
-                    servitor.curBot.myBehaviors.invisiblePatterns .Clear();
+                    myBehaviors.invisiblePatterns .Clear();
                     ids = idStatus(behaviorName);
                     tsk = taskStatus(behaviorName);
                     writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
                     break;
 
                 case "listblocks":
-                    foreach (string p in servitor.curBot.myBehaviors.invisiblePatterns.Keys)
+                    foreach (string p in myBehaviors.invisiblePatterns.Keys)
                     {
                         writer.WriteLine("<blockBehaviorPattern pattern=\"{0}\" />", p);
                     }
                     break;
 
                 case "checkblock":
-                    bool v1 = servitor.curBot.myBehaviors.visibleBehavior(behaviorName);
-                    bool v2 = servitor.curBot.myBehaviors.visibleBehavior(query );
-                    bool v3 = servitor.curBot.myBehaviors.definedBehavior(behaviorName);
-                    bool v4 = servitor.curBot.myBehaviors.definedBehavior(query);
+                    bool v1 = myBehaviors.visibleBehavior(behaviorName);
+                    bool v2 = myBehaviors.visibleBehavior(query );
+                    bool v3 = myBehaviors.definedBehavior(behaviorName);
+                    bool v4 = myBehaviors.definedBehavior(query);
                     writer.WriteLine("<visible name=\"{0}\" value=\"{1}\"/>", behaviorName, v1);
                     writer.WriteLine("<visible name=\"{0}\" value=\"{1}\"/>", query, v2);
                     writer.WriteLine("<defined name=\"{0}\" value=\"{1}\"/>", behaviorName, v3);
@@ -602,14 +642,15 @@ namespace AltAIMLbot
             TaskList.TaskEnumerator en;
             behaviorName = behaviorName.ToUpper();
             bool wasSpeced = false;
+            BehaviorSet myBehaviors = servitor.curBot.myBehaviors;
             if (behaviorName.Contains("*VISIBLE*"))
             {
                 wasSpeced = true;
-                foreach (var behaveT in servitor.curBot.myBehaviors.behaveTrees.Keys)
+                foreach (var behaveT in myBehaviors.GetBTKeyNames())
                 {
                     gatherNames.Add(behaveT);
                 }
-                foreach (var behaveT in servitor.curBot.myBehaviors.invisiblePatterns.Keys)
+                foreach (var behaveT in myBehaviors.invisiblePatterns.Keys)
                 {
                     gatherNames.Remove(behaveT);
                 }
@@ -617,14 +658,14 @@ namespace AltAIMLbot
             if (behaviorName.Contains("*DEFINED*"))
             {
                 wasSpeced = true;
-                foreach (var behaveT in servitor.curBot.myBehaviors.behaveTrees.Keys)
+                foreach (var behaveT in myBehaviors.GetBTKeyNames())
                 {
                     gatherNames.Add(behaveT);
                 }
             }
             if (behaviorName.Contains("*ALL*"))
             {
-                string[] fileList = Directory.GetFiles(servitor.curBot.myBehaviors.persistantDirectory);
+                string[] fileList = Directory.GetFiles(myBehaviors.persistantDirectory);
                 wasSpeced = true;
                 foreach (string f in fileList)
                 {
@@ -635,7 +676,7 @@ namespace AltAIMLbot
             if (behaviorName.Contains("*INVISIBLE*"))
             {
                 wasSpeced = true;
-                foreach (var behaveT in servitor.curBot.myBehaviors.invisiblePatterns.Keys)
+                foreach (var behaveT in myBehaviors.invisiblePatterns.Keys)
                 {
                     gatherNames.Add(behaveT);
                 }

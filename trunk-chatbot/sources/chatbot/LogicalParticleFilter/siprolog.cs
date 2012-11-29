@@ -3882,9 +3882,15 @@ namespace LogicalParticleFilter1
 
     public class KeyCase : IEqualityComparer<string>
     {
-        public static KeyCase Default = new KeyCase();
+        public static KeyCase Default = new KeyCase(NormalizeKeyLowerCase);
+        public static KeyCase DefaultFN = new KeyCase(NormalizeKeyLowerCaseNoFileExt);
         #region Implementation of IEqualityComparer<string>
 
+        public Func<object, string> NormalizeKey;
+        public KeyCase(Func<object,string> normalizer)
+        {
+            NormalizeKey = normalizer;
+        }
         /// <summary>
         /// Determines whether the specified objects are equal.
         /// </summary>
@@ -3913,14 +3919,19 @@ namespace LogicalParticleFilter1
             return NormalizeKey(obj).GetHashCode();
         }
 
-        public static string NormalizeKey(object s)
+        public static string NormalizeKeyLowerCase(object s)
         {
-            return s.ToString().Trim().ToLower().Replace(" ", "_");
+            string fn = s.ToString().Trim().ToLower().Replace(" ", "_");
+            return fn;// Path.GetFileNameWithoutExtension(fn);
         }
-
+        public static string NormalizeKeyLowerCaseNoFileExt(object s)
+        {
+            string fn = s.ToString().Trim().ToLower().Replace(" ", "_");
+            return Path.GetFileNameWithoutExtension(fn);
+        }
         #endregion
 
-        public static bool SameKey(object u1, object key)
+        public bool SameKey(object u1, object key)
         {
             if (Equals(u1, key)) return true;
             if (u1.GetType().IsValueType)

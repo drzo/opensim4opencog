@@ -273,7 +273,7 @@ namespace AltAIMLbot
 
         private int GetIndex(string item)
         {
-            lock (loc) return items.FindLastIndex(delegate(string s) { return KeyCase.SameKey(s, item); });
+            lock (loc) return items.FindLastIndex(delegate(string s) { return KeyCase.DefaultFN.SameKey(s, item); });
         }
 
         public void Enqueue(string item)
@@ -302,9 +302,9 @@ namespace AltAIMLbot
         //public Hashtable behaveTrees;
         public CIDictionary<string, BehaviorTree> behaveTrees;
         public CIDictionary<string, RunStatus> runState;
-        public CIDictionary<string, Int32> entryTime = new CIDictionary<string, Int32>();
-        public CIDictionary<string, Int32> execTime = new CIDictionary<string, Int32>();
-        public CIDictionary<string, string> eventTable = new CIDictionary<string, string>();
+        public CIDictionary<string, Int32> entryTime = new CIDictionary<string, Int32>(KeyCase.DefaultFN);
+        public CIDictionary<string, Int32> execTime = new CIDictionary<string, Int32>(KeyCase.DefaultFN);
+        public CIDictionary<string, string> eventTable = new CIDictionary<string, string>(KeyCase.DefaultFN);
         public ValenceSet VSoup;
         public Stack handlerStack;
         public string persistantDirectory=null;
@@ -312,25 +312,16 @@ namespace AltAIMLbot
         public bool waitingForChat = false;
 
 
-        public AltBot bot {
-                get { return _bot; }
-                set {
-                        _bot = value;
-
-                        List<string> btList = new List<string>();
-                        lock (behaveTrees)
-                        {
-                            foreach (String treeName in behaveTrees.Keys)
-                            {
-                                btList.Add(treeName);
-                            }
-                        }
-                        foreach (string k in btList)
-                        {
-                            behaveTrees[k].bot = _bot;
-                        }
-                    } 
-          }
+        public AltBot bot
+        {
+            get { return _bot; }
+            set
+            {
+                _bot = value;
+                foreach (var tree in GetTreeList())
+                    tree.bot = _bot;
+            }
+        }
         [NonSerialized ]
         private AltBot _bot;
 
@@ -339,19 +330,19 @@ namespace AltAIMLbot
         {
             _bot = bot;
             //behaveTrees = new Hashtable();
-            behaveTrees = new CIDictionary<string, BehaviorTree>();
-            runState = new CIDictionary<string, RunStatus>();
+            behaveTrees = new CIDictionary<string, BehaviorTree>(KeyCase.DefaultFN);
+            runState = new CIDictionary<string, RunStatus>(KeyCase.DefaultFN);
             VSoup = new ValenceSet();
             handlerStack = new Stack();
-            invisiblePatterns = new CIDictionary<string, bool>();
+            invisiblePatterns = new CIDictionary<string, bool>(KeyCase.DefaultFN);
         }
        
         
         public void preSerial()
         {
-            foreach (string k in behaveTrees.Keys)
+            foreach (BehaviorTree t in GetTreeList())
             {
-                behaveTrees[k].preSerial();
+                t.preSerial();
             }
 
         }
@@ -359,15 +350,15 @@ namespace AltAIMLbot
         public void postSerial(AltBot deBot)
         {
             bot = deBot;
-            foreach (string k in behaveTrees.Keys)
+            foreach (var t in GetTreeList())
             {
-                behaveTrees[k].postSerial(deBot);
+                t.postSerial(deBot);
             }
         }
 
         public void persistAllToFiles()
         {
-            foreach (string k in behaveTrees.Keys)
+            lock (behaveTrees) foreach (string k in GetBTKeyNames())
             {
                 persistToFile(k);
             }
@@ -382,21 +373,26 @@ namespace AltAIMLbot
             if (persistantDirectory == null) return;
             if (!Directory.Exists(persistantDirectory)) return;
 
-            string diskName = String.Format("{0}{1}{2}.BTX", persistantDirectory, Path.DirectorySeparatorChar, behaveTrees[treeName.ToLower()].name);
+            BehaviorTree treeByTreeName = GetTreeByName(treeName);
+            string realName = treeByTreeName.name;
+            string diskName = behaviorDiskName(realName);
             //if (File.Exists(diskName)) return;
-            StreamWriter outfile = new StreamWriter(diskName);
-            string docText = behaveTrees[treeName.ToLower()].treeDoc.OuterXml;
-            outfile.Write(docText);
-            outfile.Flush();
-            outfile.Close();
+            string docText = treeByTreeName.treeDoc.OuterXml;
+            lock (BehaviorTree.FileLock)
+            {
+                StreamWriter outfile = new StreamWriter(diskName);
+                outfile.Write(docText);
+                outfile.Flush();
+                outfile.Close();
+            }
         }
 
         public List<string> behaviorXmlList()
         {
             List<string> XList = new List<string>();
-            foreach (String treeName in behaveTrees.Keys)
+            foreach (var tree in GetTreeList())
             {
-                string docText = behaveTrees[treeName].treeDoc.OuterXml;
+                string docText = tree.treeDoc.OuterXml;
                 XList.Add(docText);
             }
             return XList;
@@ -404,23 +400,33 @@ namespace AltAIMLbot
 
         public void loadFromFiles(string ID)
         {
-            if (behaveTrees.ContainsKey(ID.ToLower()))
+            BehaviorTree bt;
+            bool hasBt;
+            lock (behaveTrees)
             {
-                if (behaveTrees[ID].treeDoc != null)
+                hasBt = behaveTrees.TryGetValue(ID, out bt);
+            }
+
+            if (hasBt)
+            {
+                if (bt.treeDoc != null)
                 {
                     return;
                 }
             }
-            string diskName = String.Format("{0}{1}{2}.BTX", persistantDirectory, Path.DirectorySeparatorChar, behaveTrees[ID.ToLower()].name);
-            if (!File.Exists(diskName))
+            string diskName = behaviorDiskName(bt.name);
+            lock (BehaviorTree.FileLock)
             {
-                //defineBehavior(ID, "");
-            }
-            else
-            {
-                string readText = File.ReadAllText(diskName);
+                if (!File.Exists(diskName))
+                {
+                    //defineBehavior(ID, "");
+                }
+                else
+                {
+                    string readText = File.ReadAllText(diskName);
 
-                defineBehavior(ID, readText);
+                    defineBehavior(ID, readText);
+                }
             }
         }
 
@@ -430,9 +436,12 @@ namespace AltAIMLbot
             {
                 BehaviorTree newTree = new BehaviorTree(bot);
                 newTree.defineBehavior(treeName, behaviorDef);
-                behaveTrees[treeName.ToLower()] = newTree;
-                if (_bot != null) behaveTrees[treeName.ToLower()].bot = _bot;
-                persistToFile(treeName);
+                if (_bot != null) newTree.bot = _bot;
+                lock (behaveTrees)
+                {
+                    behaveTrees[treeName] = newTree;
+                    persistToFile(treeName);
+                }
             }
             catch (Exception e)
             {
@@ -600,18 +609,26 @@ namespace AltAIMLbot
             return true;
         }
 
-
         public bool definedBehavior(string behaviorName)
+        {
+            lock (behaveTrees)
+            {
+                return definedBehavior_unlocked(behaviorName);
+            }
+        }
+        private bool definedBehavior_unlocked(string behaviorName)
         {
             if (!visibleBehavior(behaviorName)) return false;
             if (behaveTrees.ContainsKey(behaviorName)) return true;
-            string diskName = String.Format("{0}{1}{2}.BTX", persistantDirectory,Path.DirectorySeparatorChar, behaviorName);
-            //Console.WriteLine("definedBehavior( {0} -> {1})",behaviorName, diskName);
-            if (!File.Exists(diskName))
+            string readText;
+            string diskName = behaviorDiskName(behaviorName);
+            lock (BehaviorTree.FileLock)
             {
-                return false;
+                //Console.WriteLine("definedBehavior( {0} -> {1})",behaviorName, diskName);
+                if (!File.Exists(diskName))
+                    return false;                
+                readText = File.ReadAllText(diskName);
             }
-            string readText = File.ReadAllText(diskName);
             if (!string.IsNullOrEmpty(readText)) defineBehavior(behaviorName, readText);
             return behaveTrees.ContainsKey(behaviorName);
         }
@@ -629,61 +646,60 @@ namespace AltAIMLbot
 
         public void addEventHandler(string evnt, string val)
         {
-            if (eventTable.ContainsKey(evnt))
+            lock (eventTable)
                 eventTable[evnt] = val;
-            else
-                eventTable.Add(evnt, val);
-
         }
+
         public void deleteEventHandler(string evnt, string val)
         {
-            if (eventTable.ContainsKey(evnt))
+            lock (eventTable)
                 eventTable.Remove(evnt);
         }
-        public  bool hasEventHandler(string evnt)
+        public  bool hasEventHandler(string evnt, out string result)
         {
-            if (eventTable.ContainsKey(evnt))
+            bool ret = false;
+            lock (eventTable)
             {
-                Console.WriteLine("   hasEventHandler({0}) ={1}", evnt, true);
+                ret = eventTable.TryGetValue(evnt, out result);
             }
+            if (ret) 
+                Console.WriteLine("   hasEventHandler({0}) ={1}", evnt, true);                
             if (definedBehavior(evnt))
-            {
                 Console.WriteLine("   definedBehavior({0}) ={1}", evnt, true);
-            }
-            return eventTable.ContainsKey(evnt);
+            return ret;
         }
 
         public void runEventHandler0(string evnt)
         {
-            if (hasEventHandler(evnt))
+            string result;
+            if (hasEventHandler(evnt, out result))
             {
-                runBotBehavior(eventTable[evnt], bot);
+                runBotBehavior(result, bot);
+                return;
             }
-            else
-            {
-                if (definedBehavior(evnt)) runBotBehavior(evnt, bot);
-            }
-
+            if (definedBehavior(evnt)) runBotBehavior(evnt, bot);
         }
+
         public void runEventHandler(string evnt)
         {
+            string resultName;
             if ((bot != null) && (bot.myServitor != null) && (bot.myServitor.myScheduler != null))
             {
-                if (hasEventHandler(evnt))
+                if (hasEventHandler(evnt, out resultName))
                 {
-                    bot.myServitor.myScheduler.EnqueueEvent(eventTable[evnt]);
+                    bot.myServitor.myScheduler.EnqueueEvent(resultName);
                 }
                 else
                 {
-                    if (definedBehavior(evnt)) 
-                    bot.myServitor.myScheduler.EnqueueEvent(evnt);
+                    if (definedBehavior(evnt))
+                        bot.myServitor.myScheduler.EnqueueEvent(evnt);
                 }
             }
             else
             {
-                if (hasEventHandler(evnt))
+                if (hasEventHandler(evnt, out resultName))
                 {
-                    runBotBehavior(eventTable[evnt], bot);
+                    runBotBehavior(resultName, bot);
                 }
                 else
                 {
@@ -694,15 +710,11 @@ namespace AltAIMLbot
 
         public string getEventHandler(string evnt)
         {
-            if (hasEventHandler(evnt))
-            {
-                return eventTable[evnt];
-            }
-            else
-            {
-                if (definedBehavior(evnt)) 
-                    return evnt;
-            }
+            string resultName;
+            if (hasEventHandler(evnt, out resultName))
+                return resultName;
+            if (definedBehavior(evnt))
+                return evnt;
             return "";
         }
 
@@ -896,18 +908,18 @@ namespace AltAIMLbot
 
         public RunStatus runBotBehavior(string behaviorName, AltBot deBot)
         {
+            string resultName;
             bot = deBot;
-            
-            if (hasEventHandler(behaviorName))
+
+            if (hasEventHandler(behaviorName, out resultName))
             {
-                return runBotBehavior(eventTable[behaviorName], deBot);
+                return runBotBehavior(resultName, deBot);
             }
-            bool known= definedBehavior(behaviorName);
-            if (known || (behaveTrees.ContainsKey(behaviorName)))
+            if (definedBehavior(behaviorName))
             {
                 try
                 {
-                    BehaviorTree curTree = (BehaviorTree)behaveTrees[behaviorName];
+                    BehaviorTree curTree = GetTreeByName(behaviorName);
                     //RunStatus result = curTree.runBehaviorTree(deBot);
                     RunStatus result = RunStatus.Running;
                     foreach (RunStatus myChildResult in curTree.runBehaviorTree(deBot))
@@ -938,7 +950,7 @@ namespace AltAIMLbot
         public IEnumerator<RunStatus> getBehaviorEnumerator(string name)
         {
 
-            BehaviorTree curTree = (BehaviorTree)behaveTrees[name.ToLower()];
+            BehaviorTree curTree = GetTreeByName(name);
             if (curTree == null)
             {
                 Console.WriteLine("WARN: Tree '{0}' is null", name);
@@ -947,6 +959,12 @@ namespace AltAIMLbot
             return curTree.runBehaviorTree(bot).GetEnumerator();
 
         }
+
+        public BehaviorTree GetTreeByName(string name)
+        {
+            lock (behaveTrees) return behaveTrees[name];
+        }
+
         public void runBotBehaviors(AltBot deBot)
         {
             if (bot != deBot) bot = deBot;
@@ -958,7 +976,7 @@ namespace AltAIMLbot
             {
                     try
                     {
-                        BehaviorTree curTree = (BehaviorTree)behaveTrees["root"];
+                        BehaviorTree curTree = GetTreeByName("root");
                         if (curTree == null)
                         {
                             Console.WriteLine("WARN: Tree '{0}' is null", "null");
@@ -979,17 +997,11 @@ namespace AltAIMLbot
             {
                 try
                 {
-                    List <string> bkeys = new List<string> ();
-                    foreach (string treeName in behaveTrees.Keys)
-                    {
-                        bkeys.Add(treeName);
-                    }
-
-                    foreach (string treeName in bkeys)
+                    foreach (string treeName in GetBTKeyNames())
                     {
                         try
                         {
-                            BehaviorTree curTree = (BehaviorTree)behaveTrees[treeName];
+                            BehaviorTree curTree = GetTreeByName(treeName);
                             if (curTree == null)
                             {
                                 Console.WriteLine("WARN: Tree '{0}' is null", treeName);
@@ -1014,6 +1026,31 @@ namespace AltAIMLbot
 
             }
 
+        }
+        private IEnumerable<BehaviorTree> GetTreeList()
+        {
+            var list = new List<BehaviorTree>();
+            lock (behaveTrees)
+            {
+                foreach (var tree in behaveTrees.Values)
+                {
+                    list.Add(tree);
+                }
+            }
+            return list;
+        }
+
+        public IEnumerable<string> GetBTKeyNames()
+        {
+            var list = new List<string>();
+            lock (behaveTrees)
+            {
+                foreach (var tree in behaveTrees.Keys)
+                {
+                    list.Add(tree);
+                }
+            }
+            return list;
         }
     }
     [Serializable]
@@ -3119,65 +3156,20 @@ namespace AltAIMLbot
         }
     }
 
-    public class KeyCaseUseSIPROOGNOW : IEqualityComparer<string>
-    {
-        public static KeyCase Default = new KeyCase();
-        #region Implementation of IEqualityComparer<string>
-
-        /// <summary>
-        /// Determines whether the specified objects are equal.
-        /// </summary>
-        /// <returns>
-        /// true if the specified objects are equal; otherwise, false.
-        /// </returns>
-        /// <param name="x">The first object of type <paramref name="T"/> to compare.
-        ///                 </param><param name="y">The second object of type <paramref name="T"/> to compare.
-        ///                 </param>
-        public bool Equals(string x, string y)
-        {
-            return SameKey(x, y);
-        }
-
-        /// <summary>
-        /// Returns a hash code for the specified object.
-        /// </summary>
-        /// <returns>
-        /// A hash code for the specified object.
-        /// </returns>
-        /// <param name="obj">The <see cref="T:System.Object"/> for which a hash code is to be returned.
-        ///                 </param><exception cref="T:System.ArgumentNullException">The type of <paramref name="obj"/> is a reference type and <paramref name="obj"/> is null.
-        ///                 </exception>
-        public int GetHashCode(string obj)
-        {
-            return NormalizeKey(obj).GetHashCode();
-        }
-
-        public static string NormalizeKey(object s)
-        {
-            return s.ToString().Trim().ToLower().Replace(" ", "_");
-        }
-
-        #endregion
-
-        public static bool SameKey(object u1, object key)
-        {
-            if (Equals(u1, key)) return true;
-            if (u1.GetType().IsValueType)
-            {
-                throw new InvalidOperationException("lcase " + u1.GetType());
-            }
-            if (NormalizeKey(u1) != NormalizeKey(key)) return false;
-            return true;
-        }
-    }
-
     public class CIDictionary<K, V> : Dictionary<K, V>
     {
-        static public IEqualityComparer<K> comp
+        static public KeyCase comp
         {
             get
             {
-                return (IEqualityComparer<K>)KeyCase.Default;
+                return (KeyCase)KeyCase.Default;
+            }
+        }
+        public KeyCase myComp
+        {
+            get
+            {
+                return (KeyCase) Comparer;
             }
         }
         public CIDictionary()
@@ -3185,10 +3177,38 @@ namespace AltAIMLbot
         {
 
         }
+        public CIDictionary(IEqualityComparer<K> comp)
+            : base(comp)
+        {
+
+        }
         public CIDictionary(IDictionary<K, V> dict)
             : base(dict, (IEqualityComparer<K>)comp)
         {
 
+        }
+        public V this[K key]
+        {
+            get
+            {
+                V v;
+                if (TryGetValue(key, out v))
+                {
+                    return v;
+                }
+                return base[key];
+            }
+
+            set
+            {
+                string key1 = "" + key;
+                var key2 = this.myComp.NormalizeKey(key);
+                if (key2 != key1)
+                {
+                    //throw new NotImplementedException();
+                }
+                base[ key] = value;
+            }
         }
     }
     public class CIDictionary2<U1, U2> : IDictionary<U1, U2>
@@ -3207,7 +3227,7 @@ namespace AltAIMLbot
         {
             foreach (var u1 in backing)
             {
-                if (KeyCase.SameKey(u1.Key, key)) return u1;
+                if (KeyCase.Default.SameKey(u1.Key, key)) return u1;
             }
             return null;
         }

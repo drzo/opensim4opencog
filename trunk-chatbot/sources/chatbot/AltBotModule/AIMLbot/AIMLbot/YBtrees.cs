@@ -403,13 +403,9 @@ namespace AltAIMLbot
                 nodeID = "null";
             }
 
+            Action<RunStatus> SetCurNodeIdStatus = (v) => { bot.myBehaviors.runState[nodeID] = v; };
             // Initiate our status
-            if (!bot.myBehaviors.runState.ContainsKey(nodeID))
-            {
-                bot.myBehaviors.runState.Add(nodeID,  RunStatus.Running);
-
-            }
-            bot.myBehaviors.runState[nodeID] = RunStatus.Running;
+            SetCurNodeIdStatus(RunStatus.Running);
 
             bool origCritical = bot.inCritical;
             logNode("BEGIN", myNode);
@@ -425,7 +421,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessAssert(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID]=myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -434,7 +430,7 @@ namespace AltAIMLbot
                          foreach (RunStatus result in ProcessAssertTimer(myNode))
                          {
                              myResult = result;
-                             bot.myBehaviors.runState[nodeID] = myResult;
+                             SetCurNodeIdStatus(myResult);
                              if (myResult != RunStatus.Running) break;
                              yield return result;
                          }
@@ -443,7 +439,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessSequence(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -452,7 +448,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessSelector(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -461,7 +457,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessRandomSelector(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -470,7 +466,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessWeightedSelector(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -479,7 +475,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in  ProcessParallel(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -488,7 +484,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in  ProcessLoop(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -497,7 +493,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in  ProcessLoopUntil(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -506,7 +502,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessTask(myNode))
                          { 
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                          }
@@ -515,7 +511,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessStateAiml(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -525,7 +521,7 @@ namespace AltAIMLbot
                         //Thread.Sleep(2000);
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -535,7 +531,7 @@ namespace AltAIMLbot
                         //Thread.Sleep(2000);
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -543,20 +539,20 @@ namespace AltAIMLbot
 
                     case "inhibit":
                         this.bot.myBehaviors.VSoup.setRefVal(nodeID, 0);
-                        bot.myBehaviors.runState[nodeID] = RunStatus.Success;
+                        SetCurNodeIdStatus(RunStatus.Success);
                         { yield return RunStatus.Success; }
                         break;
 
                     case "release":
                         this.bot.myBehaviors.VSoup.adjust(nodeID, 1.0);
-                        bot.myBehaviors.runState[nodeID] = RunStatus.Success;
+                        SetCurNodeIdStatus(RunStatus.Success);
                         { yield return RunStatus.Success; }
                         break;
                     case "genchemsimfrommt":
                         foreach (RunStatus result in ProcessGenChemsysFromMt(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -567,7 +563,7 @@ namespace AltAIMLbot
                         {
                             myResult = result;
                             //Console.WriteLine("  yield {0} {1} = {2}", myNode.Name.ToLower(), nodeID, result.ToString());
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -576,7 +572,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessRBehavior(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -585,7 +581,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessSubBehavior(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -594,7 +590,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessScheduler(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -606,7 +602,7 @@ namespace AltAIMLbot
                         bot.myBehaviors.runEventHandler("onsuccess");
                         ProcessNodeDeleteEvents(myNode);
                         bot.inCritical = origCritical;
-                        bot.myBehaviors.runState[nodeID] = RunStatus.Success;
+                        SetCurNodeIdStatus(RunStatus.Success);
                         yield return RunStatus.Success;
                         yield break;
                         break;
@@ -620,7 +616,7 @@ namespace AltAIMLbot
                         bot.myBehaviors.runEventHandler("onsuccess");
                         ProcessNodeDeleteEvents(myNode);
                         bot.inCritical = origCritical;
-                        bot.myBehaviors.runState[nodeID] = RunStatus.Success;
+                        SetCurNodeIdStatus(RunStatus.Success);
                         yield return RunStatus.Success;
                         yield  break;
                         break;
@@ -629,7 +625,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessTellKB(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -638,7 +634,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessTellBaseKB(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -647,7 +643,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessTellKBOCC(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -656,7 +652,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessClearKB(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -665,7 +661,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in  ProcessClearBaseKB(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -674,7 +670,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessKBModel(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -684,7 +680,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in  ProcessChat(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -694,7 +690,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessAssertGuest(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -703,7 +699,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in  ProcessTaskGuest(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -712,7 +708,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessEnqueue(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -721,7 +717,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessFlushQueue(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -730,7 +726,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in  ProcessBreaker(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -740,7 +736,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessClearPrologMt(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -749,7 +745,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessConnectMt(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -758,7 +754,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessTellPrologMt(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -767,7 +763,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessLoadKEKB(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -776,7 +772,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessInsertMt(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -785,7 +781,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessAppendMt(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -794,7 +790,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessAssertProlog(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -804,7 +800,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessEvalPrologMacro(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -814,7 +810,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessInduceFromMt(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -826,7 +822,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessDefineState(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -835,7 +831,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessConstraintSet(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -844,7 +840,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessStateSense(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -853,7 +849,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessStateActTransition(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -862,7 +858,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessQuickFilter(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -871,7 +867,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessMeanParticle(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -880,7 +876,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessGenFilterFromMt(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -890,7 +886,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessLoadChatMapper(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -899,7 +895,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessWaitForChatInput(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -908,7 +904,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessAssertMenu(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -920,7 +916,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaAction(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -929,7 +925,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaActionState(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -938,7 +934,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaAgentFeature(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -947,7 +943,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaAgentResponsibleBelief(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -956,7 +952,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaAnger(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -965,7 +961,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaAmbition(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -974,7 +970,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaDesired(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -983,7 +979,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaActionTendancy(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -993,7 +989,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaEmotion(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -1002,7 +998,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaExpectedSatisfaction(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -1011,7 +1007,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaFeatureEmotionBelief(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -1020,7 +1016,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaFeatureBelief(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -1029,7 +1025,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaPerform(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -1038,7 +1034,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaPraiseworthy(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -1047,7 +1043,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaRelation(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -1056,7 +1052,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessAssertCoppelia(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -1065,7 +1061,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaResponse(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -1074,7 +1070,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaStateLikelihood(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -1083,7 +1079,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaState(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -1092,7 +1088,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaStateState(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -1102,7 +1098,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaMoral(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -1111,7 +1107,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaMoralAmbition(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -1120,7 +1116,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessCoppeliaActionMoralBelief(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -1129,7 +1125,7 @@ namespace AltAIMLbot
                         foreach (RunStatus result in ProcessGenCoppeliaFromMt(myNode))
                         {
                             myResult = result;
-                            bot.myBehaviors.runState[nodeID] = myResult;
+                            SetCurNodeIdStatus(myResult);
                             if (myResult != RunStatus.Running) break;
                             yield return result;
                         }
@@ -1140,7 +1136,7 @@ namespace AltAIMLbot
 //DEFAULT
                     default:
                         // Ignore the Nops
-                        bot.myBehaviors.runState[nodeID] = RunStatus.Success;
+                        SetCurNodeIdStatus(RunStatus.Success);
                         yield return RunStatus.Success;
                         yield  break;
                         break;
@@ -1163,7 +1159,7 @@ namespace AltAIMLbot
             }
             // update on exit
             //bot.inCritical = origCritical;
-             bot.myBehaviors.runState[nodeID] = myResult;
+             SetCurNodeIdStatus(myResult);
              bot.myBehaviors.keepTime(nodeID, myResult);
              bot.myBehaviors.activationTime(nodeID, myResult);
 
@@ -1732,8 +1728,9 @@ namespace AltAIMLbot
             // could be handled by the called behaviors
             // like onmousemove versus onclick
             if (bot.myPositiveSATModleString == null) return;
-            if (bot.myBehaviors.eventTable.Count == 0) return;
-            foreach (string evnt in bot.myBehaviors.eventTable.Keys)
+            IDictionary<string, string> eventTable = LockInfo.CopyOf(bot.myBehaviors.eventTable);
+            if (eventTable.Count == 0) return;
+            foreach (string evnt in eventTable.Keys)
             {
                 if (bot.myPositiveSATModleString.Contains(evnt))
                 {
@@ -2563,6 +2560,7 @@ namespace AltAIMLbot
 
         // Process KB
         public double trialsMemory = 2048;
+        public static object FileLock = new object();
 
         public IEnumerable<RunStatus> ProcessKBModel(XmlNode myNode)
         {

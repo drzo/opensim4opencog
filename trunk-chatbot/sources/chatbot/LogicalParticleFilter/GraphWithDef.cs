@@ -49,7 +49,7 @@ namespace LogicalParticleFilter1
         const string rdfDefMT = "rdfGlobalDefsMt";
         private GraphWithDef rdfDefSync;
         public Dictionary<string, GraphWithDef> GraphForMT = new CIDictionary<string, GraphWithDef>();
-        static public string RoboKindURI = "http://localhost:8123/onto/robokind#";
+        static public string RoboKindURI = "http://cogserver:8123/onto/robokind#";
         public static string RoboKindPrefix = "robokind";
         public static string RoboKindPrefixPrepend = RoboKindPrefix + ":";
         private static Dictionary<string, PredicateProperty> SharedGlobalPredDefs = new CIDictionary<string, PredicateProperty>();
