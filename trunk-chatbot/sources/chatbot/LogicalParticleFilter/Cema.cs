@@ -11,7 +11,7 @@ namespace LogicalParticleFilter1
 {
     public class CemaState:IComparable <CemaState>
     {
-        public double eval;
+        public double totalCost=0;
         public List<string> modList;
         public List<string> missingList;
         public double f()
@@ -25,6 +25,7 @@ namespace LogicalParticleFilter1
         }
         public double costSoFar()
         {
+            if (totalCost > 0) return totalCost;
             if (modList == null) return 0;
             return modList.Count;
         }
@@ -84,8 +85,11 @@ namespace LogicalParticleFilter1
         // - System will return 
         //    - a list of module mt's that provide a solution
         //    - a solution mt with a genlMt to all the solution modules
+        // Note: solution mt local contents will be overwritten on each invocation
 
         SIProlog prologEngine = null;
+        public bool worstWeighting = false;
+        public double problemWorstCost = -1;
 
         public CemaSolver(SIProlog prologEng)
         {
@@ -128,7 +132,39 @@ namespace LogicalParticleFilter1
             return false;
         }
 
-        public void constructSolution(string problemMt,string moduleMt, string solutionMt)
+        public double getModuleCost(string moduleMt)
+        {
+            // be pessimistic on the module cost
+            // if no cost found then assume a step of +1
+            // all costs should be positive and found in the module mt
+
+            List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
+            string costQuery = "cost(COST)";
+            prologEngine.askQuery(costQuery, moduleMt, out bingingsList);
+            double worstCost = -1;
+            foreach (Dictionary<string, string> bindings in bingingsList)
+            {
+                foreach (string k in bindings.Keys)
+                {
+                    if (k == "COST")
+                    {
+                        double newCost = double.Parse (bindings [k].Trim());
+                        if (newCost > worstCost)
+                        {
+                            worstCost = newCost;
+                        }
+                    }
+                }
+            }
+            if (worstCost == -1)
+            {
+                worstCost = 1;
+            }
+            return worstCost;
+
+        }
+
+        public bool constructSolution(string problemMt,string moduleMt, string solutionMt)
         {
             // CEMA
             prologEngine.connectMT(solutionMt, problemMt);
@@ -146,6 +182,40 @@ namespace LogicalParticleFilter1
                     if (k == "MODMT") totalModuleList.Add(bindings[k]);
                 }
             }
+
+            // Find worst cost
+            // h(n)*problemWorstCost should be admissible for A*
+            problemWorstCost = -1;
+
+            if (worstWeighting)
+            {
+                string costQuery = "cost(COST)";
+                prologEngine.askQuery(costQuery, moduleMt, out bingingsList);
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    foreach (string k in bindings.Keys)
+                    {
+                        if (k == "COST")
+                        {
+                            double newCost = double.Parse(bindings[k].Trim());
+                            if (newCost > problemWorstCost)
+                            {
+                                problemWorstCost = newCost;
+                            }
+                        }
+                    }
+                }
+                if (problemWorstCost == -1)
+                {
+                    problemWorstCost = 1;
+                }
+            }
+            else
+            {
+                problemWorstCost = 1;
+            }
+
+
             List<string> missingList = missingInMt(problemMt);
             CemaState start = new CemaState(new List<string>(), missingList);
             // get initial Eval
@@ -153,7 +223,7 @@ namespace LogicalParticleFilter1
             if (missingList.Count == 0)
             {
                 commitSolution(start, solutionMt, problemMt);
-                return; // nothing is missing so done
+                return true; // nothing is missing so done
             }
             List<CemaState> closedSet = new List<CemaState>();
             List<CemaState> openSet = new List<CemaState>();
@@ -168,7 +238,7 @@ namespace LogicalParticleFilter1
             Dictionary<CemaState, double> fScores = new Dictionary<CemaState, double>();
 
             gScores.Add(start, 0);
-            hScores.Add(start, start.distToGoal());
+            hScores.Add(start, start.distToGoal() * problemWorstCost);
             fScores.Add(start, (gScores[start] + hScores[start]));
             
             openSet.Add(start);
@@ -184,7 +254,7 @@ namespace LogicalParticleFilter1
                 {
                     // return with the solutionMt already connected
                     commitSolution(bestState, solutionMt, problemMt);
-                    return;
+                    return true;
                 }
                 openSet.Remove(bestState);
                 closedSet.Add(bestState);
@@ -197,13 +267,15 @@ namespace LogicalParticleFilter1
                     if (!isRelevantMt(nextModule, bestState.missingList))
                         continue;
 
+                    double nextCost = getModuleCost(nextModule);
+
                     // Ok nextModule is relevant so clone bestState and extend
                     List <string>nextModList = new List<string> ();
                     foreach(string m in bestState .modList ) nextModList.Add(m);
                     nextModList.Add(nextModule);
 
                     CemaState nextState = new CemaState(nextModList, null);
-
+                    nextState.totalCost = bestState.totalCost + nextCost;
                     // measure the quality of the next state
                     setSolution(nextState, solutionMt, problemMt);
 
@@ -215,7 +287,7 @@ namespace LogicalParticleFilter1
                     {
                         openSet.Add(nextState);
                         gScores.Add(nextState, nextState.costSoFar ());
-                        hScores.Add(nextState, nextState.distToGoal());
+                        hScores.Add(nextState, nextState.distToGoal() * problemWorstCost);
                         fScores.Add(nextState, (gScores[nextState] + hScores[nextState]));
                     }
                 }
@@ -223,12 +295,14 @@ namespace LogicalParticleFilter1
             }
             // an impossible task appently
             commitSolution(start, solutionMt, problemMt);
-            return;
+            return false;
         }
 
 
         public void setSolution(CemaState cState, string solutionMt,string problemMt)
         {
+            // Make the description in cState the focus
+            prologEngine.clearKB(solutionMt);
             prologEngine.clearConnectionsFromMt(solutionMt);
             prologEngine.connectMT(solutionMt, problemMt);
             foreach (string moduleMt in cState.modList)
@@ -245,7 +319,9 @@ namespace LogicalParticleFilter1
             string postScript = "";
             postScript += String.Format("g({0}).\n", cState.costSoFar());
             postScript += String.Format("h({0}).\n", cState.distToGoal());
-            postScript += String.Format("f({0}).\n", cState.costSoFar()+cState.distToGoal());
+            postScript += String.Format("f({0}).\n", cState.costSoFar() + cState.distToGoal() * problemWorstCost);
+            postScript += String.Format("worst({0}).\n", problemWorstCost);
+
             if (cState.distToGoal() == 0)
             {
                 postScript += "planstate(solved).\n";
@@ -255,6 +331,7 @@ namespace LogicalParticleFilter1
                 postScript += "planstate(unsolved).\n";
 
             }
+
             prologEngine.appendKB(postScript,solutionMt);
 
             // post the modules used

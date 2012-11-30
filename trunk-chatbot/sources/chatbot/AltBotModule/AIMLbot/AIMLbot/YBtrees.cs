@@ -3336,8 +3336,21 @@ namespace AltAIMLbot
                 if (myNode.Attributes["modules"] != null) moduleMt = myNode.Attributes["modules"].Value;
                 if (myNode.Attributes["solution"] != null) solutionMt = myNode.Attributes["solution"].Value;
                 CemaSolver Inventor = new CemaSolver(bot.myServitor.prologEngine);
-                Inventor.constructSolution(problemMt, moduleMt, solutionMt);
-                rs = RunStatus.Success;
+
+                if (myNode.Attributes["admissible"] != null)
+                {
+                    if (myNode.Attributes["admissible"].Value.ToLower().Contains("t"))
+                    {
+                        Inventor.worstWeighting = true;
+                    }
+                }
+               
+                bool outcome = Inventor.constructSolution(problemMt, moduleMt, solutionMt);
+                if (outcome)
+                    rs = RunStatus.Success;
+                else
+                    rs = RunStatus.Failure;
+
             }
             catch (Exception e)
             {
