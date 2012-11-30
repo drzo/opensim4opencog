@@ -30,7 +30,7 @@ namespace AltAIMLbot
                 if (tl_serverRoot != null) return tl_serverRoot;
                 if (GlobalServerRoot != null)
                 {
-                    return GlobalServerRoot + ":" + serverPort + "/";
+                    return GlobalServerRoot;
                 }
                 return "http://CogbotServer:" + serverPort + "/";
             }

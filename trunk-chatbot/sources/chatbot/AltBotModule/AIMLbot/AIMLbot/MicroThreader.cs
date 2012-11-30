@@ -164,6 +164,10 @@ namespace AltAIMLbot
         TaskList active, sleeping;
         Servitor servitor;
         public bool singular = true; // only one process
+        BehaviorSet myBehaviors
+        {
+            get { return servitor.curBot.myBehaviors; }
+        }
 
         public Scheduler(Servitor myServitor)
         {
@@ -183,11 +187,11 @@ namespace AltAIMLbot
                 return;
             }
             // start up a new one
-            if (!servitor.curBot.myBehaviors.definedBehavior(name))
+            if (!myBehaviors.definedBehavior(name))
             {
                 return;
             }
-            IEnumerator<RunStatus> iterator = servitor.curBot.myBehaviors.getBehaviorEnumerator(name);
+            IEnumerator<RunStatus> iterator = myBehaviors.getBehaviorEnumerator(name);
             
             if ((singular ==false) || (active.Count ==0))
             {
@@ -204,8 +208,8 @@ namespace AltAIMLbot
 
         public void EnqueueEvent(string evnt)
         {
-            string evntBehavior = servitor.curBot.myBehaviors.getEventHandler(evnt);
-            if (evntBehavior == "")
+            string evntBehavior = myBehaviors.getEventHandler(evnt);
+            if (string.IsNullOrEmpty(evntBehavior))
             {
                 return;
             }
@@ -292,13 +296,13 @@ namespace AltAIMLbot
         public string idStatus(string nodeID)
         {
             string report ="non";
-            if (!servitor.curBot.myBehaviors.runState.ContainsKey(nodeID))
+            if (!myBehaviors.runState.ContainsKey(nodeID))
             {
                 report = "non";
             }
             else
             {
-                report = servitor.curBot.myBehaviors.runState[nodeID].ToString();
+                report = myBehaviors.runState[nodeID].ToString();
             }
             return report;
          }
@@ -440,7 +444,7 @@ namespace AltAIMLbot
             {
                 if (multiBehaviorName.Count == 0)
                 {
-                    writer.WriteLine("Could not identify tasks or behaviors from :" + behaviorName);
+                    writer.WriteLine("Zero tasks or behaviors from :" + behaviorName);
                     return;
                 }
                 foreach (string behavorT in multiBehaviorName)
@@ -460,26 +464,28 @@ namespace AltAIMLbot
             string ids = "";
             string tsk = "";
             TaskList.TaskEnumerator  en = null;
-            BehaviorSet myBehaviors = servitor.curBot.myBehaviors;
             switch (action)
             {
                 case "info":
-                    bool v01 = myBehaviors.visibleBehavior(behaviorName);
-                    bool v03 = myBehaviors.definedBehavior(behaviorName);
-                    var treeByTreeName = myBehaviors.GetTreeByName(behaviorName);
-                    writer.WriteLine("<visible name=\"{0}\" value=\"{1}\"/>", behaviorName, v01);
-                    writer.WriteLine("<defined name=\"{0}\" value=\"{1}\"/>", behaviorName, v03);
-                    string eh = myBehaviors.getEventHandler(behaviorName);
-                    if (eh != null && eh != behaviorName)
-                    {
-                        writer.WriteLine("<eventHandler name=\"{0}\" value=\"{1}\"/>", behaviorName, eh);
-                    }
-                    writer.WriteLine(treeByTreeName.treeDoc.OuterXml);
                     ids = idStatus(behaviorName);
                     tsk = taskStatus(behaviorName);
                     writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
- 
-                    //performAction(writer, "status,source", query, behaviorName);
+                    bool v01 = myBehaviors.visibleBehavior(behaviorName);
+                    bool v03 = myBehaviors.definedBehavior(behaviorName);
+                    string eh = myBehaviors.getEventHandler(behaviorName);
+                    if (!string.IsNullOrEmpty(eh) && !KeyCase.DefaultFN.SameKey(eh, behaviorName))
+                    {
+                        writer.WriteLine("<eventHandler name=\"{0}\" value=\"{1}\">", behaviorName, eh);
+                        performAction(writer, action, query, eh);
+                        writer.WriteLine("</eventHandler>");
+                    }
+                    if (v03)
+                    {
+                        var treeByTreeName = myBehaviors.GetTreeByName(behaviorName);
+                        writer.WriteLine(treeByTreeName.treeDoc.OuterXml);
+                    }
+                    writer.WriteLine("<visible name=\"{0}\" value=\"{1}\"/>", behaviorName, v01);
+                    writer.WriteLine("<defined name=\"{0}\" value=\"{1}\"/>", behaviorName, v03);
                     break;
 
                 case "source":
@@ -642,7 +648,6 @@ namespace AltAIMLbot
             TaskList.TaskEnumerator en;
             behaviorName = behaviorName.ToUpper();
             bool wasSpeced = false;
-            BehaviorSet myBehaviors = servitor.curBot.myBehaviors;
             if (behaviorName.Contains("*VISIBLE*"))
             {
                 wasSpeced = true;
