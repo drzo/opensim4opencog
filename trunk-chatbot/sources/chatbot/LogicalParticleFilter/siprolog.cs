@@ -129,7 +129,19 @@ namespace LogicalParticleFilter1
         {
             KBGraph.Connect(childMT, parentMT);
         }
-
+        public void disconnectMT(string childMT, string parentMT)
+        {
+            KBGraph.Disconnect(childMT, parentMT);
+        }
+        public void clearConnectionsToMt(string childMt)
+        {
+            KBGraph.ClearInConnections(childMt);
+        }
+        public void clearConnectionsFromMt(string childMt)
+        {
+            KBGraph.ClearOutConnections(childMt);
+        }
+       
         public string visibleKBText(string startMT)
         {
             PNode focus = KBGraph.Contains(startMT);
@@ -3523,7 +3535,14 @@ namespace LogicalParticleFilter1
             {
                 outgoingEdgeList.Add(edge);
             }
-
+            public void ClearIncomingEdges()
+            {
+                incomingEdgeList.Clear();
+            }
+            public void ClearOutgoingEdges()
+            {
+                outgoingEdgeList.Clear();
+            }
             public PEdge[] IncomingEdges
             {
                 get { return incomingEdgeList.ToArray(); }
@@ -3550,6 +3569,23 @@ namespace LogicalParticleFilter1
                 }
 
                 return false;
+            }
+
+            public void RemoveEdgeTo(PNode otherNode)
+            {
+                foreach (PEdge e in this.OutgoingEdges)
+                {
+                    if (e.EndNode == otherNode)
+                    {
+                        if (e.StartNode.outgoingEdgeList.Contains(e))
+                                e.StartNode.outgoingEdgeList.Remove(e);
+                        if (e.EndNode.incomingEdgeList.Contains(e)) 
+                                e.EndNode.incomingEdgeList.Remove(e);
+                        return ;
+                    }
+                }
+
+                return;
             }
 
             /// <summary>
@@ -3616,6 +3652,17 @@ namespace LogicalParticleFilter1
         {
             List<PNode> topLevelNodes = new List<PNode>();
 
+            public void ClearInConnections(string idSrc)
+            {
+                PNode srcNode = FindOrCreateNode(idSrc);
+                srcNode.ClearIncomingEdges();
+            }
+            public void ClearOutConnections(string idSrc)
+            {
+                PNode srcNode = FindOrCreateNode(idSrc);
+                srcNode.ClearOutgoingEdges();
+            }
+
             public void Connect(string idSrc, string idDest)
             {
                 PNode srcNode = FindOrCreateNode(idSrc);
@@ -3627,6 +3674,18 @@ namespace LogicalParticleFilter1
                 }
                 if (!srcNode.EdgeAlreadyExists(destNode))
                     srcNode.CreateEdgeTo(destNode);
+            }
+            public void Disconnect(string idSrc, string idDest)
+            {
+                PNode srcNode = FindOrCreateNode(idSrc);
+                PNode destNode = FindOrCreateNode(idDest);
+
+                if (destNode == srcNode)
+                {
+                    return;
+                }
+                if (!srcNode.EdgeAlreadyExists(destNode)) return;
+                srcNode.RemoveEdgeTo(destNode);
             }
 
             private PNode FindOrCreateNode(string idSrc)

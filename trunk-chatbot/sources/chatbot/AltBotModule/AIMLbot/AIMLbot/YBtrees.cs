@@ -815,7 +815,16 @@ namespace AltAIMLbot
                             yield return result;
                         }
                         break;
-                         
+
+                    case "inventfrommt":
+                        foreach (RunStatus result in ProcessInventFromMt(myNode))
+                        {
+                            myResult = result;
+                            SetCurNodeIdStatus(myResult);
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
 
                     //Particle filter interface
                     case "definestate":
@@ -3305,13 +3314,39 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessLoadKEKB '{0}':'{1}':{2}", sourceMt, resultMt, EMsg(e));
+                Console.WriteLine("Error ProcessInduceFromMt '{0}':'{1}':{2}", sourceMt, resultMt, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
             yield break;
         }
 
+        public IEnumerable<RunStatus> ProcessInventFromMt(XmlNode myNode)
+        {
+            // load some KE (which will have MT definitions)
+            RunStatus rs = RunStatus.Failure;
+            string problemMt = "problemMt";
+            string moduleMt = "moduleMt";
+            string solutionMt = "solutionMt";
+            string innerStr = myNode.InnerXml.Trim();
+
+            try
+            {
+                if (myNode.Attributes["problem"] != null) problemMt = myNode.Attributes["problem"].Value;
+                if (myNode.Attributes["modules"] != null) moduleMt = myNode.Attributes["modules"].Value;
+                if (myNode.Attributes["solution"] != null) solutionMt = myNode.Attributes["solution"].Value;
+                CemaSolver Inventor = new CemaSolver(bot.myServitor.prologEngine);
+                Inventor.constructSolution(problemMt, moduleMt, solutionMt);
+                rs = RunStatus.Success;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessInventFromMt '{0}':'{1}':'{2}':{3}", problemMt, moduleMt, solutionMt, EMsg(e));
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
 
         public IEnumerable<RunStatus> ProcessInsertMt(XmlNode myNode)
         {
