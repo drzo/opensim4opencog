@@ -3344,6 +3344,14 @@ namespace AltAIMLbot
                         Inventor.worstWeighting = true;
                     }
                 }
+                if (myNode.Attributes["trials"] != null)
+                {
+                    Inventor.limitTrials = int.Parse(myNode.Attributes["trials"].Value);
+                }
+                if (myNode.Attributes["budget"] != null)
+                {
+                    Inventor.limitCost = double.Parse(myNode.Attributes["budget"].Value);
+                }
                
                 bool outcome = Inventor.constructSolution(problemMt, moduleMt, solutionMt);
                 if (outcome)

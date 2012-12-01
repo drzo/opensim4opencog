@@ -79,8 +79,9 @@ namespace LogicalParticleFilter1
         // - an MT having all module Mt's visible
         // - a set of module mt's containing
         //    - module(module_mt_name)
-        //    - requires(proposition)
-        //    - provides(proposition)
+        //    - optionally cost(module_cost)
+        //    - set/list of requires(proposition)
+        //    - set/list of provides(proposition)
         //    - any other information that defines that module
         // - System will return 
         //    - a list of module mt's that provide a solution
@@ -90,6 +91,9 @@ namespace LogicalParticleFilter1
         SIProlog prologEngine = null;
         public bool worstWeighting = false;
         public double problemWorstCost = -1;
+        public double limitCost = double.MaxValue;
+        public int limitTrials = int.MaxValue;
+
 
         public CemaSolver(SIProlog prologEng)
         {
@@ -100,14 +104,17 @@ namespace LogicalParticleFilter1
         {
             List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
             // Find Desired List
-            string reqQuery = "required(NEED)";
+            string reqQuery = "requires(NEED)";
             List<string> needList = new List<string>();
             prologEngine.askQuery(reqQuery, proposalMt, out bingingsList);
             foreach (Dictionary<string, string> bindings in bingingsList)
             {
                 foreach (string k in bindings.Keys)
                 {
-                    if (k == "NEED") needList.Add(bindings[k]);
+                    if (k == "NEED")
+                    {
+                        if (!needList.Contains(bindings[k])) needList.Add(bindings[k]);
+                    }
                 }
             }
             if (needList.Count==0) return new List<string> ();
@@ -116,8 +123,12 @@ namespace LogicalParticleFilter1
             foreach (string need in needList)
             {
                 string needQuery = String.Format("provides({0})", need);
-                bool isMissing = prologEngine.isTrueIn (needQuery, proposalMt);
-                if (isMissing) missingList.Add(need);
+                bool needSatisfied = prologEngine.isTrueIn (needQuery, proposalMt);
+                if (!needSatisfied)
+                {
+                  if (!missingList.Contains (need))
+                      missingList.Add(need);
+                }
             }
             return missingList;
         }
@@ -126,8 +137,8 @@ namespace LogicalParticleFilter1
             foreach (string need in needList)
             {
                 string needQuery = String.Format("provides({0})", need);
-                bool isMissing = prologEngine.isTrueIn(needQuery, moduleMt);
-                if (!isMissing) return true;
+                bool needSatisfied = prologEngine.isTrueIn(needQuery, moduleMt);
+                if (needSatisfied) return true;
             }
             return false;
         }
@@ -242,9 +253,12 @@ namespace LogicalParticleFilter1
             fScores.Add(start, (gScores[start] + hScores[start]));
             
             openSet.Add(start);
-
+            int trials = 0;
             while (openSet.Count != 0)
             {
+                trials++;
+                if (trials > limitTrials) break;
+
                 //we look for the node within the openSet with the lowest f score.
                 CemaState bestState = this.FindBest(openSet, fScores);
                 setSolution(bestState, solutionMt,problemMt );
@@ -258,6 +272,10 @@ namespace LogicalParticleFilter1
                 }
                 openSet.Remove(bestState);
                 closedSet.Add(bestState);
+
+                // Not the final solution and too expensive
+                if (bestState.totalCost > limitCost)
+                    continue;
 
                 // get the list of modules we have not used
                 List<string> validModules = bestState.validNextMods(totalModuleList);
@@ -309,7 +327,7 @@ namespace LogicalParticleFilter1
             {
                 prologEngine.connectMT(solutionMt, moduleMt);
             }
-            List<string> solutionMissingList = missingInMt(problemMt);
+            List<string> solutionMissingList = missingInMt(solutionMt);
             cState.missingList = solutionMissingList;
         }
 
