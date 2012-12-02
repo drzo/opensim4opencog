@@ -365,6 +365,7 @@ namespace AltAIMLbot
             //serverRoot
             if (path.Contains("./plot/"))
             {
+                tl_AsHTML = false;
                 context.Response.StatusCode = (int) HttpStatusCode.OK;
                 //+using (Stream s = context.Response.OutputStream )
                 using (var writer = HtmlStreamWriter(context))

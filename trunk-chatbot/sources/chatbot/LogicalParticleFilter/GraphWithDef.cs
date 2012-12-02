@@ -1013,7 +1013,7 @@ yago	http://dbpedia.org/class/yago/
                     if (!SharedGlobalPredDefs.TryGetValue(key, out def))
                     {
                         newlyCreated = true;
-                        string predClassName = key + "_PredClass";
+                        string predClassName = "PredClass_" + key;
                         SharedGlobalPredDefs[key] =
                             def =
                             new PredicateProperty(arity) {name = predName, keyname = key, classname = predClassName};
@@ -1473,7 +1473,7 @@ yago	http://dbpedia.org/class/yago/
             private INode CreateInstance(PredicateProperty headDef, RdfRules graph, bool isVar)
             {
                 int nxt = headDef.instanceNumber++;
-                string iname = headDef.keyname + "_PredInst" + nxt;
+                string iname = "Pred" + nxt + "_" + headDef.keyname;
                 INode iln = isVar ? definations.CreateVariableNode(iname) : (INode)C(RoboKindURI + iname);
                 var a = InstanceOf;
                 var cn = headDef.classNode = headDef.classNode ?? C(RoboKindURI + headDef.classname);
