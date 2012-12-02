@@ -78,6 +78,12 @@
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
+      <Project>{E64505B9-62DE-4AF1-93C6-DDDB42B7D4E7}</Project>
+      <Name>MushDLR223</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

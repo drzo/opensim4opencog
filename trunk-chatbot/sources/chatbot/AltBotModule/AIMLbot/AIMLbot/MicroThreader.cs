@@ -6,6 +6,7 @@ using System.Diagnostics;
 
 using System.IO;
 using LogicalParticleFilter1;
+using MushDLR223.Utilities;
 
 namespace AltAIMLbot
 {
@@ -34,7 +35,7 @@ namespace AltAIMLbot
 
         public bool IsNamed(string n)
         {
-            return KeyCase.DefaultFN.SameKey(n, name);
+            return KeyCase.DefaultFN.SameKey(name, n);
         }
     }
 
@@ -295,16 +296,16 @@ namespace AltAIMLbot
 
         public string idStatus(string nodeID)
         {
-            string report ="non";
-            if (!myBehaviors.runState.ContainsKey(nodeID))
+            RunStatus status;
+            var rs = myBehaviors.runState;
+            lock (rs)
             {
-                report = "non";
+                if (rs.TryGetValue(nodeID, out status))
+                {
+                    return status.ToString();
+                }
             }
-            else
-            {
-                report = myBehaviors.runState[nodeID].ToString();
-            }
-            return report;
+            return "non";
          }
 
         public string taskStatus(string nodeID)
@@ -550,9 +551,10 @@ namespace AltAIMLbot
                     }
                     break;
                 case "listidstatus":
-                    foreach (string key in myBehaviors.runState.Keys)
+                    var runState = LockInfo.CopyOf(myBehaviors.runState);
+                    foreach (string key in runState.Keys)
                     {
-                        string status= myBehaviors.runState[key].ToString();
+                        string status= runState[key].ToString();
                         writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" />", key, status);
                     }
 

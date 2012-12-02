@@ -403,7 +403,8 @@ namespace AltAIMLbot
                 nodeID = "null";
             }
 
-            Action<RunStatus> SetCurNodeIdStatus = (v) => { bot.myBehaviors.runState[nodeID] = v; };
+            var rs = bot.myBehaviors.runState;
+            Action<RunStatus> SetCurNodeIdStatus = v => { lock (rs) rs[nodeID] = v; };
             // Initiate our status
             SetCurNodeIdStatus(RunStatus.Running);
 
@@ -1777,7 +1778,7 @@ namespace AltAIMLbot
                 if (bot.myBehaviors.definedBehavior(behaviorName))
                 {
                     logText("ProcessSubBehavior found:" + behaviorName);
-                    BehaviorTree curTree = (BehaviorTree)bot.myBehaviors.behaveTrees[behaviorName];
+                    BehaviorTree curTree = bot.myBehaviors.GetTreeByName(behaviorName);
 
                     //result = runSubTree(curTree.treeDoc);
                     foreach (RunStatus myChildResult in runSubTree(curTree.treeDoc))
