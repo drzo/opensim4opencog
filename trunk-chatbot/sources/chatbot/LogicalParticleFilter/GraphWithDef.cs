@@ -28,13 +28,24 @@ namespace LogicalParticleFilter1
         public static INode instanceTriple(this SIProlog.Rule rule)
         {
             if (rule == null) return null;
-            INode node = rule.rdfRuleCache.RuleNode;
-            if (node != null) return node;
-            lock (rule2Node) if (rule2Node.TryGetValue(rule, out node))
+            SIProlog.RdfRules ruleCache = rule.rdfRuleCache;
+            if (ruleCache != null)
+            {
+                INode node = ruleCache.RuleNode;
+                if (node != null) return node;
+            }
+            INode saved;
+            lock (rule2Node)
+            {
+                if (rule2Node.TryGetValue(rule, out saved))
                 {
-                    rule.rdfRuleCache.RuleNode = node;
-                    return node;
+                    if (ruleCache != null)
+                    {
+                        rule.rdfRuleCache.RuleNode = saved;
+                    }
+                    return saved;
                 }
+            }
             return null;
         }
         public static int WordCount(this String str)
@@ -452,8 +463,13 @@ namespace LogicalParticleFilter1
             {
                 get
                 {
+                    if (_requirementsMet) return true;
+                    if (RuleNode == null)
+                    {
+                        return false;
+                    }
                     if (Requirements.Count == 0) return true;
-                    return _requirementsMet;
+                    return false;
                 }
                 set
                 {
@@ -1462,6 +1478,7 @@ yago	http://dbpedia.org/class/yago/
                         GatherTermAntecedants(p, headDef, rdfRules);
                     }
                 }
+                rdfRules.RuleNode = ruleSubject;
                 var definations = rdfRules.def;
                 rdfRules.AddProducing(MakeTriple(ruleSubject, definations.CreateUriNode("siprolog:sourceCode"), 
                     definations.CreateLiteralNode(rule.ToString(), "prolog")));
