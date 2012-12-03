@@ -739,6 +739,7 @@ namespace RTParser
                 FindUser("ExemplarUser") ?? new MasterUser("ExemplarUser", "ExemplarUser", this, DefaultPredicates);
             guser.SetMeMyselfAndI("ExemplarUser");
             RegisterDictionary("defaults", DefaultPredicates);
+            DefaultPredicates.InsertFallback(() => this.AllUserPreds);
             this.GlobalSettings = MakeSettingsDictionary("GlobalSettingsMt");
             this.GlobalSettings.bbPrefix = "bot";
             RegisterDictionary("bot", GlobalSettings);
@@ -749,6 +750,13 @@ namespace RTParser
             this.HeardPredicates = MakeSettingsDictionary("HeardPredicatesMt");
             RegisterDictionary("chat.heardpredicates", HeardPredicates);
             RegisterDictionary("bot.alluserpred", this.AllUserPreds);
+            this.AllUserPreds["dictname"] = "bot.AllUserPreds";
+            this.HeardPredicates["dictname"] = "bot.HeardPredicates";
+            this.AllUserPreds["iamAllUsers"] = "True";
+            this.HeardPredicates["iamAllUsers"] = "False";
+            this.AllUserPreds["iamHeardPredicates"] = "False";
+            this.HeardPredicates["iamHeardPredicates"] = "True";
+            this.HeardPredicates["iamHeardPredicatesLocally"] = "True";
             this.CustomTags = new Dictionary<string, TagHandler>();
             this.Graphs = new Dictionary<string, GraphMaster>();
             this.Graphmaster = new GraphMaster("base", this);

@@ -1345,6 +1345,23 @@ namespace AltAIMLbot
             if (tmBehaveThread != null) tmBehaveThread.Abort();
             if (myCronThread != null) myCronThread.Abort();
         }
+
+        public static void EnsureBTX(string official)
+        {
+            string btxStore = Path.Combine(official, "bstore");
+            Directory.CreateDirectory(btxStore);
+            bool needBtx = true;
+            foreach (string fileName in Directory.GetFiles(btxStore, "*.btx"))
+            {
+                needBtx = false;
+                break;
+            }
+            foreach (string fileName in Directory.GetFiles(official, "*.aiml"))
+            {
+                System.IO.File.SetLastWriteTimeUtc(fileName, DateTime.UtcNow);
+                if (!needBtx) break;
+            }
+        }
     }
 
     

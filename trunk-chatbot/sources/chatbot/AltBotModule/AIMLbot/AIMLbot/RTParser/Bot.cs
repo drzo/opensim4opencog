@@ -1767,6 +1767,7 @@ The AIMLbot program.
                 official = LoadPersonalDirectory("default_bot", true, false);
             }
             PersonalAiml = official;
+            Servitor.EnsureBTX(official);
             thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
             AddExcuteHandler(NamePath, ChatWithThisBot);
             RunOnBotCreatedHooks();
