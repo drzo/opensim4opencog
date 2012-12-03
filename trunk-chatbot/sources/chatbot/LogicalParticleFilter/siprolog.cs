@@ -76,17 +76,19 @@ namespace LogicalParticleFilter1
         public chemSysDelegate chemSysCommandProcessor = null;
 
         public bool lazyTranslate = false; // translate KB text to internal on entry or on first use
-
-        public PGraph KBGraph = new PGraph();
+        
+        public static PGraph GlobalKBGraph = new PGraph();
+        public PGraph KBGraph = GlobalKBGraph ?? new PGraph();
         readonly public PDB testdb = new PDB();
         //was unused :  private Dictionary<string, string> bindingsDict = new Dictionary<string, string>();
         
         // natural language to MT name
         public Dictionary<string, string> aliasMap = new Dictionary<string, string>();
 
-
+        public static SIProlog CurrentProlog;
         public SIProlog()
         {
+            CurrentProlog = this;
             defineBuiltIns();
             connectMT("stdlib", "root");
             defineRDFExtensions();
@@ -166,7 +168,12 @@ namespace LogicalParticleFilter1
             // Skips those with zero probibility
            ArrayList vlist= findVisibleKBS(startMT, new ArrayList());
            RuleList VKB = new RuleList();
-           if (vlist == null) vlist = new ArrayList();
+           if (vlist == null)
+           {
+               return VKB;
+               vlist = new ArrayList();
+           }
+           vlist.Reverse();
            vlist.Sort();
            foreach (PNode focus in vlist)
            {
@@ -197,7 +204,10 @@ namespace LogicalParticleFilter1
         {
             PNode focus = KBGraph.Contains(startMT);
             if (focus == null) return null;
-            if (vlist.Contains(focus)) return null;
+            if (vlist.Contains(focus))
+            {
+                return null;
+            }
             vlist.Add(focus);
             foreach (PEdge E in focus.OutgoingEdges)
             {
@@ -260,6 +270,44 @@ namespace LogicalParticleFilter1
                 writer.WriteLine("<META HTTP-EQUIV=\"REFRESH\" content=\"10\">");
             }
             writer.WriteLine("<html>");
+            var s = @"<head>
+<script>
+function showtip(current,e,text)
+{
+   if (document.all)
+   {
+      thetitle=text.split('<br>')
+      if (thetitle.length > 1)
+      {
+        thetitles=""
+        for (i=0; i<thetitle.length-1; i++)
+           thetitles += thetitle[i] + ""\r\n""
+        current.title = thetitles
+      }
+      else current.title = text
+   }
+
+   else if (document.layers)
+   {
+       document.tooltip.document.write(
+           '<layer bgColor=""#FFFFE7"" style=""border:1px ' +
+           'solid black; font-size:12px;color:#000000;"">' + text + '</layer>')
+       document.tooltip.document.close()
+       document.tooltip.left=e.pageX+5
+       document.tooltip.top=e.pageY+5
+       document.tooltip.visibility=""show""
+   }
+}
+
+function hidetip()
+{
+    if (document.layers)
+        document.tooltip.visibility=""hidden""
+}
+</script>
+</head>
+";
+            writer.WriteLine(s);
             TOCmenu(writer, serverRoot); 
             webWriter0(writer, action, query, mt, serverRoot, true);
             writer.WriteLine("</html>");
@@ -434,7 +482,14 @@ namespace LogicalParticleFilter1
             string color = localMT ? "blue" : "darkgreen";
             string ext = localMT ? "" : string.Format("&nbsp;&nbsp;%<a href='{0}xrdf/?mt={1}'>{1}</a>", tl_ServerRoot, mt);
 
-            writer.WriteLine("<font color='{0}'>{1}</font>{2}<br/>", color, r.ToString(), ext);
+
+            string toolTip = "";
+            /*var rdf = r.RdfRuleValue(); 
+            if (rdf != null)
+            {
+                toolTip = string.Format("onmouseover=\"showtip('{0}')\" ", rdf.ToString().Replace("\"", "\\\"").Replace("'", "\\'"));
+            }*/
+            writer.WriteLine("<font color='{0}' {1}>{2}</font>{3}<br/>", color, toolTip, r.ToString(), ext);
         }
 
         public static string StructToString(object t)
@@ -1223,7 +1278,7 @@ namespace LogicalParticleFilter1
 
         private void inGlobalTest()
         {
-            throw new NotImplementedException();
+            throw ErrorBadOp("inGlobalTest");
         }
         #endregion
         #region interfaceUtils
@@ -2114,10 +2169,12 @@ namespace LogicalParticleFilter1
 
             private void Release(Rule r)
             {
-                INode tripleInst = r.instanceTriple;
+                var ruleCache = r.rdfRuleCache;
+                if (ruleCache == null) return;
+                INode tripleInst = ruleCache.RuleNode;
                 if (tripleInst == null) return;
                 ConsoleWriteLine("Remove Rule: " + r);
-                IGraph graph = tripleInst.Graph;
+                IGraph graph = ruleCache.ContainingGraph ?? tripleInst.Graph;
                 IEnumerable<Triple> found = graph.GetTriples(tripleInst);
                 int fnd = 0;
                 foreach (Triple triple in found)
@@ -2222,9 +2279,9 @@ namespace LogicalParticleFilter1
 
         public abstract class Part
         {
-            protected NotImplementedException Missing(string p)
+            protected Exception Missing(string p)
             {
-                return new NotImplementedException(type + " Missing '" + p + "' for " + this.ToPLStringReadable());
+                return ErrorBadOp("{0} Missing '{1}' for {2}", type, p, this.ToPLStringReadable());
             }
             public abstract string type { get; }
             virtual public string name
@@ -2251,7 +2308,7 @@ namespace LogicalParticleFilter1
 
             public virtual double AsDouble()
             {
-                throw new NotImplementedException();
+                throw Missing("AsDouble"); 
             }
 
             public static void ConsolePrint(string format, params object[] args)
@@ -2278,13 +2335,13 @@ namespace LogicalParticleFilter1
                 get { return tlist.Count; }
             }
 
-            public SIProlog.Part this[int i]
+            public Part this[int i]
             {
                 get
                 {
                     if (i < 0 || i >= Count)
                     {
-                        throw new NotImplementedException("inner partlist");
+                        throw BadOp("inner partlist");
                     }
                     return (SIProlog.Part) tlist[i];
                 }
@@ -2292,17 +2349,22 @@ namespace LogicalParticleFilter1
                 {
                     if (i < 0 || i >= Count)
                     {
-                        throw new NotImplementedException("inner partlist");
+                        throw BadOp("inner partlist");
                     }
                     tlist[i] = value;
                 }
+            }
+
+            internal Exception BadOp(string s)
+            {
+                return BadOp(s);
             }
 
             public void Add(SIProlog.Part part)
             {
                 if (part is SIProlog.PartList)
                 {
-                    throw new NotImplementedException("inner partlist");
+                    throw BadOp("inner partlist");
                 }
                 tlist.Add(part);
             }
@@ -2314,7 +2376,7 @@ namespace LogicalParticleFilter1
                     Add(part);
                     return;
                 }
-                throw new NotImplementedException("inserting outof order");
+                throw BadOp("inserting outof order");
             }
 
             public int Length
@@ -2390,7 +2452,7 @@ namespace LogicalParticleFilter1
             {
                 if (i != tlist.Count)
                 {
-                    throw new NotImplementedException("out of order insertion");
+                    throw BadOp("out of order insertion");
                 }
                 tlist.Insert(i, part);
             }
@@ -2421,6 +2483,7 @@ namespace LogicalParticleFilter1
         }
 
         public static Dictionary<string, Atom> AtomTable = new Dictionary<string, Atom>();
+
         public interface IAtomic
         {
             int CompareTo(IAtomic atomic);
@@ -2700,7 +2763,7 @@ namespace LogicalParticleFilter1
 
             public IEnumerable<Part> Args
             {
-                get { return partlist.ArgList.ToList(); }
+                get { return (IEnumerable<Part>)partlist.ArgList.ToArray(); }
             }
 
             public readonly PartList partlist;
@@ -2808,7 +2871,7 @@ namespace LogicalParticleFilter1
                     if (ReferenceEquals(argr, null)) return;
                     if (!ReferenceEquals(argr, arg))
                     {
-                        this.partlist.ArgList[argNum] = argr;
+                        this.ArgList[argNum] = argr;
                     }
                     argNum++;
                 }
@@ -3565,12 +3628,12 @@ namespace LogicalParticleFilter1
             {
                 while (((((PartList)x).Length == 1) && ((PartList)x).ArgList[0] is PartList) && (((PartList)x).Length != ((PartList)y).Length) )
                 {
-                    throw new NotImplementedException("inner partlist");
+                    throw ErrorBadOp("inner partlist");
                     x = ((PartList)((PartList)x).ArgList[0]);
                 }
                 while (((((PartList)y).Length == 1) && ((PartList)y).ArgList[0] is PartList) && (((PartList)x).Length != ((PartList)y).Length) )
                 {
-                    throw new NotImplementedException("inner partlist");
+                    throw ErrorBadOp("inner partlist");
                     y = ((PartList)((PartList)y).ArgList[0]);
                 }
                 
@@ -4065,15 +4128,22 @@ namespace LogicalParticleFilter1
             if (name == "cons")
             {
                 return "cons";
-                throw new NotImplementedException(name);
+                throw ErrorBadOp(name);
             }
             if (name == "nil")
             {
                 return "nil";
-                throw new NotImplementedException(name);
+                throw ErrorBadOp(name);
             }
             return name;
         }
+        static internal Exception ErrorBadOp(string f, params object[] args)
+        {
+            string m = string.Format(f, args);
+            Warn("ERRORBADOP " + m);
+            return new NotImplementedException(m);
+        }
+
     }
 
     public class DontTouchThisTextWriter : TextWriter
@@ -4247,7 +4317,7 @@ namespace LogicalParticleFilter1
 
         }
 
-        new public V this[K key]
+        public V this[K key, int i]
         {
             get
             {
@@ -4265,7 +4335,7 @@ namespace LogicalParticleFilter1
                 var key2 = this.myComp.NormalizeKey(key);
                 if (key2 != key1)
                 {
-                    //throw new NotImplementedException();
+                    //throw BadOp();
                 }
                 base[key] = value;
             }
@@ -4430,50 +4500,6 @@ namespace LogicalParticleFilter1
         {
             get { throw new NotImplementedException(); }
             set { throw new NotImplementedException(); }
-        }
-    }
-
-    public partial class TermListImpl
-    {
-        ArrayList holder = new ArrayList();
-        public int Count
-        {
-            get { return holder.Count; }
-        }
-
-        public SIProlog.Part this[int i]
-        {
-            get { return (SIProlog.Part)holder[i]; }
-            set { holder[i] = value; }
-        }
-
-        public void Add(SIProlog.Part part)
-        {
-            if (part is SIProlog.PartList)
-            {
-                throw new NotImplementedException("inner partlist");
-            }
-            holder.Add(part);
-        }
-
-        public void Insert(int i, SIProlog.Part part)
-        {
-            if (i == Count)
-            {
-                Add(part);
-                return;
-            }
-            throw new NotImplementedException("inserting outof order");
-        }
-
-        public IEnumerable<SIProlog.Part> ToList()
-        {
-            var nl = new List<SIProlog.Part>();
-            foreach (SIProlog.Part p in holder)
-            {
-                nl.Add(p);
-            }
-            return nl;
         }
     }
 }
