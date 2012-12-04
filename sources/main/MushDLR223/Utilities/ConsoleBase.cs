@@ -399,6 +399,7 @@ namespace MushDLR223.Utilities
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public static bool AllocedConsole = false;
         public static bool NoConsoleVisible = false;
+        public static HashSet<string> IgnoredSenders = new HashSet<string>();
         [ConfigSetting(Description="if false, Print method name with error messages. Printing them is expensive.")]
         public static bool SkipStackTraces = false;
         private static readonly object[] NOARGS = new object[0];
@@ -953,6 +954,7 @@ namespace MushDLR223.Utilities
                 var c = CurrentCaller;
                 format = sender + ": " + format;
             }
+            if (IgnoreSender(sender)) return;
             lock (cmdline) lock (m_syncRoot)
                 {
                     if (m_cursorYPosition != -1)
@@ -986,6 +988,35 @@ namespace MushDLR223.Utilities
                 }
         }
 
+        public static bool IgnoreSender(string sender)
+        {
+            if (DebugLevel > 8) return true;
+            lock (IgnoredSenders) return (IgnoredSenders.Contains(sender));
+        }
+        public static void SetIgnoreSender(string sender, bool tf)
+        {
+            lock (IgnoredSenders)
+            {
+                if (sender == null)
+                {
+                    if (tf == false)
+                    {
+                        IgnoredSenders.Clear();
+                    }
+                    return;
+                }
+                sender = sender.ToUpper();
+                if (tf)
+                {
+                    IgnoredSenders.Add(sender);
+                }
+                else
+                {
+                    IgnoredSenders.Remove(sender);
+                }
+            }
+        }
+
         static public string OmitPrefix(string sender, string trimmed)
         {
             string tt = trimmed.TrimStart().ToUpper();
@@ -1012,6 +1043,7 @@ namespace MushDLR223.Utilities
 
         static void WriteNewLine_Helper(ConsoleColor senderColor, string sender, ConsoleColor color, string trimmed)
         {
+            if (IgnoreSender(sender)) return;
             if (m_cursorYPosition != -1)
                 m_cursorYPosition = CursorTop;
             WritePrefixLine(senderColor, sender);
@@ -1542,7 +1574,10 @@ namespace MushDLR223.Utilities
         public static int DebugLevel = 0;
         public static void DebugWriteLine(string format, params object[] args)
         {
-            if (DebugLevel == 0) return;
+            if (DebugLevel == 0)
+            {
+                return;
+            }
             string printStr = TheConsole.SafeFormat(format, args);
             if (!TheGlobalLogFilter.ShouldPrint(printStr))
             {
