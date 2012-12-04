@@ -55,13 +55,13 @@ namespace AltAIMLbot
             if (query == "rdf2pl")
             {
                 graph = prologEngine.MakeRepositoryKB(mt);
-                graph.pushGraphToKB();
+                graph.pushRdfGraphToPrologKB();
             } if (query == "pl2rdf" || true)
             {
                 graph = prologEngine.MakeRepositoryKB(mt);
-                graph.pushRulesToGraph();
-            }            
-            graph.prologEngine.webWriter(writer, null, null, graph.prologMt, serverRoot);
+                graph.pushPrologKBToRdfGraph();
+            }
+            graph.RdfStore.prologEngine.webWriter(writer, null, null, graph.id, serverRoot);
             return;
             ////throw new NotImplementedException();
         }

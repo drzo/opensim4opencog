@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
+using System.Windows.Forms;
 using MushDLR223.ScriptEngines;
 
 namespace MushDLR223.Utilities
@@ -325,6 +326,43 @@ namespace MushDLR223.Utilities
         {
             lock (Waiters)
                 Waiters.Add(p);
+        }
+
+        public static void EnsureLocked(object lockObj, Action<string> bad)
+        {
+            string s = CheckLocked(lockObj);
+            if (s == null) return;
+            if (bad != null) bad(s);
+        }
+        static public string CheckLocked(object lockObj)
+        {
+            bool[] o = { false };
+            Thread n = new Thread(() => isUnlocked(o, lockObj));
+            n.Start();
+            n.Join();
+            bool lockingIt = o[0];
+            if (!lockingIt)
+            {
+                return "Everyone forgot to lock";
+            }
+            if (!Monitor.TryEnter(lockObj))
+            {
+                return "We forgot to lock";
+            }
+            else
+            {
+                Monitor.Exit(lockObj);
+                return null;
+            }
+        }
+        static private void isUnlocked(bool[] o, object lockObj)
+        {
+            o[0] = true;
+            if (Monitor.TryEnter(lockObj))
+            {
+                Monitor.Exit(lockObj);
+                o[0] = false;
+            }
         }
     }
 

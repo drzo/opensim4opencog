@@ -192,6 +192,7 @@ namespace RTParser
         public static void Run(string[] args)
         {
             AltBot myBot = null;
+            DLRConsole.DebugLevel = 6;
             TaskQueueHandler.TimeProcess("ROBOTCONSOLE: STARTUP", () => { myBot = Startup(args); });
 
             if (new List<string>(args).Contains("--gui"))

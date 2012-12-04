@@ -109,6 +109,7 @@ namespace RTParser.Variables
         {
             prologEngine = pl;
             dictMt = mtName;
+            pl.MakeRepositoryKB(mtName);
             predicateName = predicate;
         }
 

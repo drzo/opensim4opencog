@@ -17,6 +17,7 @@ using VDS.RDF.Nodes;
 using StringWriter=System.IO.StringWriter;
 //using TermList = LogicalParticleFilter1.TermListImpl;
 using TermList = LogicalParticleFilter1.SIProlog.PartList;
+using System.Threading;
 //using GraphWithDef = LogicalParticleFilter1.SIProlog.;
 
 namespace LogicalParticleFilter1
@@ -90,6 +91,8 @@ namespace LogicalParticleFilter1
         public SIProlog()
         {
             CurrentProlog = this;
+            DLRConsole.TransparentCallers.Add(GetType());
+            DLRConsole.SetIgnoreSender("KEYVALUELISTSIPROLOG", true);
             defineBuiltIns();
             defineRDFExtensions();
             tl_mt = "baseKB";
@@ -168,13 +171,14 @@ namespace LogicalParticleFilter1
         {
             // Returns rules sorted by MT probability
             // Skips those with zero probibility
-           ArrayList vlist= findVisibleKBS(startMT, new ArrayList());
+           var vlist = findVisibleKBS(startMT, new List<PNode>());
            RuleList VKB = new RuleList();
            if (vlist == null)
            {
+               Warn("No found visible KBs from " + startMT);
                return VKB;
-               vlist = new ArrayList();
            }
+          //this reverse is because sort() will reverse equal member
            vlist.Reverse();
            vlist.Sort();
            foreach (PNode focus in vlist)
@@ -202,31 +206,36 @@ namespace LogicalParticleFilter1
            return VKB;
         }
 
-        public ArrayList findVisibleKBS(string startMT, ArrayList vlist)
+        public List<PNode> findVisibleKBS(string startMT, List<PNode> vlist)
         {
             PNode focus = KBGraph.Contains(startMT);
             if (focus == null) return null;
             if (vlist.Contains(focus))
             {
+                Warn("Already contains KB named " + startMT);
                 return null;
             }
             vlist.Add(focus);
             foreach (PEdge E in focus.OutgoingEdges)
             {
                 string parentMT = E.EndNode.Id;
-                ArrayList collectedKB = findVisibleKBS(parentMT, vlist);
+                findVisibleKBS(parentMT, vlist);
             }
             return vlist;
         }
 
         public RuleList findVisibleKBRules(string startMT)
         {
-            return findVisibleKBRules(startMT, new ArrayList(), true);
+            return findVisibleKBRules(startMT, new List<string>(), true);
         }
 
-        public RuleList findVisibleKBRules(string startMT, ArrayList vlist, bool followGenlMt)
+        public RuleList findVisibleKBRules(string startMT, List<string> vlist, bool followGenlMt)
         {
-            if (vlist.Contains(startMT)) return null;
+            if (vlist.Contains(startMT))
+            {
+                Warn("Already contains KB named " + startMT);
+                return null;
+            } 
             vlist.Add(startMT);
             // Returns the preprocessed list of visible KB entries.
             // We should probably de-duplicate if possible
@@ -234,8 +243,12 @@ namespace LogicalParticleFilter1
             // Prefix or postfix ??
             // should have one that takes a KB shopping list
             PNode focus = KBGraph.Contains(startMT);
-            if (focus == null) return null;
-                ensureCompiled(focus);
+            if (focus == null)
+            {
+                Warn("No KB named " + startMT);
+                return null;
+            }
+            ensureCompiled(focus);
 
             RuleList VKB = new RuleList();
             // Prefix
@@ -680,15 +693,52 @@ function hidetip()
         }
         private void ensureCompiled(PNode focus)
         {
-            ensureHalfCompiled(focus);
-            ensureSynced(focus);
+            lock (focus.CompileLock)
+            {
+                ensureHalfCompiled(focus);
+                while (true)
+                {
+                    if (focus.SyncFromNow == ContentBackingStore.None) return;
+                    var prev = focus.SyncFromNow;
+                    ensureSynced(focus);
+                    if (prev == focus.SyncFromNow)
+                    {
+                        Warn("Synced on " + focus + " still the same: " + prev);
+                        return;
+                    }
+                }
+            }
         }
 
         private void ensureSynced(PNode focus)
         {
-            if (focus.SyncFromNow == ContentBackingStore.None) return;
-            if (focus.SyncFromNow == ContentBackingStore.FromRDFInMemory)
+            while (true)
             {
+                if (focus.SyncFromNow == ContentBackingStore.None) return;
+                if (focus.SyncFromNow == ContentBackingStore.RdfMemory)
+                {
+                    focus.SyncFromNow = ContentBackingStore.None;
+                    focus.pushRdfGraphToPrologKB();
+                    continue;
+                }
+                if (focus.SyncFromNow == ContentBackingStore.PrologMemory)
+                {
+                    focus.SyncFromNow = ContentBackingStore.None;
+                    focus.pushPrologKBToRdfGraph();
+                    continue;
+                }
+                if (focus.SyncFromNow == ContentBackingStore.PrologSource)
+                {
+                    ensureHalfCompiled(focus);
+                    continue;
+                }
+                if (focus.SyncFromNow == ContentBackingStore.RdfServerURI)
+                {
+                    ensureHalfCompiled(focus);
+                    continue;
+                }
+                Warn("Cant ensured synced on " + focus);   
+                return;
             }
         }
 
@@ -699,49 +749,33 @@ function hidetip()
             var rkb = MakeRepositoryKB(focus.Id);
             switch (focus.SourceKind)
             {
-                case ContentBackingStore.FromRDFServerURI:
+                case ContentBackingStore.RdfServerURI:
                     {
-                        string uri = "" + focus.Repository;
-                        focus.dirty = false;
-                        rdfRemoteEndpointToKB(uri,
-                                              focus.Id,
-                                              "SELECT * WHERE { ?s ?p ?o } LIMIT " + maxMtSize,
-                                              null);
-                        focus.SyncFromNow = ContentBackingStore.FromRDFInMemory;
+                        pullKBFromRdfServer(focus);
                         return;
                     }
                     break;
-                case ContentBackingStore.FromRDFInMemory:
+                case ContentBackingStore.RdfMemory:
                     {
                         //string uri = "" + focus.Repository;
                         focus.Repository = null;
                         focus.dirty = false;
-                        focus.SyncFromNow = ContentBackingStore.FromRDFInMemory;
-                        rkb.pushGraphToKB();
+                        focus.SyncFromNow = ContentBackingStore.RdfMemory;
                         return;
                     }
-                case ContentBackingStore.PrologSourceCode:
+                case ContentBackingStore.PrologSource:
                     {
-                        var outr = parseRuleset(focus.ruleset, focus.Id);
-
-                        lock (focus.pdb.rules)
-                        {
-                            focus.pdb.rules = outr;
-                            focus.dirty = false;
-                        }
-                        focus.SyncFromNow = ContentBackingStore.PrologRuleList;
-                        rkb.pushRulesToGraph();
+                        compileRuleListFromPrologSource(focus);
                         return;
                     }
-                case ContentBackingStore.PrologRuleList:
+                case ContentBackingStore.PrologMemory:
                     {
                         if (focus.ruleset != null)
                         {
                             focus.ruleset = null;
                         }
                         focus.dirty = false;
-                        focus.SyncFromNow = ContentBackingStore.PrologRuleList;
-                        rkb.pushRulesToGraph();
+                        focus.SyncFromNow = ContentBackingStore.PrologMemory;
                         return;
                     }
                 default:
@@ -792,12 +826,19 @@ function hidetip()
         /// <param name="startMT"></param>
         public void insertKB(string ruleSet,string startMT )
         {
-            //replaces KB with a fresh rule set
             PNode focus = FindOrCreateKB(startMT);
-            if (!focus.IsDataFrom(ContentBackingStore.PrologSourceCode))
+            lock (focus.CompileLock)
+            {
+                insertKB_unlocked(ruleSet, focus, startMT);
+            }
+        }
+        public void insertKB_unlocked(string ruleSet, PNode focus, string startMT)
+        {
+            //replaces KB with a fresh rule set
+            if (!focus.IsDataFrom(ContentBackingStore.PrologSource))
             {
                 focus.Clear();
-                appendKB(ruleSet, startMT);
+                appendKB_unlocked(ruleSet, focus, startMT);
                 return;
             }
             focus.ruleset = ruleSet;
@@ -817,9 +858,16 @@ function hidetip()
         {
             // Adds a string rule set
             PNode focus = FindOrCreateKB(startMT);
+            lock (focus.CompileLock)
+            {
+                appendKB_unlocked(ruleSet, focus, startMT);
+            }
+        }
+        public void appendKB_unlocked(string ruleSet,PNode focus, string startMT)
+        {
             startMT = focus.Id;
             if (ruleSet.Trim() == "") return;
-            if (focus.IsDataFrom(ContentBackingStore.PrologRuleList))
+            if (focus.IsDataFrom(ContentBackingStore.PrologMemory))
             {
                 focus.pdb.index.Clear();
                 var outr = parseRuleset(ruleSet, startMT);
@@ -830,15 +878,15 @@ function hidetip()
                         focus.pdb.rules.Add(r);
                     }
                 }
-                focus.SyncFromNow = ContentBackingStore.PrologRuleList;
+                focus.SyncFromNow = ContentBackingStore.PrologMemory;
                 return;
             }
-            if (!focus.IsDataFrom(ContentBackingStore.PrologSourceCode))
+            if (!focus.IsDataFrom(ContentBackingStore.PrologSource))
             {
                 Warn("KB " + startMT + " is not from sourcecode but instead from " + focus.SourceKind);
                 return;
             }
-            focus.SyncFromNow = ContentBackingStore.PrologSourceCode;
+
             if (!focus.dirty)
             {
                 if ((focus.ruleset != null) && (focus.ruleset.Length > (maxMtSize*1.2)))
@@ -850,6 +898,7 @@ function hidetip()
                         focus.ruleset = focus.ruleset.Substring(p1 + 1);
                         focus.dirty = true;
                     }
+                    focus.SyncFromNow = ContentBackingStore.PrologSource;
                     if (lazyTranslate) return;
                     ensureCompiled(focus);
 
@@ -866,10 +915,14 @@ function hidetip()
                             focus.pdb.rules.Add(r);
                         }
                     }
+                    focus.SyncFromNow = ContentBackingStore.PrologMemory;
                 }
                 return;
             }
+
             focus.ruleset = focus.ruleset + "\n" + ruleSet + "\n";
+            focus.dirty = true; 
+            focus.SyncFromNow = ContentBackingStore.PrologSource;
             if (lazyTranslate) return;
             ensureCompiled(focus);
         }
@@ -971,7 +1024,7 @@ function hidetip()
             }
         }
 
-        private Dictionary<string, string> ParseKEText(string startMT, string ruleSet)
+        Dictionary<string, string> ParseKEText(string startMT, string ruleSet)
         {
             curKB = startMT;
             Dictionary<string, string> tempKB = new Dictionary<string, string>();
@@ -1326,7 +1379,7 @@ function hidetip()
                 var db = ctx.db;
                 if (!followGenlMt)
                 {
-                    db.rules = findVisibleKBRules(queryMT, new ArrayList(), false);
+                    db.rules = findVisibleKBRules(queryMT, new List<string>(), false);
                 }
                 else
                 {
@@ -2333,7 +2386,7 @@ function hidetip()
                 if (tripleInst == null) return;
                 ConsoleWriteLine("Remove Rule: " + r);
                 IGraph graph = ruleCache.ContainingGraph ?? tripleInst.Graph;
-                IEnumerable<Triple> found = graph.GetTriples(tripleInst);
+                IEnumerable<Triple> found = LockInfo.CopyOf(graph.GetTriples(tripleInst));
                 int fnd = 0;
                 foreach (Triple triple in found)
                 {
@@ -2499,7 +2552,7 @@ function hidetip()
                 {
                     if (i < 0 || i >= Count)
                     {
-                        throw BadOp("inner partlist");
+                        throw ErrorBadOp("inner partlist");
                     }
                     return (SIProlog.Part) tlist[i];
                 }
@@ -2507,22 +2560,17 @@ function hidetip()
                 {
                     if (i < 0 || i >= Count)
                     {
-                        throw BadOp("inner partlist");
+                        throw ErrorBadOp("inner partlist");
                     }
                     tlist[i] = value;
                 }
-            }
-
-            internal Exception BadOp(string s)
-            {
-                return BadOp(s);
             }
 
             public void Add(SIProlog.Part part)
             {
                 if (part is SIProlog.PartList)
                 {
-                    throw BadOp("inner partlist");
+                    throw ErrorBadOp("inner partlist");
                 }
                 tlist.Add(part);
             }
@@ -2534,7 +2582,7 @@ function hidetip()
                     Add(part);
                     return;
                 }
-                throw BadOp("inserting outof order");
+                throw ErrorBadOp("inserting outof order");
             }
 
             public int Length
@@ -2553,10 +2601,9 @@ function hidetip()
             }
 
             //public PartList(string head) { name = head; }
-            public PartList(Part l) 
-                : this()
+            public PartList(params Part[] lS) 
             {
-                tlist.Add(l);
+                this.tlist = new List<Part>(lS);
             }
 
             public PartList()
@@ -2565,8 +2612,8 @@ function hidetip()
             }
 
             public PartList(TermList head, PEnv env)
-                : this()
             {
+                this.tlist = new List<Part>();
                 for (var i = 0; i < head.Count; i++)
                 {
                    tlist.Add(value(head[i], env));
@@ -2610,7 +2657,7 @@ function hidetip()
             {
                 if (i != tlist.Count)
                 {
-                    throw BadOp("out of order insertion");
+                    throw ErrorBadOp("out of order insertion");
                 }
                 tlist.Insert(i, part);
             }
@@ -2721,7 +2768,7 @@ function hidetip()
                     string localAname;
                     //if (aname != null) return aname;
                     string path = _name.AsValuedNode().AsString();
-                    bool devolved = PNode.DevolveURI(rdfDefinations.NamespaceMap, path, out uri, out prefix, out localAname);
+                    bool devolved = GraphWithDef.DevolveURI(rdfDefinations.NamespaceMap, path, out uri, out prefix, out localAname);
                     bool noaname = string.IsNullOrEmpty(localAname);
                     if (devolved && !noaname)
                     {
@@ -2808,7 +2855,7 @@ function hidetip()
                 bool isNumberMaybe = c0 == '+' || c0 == '-' || char.IsDigit(c0);
                 if (isNumberMaybe)
                 {
-                    makeNode = PNode.CExtracted(rdfDefinations, s);
+                    makeNode = GraphWithDef.CExtracted(rdfDefinations, s);
                     quoting = null;
                 }
                 if (c0 == '"' && cL == c0)
@@ -2933,21 +2980,23 @@ function hidetip()
             public bool headIsVar()
             {
                 // should be [A-Z\_\?]
-                return SIProlog.IsVarName(name);
+                if (!SIProlog.IsVarName(name)) return false;
+                Warn("Head is VAR: " + this);
+                return true;
             }
             public Term(string head, PartList a0N)
             {
+                _name = head;
+                partlist = a0N;
                 if (a0N != null && a0N.Length == 1)
                 {
                     Part a0 = a0N.ArgList[0];
                     if (a0 is PartList)
                     {
-                        Warn("Poorly constructed term " + a0);
+                        Warn("Poorly constructed term: " + this);
                     }
                 }
                 SIProlog.NameCheck(head);
-                _name = head;
-                partlist = a0N;
             }
             public override void print()
             {
@@ -3333,7 +3382,7 @@ function hidetip()
             return ParseTerm(tk);
         }
 
-        public object ParseTerm(Tokeniser tk)
+        static public object ParseTerm(Tokeniser tk)
         {
             // Term -> [NOTTHIS] id ( optParamList )
 
@@ -3391,7 +3440,7 @@ function hidetip()
         }
 
         // This was a beautiful piece of code. It got kludged to add [a,b,c|Z] sugar.
-        public Part ParsePart(Tokeniser tk)
+        static public Part ParsePart(Tokeniser tk)
         {
             // Part -> var | id | id(optParamList)
             // Part -> [ listBit ] ::-> cons(...)
@@ -3477,7 +3526,7 @@ function hidetip()
             return new Term(name, p);
         }
 
-        private Part MakeList(Part li, Part append)
+        static private Part MakeList(Part li, Part append)
         {
             PartList frag = new PartList();
             frag.AddPart((Part)li);
@@ -4138,25 +4187,39 @@ function hidetip()
             return new NotImplementedException(m);
         }
 
+        public static Term MakeTerm(string name, params Part[] parts)
+        {
+            return new Term(name, new PartList(parts));
+        }
     }
 
     public enum ContentBackingStore
     {
         None = 0,
-        FromRDFServerURI,
-        FromRDFInMemory,
+        
+        /// <summary>
+        /// When the KB is dirty
+        /// mt.Repository URI is what we'd compile from
+        /// </summary>
+        RdfServerURI,
+
+        /// <summary>
+        /// When the KB is dirty
+        /// mt.RDFStore.Triples is what we'd compile from
+        /// </summary>
+        RdfMemory,
 
         /// <summary>
         /// When the KB is dirty
         /// mt.ruleset  Sourcecode is what we'd compile from
         /// </summary>
-        PrologSourceCode,
+        PrologSource,
 
         /// <summary>
         /// When the KB is dirty
         /// mt.pdb.rules  Prolog rule list is what we'd compile from
         /// </summary>
-        PrologRuleList,
+        PrologMemory,
     }
 
     public class DontTouchThisTextWriter : TextWriter
