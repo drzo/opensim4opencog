@@ -51,7 +51,7 @@ namespace AltAIMLbot
         {
             mt = mt ?? "rdfMT";
             BeginsWith("./xrdf/", ref path);
-            SIProlog.GraphWithDef graph = null;
+            SIProlog.PNode graph = null;
             if (query == "rdf2pl")
             {
                 graph = prologEngine.MakeRepositoryKB(mt);

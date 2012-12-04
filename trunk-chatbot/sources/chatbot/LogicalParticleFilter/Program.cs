@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -140,10 +140,10 @@ namespace LogicalParticleFilter1
         }
         static void testKBload()
         {
-            prologEngine.loadKEKB("default.ke");
-            prologEngine.loadKEKB("cycUpper.ke");
-            prologEngine.loadKEKB("mini-cyc-prolog.ke");
-            prologEngine.loadKEKB("occEmotions.ke");
+            prologEngine.loadKEFile("default.ke");
+            prologEngine.loadKEFile("cycUpper.ke");
+            prologEngine.loadKEFile("mini-cyc-prolog.ke");
+            prologEngine.loadKEFile("occEmotions.ke");
 
         }
         static void testProlog3()
@@ -255,7 +255,7 @@ namespace LogicalParticleFilter1
         {
             prologEngine.maxdepth = 128;
             prologEngine.trace = false;
-            prologEngine.loadKEKB("nanocema.ke");
+            prologEngine.loadKEFile("nanocema.ke");
            // prologEngine.askQuery("member(X,[a,b,c])", "testCema");
             //prologEngine.trace = true;
             //http://www.csupomona.edu/~jrfisher/www/prolog_tutorial/2_7.html
@@ -284,7 +284,7 @@ namespace LogicalParticleFilter1
         {
             prologEngine.maxdepth = 32;
             prologEngine.trace = false;
-            prologEngine.loadKEKB("nanosat.ke");
+            prologEngine.loadKEFile("nanosat.ke");
             //prologEngine.trace = true;
             prologEngine.askQuery("testSat([X,Y,Z])", "flops_satsolver");
         }

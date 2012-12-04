@@ -17,12 +17,12 @@ using VDS.RDF.Writing;
 using ListOfBindings = System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, LogicalParticleFilter1.SIProlog.Part>>;
 using StringWriter=System.IO.StringWriter;
 using VDS.RDF.Writing.Formatting;
-
 namespace LogicalParticleFilter1
 {
+    using GraphWithDef = SIProlog.PNode;
     public static class RDFExtensions
     {
-        //static public Dictionary<SIProlog.GraphWithDef.Rule, INode> rule2Node = new Dictionary<SIProlog.GraphWithDef.Rule, INode>();
+        //static public Dictionary<GraphWithDef.Rule, INode> rule2Node = new Dictionary<GraphWithDef.Rule, INode>();
         static public Dictionary<SIProlog.Rule, INode> rule2Node = new Dictionary<SIProlog.Rule, INode>();
 
         public static INode instanceTriple(this SIProlog.Rule rule)
@@ -71,13 +71,14 @@ namespace LogicalParticleFilter1
                     string prologRuleoptHomeMt = prologRule.optHomeMt;
                     SIProlog.PGraph gg = SIProlog.GlobalKBGraph;
                     var kb = prolog.MakeRepositoryKB(prologRuleoptHomeMt);
-                    SIProlog.GraphWithDef.FromRule(prologRule, kb.rdfGraph);
+                    GraphWithDef.FromRule(prologRule, kb.rdfGraph);
                     rr = prologRule.rdfRuleCache;
                 }
                 return rr;
             }
         }
     }
+
     public partial class SIProlog
     {        
         static readonly internal IGraph rdfDefinations = new Graph();
@@ -92,11 +93,12 @@ namespace LogicalParticleFilter1
 
         private void defineRDFExtensions()
         {
-            var node = FindOrCreateKB(rdfDefMT);
             rdfDefinations.BaseUri = new Uri(RoboKindURI);
+            var node = FindOrCreateKB(rdfDefMT);
             rdfDefSync =
-                GraphForMT[rdfDefMT] =
-                rdfDefSync ?? new GraphWithDef(rdfDefMT, this, rdfDefinations, rdfDefinations) { PrologKB = node };
+                rdfDefSync ??
+                KBGraph.Contains(rdfDefMT) ??
+                new GraphWithDef(rdfDefMT, this, rdfDefinations, rdfDefinations) {PrologKB = node};
             EnsureReaderNamespaces();
             loadKB("aiml/shared_ke/argdefs.txt", rdfDefMT);
             mtest();
@@ -828,6 +830,7 @@ yago	http://dbpedia.org/class/yago/
             RdfXmlWriter rdfxmlwriter = new RdfXmlWriter();
             rdfxmlwriter.Save(g, "HelloWorld.rdf");
 
+            MakeRepositoryKB("testRDF").SourceKind = ContentBackingStore.PrologRuleList;
             rdfImportToKB(g,
                           "testRDF",
                           "SELECT * WHERE { ?s ?p ?o }",
@@ -840,6 +843,8 @@ yago	http://dbpedia.org/class/yago/
                 //        "http://lod.hebis.de/sparql",                        
                     })
             {
+
+                MakeRepositoryKB("dbpediaKB").SourceKind = ContentBackingStore.PrologRuleList;                
                 rdfRemoteEndpointToKB(endp,
                                       "dbpediaKB",
                                       "SELECT DISTINCT ?o WHERE { ?s a ?o } LIMIT 100",
@@ -861,6 +866,17 @@ yago	http://dbpedia.org/class/yago/
         private string tl_ServerRoot;
         [ThreadStatic]
         private string tl_mt;
+        private string curKB
+        {
+            get
+            {
+                return tl_mt;
+            }
+            set
+            {
+                tl_mt = value;
+            }
+        }
         [ThreadStatic]
         private TextWriter tl_writer;
 
@@ -1025,16 +1041,230 @@ yago	http://dbpedia.org/class/yago/
                 return predicateArgName.Contains(ProperCase(name));
             }
         }
-        public partial class GraphWithDef
+
+        public partial class PNode:IComparable 
         {
+            public string id;
+            public PDB pdb = new PDB();
+            private string srcCode;
+            public string ruleset
+            {
+                set
+                {
+                    srcCode = value;
+                    if (value != null)
+                    {
+                        SourceKind = ContentBackingStore.PrologSourceCode;
+                    }
+                    else
+                    {
+                        SourceKind = ContentBackingStore.PrologRuleList;
+                    }
+                }
+                get
+                {
+                    if (!IsDataFrom(ContentBackingStore.PrologSourceCode))
+                    {
+                        Warn("KB " + id + " is not from sourcecode but instead from " + SourceKind);
+                    }
+                    return srcCode;
+                }
+            }
+            public bool dirty = false;
+            public double probability = 1.0;
+            public ContentBackingStore SourceKind = ContentBackingStore.PrologSourceCode;
+            public ContentBackingStore SyncFromNow = ContentBackingStore.None;
+
+            List<PEdge> incomingEdgeList = new List<PEdge>();
+            List<PEdge> outgoingEdgeList = new List<PEdge>();
+
+            public string Id
+            {
+                get { return id; }
+                set { id = value; }
+            }
+            object _repository;
+
+            public object Repository
+            {
+                get { return _repository; }
+                set
+                {
+                    if (value == null)
+                    {
+                        SourceKind = ContentBackingStore.FromRDFInMemory;
+                    }
+                    else
+                    {
+                        SourceKind = ContentBackingStore.FromRDFServerURI;
+                    }
+                    _repository = value;
+                }
+            }
+
+            public double Probability
+            {
+                get { return probability; }
+                set { probability = value; }
+            }
+
+            public PNode(string id)
+                : this(id, null)
+            {            
+            }
+            public override int GetHashCode()
+            {
+                return base.GetHashCode();
+                return id.GetHashCode();
+            }
+            public override bool Equals(object obj)
+            {
+                PNode otherNode = obj as PNode;
+                if (otherNode == null)
+                    return false;
+
+                return otherNode.id == this.id;
+            }
+
+            public static bool operator ==(PNode node1, PNode node2)
+            {
+                if (Object.ReferenceEquals(node1, node2))
+                    return true;
+                if (Object.ReferenceEquals(node1, null) || Object.ReferenceEquals(node2, null))
+                    return false;
+
+                return node1.Equals(node2);
+            }
+
+            public static bool operator !=(PNode node1, PNode node2)
+            {
+                return !(node1 == node2);
+            }
+            public PNode(string id, object info)
+            {
+                this.id = id;
+                this._repository = info;
+            }
+
             public override string ToString()
+            {
+                return "mt:" + Id + " " + DebugInfo;
+            }
+
+            public PEdge CreateEdgeTo(PNode otherNode)
+            {
+                PEdge edge = new PEdge(this, otherNode);
+                return edge;
+            }
+
+            public void AddIncomingEdge(PEdge edge)
+            {
+                incomingEdgeList.Add(edge);
+            }
+
+            public void AddOutgoingEdge(PEdge edge)
+            {
+                outgoingEdgeList.Add(edge);
+            }
+            public void ClearIncomingEdges()
+            {
+                incomingEdgeList.Clear();
+            }
+            public void ClearOutgoingEdges()
+            {
+                outgoingEdgeList.Clear();
+            }
+            public PEdge[] IncomingEdges
+            {
+                get { return incomingEdgeList.ToArray(); }
+            }
+
+            public PEdge[] OutgoingEdges
+            {
+                get { return outgoingEdgeList.ToArray(); }
+            }
+
+            public string DebugInfo
+            {
+                get { return string.Format("prob={0} size={1}", probability, pdb.rules.Count); }
+            }
+
+            public bool EdgeAlreadyExists(PNode otherNode)
+            {
+                foreach (PEdge e in this.OutgoingEdges)
+                {
+                    if (e.EndNode == otherNode)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            public void RemoveEdgeTo(PNode otherNode)
+            {
+                foreach (PEdge e in this.OutgoingEdges)
+                {
+                    if (e.EndNode == otherNode)
+                    {
+                        if (e.StartNode.outgoingEdgeList.Contains(e))
+                                e.StartNode.outgoingEdgeList.Remove(e);
+                        if (e.EndNode.incomingEdgeList.Contains(e)) 
+                                e.EndNode.incomingEdgeList.Remove(e);
+                        return ;
+                    }
+                }
+
+                return;
+            }
+
+            /// <summary>
+            /// IComparable.CompareTo implementation.
+            /// </summary>
+            public int CompareTo(object obj)
+            {
+                if (obj is PNode)
+                {
+                    PNode temp = (PNode)obj;
+
+                    return probability.CompareTo(temp.probability);
+                }
+
+                throw new ArgumentException("object is not a PNode");
+            }
+
+
+            internal string ToLink(string serverRoot)
+            {
+                return string.Format("<a href='{1}siprolog/?mt={0}'>{0}  ({2})</a>", id, serverRoot, DebugInfo);
+            }
+
+            public bool IsDataFrom(ContentBackingStore backingStore)
+            {
+                return SourceKind == backingStore;
+            }
+
+            /// <summary>
+            /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            /// </summary>
+            /// <returns>
+            /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            /// </returns>
+            /// <filterpriority>2</filterpriority>
+/*            public override string ToString()
             {
                 return StructToString(this, 1);
             }
+            */
 
             public IGraph rdfGraph;
             public IGraph definations;
-            public string prologMt;
+            public string prologMt
+            {
+                get { return id; }
+                set { id = value; }
+            }
 
             static public List<PredicateProperty> localPreds = new List<PredicateProperty>();
             static public List<RDFArgSpec> localArgTypes = new List<RDFArgSpec>();
@@ -1046,13 +1276,13 @@ yago	http://dbpedia.org/class/yago/
             {
                 get
                 {
-                    kbNode = kbNode ?? prologEngine.KBGraph.Contains(prologMt);
+                    kbNode = kbNode ?? this ?? prologEngine.KBGraph.Contains(prologMt);
                     return kbNode;
                 }
                 set { kbNode = value; }
             }
 
-            public GraphWithDef(string plMt, SIProlog prolog, IGraph data, IGraph defs)
+            public PNode(string plMt, SIProlog prolog, IGraph data, IGraph defs)
             {
                 this.prologEngine = prolog;
                 prologMt = plMt;
@@ -1917,6 +2147,24 @@ yago	http://dbpedia.org/class/yago/
             {
                 rdfGraph = new Graph();
             }
+            internal void ClearProlog()
+            {
+                if (srcCode != null)
+                {
+                    ruleset = "";
+                }
+                pdb.index.Clear();
+                lock (pdb.rules) pdb.rules.Clear();
+            }
+
+            internal void Clear()
+            {
+                ClearProlog();
+                ClearRDF();
+                dirty = true;
+            }
+
+            
         }
         public static void Warn(string format, params object[] args)
         {

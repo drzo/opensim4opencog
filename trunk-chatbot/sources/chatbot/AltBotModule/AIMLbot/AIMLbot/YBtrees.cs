@@ -3285,7 +3285,7 @@ namespace AltAIMLbot
                 if (myNode.Attributes["path"] != null) path = myNode.Attributes["path"].Value;
 
 
-                bot.myServitor.prologEngine.loadKEKB(path);
+                bot.myServitor.prologEngine.loadKEFile(path);
                 rs = RunStatus.Success;
             }
             catch (Exception e)

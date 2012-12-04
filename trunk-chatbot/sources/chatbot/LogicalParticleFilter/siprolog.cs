@@ -17,6 +17,7 @@ using VDS.RDF.Nodes;
 using StringWriter=System.IO.StringWriter;
 //using TermList = LogicalParticleFilter1.TermListImpl;
 using TermList = LogicalParticleFilter1.SIProlog.PartList;
+//using GraphWithDef = LogicalParticleFilter1.SIProlog.;
 
 namespace LogicalParticleFilter1
 {
@@ -90,8 +91,9 @@ namespace LogicalParticleFilter1
         {
             CurrentProlog = this;
             defineBuiltIns();
-            connectMT("stdlib", "root");
             defineRDFExtensions();
+            tl_mt = "baseKB";
+            connectMT("stdlib", "root");
             insertKB(standardLib(), "stdlib");
         }
 
@@ -673,28 +675,77 @@ function hidetip()
         {
             PNode focus = KBGraph.Contains(focusMT);
             if (focus == null) return;
-            focus.ruleset = "";
-            focus.pdb.index.Clear();
-            lock (focus.pdb.rules) focus.pdb.rules.Clear();
-           
-            focus.dirty = true;
+            focus.ClearProlog();
             ensureCompiled(focus);
         }
-
         private void ensureCompiled(PNode focus)
         {
-            if (focus == null) return;
-            if (focus.dirty)
+            ensureHalfCompiled(focus);
+            ensureSynced(focus);
+        }
+
+        private void ensureSynced(PNode focus)
+        {
+            if (focus.SyncFromNow == ContentBackingStore.None) return;
+            if (focus.SyncFromNow == ContentBackingStore.FromRDFInMemory)
             {
-                var outr = parseRuleset(focus.ruleset, focus.Id);
-                lock (focus.pdb.rules)
-                {
-                    focus.pdb.rules = outr;
-                    focus.dirty = false;
-                    if (focus.Repository != "pdb") return;
-                    var rkb = MakeRepositoryKB(focus.Id);
-                    rkb.pushRulesToGraph();
-                }
+            }
+        }
+
+        private void ensureHalfCompiled(PNode focus)
+        {
+            if (focus == null) return;
+            if (!focus.dirty) return;
+            var rkb = MakeRepositoryKB(focus.Id);
+            switch (focus.SourceKind)
+            {
+                case ContentBackingStore.FromRDFServerURI:
+                    {
+                        string uri = "" + focus.Repository;
+                        focus.dirty = false;
+                        rdfRemoteEndpointToKB(uri,
+                                              focus.Id,
+                                              "SELECT * WHERE { ?s ?p ?o } LIMIT " + maxMtSize,
+                                              null);
+                        focus.SyncFromNow = ContentBackingStore.FromRDFInMemory;
+                        return;
+                    }
+                    break;
+                case ContentBackingStore.FromRDFInMemory:
+                    {
+                        //string uri = "" + focus.Repository;
+                        focus.Repository = null;
+                        focus.dirty = false;
+                        focus.SyncFromNow = ContentBackingStore.FromRDFInMemory;
+                        rkb.pushGraphToKB();
+                        return;
+                    }
+                case ContentBackingStore.PrologSourceCode:
+                    {
+                        var outr = parseRuleset(focus.ruleset, focus.Id);
+
+                        lock (focus.pdb.rules)
+                        {
+                            focus.pdb.rules = outr;
+                            focus.dirty = false;
+                        }
+                        focus.SyncFromNow = ContentBackingStore.PrologRuleList;
+                        rkb.pushRulesToGraph();
+                        return;
+                    }
+                case ContentBackingStore.PrologRuleList:
+                    {
+                        if (focus.ruleset != null)
+                        {
+                            focus.ruleset = null;
+                        }
+                        focus.dirty = false;
+                        focus.SyncFromNow = ContentBackingStore.PrologRuleList;
+                        rkb.pushRulesToGraph();
+                        return;
+                    }
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -734,10 +785,21 @@ function hidetip()
             return null;
         }
 
+        /// <summary>
+        /// Replaces KB with a fresh rule set
+        /// </summary>
+        /// <param name="ruleSet"></param>
+        /// <param name="startMT"></param>
         public void insertKB(string ruleSet,string startMT )
         {
             //replaces KB with a fresh rule set
             PNode focus = FindOrCreateKB(startMT);
+            if (!focus.IsDataFrom(ContentBackingStore.PrologSourceCode))
+            {
+                focus.Clear();
+                appendKB(ruleSet, startMT);
+                return;
+            }
             focus.ruleset = ruleSet;
             focus.dirty = true;
 
@@ -745,11 +807,38 @@ function hidetip()
             ensureCompiled(focus);
         }
 
+        /// <summary>
+        /// Appends KB with rule set
+        /// </summary>
+        /// <param name="ruleSet"></param>
+        /// <param name="startMT"></param>
+        /// 
         public void appendKB(string ruleSet, string startMT)
         {
             // Adds a string rule set
             PNode focus = FindOrCreateKB(startMT);
             startMT = focus.Id;
+            if (ruleSet.Trim() == "") return;
+            if (focus.IsDataFrom(ContentBackingStore.PrologRuleList))
+            {
+                focus.pdb.index.Clear();
+                var outr = parseRuleset(ruleSet, startMT);
+                lock (focus.pdb.rules)
+                {
+                    foreach (Rule r in outr)
+                    {
+                        focus.pdb.rules.Add(r);
+                    }
+                }
+                focus.SyncFromNow = ContentBackingStore.PrologRuleList;
+                return;
+            }
+            if (!focus.IsDataFrom(ContentBackingStore.PrologSourceCode))
+            {
+                Warn("KB " + startMT + " is not from sourcecode but instead from " + focus.SourceKind);
+                return;
+            }
+            focus.SyncFromNow = ContentBackingStore.PrologSourceCode;
             if (!focus.dirty)
             {
                 if ((focus.ruleset != null) && (focus.ruleset.Length > (maxMtSize*1.2)))
@@ -790,21 +879,26 @@ function hidetip()
             PNode focus = KBGraph.Contains(startMT.ToString());
             if (focus == null)
             {
-                focus = new PNode(startMT);
+                focus = MakeRepositoryKB(startMT);// //new PNode(startMT);
                 KBGraph.AddNode(focus);
             }
             return focus;
         }
 
+        /// <summary>
+        /// Appends KB with a file
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <param name="startMT"></param>
         public void loadKB(string filename, string startMT)
         {
             //loads a file (clear and overwrite)
             if (File.Exists(filename))
             {
                 StreamReader streamReader = new StreamReader(filename);
-                string textKB = streamReader.ReadToEnd();
+                string ruleSet = streamReader.ReadToEnd();
                 streamReader.Close();
-                loadKEKBText(startMT, textKB);
+                loadKEText(startMT, ruleSet);
             }
         }
 
@@ -820,11 +914,22 @@ function hidetip()
             }
             return atomName;
         }
-        public void loadKEKB(string filename)
+
+
+        /// <summary>
+        /// Appends KB with a file
+        /// </summary>
+        /// <param name="filename"></param>
+        public void loadKEFile(string filename)
         {
-            loadKEKB(null, filename);
+            loadKEFile(null, filename);
         }
-        public void loadKEKB(string curKB, string filename)
+        /// <summary>
+        /// Appends KB with a file
+        /// </summary>
+        /// <param name="startMT"></param>
+        /// <param name="filename"></param>
+        public void loadKEFile(string startMT, string filename)
         {
             // Defines a simple KEText like format for the prolog
             // you can say "mt:microtheory" to route the following lines into the MT
@@ -834,19 +939,45 @@ function hidetip()
             if (File.Exists(filename))
             {
                 StreamReader streamReader = new StreamReader(filename);
-                string textKB = streamReader.ReadToEnd();
+                string ruleSet = streamReader.ReadToEnd();
                 streamReader.Close();
-                curKB = curKB ?? "baseKB";
-                loadKEKBText(curKB, textKB);
+                curKB = startMT = startMT ?? curKB ?? "baseKB";
+                loadKEText(startMT, ruleSet);
+            } else
+            {
+                Warn("File not found {0}", filename);
             }
         }
-        public void loadKEKBText(string curKB, string textKB)
+
+
+        /// <summary>
+        /// Appends KBs
+        /// </summary>
+        /// <param name="startMT"></param>
+        /// <param name="ruleSet"></param>
+        public void loadKEText(string startMT, string ruleSet)
         {
-            if (textKB != null)
+            if (ruleSet != null)
             {
-                string[] lines = textKB.Split('\n');
-                string curConst = "";
-                Dictionary<string, string> tempKB = new Dictionary<string, string>();
+                var pMT = curKB;
+                Dictionary<string, string> tempKB = ParseKEText(startMT, ruleSet);
+                foreach (string kb in tempKB.Keys)
+                {
+                    ConsoleWriteLine("INSERT INTO :{0}", kb);
+                    //insertKB(tempKB[kb], kb);
+                    appendKB(tempKB[kb], kb);
+                }
+                curKB = pMT;
+            }
+        }
+
+        private Dictionary<string, string> ParseKEText(string startMT, string ruleSet)
+        {
+            curKB = startMT;
+            Dictionary<string, string> tempKB = new Dictionary<string, string>();
+            string[] lines = ruleSet.Split('\n');
+            string curConst = "";
+            {
                 foreach (string line0 in lines)
                 {
                     var line = line0.Trim();
@@ -864,24 +995,55 @@ function hidetip()
                         string[] args = line.Split(':');
                         string cmd = args[0].Trim().ToLower();
                         string val = args[1].Trim();
-                        if (cmd == "tbc") { continue; }
-                        if (cmd == "mt") { curKB = val; continue; }
-                        if (cmd == "constant") { curConst = atomize(val).Replace(".", ""); continue; }
-                        if (cmd == "const") { curConst = atomize(val).Replace(".", ""); continue; }
-                        if (cmd == "genlmt") { connectMT(curKB, val); continue; }
-                        if (cmd == "genlmtconst") { connectMT(curKB, curConst); continue; }
-                        if (cmd == "alias") { aliasMap[val] = curKB; continue; }
-                        if (cmd == "include") { loadKEKB(curKB, val); continue; }
+                        if (cmd == "tbc")
+                        {
+                            continue;
+                        }
+                        if (cmd == "mt")
+                        {
+                            curKB = val;
+                            continue;
+                        }
+                        if (cmd == "constant")
+                        {
+                            curConst = atomize(val).Replace(".", "");
+                            continue;
+                        }
+                        if (cmd == "const")
+                        {
+                            curConst = atomize(val).Replace(".", "");
+                            continue;
+                        }
+                        if (cmd == "genlmt")
+                        {
+                            connectMT(curKB, val);
+                            continue;
+                        }
+                        if (cmd == "genlmtconst")
+                        {
+                            connectMT(curKB, curConst);
+                            continue;
+                        }
+                        if (cmd == "alias")
+                        {
+                            aliasMap[val] = curKB;
+                            continue;
+                        }
+                        if (cmd == "include")
+                        {
+                            loadKEFile(curKB, val);
+                            continue;
+                        }
                         if (cmd == "chemsys")
                         {
-                            string[] sep = { "chemsys:" };
+                            string[] sep = {"chemsys:"};
                             args = line.Split(sep, StringSplitOptions.RemoveEmptyEntries);
                             val = args[0].Trim();
                             if (chemSysCommandProcessor != null)
                             {
                                 chemSysCommandProcessor(val);
                             }
-                            string [] args2 = val.Split(',');
+                            string[] args2 = val.Split(',');
                             string head = args2[0];
                             string newhead = head + "(";
                             string oldhead = head + ",";
@@ -912,13 +1074,8 @@ function hidetip()
                         tempKB[curKB] = tempKB[curKB] + "\n" + line;
                     }
                 }
-                foreach (string kb in tempKB.Keys)
-                {
-                    ConsoleWriteLine("INSERT INTO :{0}", kb);
-                    //insertKB(tempKB[kb], kb);
-                    appendKB(tempKB[kb], kb);
-                }
             }
+            return tempKB;
         }
 
         public string findBestAliasMt(string hint)
@@ -2171,6 +2328,7 @@ function hidetip()
             {
                 var ruleCache = r.rdfRuleCache;
                 if (ruleCache == null) return;
+                r.rdfRuleCache = null;
                 INode tripleInst = ruleCache.RuleNode;
                 if (tripleInst == null) return;
                 ConsoleWriteLine("Remove Rule: " + r);
@@ -2563,7 +2721,7 @@ function hidetip()
                     string localAname;
                     //if (aname != null) return aname;
                     string path = _name.AsValuedNode().AsString();
-                    bool devolved = GraphWithDef.DevolveURI(rdfDefinations.NamespaceMap, path, out uri, out prefix, out localAname);
+                    bool devolved = PNode.DevolveURI(rdfDefinations.NamespaceMap, path, out uri, out prefix, out localAname);
                     bool noaname = string.IsNullOrEmpty(localAname);
                     if (devolved && !noaname)
                     {
@@ -2650,7 +2808,7 @@ function hidetip()
                 bool isNumberMaybe = c0 == '+' || c0 == '-' || char.IsDigit(c0);
                 if (isNumberMaybe)
                 {
-                    makeNode = GraphWithDef.CExtracted(rdfDefinations, s);
+                    makeNode = PNode.CExtracted(rdfDefinations, s);
                     quoting = null;
                 }
                 if (c0 == '"' && cL == c0)
@@ -3676,171 +3834,6 @@ function hidetip()
 
         #region mtGraph
 
-        public class PNode:IComparable 
-        {
-            public string id;
-            public PDB pdb = new PDB();
-            public string ruleset = null;
-            public bool dirty = false;
-            public double probability = 1.0;
-            public string backend = null;
-
-            List<PEdge> incomingEdgeList = new List<PEdge>();
-            List<PEdge> outgoingEdgeList = new List<PEdge>();
-
-            public string Id
-            {
-                get { return id; }
-                set { id = value; }
-            }
-            object info;
-            public string Repository = "pdb";
-
-            public object Info
-            {
-                get { return info; }
-                set { info = value; }
-            }
-
-            public double Probability
-            {
-                get { return probability; }
-                set { probability = value; }
-            }
-
-            public PNode(string id)
-                : this(id, null)
-            {            
-            }
-            public override int GetHashCode()
-            {
-                return base.GetHashCode();
-                return id.GetHashCode();
-            }
-            public override bool Equals(object obj)
-            {
-                PNode otherNode = obj as PNode;
-                if (otherNode == null)
-                    return false;
-
-                return otherNode.id == this.id;
-            }
-
-            public static bool operator ==(PNode node1, PNode node2)
-            {
-                if (Object.ReferenceEquals(node1, node2))
-                    return true;
-                if (Object.ReferenceEquals(node1, null) || Object.ReferenceEquals(node2, null))
-                    return false;
-
-                return node1.Equals(node2);
-            }
-
-            public static bool operator !=(PNode node1, PNode node2)
-            {
-                return !(node1 == node2);
-            }
-            public PNode(string id, object info)
-            {
-                this.id = id;
-                this.info = info;
-            }
-
-            public override string ToString()
-            {
-                return "mt:" + Id + " " + DebugInfo;
-            }
-
-            public PEdge CreateEdgeTo(PNode otherNode)
-            {
-                PEdge edge = new PEdge(this, otherNode);
-                return edge;
-            }
-
-            public void AddIncomingEdge(PEdge edge)
-            {
-                incomingEdgeList.Add(edge);
-            }
-
-            public void AddOutgoingEdge(PEdge edge)
-            {
-                outgoingEdgeList.Add(edge);
-            }
-            public void ClearIncomingEdges()
-            {
-                incomingEdgeList.Clear();
-            }
-            public void ClearOutgoingEdges()
-            {
-                outgoingEdgeList.Clear();
-            }
-            public PEdge[] IncomingEdges
-            {
-                get { return incomingEdgeList.ToArray(); }
-            }
-
-            public PEdge[] OutgoingEdges
-            {
-                get { return outgoingEdgeList.ToArray(); }
-            }
-
-            public string DebugInfo
-            {
-                get { return string.Format("prob={0} size={1}", probability, pdb.rules.Count); }
-            }
-
-            public bool EdgeAlreadyExists(PNode otherNode)
-            {
-                foreach (PEdge e in this.OutgoingEdges)
-                {
-                    if (e.EndNode == otherNode)
-                    {
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-
-            public void RemoveEdgeTo(PNode otherNode)
-            {
-                foreach (PEdge e in this.OutgoingEdges)
-                {
-                    if (e.EndNode == otherNode)
-                    {
-                        if (e.StartNode.outgoingEdgeList.Contains(e))
-                                e.StartNode.outgoingEdgeList.Remove(e);
-                        if (e.EndNode.incomingEdgeList.Contains(e)) 
-                                e.EndNode.incomingEdgeList.Remove(e);
-                        return ;
-                    }
-                }
-
-                return;
-            }
-
-            /// <summary>
-            /// IComparable.CompareTo implementation.
-            /// </summary>
-            public int CompareTo(object obj)
-            {
-                if (obj is PNode)
-                {
-                    PNode temp = (PNode)obj;
-
-                    return probability.CompareTo(temp.probability);
-                }
-
-                throw new ArgumentException("object is not a PNode");
-            }
-
-
-            internal string ToLink(string serverRoot)
-            {
-                return string.Format("<a href='{1}siprolog/?mt={0}'>{0}  ({2})</a>", id, serverRoot, DebugInfo);
-            }
-        }
-
         public class PEdge
         {
             PNode startNode;
@@ -3918,18 +3911,19 @@ function hidetip()
                 if (!srcNode.EdgeAlreadyExists(destNode)) return;
                 srcNode.RemoveEdgeTo(destNode);
             }
-
+           
             private PNode FindOrCreateNode(string idSrc)
             {
                 PNode srcNode = Contains(idSrc);
                 if (srcNode == null)
                 {
-                    srcNode = new PNode(idSrc);
+                    srcNode = SIProlog.CurrentProlog.MakeRepositoryKB(idSrc);// //new PNode(startMT);
+                    //srcNode = new PNode(idSrc);
                     AddNode(srcNode);
                 }
                 return srcNode;
             }
-
+            
             public PNode[] TopLevelNodes
             {
                 get { return topLevelNodes.ToArray(); }
@@ -4144,6 +4138,25 @@ function hidetip()
             return new NotImplementedException(m);
         }
 
+    }
+
+    public enum ContentBackingStore
+    {
+        None = 0,
+        FromRDFServerURI,
+        FromRDFInMemory,
+
+        /// <summary>
+        /// When the KB is dirty
+        /// mt.ruleset  Sourcecode is what we'd compile from
+        /// </summary>
+        PrologSourceCode,
+
+        /// <summary>
+        /// When the KB is dirty
+        /// mt.pdb.rules  Prolog rule list is what we'd compile from
+        /// </summary>
+        PrologRuleList,
     }
 
     public class DontTouchThisTextWriter : TextWriter
