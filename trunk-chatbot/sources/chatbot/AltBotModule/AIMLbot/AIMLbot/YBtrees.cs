@@ -826,6 +826,15 @@ namespace AltAIMLbot
                             yield return result;
                         }
                         break;
+                    case "planfrommt":
+                        foreach (RunStatus result in ProcessPlanFromMt(myNode))
+                        {
+                            myResult = result;
+                            SetCurNodeIdStatus(myResult);
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
 
                     //Particle filter interface
                     case "definestate":
@@ -3381,7 +3390,69 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
+        public IEnumerable<RunStatus> ProcessPlanFromMt(XmlNode myNode)
+        {
+            // load some KE (which will have MT definitions)
+            RunStatus rs = RunStatus.Failure;
+            string goalMt = "goalMt";
+            string moduleMt = "moduleMt";
+            string solutionMt = "solutionMt";
+            string nowMt = "nowMt";
+            string backgroundMt = "backgroundMt";
+            string innerStr = myNode.InnerXml.Trim();
 
+            try
+            {
+                if (myNode.Attributes["goal"] != null) goalMt = myNode.Attributes["goal"].Value;
+                if (myNode.Attributes["now"] != null) nowMt = myNode.Attributes["now"].Value;
+                if (myNode.Attributes["background"] != null) backgroundMt = myNode.Attributes["background"].Value;
+                if (myNode.Attributes["modules"] != null) moduleMt = myNode.Attributes["modules"].Value;
+                if (myNode.Attributes["solution"] != null) solutionMt = myNode.Attributes["solution"].Value;
+                GOAPSolver Inventor = new GOAPSolver(bot.myServitor.prologEngine);
+
+                if (myNode.Attributes["admissible"] != null)
+                {
+                    if (myNode.Attributes["admissible"].Value.ToLower().Contains("t"))
+                    {
+                        Inventor.worstWeighting = true;
+                    }
+                }
+                if (myNode.Attributes["nondeterministic"] != null)
+                {
+                    if (myNode.Attributes["nondeterministic"].Value.ToLower().Contains("t"))
+                    {
+                        Inventor.nondeterministic = true;
+                    }
+                    else
+                    {
+                        Inventor.nondeterministic = false;
+                    }
+                }
+
+                if (myNode.Attributes["trials"] != null)
+                {
+                    Inventor.limitTrials = int.Parse(myNode.Attributes["trials"].Value);
+                }
+                if (myNode.Attributes["budget"] != null)
+                {
+                    Inventor.limitCost = double.Parse(myNode.Attributes["budget"].Value);
+                }
+
+                bool outcome = Inventor.constructPlan(goalMt, nowMt,moduleMt,backgroundMt, solutionMt);
+                if (outcome)
+                    rs = RunStatus.Success;
+                else
+                    rs = RunStatus.Failure;
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessPlanFromMt '{0}':'{1}':'{2}':'{3}':'{4}':{5}", goalMt, nowMt, moduleMt, backgroundMt, solutionMt, EMsg(e));
+                rs = RunStatus.Failure;
+            }
+            yield return rs;
+            yield break;
+        }
         public IEnumerable<RunStatus> ProcessInsertMt(XmlNode myNode)
         {
             // insert some si_text (overwrite)

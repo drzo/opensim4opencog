@@ -70,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cema.cs" />
+    <Compile Include="GOAP.cs" />
     <Compile Include="GraphWithDef.cs" />
     <Compile Include="ID3Classifier.cs">
       <SubType>Component</SubType>
