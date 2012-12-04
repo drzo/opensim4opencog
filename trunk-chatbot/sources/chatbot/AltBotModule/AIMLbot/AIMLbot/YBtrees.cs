@@ -3345,6 +3345,18 @@ namespace AltAIMLbot
                         Inventor.worstWeighting = true;
                     }
                 }
+                if (myNode.Attributes["nondeterministic"] != null)
+                {
+                    if (myNode.Attributes["nondeterministic"].Value.ToLower().Contains("t"))
+                    {
+                        Inventor.nondeterministic = true;
+                    }
+                    else
+                    {
+                        Inventor.nondeterministic = false;
+                    }
+                }
+                
                 if (myNode.Attributes["trials"] != null)
                 {
                     Inventor.limitTrials = int.Parse(myNode.Attributes["trials"].Value);

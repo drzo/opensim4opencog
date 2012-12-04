@@ -12,16 +12,21 @@ namespace LogicalParticleFilter1
     public class CemaState:IComparable <CemaState>
     {
         public double totalCost=0;
+        public string idCode="";
+
         public List<string> modList;
         public List<string> missingList;
+        public List<string> violationList;
+
         public double f()
         {
             return costSoFar() + distToGoal();
         }
         public double distToGoal()
         {
+            // simple heuristic : number of missing elements to add + number of undesired to remove
             if (missingList == null) return 0;
-            return missingList.Count;
+            return missingList.Count+violationList.Count;
         }
         public double costSoFar()
         {
@@ -35,6 +40,15 @@ namespace LogicalParticleFilter1
             missingList = inMissingList;
             if (inModList == null) modList = new List<string>();
             if (inMissingList == null) missingList = new List<string>();
+            modList.Sort();
+            lock (idCode)
+            {
+                idCode = "";
+                foreach (string m in modList)
+                {
+                    idCode += m;
+                }
+            }
         }
         public  List <string> validNextMods(List<string> inModList)
         {
@@ -87,13 +101,23 @@ namespace LogicalParticleFilter1
         //    - a list of module mt's that provide a solution
         //    - a solution mt with a genlMt to all the solution modules
         // Note: solution mt local contents will be overwritten on each invocation
+        // TODO's:
+        // + implement avoids(x) - a solution must NOT provide(x)
+        //    - would bring closer to SAT representational capability
+        // + sort modules and concat to function as a unique solution key
+        // - raw query's,  without explicit 'provides' check of just propositions
 
         SIProlog prologEngine = null;
         public bool worstWeighting = false;
+        public bool nondeterministic = false;
         public double problemWorstCost = -1;
         public double limitCost = double.MaxValue;
         public int limitTrials = int.MaxValue;
-
+        public int tickBegin = 0;
+        public int tickEnd = 0;
+        public int trials = 0;
+        List<CemaState> closedSet = new List<CemaState>();
+        List<CemaState> openSet = new List<CemaState>();
 
         public CemaSolver(SIProlog prologEng)
         {
@@ -132,6 +156,40 @@ namespace LogicalParticleFilter1
             }
             return missingList;
         }
+
+        public List<string> violationsInMt(string proposalMt)
+        {
+            List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
+            // Find Desired List
+            string reqQuery = "avoid(CONSTRAINT)";
+            List<string> constraintList = new List<string>();
+            prologEngine.askQuery(reqQuery, proposalMt, out bingingsList);
+            foreach (Dictionary<string, string> bindings in bingingsList)
+            {
+                foreach (string k in bindings.Keys)
+                {
+                    if (k == "CONSTRAINT")
+                    {
+                        if (!constraintList.Contains(bindings[k])) constraintList.Add(bindings[k]);
+                    }
+                }
+            }
+            if (constraintList.Count == 0) return new List<string>();
+            // Find out what is missing
+            List<string> violationList = new List<string>();
+            foreach (string constraint in constraintList)
+            {
+                string constraintQuery = String.Format("provides({0})", constraint);
+                bool constraintViolated = prologEngine.isTrueIn(constraintQuery, proposalMt);
+                if (constraintViolated)
+                {
+                    if (!violationList.Contains(constraint))
+                        violationList.Add(constraint);
+                }
+            }
+            return violationList;
+        }
+
         public bool isRelevantMt(string moduleMt, List<string> needList)
         {
             foreach (string need in needList)
@@ -139,6 +197,17 @@ namespace LogicalParticleFilter1
                 string needQuery = String.Format("provides({0})", need);
                 bool needSatisfied = prologEngine.isTrueIn(needQuery, moduleMt);
                 if (needSatisfied) return true;
+            }
+            return false;
+        }
+
+        public bool isViolatingMt(string moduleMt, List<string> avoidList)
+        {
+            foreach (string negConstraint in avoidList)
+            {
+                string violationQuery = String.Format("provides({0})", negConstraint);
+                bool violatesConstraint = prologEngine.isTrueIn(violationQuery, moduleMt);
+                if (violatesConstraint) return true;
             }
             return false;
         }
@@ -177,6 +246,7 @@ namespace LogicalParticleFilter1
 
         public bool constructSolution(string problemMt,string moduleMt, string solutionMt)
         {
+            tickBegin = Environment.TickCount;
             // CEMA
             prologEngine.connectMT(solutionMt, problemMt);
             List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
@@ -228,39 +298,42 @@ namespace LogicalParticleFilter1
 
 
             List<string> missingList = missingInMt(problemMt);
+            List<string> violationList = violationsInMt(problemMt);
+
             CemaState start = new CemaState(new List<string>(), missingList);
             // get initial Eval
             setSolution(start, solutionMt, problemMt);
-            if (missingList.Count == 0)
+            if ((missingList.Count == 0) &&(violationList .Count ==0))
             {
                 commitSolution(start, solutionMt, problemMt);
                 return true; // nothing is missing so done
             }
-            List<CemaState> closedSet = new List<CemaState>();
-            List<CemaState> openSet = new List<CemaState>();
+
+           closedSet = new List<CemaState>();
+           openSet = new List<CemaState>();
 
             //cost expended so far
-            Dictionary<CemaState, double> gScores = new Dictionary<CemaState, double>();
+            Dictionary<string, double> gScores = new Dictionary<string, double>();
 
             //Estimate how far to go
-            Dictionary<CemaState, double> hScores = new Dictionary<CemaState, double>();
+            Dictionary<string, double> hScores = new Dictionary<string, double>();
 
             //combined f(n) = g(n)+h(n)
-            Dictionary<CemaState, double> fScores = new Dictionary<CemaState, double>();
+            Dictionary<string, double> fScores = new Dictionary<string, double>();
 
-            gScores.Add(start, 0);
-            hScores.Add(start, start.distToGoal() * problemWorstCost);
-            fScores.Add(start, (gScores[start] + hScores[start]));
+            gScores.Add(start.idCode , 0);
+            hScores.Add(start.idCode, start.distToGoal() * problemWorstCost);
+            fScores.Add(start.idCode, (gScores[start.idCode] + hScores[start.idCode]));
             
             openSet.Add(start);
-            int trials = 0;
+            trials = 0;
             while (openSet.Count != 0)
             {
                 trials++;
                 if (trials > limitTrials) break;
 
                 //we look for the node within the openSet with the lowest f score.
-                CemaState bestState = this.FindBest(openSet, fScores);
+                CemaState bestState = this.FindBest(openSet, fScores, nondeterministic);
                 setSolution(bestState, solutionMt,problemMt );
 
                 // if goal then we're done
@@ -304,9 +377,9 @@ namespace LogicalParticleFilter1
                     if (!openSet.Contains(nextState))
                     {
                         openSet.Add(nextState);
-                        gScores.Add(nextState, nextState.costSoFar ());
-                        hScores.Add(nextState, nextState.distToGoal() * problemWorstCost);
-                        fScores.Add(nextState, (gScores[nextState] + hScores[nextState]));
+                        gScores.Add(nextState.idCode, nextState.costSoFar());
+                        hScores.Add(nextState.idCode, nextState.distToGoal() * problemWorstCost);
+                        fScores.Add(nextState.idCode, (gScores[nextState.idCode] + hScores[nextState.idCode]));
                     }
                 }
                 openSet.Sort();
@@ -328,7 +401,10 @@ namespace LogicalParticleFilter1
                 prologEngine.connectMT(solutionMt, moduleMt);
             }
             List<string> solutionMissingList = missingInMt(solutionMt);
+            List<string> solutionViolationList = violationsInMt(problemMt);
+
             cState.missingList = solutionMissingList;
+            cState.violationList = solutionViolationList;
         }
 
         public void commitSolution(CemaState cState, string solutionMt, string problemMt)
@@ -339,6 +415,9 @@ namespace LogicalParticleFilter1
             postScript += String.Format("h({0}).\n", cState.distToGoal());
             postScript += String.Format("f({0}).\n", cState.costSoFar() + cState.distToGoal() * problemWorstCost);
             postScript += String.Format("worst({0}).\n", problemWorstCost);
+            postScript += String.Format("openedNodes({0}).\n", openSet.Count);
+            postScript += String.Format("closedNodes({0}).\n", closedSet.Count);
+            postScript += String.Format("totalNodes({0}).\n", openSet.Count + closedSet.Count);
 
             if (cState.distToGoal() == 0)
             {
@@ -353,9 +432,9 @@ namespace LogicalParticleFilter1
             prologEngine.appendKB(postScript,solutionMt);
 
             // post the modules used
+            string modString = "";
             if (cState.modList.Count > 0)
             {
-                string modString = "";
                 foreach (string m in cState.modList)
                 {
                     modString += " " + m;
@@ -381,6 +460,29 @@ namespace LogicalParticleFilter1
             {
                 prologEngine.appendKB("missing([]).\n", solutionMt);
             }
+            tickEnd = Environment.TickCount;
+            int elapsed = tickEnd - tickBegin;
+            int totalNodes= openSet.Count + closedSet.Count;
+            Console.WriteLine("Inventing time = {0}", elapsed);
+            Console.WriteLine("Inventing list = '{0}'", modString);
+            
+            Console.WriteLine("Inventing tials = '{0}'", trials);
+            Console.WriteLine("TotalNodes = {0}", totalNodes);
+            if (trials > 0)
+            {
+                Console.WriteLine("Inventing ms/trials = '{0}'", ((double)elapsed / (double)trials));
+            }
+            if (totalNodes > 0)
+            {
+                Console.WriteLine("Inventing ms/nodes = '{0}'", ((double)elapsed / (double)totalNodes));
+            }
+            if (elapsed > 0)
+            {
+                Console.WriteLine("Inventing trials/ms = '{0}'", ((double)trials / (double)elapsed));
+                Console.WriteLine("Inventing nodes/ms = '{0}'", ((double)totalNodes / (double)elapsed));
+            }
+
+            Console.WriteLine(postScript);
 
         }
         /// <summary>
@@ -389,23 +491,35 @@ namespace LogicalParticleFilter1
         /// <param name="set">A list of CemaStates</param>
         /// <param name="fScores">A dictionary of CemaStates and their fScores</param>
         /// <returns></returns>
-        private CemaState FindBest(List<CemaState> set, Dictionary<CemaState, double> fScores)
+        private CemaState FindBest(List<CemaState> set, Dictionary<string, double> fScores,bool randomBest)
         {
             CemaState lowestState = null;
             double lowest = double.MaxValue;
-
+            int bestCount = 1;
             //loop through all states in the list
             foreach (CemaState state in set)
             {
 
-                double value = fScores[state];
+                double value = fScores[state.idCode];
 
+                if ((value == lowest) && (randomBest))
+                {
+                    bestCount++;
+                    Random rnd = new Random();
+                    if (rnd.NextDouble() < (1 / (double)bestCount))
+                    {
+                        lowestState = state;
+                        lowest = value;
+                    }
+                }
                 //keep the best score
                 if (value < lowest)
                 {
                     lowestState = state;
-                    lowest = fScores[state];
+                    lowest = value;
+                    bestCount = 1;
                 }
+
             }
 
             return lowestState;
