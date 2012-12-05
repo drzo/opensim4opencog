@@ -3339,12 +3339,16 @@ namespace AltAIMLbot
             string moduleMt = "moduleMt";
             string solutionMt = "solutionMt";
             string innerStr = myNode.InnerXml.Trim();
+            string behaviorID = "";
+            string behaviorTag = "";
 
             try
             {
                 if (myNode.Attributes["problem"] != null) problemMt = myNode.Attributes["problem"].Value;
                 if (myNode.Attributes["modules"] != null) moduleMt = myNode.Attributes["modules"].Value;
                 if (myNode.Attributes["solution"] != null) solutionMt = myNode.Attributes["solution"].Value;
+                if (myNode.Attributes["behavior"] != null) behaviorID = myNode.Attributes["behavior"].Value;
+                if (myNode.Attributes["behaviortag"] != null) behaviorTag = myNode.Attributes["behaviortag"].Value;
                 CemaSolver Inventor = new CemaSolver(bot.myServitor.prologEngine);
 
                 if (myNode.Attributes["admissible"] != null)
@@ -3381,6 +3385,11 @@ namespace AltAIMLbot
                 else
                     rs = RunStatus.Failure;
 
+                if ((outcome)&&(behaviorID.Length > 0))
+                {
+                    string bcode = Inventor.getBTXMLBehaviorCode(behaviorID, behaviorTag);
+                    defineBehavior(behaviorID, bcode);
+                }
             }
             catch (Exception e)
             {
@@ -3399,6 +3408,9 @@ namespace AltAIMLbot
             string solutionMt = "solutionMt";
             string nowMt = "nowMt";
             string backgroundMt = "backgroundMt";
+            string behaviorID = "";
+            string behaviorTag = "";
+
             string innerStr = myNode.InnerXml.Trim();
 
             try
@@ -3408,41 +3420,49 @@ namespace AltAIMLbot
                 if (myNode.Attributes["background"] != null) backgroundMt = myNode.Attributes["background"].Value;
                 if (myNode.Attributes["modules"] != null) moduleMt = myNode.Attributes["modules"].Value;
                 if (myNode.Attributes["solution"] != null) solutionMt = myNode.Attributes["solution"].Value;
-                GOAPSolver Inventor = new GOAPSolver(bot.myServitor.prologEngine);
+                if (myNode.Attributes["behavior"] != null) behaviorID = myNode.Attributes["behavior"].Value;
+                if (myNode.Attributes["behaviortag"] != null) behaviorTag = myNode.Attributes["behaviortag"].Value;
+                GOAPSolver Planner = new GOAPSolver(bot.myServitor.prologEngine);
 
                 if (myNode.Attributes["admissible"] != null)
                 {
                     if (myNode.Attributes["admissible"].Value.ToLower().Contains("t"))
                     {
-                        Inventor.worstWeighting = true;
+                        Planner.worstWeighting = true;
                     }
                 }
                 if (myNode.Attributes["nondeterministic"] != null)
                 {
                     if (myNode.Attributes["nondeterministic"].Value.ToLower().Contains("t"))
                     {
-                        Inventor.nondeterministic = true;
+                        Planner.nondeterministic = true;
                     }
                     else
                     {
-                        Inventor.nondeterministic = false;
+                        Planner.nondeterministic = false;
                     }
                 }
 
                 if (myNode.Attributes["trials"] != null)
                 {
-                    Inventor.limitTrials = int.Parse(myNode.Attributes["trials"].Value);
+                    Planner.limitTrials = int.Parse(myNode.Attributes["trials"].Value);
                 }
                 if (myNode.Attributes["budget"] != null)
                 {
-                    Inventor.limitCost = double.Parse(myNode.Attributes["budget"].Value);
+                    Planner.limitCost = double.Parse(myNode.Attributes["budget"].Value);
                 }
 
-                bool outcome = Inventor.constructPlan(goalMt, nowMt,moduleMt,backgroundMt, solutionMt);
+                bool outcome = Planner.constructPlan(goalMt, nowMt, moduleMt, backgroundMt, solutionMt);
                 if (outcome)
                     rs = RunStatus.Success;
                 else
                     rs = RunStatus.Failure;
+
+                if ((outcome) && (behaviorID.Length > 0))
+                {
+                    string bcode = Planner.getBTXMLBehaviorCode(behaviorID, behaviorTag);
+                    defineBehavior(behaviorID, bcode);
+                }
 
             }
             catch (Exception e)

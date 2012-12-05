@@ -105,7 +105,8 @@ namespace LogicalParticleFilter1
         // + implement avoids(x) - a solution must NOT provide(x)
         //    - would bring closer to SAT representational capability
         // + sort modules and concat to function as a unique solution key
-        // - raw query's,  without explicit 'provides' check of just propositions
+        // + raw query's,  without explicit 'provides' check of just propositions
+        // + return BTXML fragment representing plan
 
         SIProlog prologEngine = null;
         public bool worstWeighting = false;
@@ -118,12 +119,17 @@ namespace LogicalParticleFilter1
         public int trials = 0;
         List<CemaState> closedSet = new List<CemaState>();
         List<CemaState> openSet = new List<CemaState>();
+        CemaState planNode = null;
 
         public CemaSolver(SIProlog prologEng)
         {
             prologEngine = prologEng;
         }
-
+        public bool isPrologish(string code)
+        {
+            // quick test for a functor syntax which could be directly queried
+            return ((code.Contains("(")) && (code.Contains(")")));
+        }
         public List<string> missingInMt(string proposalMt)
         {
             List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
@@ -146,12 +152,26 @@ namespace LogicalParticleFilter1
             List<string> missingList = new List<string>();
             foreach (string need in needList)
             {
-                string needQuery = String.Format("provides({0})", need);
-                bool needSatisfied = prologEngine.isTrueIn (needQuery, proposalMt);
-                if (!needSatisfied)
+                if (isPrologish(need))
                 {
-                  if (!missingList.Contains (need))
-                      missingList.Add(need);
+                    string needQuery =need.Replace('"',' ');
+                    bool needSatisfied = prologEngine.isTrueIn(needQuery, proposalMt);
+                    if (!needSatisfied)
+                    {
+                        if (!missingList.Contains(need))
+                            missingList.Add(need);
+                    }
+
+                }
+                else
+                {
+                    string needQuery = String.Format("provides({0})", need);
+                    bool needSatisfied = prologEngine.isTrueIn(needQuery, proposalMt);
+                    if (!needSatisfied)
+                    {
+                        if (!missingList.Contains(need))
+                            missingList.Add(need);
+                    }
                 }
             }
             return missingList;
@@ -179,12 +199,26 @@ namespace LogicalParticleFilter1
             List<string> violationList = new List<string>();
             foreach (string constraint in constraintList)
             {
-                string constraintQuery = String.Format("provides({0})", constraint);
-                bool constraintViolated = prologEngine.isTrueIn(constraintQuery, proposalMt);
-                if (constraintViolated)
+                if (isPrologish(constraint))
                 {
-                    if (!violationList.Contains(constraint))
-                        violationList.Add(constraint);
+                    string constraintQuery = constraint.Replace('"', ' '); ;
+                    bool constraintViolated = prologEngine.isTrueIn(constraintQuery, proposalMt);
+                    if (constraintViolated)
+                    {
+                        if (!violationList.Contains(constraint))
+                            violationList.Add(constraint);
+                    }
+
+                }
+                else
+                {
+                    string constraintQuery = String.Format("provides({0})", constraint);
+                    bool constraintViolated = prologEngine.isTrueIn(constraintQuery, proposalMt);
+                    if (constraintViolated)
+                    {
+                        if (!violationList.Contains(constraint))
+                            violationList.Add(constraint);
+                    }
                 }
             }
             return violationList;
@@ -194,9 +228,18 @@ namespace LogicalParticleFilter1
         {
             foreach (string need in needList)
             {
-                string needQuery = String.Format("provides({0})", need);
-                bool needSatisfied = prologEngine.isTrueIn(needQuery, moduleMt);
-                if (needSatisfied) return true;
+                if (isPrologish(need))
+                {
+                    string needQuery = need.Replace('"', ' '); ;
+                    bool needSatisfied = prologEngine.isTrueIn(needQuery, moduleMt);
+                    if (needSatisfied) return true;
+                }
+                else
+                {
+                    string needQuery = String.Format("provides({0})", need);
+                    bool needSatisfied = prologEngine.isTrueIn(needQuery, moduleMt);
+                    if (needSatisfied) return true;
+                }
             }
             return false;
         }
@@ -205,9 +248,19 @@ namespace LogicalParticleFilter1
         {
             foreach (string negConstraint in avoidList)
             {
-                string violationQuery = String.Format("provides({0})", negConstraint);
-                bool violatesConstraint = prologEngine.isTrueIn(violationQuery, moduleMt);
-                if (violatesConstraint) return true;
+                if (isPrologish(negConstraint))
+                {
+                    string violationQuery = negConstraint.Replace('"', ' '); ;
+                    bool violatesConstraint = prologEngine.isTrueIn(violationQuery, moduleMt);
+                    if (violatesConstraint) return true;
+                }
+                else
+                {
+                    string violationQuery = String.Format("provides({0})", negConstraint);
+                    bool violatesConstraint = prologEngine.isTrueIn(violationQuery, moduleMt);
+                    if (violatesConstraint) return true;
+                }
+
             }
             return false;
         }
@@ -409,6 +462,7 @@ namespace LogicalParticleFilter1
 
         public void commitSolution(CemaState cState, string solutionMt, string problemMt)
         {
+            planNode = cState;
             // Post stats and planner state
             string postScript = "";
             postScript += String.Format("g({0}).\n", cState.costSoFar());
@@ -485,6 +539,47 @@ namespace LogicalParticleFilter1
             Console.WriteLine(postScript);
 
         }
+
+        /// <summary>
+        /// Returns an BTXML code fragment with the action/modules as subbehaviors
+        /// </summary>
+        /// <param name="outerTag">The outer tag to wrap the call in (selector/sequence/...)</param>
+        /// <returns></returns>        
+        /// 
+        public string getBTXMLFragment(string outerTag)
+        {
+            if (planNode == null) return "";
+
+            if (planNode.modList.Count > 0)
+            {
+                string planSequence = "";
+                foreach (string m in planNode.modList)
+                {
+                    planSequence += String.Format("  <subbehavior id='{0}'/>\n", m);
+                }
+                string finalCode = String.Format("<{0}>\n{1}</{0}>\n", outerTag, planSequence);
+                return finalCode;
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+        /// <summary>
+        /// Returns an BTXML behavior definition with the action/modules as subbehaviors
+        /// </summary>
+        /// <param name="behaviorID">Name of the behavior to create</param>
+        /// <param name="outerTag">The outer tag to wrap the call in (selector/sequence/...)</param>
+        /// <returns></returns>        
+        /// 
+        public string getBTXMLBehaviorCode(string behaviorID, string outerTag)
+        {
+            string innerCode = getBTXMLFragment(outerTag);
+           string behaviorCode = String.Format("<behavior id='{0}'>\n{1}</behavior>\n", behaviorID);
+           return behaviorCode;
+        }
+
         /// <summary>
         /// Finds the state with the lowest value in fScores
         /// </summary>

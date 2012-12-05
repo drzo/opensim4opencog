@@ -14,8 +14,8 @@ namespace LogicalParticleFilter1
         public double totalCost = 0;
         public string idCode = "";
 
-        public List<string> modList;
-        public List<string> missingList;
+        public List<string> modList; // our module/action sequence
+        public List<string> missingList; // states unmet
         //public List<string> violationList;
 
         public double f()
@@ -92,12 +92,17 @@ namespace LogicalParticleFilter1
         public int trials = 0;
         List<GoapState> closedSet = new List<GoapState>();
         List<GoapState> openSet = new List<GoapState>();
+        GoapState planNode = null;
 
         public GOAPSolver(SIProlog prologEng)
         {
             prologEngine = prologEng;
         }
-
+        public bool isPrologish(string code)
+        {
+            // quick test for a functor syntax which could be directly queried
+            return ((code.Contains("(")) && (code.Contains(")")));
+        }
         public double getModuleCost(string moduleMt)
         {
             // be pessimistic on the module cost
@@ -152,12 +157,25 @@ namespace LogicalParticleFilter1
             List<string> missingList = new List<string>();
             foreach (string need in needList)
             {
-                string needQuery = String.Format("state({0})", need);
-                bool needSatisfied = prologEngine.isTrueIn(needQuery, nowMt);
-                if (!needSatisfied)
+                if (isPrologish(need))
                 {
-                    if (!missingList.Contains(need))
-                        missingList.Add(need);
+                    string needQuery = need.Replace('"', ' '); ;
+                    bool needSatisfied = prologEngine.isTrueIn(needQuery, nowMt);
+                    if (!needSatisfied)
+                    {
+                        if (!missingList.Contains(need))
+                            missingList.Add(need);
+                    }
+                }
+                else
+                {
+                    string needQuery = String.Format("state({0})", need);
+                    bool needSatisfied = prologEngine.isTrueIn(needQuery, nowMt);
+                    if (!needSatisfied)
+                    {
+                        if (!missingList.Contains(need))
+                            missingList.Add(need);
+                    }
                 }
             }
             return missingList;
@@ -254,6 +272,9 @@ namespace LogicalParticleFilter1
         //    - a sequence of module mt's that provide a solution
         //    - a solution mt with a genlMt to all the solution modules
 
+        // TODO's:
+        // + return BTXML fragment representing plan
+        // - possible single first action for replanning agents
 
         public bool constructPlan(string goalMt,string nowMt, string moduleMt,string backgroundMt, string solutionMt)
         {
@@ -427,6 +448,7 @@ namespace LogicalParticleFilter1
         }
         public void commitSolution(GoapState cState, string solutionMt, string nowMt, string backgroundMt)
         {
+            planNode = cState;
             // Make final connections
             if (backgroundMt != null) prologEngine.connectMT(solutionMt, backgroundMt);
             foreach (string moduleMt in cState.modList)
@@ -530,12 +552,53 @@ namespace LogicalParticleFilter1
             Console.WriteLine(postScript);
 
         }
+
+        /// <summary>
+        /// Returns an BTXML code fragment with the action/modules as subbehaviors
+        /// </summary>
+        /// <param name="outerTag">The outer tag to wrap the call in (selector/sequence/...)</param>
+        /// <returns></returns>        
+        /// 
+        public string getBTXMLFragment(string outerTag)
+        {
+            if (planNode ==null) return "";
+
+            if (planNode.modList.Count > 0)
+            {
+                string planSequence = "";
+                foreach (string m in planNode.modList)
+                {
+                    planSequence += String.Format("  <subbehavior id='{0}'/>\n", m);
+                }
+                string finalCode = String.Format("<{0}>\n{1}</{0}>\n", outerTag, planSequence);
+                return finalCode;
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+        /// <summary>
+        /// Returns an BTXML behavior definition with the action/modules as subbehaviors
+        /// </summary>
+        /// <param name="behaviorID">Name of the behavior to create</param>
+        /// <param name="outerTag">The outer tag to wrap the call in (selector/sequence/...)</param>
+        /// <returns></returns>        
+        /// 
+        public string getBTXMLBehaviorCode(string behaviorID, string outerTag)
+        {
+            string innerCode = getBTXMLFragment(outerTag);
+            string behaviorCode = String.Format("<behavior id='{0}'>\n{1}</behavior>\n", behaviorID);
+            return behaviorCode;
+        }
         /// <summary>
         /// Finds the state with the lowest value in fScores
         /// </summary>
         /// <param name="set">A list of CemaStates</param>
         /// <param name="fScores">A dictionary of CemaStates and their fScores</param>
-        /// <returns></returns>
+        /// <param name="randomBest">Given equal value choices return one at random versus the first found</param>
+        /// <returns>Lowest cost state</returns>
         private GoapState FindBest(List<GoapState> set, Dictionary<string, double> fScores, bool randomBest)
         {
             GoapState lowestState = null;
