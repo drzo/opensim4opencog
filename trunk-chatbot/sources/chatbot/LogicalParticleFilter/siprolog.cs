@@ -19,7 +19,7 @@ using StringWriter=System.IO.StringWriter;
 using TermList = LogicalParticleFilter1.SIProlog.PartList;
 using System.Threading;
 //using GraphWithDef = LogicalParticleFilter1.SIProlog.;
-
+using ProveResult = LogicalParticleFilter1.SIProlog.PEnv;
 namespace LogicalParticleFilter1
 {
     public partial class SIProlog
@@ -436,6 +436,8 @@ function hidetip()
 
         public void WriteMtInfo(TextWriter writer, string mt, string serverRoot, bool toplevel)
         {
+            tl_ServerRoot = serverRoot;
+            tl_writer = writer;
             writer.WriteLine("<h2>Siprolog Mt {0}</h2>", mt);
             PNode qnode = KBGraph.Contains(mt);
             if (qnode != null)
@@ -444,26 +446,30 @@ function hidetip()
                 KBGraph.PrintToWriterOutEdges(qnode, 0, writer, serverRoot);
                 writer.WriteLine("<h3> IncomingEdges </h3>");
                 KBGraph.PrintToWriterInEdges(qnode, 0, writer, serverRoot);
-                //KBGraph.ShowGenlMts(qnode, null, 0, writer, serverRoot);
-                writer.WriteLine("<h3> KB Operations for {0}</h3>&nbsp;", mt);
-                writer.WriteLine("<a href='{0}plot/?mt={1}&q=plot(X,Y)'>Plot Mt</a>&nbsp;", serverRoot, mt);
-                writer.WriteLine("<a href='{0}plot/?mt={1}&a=autorefresh&q=plot(X,Y)'>Scope Mt</a> ", serverRoot, mt);
-                writer.WriteLine("<a href='{0}siprolog/?mt={1}&a=autorefresh'>Watch Mt</a> ", serverRoot, mt);
-                writer.WriteLine("<a href='{0}siprolog/?mt={1}&q=clear'>Clear Prolog KB</a> ", serverRoot, mt);
-                writer.WriteLine("<a href='{0}xrdf/?mt={1}&q=clearcache'>Clear RDF Cache for KB</a> ", serverRoot, mt);
-                writer.WriteLine("<a href='{0}xrdf/?mt={1}&q=syncfromremote'>Sync From Remote</a> ", serverRoot, mt);
-                writer.WriteLine("<a href='{0}xrdf/?mt={1}&q=synctoremote'>Sync To Remote</a> ", serverRoot, mt);
-                writer.WriteLine("<a href='{0}xrdf/?mt={1}&q=pl2rdf'>Prolog2RDF</a> ", serverRoot, mt);
-                writer.WriteLine("<a href='{0}xrdf/?mt={1}&q=rdf2pl'>RDF2Prolog</a> ", serverRoot, mt);
-                writer.WriteLine("<br/>");
-                ensureCompiled(qnode);
+                mt = qnode.Id;
+            }
+            tl_mt = mt;
+            //KBGraph.ShowGenlMts(qnode, null, 0, writer, serverRoot);
+            writer.WriteLine("<h3> KB Operations for {0}</h3>&nbsp;", mt);
+            writer.WriteLine("<a href='{0}plot/?mt={1}&q=plot(X,Y)'>Plot Mt</a>&nbsp;", serverRoot, mt);
+            writer.WriteLine("<a href='{0}plot/?mt={1}&a=autorefresh&q=plot(X,Y)'>Scope Mt</a> ", serverRoot, mt);
+            writer.WriteLine("<a href='{0}siprolog/?mt={1}&a=autorefresh'>Watch Mt</a> ", serverRoot, mt);
+            writer.WriteLine("<a href='{0}siprolog/?mt={1}&q=clear'>Clear Prolog KB</a> ", serverRoot, mt);
+            writer.WriteLine("<a href='{0}xrdf/?mt={1}&q=clearcache'>Clear RDF Cache for KB</a> ", serverRoot, mt);
+            writer.WriteLine("<a href='{0}xrdf/?mt={1}&q=syncfromremote'>Sync From Remote</a> ", serverRoot, mt);
+            writer.WriteLine("<a href='{0}xrdf/?mt={1}&q=synctoremote'>Sync To Remote</a> ", serverRoot, mt);
+            writer.WriteLine("<a href='{0}xrdf/?mt={1}&q=pl2rdf'>Prolog2RDF</a> ", serverRoot, mt);
+            writer.WriteLine("<a href='{0}xrdf/?mt={1}&q=rdf2pl'>RDF2Prolog</a> ", serverRoot, mt);
+            writer.WriteLine("<br/>");
+
+            if (qnode!=null)
+            {
+                ensureCompiled(qnode);                
             }
             var kbContents = findVisibleKBRulesSorted(mt);
-            tl_ServerRoot = serverRoot;
-            tl_mt = mt;
-            tl_writer = writer;
-            int total = kbContents.Count;
-            int local = qnode.pdb.rules.Count;
+            int total = kbContents.Count;            
+            int local = 0;
+            if (qnode != null) local = qnode.pdb.rules.Count;
             writer.WriteLine(
                 "<h3> KB Contents (<font color='blue'>Blue local</font> {0}) (<font color='darkgreen'>Green Inherited</font> {1})</h3>",
                 local, total - local);
@@ -933,7 +939,7 @@ function hidetip()
             if (focus == null)
             {
                 focus = MakeRepositoryKB(startMT);// //new PNode(startMT);
-                KBGraph.AddNode(focus);
+                //KBGraph.AddNode(focus);
             }
             return focus;
         }
@@ -1221,6 +1227,7 @@ function hidetip()
             PDB.builtin["call/1"] = new builtinDelegate(Call);
             PDB.builtin["fail/0"] = new builtinDelegate(Fail);
             PDB.builtin["bagof/3"] = new builtinDelegate(BagOf);
+            PDB.builtin["callMt/2"] = new builtinDelegate(CallMt);
             PDB.builtin["external/3"] = new builtinDelegate(External);
             PDB.builtin["external2/3"] = new builtinDelegate(ExternalAndParse);
             PDB.builtin["unify/2"] = new builtinDelegate(UnifyExt);
@@ -1576,12 +1583,23 @@ function hidetip()
             else if (list is Term)
             {
                 //What if the pred is a variable ?
-                string nextName = ((Term)list).name;
-                if (((Term)list).headIsVar())
+                var term = (Term)list;
+                string nextName = term.name;
+                var tpl = term.partlist;
+                if (term.headIsVar())
                 {
-                    nextName = nextName+ "." + level.ToString();
+                    nextName = nextName + "." + level.ToString();
                 }
-                Term outv = new Term(nextName,(PartList) renameVariables<PartList>(((Term)list).partlist, level, parent));
+                else
+                {
+                    if (tpl.IsGround)
+                    {
+                        Term outv0 = new Term(nextName, tpl);
+                        outv0.parent = parent;
+                        return (T) (object) outv0;
+                    }
+                }
+                Term outv = new Term(nextName, (PartList)renameVariables<PartList>(tpl, level, parent));
                 outv.parent = parent;
                 return (T)(object)outv;
             }
@@ -1611,10 +1629,10 @@ function hidetip()
         //	unification of term heads, cut, fail, call, bagof
         //	(in that order, probably).
         public delegate void reportDelegate(PEnv env);
-        public delegate ArrayList builtinDelegate(Term t,PartList goals,PEnv env,PDB db,int level,reportDelegate rp);
+        public delegate ProveResult builtinDelegate(Term t, PartList goals, PEnv env, PDB db, int level, reportDelegate rp);
 
         // The main proving engine. Returns: null (keep going), other (drop out)
-        public ArrayList prove(PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        public ProveResult prove(PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
         {
             //DEBUG: print ("in main prove...\n");
             if (goalList.Length == 0)
@@ -1710,11 +1728,12 @@ function hidetip()
 
                     // We'll need better unification to allow the 2nd-order
                     // rule matching ... later.
-                    bool ruleIsVar = rule.head.headIsVar();
+                    Term rulehead = rule.head;
+                    bool ruleIsVar = rulehead.headIsVar();
                     if ((termIsVar == false) && (ruleIsVar == false))
                     {
                         // normal operation, both are atomic
-                        if (rule.head.name != thisTerm.name) continue;
+                        if (rulehead.name != thisTerm.name) continue;
                     }
                     if ((termIsVar == false) && (ruleIsVar == true))
                     {
@@ -1740,8 +1759,16 @@ function hidetip()
                     }
 
                     // Rename the variables in the head and body
-                    Term renamedHead = new Term(rule.head.name,
-                                                (PartList)renameVariables((Part) rule.head.partlist, level, thisTerm));
+                    Term renamedHead = null;
+                    if (rule.isGround)
+                    {
+                        renamedHead = rulehead;
+                    }
+                    else
+                    {
+                        renamedHead = new Term(rulehead.name,
+                                               renameVariables(rulehead.partlist, level, thisTerm));
+                    }
                     // renamedHead.ruleNumber = i;
                     if (trace)
                     {
@@ -1804,12 +1831,12 @@ function hidetip()
                         }
                         break;
                     }
-                    if ((thisTerm.parent != null) && (thisTerm.parent.cut))
+                    if ((thisTerm.parent != null) && (((Term)thisTerm.parent).cut))
                     {
                         if (trace)
                         {
                             Console.Write("Debug: parent goal ");
-                            thisTerm.parent.print();
+                            ((Term)thisTerm.parent).print();
                             Console.Write(" has been cut.\n");
                             ;
                         }
@@ -1834,7 +1861,8 @@ function hidetip()
  	// compare(First, Second, CmpValue)
 	// First, Second must be bound to strings here.
 	// CmpValue is bound to -1, 0, 1
-	public ArrayList Comparitor(Term thisTerm, PartList goalList,PEnv environment,PDB db,int  level, reportDelegate reportFunction) {
+        public ProveResult Comparitor(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        {
 		//DEBUG print ("in Comparitor.prove()...\n");
 		// Prove the builtin bit, then break out and prove
 		// the remaining goalList.
@@ -1876,7 +1904,7 @@ function hidetip()
 		// Just prove the rest of the goallist, recursively.
 		return prove(goalList, env2, db, level+1, reportFunction);
 	}
-    public ArrayList DoubleComparitor(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        public ProveResult DoubleComparitor(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
     {
         //DEBUG print ("in Comparitor.prove()...\n");
         // Prove the builtin bit, then break out and prove
@@ -1922,7 +1950,8 @@ function hidetip()
         // Just prove the rest of the goallist, recursively.
         return prove(goalList, env2, db, level + 1, reportFunction);
     }
-	public ArrayList Cut(Term thisTerm, PartList goalList,PEnv environment,PDB db,int  level, reportDelegate reportFunction) {
+        public ProveResult Cut(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        {
 		//DEBUG print ("in Comparitor.prove()...\n");
 		// Prove the builtin bit, then break out and prove
 		// the remaining goalList.
@@ -1936,16 +1965,16 @@ function hidetip()
 		// On the way through, we do nothing...
 
 		// Just prove the rest of the goallist, recursively.
-		ArrayList ret = prove(goalList, environment, db, level+1, reportFunction);
+		var ret = prove(goalList, environment, db, level+1, reportFunction);
 
 		// Backtracking through the 'cut' stops any further attempts to prove this subgoal.
 		//print ("Debug: backtracking through cut/0: thisTerm.parent = "); thisTerm.parent.print(); print("\n");
-		thisTerm.parent.cut = true;
+        ((Term)thisTerm.parent).cut = true;
 
 		return ret;
 	}
 
-    public ArrayList UnifyExt(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+    public ProveResult UnifyExt(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
     {
         Part x = value((Part)thisTerm.ArgList[0], environment);
         Part y = value((Part)thisTerm.ArgList[1], environment);
@@ -1961,7 +1990,7 @@ function hidetip()
     }
 
 	// Given a single argument, it sticks it on the goal list.
-    public ArrayList Call(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+    public ProveResult Call(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
     {
 		// Prove the builtin bit, then break out and prove
 		// the remaining goalList.
@@ -1997,12 +2026,18 @@ function hidetip()
 		return prove(newGoals, environment, db, level+1, reportFunction);
 	}
 
-    public ArrayList Fail(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction) 
+    public ProveResult Fail(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction) 
     {
 		return null;
 	}
 
-    public ArrayList BagOf(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+    private Term GetNewGoalPartList(Term thisTerm, int level, PartList subgoal)
+    {
+        Term newGoal = new Term(subgoal.name, (PartList)renameVariables(((PartList)subgoal), level, thisTerm));
+        newGoal.parent = thisTerm;
+        return newGoal;
+    }
+    public ProveResult BagOf(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
     {
 		// bagof(Term, ConditionTerm, ReturnList)
           //  PartList goalList = (PartList)goalIn;
@@ -2016,7 +2051,7 @@ function hidetip()
         Term newGoal = new Term(subgoal.name, (PartList)renameVariables(((PartList)subgoal), level, thisTerm));
 		newGoal.parent = thisTerm;
 
-		//var newGoals = [];
+        //var newGoals = [];
 		//newGoals[0] = newGoal;
         PartList newGoals = new PartList();
         newGoals.AddPart(newGoal);
@@ -2024,7 +2059,7 @@ function hidetip()
 		// Prove this subgoal, collecting up the environments...
 		PartList anslist = new PartList();
 		anslist.renumber = -1;
-		ArrayList ret = prove(newGoals, environment, db, level+1, BagOfCollectFunction(collect, anslist));
+		var ret = prove(newGoals, environment, db, level+1, BagOfCollectFunction(collect, anslist));
 
 		// Turn anslist into a proper list and unify with 'into'
 		
@@ -2074,7 +2109,67 @@ function hidetip()
 		};
 	}
 
-	// Call out to external javascript
+    public ProveResult CallMt(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+    {
+        // bagof(Term, ConditionTerm, ReturnList)
+        //  PartList goalList = (PartList)goalIn;
+        string queryMT = thisTerm.ArgList[0].name;
+        Part collect0 = value((Part)thisTerm.ArgList[1], environment);
+        Part subgoal = value((Part)thisTerm.ArgList[1], environment);
+
+        Part collect = renameVariables(collect0, level, thisTerm);
+        //var newGoal = new Term(subgoal.name, renameVariables(subgoal.ArgList, level, thisTerm));
+        Term newGoal = new Term(subgoal.name, (PartList)renameVariables(((PartList)subgoal), level, thisTerm));
+        newGoal.parent = thisTerm;
+
+        //var newGoals = [];
+        //newGoals[0] = newGoal;
+        PartList newGoals = new PartList();
+        newGoals.AddPart(newGoal);
+
+        // Prove this subgoal, collecting up the environments...
+        PartList anslist = new PartList();
+        anslist.renumber = -1;
+        var db2 = new PDB();
+        // db.rules = findVisibleKBRules(queryMT);
+        db2.rules = findVisibleKBRulesSorted(queryMT);
+        db2.index.Clear();
+        var ret = prove(newGoals, environment, db2, level + 1, CallMtCollectFunction(collect, anslist));
+
+        // Turn anslist into a proper list and unify with 'into'
+
+        // optional here: nil anslist -> fail?
+        Part answers = Atom.Make(FUNCTOR_NIL);
+
+        /*
+        print("Debug: anslist = [");
+            for (var j = 0; j < anslist.length; j++) {
+                anslist[j].print();
+                print(", ");
+            }
+        print("]\n");
+        */
+
+        for (int i = anslist.Length; i > 0; i--)
+        {
+            answers = MakeList(anslist.ArgList[i - 1], answers);
+        }
+
+
+        // Just prove the rest of the goallist, recursively.
+        return prove(goalList, ret, db, level + 1, reportFunction);
+    }
+
+    private reportDelegate CallMtCollectFunction(Part collect, PartList anslist)
+    {
+        return delegate(PEnv env)
+                   {
+                       // Rename this appropriately and throw it into anslist
+                       anslist.AddPart(renameVariables(value(collect, env), anslist.renumber--, null));
+                   };
+    }
+
+        // Call out to external javascript
 	// external/3 takes three arguments:
 	// first: a template string that uses $1, $2, etc. as placeholders for 
 	
@@ -2113,7 +2208,7 @@ function hidetip()
             return _Evaluator;
         }
 
-        public ArrayList External(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        public ProveResult External(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
         {
             //print ("DEBUG: in External...\n");
             PartList ourParList = GetTermPartList(thisTerm);
@@ -2228,7 +2323,8 @@ function hidetip()
             return thisTerm.partlist;
         }
 
-        public ArrayList  ExternalAndParse(Term thisTerm, PartList goalList,PEnv environment,PDB db,int  level, reportDelegate reportFunction) {
+        public ProveResult ExternalAndParse(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        {
 		//print ("DEBUG: in External...\n");
             PartList ourParList = GetTermPartList(thisTerm);
 
@@ -2327,8 +2423,9 @@ function hidetip()
         // Parameters {Partlist} = [Part]
         // Part = Variable | Atom | Term
 
-        public class PEnv : Hashtable
+        public class PEnv : PlHashtable
         {
+
             public void print()
             {
                 foreach (string k in this.Keys)
@@ -2345,7 +2442,23 @@ function hidetip()
                 }
                 return result;
             }
-
+        }
+        public class PlHashtable
+        {
+            private Hashtable ht = new Hashtable();
+            public bool ContainsKey(string name)
+            {
+                return ht.ContainsKey(name);
+            }
+            public IEnumerable Keys
+            {
+                get { return ht.Keys; }
+            }
+            public Part this[string name]
+            {
+                get { return (Part) ht[name]; }
+                set { ht[name] = value; }
+            }
         }
 
         public class RuleList : IEnumerable
@@ -2490,6 +2603,14 @@ function hidetip()
 
         public abstract class Part
         {
+            public virtual bool IsGround
+            {
+                get { return true; }
+            }
+            public virtual Part CopyTerm
+            {
+                get { return this; }
+            }
             protected Exception Missing(string p)
             {
                 return ErrorBadOp("{0} Missing '{1}' for {2}", type, p, this.ToPLStringReadable());
@@ -2533,11 +2654,63 @@ function hidetip()
             }
         }
 
-        public partial class PartList : Part, IEnumerable<Part>
+        public partial class PartList : Part, IEnumerable<Part>, IHasParent
         {
+
+            public IHasParent TParent
+            {
+                get
+                {
+                    var p = parent;
+                    if (p != null && p.TParent != null)
+                    {
+                        p = p.TParent;
+                    }
+                    return p;
+                }
+                set
+                {
+                    parent = value;
+                }
+            }
+            internal IHasParent parent;
             // Parameters {Partlist} = [Part]
             // Part = Variable | Atom | Term
             //public string name;
+
+            override public bool IsGround
+            {
+                get
+                {
+                    foreach (var t in this.tlist)
+                    {
+                        if (t is Atom) continue;
+                        if (!t.IsGround)
+                        {
+                            return false;
+                        }
+                        if (t is Term)
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }
+
+            public override Part CopyTerm
+            {
+                get
+                {
+                    var pl = new PartList();
+                    foreach (var t in this)
+                    {
+                        pl.AddPart(t.CopyTerm);
+                    }
+                    return pl;
+                }
+            }
+
             public override string type { get { return "PartList"; } }
             private readonly IList<Part> tlist;
             public int renumber=0;
@@ -2565,7 +2738,25 @@ function hidetip()
                     tlist[i] = value;
                 }
             }
-
+            public Part this[int i, bool safe]
+            {
+                get
+                {
+                    if (i < 0 || i >= Count)
+                    {
+                        throw ErrorBadOp("inner partlist");
+                    }
+                    return (SIProlog.Part)tlist[i];
+                }
+                set
+                {
+                    if (i < 0 || i >= Count)
+                    {
+                        throw ErrorBadOp("inner partlist");
+                    }
+                    tlist[i] = value;
+                }
+            }
             public void Add(SIProlog.Part part)
             {
                 if (part is SIProlog.PartList)
@@ -2604,6 +2795,10 @@ function hidetip()
             public PartList(params Part[] lS) 
             {
                 this.tlist = new List<Part>(lS);
+            }
+            public PartList(IList<Part> parts)
+            {
+                this.tlist = parts;
             }
 
             public PartList()
@@ -2664,13 +2859,13 @@ function hidetip()
             public override void Visit(PartReplacer func)
             {
                 int argNum = 0;
-                foreach (var arg in tlist)
+                foreach (var arg in tlist.ToArray())
                 {
                     var argr = func(arg, func);
                     if (ReferenceEquals(argr, null)) return;
                     if (!ReferenceEquals(argr, arg))
                     {
-                        this[argNum] = argr;
+                        this.ArgList[argNum, false] = argr;
                     }
                     argNum++;
                 }
@@ -2941,6 +3136,11 @@ function hidetip()
             public Variable(string head) { _name = head; }
             public override void print() { ConsolePrint(this.name); }
             public override string ToPLStringReadable() { return this.name; }
+
+            override public bool IsGround
+            {
+                get { return false; }
+            }
         }
         public static bool IsListName(string s)
         {
@@ -2950,9 +3150,13 @@ function hidetip()
         {
             return x is Term && IsListName(x.name) && ((Term) x).Arity == 2;
         }
-        public class Term : Part
+        public interface IHasParent
         {
-            public string _name;
+            IHasParent TParent { get; set;  }
+        }
+        public class Term : Part, IHasParent
+        {
+            readonly public string _name;
             public override string name { get { return _name; } }
             public override string type { get { return "Term"; } }
 
@@ -2971,14 +3175,27 @@ function hidetip()
                 get { return (IEnumerable<Part>)partlist.ArgList.ToArray(); }
             }
 
+            override public bool IsGround
+            {
+                get { return partlist.IsGround && !headIsVar(); }
+            }
+            public override Part CopyTerm
+            {
+                get
+                {
+                    return new Term(name, (PartList) partlist.CopyTerm) {parent = null};
+                }
+            }
             public readonly PartList partlist;
             public bool excludeThis = false;
             public int excludeRule = -1;
             public bool cut = false;
-            public Term parent = null;
+            public IHasParent parent = null;
 
+            readonly private bool? computedHeadIsVar = false;
             public bool headIsVar()
             {
+                if (computedHeadIsVar.HasValue) return computedHeadIsVar.Value;
                 // should be [A-Z\_\?]
                 if (!SIProlog.IsVarName(name)) return false;
                 Warn("Head is VAR: " + this);
@@ -2987,7 +3204,9 @@ function hidetip()
             public Term(string head, PartList a0N)
             {
                 _name = head;
+                computedHeadIsVar = SIProlog.IsVarName(head);
                 partlist = a0N;
+                a0N.TParent = this;
                 if (a0N != null && a0N.Length == 1)
                 {
                     Part a0 = a0N.ArgList[0];
@@ -3071,6 +3290,8 @@ function hidetip()
 
             override public void Visit(PartReplacer func)
             {
+                partlist.Visit(func);
+                /*
                 int argNum = 0;
                 foreach (var arg in Args)
                 {
@@ -3082,7 +3303,24 @@ function hidetip()
                     }
                     argNum++;
                 }
+               */
             }
+
+            #region IHasParent Members
+
+            public IHasParent TParent
+            {
+                get
+                {
+                    return parent;
+                }
+                set
+                {
+                    parent = value;
+                }
+            }
+
+            #endregion
         }
 
         public static bool IsVarName(string name)
@@ -3097,22 +3335,27 @@ function hidetip()
         }
 
 
-        public partial class Rule
+        public partial class Rule: IHasParent
         {
+            public bool isGround = false;
             public string optHomeMt;
             // Rule = (Head, Body)
-            public Term head = null;
+            readonly public Term head = null;
             public Body body = null;
             public Rule(Term head)
             {
                 this.head = head;
-                this.body = null;
+                isGround = head.IsGround;
+                head.parent = this;
             }
             public Rule(Term head, PartList bodylist)
+                : this(head)
             {
-                this.head = head;
                 if (bodylist != null)
+                {
                     this.body = new Body(bodylist);
+                    body.parent = this;
+                }
                 else
                     this.body = null;
             }
@@ -3142,16 +3385,56 @@ function hidetip()
                     return this.head.ToPLStringReadable() + " :- " + this.body.ToPLReadableString() + ".";
                 }
             }
+
+            public IHasParent TParent
+            {
+                get
+                {
+                    var p = parent;
+                    if (p != null && p.TParent != null)
+                    {
+                        p = p.TParent;
+                    }
+                    return p;
+                }
+                set
+                {
+                    parent = value;
+                }
+            }
+            internal IHasParent parent;
         }
 
-        public class Body
+        public class Body: IHasParent
         {
+            #region IHasParent Members
+
+            public IHasParent TParent
+            {
+                get
+                {
+                    var p = parent;
+                    if (p != null && p.TParent != null)
+                    {
+                        p = p.TParent;
+                    }
+                    return p;
+                }
+                set
+                {
+                    parent = value;
+                }
+            }
+            internal IHasParent parent;
+
+            #endregion
             // Body = [Term]
 
             readonly public PartList plist = null;
             public Body(PartList l)
             {
                 plist = l;
+                plist.parent = this;
             }
             public void print()
             {
@@ -3968,7 +4251,7 @@ function hidetip()
                 {
                     srcNode = SIProlog.CurrentProlog.MakeRepositoryKB(idSrc);// //new PNode(startMT);
                     //srcNode = new PNode(idSrc);
-                    AddNode(srcNode);
+                    //AddNode(srcNode);
                 }
                 return srcNode;
             }

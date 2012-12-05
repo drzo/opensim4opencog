@@ -46,7 +46,7 @@ namespace LogicalParticleFilter1
         public Dictionary<string, double> variables = new Dictionary<string, double>();
         public double prob;
         public double weight;
-        public string ToString()
+        public override string ToString()
         {
             string result = "";
             //foreach (string k in variables.Keys )

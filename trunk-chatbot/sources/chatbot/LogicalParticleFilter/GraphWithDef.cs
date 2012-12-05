@@ -1767,11 +1767,22 @@ yago	http://dbpedia.org/class/yago/
                 {
                     return null;
                 }
-                PredicateProperty headDef = AddDefs(rule);
                 if (rule.rdfRuleCache != null) return rule.rdfRuleCache;
 
                 var rdfRules = rule.rdfRuleCache = new RdfRules(kb);
-                AddData(rule, rdfRules);
+                PartList pl = null;
+                if (rule.body != null)
+                {
+                    pl = (PartList) rule.body.plist.CopyTerm;
+                }
+                Term rulehead = (Term) rule.head.CopyTerm;
+                AddData(rulehead, pl, rdfRules);
+                if (rdfRules.RuleNode != null)
+                {
+                    rdfRules.AddProducing(MakeTriple(rdfRules.RuleNode,
+                                                     kb.CreateUriNode("siprolog:sourceCode"),
+                                                     kb.CreateLiteralNode(rule.ToString(), "prolog")));
+                }
                 rdfRules.AssertTriples(kb, true);
                 return rdfRules;
             }
@@ -1779,7 +1790,12 @@ yago	http://dbpedia.org/class/yago/
             public void AddRuleToRDF(Rule rule)
             {
                 if (rule.rdfRuleCache != null) return;
+                string before = rule.ToString();
                 FromRule(rule, rdfGraph);
+                string after = rule.ToString();
+                if (before != after)
+                {
+                }
             }
 
             static bool IsRdfPrecoded(Term thisTerm)
@@ -1802,30 +1818,27 @@ yago	http://dbpedia.org/class/yago/
                 }
                 return false;
             }
-            
-            static private void AddData(Rule rule, RdfRules triples)
+
+            static private void AddData(Term head, PartList rulebody, RdfRules triples)
             {
-                Term head = rule.head;
-                Body rulebody = rule.body;
                 var varNames = new List<string>();
                 var newVarNames = new List<string>();
                 int newVarCount;
-                lock (rule)
+                lock (head)
                 {
                     PartList bpl = AnalyzeHead(head, true, varNames, newVarNames, out newVarCount);
                     if (newVarCount > 0)
                     {
                         if (rulebody != null)
                         {
-                            foreach (Part p in rulebody.plist)
+                            foreach (Part p in rulebody)
                             {
                                 bpl.AddPart(p);
                             }
                         }
-                        rulebody = new Body(bpl);
                     }
+                    AddData(triples, head, bpl, varNames, newVarCount, newVarNames);
                 }
-                AddData(triples, rule, head, rulebody, varNames, newVarCount, newVarNames);
             }
 
             public static PartList AnalyzeHead(Part head, bool replaceVars, ICollection<string> varNames, ICollection<string> newVarNames, out int newVarsNeeded)
@@ -1870,13 +1883,13 @@ yago	http://dbpedia.org/class/yago/
                 return pl[0];
             }
 
-            static private void AddData(RdfRules rdfRules, Rule rule, Term head, Body rulebody, List<string> varNames, int newVarCount, List<string> newVarNamesMaybe)
+            static private void AddData(RdfRules rdfRules, Term head, PartList rulebody, List<string> varNames, int newVarCount, List<string> newVarNamesMaybe)
             {
                 if (IsRdfPrecoded(head))
                 {
                     return;
                 }
-                lock (rule)
+                lock (head)
                 {
                     int newVarCount2;
                     var newVarNames = varNames;
@@ -1886,26 +1899,24 @@ yago	http://dbpedia.org/class/yago/
                     {
                         if (rulebody != null)
                         {
-                            foreach (Part p in rulebody.plist)
+                            foreach (Part p in rulebody)
                             {
                                 bpl.AddPart(p);
                             }
                         }
-                        rulebody = new Body(bpl);
                     }
+                    rulebody = bpl;
                 }
                 var ruleSubject = CreateConsequentNode(head, rdfRules, false);
                 if (rulebody != null)
                 {
-                    foreach (Part p in rulebody.plist.ArgList)
+                    foreach (Part p in rulebody.ArgList)
                     {
                         GatherTermAntecedants(p, rdfRules);
                     }
                 }
                 rdfRules.RuleNode = ruleSubject;
                 var definations = rdfRules.def;
-                rdfRules.AddProducing(MakeTriple(ruleSubject, definations.CreateUriNode("siprolog:sourceCode"),
-                    definations.CreateLiteralNode(rule.ToString(), "prolog")));
                 rdfRules.RequirementsMet = true;
                 return;
             }
