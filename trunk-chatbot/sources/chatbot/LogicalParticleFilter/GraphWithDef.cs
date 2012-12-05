@@ -1263,29 +1263,34 @@ yago	http://dbpedia.org/class/yago/
 
             public void AddIncomingEdge(PEdge edge)
             {
-                incomingEdgeList.Add(edge);
+                lock (EdgeLists) if (!incomingEdgeList.Contains(edge)) incomingEdgeList.Add(edge);
+            }
+
+            protected object EdgeLists
+            {
+                get { return incomingEdgeList; }
             }
 
             public void AddOutgoingEdge(PEdge edge)
             {
-                outgoingEdgeList.Add(edge);
+                lock (EdgeLists) if (!outgoingEdgeList.Contains(edge)) outgoingEdgeList.Add(edge);
             }
             public void ClearIncomingEdges()
             {
-                incomingEdgeList.Clear();
+                lock (EdgeLists) incomingEdgeList.Clear();
             }
             public void ClearOutgoingEdges()
             {
-                outgoingEdgeList.Clear();
+                lock (EdgeLists) outgoingEdgeList.Clear();
             }
             public PEdge[] IncomingEdges
             {
-                get { return incomingEdgeList.ToArray(); }
+                get { lock (EdgeLists) return incomingEdgeList.ToArray(); }
             }
 
             public PEdge[] OutgoingEdges
             {
-                get { return outgoingEdgeList.ToArray(); }
+                get { lock (EdgeLists) return outgoingEdgeList.ToArray(); }
             }
 
             public string DebugInfo
