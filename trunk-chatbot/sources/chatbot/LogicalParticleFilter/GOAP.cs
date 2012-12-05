@@ -47,6 +47,7 @@ namespace LogicalParticleFilter1
                 idCode = "";
                 foreach (string m in missingList)
                 {
+                    if (idCode.Length > 0) idCode += "|";
                     idCode += m;
                 }
             }

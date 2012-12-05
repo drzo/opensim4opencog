@@ -1116,6 +1116,22 @@ function hidetip()
                             }
                             continue;
                         }
+
+                        if (cmd == "module")
+                        {
+                            // A Macro for CEMA/GOAP
+                            // same as 
+                            //  mt:module_name
+                            //  module(module_name).
+
+                            curKB = val;
+                            val = atomize(val);
+                            string uniPred = String.Format("module({0}).\n", val);
+                            if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = "";
+                            tempKB[curKB] = tempKB[curKB] + uniPred;
+                            continue;
+                        }
+
                         //default is to make a binary pred of "cmd(curConst,val)."
                         val = val.Replace(".", "");
                         if (val.Length > 0)
