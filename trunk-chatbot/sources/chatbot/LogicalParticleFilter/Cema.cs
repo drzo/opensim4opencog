@@ -430,9 +430,9 @@ namespace LogicalParticleFilter1
                     if (!openSet.Contains(nextState))
                     {
                         openSet.Add(nextState);
-                        gScores.Add(nextState.idCode, nextState.costSoFar());
-                        hScores.Add(nextState.idCode, nextState.distToGoal() * problemWorstCost);
-                        fScores.Add(nextState.idCode, (gScores[nextState.idCode] + hScores[nextState.idCode]));
+                        gScores[nextState.idCode] = nextState.costSoFar();
+                        hScores[nextState.idCode] = nextState.distToGoal() * problemWorstCost;
+                        fScores[nextState.idCode] = (gScores[nextState.idCode] + hScores[nextState.idCode]);
                     }
                 }
                 openSet.Sort();

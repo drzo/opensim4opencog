@@ -57,7 +57,7 @@ namespace LogicalParticleFilter1
             List<string> vlist = new List<string>();
             foreach (string mod in inModList)
             {
-                if (!modList.Contains(mod))
+                //if (!modList.Contains(mod))
                 {
                     vlist.Add(mod);
                 }
@@ -279,7 +279,6 @@ namespace LogicalParticleFilter1
         public bool constructPlan(string goalMt,string nowMt, string moduleMt,string backgroundMt, string solutionMt)
         {
             tickBegin = Environment.TickCount;
-            return false;
 
             List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
 
@@ -410,9 +409,9 @@ namespace LogicalParticleFilter1
                     if (!openSet.Contains(nextState))
                     {
                         openSet.Add(nextState);
-                        gScores.Add(nextState.idCode, nextState.costSoFar());
-                        hScores.Add(nextState.idCode, nextState.distToGoal() * problemWorstCost);
-                        fScores.Add(nextState.idCode, (gScores[nextState.idCode] + hScores[nextState.idCode]));
+                        gScores[nextState.idCode]= nextState.costSoFar();
+                        hScores[nextState.idCode]= nextState.distToGoal() * problemWorstCost;
+                        fScores[nextState.idCode]=(gScores[nextState.idCode] + hScores[nextState.idCode]);
                     }
                 }
                 openSet.Sort();
@@ -449,6 +448,9 @@ namespace LogicalParticleFilter1
         public void commitSolution(GoapState cState, string solutionMt, string nowMt, string backgroundMt)
         {
             planNode = cState;
+            // Modules/Actions are in reverse order from now to goal so flip them
+            cState.modList.Reverse();
+
             // Make final connections
             if (backgroundMt != null) prologEngine.connectMT(solutionMt, backgroundMt);
             foreach (string moduleMt in cState.modList)
@@ -485,7 +487,7 @@ namespace LogicalParticleFilter1
             {
                 foreach (string m in cState.modList)
                 {
-                    modString += " " + m;
+                    modString += m + " ";
                 }
                 prologEngine.appendListPredToMt("modlist", modString, solutionMt);
             }
@@ -500,7 +502,7 @@ namespace LogicalParticleFilter1
             {
                 foreach (string m in cState.modList)
                 {
-                    planSequence += String.Format("planraw({0}).\n",  m);
+                    planSequence += String.Format("planraw({0}).\n", m);
                 }
                 foreach (string m in cState.modList)
                 {
@@ -530,23 +532,23 @@ namespace LogicalParticleFilter1
             tickEnd = Environment.TickCount;
             int elapsed = tickEnd - tickBegin;
             int totalNodes = openSet.Count + closedSet.Count;
-            Console.WriteLine("Inventing time = {0}", elapsed);
-            Console.WriteLine("Inventing list = '{0}'", modString);
+            Console.WriteLine("Planning time = {0}", elapsed);
+            Console.WriteLine("Planning list = '{0}'", modString);
 
-            Console.WriteLine("Inventing tials = '{0}'", trials);
+            Console.WriteLine("Planning tials = '{0}'", trials);
             Console.WriteLine("TotalNodes = {0}", totalNodes);
             if (trials > 0)
             {
-                Console.WriteLine("Inventing ms/trials = '{0}'", ((double)elapsed / (double)trials));
+                Console.WriteLine("Planning ms/trials = '{0}'", ((double)elapsed / (double)trials));
             }
             if (totalNodes > 0)
             {
-                Console.WriteLine("Inventing ms/nodes = '{0}'", ((double)elapsed / (double)totalNodes));
+                Console.WriteLine("Planning ms/nodes = '{0}'", ((double)elapsed / (double)totalNodes));
             }
             if (elapsed > 0)
             {
-                Console.WriteLine("Inventing trials/ms = '{0}'", ((double)trials / (double)elapsed));
-                Console.WriteLine("Inventing nodes/ms = '{0}'", ((double)totalNodes / (double)elapsed));
+                Console.WriteLine("Planning trials/ms = '{0}'", ((double)trials / (double)elapsed));
+                Console.WriteLine("Planning nodes/ms = '{0}'", ((double)totalNodes / (double)elapsed));
             }
 
             Console.WriteLine(postScript);
