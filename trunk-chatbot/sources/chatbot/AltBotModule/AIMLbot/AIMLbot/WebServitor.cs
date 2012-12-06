@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Net;
@@ -225,6 +226,41 @@ namespace AltAIMLbot
             string behaviorDir = ourServitor.curBot.myBehaviors.persistantDirectory;
             string path = Path.Combine(startUpPath, filename);
 
+            // The message body is posted as bytes. read the bytes
+            //byte[] PostData = context.Request.BinaryRead(context.Request.ContentLength);
+            Stream bodyStream = context.Request.InputStream;
+            Encoding encoding = context.Request.ContentEncoding;
+            string infoContentType = context.Request.ContentType;
+            long infoContentLength = context.Request.ContentLength64;
+
+            StreamReader streamReader = new StreamReader(bodyStream, encoding);
+            string infoBody = streamReader.ReadToEnd();
+            NameValueCollection NVC = HttpUtility.ParseQueryString(infoBody);
+            
+            // Posting to an MT
+            if (NVC != null)
+            {
+                string mt = NVC["mt"];
+                if (mt != null)
+                {
+                    string path2 = "." + justURL;
+                    string query = NVC["q"];
+                    string action = NVC["a"];
+                    tl_title = path;
+                    Console.WriteLine("WEBPOST path={0},action={1},query={2},btx={3}", path, action, query, behaviorName);
+                    if (path2.Contains("./siprolog/"))
+                    {
+                        tl_AsHTML = false;
+                        context.Response.StatusCode = (int)HttpStatusCode.OK;
+                        //+using (Stream s = context.Response.OutputStream )
+                        using (var writer = HtmlStreamWriter(context))
+                            ourServitor.prologEngine.webWriter(writer, action, query, mt, serverRoot);
+                        return;
+                    }
+
+                }
+            }
+
             if (path.Contains("./behavior/"))
             {
                 path.Replace("./behavior/", behaviorDir);
@@ -233,20 +269,13 @@ namespace AltAIMLbot
             {
                 path = behaviorFile;
             }
-            // The message body is posted as bytes. read the bytes
-            //byte[] PostData = context.Request.BinaryRead(context.Request.ContentLength);
-            Stream bodyStream = context.Request.InputStream;
-            Encoding encoding = context.Request.ContentEncoding;
 
-            StreamReader streamReader = new StreamReader(bodyStream, encoding);
+
             if (path.Contains("./interpreter/"))
             {
                 // Posting to the interperter directory
                 // causes the text to be loaded immediately like a new AIML file
 
-                string infoContentType = context.Request.ContentType;
-                long infoContentLength = context.Request.ContentLength64;
-                string infoBody = streamReader.ReadToEnd();
                 string report = "<ok/>";
                 try
                 {
@@ -268,9 +297,6 @@ namespace AltAIMLbot
             }
             if (context.Request.ContentType != null) 
             {
-                string infoContentType = context.Request.ContentType;
-                long infoContentLength = context.Request.ContentLength64;
-                string infoBody = streamReader.ReadToEnd();
                 //Convert the bytes to string using Encoding class
                 //string str = Encoding.UTF8.GetString(PostData);
                 ourServitor.curBot.myBehaviors.defineBehavior(behaviorName, infoBody);
@@ -1209,4 +1235,35 @@ namespace AltAIMLbot
         }
 
     }
+
+    //Using System.Collections.Specialized;
+    //Using System.Net;
+    //Using System.Text;
+
+    public class RemotePoster
+    {
+        public string remoteURL="http://localhost:8123/siprolog/";
+
+        public RemotePoster(string targetURL)
+        {
+            remoteURL = targetURL;
+        }
+
+        public string postToMt(string action, string value, string mt)
+        {
+            // for actions see siprolog.webwriter0
+            // actions = (append|insert|clear|query)
+
+            var url = remoteURL;
+            var nvc = new System.Collections.Specialized.NameValueCollection();
+            nvc.Add("a", action);
+            nvc.Add("mt", mt);
+            nvc.Add("q", value);
+            var client = new System.Net.WebClient();
+            var data = client.UploadValues(url, nvc);
+            var res = System.Text.Encoding.ASCII.GetString(data);
+            return res;
+        }
+    }
+
 }

@@ -133,7 +133,7 @@ namespace AltAIMLbot
         {
             stateDef =
                 stateDef.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&quot;", "\"").Replace("&amp;", "(Zamp)").Replace
-                    ("&apos", "'");
+                    ("&apos", "'").Replace("&0a","\n");
             if (stateDef.Contains("&"))
             {
                 throw new NotImplementedException("Fogot to clean some entity? " + stateDef);

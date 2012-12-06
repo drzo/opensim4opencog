@@ -534,31 +534,31 @@ namespace LogicalParticleFilter1
             tickEnd = Environment.TickCount;
             int elapsed = tickEnd - tickBegin;
             int totalNodes = openSet.Count + closedSet.Count;
-            Console.WriteLine("Planning time = {0}", elapsed);
-            Console.WriteLine("Planning list = '{0}'", modString);
+            SIProlog.ConsoleWriteLine("Planning time = {0}", elapsed);
+            SIProlog.ConsoleWriteLine("Planning list = '{0}'", modString);
 
-            Console.WriteLine("Planning tials = {0}", trials);
-            Console.WriteLine("TotalNodes = {0}", totalNodes);
+            SIProlog.ConsoleWriteLine("Planning tials = {0}", trials);
+            SIProlog.ConsoleWriteLine("TotalNodes = {0}", totalNodes);
             if (trials > 0)
             {
-                Console.WriteLine("Planning ms/trials = {0}", ((double)elapsed / (double)trials));
+                SIProlog.ConsoleWriteLine("Planning ms/trials = {0}", ((double)elapsed / (double)trials));
             }
             if (totalNodes > 0)
             {
                 double mspn = ((double)elapsed / (double)totalNodes);
-                Console.WriteLine("Planning ms/nodes = {0}", mspn);
+                SIProlog.ConsoleWriteLine("Planning ms/nodes = {0}", mspn);
                 if (mspn > 0)
                 {
-                    Console.WriteLine("Planning @ nodes/sec = {0}", 1000 / mspn);
+                    SIProlog.ConsoleWriteLine("Planning @ nodes/sec = {0}", 1000 / mspn);
                 }
             }
             if (elapsed > 0)
             {
-                Console.WriteLine("Planning trials/ms = {0}", ((double)trials / (double)elapsed));
-                Console.WriteLine("Planning nodes/ms = {0}", ((double)totalNodes / (double)elapsed));
+                SIProlog.ConsoleWriteLine("Planning trials/ms = {0}", ((double)trials / (double)elapsed));
+                SIProlog.ConsoleWriteLine("Planning nodes/ms = {0}", ((double)totalNodes / (double)elapsed));
             }
 
-            Console.WriteLine(postScript);
+            SIProlog.ConsoleWriteLine(postScript);
 
         }
 

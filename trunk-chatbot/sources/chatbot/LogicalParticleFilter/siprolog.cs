@@ -417,6 +417,9 @@ function hidetip()
                         case "insert":
                             insertKB(queryv, mt);
                             break;
+                        case "clear":
+                            clearKB(mt);
+                            break;
                         case "query":
                             interactQuery(writer, queryv, mt, serverRoot);
                             break;
