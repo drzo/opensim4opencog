@@ -508,6 +508,7 @@ namespace LogicalParticleFilter1
                 foreach (string m in cState.modList)
                 {
                     planSequence += String.Format("planseq({0},{1}).\n", planCount ,m);
+                    planCount++;
                 }
                 prologEngine.appendKB(planSequence, solutionMt);
             }
@@ -536,20 +537,25 @@ namespace LogicalParticleFilter1
             Console.WriteLine("Planning time = {0}", elapsed);
             Console.WriteLine("Planning list = '{0}'", modString);
 
-            Console.WriteLine("Planning tials = '{0}'", trials);
+            Console.WriteLine("Planning tials = {0}", trials);
             Console.WriteLine("TotalNodes = {0}", totalNodes);
             if (trials > 0)
             {
-                Console.WriteLine("Planning ms/trials = '{0}'", ((double)elapsed / (double)trials));
+                Console.WriteLine("Planning ms/trials = {0}", ((double)elapsed / (double)trials));
             }
             if (totalNodes > 0)
             {
-                Console.WriteLine("Planning ms/nodes = '{0}'", ((double)elapsed / (double)totalNodes));
+                double mspn = ((double)elapsed / (double)totalNodes);
+                Console.WriteLine("Planning ms/nodes = {0}", mspn);
+                if (mspn > 0)
+                {
+                    Console.WriteLine("Planning @ nodes/sec = {0}", 1000 / mspn);
+                }
             }
             if (elapsed > 0)
             {
-                Console.WriteLine("Planning trials/ms = '{0}'", ((double)trials / (double)elapsed));
-                Console.WriteLine("Planning nodes/ms = '{0}'", ((double)totalNodes / (double)elapsed));
+                Console.WriteLine("Planning trials/ms = {0}", ((double)trials / (double)elapsed));
+                Console.WriteLine("Planning nodes/ms = {0}", ((double)totalNodes / (double)elapsed));
             }
 
             Console.WriteLine(postScript);
