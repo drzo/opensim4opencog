@@ -436,7 +436,19 @@ namespace MushDLR223.Utilities
         static DLRConsole()
         {
             SafelyRun(() => DetectMainEnv(null));
+            OverrideConsoleOutput();
         }
+
+        private static void OverrideConsoleOutput()
+        {
+            var co = SystemConsole.Out;
+            if (co is OutputDelegateWriter)
+            {
+                return;
+            }
+            SystemConsole.SetOut(new OutputDelegateWriter(DebugWriteLine));
+        }
+
         public static void DetectMainEnv(TextWriter Console)
         {
             var osv = Environment.OSVersion;
@@ -565,7 +577,7 @@ namespace MushDLR223.Utilities
         private static readonly TextWriter InitialConsoleERR = SystemConsole.Error;
         public static readonly OutputDelegate SYSTEM_ERR_WRITELINE_REAL = CALL_SYSTEM_ERR_WRITELINE;
         public static readonly OutputDelegate SYSTEM_ERR_WRITELINE = CALL_SYSTEM_ERR_WRITELINE;
-        private static readonly TextWriter ConsoleOut = new OutputDelegateWriter(SystemWriteLine);
+        private static readonly TextWriter ConsoleOut = new OutputDelegateWriter(DebugWriteLine);
         private static readonly TextWriter ConsoleError = new OutputDelegateWriter(SYSTEM_ERR_WRITELINE);
 
         public Commands Commands = new Commands();
@@ -580,7 +592,7 @@ namespace MushDLR223.Utilities
         /// </summary>
         public string DefaultPrompt
         {
-            set { m_defaultPrompt = value + "# "; }
+            set { m_defaultPrompt = value; }
             get { return m_defaultPrompt; }
         }
         protected string m_defaultPrompt;
@@ -952,6 +964,14 @@ namespace MushDLR223.Utilities
             if (AvoidPrefix(sender))
             {
                 var c = CurrentCaller;
+                if (c == sender)
+                {
+
+                }
+                else if (!AvoidPrefix(c))
+                {
+                    sender = c;
+                }
                 format = sender + ": " + format;
             }
             if (IgnoreSender(sender)) return;
@@ -1112,7 +1132,7 @@ namespace MushDLR223.Utilities
         private static string omittedPrefix = "";
         static private void WritePrefixLine(ConsoleColor color, string sender)
         {
-            if (NoConsoleVisible) return; 
+            if (NoConsoleVisible || tl_justWrotePrompt) return; 
             try
             {
                 lock (m_syncRoot)
@@ -1154,7 +1174,7 @@ namespace MushDLR223.Utilities
                 try
                 {
                     ForegroundColor = color;
-                    SystemConsole.Write(text);
+                    InitialConsoleOut.Write(text);
                     Flush();
                     ResetColor();
                 }
@@ -1663,15 +1683,63 @@ namespace MushDLR223.Utilities
             SystemFlush();
         }
 
+        [ThreadStatic]
+        public static bool tl_justWrotePrompt = false;
         private static void SystemWriteLine0(string format, params object[] args)
         {
             var Outputs = DLRConsole.Outputs;
+            bool writeNewLine = true;
+            bool useSWL00 = false;
             if (Outputs.Count == 0 || IsOnMonoUnix || AlwaysWrite)
+            {
+
+                if (NoConsoleVisible) return;
+                useSWL00 = true;
+            }
+
+            string defaultPrompt = SingleInstance.DefaultPrompt;
+            if (defaultPrompt != null)
+            {
+                string formatTrim = format.Trim();
+                string dpt = defaultPrompt.Trim();
+                if (!tl_justWrotePrompt)
+                {
+                    if (formatTrim == dpt)
+                    {
+                        writeNewLine = false;
+                        tl_justWrotePrompt = true;
+                    }
+                    else
+                    {
+                        tl_justWrotePrompt = false;
+                    }
+                }
+                else
+                {
+                    if (formatTrim == "")
+                    {
+                        return;
+                    }
+                    tl_justWrotePrompt = false;
+                }
+            }
+            else
+            {
+                tl_justWrotePrompt = false;
+            }
+
+            if (useSWL00)
             {
                 var sformat = SafeFormat(format, args);
                 if (String.IsNullOrEmpty(sformat)) return;
-                if (NoConsoleVisible) return;
-                SystemWriteLine00(sformat.Trim());
+                if (writeNewLine)
+                {
+                    SystemWriteLine00(sformat.Trim());
+                }
+                else
+                {
+                    SystemWrite00(sformat.Trim());
+                }
                 return;
             }
 
@@ -1679,13 +1747,14 @@ namespace MushDLR223.Utilities
             {
                 try
                 {
+                    OutputDelegate ow = writeNewLine ? o.WriteLine : (OutputDelegate) o.Write;
                     if (args == null || args.Length == 0)
                     {
-                        o.WriteLine(format);
+                        ow(format, args);
                     }
                     else
                     {
-                        o.WriteLine(format, args);
+                        ow(format, args);
                     }
                 }
                 catch (Exception e)
@@ -1694,11 +1763,13 @@ namespace MushDLR223.Utilities
                     try
                     {
                         o.WriteLine(SafeFormat(format, args));
-                    } catch (Exception e2)
+                    }
+                    catch (Exception e2)
                     {
                         CALL_SYSTEM_ERR_WRITELINE("" + e2);
                     }
                 }
+
             }
         }
         private static void SystemWriteLine00(string format)
@@ -1779,10 +1850,14 @@ namespace MushDLR223.Utilities
 
         private static bool AvoidPrefix(string canprefix)
         {
-            if (canprefix.Length < 4) return true;
+            int len = canprefix.Length;
+            if (len < 4) return true;
             if (canprefix.Contains("(") || canprefix.Contains(" ")) return true;
             canprefix = canprefix.ToUpper();
-            if (canprefix == "COMMAND" || canprefix == "THREADHELPER" || canprefix == "SUCCESS" || canprefix == "FAILURE") return true;
+            if (canprefix.Contains("WRITE") || canprefix.Contains("PRINT")) return true;
+            if (!char.IsLetter(canprefix[0])) return true;
+            if (!char.IsLetter(canprefix[len - 1])) return true;
+            if (canprefix == "HOSTPROC" || canprefix == "PROGRAM" || canprefix == "APPDOMAIN" || canprefix == "COMMAND" || canprefix == "THREADHELPER" || canprefix == "SUCCESS" || canprefix == "FAILURE") return true;
             return false; 
         }
 
@@ -1803,56 +1878,100 @@ namespace MushDLR223.Utilities
         }
         static public string CurrentCaller
         {
-            get { return FindCallerInStack(TransparentCallers, OpacheCallers, false); }
+            get
+            {
+                string cc = FindCallerInStack(TransparentCallers, OpacheCallers, false);
+                if (cc == null || AvoidPrefix(cc))
+                {
+                    cc = FindCallerInStack(TransparentCallers, OpacheCallers, true);
+                }
+                return cc;
+            }
         }
 
         private static bool SkipStackTracesBusy = false;
         public static string FindCallerInStack(HashSet<MemberInfo> transparentCallers, HashSet<MemberInfo> opacheCallers, bool useMethodName)
         {
-            if (SkipStackTraces) return "SkipFindCallerInStack";
-            if (SkipStackTracesBusy) return "FindCallerInStackBusy";
+            if (SkipStackTraces) return "FCISSkip";
+            if (SkipStackTracesBusy) return "FCISBusy";
             //SkipStackTracesBusy = true;
             var st = new System.Diagnostics.StackTrace(true).GetFrames();
             if (st == null)
             {
                 SkipStackTracesBusy = false;
-                return "NULL";
+                return "FCISNoStackTrace";
             }
+            string fallBackName = null;
+            string cn = null;
             {
+                if (opacheCallers == null) opacheCallers = OpacheCallers;
                 int startAt = transparentCallers == null ? 0 : 2;
-                MemberInfo typeSkipped = null;
-                for (int i = startAt; i < st.Length; i++)
+                if (transparentCallers == null) transparentCallers = TransparentCallers;
+                MemberInfo typeSkipped = typeof(DLRConsole);
+                StackFrame s2 = null;
+                MemberInfo caller2 = null;
+                for (int i = startAt; i < st.Length - 1; i++)
                 {
-                    StackFrame s = st[i];
+                    StackFrame s = s2 ?? st[i];
+                    s2 = st[i + 1];
                     var m = s.GetMethod();
+                    var m2 = s2.GetMethod();
+                    cn = CallerName(s, useMethodName);
                     if (m != null)
                     {
-                        var caller = ResolveType(m);
+                        var caller = caller2 ?? ResolveType(m);
                         if (caller == null) continue;
-                        if (typeSkipped == caller) continue;
+                        caller2 = ResolveType(m2);
+                        if (typeSkipped == caller && caller == caller2)
+                        {
+                            continue;
+                        }
+                        if (caller == typeof(TextFilter)) continue;
                         typeSkipped = caller;
-                        if (opacheCallers == null) opacheCallers = OpacheCallers;
+                        lock (UltraTransparentCallers)
+                        {
+                            if (IsTypeOf(caller, UltraTransparentCallers)) continue;
+                        }
                         lock (opacheCallers)
                         {
-                            if (IsTypeOf(caller, opacheCallers)) return CallerName(s, useMethodName);
+                            if (IsTypeOf(caller, opacheCallers))
+                            {
+                                return CallerName(s, useMethodName);
+                            }
                         }
-                        if (transparentCallers == null)
-                            transparentCallers = TransparentCallers;
                         lock (transparentCallers)
                         {
-                            if (IsTypeOf(caller, transparentCallers)) continue;
+                            if (IsTypeOf(caller, transparentCallers))
+                            {
+                                string fbn = CallerName(s, !useMethodName);
+                                if (!AvoidPrefix(fbn))
+                                {
+                                    if (fallBackName == null)
+                                    {
+                                        fallBackName = fbn;
+                                    }
+                                }
+                                continue;
+                            }
                         }
                     }
-                    SkipStackTracesBusy = false;
-                    string cn = CallerName(s, useMethodName);
+                    SkipStackTracesBusy = false;                  
                     if (AvoidPrefix(cn))
                     {
                         continue;
+                    }
+                    if (cn == "KEYVALUELISTSIPROLOG")
+                    {
+                        return cn;
                     }
                     return cn;
                 }
             }
             SkipStackTracesBusy = false;
+            if (fallBackName != null)
+            {
+                return fallBackName;
+            }
             return CallerName(st[st.Length - 1], useMethodName);
         }
 
@@ -1878,7 +1997,7 @@ namespace MushDLR223.Utilities
 
         private static string CallerName(StackFrame frame, bool useMethodName)
         {
-            string str = null;
+            string str = "";
             if (frame == null) return str;
             var m = frame.GetMethod();
             string suffix = "";
@@ -1886,26 +2005,31 @@ namespace MushDLR223.Utilities
             {
                 MemberInfo type = m; // +"_" + str;                   
                 type = ResolveType(type);
-                str = type.Name;
+                str = type.Name ?? "" + type;
                 if (type is Type)
                 {
-                    if (TransparentCallers.Contains(type))
+                    lock (TransparentCallers)
                     {
-                        //todo decide below to comment
-                        useMethodName = true;
-                        str = "";
+                        if (TransparentCallers.Contains(type) && !UltraTransparentCallers.Contains(type))
+                        {
+                            //todo decide below to comment
+                            useMethodName = true;
+                            str = "";
+                        }
                     }
                 }
                 if (useMethodName)
                 {
                     suffix = m.Name;
                     if (suffix.StartsWith("get_") || suffix.StartsWith("set_")) suffix = suffix.Substring(4);
-                    suffix = "." + suffix;
                 }
-                if (!string.IsNullOrEmpty(str)) return str.ToUpper() + suffix;
+            }
+            if (!string.IsNullOrEmpty(str) && !string.IsNullOrEmpty(suffix))
+            {
+                return str.ToUpper() + "." + suffix;
             }
             //var mo = frame.GetFileName() + "_" + frame.GetFileLineNumber() + suffix;
-            return str + suffix;
+            return str.ToUpper() + suffix;
         }
 
         private static MemberInfo ResolveType(MemberInfo type)
@@ -2012,12 +2136,13 @@ namespace MushDLR223.Utilities
 
         static readonly HashSet<TextWriter> _outputs = new HashSet<TextWriter>();
 
-        public static readonly HashSet<MemberInfo> TransparentCallers = new HashSet<MemberInfo>()
+        public static readonly HashSet<MemberInfo> UltraTransparentCallers = new HashSet<MemberInfo>()
                                                                       {
                                                                           typeof (OpenSimAppender),
                                                                           typeof (DLRConsole),
                                                                           typeof (SystemConsole),
                                                                           typeof (OutputDelegateWriter),
+                                                                          typeof (TextWriter),
                                                                           typeof (TextFilter),
                                                                           typeof (RuntimeMethodHandle),
                                                                           typeof (MethodInfo),
@@ -2027,6 +2152,11 @@ namespace MushDLR223.Utilities
                                                                           typeof (EventHandler),
                                                                           typeof (EventHandler<>)
                                                                       };
+
+        public static readonly HashSet<MemberInfo> TransparentCallers = new HashSet<MemberInfo>(UltraTransparentCallers)
+                                                                            {
+                                                                                typeof (XmlDocumentLineInfo)
+                                                                            };
 
         public static readonly HashSet<MemberInfo> OpacheCallers = new HashSet<MemberInfo>()
                                                               {
