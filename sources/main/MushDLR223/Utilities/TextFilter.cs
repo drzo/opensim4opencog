@@ -31,7 +31,7 @@ namespace MushDLR223.Utilities
         private string lastOutput = "xoxoxoxoxoxoxoxoxoxoxoxoxdo";
         public bool writeDebugLine(OutputDelegate console, string message, params object[] args)
         {
-            console = console ?? DLRConsole.SystemWriteLine;
+            console = console ?? DLRConsole.DebugWriteLine;
             try
             {
                 bool printIt;
@@ -52,7 +52,7 @@ namespace MushDLR223.Utilities
                     printIt = message.StartsWith("--");
                     if (printIt)
                     {
-                        message = message.Substring(1);
+                        message = message.Substring(2);
                     }
                     else
                     {
@@ -468,9 +468,23 @@ namespace MushDLR223.Utilities
 
         public static string ReadLineFromInput(OutputDelegate outputDelegate, string prompt)
         {
+            string prev = DLRConsole.SingleInstance.DefaultPrompt;
+            try
+            {
+                DLRConsole.SingleInstance.DefaultPrompt = prompt;
+                return ReadLineFromInput0(outputDelegate, prompt);
+            }
+            finally
+            {
+                DLRConsole.tl_justWrotePrompt = false;
+                DLRConsole.SingleInstance.DefaultPrompt = prev;
+            }
+        }
+        public static string ReadLineFromInput0(OutputDelegate outputDelegate, string prompt)
+        {
             TextWriter w = (DLRConsole.Out ?? (Console.Out ?? Console.Error) ?? new StringWriter());
             MethodInfo rm = null;
-            object ro = null;       
+            object ro = null;
             if (outputDelegate != null)
             {
                 var mi = outputDelegate.Method;
@@ -500,7 +514,7 @@ namespace MushDLR223.Utilities
                 }
                 return r.ReadLine();
             }
-                return "" + rm.Invoke(ro, new object[0]);
+            return "" + rm.Invoke(ro, new object[0]);
         }
 
         /// <summary>
