@@ -27,7 +27,9 @@ namespace MushDLR223.Utilities
         }
         public override void Write(char[] buffer, int index, int count)
         {
+            DLRConsole.InitialConsoleOut.Flush(); 
             lock (locker) sw.Write(buffer, index, count);
+            Flush();
         }
         public override void Close()
         {
@@ -59,6 +61,11 @@ namespace MushDLR223.Utilities
             }
         }
         public override void Flush()
+        {
+            Flush0();
+            DLRConsole.InitialConsoleOut.Flush();
+        }
+        public void Flush0()
         {
             string toWrite = "";
             lock (locker)
