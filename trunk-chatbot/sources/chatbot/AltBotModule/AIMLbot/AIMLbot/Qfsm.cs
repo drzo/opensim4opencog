@@ -254,8 +254,7 @@ namespace AltAIMLbot
                 {
                     try
                     {
-                        XmlNode resultTemplateNode = AIMLTagHandler.getNode("<template>" + templateNode.InnerXml + "</template>");
-                        bot.evalTemplateNode(resultTemplateNode);
+                        bot.evalTemplateNodeInnerXml(templateNode);
                         //bot.evalTemplateNode(templateNode);
                     }
                     catch (Exception e)
@@ -281,8 +280,7 @@ namespace AltAIMLbot
                 {
                     try
                     {
-                        XmlNode resultTemplateNode = AIMLTagHandler.getNode("<template>" + templateNode.InnerXml + "</template>");
-                        bot.evalTemplateNode(resultTemplateNode);
+                        bot.evalTemplateNodeInnerXml(templateNode);
                         //bot.evalTemplateNode(templateNode);
                     }
                     catch (Exception e)

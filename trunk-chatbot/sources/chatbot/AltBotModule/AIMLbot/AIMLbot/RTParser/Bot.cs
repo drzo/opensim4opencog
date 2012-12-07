@@ -1851,7 +1851,7 @@ The AIMLbot program.
             bool printIt = false;
             lock (LoggedWords)
             {
-                printIt = LoggedWords.writeDebugLine(DLRConsole.SystemWriteLine, message, args);
+                printIt = LoggedWords.writeDebugLine(DLRConsole.DebugWriteLine, message, args);
             }
             //
             {

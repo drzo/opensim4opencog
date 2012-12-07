@@ -15,6 +15,7 @@ using AIMLbot;
 using AltAIMLbot;
 using AltAIMLParser;
 using LAIR.ResourceAPIs.WordNet;
+using LogicalParticleFilter1;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
@@ -30,6 +31,7 @@ using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 using MasterRequest = AltAIMLParser.Request;
 using Mono.CSharp;
+using Action=System.Action;
 using Attribute=System.Attribute;
 
 namespace RTParser
@@ -428,7 +430,7 @@ namespace RTParser
                     {
                         // See what the servitor says
                         updateRTP2Sevitor(myUser);
-                        servitor.respondToChat(input);
+                        writeLine(myName + "> " + servitor.respondToChat(input));
                         updateServitor2RTP(myUser);
                     }
                     else
@@ -614,6 +616,7 @@ namespace RTParser
             }
 
             if (AltBotCommands.TaskCommand(request, console, cmd, args)) return true;
+            if (cmd == "anim") return true;
             console("unknown: @" + input);
             return false;
         }
@@ -654,6 +657,47 @@ namespace RTParser
             currentRequest = requestornull;
             var ei = GetEvalInstance();
             return ei.Evaluate(cmd);
+        }
+
+        private object SIPrologExec(string cmd, Request requestornull)
+        {
+            string queryMT = "baseKB";
+            if (requestornull != null)
+            {
+                currentRequest = requestornull;
+            }
+            if (currentRequest != null)
+            {
+                var rps = currentRequest.RequesterPredicates;
+                queryMT = rps.grabSetting("querymt,kb,mt,behavourmt,behavour") ?? queryMT;
+            }
+            var outBindingPart = new List<Dictionary<string, SIProlog.Part>>();
+            List<Dictionary<string, string>> outBindingStrings = null;
+            prologEngine.askQuery(cmd, queryMT, true, outBindingPart, outBindingStrings);
+            if (outBindingPart.Count > 0)
+            {
+                Dictionary<string, SIProlog.Part> firstResult = outBindingPart[0];
+                if (firstResult.Count > 0)
+                {
+                    if (firstResult.Count > 1)
+                    {
+                        foreach (var varname in new[] {"VALUE", "X", "OUT", "RETURN", "RETVAL"})
+                        {
+                            SIProlog.Part returnThis;
+                            if (firstResult.TryGetValue(varname, out returnThis))
+                            {
+                                return returnThis;
+                            }
+                        }
+                    }
+                    foreach (KeyValuePair<string, SIProlog.Part> keyValuePair in firstResult)
+                    {
+                        return keyValuePair.Value;
+                    }
+                }            
+                return "True";
+            }
+            return "False";
         }
     }
 

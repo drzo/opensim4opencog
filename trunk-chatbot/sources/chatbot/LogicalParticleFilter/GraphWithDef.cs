@@ -85,7 +85,24 @@ namespace LogicalParticleFilter1
         static readonly internal IGraph rdfDefinations = new Graph();
         const string rdfDefMT = "rdfGlobalDefsMt";
         private GraphWithDef rdfDefSync;
-        public CIDictionary<string, GraphWithDef> GraphForMT = new CIDictionary<string, GraphWithDef>(KeyCase.Default);
+        public CIDictionary<string, GraphWithDef> GraphForMT = new CIDictionary<string, GraphWithDef>(new KeyCase(NormalizeKBName));
+
+        public static string NormalizeKBName(object arg)
+        {
+            string retVal = KeyCase.NormalizeKeyLowerCaseNoFileExt(arg);
+            int retValLength = retVal.Length;
+            if (retValLength > 3)
+            {
+                if (retVal.EndsWith("mt") || retVal.EndsWith("kb")) retVal = retVal.Substring(0, retValLength - 2);
+            }
+            return retVal;
+        }
+
+        public static bool SameKBName(string kb1,string kb2)
+        {
+            return NormalizeKBName(kb1) == NormalizeKBName(kb2);
+        }
+
         static public string RoboKindURI = "http://cogserver:8123/onto/robokind#";
         public static string RoboKindPrefix = "robokind";
         public static string RoboKindPrefixPrepend = RoboKindPrefix + ":";
@@ -101,7 +118,7 @@ namespace LogicalParticleFilter1
                 new GraphWithDef(rdfDefMT, this, rdfDefinations);
             EnsureReaderNamespaces();
             loadKB("aiml/shared_ke/argdefs.txt", rdfDefMT);
-            mtest();
+           // mtest();
         }
 
         private static void EnsureReaderNamespaces()
@@ -115,10 +132,30 @@ namespace LogicalParticleFilter1
 
         public PNode MakeRepositoryKB(string mt)
         {
+            bool newlyCreated;
+            var node = MakeRepositoryKB(mt, out newlyCreated);
+            if (newlyCreated)
+            {
+                EverythingPSC = EverythingPSC ?? MakeRepositoryKB("everythingPSC", out newlyCreated);
+                BaseKB = BaseKB ?? MakeRepositoryKB("baseKB", out newlyCreated);
+                if (node != EverythingPSC && node != BaseKB)
+                {
+                    EverythingPSC.CreateEdgeTo(node);
+                    node.CreateEdgeTo(BaseKB);
+                }
+                //connectMT(epsc.Id, mt); // 
+                //connectMT(mt, basekb.Id); // 
+            }
+            return node;
+        }
+
+        public PNode MakeRepositoryKB(string mt, out bool newlyCreated)
+        {
             lock (GraphForMT)
             {
                 GraphWithDef graph;
-                if (!GraphForMT.TryGetValue(mt, out graph))
+                newlyCreated = !GraphForMT.TryGetValue(mt, out graph);
+                if (newlyCreated)
                 {
                     graph = GraphForMT[mt] = new GraphWithDef(mt, this, new Graph());
                    // var node = graph.PrologKB;
@@ -895,6 +932,9 @@ yago	http://dbpedia.org/class/yago/
         [ThreadStatic]
         private TextWriter tl_writer;
 
+        public static PNode BaseKB;
+        public static PNode EverythingPSC;
+
         private static INode MakeNode(string s, string quoting)
         {
             switch (quoting)
@@ -1257,6 +1297,10 @@ yago	http://dbpedia.org/class/yago/
 
             public PEdge CreateEdgeTo(PNode otherNode)
             {
+                if (otherNode == this)
+                {
+                    return null;
+                }
                 PEdge edge = new PEdge(this, otherNode);
                 return edge;
             }
@@ -1266,10 +1310,12 @@ yago	http://dbpedia.org/class/yago/
                 lock (EdgeLists) if (!incomingEdgeList.Contains(edge)) incomingEdgeList.Add(edge);
             }
 
-            protected object EdgeLists
+            public object EdgeLists
             {
-                get { return incomingEdgeList; }
+                get { return GlobalEdgeListLock; }
             }
+
+            public static object GlobalEdgeListLock = new object();
 
             public void AddOutgoingEdge(PEdge edge)
             {
@@ -1362,7 +1408,7 @@ yago	http://dbpedia.org/class/yago/
 
             internal string ToLink(string serverRoot)
             {
-                return string.Format("<a href='{1}siprolog/?mt={0}'>{0}  ({2})</a>", id, serverRoot, DebugInfo);
+                return string.Format("<a href='{1}siprolog/?mt={0}'>{0}</a>&nbsp;({2})", id, serverRoot, DebugInfo.Replace(" ", "&nbsp;"));
             }
 
             public bool IsDataFrom(ContentBackingStore backingStore)
@@ -2443,7 +2489,7 @@ yago	http://dbpedia.org/class/yago/
                     dtt = new StringWriter();
                     try
                     {
-                        n3w.Save(graph, dtt);
+                        lock (graph) n3w.Save(graph, dtt);
                         dttToString = dtt.ToString();
                         printerName = n3w.GetType().Name;
                     }

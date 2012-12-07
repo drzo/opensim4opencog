@@ -3080,8 +3080,7 @@ namespace AltAIMLbot
             yield return RunStatus.Running;
             try
             {
-                XmlNode resultTemplateNode = AIMLTagHandler.getNode("<template>" + myNode.InnerXml + "</template>");
-                bot.evalTemplateNode(resultTemplateNode);
+                bot.evalTemplateNodeInnerXml(myNode);
                 //bot.evalTemplateNode(templateNode);
             }
             catch (Exception e)
@@ -3100,8 +3099,7 @@ namespace AltAIMLbot
             {
                 try
                 {
-                    XmlNode resultTemplateNode = AIMLTagHandler.getNode("<template>" + templateNode.InnerXml + "</template>");
-                    bot.evalTemplateNode(resultTemplateNode);
+                    bot.evalTemplateNodeInnerXml(templateNode);
                     //bot.evalTemplateNode(templateNode);
                 }
                 catch (Exception e)
@@ -3178,8 +3176,7 @@ namespace AltAIMLbot
             {
                 try
                 {
-                    XmlNode resultTemplateNode = AIMLTagHandler.getNode("<template>" + templateNode.InnerXml + "</template>");
-                    bot.evalTemplateNode(resultTemplateNode);
+                    bot.evalTemplateNodeInnerXml(templateNode);
                     //bot.evalTemplateNode(templateNode);
                 }
                 catch (Exception e)

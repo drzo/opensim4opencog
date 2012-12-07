@@ -430,7 +430,11 @@ namespace AltAIMLbot.Utils
 
             try
             {
-                this.bot.evalTemplateNode(node);
+                object result = this.bot.evalTemplateNode(node);
+                if (AltBot.tl_aimlResult != null)
+                {
+                    AltBot.tl_aimlResult.AddResult(node, filename, result);
+                }
             }
             catch (Exception e)
             {

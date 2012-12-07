@@ -639,7 +639,11 @@ namespace AltAIMLbot
             }
             if (input.StartsWith("<"))
             {
-                return "@rem <>=" + curBot.myBehaviors.runBTXML(input);
+                AltBot.tl_aimlResult = new AltBot.AimlResult();
+                RunStatus rs = curBot.myBehaviors.runBTXML(input);
+                AltBot.AimlResult altBottl_aimlResult = AltBot.tl_aimlResult;
+                AltBot.tl_aimlResult = null;
+                return string.Format("@rem <{0}>=<{1}>", rs, altBottl_aimlResult);
             }
             curBot.isPerformingOutput = true;
             if (curBot.myBehaviors.waitingForChat)

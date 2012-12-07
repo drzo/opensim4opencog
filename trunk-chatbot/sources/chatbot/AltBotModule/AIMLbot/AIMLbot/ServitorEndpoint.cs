@@ -42,6 +42,7 @@ namespace AltAIMLbot
             myServer = new PFEndpoint();
             //StringParser.Parse(prologEngine.rdfGraph, "<http://example.org/a1> <http://example.org/b1> <http://example.org/c1> .");
             prologEngine.connectMT("spindleMT", "rdfMT");
+            prologEngine.connectMT("rdfMT", "baseKB");
             prologEngine.appendKB("triple(this,can,work).\n", "rdfMT");
 
             myServer.beginService(prologEngine);

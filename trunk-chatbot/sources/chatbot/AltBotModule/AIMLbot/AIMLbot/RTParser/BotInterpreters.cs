@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
 using AIMLbot;
+using AltAIMLbot;
 using AltAIMLParser;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
@@ -108,6 +109,42 @@ namespace RTParser
         }
 
         private AIMLScriptIntperForFiletype AIMLScriptIntperForFiletypeNone = null;
+        [ThreadStatic]
+        public static AimlResult tl_aimlResult;
+        public class AimlResult
+        {
+            private List<AimlSubResult> resultList = new List<AimlSubResult>();
+
+            public void AddResult(XmlNode node, string filename, object result)
+            {
+                resultList.Add(new AimlSubResult(node, filename, result));
+            }
+            public override string ToString()
+            {
+                if (resultList.Count == 0) return "no results";
+                string res = "";
+                foreach (var node in resultList)
+                {
+                    res += "" + node.Result;
+                }
+                if (string.IsNullOrEmpty(res)) return "blankresults:" + resultList.Count;
+                return res;
+            }
+        }
+        public class AimlSubResult
+        {
+            public XmlNode Node;
+            public string Filename;
+            public object Result;
+
+            public AimlSubResult(XmlNode node, string filename, object result)
+            {
+                this.Node = node;
+                this.Filename = filename;
+                this.Result = result;
+            }
+        }
+
         private void SetupExecHandlers()
         {
             AIMLScriptIntperForFiletypeNone = new AIMLScriptIntperForFiletype("aiml", this);

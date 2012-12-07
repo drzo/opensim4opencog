@@ -89,8 +89,8 @@ namespace AltAIMLbot
                 try
                 {
 
-                    listener.Prefixes.Add(serverRoot);
                     Console.WriteLine("Listener Adding:" + serverRoot);
+                    listener.Prefixes.Add(serverRoot);
                 }
                 catch (Exception e)
                 {
@@ -107,8 +107,8 @@ namespace AltAIMLbot
                     {
                         pfadd = "http://*:" + serverPort.ToString() + "/";
                     }
-                    listener.Prefixes.Add(pfadd);
                     Console.WriteLine("Listener Adding:" + pfadd);
+                    listener.Prefixes.Add(pfadd);
                 }
                 catch (Exception e)
                 {

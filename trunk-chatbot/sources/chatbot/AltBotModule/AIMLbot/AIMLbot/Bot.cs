@@ -712,6 +712,7 @@ namespace RTParser
             AddExcuteHandler("bot", LightWeigthBotDirective);
             AddExcuteHandler("csharp", CSharpExec);
             AddExcuteHandler("cs", CSharpExec);
+            AddExcuteHandler("siprolog", SIPrologExec);
 
             testCaseRunner = testCaseRunner ?? new TestCaseRunner(null);
             XmlNodeEvaluators.Add(testCaseRunner);
@@ -1369,13 +1370,28 @@ namespace RTParser
             }
             return normalizedPaths;
         }
-    
+
+        public object evalTemplateNodeInnerXml(XmlNode templateNodeInnerXML)
+        {
+            return evalTemplateXml(templateNodeInnerXML.InnerXml);
+        }
+
+        public object evalTemplateXml(string templateNodeString)
+        {
+            if (!templateNodeString.StartsWith("<template"))
+            {
+                templateNodeString = string.Format("<template>{0}</template>", templateNodeString);
+            }
+            XmlNode resultTemplateNode = AIMLTagHandler.getNode(templateNodeString);
+            return evalTemplateNode(resultTemplateNode);
+        }
+
         /// <summary>
         /// given an template side XML, try evaluating it
         /// </summary>       
-        public void evalTemplateNode(XmlNode templateNode)
+        public object evalTemplateNode(XmlNode templateNode)
         {
-            if (StaticXMLUtils.IsBlank(templateNode)) return;
+            if (StaticXMLUtils.IsBlank(templateNode)) return "";
             var imaginaryUser = LastUser;
             Request request = new Request("evalTemplateNode Request", imaginaryUser, this);
             AltAIMLbot.Result result = new MasterResult(request.user, this, request);
@@ -1383,7 +1399,7 @@ namespace RTParser
             
  
             string outputSentence = this.processNode(templateNode, query, request, result, request.user, true);
-       
+            return outputSentence;       
         }
         /// <summary>
         /// Recursively evaluates the template nodes returned from the bot
@@ -1405,7 +1421,7 @@ namespace RTParser
             }
                         
             // process the node
-            string tagName = node.Name.ToLower();
+            string tagName = node.LocalName.ToLower();
             myBehaviors.logNode("AIML", node);
 
             if (tagName == "template" || tagName == "li")

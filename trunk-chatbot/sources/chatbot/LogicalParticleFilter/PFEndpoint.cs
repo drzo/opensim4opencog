@@ -28,6 +28,11 @@ namespace LogicalParticleFilter1
 {
     public class PFEndpoint
     {
+        public static void ConsoleWriteLine(string format, params object[] args)
+        {
+            SIProlog.ConsoleWriteLine(format, args);
+        }
+
         public  HttpListener listener = new HttpListener();
         public  string startUpPath = null;
         public  SIProlog ourEngine = null;
@@ -57,7 +62,7 @@ namespace LogicalParticleFilter1
             
             if (!HttpListener.IsSupported)
             {
-                Console.WriteLine("***** HttpListener is not supported on this platform. *****");
+                ConsoleWriteLine("***** HttpListener is not supported on this platform. *****");
                 return;
             }
             ourEngine = theEngine;
@@ -71,12 +76,12 @@ namespace LogicalParticleFilter1
                 {
 
                     //listener.Prefixes.Add(serverRoot);
-                    //Console.WriteLine("Listener Adding:" + serverRoot);
+                    //ConsoleWriteLine("Listener Adding:" + serverRoot);
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("FAIL Listener Adding:" + serverRoot);
-                    Console.WriteLine(e.Message);
+                    ConsoleWriteLine("FAIL Listener Adding:" + serverRoot);
+                    ConsoleWriteLine(e.Message);
                 }
                 try
                 {
@@ -88,13 +93,13 @@ namespace LogicalParticleFilter1
                     {
                         pfadd = "http://*:" + serverPort.ToString() + "/";
                     }
+                    ConsoleWriteLine("Listener Adding:" + pfadd);
                     listener.Prefixes.Add(pfadd);
-                    Console.WriteLine("Listener Adding:" + pfadd);
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("FAIL Listener Adding:" + pfadd);
-                    Console.WriteLine(e.Message);
+                    ConsoleWriteLine("FAIL Listener Adding:" + pfadd);
+                    ConsoleWriteLine(e.Message);
                 }
                 try
                 {
@@ -102,8 +107,8 @@ namespace LogicalParticleFilter1
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("FAIL listener.Start()");
-                    Console.WriteLine(e.Message);
+                    ConsoleWriteLine("FAIL listener.Start()");
+                    ConsoleWriteLine(e.Message);
                 }
 
                 //loadAnalyzer();
@@ -123,7 +128,7 @@ namespace LogicalParticleFilter1
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message);
+                    ConsoleWriteLine(e.Message);
                 }
             }
         }
@@ -207,7 +212,7 @@ namespace LogicalParticleFilter1
                 INode objNode = g.GetUriNode(new Uri("dotnetrdf:" + expectedPath));
                 if (objNode == null)
                 {
-                    Console.WriteLine("The Configuration Graph does not contain a URI Node with the expected URI <dotnetrdf:" + expectedPath + ">");
+                    ConsoleWriteLine("The Configuration Graph does not contain a URI Node with the expected URI <dotnetrdf:" + expectedPath + ">");
                     return false;
                 }
                 //objNode = g.GetUriNode(new Uri("dotnetrdf:" + expectedPath));

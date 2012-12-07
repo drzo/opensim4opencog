@@ -533,7 +533,7 @@ namespace AltAIMLbot
             RunStatus result = RunStatus.Failure;
             BehaviorTree newTree = new BehaviorTree(bot);
             string treeName = "temptree123" +newTree.rgen.Next();
-            newTree.defineBehavior(treeName, BTXML);
+            newTree.defineBehavior(treeName, string.Format("<behavior id='{0}'><subaiml>{1}</subaiml></behavior>", treeName, BTXML));
             //result = newTree.runBehaviorTree(this.bot);
             foreach (RunStatus myChildResult in newTree.runBehaviorTree(this.bot))
             {
@@ -2972,8 +2972,7 @@ namespace AltAIMLbot
             }
             try
                 {
-                    XmlNode resultTemplateNode = AIMLTagHandler.getNode("<template>" + myNode.InnerXml + "</template>");
-                    bot.evalTemplateNode(resultTemplateNode);
+                    bot.evalTemplateNodeInnerXml(myNode);
                     //bot.evalTemplateNode(templateNode);
                 }
                 catch (Exception e)
@@ -2991,8 +2990,7 @@ namespace AltAIMLbot
             {
                 try
                 {
-                    XmlNode resultTemplateNode = AIMLTagHandler.getNode("<template>" + templateNode.InnerXml + "</template>");
-                    bot.evalTemplateNode(resultTemplateNode);
+                    bot.evalTemplateNodeInnerXml(templateNode);
                     //bot.evalTemplateNode(templateNode);
                 }
                 catch (Exception e)
@@ -3067,8 +3065,7 @@ namespace AltAIMLbot
             {
                 try
                 {
-                    XmlNode resultTemplateNode = AIMLTagHandler.getNode("<template>" + templateNode.InnerXml + "</template>");
-                    bot.evalTemplateNode(resultTemplateNode);
+                    bot.evalTemplateNodeInnerXml(templateNode);
                     //bot.evalTemplateNode(templateNode);
                 }
                 catch (Exception e)

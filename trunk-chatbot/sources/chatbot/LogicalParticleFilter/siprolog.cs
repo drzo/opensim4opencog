@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions ;
@@ -212,7 +213,7 @@ namespace LogicalParticleFilter1
             if (focus == null) return null;
             if (vlist.Contains(focus))
             {
-                Warn("Already contains KB named " + startMT);
+                //Warn("Already contains KB named " + startMT);
                 return null;
             }
             vlist.Add(focus);
@@ -233,7 +234,7 @@ namespace LogicalParticleFilter1
         {
             if (vlist.Contains(startMT))
             {
-                Warn("Already contains KB named " + startMT);
+                // Warn("Already contains KB named " + startMT);
                 return null;
             } 
             vlist.Add(startMT);
@@ -1314,7 +1315,7 @@ function hidetip()
             {
                 Console.Write("Query is: ");
                 q.print();
-                Console.WriteLine("\n\n");
+                ConsoleWriteLine("\n\n");
             }
 
             var vs = varNames(q.plist);
@@ -1351,7 +1352,7 @@ function hidetip()
             {
                 Console.Write("Query is: ");
                 q.print();
-                Console.WriteLine("\n\n");
+                ConsoleWriteLine("\n\n");
             }
 
             var vs = varNames(q.plist);
@@ -1396,7 +1397,7 @@ function hidetip()
                 {
                     Console.Write("Query is: ");
                     q.print();
-                    Console.WriteLine("\n\n");
+                    ConsoleWriteLine("\n\n");
                 }
 
                 var vs = varNames(q.plist);
@@ -1487,7 +1488,7 @@ function hidetip()
             {
                 Console.Write("Query is: ");
                 q.print();
-                Console.WriteLine("\n\n");
+                ConsoleWriteLine("\n\n");
             }
 
             var vs = varNames(q.plist);
@@ -2320,7 +2321,7 @@ function hidetip()
                 {
                     return false;
                 }
-                DLRConsole.DebugWriteLine("Poorly formed list passed to GetCons " + conslist);
+                //DLRConsole.DebugWriteLine("Poorly formed list passed to GetCons " + conslist);
                 return false;
             }
             first1 = conslist.ArgList[0];
@@ -3383,14 +3384,14 @@ function hidetip()
                 if (this.body == null)
                 {
                     this.head.print();
-                    Console.WriteLine(".");
+                    ConsoleWriteLine(".");
                 }
                 else
                 {
                     this.head.print();
                     Console.Write(" :- ");
                     this.body.print();
-                    Console.WriteLine(".");
+                    ConsoleWriteLine(".");
                 }
             }
             public override string ToString()
@@ -3866,7 +3867,7 @@ function hidetip()
         {
             if (env == null)
             {
-                Console.WriteLine("null\n");
+                ConsoleWriteLine("null\n");
                 return;
             }
             var k = false;
@@ -3876,9 +3877,9 @@ function hidetip()
                 k = true;
                 Console.Write(" " + i + " = ");
                 ((Part)env[i]).print();
-                Console.WriteLine("\n");
+                ConsoleWriteLine("\n");
             }
-            if (!k) Console.WriteLine("true\n");
+            if (!k) ConsoleWriteLine("true\n");
         }
 
         public void printVars(PartList which, PEnv environment)
@@ -3886,7 +3887,7 @@ function hidetip()
             // Print bindings.
             if (which.Length == 0)
             {
-                Console.WriteLine("true\n");
+                ConsoleWriteLine("true\n");
             }
             else
             {
@@ -3896,10 +3897,10 @@ function hidetip()
                     Console.Write(" = ");
                     //((Atom)value(new Variable(((Variable)which.alist[i]).name + ".0"), environment)).print();
                     value(new Variable(((Variable)which.ArgList[i]).name + ".0"), environment).print();
-                    Console.WriteLine("\n");
+                    ConsoleWriteLine("\n");
                 }
             }
-            Console.WriteLine("\n");
+            ConsoleWriteLine("\n");
         }
 
         // The value of x in a given environment
@@ -4075,7 +4076,7 @@ function hidetip()
             {
                 if (((PartList)x).Length ==0 &&  ((PartList)y).Length ==0)
                 {
-                    if (trace) Console.WriteLine("     MATCH");
+                    if (trace) ConsoleWriteLine("     MATCH");
                     return env;
                 }
 
@@ -4084,12 +4085,12 @@ function hidetip()
             // variables check, should do occurs in check ...
             if (x is Variable)
             {
-                if (trace) Console.WriteLine("     MATCH");
+                if (trace) ConsoleWriteLine("     MATCH");
                 return newEnv(((Variable)x).name, y, env);
             }
             if (y is Variable)
             {
-                if (trace) Console.WriteLine("     MATCH");
+                if (trace) ConsoleWriteLine("     MATCH");
                 return newEnv(((Variable)y).name, x, env);
             }
             // both lists or terms
@@ -4214,12 +4215,44 @@ function hidetip()
 
             public PEdge(PNode startNode, PNode endNode, object info)
             {
+                if (startNode == endNode)
+                {
+                    throw new NullReferenceException("Trying to connect a KB to itself " + startNode);
+                }
                 this.startNode = startNode;
-                this.startNode.AddOutgoingEdge(this);
                 this.endNode = endNode;
+                this.startNode.AddOutgoingEdge(this);
                 this.endNode.AddIncomingEdge(this);
 
                 this.info = info;
+            }
+
+            public bool Equals(PEdge other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                if (other.StartNode == StartNode && other.EndNode == EndNode)
+                {
+                    return true;
+                }
+                return false;
+            }
+            
+            public override bool Equals(object obj)
+            {
+                if (base.Equals(obj)) return true;
+                return Equals(obj as PEdge);
+            }
+            
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int result = (startNode != null ? startNode.GetHashCode() : 0);
+                    result = (result*397) ^ (endNode != null ? endNode.GetHashCode() : 0);
+                    return result;
+                }
             }
         }
 
@@ -4247,8 +4280,11 @@ function hidetip()
                 {
                     return;
                 }
-                if (!srcNode.EdgeAlreadyExists(destNode))
-                    srcNode.CreateEdgeTo(destNode);
+                lock (srcNode.EdgeLists) lock (destNode.EdgeLists)
+                {
+                    if (!srcNode.EdgeAlreadyExists(destNode))
+                        srcNode.CreateEdgeTo(destNode);
+                }
             }
             public void Disconnect(string idSrc, string idDest)
             {
@@ -4274,17 +4310,15 @@ function hidetip()
                 }
                 return srcNode;
             }
-            
+
             public PNode[] TopLevelNodes
             {
-                get { return topLevelNodes.ToArray(); }
+                get { lock (topLevelNodes) return topLevelNodes.ToArray(); }
             }
            public PNode[] SortedTopLevelNodes
             {
                 get {
-                    //return 
-                    //    topLevelNodes.ToArray();
-                    PNode[] temp = topLevelNodes.ToArray();
+                    PNode[] temp = TopLevelNodes;
                     Array.Sort(temp, delegate(PNode p1, PNode p2)
                     {
                         return CIC.Compare(p1.id, p2.id);
@@ -4293,16 +4327,21 @@ function hidetip()
                 }
             }
 
-            public void AddNode(PNode node)
-            {
-                topLevelNodes.Add(node);
-            }
+           public void AddNode(PNode node)
+           {
+               lock (topLevelNodes)
+               {
+                   if (!topLevelNodes.Contains(node))
+                   {
+                       topLevelNodes.Add(node);
+                   }
+               }
+           }
 
             public PNode Contains(string id)
             {
                 List<PNode> visitedNodes = new List<PNode>();
-                PNode[] tempTopLevelNodes;
-                lock (topLevelNodes) { tempTopLevelNodes = topLevelNodes.ToArray(); }
+                PNode[] tempTopLevelNodes = TopLevelNodes;
 
                 foreach (PNode node in tempTopLevelNodes)
                 {
@@ -4352,10 +4391,7 @@ function hidetip()
             public PNode[] GetTopLevelNodes()
             {
                 List<PNode> rootNodes = new List<PNode>();
-                rootNodes.AddRange(topLevelNodes.FindAll(delegate(PNode node)
-                {
-                    return node.IncomingEdges.Length == 0;
-                }));
+                lock (topLevelNodes) rootNodes.AddRange(topLevelNodes.FindAll(node => node.IncomingEdges.Length == 0));                               
 
                 // Fully connected graph, return any node
                 if (rootNodes.Count == 0 && topLevelNodes.Count > 0)
@@ -4406,7 +4442,7 @@ function hidetip()
                 if (node == null) return;
                 if (indentation > 4) return; 
                 for (int i = 0; i < indentation; ++i) Console.Write(" ");
-                Console.WriteLine(node.Id);
+                ConsoleWriteLine(node.Id);
 
                 foreach (PEdge e in node.OutgoingEdges)
                 {
@@ -4431,6 +4467,7 @@ function hidetip()
                 //writer.Write("<p>");
                 //for (int i = 0; i < indentation; ++i) writer.Write(" ");
                 //ConsoleWriteLine(node.Id);
+                if (node == SIProlog.BaseKB && indentation > 1) return;
                 writer.WriteLine("<li>{0}</li>", node.ToLink(serverRoot));
                 writer.WriteLine("<ul>");
                 foreach (PEdge e in node.OutgoingEdges)
@@ -4457,6 +4494,7 @@ function hidetip()
                 //writer.Write("<p>");
                 //for (int i = 0; i < indentation; ++i) writer.Write(" ");
                 //ConsoleWriteLine(node.Id);
+                if (node == SIProlog.EverythingPSC && indentation > 1) return;
                 writer.WriteLine("<li>{0}</li>", node.ToLink(serverRoot));
                 writer.WriteLine("<ul>");
                 foreach (PEdge e in node.IncomingEdges )
@@ -4695,7 +4733,7 @@ function hidetip()
 
         }
 
-        public V this[K key, int i]
+        public V this[K key, Func<V> ifMissing]
         {
             get
             {
@@ -4704,7 +4742,7 @@ function hidetip()
                 {
                     return v;
                 }
-                return base[key];
+                return ifMissing();
             }
 
             set
