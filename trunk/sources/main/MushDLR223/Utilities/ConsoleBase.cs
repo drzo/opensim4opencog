@@ -573,12 +573,12 @@ namespace MushDLR223.Utilities
         private int h = 1;
         private string prompt = "# ";
         static private StringBuilder cmdline = new StringBuilder();
-        private static readonly TextWriter InitialConsoleOut = SystemConsole.Out;
-        private static readonly TextWriter InitialConsoleERR = SystemConsole.Error;
+        public static readonly TextWriter InitialConsoleOut = SystemConsole.Out;
+        public static readonly TextWriter InitialConsoleERR = SystemConsole.Error;
         public static readonly OutputDelegate SYSTEM_ERR_WRITELINE_REAL = CALL_SYSTEM_ERR_WRITELINE;
         public static readonly OutputDelegate SYSTEM_ERR_WRITELINE = CALL_SYSTEM_ERR_WRITELINE;
-        private static readonly TextWriter ConsoleOut = new OutputDelegateWriter(DebugWriteLine);
-        private static readonly TextWriter ConsoleError = new OutputDelegateWriter(SYSTEM_ERR_WRITELINE);
+        public static readonly TextWriter ConsoleOut = new OutputDelegateWriter(DebugWriteLine);
+        public static readonly TextWriter ConsoleError = new OutputDelegateWriter(SYSTEM_ERR_WRITELINE);
 
         public Commands Commands = new Commands();
         ///private bool echo = true;
