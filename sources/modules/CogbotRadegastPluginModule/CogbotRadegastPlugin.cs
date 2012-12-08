@@ -72,7 +72,7 @@ namespace CogbotRadegastPluginModule
           //  return;
             try
             {
-                SetLoginButton("cogbot start...", false);
+                SetLoginButton("cogbot start...", true);
                GUIInvoke(() => StartPlugin0(inst));
 
             }
