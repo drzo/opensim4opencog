@@ -56,7 +56,7 @@ namespace LogicalParticleFilter1
 
             public void InitContext()
             {
-                
+
             }
         }
 
@@ -79,12 +79,12 @@ namespace LogicalParticleFilter1
         public chemSysDelegate chemSysCommandProcessor = null;
 
         public bool lazyTranslate = false; // translate KB text to internal on entry or on first use
-        
+
         public static PGraph GlobalKBGraph = new PGraph();
         public PGraph KBGraph = GlobalKBGraph ?? new PGraph();
         readonly public PDB testdb = new PDB();
         //was unused :  private Dictionary<string, string> bindingsDict = new Dictionary<string, string>();
-        
+
         // natural language to MT name
         public Dictionary<string, string> aliasMap = new Dictionary<string, string>();
 
@@ -148,7 +148,7 @@ namespace LogicalParticleFilter1
         {
             KBGraph.ClearOutConnections(childMt);
         }
-       
+
         public string visibleKBText(string startMT)
         {
             PNode focus = KBGraph.Contains(startMT);
@@ -172,39 +172,39 @@ namespace LogicalParticleFilter1
         {
             // Returns rules sorted by MT probability
             // Skips those with zero probibility
-           var vlist = findVisibleKBS(startMT, new List<PNode>());
-           RuleList VKB = new RuleList();
-           if (vlist == null)
-           {
-               Warn("No found visible KBs from " + startMT);
-               return VKB;
-           }
-          //this reverse is because sort() will reverse equal member
-           vlist.Reverse();
-           vlist.Sort();
-           foreach (PNode focus in vlist)
-           {
-               if (focus.probability > 0)
-               {
-                   ensureCompiled(focus);
-               }
-             
-           }
-           foreach (PNode focus in vlist)
-           {
-               lock (focus.pdb.rules)
-               {
-                   if (focus.probability > 0)
-                   {
-                       foreach (Rule r in focus.pdb.rules)
-                       {
-                           VKB.Add(r);
-                       }
-                   }
-               }
+            var vlist = findVisibleKBS(startMT, new List<PNode>());
+            RuleList VKB = new RuleList();
+            if (vlist == null)
+            {
+                Warn("No found visible KBs from " + startMT);
+                return VKB;
+            }
+            //this reverse is because sort() will reverse equal member
+            vlist.Reverse();
+            vlist.Sort();
+            foreach (PNode focus in vlist)
+            {
+                if (focus.probability > 0)
+                {
+                    ensureCompiled(focus);
+                }
 
-           }
-           return VKB;
+            }
+            foreach (PNode focus in vlist)
+            {
+                lock (focus.pdb.rules)
+                {
+                    if (focus.probability > 0)
+                    {
+                        foreach (Rule r in focus.pdb.rules)
+                        {
+                            VKB.Add(r);
+                        }
+                    }
+                }
+
+            }
+            return VKB;
         }
 
         public List<PNode> findVisibleKBS(string startMT, List<PNode> vlist)
@@ -236,7 +236,7 @@ namespace LogicalParticleFilter1
             {
                 // Warn("Already contains KB named " + startMT);
                 return null;
-            } 
+            }
             vlist.Add(startMT);
             // Returns the preprocessed list of visible KB entries.
             // We should probably de-duplicate if possible
@@ -254,10 +254,10 @@ namespace LogicalParticleFilter1
             RuleList VKB = new RuleList();
             // Prefix
             lock (focus.pdb.rules) foreach (Rule r in focus.pdb.rules)
-            {
-                VKB.Add(r);
-                r.optHomeMt = startMT;
-            }
+                {
+                    VKB.Add(r);
+                    r.optHomeMt = startMT;
+                }
             if (!followGenlMt) return VKB;
             foreach (PEdge E in focus.OutgoingEdges)
             {
@@ -266,7 +266,7 @@ namespace LogicalParticleFilter1
                 if (collectedKB != null)
                 {
                     foreach (Rule r in collectedKB)
-                    {                       
+                    {
                         VKB.Add(r);
                     }
                 }
@@ -278,7 +278,7 @@ namespace LogicalParticleFilter1
             //}
             return VKB;
         }
-        public void webWriter(TextWriter writer,string action,string query,string mt, string serverRoot)
+        public void webWriter(TextWriter writer, string action, string query, string mt, string serverRoot)
         {
             serverRoot = "/";
             if (action == "autorefresh")
@@ -324,7 +324,7 @@ function hidetip()
 </head>
 ";
             writer.WriteLine(s);
-            TOCmenu(writer, serverRoot); 
+            TOCmenu(writer, serverRoot);
             webWriter0(writer, action, query, mt, serverRoot, true);
             writer.WriteLine("</html>");
 
@@ -347,11 +347,11 @@ function hidetip()
         {
             try
             {
-                if ((action==null) && (queryv==null) && (mt==null))
+                if ((action == null) && (queryv == null) && (mt == null))
                 {
-                    queryv="list";
+                    queryv = "list";
                 }
-                
+
 
                 if (action == null)
                 {
@@ -395,7 +395,7 @@ function hidetip()
                             foreach (var list in allMts)
                             {
                                 writer.WriteLine("<hr/>");
-                                webWriter0(writer, action, null, list, null, false);                                
+                                webWriter0(writer, action, null, list, null, false);
                             }
                             interactFooter(writer, "", serverRoot);
                             return;
@@ -407,7 +407,7 @@ function hidetip()
                         if (toplevel) interactFooter(writer, mt, serverRoot);
                         return;
                     }
-                 }
+                }
                 else
                 {
                     switch (action.ToLower())
@@ -430,7 +430,7 @@ function hidetip()
             }
             catch (Exception e)
             {
-                writer.WriteLine("<font color='red'>{0} {1} {2}</font>", e.GetType(), e.Message, e.StackTrace);                
+                writer.WriteLine("<font color='red'>{0} {1} {2}</font>", e.GetType(), e.Message, e.StackTrace);
                 return;
             }
 
@@ -466,12 +466,12 @@ function hidetip()
             writer.WriteLine("<a href='{0}xrdf/?mt={1}&q=rdf2pl'>RDF2Prolog</a> ", serverRoot, mt);
             writer.WriteLine("<br/>");
 
-            if (qnode!=null)
+            if (qnode != null)
             {
-                ensureCompiled(qnode);                
+                ensureCompiled(qnode);
             }
             var kbContents = findVisibleKBRulesSorted(mt);
-            int total = kbContents.Count;            
+            int total = kbContents.Count;
             int local = 0;
             if (qnode != null) local = qnode.pdb.rules.Count;
             writer.WriteLine(
@@ -501,7 +501,7 @@ function hidetip()
         }
 
         private void WriteRule(TextWriter writer, Rule r, PNode qnode)
-        {            
+        {
             var mt = r.optHomeMt;
             bool localMT = qnode.id == mt;
             string color = localMT ? "blue" : "darkgreen";
@@ -530,7 +530,7 @@ function hidetip()
         {
             if (t == null) return "NULL";
             Type structType = t.GetType();
-            if (t is IConvertible || t is String || t is Uri || t is Stream ) return "" + t;
+            if (t is IConvertible || t is String || t is Uri || t is Stream) return "" + t;
             if (depth < 0) return "^";// +t;
             StringBuilder result = new StringBuilder();
             if (t is ICollection)
@@ -609,7 +609,7 @@ function hidetip()
             }
             else
             {
-                writer.WriteLine("{2} bindings found at depth {0} in {1}<br/>", testdepth,mt, bingingsList.Count);
+                writer.WriteLine("{2} bindings found at depth {0} in {1}<br/>", testdepth, mt, bingingsList.Count);
                 int index = 0;
                 foreach (Dictionary<string, string> bindings in bingingsList)
                 {
@@ -618,9 +618,9 @@ function hidetip()
                     foreach (string k in bindings.Keys)
                     {
                         string v = bindings[k];
-                        writer.Write("{0}={1} ",k,v);
+                        writer.Write("{0}={1} ", k, v);
                     }
-                    writer .WriteLine("<br/>");
+                    writer.WriteLine("<br/>");
                 }
                 writer.WriteLine("<hr/>");
 
@@ -636,7 +636,7 @@ function hidetip()
             writer.WriteLine(" <INPUT TYPE='hidden' name='a' VALUE='query'/>");
             writer.WriteLine(" <INPUT TYPE='submit' VALUE='submit'/>");
             writer.WriteLine(" </FORM>");
-            writer.WriteLine(" <form method='get' ACTION='{1}siprolog/'>",mt,serverRoot );
+            writer.WriteLine(" <form method='get' ACTION='{1}siprolog/'>", mt, serverRoot);
             writer.WriteLine(" Append: <INPUT TYPE='text' name='q'/>");
             MtSelector(writer, mt);
             writer.WriteLine(" <INPUT TYPE='hidden' name='a' VALUE='append'/>");
@@ -665,16 +665,16 @@ function hidetip()
 
         public ArrayList collectKBRules(ArrayList kbList)
         {
-            ArrayList VKB = new ArrayList ();
-            foreach (string focusMT in kbList )
+            ArrayList VKB = new ArrayList();
+            foreach (string focusMT in kbList)
             {
                 PNode focus = KBGraph.Contains(focusMT);
-                if (focus == null)  continue;
+                if (focus == null) continue;
                 ensureCompiled(focus);
                 lock (focus.pdb.rules) foreach (Rule r in focus.pdb.rules)
-                {
-                    VKB.Add(r);
-                }
+                    {
+                        VKB.Add(r);
+                    }
 
             }
             return VKB;
@@ -747,7 +747,7 @@ function hidetip()
                     ensureHalfCompiled(focus);
                     continue;
                 }
-                Warn("Cant ensured synced on " + focus);   
+                Warn("Cant ensured synced on " + focus);
                 return;
             }
         }
@@ -807,25 +807,25 @@ function hidetip()
             focusMT = focus.id;
             var rules = focus.pdb.rules;
             lock (rules) for (int i = 0; i < rules.Count; i++)
-            {
-                Rule r = (Rule) rules[i];
-                string val = r.ToString();
-                if (val.Replace(", ", ",").StartsWith(fact))
                 {
-                    // we null out ruleset so that the accessor knows all rules are in the PDB
-                    focus.ruleset = null;
-                    focus.pdb.index.Clear();
-                    if (String.IsNullOrEmpty(replace))
+                    Rule r = (Rule)rules[i];
+                    string val = r.ToString();
+                    if (val.Replace(", ", ",").StartsWith(fact))
                     {
-                        rules.RemoveAt(i);
+                        // we null out ruleset so that the accessor knows all rules are in the PDB
+                        focus.ruleset = null;
+                        focus.pdb.index.Clear();
+                        if (String.IsNullOrEmpty(replace))
+                        {
+                            rules.RemoveAt(i);
+                            return val;
+                        }
+                        var or = ParseRule(new Tokeniser(replace));
+                        or.optHomeMt = focusMT;
+                        rules[i] = or;
                         return val;
                     }
-                    var or = ParseRule(new Tokeniser(replace));
-                    or.optHomeMt = focusMT;
-                    rules[i] = or;
-                    return val;
                 }
-            }
             return null;
         }
 
@@ -834,7 +834,7 @@ function hidetip()
         /// </summary>
         /// <param name="ruleSet"></param>
         /// <param name="startMT"></param>
-        public void insertKB(string ruleSet,string startMT )
+        public void insertKB(string ruleSet, string startMT)
         {
             PNode focus = FindOrCreateKB(startMT);
             lock (focus.CompileLock)
@@ -873,7 +873,7 @@ function hidetip()
                 appendKB_unlocked(ruleSet, focus, startMT);
             }
         }
-        public void appendKB_unlocked(string ruleSet,PNode focus, string startMT)
+        public void appendKB_unlocked(string ruleSet, PNode focus, string startMT)
         {
             startMT = focus.Id;
             if (ruleSet.Trim() == "") return;
@@ -899,10 +899,10 @@ function hidetip()
 
             if (!focus.dirty)
             {
-                if ((focus.ruleset != null) && (focus.ruleset.Length > (maxMtSize*1.2)))
+                if ((focus.ruleset != null) && (focus.ruleset.Length > (maxMtSize * 1.2)))
                 {
                     focus.ruleset = focus.ruleset + "\n" + ruleSet + "\n";
-                    while ((focus.ruleset!=null)&&(focus.ruleset.Length > maxMtSize))
+                    while ((focus.ruleset != null) && (focus.ruleset.Length > maxMtSize))
                     {
                         int p1 = focus.ruleset.IndexOf("\n");
                         focus.ruleset = focus.ruleset.Substring(p1 + 1);
@@ -931,7 +931,7 @@ function hidetip()
             }
 
             focus.ruleset = focus.ruleset + "\n" + ruleSet + "\n";
-            focus.dirty = true; 
+            focus.dirty = true;
             focus.SyncFromNow = ContentBackingStore.PrologSource;
             if (lazyTranslate) return;
             ensureCompiled(focus);
@@ -1006,7 +1006,8 @@ function hidetip()
                 streamReader.Close();
                 curKB = startMT = startMT ?? curKB ?? "baseKB";
                 loadKEText(startMT, ruleSet);
-            } else
+            }
+            else
             {
                 Warn("File not found {0}", filename);
             }
@@ -1099,7 +1100,7 @@ function hidetip()
                         }
                         if (cmd == "chemsys")
                         {
-                            string[] sep = {"chemsys:"};
+                            string[] sep = { "chemsys:" };
                             args = line.Split(sep, StringSplitOptions.RemoveEmptyEntries);
                             val = args[0].Trim();
                             if (chemSysCommandProcessor != null)
@@ -1203,7 +1204,7 @@ function hidetip()
 
         #endregion
 
-        #region interpreterInterface 
+        #region interpreterInterface
         public void parseRuleset()
         {
             inGlobalTest();
@@ -1338,7 +1339,7 @@ function hidetip()
                 );
             return isTrue;
         }
-        public void askQuery(string inQuery,string queryMT)
+        public void askQuery(string inQuery, string queryMT)
         {
             var query = inQuery;
             PartList qlist = ParseBody(new Tokeniser(query));
@@ -1452,7 +1453,7 @@ function hidetip()
                             {
                                 string k = (((Variable)context.ArgList[i]).name);
                                 //string v = ((Atom)value(new Variable(((Variable)context.alist[i]).name + ".0"), env)).ToString();
-                                var part = value(new Variable(((Variable) context.ArgList[i]).name + ".0"), env);
+                                var part = value(new Variable(((Variable)context.ArgList[i]).name + ".0"), env);
                                 if (doParts)
                                 {
                                     bindDictParts[k] = part;
@@ -1588,7 +1589,7 @@ function hidetip()
         // by appending 'level' to each variable name.
         // How non-graph-theoretical can this get?!?
         // "parent" points to the subgoal, the expansion of which lead to these terms.
-        public T renameVariables<T>(T list0, int level, Term parent) where T:Part
+        public T renameVariables<T>(T list0, int level, Term parent) where T : Part
         {
             object list = list0;
 
@@ -1616,7 +1617,7 @@ function hidetip()
                     {
                         Term outv0 = new Term(nextName, tpl);
                         outv0.parent = parent;
-                        return (T) (object) outv0;
+                        return (T)(object)outv0;
                     }
                 }
                 Term outv = new Term(nextName, (PartList)renameVariables<PartList>(tpl, level, parent));
@@ -1628,7 +1629,7 @@ function hidetip()
             PartList inL = (PartList)list;
             for (var i = 0; i < inL.Length; i++)
             {
-                outl.AddPart(renameVariables((Part) inL.ArgList[i], level, parent));
+                outl.AddPart(renameVariables((Part)inL.ArgList[i], level, parent));
                 /*
                         if (list[i] is IAtomic) {
                             out[i] = list[i];
@@ -1685,19 +1686,20 @@ function hidetip()
 
             builtinDelegate builtin = (builtinDelegate)PDB.builtin[thisTerm.name + "/" + thisTerm.Arity];
 
-       //if (trace) { Console.Write("Debug: searching for builtin " + thisTerm.name + "/" + ((PartList)((PartList)thisTerm.partlist).list).length + "\n"); }
-		if (builtin != null) {
-            if (trace) { Console.Write("builtin with name " + thisTerm.name + " found; calling prove() on it...\n"); }
-			// Stick the new body list
-                    PartList newGoals = new PartList();
-			int j;
-			for (j=1; j<goalList.Length; j++)
+            //if (trace) { Console.Write("Debug: searching for builtin " + thisTerm.name + "/" + ((PartList)((PartList)thisTerm.partlist).list).length + "\n"); }
+            if (builtin != null)
             {
-                newGoals.InsertPart(j-1, goalList.ArgList[j]);
+                if (trace) { Console.Write("builtin with name " + thisTerm.name + " found; calling prove() on it...\n"); }
+                // Stick the new body list
+                PartList newGoals = new PartList();
+                int j;
+                for (j = 1; j < goalList.Length; j++)
+                {
+                    newGoals.InsertPart(j - 1, goalList.ArgList[j]);
+                }
+                return builtin(thisTerm, newGoals, environment, db, level + 1, reportFunction);
             }
-			return builtin(thisTerm, newGoals, environment, db, level+1, reportFunction);
-		}
-             
+
             bool termIsVar = thisTerm.headIsVar();
             if (db.index.Count == 0)
             {
@@ -1744,7 +1746,7 @@ function hidetip()
                     }
 
                     //var rule = (Rule)db.rules[i];
-                    var rule = (Rule) localRules[i];
+                    var rule = (Rule)localRules[i];
 
                     // We'll need better unification to allow the 2nd-order
                     // rule matching ... later.
@@ -1816,14 +1818,14 @@ function hidetip()
                     var body = rule.body;
                     if (body != null)
                     {
-                        Part newFirstGoals = renameVariables((Part) rule.body.plist, level, renamedHead);
+                        Part newFirstGoals = renameVariables((Part)rule.body.plist, level, renamedHead);
                         // Stick the new body list
-                        PartList newGoals = new PartList();                        
+                        PartList newGoals = new PartList();
                         int j, k;
-                        for (j = 0; j < ((PartList) newFirstGoals).Length; j++)
+                        for (j = 0; j < ((PartList)newFirstGoals).Length; j++)
                         {
-                            newGoals.InsertPart(j, ((PartList) newFirstGoals).ArgList[j]);
-                            if (((Term) rule.body.plist.ArgList[j]).excludeThis) ((Term) newGoals.ArgList[j]).excludeRule = i;
+                            newGoals.InsertPart(j, ((PartList)newFirstGoals).ArgList[j]);
+                            if (((Term)rule.body.plist.ArgList[j]).excludeThis) ((Term)newGoals.ArgList[j]).excludeRule = i;
                         }
                         for (k = 1; k < goalList.Length; k++) newGoals.InsertPart(j++, goalList.ArgList[k]);
                         var ret = prove(newGoals, env2, db, level + 1, reportFunction);
@@ -1873,337 +1875,342 @@ function hidetip()
         // Maybe a class level prover delegate is called for?
 
 
-#endregion
+        #endregion
         #region builtins
         // A sample builtin function, including all the bits you need to get it to work
-    // within the general proving mechanism.
+        // within the general proving mechanism.
 
- 	// compare(First, Second, CmpValue)
-	// First, Second must be bound to strings here.
-	// CmpValue is bound to -1, 0, 1
+        // compare(First, Second, CmpValue)
+        // First, Second must be bound to strings here.
+        // CmpValue is bound to -1, 0, 1
         public ProveResult Comparitor(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
         {
-		//DEBUG print ("in Comparitor.prove()...\n");
-		// Prove the builtin bit, then break out and prove
-		// the remaining goalList.
-	
-		// if we were intending to have a resumable builtin (one that can return
-		// multiple bindings) then we'd wrap all of this in a while() loop.
+            //DEBUG print ("in Comparitor.prove()...\n");
+            // Prove the builtin bit, then break out and prove
+            // the remaining goalList.
 
-		// Rename the variables in the head and body
-		// var renamedHead = new Term(rule.head.name, renameVariables(rule.head.ArgList, level));
+            // if we were intending to have a resumable builtin (one that can return
+            // multiple bindings) then we'd wrap all of this in a while() loop.
 
-	    var first = value((Part) thisTerm.ArgList[0], environment) as IAtomic;
-        if (first == null)
-        {
-            //print("Debug: Comparitor needs First bound to an Atom, failing\n");
-            return null;
+            // Rename the variables in the head and body
+            // var renamedHead = new Term(rule.head.name, renameVariables(rule.head.ArgList, level));
+
+            var first = value((Part)thisTerm.ArgList[0], environment) as IAtomic;
+            if (first == null)
+            {
+                //print("Debug: Comparitor needs First bound to an Atom, failing\n");
+                return null;
+            }
+
+            var second = value((Part)thisTerm.ArgList[1], environment) as IAtomic;
+            if (second == null)
+            {
+                //print("Debug: Comparitor needs Second bound to an Atom, failing\n");
+                return null;
+            }
+
+            var cmp = "eq";
+            int cmpv = first.CompareTo(second);
+            if (cmpv < 0) cmp = "lt";
+            if (cmpv > 0) cmp = "gt";
+            //if (first.name < second.name) cmp = "lt";
+            //else if (first.name > second.name) cmp = "gt";
+
+            var env2 = unify((Part)thisTerm.ArgList[2], Atom.Make(cmp), environment);
+
+            if (env2 == null)
+            {
+                //print("Debug: Comparitor cannot unify CmpValue with " + cmp + ", failing\n");
+                return null;
+            }
+
+            // Just prove the rest of the goallist, recursively.
+            return prove(goalList, env2, db, level + 1, reportFunction);
         }
-
-	    var second = value((Part) thisTerm.ArgList[1], environment) as IAtomic;
-        if (second == null)
-        {
-			//print("Debug: Comparitor needs Second bound to an Atom, failing\n");
-			return null;
-		}
-
-		var cmp = "eq";
-        int cmpv=first.CompareTo(second);
-        if (cmpv<0) cmp ="lt";
-        if (cmpv>0) cmp="gt";
-		//if (first.name < second.name) cmp = "lt";
-		//else if (first.name > second.name) cmp = "gt";
-
-		var env2 = unify((Part)thisTerm.ArgList[2], Atom.Make(cmp), environment);
-
-		if (env2 == null) {
-			//print("Debug: Comparitor cannot unify CmpValue with " + cmp + ", failing\n");
-			return null;
-		}
-
-		// Just prove the rest of the goallist, recursively.
-		return prove(goalList, env2, db, level+1, reportFunction);
-	}
         public ProveResult DoubleComparitor(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
-    {
-        //DEBUG print ("in Comparitor.prove()...\n");
-        // Prove the builtin bit, then break out and prove
-        // the remaining goalList.
-
-        // if we were intending to have a resumable builtin (one that can return
-        // multiple bindings) then we'd wrap all of this in a while() loop.
-
-        // Rename the variables in the head and body
-        // var renamedHead = new Term(rule.head.name, renameVariables(rule.head.partlist.list, level));
-
-        var first = value((Part) thisTerm.partlist.ArgList[0], environment) as IAtomic;
-        if (first == null)
         {
-            //print("Debug: Comparitor needs First bound to an Atom, failing\n");
-            return null;
+            //DEBUG print ("in Comparitor.prove()...\n");
+            // Prove the builtin bit, then break out and prove
+            // the remaining goalList.
+
+            // if we were intending to have a resumable builtin (one that can return
+            // multiple bindings) then we'd wrap all of this in a while() loop.
+
+            // Rename the variables in the head and body
+            // var renamedHead = new Term(rule.head.name, renameVariables(rule.head.partlist.list, level));
+
+            var first = value((Part)thisTerm.partlist.ArgList[0], environment) as IAtomic;
+            if (first == null)
+            {
+                //print("Debug: Comparitor needs First bound to an Atom, failing\n");
+                return null;
+            }
+
+            var second = value((Part)thisTerm.partlist.ArgList[1], environment) as IAtomic;
+            if (second == null)
+            {
+                //print("Debug: Comparitor needs Second bound to an Atom, failing\n");
+                return null;
+            }
+
+            var cmp = "eq";
+            double v1 = first.AsDouble();
+            double v2 = second.AsDouble();
+            int cmpv = v1.CompareTo(v2);
+            if (cmpv < 0) cmp = "gt";
+            if (cmpv > 0) cmp = "lt";
+            //if (first.name < second.name) cmp = "lt";
+            //else if (first.name > second.name) cmp = "gt";
+
+            var env2 = unify((Part)thisTerm.partlist.ArgList[2], Atom.Make(cmp), environment);
+
+            if (env2 == null)
+            {
+                //print("Debug: Comparitor cannot unify CmpValue with " + cmp + ", failing\n");
+                return null;
+            }
+
+            // Just prove the rest of the goallist, recursively.
+            return prove(goalList, env2, db, level + 1, reportFunction);
         }
-
-        var second = value((Part) thisTerm.partlist.ArgList[1], environment) as IAtomic;
-        if (second == null)
-        {
-            //print("Debug: Comparitor needs Second bound to an Atom, failing\n");
-            return null;
-        }
-
-        var cmp = "eq";
-        double v1 = first.AsDouble();
-        double v2 = second.AsDouble();
-        int cmpv = v1.CompareTo(v2);
-        if (cmpv < 0) cmp = "gt";
-        if (cmpv > 0) cmp = "lt";
-        //if (first.name < second.name) cmp = "lt";
-        //else if (first.name > second.name) cmp = "gt";
-
-        var env2 = unify((Part)thisTerm.partlist.ArgList[2], Atom.Make(cmp), environment);
-
-        if (env2 == null)
-        {
-            //print("Debug: Comparitor cannot unify CmpValue with " + cmp + ", failing\n");
-            return null;
-        }
-
-        // Just prove the rest of the goallist, recursively.
-        return prove(goalList, env2, db, level + 1, reportFunction);
-    }
         public ProveResult Cut(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
         {
-		//DEBUG print ("in Comparitor.prove()...\n");
-		// Prove the builtin bit, then break out and prove
-		// the remaining goalList.
-	
-		// if we were intending to have a resumable builtin (one that can return
-		// multiple bindings) then we'd wrap all of this in a while() loop.
+            //DEBUG print ("in Comparitor.prove()...\n");
+            // Prove the builtin bit, then break out and prove
+            // the remaining goalList.
 
-		// Rename the variables in the head and body
-		// var renamedHead = new Term(rule.head.name, renameVariables(rule.head.ArgList, level));
+            // if we were intending to have a resumable builtin (one that can return
+            // multiple bindings) then we'd wrap all of this in a while() loop.
 
-		// On the way through, we do nothing...
+            // Rename the variables in the head and body
+            // var renamedHead = new Term(rule.head.name, renameVariables(rule.head.ArgList, level));
 
-		// Just prove the rest of the goallist, recursively.
-		var ret = prove(goalList, environment, db, level+1, reportFunction);
+            // On the way through, we do nothing...
 
-		// Backtracking through the 'cut' stops any further attempts to prove this subgoal.
-		//print ("Debug: backtracking through cut/0: thisTerm.parent = "); thisTerm.parent.print(); print("\n");
-        ((Term)thisTerm.parent).cut = true;
+            // Just prove the rest of the goallist, recursively.
+            var ret = prove(goalList, environment, db, level + 1, reportFunction);
 
-		return ret;
-	}
+            // Backtracking through the 'cut' stops any further attempts to prove this subgoal.
+            //print ("Debug: backtracking through cut/0: thisTerm.parent = "); thisTerm.parent.print(); print("\n");
+            ((Term)thisTerm.parent).cut = true;
 
-    public ProveResult UnifyExt(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
-    {
-        Part x = value((Part)thisTerm.ArgList[0], environment);
-        Part y = value((Part)thisTerm.ArgList[1], environment);
-        var res = unify(x, y, environment);
-        if (res == null) return null;
-
-        // Backtracking through the 'cut' stops any further attempts to prove this subgoal.
-        //print ("Debug: backtracking through cut/0: thisTerm.parent = "); thisTerm.parent.print(); print("\n");
-        // thisTerm.parent.cut = true;
-
-        // Just prove the rest of the goallist, recursively.
-        return prove(goalList, res, db, level + 1, reportFunction);
-    }
-
-	// Given a single argument, it sticks it on the goal list.
-    public ProveResult Call(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
-    {
-		// Prove the builtin bit, then break out and prove
-		// the remaining goalList.
-	    //PartList goalList = (PartList)goalIn;
-
-		// Rename the variables in the head and body
-		// var renamedHead = new Term(rule.head.name, renameVariables(rule.head.ArgList, level));
-
-		Term first = (Term) value((Part)thisTerm.ArgList[0], environment);
-		if (!(first is Term)) {
-			//print("Debug: Call needs parameter bound to a Term, failing\n");
-			return null;
-		}
-
-		//var newGoal = new Term(first.name, renameVariables(first.ArgList, level, thisTerm));
-		//newGoal.parent = thisTerm;
-
-		// Stick this as a new goal on the start of the goallist
-		//var newGoals = [];
-		//newGoals[0] = first;
-
-        PartList newGoals = new PartList();        
-        newGoals.InsertPart(0,first);
-		first.parent = thisTerm;
-
-		int j;
-        for (j = 0; j < goalList.Length; j++)
-        {
-            newGoals.InsertPart(j + 1, goalList.ArgList[j]);
+            return ret;
         }
 
-	    // Just prove the rest of the goallist, recursively.
-		return prove(newGoals, environment, db, level+1, reportFunction);
-	}
-
-    public ProveResult Fail(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction) 
-    {
-		return null;
-	}
-
-    private Term GetNewGoalPartList(Term thisTerm, int level, PartList subgoal)
-    {
-        Term newGoal = new Term(subgoal.name, (PartList)renameVariables(((PartList)subgoal), level, thisTerm));
-        newGoal.parent = thisTerm;
-        return newGoal;
-    }
-    public ProveResult BagOf(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
-    {
-		// bagof(Term, ConditionTerm, ReturnList)
-          //  PartList goalList = (PartList)goalIn;
-
-		Part collect0 = value((Part)thisTerm.ArgList[0], environment);
-		Part subgoal = value((Part)thisTerm.ArgList[1], environment);
-		Part into = value((Part)thisTerm.ArgList[2], environment);
-
-		Part collect = renameVariables(collect0, level, thisTerm);
-        //var newGoal = new Term(subgoal.name, renameVariables(subgoal.ArgList, level, thisTerm));
-        Term newGoal = new Term(subgoal.name, (PartList)renameVariables(((PartList)subgoal), level, thisTerm));
-		newGoal.parent = thisTerm;
-
-        //var newGoals = [];
-		//newGoals[0] = newGoal;
-        PartList newGoals = new PartList();
-        newGoals.AddPart(newGoal);
-
-		// Prove this subgoal, collecting up the environments...
-		PartList anslist = new PartList();
-		anslist.renumber = -1;
-		var ret = prove(newGoals, environment, db, level+1, BagOfCollectFunction(collect, anslist));
-
-		// Turn anslist into a proper list and unify with 'into'
-		
-		// optional here: nil anslist -> fail?
-		Part answers = Atom.Make(FUNCTOR_NIL);
-
-		/*
-		print("Debug: anslist = [");
-			for (var j = 0; j < anslist.length; j++) {
-				anslist[j].print();
-				print(", ");
-			}
-		print("]\n");
-		*/
-
-		for (int i = anslist.Length; i > 0; i--)
+        public ProveResult UnifyExt(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
         {
-            answers = MakeList(anslist.ArgList[i - 1], answers);
+            Part x = value((Part)thisTerm.ArgList[0], environment);
+            Part y = value((Part)thisTerm.ArgList[1], environment);
+            var res = unify(x, y, environment);
+            if (res == null) return null;
+
+            // Backtracking through the 'cut' stops any further attempts to prove this subgoal.
+            //print ("Debug: backtracking through cut/0: thisTerm.parent = "); thisTerm.parent.print(); print("\n");
+            // thisTerm.parent.cut = true;
+
+            // Just prove the rest of the goallist, recursively.
+            return prove(goalList, res, db, level + 1, reportFunction);
         }
 
-		//print("Debug: unifying "); into.print(); print(" with "); answers.print(); print("\n");
-		var env2 = unify(into, answers, environment);
+        // Given a single argument, it sticks it on the goal list.
+        public ProveResult Call(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        {
+            // Prove the builtin bit, then break out and prove
+            // the remaining goalList.
+            //PartList goalList = (PartList)goalIn;
 
-		if (env2 == null) {
-			//print("Debug: bagof cannot unify anslist with "); into.print(); print(", failing\n");
-			return null;
-		}
+            // Rename the variables in the head and body
+            // var renamedHead = new Term(rule.head.name, renameVariables(rule.head.ArgList, level));
 
-		// Just prove the rest of the goallist, recursively.
-		return prove(goalList, env2, db, level+1, reportFunction);
-	}
-
-	// Aux function: return the reportFunction to use with a bagof subgoal
-	public reportDelegate   BagOfCollectFunction(Part collect,PartList anslist) {
-		return delegate(PEnv env) {
-			/*
-			print("DEBUG: solution in bagof/3 found...\n");
-			print("Value of collection term ");
-			collect.print();
-			print(" in this environment = ");
-			(value(collect, env)).print();
-			print("\n");
-			printEnv(env);
-			*/
-			// Rename this appropriately and throw it into anslist
-			anslist.AddPart( renameVariables(value(collect, env), anslist.renumber--, null));
-		};
-	}
-
-    public ProveResult CallMt(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
-    {
-        // bagof(Term, ConditionTerm, ReturnList)
-        //  PartList goalList = (PartList)goalIn;
-        string queryMT = thisTerm.ArgList[0].name;
-        Part collect0 = value((Part)thisTerm.ArgList[1], environment);
-        Part subgoal = value((Part)thisTerm.ArgList[1], environment);
-
-        Part collect = renameVariables(collect0, level, thisTerm);
-        //var newGoal = new Term(subgoal.name, renameVariables(subgoal.ArgList, level, thisTerm));
-        Term newGoal = new Term(subgoal.name, (PartList)renameVariables(((PartList)subgoal), level, thisTerm));
-        newGoal.parent = thisTerm;
-
-        //var newGoals = [];
-        //newGoals[0] = newGoal;
-        PartList newGoals = new PartList();
-        newGoals.AddPart(newGoal);
-
-        // Prove this subgoal, collecting up the environments...
-        PartList anslist = new PartList();
-        anslist.renumber = -1;
-        var db2 = new PDB();
-        // db.rules = findVisibleKBRules(queryMT);
-        db2.rules = findVisibleKBRulesSorted(queryMT);
-        db2.index.Clear();
-        var ret = prove(newGoals, environment, db2, level + 1, CallMtCollectFunction(collect, anslist));
-
-        // Turn anslist into a proper list and unify with 'into'
-
-        // optional here: nil anslist -> fail?
-        Part answers = Atom.Make(FUNCTOR_NIL);
-
-        /*
-        print("Debug: anslist = [");
-            for (var j = 0; j < anslist.length; j++) {
-                anslist[j].print();
-                print(", ");
+            Term first = (Term)value((Part)thisTerm.ArgList[0], environment);
+            if (!(first is Term))
+            {
+                //print("Debug: Call needs parameter bound to a Term, failing\n");
+                return null;
             }
-        print("]\n");
-        */
 
-        for (int i = anslist.Length; i > 0; i--)
-        {
-            answers = MakeList(anslist.ArgList[i - 1], answers);
+            //var newGoal = new Term(first.name, renameVariables(first.ArgList, level, thisTerm));
+            //newGoal.parent = thisTerm;
+
+            // Stick this as a new goal on the start of the goallist
+            //var newGoals = [];
+            //newGoals[0] = first;
+
+            PartList newGoals = new PartList();
+            newGoals.InsertPart(0, first);
+            first.parent = thisTerm;
+
+            int j;
+            for (j = 0; j < goalList.Length; j++)
+            {
+                newGoals.InsertPart(j + 1, goalList.ArgList[j]);
+            }
+
+            // Just prove the rest of the goallist, recursively.
+            return prove(newGoals, environment, db, level + 1, reportFunction);
         }
 
+        public ProveResult Fail(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        {
+            return null;
+        }
 
-        // Just prove the rest of the goallist, recursively.
-        return prove(goalList, ret, db, level + 1, reportFunction);
-    }
+        private Term GetNewGoalPartList(Term thisTerm, int level, PartList subgoal)
+        {
+            Term newGoal = new Term(subgoal.name, (PartList)renameVariables(((PartList)subgoal), level, thisTerm));
+            newGoal.parent = thisTerm;
+            return newGoal;
+        }
+        public ProveResult BagOf(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        {
+            // bagof(Term, ConditionTerm, ReturnList)
+            //  PartList goalList = (PartList)goalIn;
 
-    private reportDelegate CallMtCollectFunction(Part collect, PartList anslist)
-    {
-        return delegate(PEnv env)
-                   {
-                       // Rename this appropriately and throw it into anslist
-                       anslist.AddPart(renameVariables(value(collect, env), anslist.renumber--, null));
-                   };
-    }
+            Part collect0 = value((Part)thisTerm.ArgList[0], environment);
+            Part subgoal = value((Part)thisTerm.ArgList[1], environment);
+            Part into = value((Part)thisTerm.ArgList[2], environment);
+
+            Part collect = renameVariables(collect0, level, thisTerm);
+            //var newGoal = new Term(subgoal.name, renameVariables(subgoal.ArgList, level, thisTerm));
+            Term newGoal = new Term(subgoal.name, (PartList)renameVariables(((PartList)subgoal), level, thisTerm));
+            newGoal.parent = thisTerm;
+
+            //var newGoals = [];
+            //newGoals[0] = newGoal;
+            PartList newGoals = new PartList();
+            newGoals.AddPart(newGoal);
+
+            // Prove this subgoal, collecting up the environments...
+            PartList anslist = new PartList();
+            anslist.renumber = -1;
+            var ret = prove(newGoals, environment, db, level + 1, BagOfCollectFunction(collect, anslist));
+
+            // Turn anslist into a proper list and unify with 'into'
+
+            // optional here: nil anslist -> fail?
+            Part answers = Atom.Make(FUNCTOR_NIL);
+
+            /*
+            print("Debug: anslist = [");
+                for (var j = 0; j < anslist.length; j++) {
+                    anslist[j].print();
+                    print(", ");
+                }
+            print("]\n");
+            */
+
+            for (int i = anslist.Length; i > 0; i--)
+            {
+                answers = MakeList(anslist.ArgList[i - 1], answers);
+            }
+
+            //print("Debug: unifying "); into.print(); print(" with "); answers.print(); print("\n");
+            var env2 = unify(into, answers, environment);
+
+            if (env2 == null)
+            {
+                //print("Debug: bagof cannot unify anslist with "); into.print(); print(", failing\n");
+                return null;
+            }
+
+            // Just prove the rest of the goallist, recursively.
+            return prove(goalList, env2, db, level + 1, reportFunction);
+        }
+
+        // Aux function: return the reportFunction to use with a bagof subgoal
+        public reportDelegate BagOfCollectFunction(Part collect, PartList anslist)
+        {
+            return delegate(PEnv env)
+            {
+                /*
+                print("DEBUG: solution in bagof/3 found...\n");
+                print("Value of collection term ");
+                collect.print();
+                print(" in this environment = ");
+                (value(collect, env)).print();
+                print("\n");
+                printEnv(env);
+                */
+                // Rename this appropriately and throw it into anslist
+                anslist.AddPart(renameVariables(value(collect, env), anslist.renumber--, null));
+            };
+        }
+
+        public ProveResult CallMt(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        {
+            // bagof(Term, ConditionTerm, ReturnList)
+            //  PartList goalList = (PartList)goalIn;
+            string queryMT = thisTerm.ArgList[0].name;
+            Part collect0 = value((Part)thisTerm.ArgList[1], environment);
+            Part subgoal = value((Part)thisTerm.ArgList[1], environment);
+
+            Part collect = renameVariables(collect0, level, thisTerm);
+            //var newGoal = new Term(subgoal.name, renameVariables(subgoal.ArgList, level, thisTerm));
+            Term newGoal = new Term(subgoal.name, (PartList)renameVariables(((PartList)subgoal), level, thisTerm));
+            newGoal.parent = thisTerm;
+
+            //var newGoals = [];
+            //newGoals[0] = newGoal;
+            PartList newGoals = new PartList();
+            newGoals.AddPart(newGoal);
+
+            // Prove this subgoal, collecting up the environments...
+            PartList anslist = new PartList();
+            anslist.renumber = -1;
+            var db2 = new PDB();
+            // db.rules = findVisibleKBRules(queryMT);
+            db2.rules = findVisibleKBRulesSorted(queryMT);
+            db2.index.Clear();
+            var ret = prove(newGoals, environment, db2, level + 1, CallMtCollectFunction(collect, anslist));
+
+            // Turn anslist into a proper list and unify with 'into'
+
+            // optional here: nil anslist -> fail?
+            Part answers = Atom.Make(FUNCTOR_NIL);
+
+            /*
+            print("Debug: anslist = [");
+                for (var j = 0; j < anslist.length; j++) {
+                    anslist[j].print();
+                    print(", ");
+                }
+            print("]\n");
+            */
+
+            for (int i = anslist.Length; i > 0; i--)
+            {
+                answers = MakeList(anslist.ArgList[i - 1], answers);
+            }
+
+
+            // Just prove the rest of the goallist, recursively.
+            return prove(goalList, ret, db, level + 1, reportFunction);
+        }
+
+        private reportDelegate CallMtCollectFunction(Part collect, PartList anslist)
+        {
+            return delegate(PEnv env)
+                       {
+                           // Rename this appropriately and throw it into anslist
+                           anslist.AddPart(renameVariables(value(collect, env), anslist.renumber--, null));
+                       };
+        }
 
         // Call out to external javascript
-	// external/3 takes three arguments:
-	// first: a template string that uses $1, $2, etc. as placeholders for 
-	
-        //var EvalContext = [];
-    public string ourEval( string expression)
-    {
-        Mono.CSharp.Evaluator evaluator = GetEvalInstance();
-        string result = "" + evaluator.Evaluate(expression);
-        //var evaluator = new Evaluator();
-        //evaluator.Run("using System;");
+        // external/3 takes three arguments:
+        // first: a template string that uses $1, $2, etc. as placeholders for 
 
-        // TODO: Insert evquivelent of javascript Eval(x) here, return result in string form
-        return result;
-    }
+        //var EvalContext = [];
+        public string ourEval(string expression)
+        {
+            Mono.CSharp.Evaluator evaluator = GetEvalInstance();
+            string result = "" + evaluator.Evaluate(expression);
+            //var evaluator = new Evaluator();
+            //evaluator.Run("using System;");
+
+            // TODO: Insert evquivelent of javascript Eval(x) here, return result in string form
+            return result;
+        }
 
         private static Evaluator _Evaluator = null;
         private static CompilerContext ctx;
@@ -2214,7 +2221,7 @@ function hidetip()
         {
             if (_Evaluator == null)
             {
-                if (ctx==null)
+                if (ctx == null)
                 {
                     if (compset == null) compset = new CompilerSettings();
                     if (rp == null)
@@ -2234,7 +2241,7 @@ function hidetip()
             PartList ourParList = GetTermPartList(thisTerm);
 
             // Get the first term, the template.
-            var first = value((Part) ourParList.ArgList[0], environment) as IAtomic;
+            var first = value((Part)ourParList.ArgList[0], environment) as IAtomic;
             if (first == null)
             {
                 //print("Debug: External needs First bound to a string Atom, failing\n");
@@ -2250,7 +2257,7 @@ function hidetip()
             //print("DEBUG: template for External/3 is "+r+"\n");
 
             // Get the second term, the argument list.
-            Part second = (Part) value((Term) ourParList.ArgList[1], environment);
+            Part second = (Part)value((Term)ourParList.ArgList[1], environment);
             Part next;
             int i = 1;
 
@@ -2298,7 +2305,7 @@ function hidetip()
 
 
             // Convert back into an atom...
-            var env2 = unify((Part) ourParList.ArgList[2], Atom.Make(ret), environment);
+            var env2 = unify((Part)ourParList.ArgList[2], Atom.Make(ret), environment);
 
             if (env2 == null)
             {
@@ -2334,7 +2341,7 @@ function hidetip()
             TermList tl = thisTerm.ArgList;
             if (tl.Count == 1 && tl[0] is PartList)
             {
-                return (PartList) tl[0];
+                return (PartList)tl[0];
             }
             if (tl[0] is PartList)
             {
@@ -2345,93 +2352,94 @@ function hidetip()
 
         public ProveResult ExternalAndParse(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
         {
-		//print ("DEBUG: in External...\n");
+            //print ("DEBUG: in External...\n");
             PartList ourParList = GetTermPartList(thisTerm);
 
-        // Get the first term, the template.
-	    var first = value((Part) ourParList.ArgList[0], environment) as IAtomic;
-        if (first == null)
-        {
-			//print("Debug: External needs First bound to a string Atom, failing\n");
-			return null;
-		}
-        Match rm = Regex.Match(first.AsString(), @"^\""(.*)\""$");
-        if (!rm.Success) return null;
-        string r = rm.Groups[1].Value;
-
-		//print("DEBUG: template for External/3 is "+r+"\n");
-
-        // Get the second term, the argument list.
-        Part second = (Part)value((Term)ourParList.ArgList[1], environment);
-        Part next;
-        int i = 1;
-        while (second is Term && IsListName(((Term)second).name))
-        {
-            next = (PartList)((Term)second).ArgList[0];
-            next = (Part)((PartList)next).ArgList[0];
-            next = (Part)((PartList)next).ArgList[0];
-
-            Part argV = null;
-            Part nextTerm = null;
-            if (next is PartList)
+            // Get the first term, the template.
+            var first = value((Part)ourParList.ArgList[0], environment) as IAtomic;
+            if (first == null)
             {
-                argV = (Part)((PartList)next).ArgList[0];
-                nextTerm = (Part)((PartList)next).ArgList[1];
-            }
-            if (next is Variable)
-            {
-                argV = next;
-                nextTerm = next;
-            }
-            // Go through second an argument at a time...
-            //Part arg = value((Part)((Term)second).ArgList[0], environment);
-            var arg = value(argV, environment) as IAtomic;
-            if (arg == null)
-            {
-                //print("DEBUG: External/3: argument "+i+" must be an Atom, not "); arg.print(); print("\n");
+                //print("Debug: External needs First bound to a string Atom, failing\n");
                 return null;
             }
-            //var re = new RegExp("\\$"+i, "g");
-            //print("DEBUG: External/3: RegExp is "+re+", arg is "+arg.name+"\n");
-            //r = r.Replace(re, arg.name);
-            r = Regex.Replace(r, "\\$" + i, ((IAtomic)arg).AsString());
+            Match rm = Regex.Match(first.AsString(), @"^\""(.*)\""$");
+            if (!rm.Success) return null;
+            string r = rm.Groups[1].Value;
 
-            //print("DEBUG: External/3: r becomes "+r+"\n");
+            //print("DEBUG: template for External/3 is "+r+"\n");
 
-            second = nextTerm;
+            // Get the second term, the argument list.
+            Part second = (Part)value((Term)ourParList.ArgList[1], environment);
+            Part next;
+            int i = 1;
+            while (second is Term && IsListName(((Term)second).name))
+            {
+                next = (PartList)((Term)second).ArgList[0];
+                next = (Part)((PartList)next).ArgList[0];
+                next = (Part)((PartList)next).ArgList[0];
 
-            i++;
+                Part argV = null;
+                Part nextTerm = null;
+                if (next is PartList)
+                {
+                    argV = (Part)((PartList)next).ArgList[0];
+                    nextTerm = (Part)((PartList)next).ArgList[1];
+                }
+                if (next is Variable)
+                {
+                    argV = next;
+                    nextTerm = next;
+                }
+                // Go through second an argument at a time...
+                //Part arg = value((Part)((Term)second).ArgList[0], environment);
+                var arg = value(argV, environment) as IAtomic;
+                if (arg == null)
+                {
+                    //print("DEBUG: External/3: argument "+i+" must be an Atom, not "); arg.print(); print("\n");
+                    return null;
+                }
+                //var re = new RegExp("\\$"+i, "g");
+                //print("DEBUG: External/3: RegExp is "+re+", arg is "+arg.name+"\n");
+                //r = r.Replace(re, arg.name);
+                r = Regex.Replace(r, "\\$" + i, ((IAtomic)arg).AsString());
+
+                //print("DEBUG: External/3: r becomes "+r+"\n");
+
+                second = nextTerm;
+
+                i++;
+            }
+            //if (second.type != "Atom" || second.name != FUNCTOR_NIL) {
+            //print("DEBUG: External/3 needs second to be a list, not "); second.print(); print("\n");
+            //	return null;
+            //}
+
+            //print("DEBUG: External/3 about to eval \""+r+"\"\n");
+
+            //var ret;
+            //with(EvalContext)
+            //	ret = eval(r);
+            string ret = ourEval(r);
+            //print("DEBUG: External/3 got "+ret+" back\n");
+
+            if (ret == null) ret = FUNCTOR_NIL;
+
+
+            // Convert back into a Prolog term by calling the appropriate Parse routine...
+            Part retPart = ParsePart(new Tokeniser(ret));
+            //print("DEBUG: external2, ret = "); ret.print(); print(".\n");
+
+            var env2 = unify((Part)ourParList.ArgList[2], retPart, environment);
+
+            if (env2 == null)
+            {
+                //print("Debug: External/3 cannot unify OutValue with " + ret + ", failing\n");
+                return null;
+            }
+
+            // Just prove the rest of the goallist, recursively.
+            return prove(goalList, env2, db, level + 1, reportFunction);
         }
-        //if (second.type != "Atom" || second.name != FUNCTOR_NIL) {
-        //print("DEBUG: External/3 needs second to be a list, not "); second.print(); print("\n");
-        //	return null;
-        //}
-
-		//print("DEBUG: External/3 about to eval \""+r+"\"\n");
-
-		//var ret;
-		//with(EvalContext)
-		//	ret = eval(r);
-        string ret = ourEval(r);
-		//print("DEBUG: External/3 got "+ret+" back\n");
-
-		if (ret==null) ret = FUNCTOR_NIL;
-
-
-		// Convert back into a Prolog term by calling the appropriate Parse routine...
-		Part retPart = ParsePart(new Tokeniser(ret));
-		//print("DEBUG: external2, ret = "); ret.print(); print(".\n");
-
-        var env2 = unify((Part)ourParList.ArgList[2], retPart, environment);
-
-		if (env2 == null) {
-			//print("Debug: External/3 cannot unify OutValue with " + ret + ", failing\n");
-			return null;
-		}
-
-		// Just prove the rest of the goallist, recursively.
-		return prove(goalList, env2, db, level+1, reportFunction);
-    }
         #endregion
         #region prologObjects
 
@@ -2458,7 +2466,7 @@ function hidetip()
                 string result = "";
                 foreach (string k in this.Keys)
                 {
-                    result += String.Format("{0} = ", k) + ((Part)this[k]).ToPLStringReadable() + "\n"; 
+                    result += String.Format("{0} = ", k) + ((Part)this[k]).ToPLStringReadable() + "\n";
                 }
                 return result;
             }
@@ -2476,7 +2484,7 @@ function hidetip()
             }
             public Part this[string name]
             {
-                get { return (Part) ht[name]; }
+                get { return (Part)ht[name]; }
                 set { ht[name] = value; }
             }
         }
@@ -2660,7 +2668,7 @@ function hidetip()
 
             public virtual double AsDouble()
             {
-                throw Missing("AsDouble"); 
+                throw Missing("AsDouble");
             }
 
             public static void ConsolePrint(string format, params object[] args)
@@ -2733,7 +2741,7 @@ function hidetip()
 
             public override string type { get { return "PartList"; } }
             private readonly IList<Part> tlist;
-            public int renumber=0;
+            public int renumber = 0;
             public int Count
             {
                 get { return tlist.Count; }
@@ -2747,7 +2755,7 @@ function hidetip()
                     {
                         throw ErrorBadOp("inner partlist");
                     }
-                    return (SIProlog.Part) tlist[i];
+                    return (SIProlog.Part)tlist[i];
                 }
                 set
                 {
@@ -2812,7 +2820,7 @@ function hidetip()
             }
 
             //public PartList(string head) { name = head; }
-            public PartList(params Part[] lS) 
+            public PartList(params Part[] lS)
             {
                 this.tlist = new List<Part>(lS);
             }
@@ -2831,7 +2839,7 @@ function hidetip()
                 this.tlist = new List<Part>();
                 for (var i = 0; i < head.Count; i++)
                 {
-                   tlist.Add(value(head[i], env));
+                    tlist.Add(value(head[i], env));
                 }
 
             }
@@ -2846,7 +2854,7 @@ function hidetip()
                     p.print();
                     com = true;
                 }
-              //  ConsoleWrite(")");
+                //  ConsoleWrite(")");
             }
             public override string ToPLStringReadable()
             {
@@ -2859,7 +2867,7 @@ function hidetip()
                     result += p.ToPLStringReadable();
                     com = true;
                 }
-               // result += ")";
+                // result += ")";
                 return result;
             }
 
@@ -3007,7 +3015,7 @@ function hidetip()
                 var f = name;
                 if (f.Contains("0"))
                 {
-                    
+
                 }
             }
             public override void print()
@@ -3108,7 +3116,7 @@ function hidetip()
             }
 
             public string AsString()
-            { 
+            {
                 return AsValuedNode().AsString();
             }
 
@@ -3168,11 +3176,11 @@ function hidetip()
         }
         public static bool IsList(Part x)
         {
-            return x is Term && IsListName(x.name) && ((Term) x).Arity == 2;
+            return x is Term && IsListName(x.name) && ((Term)x).Arity == 2;
         }
         public interface IHasParent
         {
-            IHasParent TParent { get; set;  }
+            IHasParent TParent { get; set; }
         }
         public class Term : Part, IHasParent
         {
@@ -3203,7 +3211,7 @@ function hidetip()
             {
                 get
                 {
-                    return new Term(name, (PartList) partlist.CopyTerm) {parent = null};
+                    return new Term(name, (PartList)partlist.CopyTerm) { parent = null };
                 }
             }
             public readonly PartList partlist;
@@ -3244,9 +3252,9 @@ function hidetip()
                     Part x = this;
                     while (IsList(x))
                     {
-                        x = ((Term) x).ArgList[1];
+                        x = ((Term)x).ArgList[1];
                     }
-                    if ((x is IAtomic && ((Atom)x).name == FUNCTOR_NIL) || x is Variable )
+                    if ((x is IAtomic && ((Atom)x).name == FUNCTOR_NIL) || x is Variable)
                     {
                         x = this;
                         ConsolePrint("[");
@@ -3258,7 +3266,7 @@ function hidetip()
                             com = true;
                             x = ((Term)x).ArgList[1];
                         }
-                        if (x is Variable )
+                        if (x is Variable)
                         {
                             ConsolePrint(" | ");
                             x.print();
@@ -3288,15 +3296,15 @@ function hidetip()
                         var com = false;
                         while (IsList(x))
                         {
-                            if (com) result +=", ";
+                            if (com) result += ", ";
                             result += ((Term)x).ArgList[0].ToPLStringReadable(); // May need to case var/atom/term
                             com = true;
                             x = ((Term)x).ArgList[1];
                         }
                         if (x is Variable)
                         {
-                           result += " | ";
-                           result += x.ToPLStringReadable();
+                            result += " | ";
+                            result += x.ToPLStringReadable();
                         }
                         result += "]";
                         return result;
@@ -3355,7 +3363,7 @@ function hidetip()
         }
 
 
-        public partial class Rule: IHasParent
+        public partial class Rule : IHasParent
         {
             public bool isGround = false;
             public string optHomeMt;
@@ -3425,7 +3433,7 @@ function hidetip()
             internal IHasParent parent;
         }
 
-        public class Body: IHasParent
+        public class Body : IHasParent
         {
             #region IHasParent Members
 
@@ -3483,13 +3491,13 @@ function hidetip()
                 return result;
             }
         }
-    #endregion
+        #endregion
 
-        public string describeObject(string objname,object o)
+        public string describeObject(string objname, object o)
         {
             string result = "";
             Type type = o.GetType();
-            PropertyInfo [] properties = type.GetProperties();
+            PropertyInfo[] properties = type.GetProperties();
             foreach (PropertyInfo pi in properties)
             {
                 if (pi.CanRead)
@@ -3519,7 +3527,7 @@ function hidetip()
                         {
                             frag = String.Format("triple({0},{1},{2}).\n", objname, pname, pval);
                         }
-                        
+
                         result += frag;
                     }
                 }
@@ -3704,7 +3712,7 @@ function hidetip()
             }
 
             //if (tk.type != "id")  return null;
-            if ((tk.type != "id")&&(tk.type !="var")) return null;
+            if ((tk.type != "id") && (tk.type != "var")) return null;
             var name = tk.current;
             tk.consume();
 
@@ -3798,7 +3806,7 @@ function hidetip()
                 // Return the new cons.... of all this rubbish.
                 for (--i; i >= 0; i--)
                 {
-                    append = MakeList((Part) l[i], append);
+                    append = MakeList((Part)l[i], append);
                 }
                 return append;
             }
@@ -3922,7 +3930,7 @@ function hidetip()
             if (!env.ContainsKey(((Variable)x).name))
                 return x;
             Part binding = (Part)env[((Variable)x).name]; //** HASH/DICTIONARY NEEDED ** 
-            if (binding == null) 
+            if (binding == null)
                 return x;		// Just the variable, no binding.
             return value(binding, env);
         }
@@ -4069,12 +4077,12 @@ function hidetip()
                 {
                     return null;
                 }
-            
+
             }
             // both lists, both empty
             if (x is PartList && y is PartList)
             {
-                if (((PartList)x).Length ==0 &&  ((PartList)y).Length ==0)
+                if (((PartList)x).Length == 0 && ((PartList)y).Length == 0)
                 {
                     if (trace) ConsoleWriteLine("     MATCH");
                     return env;
@@ -4134,26 +4142,26 @@ function hidetip()
 
 
             }
-            if (x is PartList )
+            if (x is PartList)
             {
-                while (((((PartList)x).Length == 1) && ((PartList)x).ArgList[0] is PartList) && (((PartList)x).Length != ((PartList)y).Length) )
+                while (((((PartList)x).Length == 1) && ((PartList)x).ArgList[0] is PartList) && (((PartList)x).Length != ((PartList)y).Length))
                 {
                     throw ErrorBadOp("inner partlist");
                     x = ((PartList)((PartList)x).ArgList[0]);
                 }
-                while (((((PartList)y).Length == 1) && ((PartList)y).ArgList[0] is PartList) && (((PartList)x).Length != ((PartList)y).Length) )
+                while (((((PartList)y).Length == 1) && ((PartList)y).ArgList[0] is PartList) && (((PartList)x).Length != ((PartList)y).Length))
                 {
                     throw ErrorBadOp("inner partlist");
                     y = ((PartList)((PartList)y).ArgList[0]);
                 }
-                
+
                 if (((PartList)x).Length != ((PartList)y).Length)
                 {
-                     while (((PartList)x).Length != ((PartList)y).Length)
+                    while (((PartList)x).Length != ((PartList)y).Length)
                     {
                         if (((PartList)y).Length < ((PartList)x).Length)
                         {
-                            PartList temp = (PartList) x;
+                            PartList temp = (PartList)x;
                             x = y;
                             y = temp;
 
@@ -4163,7 +4171,7 @@ function hidetip()
                             x = ((PartList)((PartList)x).alist[0]);
                         }
                         else*/
-                            return null;
+                        return null;
                     }
 
                 }
@@ -4176,7 +4184,7 @@ function hidetip()
                     env = unify((Part)((PartList)x).ArgList[i], (Part)((PartList)y).ArgList[i], env);
                     if (env == null)
                         return null;
-                }               
+                }
             }
 
             if (trace) Console.WriteLine("     MATCH");
@@ -4237,20 +4245,20 @@ function hidetip()
                 }
                 return false;
             }
-            
+
             public override bool Equals(object obj)
             {
                 if (base.Equals(obj)) return true;
                 return Equals(obj as PEdge);
             }
-            
+
 
             public override int GetHashCode()
             {
                 unchecked
                 {
                     int result = (startNode != null ? startNode.GetHashCode() : 0);
-                    result = (result*397) ^ (endNode != null ? endNode.GetHashCode() : 0);
+                    result = (result * 397) ^ (endNode != null ? endNode.GetHashCode() : 0);
                     return result;
                 }
             }
@@ -4281,10 +4289,10 @@ function hidetip()
                     return;
                 }
                 lock (srcNode.EdgeLists) lock (destNode.EdgeLists)
-                {
-                    if (!srcNode.EdgeAlreadyExists(destNode))
-                        srcNode.CreateEdgeTo(destNode);
-                }
+                    {
+                        if (!srcNode.EdgeAlreadyExists(destNode))
+                            srcNode.CreateEdgeTo(destNode);
+                    }
             }
             public void Disconnect(string idSrc, string idDest)
             {
@@ -4298,7 +4306,7 @@ function hidetip()
                 if (!srcNode.EdgeAlreadyExists(destNode)) return;
                 srcNode.RemoveEdgeTo(destNode);
             }
-           
+
             private PNode FindOrCreateNode(string idSrc)
             {
                 PNode srcNode = Contains(idSrc);
@@ -4315,9 +4323,10 @@ function hidetip()
             {
                 get { lock (topLevelNodes) return topLevelNodes.ToArray(); }
             }
-           public PNode[] SortedTopLevelNodes
+            public PNode[] SortedTopLevelNodes
             {
-                get {
+                get
+                {
                     PNode[] temp = TopLevelNodes;
                     Array.Sort(temp, delegate(PNode p1, PNode p2)
                     {
@@ -4327,16 +4336,16 @@ function hidetip()
                 }
             }
 
-           public void AddNode(PNode node)
-           {
-               lock (topLevelNodes)
-               {
-                   if (!topLevelNodes.Contains(node))
-                   {
-                       topLevelNodes.Add(node);
-                   }
-               }
-           }
+            public void AddNode(PNode node)
+            {
+                lock (topLevelNodes)
+                {
+                    if (!topLevelNodes.Contains(node))
+                    {
+                        topLevelNodes.Add(node);
+                    }
+                }
+            }
 
             public PNode Contains(string id)
             {
@@ -4391,7 +4400,7 @@ function hidetip()
             public PNode[] GetTopLevelNodes()
             {
                 List<PNode> rootNodes = new List<PNode>();
-                lock (topLevelNodes) rootNodes.AddRange(topLevelNodes.FindAll(node => node.IncomingEdges.Length == 0));                               
+                lock (topLevelNodes) rootNodes.AddRange(topLevelNodes.FindAll(node => node.IncomingEdges.Length == 0));
 
                 // Fully connected graph, return any node
                 if (rootNodes.Count == 0 && topLevelNodes.Count > 0)
@@ -4440,7 +4449,7 @@ function hidetip()
             private void PrintToConsole(PNode node, int indentation)
             {
                 if (node == null) return;
-                if (indentation > 4) return; 
+                if (indentation > 4) return;
                 for (int i = 0; i < indentation; ++i) Console.Write(" ");
                 ConsoleWriteLine(node.Id);
 
@@ -4497,9 +4506,9 @@ function hidetip()
                 if (node == SIProlog.EverythingPSC && indentation > 1) return;
                 writer.WriteLine("<li>{0}</li>", node.ToLink(serverRoot));
                 writer.WriteLine("<ul>");
-                foreach (PEdge e in node.IncomingEdges )
+                foreach (PEdge e in node.IncomingEdges)
                 {
-                    PrintToWriterInEdges(e.StartNode , indentation + 1, writer, serverRoot);
+                    PrintToWriterInEdges(e.StartNode, indentation + 1, writer, serverRoot);
                 }
                 writer.WriteLine("</ul>");
             }
@@ -4536,7 +4545,7 @@ function hidetip()
     public enum ContentBackingStore
     {
         None = 0,
-        
+
         /// <summary>
         /// When the KB is dirty
         /// mt.Repository URI is what we'd compile from
@@ -4602,7 +4611,7 @@ function hidetip()
         public Func<object, string> NormalizeKey;
         static private readonly char[] RegexMarkers = "$^.*[|]".ToCharArray();
 
-        public KeyCase(Func<object,string> normalizer)
+        public KeyCase(Func<object, string> normalizer)
         {
             NormalizeKey = normalizer;
         }
@@ -4779,8 +4788,8 @@ function hidetip()
         }
 
         readonly IDictionary<U1, U2> backing;
-        
-        public CIDictionary2()           
+
+        public CIDictionary2()
         {
             backing = new Dictionary<U1, U2>((IEqualityComparer<U1>)KeyCase.Default);
         }
