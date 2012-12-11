@@ -1689,15 +1689,30 @@ namespace RTParser.Utils
         public string evaluate(string path, SubQuery query, Request request, MatchState state, StringBuilder builder)
         {
             ensureEdb();
+            string result = "";
             if (!useChatDB)
             {
                 //root = root ?? RootNode;
-                return root.evaluate(path, query, request, state, builder); 
+                result = root.evaluate(path, query, request, state, builder); 
             }
             else
             {
-                return root.evaluateDB(path, query, request, state, builder, "", chatDB);
+                result = root.evaluateDB(path, query, request, state, builder, "", chatDB);
             }
+
+            // temporary PATCH
+            if (result.Contains("<")) 
+            {
+                result = result.Replace("<", " <");
+                result = result.Replace("  <", " <");
+            }
+            if (result.Contains(">"))
+            {
+                result = result.Replace(">", "> ");
+                result = result.Replace(">  ", "> ");
+            }
+
+            return result;
         }
         public bool IsMicrosoftCLR()
         {

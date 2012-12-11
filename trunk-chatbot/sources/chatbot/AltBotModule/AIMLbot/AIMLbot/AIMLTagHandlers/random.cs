@@ -55,6 +55,13 @@ namespace AltAIMLbot.AIMLTagHandlers
                         //XmlNode chosenNode = (XmlNode)listNodes[r.Next(listNodes.Count)];
                         //string result = chosenNode.InnerXml;
                         string result = this.bot.myRandMem.selectOne(listNodes);
+
+                        // temporary PATCH
+                        if ((result.Contains("<star"))&&(!result.Contains(" <star")))
+                        {
+                            result=result.Replace("<star", " <star");
+                        }
+
                         Console.WriteLine(" Random Selected:{0}", result);
                         return result;
                     }

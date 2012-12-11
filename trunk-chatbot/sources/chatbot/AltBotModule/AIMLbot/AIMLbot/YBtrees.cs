@@ -46,6 +46,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 namespace AltAIMLbot
 {
+    #region BTXML
     [Serializable]
     public class BehaviorTree
     {
@@ -1248,7 +1249,7 @@ namespace AltAIMLbot
         }
 
 
-        #region TagProcessors
+        #region BTXMLTags
 
         public IEnumerable<RunStatus> ProcessPushBehavior(XmlNode myNode)
         {
@@ -3552,8 +3553,8 @@ namespace AltAIMLbot
             // given a prolog query, will take the bindings of var as a list of subbehavior id's (or other)
             // then place them inside a <cmd> tag and execute
             //examples:
-            // <query_macro outtercmd='select' innercmd='subbehavior' mt='decide' var="ACTION" >should_act(ACTION)</query_macro>
-            // <query_macro outtercmd='random' innercmd='task,say' mt='tellerSpindle' var="MESSAGE" >couldSay(MESSAGE)</query_macro>
+            // <evalprologmacro outtercmd='select' innercmd='subbehavior' mt='decide' var="ACTION" >should_act(ACTION)</query_macro>
+            // <evalprologmacro outtercmd='random' innercmd='task,say' mt='tellerSpindle' var="MESSAGE" >couldSay(MESSAGE)</query_macro>
             //
             string filler = "";
 
@@ -5414,7 +5415,7 @@ namespace AltAIMLbot
         }
 
         #endregion
-
+        #region ChatMapperImport
         // <loadchatmaper path="chatmapper\example.xml"/>
         public IEnumerable<RunStatus> ProcessLoadChatMapper(XmlNode myNode)
         {
@@ -5669,9 +5670,9 @@ namespace AltAIMLbot
 
             return (false ^ negation);
         }
+        #endregion
 
-
-        public void addOCCLogicForInteraction(KnowledgeBase kb, string target)
+         public void addOCCLogicForInteraction(KnowledgeBase kb, string target)
         {
 
             kb.Tell(string.Format("((NOT selfLikeUser) => (NOT selfWant{0}))", target));
@@ -5741,6 +5742,7 @@ namespace AltAIMLbot
             kb.Tell(string.Format("((selfFeelNaughtyAbout{0}) => selfFeelNaughty)", target));
         }
     }
+    #endregion 
     #region chatmapper
     /******************************************************************************************
         ChatMapper XML to BTXML importer -- Copyright (c) 2012,Kino Coursey, Daxtron Labs

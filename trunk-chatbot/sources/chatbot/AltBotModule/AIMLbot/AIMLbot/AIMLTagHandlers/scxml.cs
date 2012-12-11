@@ -46,7 +46,7 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             if (this.TemplateNodeName == "scxml")
             {
-                // Simply push the filled in tag contents onto the stack
+                // define a state machine using scxml. Default name is "root"
                 try
                 {
                     String templateNodeTotalValue = this.TemplateNodeOuterXml;

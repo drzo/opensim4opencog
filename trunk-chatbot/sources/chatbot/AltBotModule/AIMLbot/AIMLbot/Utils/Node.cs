@@ -416,6 +416,12 @@ namespace AltAIMLbot.Utils
                 templates = null;
                 return;                
             }
+
+            //Tempory PATCH
+            if ((template.Contains("<star"))&&(!template.Contains(" <star")))
+            {
+                template = template.Replace("<star", " <star");
+            }
             if (templates == null) templates = new List<OutputTemplate>();
             if (template.Contains("xmlns"))
             {

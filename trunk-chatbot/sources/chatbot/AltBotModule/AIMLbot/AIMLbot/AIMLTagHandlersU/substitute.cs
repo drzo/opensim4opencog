@@ -61,6 +61,23 @@ namespace RTParser.AIMLTagHandlers
                 // non atomic version of the node
                 return RTParser.Normalize.ApplySubstitutions.Substitute(GetDictionary(), templateNodeInnerText);
             }
+            else
+            {
+                //Need an atomic version
+                // atomic version of the node
+                XmlNode starNode = AIMLTagHandler.getNode("<star/>");
+                star recursiveStar = new star(this.bot, this.user, this.query, this.request, this.result, starNode);
+                this.templateNode.InnerText = recursiveStar.Transform();
+                if (this.templateNode.InnerText.Length > 0)
+                {
+                    return this.ProcessChange();
+                }
+                else
+                {
+                    return Unifiable.Empty;
+                }
+
+            }
             return Unifiable.Empty;
         }
 
