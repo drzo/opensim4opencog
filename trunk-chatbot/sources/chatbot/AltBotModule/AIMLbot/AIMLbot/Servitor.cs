@@ -732,10 +732,14 @@ namespace AltAIMLbot
                 myScheduler.SleepAllTasks(30000);
                 myScheduler.EnqueueEvent("onchat");
 
-                curBot.isPerformingOutput = true;
-                curBot.myBehaviors.logText("ONCHAT IMMED RETURN:" + curBot.lastBehaviorChatOutput);
-                prologEngine.postListPredToMt("lastoutput", curBot.lastBehaviorChatOutput, "lastoutputMt");
-                return curBot.lastBehaviorChatOutput;
+                string chatOutput = curBot.lastBehaviorChatOutput;
+                if (!string.IsNullOrEmpty(chatOutput))
+                {
+                    curBot.isPerformingOutput = true;
+                    curBot.myBehaviors.logText("ONCHAT IMMED RETURN:" + chatOutput);
+                    prologEngine.postListPredToMt("lastoutput", chatOutput, "lastoutputMt");
+                    return chatOutput;
+                }
             }
             // else try the named behavior
             if (doHaviours && curBot.myBehaviors.definedBehavior("chatRoot"))
@@ -756,11 +760,14 @@ namespace AltAIMLbot
                 curBot.lastBehaviorChatOutput = "";
                 myScheduler.SleepAllTasks(30000);
                 myScheduler.ActivateBehaviorTask("chatRoot");
-
-                curBot.isPerformingOutput = true;
-                curBot.myBehaviors.logText("CHATROOT IMMED RETURN:" + curBot.lastBehaviorChatOutput);
-                prologEngine.postListPredToMt("lastoutput", curBot.lastBehaviorChatOutput, "lastoutputMt");
-                return curBot.lastBehaviorChatOutput;
+                string chatOutput = curBot.lastBehaviorChatOutput;
+                if (!string.IsNullOrEmpty(chatOutput))
+                {
+                    curBot.isPerformingOutput = true;
+                    curBot.myBehaviors.logText("CHATROOT IMMED RETURN:" + chatOutput);
+                    prologEngine.postListPredToMt("lastoutput", chatOutput, "lastoutputMt");
+                    return chatOutput;
+                }
             }
             // else just do it (no other behavior is defined)
             try
@@ -773,14 +780,24 @@ namespace AltAIMLbot
                 Request r = new Request(input, curUser, curBot);
                 Result res = curBot.Chat(r);
                 Unifiable output = res.Output;
+                string outputS = (string)output;
+                if (string.IsNullOrEmpty(outputS))
+                {
+                    outputS = (string)curBot.lastBehaviorChatOutput;
+                    if (string.IsNullOrEmpty(outputS))
+                    {
+                        return "";
+                    }
+                    output = (Unifiable)outputS;
+                }
                 curBot.BotAsUser.JustSaid = output;
                 if (traceServitor)
                 {
                     Console.WriteLine("SERVITOR: respondToChat({0})={1}", input, output);
                 }
-                curBot.lastBehaviorChatOutput = output;
+                curBot.lastBehaviorChatOutput = outputS;
                 curBot.isPerformingOutput = true;
-                curBot.myBehaviors.logText("CHATROOT IMMED RETURN:" + curBot.lastBehaviorChatOutput);
+                curBot.myBehaviors.logText("CHAT IMMED RETURN:" + curBot.lastBehaviorChatOutput);
                 prologEngine.postListPredToMt("lastoutput", curBot.lastBehaviorChatOutput, "lastoutputMt");
                 return curBot.lastBehaviorChatOutput;
             }
