@@ -57,9 +57,12 @@ namespace AltAIMLbot.AIMLTagHandlers
                         string result = this.bot.myRandMem.selectOne(listNodes);
 
                         // temporary PATCH
-                        if ((result.Contains("<star"))&&(!result.Contains(" <star")))
+                        if (AltBot.PadAroundTemplateTags)
                         {
-                            result=result.Replace("<star", " <star");
+                            if ((result.Contains("<star")) && (!result.Contains(" <star")))
+                            {
+                                result = result.Replace("<star", " <star");
+                            }
                         }
 
                         Console.WriteLine(" Random Selected:{0}", result);

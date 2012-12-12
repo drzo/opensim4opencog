@@ -72,6 +72,12 @@ namespace RTParser
         /// </summary>
         //public RChem myChemistry = new RChem(myConst.MEMHOST, true);
         //public Qchem realChem = new Qchem(myConst.MEMHOST);
+        
+        /// <summary>
+        /// @TODO @WORKAROUND Currently adding some padding around Template expanded tags
+        /// </summary>
+        public static bool PadAroundTemplateTags = true;
+
         public RChem myChemistry = null;
         public Qchem realChem = null;
         public ChemTrace myChemTrace = null;
@@ -79,7 +85,20 @@ namespace RTParser
         public BehaviorSet myBehaviors;
         public Cron myCron = null;
         public bool inCritical = false;
-        public bool blockCron = false;
+        private bool _blockCron = false;
+        public bool blockCron
+        {
+            get
+            {
+                if (_blockCron) return true;
+                if (servitor.IsBackgroundDisabled) return true;
+                return false;
+            }
+            set
+            {
+                _blockCron = value;
+            }
+        }
         public bool loadChanging = true;
         public RandomMemory myRandMem = new RandomMemory();
 

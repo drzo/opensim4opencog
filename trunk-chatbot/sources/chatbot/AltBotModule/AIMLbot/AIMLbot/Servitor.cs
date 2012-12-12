@@ -58,12 +58,54 @@ namespace AltAIMLbot
             get { return curBot.LastUser; }
         }
         public  Thread tmTalkThread = null;
-        public bool tmTalkEnabled = true;
+        private bool _tmTalkEnabled = true;
+        public bool tmTalkEnabled
+        {
+            get
+            {
+                if (IsBackgroundDisabled) return false;
+                return _tmTalkEnabled;
+            }
+            set
+            {
+                _tmTalkEnabled = value;
+            }
+        }
+
+        public bool IsBackgroundDisabled
+        {
+            get
+            {
+                return true;
+                if (curBot != null && curBot.GlobalSettings != null)
+                {
+                    string NBGC = curBot.GlobalSettings.grabSetting("noBackgroundChat");
+                    if (NBGC!=null && NBGC.ToLower().StartsWith("t"))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
         public bool mLoadCompleteAndPersonalityShouldBeDefined = false;
         public  Thread tmFSMThread = null;
         public bool tmFSMEnabled = true;
         public  Thread tmBehaveThread = null;
-        public bool tmBehaveEnabled = true;
+        private bool _tmBehaveEnabled = true;
+        public bool tmBehaveEnabled
+        {
+            get
+            {
+                if (IsBackgroundDisabled) return false;
+                return _tmBehaveEnabled;
+            }
+            set 
+            {
+                _tmBehaveEnabled = value;
+            }
+        }
 
         public  Thread myCronThread = null;
         public  string lastAIMLInstance = "";
@@ -723,19 +765,29 @@ namespace AltAIMLbot
             // else just do it (no other behavior is defined)
             try
             {
-                    Request r = new Request(input, curUser, curBot);
-                    Result res = curBot.Chat(r);
-                    if (traceServitor)
-                    {
-                        Console.WriteLine("SERVITOR: respondToChat({0})={1}", input, res.Output);
-                    }
-                    curBot.isPerformingOutput = true;
-                    return res.Output;
+                curUser.JustSaid = input;
+                curUser.Predicates.updateSetting("lastinput", input);
+                prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
+                //curBot.lastBehaviorChatInput = input;
+                curBot.isPerformingOutput = false;
+                Request r = new Request(input, curUser, curBot);
+                Result res = curBot.Chat(r);
+                Unifiable output = res.Output;
+                curBot.BotAsUser.JustSaid = output;
+                if (traceServitor)
+                {
+                    Console.WriteLine("SERVITOR: respondToChat({0})={1}", input, output);
+                }
+                curBot.lastBehaviorChatOutput = output;
+                curBot.isPerformingOutput = true;
+                curBot.myBehaviors.logText("CHATROOT IMMED RETURN:" + curBot.lastBehaviorChatOutput);
+                prologEngine.postListPredToMt("lastoutput", curBot.lastBehaviorChatOutput, "lastoutputMt");
+                return curBot.lastBehaviorChatOutput;
             }
             catch
             {
                 curBot.isPerformingOutput = true;
-                return "..."; 
+                return "...";
             }
 
         }

@@ -1701,10 +1701,13 @@ namespace RTParser.Utils
             }
 
             // temporary PATCH
-            if (result.Contains("<")) 
+            if (AltBot.PadAroundTemplateTags)
             {
-                result = result.Replace("<", " <");
-                result = result.Replace("  <", " <");
+                if (result.Contains("<"))
+                {
+                    result = result.Replace("<", " <");
+                    result = result.Replace("  <", " <");
+                }
             }
             if (result.Contains(">"))
             {

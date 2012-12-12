@@ -40,26 +40,6 @@ namespace LogicalParticleFilter1
         // https://github.com/abresas/prologjs
         // https://github.com/crcx/chrome_prolog
 
-        public class QueryContext
-        {
-            //public string ruleset;
-            public string startMT;
-            public readonly PDB db;
-            //public readonly PartList context = new PartList();
-
-            public QueryContext(string home, PartList list)
-            {
-                db = new PDB();
-                startMT = home;
-                //context = list;
-            }
-
-            public void InitContext()
-            {
-
-            }
-        }
-
         //public QueryContext test; 
         /// <summary>
         ///  A plain old super simple prolog interpreter
@@ -82,7 +62,7 @@ namespace LogicalParticleFilter1
 
         public static PGraph GlobalKBGraph = new PGraph();
         public PGraph KBGraph = GlobalKBGraph ?? new PGraph();
-        readonly public PDB testdb = new PDB();
+        public readonly PDB testdb = new PDB(false);
         //was unused :  private Dictionary<string, string> bindingsDict = new Dictionary<string, string>();
 
         // natural language to MT name
@@ -517,43 +497,67 @@ function hidetip()
             writer.WriteLine("<font color='{0}' {1}>{2}</font>{3}<br/>", color, toolTip, r.ToString(), ext);
         }
 
+        [ThreadStatic] static int tl_StructToStringDepth = 4;
         public static string StructToString(object t)
         {
-            return StructToString(t, 2);
+            int before = tl_StructToStringDepth;
+            try
+            {
+                return StructToString1(t, 2);
+            }
+            finally
+            {
+                tl_StructToStringDepth = before;
+            }
         }
 
         private static bool HasElements(ICollection props)
         {
             return props != null && props.Count > 0;
         }
-        public static string StructToString(object t, int depth)
+        public static string StructToString1(object t, int depth)
         {
             if (t == null) return "NULL";
             Type structType = t.GetType();
-            if (t is IConvertible || t is String || t is Uri || t is Stream) return "" + t;
+            if (t is IConvertible || t is String || t is Uri || t is Stream || t is Part) return "" + t;
+            if (tl_StructToStringDepth > depth)
+            {
+                tl_StructToStringDepth = depth;
+            }
+            else
+            {
+                depth = tl_StructToStringDepth;
+            }
+            if (structType.IsValueType) depth++;
             if (depth < 0) return "^";// +t;
             StringBuilder result = new StringBuilder();
-            if (t is ICollection)
+            if (t is IEnumerable)
             {
-                ICollection ic = t as ICollection;
+                IEnumerable ic = t as IEnumerable;
                 int max = 10;
-                result.Append("CollectionType: " + structType + " Count: " + ic.Count + " " + " Items: [");
+                int fnd = 0;
+                bool printSomething = true;
+                result.Append("Items: [");
                 foreach (var i in ic)
                 {
-                    result.Append(ic.Count + ": " + StructToString(i, depth - 1) + " ");
+                    if (printSomething)
+                    {
+                        result.Append(fnd + ": " + StructToString1(i, depth - 1) + " ");
+                        tl_StructToStringDepth = depth;
+                    }
+                    fnd++;
                     max--;
                     if (max < 1)
                     {
-                        result.Append("...");
-                        break;
-
+                        if (printSomething) result.Append("...");
+                        printSomething = false;
                     }
                 }
                 result.Append("]");
-                return result.ToString().TrimEnd();
+                return "CollectionType: " + structType + " Count: " + fnd + " " + result.ToString().TrimEnd();
             }
-            var fpub = BindingFlags.Public | BindingFlags.Instance;
-            var fpriv = BindingFlags.NonPublic | BindingFlags.Instance;
+            const BindingFlags fpub = BindingFlags.Public | BindingFlags.Instance;
+            const BindingFlags fpriv = BindingFlags.NonPublic | BindingFlags.Instance;
             FieldInfo[] fields = structType.GetFields(fpub);
             PropertyInfo[] props = structType.GetProperties(fpub);
             bool hasProps = HasElements(props);
@@ -561,24 +565,35 @@ function hidetip()
             {
                 fields = structType.GetFields(fpriv);
             }
+            if (!HasElements(props))
+            {
+                props = structType.GetProperties(fpriv);
+            }
             bool needSimpleToString = true;
 
-            if (!HasElements(fields))
+            HashSet<string> unneeded = new HashSet<string>();
+            //if (HasElements(fields))
             {
-                props = hasProps ? props : structType.GetProperties(fpriv);
                 foreach (PropertyInfo prop in props)
                 {
                     if (prop.GetIndexParameters().Length != 0) continue;
                     needSimpleToString = false;
-                    result.Append("{" + prop.Name + ": " + StructToString(prop.GetValue(t, null), depth - 1) + "}");
+                    string propname = prop.Name;
+                    if (propname == "AToString") continue;
+                    unneeded.Add(propname.Trim('m', '_').ToUpper());
+                    result.Append("{" + propname + ": " + StructToString1(prop.GetValue(t, null), depth - 1) + "}");
+                    tl_StructToStringDepth = depth;
                 }
             }
-            if (needSimpleToString)
+            //if (needSimpleToString)
             {
                 foreach (FieldInfo prop in fields)
                 {
+                    string propname = prop.Name;
+                    if (unneeded.Contains(propname.Trim('m', '_').ToUpper())) continue;                   
                     needSimpleToString = false;
-                    result.Append("{" + prop.Name + ": " + StructToString(prop.GetValue(t), depth - 1) + "}");
+                    result.Append("{" + propname + ": " + StructToString1(prop.GetValue(t), depth - 1) + "}");
+                    tl_StructToStringDepth = depth;
                 }
             }
 
@@ -663,9 +678,9 @@ function hidetip()
             }
         }
 
-        public ArrayList collectKBRules(ArrayList kbList)
+        public RuleList collectKBRules(IEnumerable<string> kbList)
         {
-            ArrayList VKB = new ArrayList();
+            RuleList VKB = new RuleList();
             foreach (string focusMT in kbList)
             {
                 PNode focus = KBGraph.Contains(focusMT);
@@ -797,33 +812,64 @@ function hidetip()
         {
             return replaceInKB(fact, "", focusMT);
         }
-        public string replaceInKB(string fact, string replace, string focusMT)
+        public Rule retractKB(Rule fact, PNode focus)
+        {
+            return replaceInKB(fact, null, focus);
+        }
+        public string replaceInKB(string oldFact, string newFact, string focusMT)
         {
             PNode focus = KBGraph.Contains(focusMT);
             if (focus == null) return null;
             ensureCompiled(focus);
-            fact = fact.Replace(", ", ",");
-            fact = fact.Replace("\n", "");
+            oldFact = oldFact.Replace(", ", ",");
+            oldFact = oldFact.Replace("\n", "");
             focusMT = focus.id;
             var rules = focus.pdb.rules;
             lock (rules) for (int i = 0; i < rules.Count; i++)
                 {
                     Rule r = (Rule)rules[i];
                     string val = r.ToString();
-                    if (val.Replace(", ", ",").StartsWith(fact))
+                    if (val.Replace(", ", ",").StartsWith(oldFact))
                     {
                         // we null out ruleset so that the accessor knows all rules are in the PDB
                         focus.ruleset = null;
-                        focus.pdb.index.Clear();
-                        if (String.IsNullOrEmpty(replace))
+                        if (String.IsNullOrEmpty(newFact))
                         {
+                            focus.pdb.index.Clear();
                             rules.RemoveAt(i);
                             return val;
                         }
-                        var or = ParseRule(new Tokeniser(replace));
+                        var or = ParseRule(new Tokeniser(newFact), focusMT);
                         or.optHomeMt = focusMT;
                         rules[i] = or;
+                        focus.SyncFromNow = ContentBackingStore.PrologMemory;
                         return val;
+                    }
+                }
+            return null;
+        }
+        public Rule replaceInKB(Rule oldFact, Rule newFact, PNode focus)
+        {
+            if (focus == null) return null;
+            ensureCompiled(focus);
+            var rules = focus.pdb.rules;
+            lock (rules) for (int i = 0; i < rules.Count; i++)
+                {
+                    Rule r = (Rule)rules[i];
+                    string val = r.ToString();
+                    if (r.SameClause(oldFact))
+                    {
+                        // we null out ruleset so that the accessor knows all rules are in the PDB
+                        focus.ruleset = null;
+                        if (newFact == null)
+                        {
+                            focus.pdb.index.Clear();
+                            rules.RemoveAt(i);
+                            return r;
+                        }
+                        rules[i] = newFact;
+                        focus.SyncFromNow = ContentBackingStore.PrologMemory;
+                        return oldFact;
                     }
                 }
             return null;
@@ -848,7 +894,7 @@ function hidetip()
             if (!focus.IsDataFrom(ContentBackingStore.PrologSource))
             {
                 focus.Clear();
-                appendKB_unlocked(ruleSet, focus, startMT);
+                appendKB_unlocked(ruleSet, focus);
                 return;
             }
             focus.ruleset = ruleSet;
@@ -863,27 +909,38 @@ function hidetip()
         /// </summary>
         /// <param name="ruleSet"></param>
         /// <param name="startMT"></param>
-        /// 
+        ///
+        public void appendKB(RuleList ruleSet, PNode focus)
+        {
+            lock (focus.CompileLock)
+            {
+                appendKB_unlocked(ruleSet, focus);
+            }
+        }
         public void appendKB(string ruleSet, string startMT)
         {
             // Adds a string rule set
             PNode focus = FindOrCreateKB(startMT);
             lock (focus.CompileLock)
             {
-                appendKB_unlocked(ruleSet, focus, startMT);
+                appendKB_unlocked(ruleSet, focus);
             }
         }
-        public void appendKB_unlocked(string ruleSet, PNode focus, string startMT)
+        public void appendKB_unlocked(string ruleSet, PNode focus)
         {
-            startMT = focus.Id;
             if (ruleSet.Trim() == "") return;
+            string startMT = focus.Id;
+            var outr = parseRuleset(ruleSet, startMT);
+            appendKB_unlocked(outr, focus);
+        }
+        public void appendKB_unlocked(RuleList ruleSet, PNode focus)
+        {
             if (focus.IsDataFrom(ContentBackingStore.PrologMemory))
             {
                 focus.pdb.index.Clear();
-                var outr = parseRuleset(ruleSet, startMT);
                 lock (focus.pdb.rules)
                 {
-                    foreach (Rule r in outr)
+                    foreach (Rule r in ruleSet)
                     {
                         focus.pdb.rules.Add(r);
                     }
@@ -893,7 +950,7 @@ function hidetip()
             }
             if (!focus.IsDataFrom(ContentBackingStore.PrologSource))
             {
-                Warn("KB " + startMT + " is not from sourcecode but instead from " + focus.SourceKind);
+                Warn("KB " + focus + " is not from sourcecode but instead from " + focus.SourceKind);
                 return;
             }
 
@@ -901,7 +958,7 @@ function hidetip()
             {
                 if ((focus.ruleset != null) && (focus.ruleset.Length > (maxMtSize * 1.2)))
                 {
-                    focus.ruleset = focus.ruleset + "\n" + ruleSet + "\n";
+                    focus.ruleset = focus.ruleset + "\n" + ruleSet.ToSource() + "\n";
                     while ((focus.ruleset != null) && (focus.ruleset.Length > maxMtSize))
                     {
                         int p1 = focus.ruleset.IndexOf("\n");
@@ -915,12 +972,11 @@ function hidetip()
                 }
                 else
                 {
-                    focus.ruleset = focus.ruleset + "\n" + ruleSet + "\n";
+                    focus.ruleset = focus.ruleset + "\n" + ruleSet.ToSource() + "\n";
                     focus.pdb.index.Clear();
-                    var outr = parseRuleset(ruleSet, startMT);
                     lock (focus.pdb.rules)
                     {
-                        foreach (Rule r in outr)
+                        foreach (Rule r in ruleSet)
                         {
                             focus.pdb.rules.Add(r);
                         }
@@ -930,7 +986,7 @@ function hidetip()
                 return;
             }
 
-            focus.ruleset = focus.ruleset + "\n" + ruleSet + "\n";
+            focus.ruleset = focus.ruleset + "\n" + ruleSet.ToSource() + "\n";
             focus.dirty = true;
             focus.SyncFromNow = ContentBackingStore.PrologSource;
             if (lazyTranslate) return;
@@ -1048,7 +1104,7 @@ function hidetip()
                     if (line.StartsWith(";doc;"))
                     {
                         var line5 = line.Substring(5).Trim() + " .";
-                        Term t = ParseTerm(new Tokeniser(line5)) as Term;
+                        Term t = ParseTerm(new Tokeniser(line5), startMT) as Term;
                         DocumentTerm(t, false);
                         continue;
                     }
@@ -1223,7 +1279,7 @@ function hidetip()
                 {
                     if (rule.Substring(0, 1) == "#" || rule == "") continue;
 
-                    var or = ParseRule(new Tokeniser(rule));
+                    var or = ParseRule(new Tokeniser(rule), homeMt);
                     if (or == null) continue;
                     or.optHomeMt = homeMt;
                     ruleList.Add(or);
@@ -1304,7 +1360,7 @@ function hidetip()
 
             Dictionary<string, string> bindingsDict = new Dictionary<string, string>();
             string query = inQuery;
-            PartList qlist = ParseBody(new Tokeniser(query));
+            PartList qlist = ParseBody(new Tokeniser(query), queryMT);
             if (qlist == null)
             {
                 Warn("An error occurred parsing the query '{0}.\n", query);
@@ -1318,18 +1374,13 @@ function hidetip()
                 ConsoleWriteLine("\n\n");
             }
 
-            var vs = varNames(q.plist);
-            var ctx = new QueryContext(queryMT, vs);
-            var db = ctx.db;
-            // db.rules = findVisibleKBRules(queryMT);
-            db.rules = findVisibleKBRulesSorted(queryMT);
-            db.index.Clear();
+            var ctx = MakeQueryContext(queryMT, true, null);
             bool isTrue = false;
             // Prove the query.
             prove(
                 renameVariables(q.plist, 0, null),
                     new PEnv(),
-                db,
+                ctx,
                 1,
                 delegate(PEnv env)
                 {
@@ -1341,7 +1392,7 @@ function hidetip()
         public void askQuery(string inQuery, string queryMT)
         {
             var query = inQuery;
-            PartList qlist = ParseBody(new Tokeniser(query));
+            PartList qlist = ParseBody(new Tokeniser(query), queryMT);
             if (qlist == null)
             {
                 Warn("An error occurred parsing the query '{0}.\n", query);
@@ -1356,11 +1407,8 @@ function hidetip()
             }
 
             var vs = varNames(q.plist);
-            var ctx = new QueryContext(queryMT, vs);
+            var ctx = MakeQueryContext(queryMT, true, null);
             var db = ctx.db;
-            // db.rules = findVisibleKBRules(queryMT);
-            db.rules = findVisibleKBRulesSorted(queryMT);
-            db.index.Clear();
 
             // Prove the query.
             prove(
@@ -1372,26 +1420,46 @@ function hidetip()
                 );
 
         }
-        public void askQuery(string inQuery, string queryMT, out List<Dictionary<string, string>> outBindings)
+
+        private PDB MakeQueryContext(string queryMT, bool followGenlMt, PDB start)
         {
-            outBindings = new List<Dictionary<string, string>>();
-            askQuery(inQuery, queryMT, true, null, outBindings);
+            PDB db = start ?? new PDB(false);
+            if (queryMT != null)
+            {
+                if (db.isStorage)
+                {
+                    var db2 = new PDB(false);
+                    db2.rules = db.rules.Copy();
+                    db = db2;
+                }
+                db.startMt = queryMT;
+                db.followedGenlMt = followGenlMt;
+                db.rules = findVisibleKBRules(queryMT, new List<string>(), followGenlMt);
+                db.index.Clear();
+            }
+            return db;
         }
 
-        public void askQuery(string inQuery, string queryMT, bool followGenlMt, List<Dictionary<string, Part>> outBindingParts, List<Dictionary<string, string>> outBindingStrings)
+        public void askQuery(string query, string queryMT, out List<Dictionary<string, string>> outBindings)
+        {
+            outBindings = new List<Dictionary<string, string>>();
+            PartList qlist = ParseBody(new Tokeniser(query), queryMT);
+            if (qlist == null)
+            {
+                Warn("An error occurred parsing the query '{0}.\n", query);
+                //outBindings = bindingList;
+                return;
+            }
+            askQuery(qlist, queryMT, true, null, outBindings);
+        }
+
+        public void askQuery(PartList qlist, string queryMT, bool followGenlMt, List<Dictionary<string, Part>> outBindingParts, List<Dictionary<string, string>> outBindingStrings)
         {
             //var bindingList = new List<Dictionary<string, Part>>();
             //var bindingsDict = new Dictionary<string, Part>();
             //try
             {
-                var query = inQuery;
-                PartList qlist = ParseBody(new Tokeniser(query));
-                if (qlist == null)
-                {
-                    Warn("An error occurred parsing the query '{0}.\n", query);
-                    //outBindings = bindingList;
-                    return;
-                }
+                //var query = inQuery;
                 Body q = new Body(qlist);
                 if (show)
                 {
@@ -1400,18 +1468,9 @@ function hidetip()
                     ConsoleWriteLine("\n\n");
                 }
 
-                var vs = varNames(q.plist);
-                var ctx = new QueryContext(queryMT, vs);
-                var context = vs;
+                var context = varNames(q.plist);
+                var ctx = MakeQueryContext(queryMT, followGenlMt, null);
                 var db = ctx.db;
-                if (!followGenlMt)
-                {
-                    db.rules = findVisibleKBRules(queryMT, new List<string>(), false);
-                }
-                else
-                {
-                    db.rules = findVisibleKBRulesSorted(queryMT);
-                }
                 if (db.rules == null)
                 {
                     //outBindings = bindingList;
@@ -1425,7 +1484,7 @@ function hidetip()
                 prove(
                     renameVariables(q.plist, 0, null),
                         new PEnv(),
-                    db,
+                    ctx,
                     1,
                     delegate(PEnv env)
                     {
@@ -1477,7 +1536,7 @@ function hidetip()
         public void parseQuery()
         {
             inGlobalTest();
-            PartList qlist = ParseBody(new Tokeniser(testquery));
+            PartList qlist = ParseBody(new Tokeniser(testquery), null);
             if (qlist == null)
             {
                 Warn("An error occurred parsing the query '{0}.\n", testquery);
@@ -1492,7 +1551,7 @@ function hidetip()
             }
 
             var vs = varNames(q.plist);
-            var test = new QueryContext(null, vs);
+            var test = MakeQueryContext(null, true, testdb);
 
             testdb.index.Clear();
 
@@ -1500,7 +1559,7 @@ function hidetip()
             prove(
                 renameVariables(q.plist, 0, null),
                 new PEnv(),
-                test.db,
+                test,
                 1,
                 (env) => printContext(vs, env)
                 );
@@ -1699,11 +1758,11 @@ function hidetip()
             //PDB db;
             if (thisTerm.name == "callMt")
             {
-                db = new PDB();
                 // db.rules = findVisibleKBRules(queryMT);
-                string queryMT = ((IAtomic)thisTerm.ArgList[1]).AsString();
-                db.rules = findVisibleKBRulesSorted(queryMT);
-                thisTerm = thisTerm.ArgList[0] as Term;
+                string queryMT = ((IAtomic) thisTerm.ArgList[0]).AsString();
+                db = MakeQueryContext(queryMT, true, null);
+                tl_mt = queryMT;
+                thisTerm = thisTerm.ArgList[1] as Term;
             }
             else
             {
@@ -1763,6 +1822,7 @@ function hidetip()
                 int i = -1;
                 foreach (Rule rule in localRules)
                 {
+                    tl_rule_mt = rule.optHomeMt ?? tl_rule_mt;
                     i++;
                     if (thisTerm.excludeRule == i)
                     {
@@ -2459,13 +2519,33 @@ function hidetip()
                 get { return (Part)ht[name]; }
                 set { ht[name] = value; }
             }
+
+            public bool TryGetValue(string name, out Part o)
+            {
+                o = this[name];
+                return o != null;
+            }
         }
 
         public class RuleList : IEnumerable
         {
             internal List<Rule> arrayList = new List<Rule>();
             internal PDB syncPDB;
-
+            /// <summary>
+            /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            /// </summary>
+            /// <returns>
+            /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            /// </returns>
+            /// <filterpriority>2</filterpriority>
+            public override string ToString()
+            {
+                return StructToString(this);
+            }
+            public string AToString
+            {
+                get { return ToString(); }
+            }
             public int Count
             {
                 get { lock (Sync) return arrayList.Count; }
@@ -2549,19 +2629,58 @@ function hidetip()
             {
                 lock (Sync) return arrayList.GetEnumerator();
             }
+
+            public RuleList Copy()
+            {
+                var ret = new RuleList();
+                ret.arrayList.AddRange(arrayList);
+                return ret;
+            }
+
+            public string ToSource()
+            {
+                var ret = new StringWriter();
+                foreach (Rule rule in arrayList)
+                {
+                    ret.WriteLine(rule.ToSource());
+                }
+                return ret.ToString();
+            }
         }
         public class PDB
         {
+            /// <summary>
+            /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            /// </summary>
+            /// <returns>
+            /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            /// </returns>
+            /// <filterpriority>2</filterpriority>
+            public override string ToString()
+            {
+                return StructToString(this);
+            }
+            public string AToString
+            {
+                get { return ToString(); }
+            }
+            public string startMt;
+            public bool followedGenlMt;
+            public bool isStorage;
             static public Hashtable builtin = new Hashtable();
             private RuleList _rules;
 
             // A fast index for the database
             public Dictionary<string, RuleList> index = new Dictionary<string, RuleList>();
 
-            public PDB()
+            public PDB(bool isStaticKB)
             {
+                isStorage = isStaticKB;
                 _rules = new RuleList();
-                _rules.syncPDB = this;
+                if (isStorage)
+                {
+                    _rules.syncPDB = this;
+                }
             }
 
             public void initIndex()
@@ -2597,12 +2716,18 @@ function hidetip()
                     _rules = value;
                 }
             }
+
+            public PDB db
+            {
+                get { return this; }
+            }
         }
 
         public delegate Part PartReplacer(Part p, PartReplacer pr);
 
         public abstract class Part : IHasParent
         {
+            public abstract bool SameClause(Part term, PlHashtable varlist);
             public virtual bool IsGround
             {
                 get { return true; }
@@ -2658,6 +2783,11 @@ function hidetip()
             {
                 return;
             }
+
+            public virtual string AsString()
+            {
+                throw Missing("AsString");
+            }
         }
 
         public partial class PartList : Part, IEnumerable<Part>, IHasParent
@@ -2683,6 +2813,18 @@ function hidetip()
             // Parameters {Partlist} = [Part]
             // Part = Variable | Atom | Term
             //public string name;
+
+            public override bool SameClause(Part term, PlHashtable varlist)
+            {
+                var term2 = term as PartList;
+                if (term2 == null) return false;
+                int i = 0;
+                foreach (var s in this)
+                {
+                    if (!term2[i++].SameClause(s, varlist)) return false;
+                }
+                return true;
+            }
 
             override public bool IsGround
             {
@@ -2901,6 +3043,13 @@ function hidetip()
         }
         public class Atom : Part, IAtomic
         {
+            public override bool SameClause(Part term, PlHashtable varlist)
+            {
+                var term2 = term as Atom;
+                if (term2 == null) return false;
+                return this.Equals(term2);
+            }
+
             readonly public Object _name;
             string aname;
             string prefix;
@@ -3058,8 +3207,13 @@ function hidetip()
                 }
                 return name;
             }
+            public static Atom MakeString(string s)
+            {
+                return MakeAtom(s, "\"\"", null);
+            }
             public static Atom Make(string s)
             {
+                if (s == "") return MakeAtom("", "\"\"", null);
                 if (s == "[]" || s == FUNCTOR_NIL) s = "'robokind:nil'";
                 if (s == "." || s == FUNCTOR_CONS) s = "'robokind:cons'";
                 char c0 = s[0];
@@ -3107,7 +3261,7 @@ function hidetip()
                 }
             }
 
-            public string AsString()
+            override public string AsString()
             {
                 return AsValuedNode().AsString();
             }
@@ -3195,6 +3349,19 @@ function hidetip()
             {
                 get { return false; }
             }
+            public override bool SameClause(Part term, PlHashtable varlist)
+            {
+                var term2 = term as Variable;
+                if (term2 == null) return false;
+                if (term2.name == this.name) return true;
+                Part other;
+                if (!varlist.TryGetValue(name, out other))
+                {
+                    varlist[name] = term2;
+                    return true;
+                }
+                return other.name == term2.name;
+            }
         }
         public static bool IsListName(string s)
         {
@@ -3210,6 +3377,13 @@ function hidetip()
         }
         public class Term : Part, IHasParent
         {
+            public override bool SameClause(Part term, PlHashtable varlist)
+            {
+                var term2 = term as Term;
+                if (term2 == null) return false;
+                if (term2.name != this.name) return false;
+                return partlist.SameClause(term2.partlist, varlist);
+            }
             readonly public string _name;
             public override string name { get { return _name; } }
             public override string type { get { return "Term"; } }
@@ -3428,7 +3602,12 @@ function hidetip()
                     ConsoleWriteLine(".");
                 }
             }
+
             public override string ToString()
+            {
+                return ToSource();
+            }
+            public string ToSource()
             {
                 if (this.body == null)
                 {
@@ -3691,11 +3870,11 @@ function hidetip()
 
 
 
-        public Rule ParseRule(Tokeniser tk)
+        public Rule ParseRule(Tokeniser tk, string mt)
         {
             // A rule is a Head followed by . or by :- Body
 
-            Term h = (Term)ParseHead(tk);
+            Term h = (Term)ParseHead(tk, mt);
             if (h == null) return null;
 
             if (tk.current == ".")
@@ -3706,20 +3885,20 @@ function hidetip()
 
             if (tk.current != ":-") return null;
             tk.consume();
-            PartList b = ParseBody(tk);
+            PartList b = ParseBody(tk, mt);
 
             if (tk.current != ".") return null;
 
             return new Rule(h, b);
         }
 
-        public object ParseHead(Tokeniser tk)
+        public object ParseHead(Tokeniser tk, string mt)
         {
             // A head is simply a term. (errors cascade back up)
-            return ParseTerm(tk);
+            return ParseTerm(tk, mt);
         }
 
-        static public object ParseTerm(Tokeniser tk)
+        static public object ParseTerm(Tokeniser tk, string mt)
         {
             // Term -> [NOTTHIS] id ( optParamList )
 
@@ -3871,8 +4050,11 @@ function hidetip()
             append = new Term(FUNCTOR_CONS, frag);
             return append;
         }
-
-        public PartList ParseBody(Tokeniser tk)
+        public PartList ParseBody(string query, string mt)
+        {
+            return ParseBody(new Tokeniser(query), mt);
+        }
+        public PartList ParseBody(Tokeniser tk, string mt)
         {
             // Body -> Term {, Term...}
 
@@ -3880,7 +4062,7 @@ function hidetip()
             var i = 0;
 
             Term t;
-            while ((t = (Term)ParseTerm(tk)) != null)
+            while ((t = (Term)ParseTerm(tk, mt)) != null)
             {
                 p.AddPart(t);
                 i++;

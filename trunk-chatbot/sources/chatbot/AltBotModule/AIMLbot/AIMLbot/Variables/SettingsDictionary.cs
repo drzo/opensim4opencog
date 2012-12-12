@@ -101,6 +101,15 @@ namespace RTParser.Variables
     public class KeyValueListSIProlog : KeyValueList
     {
         public string dictMt;
+
+        private SIProlog.PNode _pnodeMt = null;
+        public SIProlog.PNode pnodeMt
+        {
+            get
+            {
+                return _pnodeMt ?? (_pnodeMt = prologEngine.FindOrCreateKB(dictMt));
+            }    
+        }
         public string predicateName;
         public string arg1Name;
         private LogicalParticleFilter1.SIProlog prologEngine;
@@ -131,11 +140,19 @@ namespace RTParser.Variables
             }
         }
 
+        private SIProlog.PartList KeyValueTerm
+        {
+            get
+            {
+                return QueryForNameValue(new SIProlog.Variable("KEY"), new SIProlog.Variable("VALUE"));
+            }
+        }
         public int Count
         {
-            get {
-                List<Dictionary<string, string>> bingingsList;
-                this.prologEngine.askQuery(QueryForNameValue("KEY", "VALUE"), dictMt, out bingingsList);
+            get
+            {
+                List<Dictionary<string, SIProlog.Part>> bingingsList = new List<Dictionary<string, SIProlog.Part>>();
+                this.prologEngine.askQuery(KeyValueTerm, dictMt, true, bingingsList, null);
                 return bingingsList.Count;
             }
         }
@@ -144,8 +161,9 @@ namespace RTParser.Variables
         {
             get
             {
-                List<Dictionary<string, string>> bingingsList;
-                this.prologEngine.askQuery(QueryForNameValue("KEY", "VALUE"), dictMt, out bingingsList);
+
+                List<Dictionary<string, SIProlog.Part>> bingingsList = new List<Dictionary<string, SIProlog.Part>>();
+                this.prologEngine.askQuery(KeyValueTerm, dictMt, true, bingingsList, null);
                 if (bingingsList.Count == 0) return new string[0];
                 List<string> keys = new List<string>();
                 foreach (var list in bingingsList)
@@ -166,37 +184,30 @@ namespace RTParser.Variables
         public void Add(string name, string value)
         {
             name = KeyCase.Default.NormalizeKey(name);
-            string valArg = MakeArg(value);
+            var valArg = MakeArg(value);
             //Remove(name);
-            string before = GetArgVal(name, false);
+            var before = GetArgVal(name, false);
             if (valArg == before) return;
             if (before != null)
             {
-                prologEngine.replaceInKB(QueryForNameValue(MakeArg(name), before) + ".",
-                                         QueryForNameValue(MakeArg(name), valArg) + ".", dictMt);
+                prologEngine.replaceInKB(RuleForNameValue(MakeArg(name), before),
+                                         RuleForNameValue(MakeArg(name), valArg), pnodeMt);
             }
             else
             {
-                prologEngine.appendKB(QueryForNameValue(MakeArg(name), valArg) + ".\n", dictMt);
+                prologEngine.appendKB(new SIProlog.RuleList() { RuleForNameValue(MakeArg(name), valArg) }, pnodeMt);
             }
-            string now = GetArgVal(name, false);
+            var now = GetArgVal(name, false);
             if (now != valArg)
             {
+                return;
                 throw new NotImplementedException("asserting " + valArg);
             }
         }
 
-        private string MakeArg(string value)
+        private LogicalParticleFilter1.SIProlog.Atom MakeArg(string value)
         {
-            var value2 = value.Replace("\\", "\\\\").Replace("\"", "\\\"");
-            if (value2 == value)
-            {
-                if (value.ToLower() == value)
-                {
-                   // return value;
-                }
-            }
-            return "\"" + value2 + "\"";
+            return LogicalParticleFilter1.SIProlog.Atom.MakeString(value);
         }
 
         public void Clear()
@@ -207,10 +218,10 @@ namespace RTParser.Variables
         public void Remove(string name)
         {
             name = KeyCase.Default.NormalizeKey(name);
-            string valArg = GetArgVal(name, false);
+            SIProlog.Part valArg = GetArgVal(name, false);
             if (valArg == null) return;
-            string remove = QueryForNameValue(MakeArg(name), valArg);
-            var didit = prologEngine.retractKB(remove, dictMt);
+            SIProlog.Rule remove = RuleForNameValue(MakeArg(name), valArg);
+            var didit = prologEngine.retractKB(remove, pnodeMt);
             var valarg2 = GetArgVal(name, false);
             if (null != valarg2)
             {
@@ -219,31 +230,31 @@ namespace RTParser.Variables
 
         }
 
-        public string GetArgVal(string normalizedName, bool followGenlMt)
+        public SIProlog.Part GetArgVal(string normalizedName, bool followGenlMt)
         {
             normalizedName = KeyCase.Default.NormalizeKey(normalizedName);
             var bingingsList = new List<Dictionary<string, SIProlog.Part>>();
-            this.prologEngine.askQuery(QueryForNameValue(MakeArg(normalizedName), "VALUE"), dictMt, followGenlMt,
+            this.prologEngine.askQuery(QueryForNameValue(MakeArg(normalizedName), new SIProlog.Variable("VALUE")),
+                                       dictMt, followGenlMt,
                                        bingingsList, null);
             int cnt = bingingsList.Count;
             if (cnt == 0) return null;
-            string res;
+            SIProlog.Part res;
             if (cnt == 1 || !followGenlMt)
             {
-                res = bingingsList[0]["VALUE"].ToPLStringReadable();
+                res = bingingsList[0]["VALUE"];
             }
             else
             {
                 if (followGenlMt)
                 {
-                    res = bingingsList[0]["VALUE"].ToPLStringReadable();
+                    res = bingingsList[0]["VALUE"];
                 }
                 else
                 {
-                    res = bingingsList[cnt - 1]["VALUE"].ToPLStringReadable();
+                    res = bingingsList[cnt - 1]["VALUE"];
                 }
             }
-            int len = res.Length;
             return res;
         }
 
@@ -253,20 +264,18 @@ namespace RTParser.Variables
             return ArgToValue(res);
         }
 
-        private string ArgToValue(string res)
+        private string ArgToValue(SIProlog.Part res)
         {
-            if (res == null) return null;
-            int len = res.Length;
-            if (res.StartsWith("\"") && res.EndsWith("\""))
-            {
-                res = res.Substring(1, len - 2);
-            }
-            return res;
+            return res.AsString();
         }
 
-        private string QueryForNameValue(string name, string value)
+        private SIProlog.Rule RuleForNameValue(SIProlog.Part name, SIProlog.Part value)
         {
-            return predicateName + "(" + name + "," + value + ")";
+            return new SIProlog.Rule(SIProlog.MakeTerm(predicateName, name, value));
+        }
+        private SIProlog.PartList QueryForNameValue(SIProlog.Part name, SIProlog.Part value)
+        {
+            return new SIProlog.PartList(SIProlog.MakeTerm(predicateName, name, value));
         }
 
         public void AddKey(string name)
@@ -2304,8 +2313,12 @@ namespace RTParser.Variables
                             // update local value
                             if (this.orderedKeysContains(normalizedName))
                             {
-                                this.removeFromHash(normalizedName);
-                                this.settingsHash.Add(normalizedName, bbValue);
+                                DataUnifiable v = localValue(name, normalizedName);
+                                if (bbValue != v)
+                                {
+                                    this.removeFromHash(normalizedName);
+                                    this.settingsHash.Add(normalizedName, bbValue);
+                                }
                             }
                             return bbValue;
                         }

@@ -330,7 +330,10 @@ namespace AltAIMLbot.Utils
         {
             if (template.Length == 0)
             {
-                throw new XmlException("The category with a pattern: " + path + " found in file: " + filename + " has an empty template tag. ABORTING");
+                string problem = string.Format("The category with a pattern: {0} found in file: {1} has an empty template tag.", path, filename);
+                Console.WriteLine("ERROR, This is a template 'Delete '(which is not implmneted for addCatagoryDB: " + problem);
+                return;
+                throw new XmlException(problem + " ABORTING");
             }
             lock (ExternDB.mylock) addCategoryDB0(myWord, path, template, filename, score, scale, absPath, pathDB);
         }
@@ -418,15 +421,14 @@ namespace AltAIMLbot.Utils
             }
 
             //Tempory PATCH
-            if ((template.Contains("<star"))&&(!template.Contains(" <star")))
+            if (AltBot.PadAroundTemplateTags)
             {
-                template = template.Replace("<star", " <star");
+                if ((template.Contains("<star")) && (!template.Contains(" <star")))
+                {
+                    template = template.Replace("<star", " <star");
+                }
             }
             if (templates == null) templates = new List<OutputTemplate>();
-            if (template.Contains("xmlns"))
-            {
-                
-            }
             templates.Insert(0, new OutputTemplate() {Template = template, filename = filename1});
         }
 

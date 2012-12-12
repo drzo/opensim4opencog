@@ -399,17 +399,18 @@ namespace RTParser
             }
             User BotAsAUser = myBot.BotAsUser;
             myUser = myUser ?? myBot.LastUser;
-            if (string.IsNullOrEmpty(input))
-            {
-                writeLine("");
-                return;
-            }
             string myName = BotAsAUser.UserName;
             {
                 writeLine("-----------------------------------------------------------------");
-                if (String.IsNullOrEmpty(input))
+                if (string.IsNullOrEmpty(input))
                 {
-                    writeLine(myName + "> " + BotAsAUser.JustSaid);
+                    writeLine("{0}: {1}", myUser.UserName, myUser.JustSaid);
+                    if (!WaitUntilVerbalOutput)
+                    {
+                        writeLine("---------------------");
+                        writeLine("{0}: {1}", myName, BotAsAUser.JustSaid);
+                    }
+                    writeLine("-----------------------------------------------------------------");
                     return;
                 }
                 try
@@ -669,11 +670,12 @@ namespace RTParser
             if (currentRequest != null)
             {
                 var rps = currentRequest.RequesterPredicates;
+                queryMT = rps.NameSpace;
                 queryMT = rps.grabSetting("querymt,kb,mt,behavourmt,behavour") ?? queryMT;
             }
             var outBindingPart = new List<Dictionary<string, SIProlog.Part>>();
-            List<Dictionary<string, string>> outBindingStrings = null;
-            prologEngine.askQuery(cmd, queryMT, true, outBindingPart, outBindingStrings);
+            const List<Dictionary<string, string>> outBindingStrings = null;
+            prologEngine.askQuery(prologEngine.ParseBody(cmd, queryMT), queryMT, true, outBindingPart, outBindingStrings);
             if (outBindingPart.Count > 0)
             {
                 Dictionary<string, SIProlog.Part> firstResult = outBindingPart[0];

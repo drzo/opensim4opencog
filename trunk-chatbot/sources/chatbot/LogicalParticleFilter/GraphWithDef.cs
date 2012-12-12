@@ -208,7 +208,7 @@ namespace LogicalParticleFilter1
                 //Object results = g.ExecuteQuery(query);
                 //Make a SELECT query against the Endpoint
                 SparqlResultSet results = endpoint.QueryWithResultSet(query);
-                miniMt = GetMiniMt(results, assertTemplate, gwd.RdfStore, show, null);
+                miniMt = GetMiniMt(results, assertTemplate, graphKBName, gwd.RdfStore, show, null);
             }
             catch (RdfQueryException queryEx)
             {
@@ -226,7 +226,7 @@ namespace LogicalParticleFilter1
             try
             {
                 Object results = g.ExecuteQuery(query);
-                miniMt = GetMiniMt(results, assertTemplate, repo.RdfStore, show, null);
+                miniMt = GetMiniMt(results, assertTemplate, graphKBName, repo.RdfStore, show, null);
             }
             catch (RdfQueryException queryEx)
             {
@@ -236,7 +236,7 @@ namespace LogicalParticleFilter1
             insertKB(miniMt, graphKBName);
         }
 
-        private string GetMiniMt(object results, string assertTemplate, GraphWithDef repo, bool show, List<Rule> triples)
+        private string GetMiniMt(object results, string assertTemplate, string graphKBName, GraphWithDef repo, bool show, List<Rule> triples)
         {
             assertTemplate = assertTemplate ?? "triple($?s$,$?p$,$?o$).\n";
             bool MakeRules = triples != null && assertTemplate.Trim().EndsWith(".");
@@ -283,7 +283,7 @@ namespace LogicalParticleFilter1
                     }
                     if (MakeRules)
                     {
-                        Rule rule = ParseRule(new Tokeniser(assertIt));
+                        Rule rule = ParseRule(new Tokeniser(assertIt), graphKBName);
                         if (show) ConsoleWriteLine("RULE_IG: {0}", rule);
                         triples.Add(rule);
                     }
@@ -318,7 +318,7 @@ namespace LogicalParticleFilter1
                     }
                     if (MakeRules)
                     {
-                        Rule rule = ParseRule(new Tokeniser(assertIt));
+                        Rule rule = ParseRule(new Tokeniser(assertIt), graphKBName);
                         if (show) ConsoleWriteLine("RULE_IG: {0}", rule);
                         triples.Add(rule);
                     }
@@ -343,7 +343,7 @@ namespace LogicalParticleFilter1
             // Possibly called by the Sparql endpoint before servicing a query
             // Is there anything we want to update rdfGraph with ?
             var bingingsList = new ListOfBindings();
-            askQuery("triple(S,P,O)", mt, false, bingingsList, null);
+            askQuery(ParseBody("triple(S,P,O)", mt), mt, false, bingingsList, null);
             bool useTripeQuery = true;
             if (bingingsList == null || bingingsList.Count <= 0)
             {
@@ -675,7 +675,8 @@ namespace LogicalParticleFilter1
             // Possibly called by the Sparql endpoint before servicing a query
             // Is there anything we want to update rdfGraph with ?
             var bingingsList = new ListOfBindings();
-            askQuery("triple(S,P,O)", "spindleMT", true, bingingsList, null);
+            string mt = "spindleMT";
+            askQuery(ParseBody("triple(S,P,O)", mt), mt, true, bingingsList, null);
             RdfRules newTriples = new RdfRules(rdfGraph);
             foreach (var bindings in bingingsList)
             {
@@ -918,6 +919,8 @@ yago	http://dbpedia.org/class/yago/
         private string tl_ServerRoot;
         [ThreadStatic]
         private string tl_mt;
+        [ThreadStatic]
+        private string tl_rule_mt;
         private string curKB
         {
             get
@@ -980,6 +983,29 @@ yago	http://dbpedia.org/class/yago/
         public partial class Rule
         {
             public RdfRules rdfRuleCache;
+
+            public bool SameClause(Rule rule)
+            {
+                var vars = new PlHashtable();
+                if (!head.SameClause(rule.head, vars))
+                {
+                    return false;
+                }
+                int partLen = this.bodyLen;
+                int partLen2 = rule.bodyLen;
+                if (partLen2 != partLen) return false;
+                if (partLen == 0) return true;
+                return body.plist.SameClause(rule.body.plist, vars);
+            }
+
+            protected int bodyLen
+            {
+                get
+                {
+                    if (body == null) return 0;
+                    return body.plist.Length;
+                }
+            }
         }
 
         public class PredicateProperty
@@ -995,9 +1021,20 @@ yago	http://dbpedia.org/class/yago/
             public string assertionMt;
             public List<Triple> inations = new List<Triple>();
 
+            /// <summary>
+            /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            /// </summary>
+            /// <returns>
+            /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            /// </returns>
+            /// <filterpriority>2</filterpriority>
             public override string ToString()
             {
-                return StructToString(this, 2);
+                return StructToString(this);
+            }
+            public string AToString
+            {
+                get { return ToString(); }
             }
 
             public int GetArgNumForName(string argName)
@@ -1058,9 +1095,20 @@ yago	http://dbpedia.org/class/yago/
                 }
                 return predicateNode ?? def.CreateUriNode(RoboKindPrefixPrepend + predicateArgName);
             }
+            /// <summary>
+            /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            /// </summary>
+            /// <returns>
+            /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            /// </returns>
+            /// <filterpriority>2</filterpriority>
             public override string ToString()
             {
-                return StructToString(this, 2);
+                return StructToString(this);
+            }
+            public string AToString
+            {
+                get { return ToString(); }
             }
             public void AddDomainType(PredicateProperty property, int argNumber1Based)
             {
@@ -1107,7 +1155,8 @@ yago	http://dbpedia.org/class/yago/
                     return pdb.rules;
                 }
             }
-            public PDB pdb = new PDB();
+
+            readonly public PDB pdb;
             private string srcCode;
             public string ruleset
             {
@@ -1287,6 +1336,9 @@ yago	http://dbpedia.org/class/yago/
             public PNode(string id, object info)
             {
                 this.id = id;
+                pdb = new PDB(true);
+                pdb.startMt = id;
+                pdb.followedGenlMt = false;
                 this._repository = info;
             }
 
@@ -1468,12 +1520,21 @@ yago	http://dbpedia.org/class/yago/
             /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
             /// </returns>
             /// <filterpriority>2</filterpriority>
+            /// <summary>
+            /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            /// </summary>
+            /// <returns>
+            /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            /// </returns>
+            /// <filterpriority>2</filterpriority>
             public override string ToString()
             {
-                return StructToString(this, 1);
+                return StructToString(this);
             }
-
-
+            public string AToString
+            {
+                get { return ToString(); }
+            }
             public IGraph rdfGraph;
 
             public string prologMt;
@@ -1493,7 +1554,7 @@ yago	http://dbpedia.org/class/yago/
                         {
                             kbNode = prologEngine.KBGraph.Contains(prologMt);
                             if (kbNode != null) return kbNode;
-                            kbNode = new PNode(prologMt) {RdfStore = this};
+                            kbNode = new PNode(prologMt) {RdfStore = this, id=prologMt};
                             prologEngine.KBGraph.AddNode(kbNode);
                         }
                     return kbNode;

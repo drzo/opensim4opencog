@@ -1054,12 +1054,12 @@ namespace RTParser
                 if (IsSomething(_JustSaid, out something)) return something;
                 if (LastResponder != null)
                 {
-                    var vv = Predicates.grabSetting("lastsaid,thatstar");
+                    var vv = Predicates.grabSetting("lastsaid");
                     if (IsSomething(vv, out something)) return something;
                     var llr = LastResponder.LastResponder;
                     if (llr != null && llr != this)
                     {
-                        vv = LastResponder.Value.Predicates.grabSetting("lastsaid");
+                        vv = LastResponder.Value.Predicates.grabSetting("lastheard,that");
                         if (IsSomething(vv, out something)) return something;
                     }
                     // infinate loop here -> return LastReponder.ResponderJustSaid;
@@ -1092,7 +1092,6 @@ namespace RTParser
                         value = something;
                         _JustSaid = value;
                         Predicates.addSetting("lastsaid", value);
-                        Predicates.addSetting("thatstar", value);
                         if (LastResponder != null)
                         {
                             LastResponder.ResponderJustSaid = value;

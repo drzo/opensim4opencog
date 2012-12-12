@@ -136,6 +136,9 @@ namespace RTParser
         private static readonly Dictionary<string, Unifiable> internedUnifiables =
             new Dictionary<string, Unifiable>(20000);
 
+
+        public static bool AutoInternUnifiables = false;
+
         private static readonly Dictionary<string, Unifiable> specialUnifiables = new Dictionary<string, Unifiable>(20);
 
         public static readonly Unifiable[] DontStore = new Unifiable[0];
@@ -511,7 +514,7 @@ namespace RTParser
         }
         public static void LoadUnifiables(string path, BinaryFormatter bf)
         {
-
+            if (!AutoInternUnifiables) return;
             FileInfo fi = new FileInfo(path);
             if (!fi.Exists)
             {
@@ -529,7 +532,7 @@ namespace RTParser
         }
         public static void SaveUnifiables(string path, BinaryFormatter bf)
         {
-
+            if (!AutoInternUnifiables) return;
             FileInfo fi = new FileInfo(path);
             if (fi.Exists)
             {
@@ -582,7 +585,7 @@ namespace RTParser
         }
         public static void AddUnifiable(string str, Unifiable u)
         {
-            internedUnifiables.Add(str, u);
+            lock (internedUnifiables) internedUnifiables.Add(str, u);
         }
 
         public static Unifiable MakeUnifiableFromString(string value, bool useTrimmingRules)
@@ -609,7 +612,7 @@ namespace RTParser
                 value = key;
                 //return new StringUnifiable(value);
             }
-            if (true)
+            if (AutoInternUnifiables)
                 lock (internedUnifiables)
                 {
                     if (!internedUnifiables.TryGetValue(key, out u))
@@ -617,7 +620,7 @@ namespace RTParser
                         u = MakeCorrectUnifiable(value);
                         internedUnifiables[key] = u;
                         // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                        if (false && (internedUnifiables.Count%10000) == 0)
+                        if ((internedUnifiables.Count%10000) == 0)
                             // ReSharper restore ConditionIsAlwaysTrueOrFalse
                         {
                             writeToLog("DEBUG9 internedUnifiables.Count=" + internedUnifiables.Count);
