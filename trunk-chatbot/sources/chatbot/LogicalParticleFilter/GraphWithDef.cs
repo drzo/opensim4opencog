@@ -18,6 +18,8 @@ using VDS.RDF.Writing;
 using ListOfBindings = System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, LogicalParticleFilter1.SIProlog.Part>>;
 using StringWriter=System.IO.StringWriter;
 using VDS.RDF.Writing.Formatting;
+using PartList = LogicalParticleFilter1.SIProlog.PartListImpl;
+
 namespace LogicalParticleFilter1
 {
 //    using GraphWithDef = SIProlog.PNode;
@@ -53,11 +55,6 @@ namespace LogicalParticleFilter1
         {
             return str.Split(new char[] { ' ', '.', '?' },
                              StringSplitOptions.RemoveEmptyEntries).Length;
-        }
-        public static SIProlog.PartList VarsOf(this SIProlog.Part str)
-        {
-            // termVarNames
-            return SIProlog.varNames(new SIProlog.PartList(str));
         }
 
         public static SIProlog.RdfRules RdfRuleValue(this SIProlog.Rule prologRule)
@@ -1938,7 +1935,7 @@ yago	http://dbpedia.org/class/yago/
                 int newVarCount;
                 lock (head)
                 {
-                    PartList bpl = AnalyzeHead(head, true, varNames, newVarNames, out newVarCount);
+                    var bpl = AnalyzeHead(head, true, varNames, newVarNames, out newVarCount);
                     if (newVarCount > 0)
                     {
                         if (rulebody != null)
@@ -2108,7 +2105,7 @@ yago	http://dbpedia.org/class/yago/
                 int argNum = 1;
                 var conds = new List<Triple>();
                 var headDef = GetPredicateProperty(term);
-                foreach (Part part in term.Args)
+                foreach (Part part in term.ArgList)
                 {
                     RDFArgSpec argDef = GetAdef(headDef, argNum, false);
                     if (part is Variable)
@@ -2658,7 +2655,7 @@ yago	http://dbpedia.org/class/yago/
             bool newlyCreated;
             PredicateProperty pp = GraphWithDef.GetPredDef(term.name, term.Arity, out newlyCreated);
             int argNum = 0;
-            foreach (Part part in term.Args)
+            foreach (Part part in term.ArgList)
             {
                 argNum++;
                 if (varnamesOnly) if (!(part is Variable)) continue;

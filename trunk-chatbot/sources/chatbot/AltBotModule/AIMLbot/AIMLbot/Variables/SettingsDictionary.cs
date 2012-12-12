@@ -140,7 +140,7 @@ namespace RTParser.Variables
             }
         }
 
-        private SIProlog.PartList KeyValueTerm
+        private SIProlog.PartListImpl KeyValueTerm
         {
             get
             {
@@ -273,9 +273,9 @@ namespace RTParser.Variables
         {
             return new SIProlog.Rule(SIProlog.MakeTerm(predicateName, name, value));
         }
-        private SIProlog.PartList QueryForNameValue(SIProlog.Part name, SIProlog.Part value)
+        private SIProlog.PartListImpl QueryForNameValue(SIProlog.Part name, SIProlog.Part value)
         {
-            return new SIProlog.PartList(SIProlog.MakeTerm(predicateName, name, value));
+            return new SIProlog.PartListImpl(SIProlog.MakeTerm(predicateName, name, value));
         }
 
         public void AddKey(string name)

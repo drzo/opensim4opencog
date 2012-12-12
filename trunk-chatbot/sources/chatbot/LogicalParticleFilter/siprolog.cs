@@ -17,7 +17,12 @@ using VDS.RDF.Writing;
 using VDS.RDF.Nodes;
 using StringWriter = System.IO.StringWriter;
 //using TermList = LogicalParticleFilter1.TermListImpl;
-using TermList = LogicalParticleFilter1.SIProlog.PartList;
+//using TermList = System.Collections.Generic.List<LogicalParticleFilter1.SIProlog.Part>;///LogicalParticleFilter1.SIProlog.PartListImpl;
+//using PartList = System.Collections.Generic.List<LogicalParticleFilter1.SIProlog.Part>;///LogicalParticleFilter1.SIProlog.PartListImpl;
+
+using TermList = LogicalParticleFilter1.SIProlog.PartListImpl;
+using PartList = LogicalParticleFilter1.SIProlog.PartListImpl;
+
 using System.Threading;
 //using GraphWithDef = LogicalParticleFilter1.SIProlog.;
 //using ProveResult = LogicalParticleFilter1.SIProlog.PEnv;
@@ -1392,7 +1397,7 @@ function hidetip()
         public void askQuery(string inQuery, string queryMT)
         {
             var query = inQuery;
-            PartList qlist = ParseBody(new Tokeniser(query), queryMT);
+            var qlist = ParseBody(new Tokeniser(query), queryMT);
             if (qlist == null)
             {
                 Warn("An error occurred parsing the query '{0}.\n", query);
@@ -2790,9 +2795,9 @@ function hidetip()
             }
         }
 
-        public partial class PartList : Part, IEnumerable<Part>, IHasParent
+        public class PartListImpl : Part, IEnumerable<Part>, IHasParent
         {
-
+            private string fuctor;
             public override IHasParent TParent
             {
                 get
@@ -2816,7 +2821,7 @@ function hidetip()
 
             public override bool SameClause(Part term, PlHashtable varlist)
             {
-                var term2 = term as PartList;
+                var term2 = term as PartListImpl;
                 if (term2 == null) return false;
                 int i = 0;
                 foreach (var s in this)
@@ -2850,7 +2855,7 @@ function hidetip()
             {
                 get
                 {
-                    var pl = new PartList();
+                    var pl = new PartListImpl();
                     foreach (var t in this)
                     {
                         pl.AddPart(t.CopyTerm);
@@ -2907,7 +2912,7 @@ function hidetip()
             }
             public void Add(SIProlog.Part part)
             {
-                if (part is SIProlog.PartList)
+                if (part is SIProlog.PartListImpl)
                 {
                     throw ErrorBadOp("inner partlist");
                 }
@@ -2940,21 +2945,21 @@ function hidetip()
             }
 
             //public PartList(string head) { name = head; }
-            public PartList(params Part[] lS)
+            public PartListImpl(params Part[] lS)
             {
                 this.tlist = new List<Part>(lS);
             }
-            public PartList(IList<Part> parts)
+            public PartListImpl(IList<Part> parts)
             {
                 this.tlist = parts;
             }
 
-            public PartList()
+            public PartListImpl()
             {
                 this.tlist = new List<Part>();
             }
 
-            public PartList(TermList head, PEnv env)
+            public PartListImpl(TermList head, PEnv env)
             {
                 this.tlist = new List<Part>();
                 for (var i = 0; i < head.Count; i++)
@@ -3013,7 +3018,7 @@ function hidetip()
                     if (ReferenceEquals(argr, null)) return;
                     if (!ReferenceEquals(argr, arg))
                     {
-                        this.ArgList[argNum, false] = argr;
+                        this.ArgList[argNum] = argr;
                     }
                     argNum++;
                 }
@@ -3028,6 +3033,50 @@ function hidetip()
             {
                 return GetEnumerator();
             }
+
+            #region IList<Part> Members
+
+            public int IndexOf(Part item)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void RemoveAt(int index)
+            {
+                throw new NotImplementedException();
+            }
+
+            #endregion
+
+            #region ICollection<Part> Members
+
+
+            public void Clear()
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool Contains(Part item)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void CopyTo(Part[] array, int arrayIndex)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool IsReadOnly
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            public bool Remove(Part item)
+            {
+                throw new NotImplementedException();
+            }
+
+            #endregion
         }
 
         public static Dictionary<string, Atom> AtomTable = new Dictionary<string, Atom>();
@@ -3398,11 +3447,6 @@ function hidetip()
                 get { return partlist.Length; }
             }
 
-            public IEnumerable<Part> Args
-            {
-                get { return (IEnumerable<Part>)partlist.ArgList.ToArray(); }
-            }
-
             override public bool IsGround
             {
                 get { return partlist.IsGround && !headIsVar(); }
@@ -3663,8 +3707,8 @@ function hidetip()
             #endregion
             // Body = [Term]
 
-            readonly public PartList plist = null;
-            public Body(PartList l)
+            readonly public PartListImpl plist = null;
+            public Body(PartListImpl l)
             {
                 plist = l;
                 plist.parent = this;
