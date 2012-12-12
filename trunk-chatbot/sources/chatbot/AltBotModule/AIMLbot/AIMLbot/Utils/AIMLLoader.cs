@@ -676,13 +676,13 @@ namespace AltAIMLbot.Utils
 
             foreach (XmlNode template in templates)
             {
-                string templateXML = InnerTextOrXML(template) ?? "";
+                string templateXML = InnerTextOrXML(template, false) ?? "";
                 foreach (var that in thats)
                 {
-                    string thatText = InnerTextOrXML(that) ?? currentThat;
+                    string thatText = InnerTextOrXML(that, true) ?? currentThat;
                     foreach (var pattern in patterns)
                     {
-                        string patternText = InnerTextOrXML(pattern) ?? "";
+                        string patternText = InnerTextOrXML(pattern, true) ?? "";
                         string categoryPath = generatePath(patternText, thatText, topicName, stateNamePre, stateNamePost,
                                                            isUserInput);
                         lretval.Add(new KeyValuePair<string, string>(categoryPath, templateXML));
@@ -692,15 +692,26 @@ namespace AltAIMLbot.Utils
             return lretval;
         }
 
-        private static string InnerTextOrXML(XmlNode pattern)
+        private static string InnerTextOrXML(XmlNode pattern, bool isPatternMatcher)
         {
             if (object.Equals(null, pattern))
             {
                 return null;
             }
             var xo = pattern.InnerXml;
-            if (xo.Contains("<")) return xo;
-            return pattern.InnerText;
+            if (!xo.Contains("<") && !xo.Contains("&"))
+            {
+                xo = pattern.InnerText;
+            }
+
+            if (xo != xo.Trim() || xo.IndexOfAny("\n\r\t\b\"".ToCharArray()) != -1)
+            {
+                if (isPatternMatcher)
+                {
+                    xo = StaticXMLUtils.ReTrimAndspace(xo);
+                }
+            }
+            return xo;
         }
 
         /// <summary>

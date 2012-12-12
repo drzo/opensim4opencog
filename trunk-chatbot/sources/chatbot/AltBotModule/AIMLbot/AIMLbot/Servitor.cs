@@ -76,6 +76,7 @@ namespace AltAIMLbot
         {
             get
             {
+                return true;
                 if (curBot != null && curBot.GlobalSettings != null)
                 {
                     string NBGC = curBot.GlobalSettings.grabSetting("noBackgroundChat");

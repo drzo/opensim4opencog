@@ -412,14 +412,14 @@ namespace RTParser.Utils
             }
         */
         }
-
+        /*
         private XmlNode GetMatchableXMLNode(string nodeName, Unifiable topicName)
         {
-            var node = GetMatchableXMLNode0(nodeName, topicName);
+            var node = GetMatchableXMLNode00(nodeName, topicName);
             if (node != null) return node;
-            return GetMatchableXMLNode0(nodeName, topicName);
+            return GetMatchableXMLNode00(nodeName, topicName);
         }
-        private XmlNode GetMatchableXMLNode0(string nodeName, string topicName)
+        private XmlNode GetMatchableXMLNode00(string nodeName, string topicName)
         {
             if (NoIndexing) return null;
             if (String.IsNullOrEmpty(topicName))
@@ -428,7 +428,7 @@ namespace RTParser.Utils
             }
             if (PatternNodes == null)
             {
-                return StaticXMLUtils.getNode(String.Format("<{0}>{1}</{0}>", nodeName, topicName));
+                return StaticXMLUtils.getNode(true, String.Format("<{0}>{1}</{0}>", nodeName, topicName));
             }
             lock (PatternNodes)
             {
@@ -439,11 +439,12 @@ namespace RTParser.Utils
                     if (pi != null) return pi;
                     pi =
                         PatternNodes[pats] =
-                        StaticXMLUtils.getNode(String.Format("<{0}>{1}</{0}>", nodeName, topicName));
+                        StaticXMLUtils.getNode(true, String.Format("<{0}>{1}</{0}>", nodeName, topicName));
                 }
                 return pi;
             }
         }
+         */
 
         public Unifiable FindTopic(Unifiable topicName)
         {
@@ -1708,13 +1709,12 @@ namespace RTParser.Utils
                     result = result.Replace("<", " <");
                     result = result.Replace("  <", " <");
                 }
+                if (result.Contains(">"))
+                {
+                    result = result.Replace(">", "> ");
+                    result = result.Replace(">  ", "> ");
+                }
             }
-            if (result.Contains(">"))
-            {
-                result = result.Replace(">", "> ");
-                result = result.Replace(">  ", "> ");
-            }
-
             return result;
         }
         public bool IsMicrosoftCLR()

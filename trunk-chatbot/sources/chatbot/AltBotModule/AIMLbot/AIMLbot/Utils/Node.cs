@@ -464,7 +464,9 @@ namespace AltAIMLbot.Utils
             {
                 if (list.disable) continue;
                 string temp = templates[0].Template;
-                if (temp.Length > 0) return "<template>" + temp + "</template>";
+                string tempTrim = temp.Trim();
+                if (!tempTrim.StartsWith("<template")) temp =  "<template>" + temp + "</template>";
+                return temp;
             }
             return string.Empty;
         }

@@ -169,11 +169,20 @@ namespace MushDLR223.Utilities
         public static string VisibleRendering(XmlNodeList nodeS, RenderOptions options)
         {
             string sentenceIn = "";
+            bool needSpace = false;
             foreach (XmlNode nodeO in nodeS)
             {
-                sentenceIn = sentenceIn + " " + VisibleRendering(nodeO, options);
+                if (!needSpace)
+                {
+                    needSpace = true;
+                }
+                else
+                {
+                    sentenceIn += " ";
+                }
+                sentenceIn += VisibleRendering(nodeO, options);
             }
-            return sentenceIn.Trim().Replace("  ", " ");
+            return sentenceIn;
         }
 
 
@@ -740,7 +749,7 @@ namespace MushDLR223.Utilities
             LineInfoElementImpl xmlNode = (LineInfoElementImpl)(oc as IXmlLineInfo);
             if (xmlNode == null)
             {
-                xmlNode = (LineInfoElementImpl)getNodeAndSetSibling(node.OuterXml, false, false, node);
+                xmlNode = (LineInfoElementImpl)getNodeAndSetSibling(false, node.OuterXml, false, false, node);
                 LineInfoElementImpl.unsetReadonly(xmlNode);
             }
             else
@@ -1023,26 +1032,42 @@ namespace MushDLR223.Utilities
         /// </summary>
         /// <param name="outerXML">the Unifiable to XMLize</param>
         /// <returns>The XML node</returns>
-        public static XmlNode getNode(string outerXML, bool wasWrapped)
+        public static XmlNode getNode(bool isPattern, string outerXML, bool wasWrapped)
         {
-            XmlDocumentLineInfo stringOnlyDoc1 = StringOnlyDoc;
-            stringOnlyDoc1.SetText(outerXML);
-            return getDocNode(outerXML, wasWrapped, stringOnlyDoc1);
+            XmlDocumentLineInfo stringOnlyDoc1 = GetStringOnlyDoc(isPattern);
+            lock (stringOnlyDoc1)
+            {
+                stringOnlyDoc1.SetText(outerXML);
+                return getDocNode(isPattern, outerXML, wasWrapped, stringOnlyDoc1);
+            }
+        }
+
+        public static XmlNode getNode(bool isPattern, string outerXML)
+        {
+            var StringOnlyDoc = GetStringOnlyDoc(isPattern);
+            lock (StringOnlyDoc)
+            {
+                return getDocNode(isPattern, outerXML, false, false, StringOnlyDoc);
+            }
         }
 
         public static XmlNode getNode(string outerXML)
         {
-            return getDocNode(outerXML, false, false, StringOnlyDoc);
+            return getNode(false, outerXML);
         }
 
+        public static XmlNode getNodeAndSetSiblingNode(bool isPattern, string outerXML, XmlNode sibling)
+        {
+            return getNodeAndSetSibling(isPattern, outerXML, false, true, sibling);
+        }
         public static XmlNode getNodeAndSetSiblingNode(string outerXML, XmlNode sibling)
         {
-            return getNodeAndSetSibling(outerXML, false, true, sibling);
+            return getNodeAndSetSibling(false, outerXML, false, true, sibling);
         }
 
 
         public static bool UseOneStringOnlyDoc = false;
-        public static XmlDocumentLineInfo StringOnlyDoc
+        public static XmlDocumentLineInfo StringOnlyDocNoPreserve
         {
             get
             {
@@ -1052,20 +1077,46 @@ namespace MushDLR223.Utilities
                     doc.InfoString = "new StringOnlyDoc";
                     return doc;
                 }
-                return stringOnlyDoc;
+                return stringOnlyDocNoPreserve;
             }
         }
-        public static XmlNode getDocNode(string outerXML, bool wasWrapped, XmlDocument doc0)
+        public static XmlDocumentLineInfo StringOnlyDocPreserve
         {
-            return getDocNode(outerXML, wasWrapped, !wasWrapped, doc0);
+            get
+            {
+                if (UseOneStringOnlyDoc)
+                {
+                    var doc = new XmlDocumentLineInfo();
+                    doc.InfoString = "new StringOnlyDoc";
+                    doc.PreserveWhitespace = true;
+                    return doc;
+                }
+                return stringOnlyDocPreserve;
+            }
         }
-
-        public static XmlNode getDocNode(string outerXML, bool wasWrapped, bool mayTryToWrap, XmlDocument doc0Hint)
+        public static XmlNode getDocNode(bool isPattern, string outerXML, bool wasWrapped, XmlDocument doc0)
         {
-            var doc0 = doc0Hint ?? StringOnlyDoc;
+            return getDocNode(isPattern, outerXML, wasWrapped, !wasWrapped, doc0);
+        }
+        public static XmlNode getDocNode(bool isPattern, string outerXML, bool wasWrapped, bool mayTryToWrap, XmlDocument doc0Hint)
+        {
+            var doc0 = doc0Hint ?? GetStringOnlyDoc(isPattern);
             XmlDocumentLineInfo doc = doc0 as XmlDocumentLineInfo;
             if (doc == null && doc0 != null) doc = doc0.OwnerDocument as XmlDocumentLineInfo;
-            outerXML = ReTrimAndspace(outerXML);
+            doc = doc ?? GetStringOnlyDoc(isPattern);
+            lock (doc)
+            {
+                return getDocNode_unlockedDoc(isPattern, outerXML, wasWrapped, mayTryToWrap, doc);
+            }
+        }
+        private static XmlDocumentLineInfo GetStringOnlyDoc(bool isPattern)
+        {
+            return (isPattern ? StringOnlyDocNoPreserve : StringOnlyDocPreserve);
+        }
+
+        public static XmlNode getDocNode_unlockedDoc(bool isPattern, string outerXML, bool wasWrapped, bool mayTryToWrap, XmlDocumentLineInfo doc)
+        {
+            if (isPattern) outerXML = ReTrimAndspace(outerXML);
             try
             {
                 if (!wasWrapped && outerXML.Length > 0 && mayTryToWrap)
@@ -1151,18 +1202,18 @@ namespace MushDLR223.Utilities
         public static string ReTrimAndspace(string substitute)
         {
             if (substitute == null) return null;
-            var s = OlderReference(substitute, substitute.Replace("> ", ">").Replace(" <", "<").Replace("  ", " "));
+            string substituteReplaceReplace = substitute.Replace("> ", ">").Replace(" <", "<");
+            if (substituteReplaceReplace != substitute)
+            {
+                substituteReplaceReplace = substitute;
+            }
+            var s = OlderReference(substitute, substituteReplaceReplace.Replace("  ", " "));
             if (s.Length == 1)
             {
                 if (s != " ") return s;
                 return s;
             }
             return Trim(substitute);
-        }
-
-        public static string Trim00(string outerXml)
-        {
-            return CleanWhitepaces(outerXml);
         }
 
         public static string ToUpper(string param1)
@@ -1226,7 +1277,7 @@ namespace MushDLR223.Utilities
         }
 
 
-        public static XmlNode getNodeAndSetSibling(string outerXML, bool wasWrapped, bool mayTryToWrap, XmlNode nodeHint)
+        public static XmlNode getNodeAndSetSibling(bool isPattern, string outerXML, bool wasWrapped, bool mayTryToWrap, XmlNode nodeHint)
         {
             var templateNode = nodeHint as XmlLinkedNode;
             var ownerDoc = nodeHint as XmlDocumentLineInfo;
@@ -1235,9 +1286,9 @@ namespace MushDLR223.Utilities
             {
                 ownerDoc = ownerDoc ?? nodeHint.OwnerDocument as XmlDocumentLineInfo;
                 XmlNode temp =
-                    getDocNode(outerXML,
+                    getDocNode(isPattern, outerXML,
                                wasWrapped, mayTryToWrap,
-                               ownerDoc ?? StringOnlyDoc);
+                               ownerDoc ?? GetStringOnlyDoc(isPattern));
                 if (temp is LineInfoElementImpl)
                 {
                     LineInfoElementImpl li = (LineInfoElementImpl)temp;
@@ -1290,6 +1341,10 @@ namespace MushDLR223.Utilities
             return doc.FirstChild;
         }
 
+        public static bool ContainsWhitespace(string xml2)
+        {
+            return CleanWhitepaces(xml2) != xml2;
+        }
 
         public static string CleanWhitepaces(string xml2)
         {
@@ -1449,7 +1504,8 @@ namespace MushDLR223.Utilities
         public static char[] isValueSetChars = " ".ToCharArray();
         public static string isValueSetStart = "+++";
         public static int isValueSetSkip = isValueSetStart.Length;
-        public static readonly XmlDocumentLineInfo stringOnlyDoc = new XmlDocumentLineInfo("getNode(ANYTHING)", false);
+        public static readonly XmlDocumentLineInfo stringOnlyDocPreserve = new XmlDocumentLineInfo("getNode(ANYTHING)", true);
+        public static readonly XmlDocumentLineInfo stringOnlyDocNoPreserve = new XmlDocumentLineInfo("getNode(ANYTHING)", false);
         public static bool DontFragment = true;
         public static string XXXX(string res)
         {

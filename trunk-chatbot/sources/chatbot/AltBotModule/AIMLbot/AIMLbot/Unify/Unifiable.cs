@@ -601,7 +601,7 @@ namespace RTParser
                         return u;
                     }
                 }
-            if (useTrimmingRules)
+            if (useTrimmingRules && StaticAIMLUtils.ContainsWhitespace(value))
             {
                 value = StaticAIMLUtils.CleanWhitepaces(value);
             }

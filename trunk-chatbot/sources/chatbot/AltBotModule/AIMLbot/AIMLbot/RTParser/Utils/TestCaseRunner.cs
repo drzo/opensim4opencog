@@ -121,7 +121,7 @@ namespace RTParser.Utils
             {
                 outputdelegate("ERROR cannot find 'Input' in '" + src.OuterXml + "'");
                 m = false;
-                return getNodeAndSetSibling(
+                return getNodeAndSetSibling(false,
                     "<template type=\"error\">ERROR cannot find 'Input' in '" + src.OuterXml + "'</template>", true,
                     false, src);
             }

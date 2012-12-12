@@ -76,7 +76,7 @@ namespace RTParser
         /// <summary>
         /// @TODO @WORKAROUND Currently adding some padding around Template expanded tags
         /// </summary>
-        public static bool PadAroundTemplateTags = true;
+        public static bool PadAroundTemplateTags = false;
 
         public RChem myChemistry = null;
         public Qchem realChem = null;
@@ -1610,7 +1610,7 @@ namespace RTParser
                 StringBuilder recursiveResult = new StringBuilder();
                 // recursively check
                 bool needSpace = false;
-                string sep = " ";
+                string sep = "";
                 string lastResult = "";
                 foreach (XmlNode childNode in resultNode.ChildNodes)
                 {

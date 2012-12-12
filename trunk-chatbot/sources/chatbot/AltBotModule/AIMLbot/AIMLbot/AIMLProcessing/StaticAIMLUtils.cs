@@ -146,10 +146,10 @@ namespace RTParser.Utils
         public static bool DebugSRAIs = true;
         public static Dictionary<XmlNode, StringBuilder> ErrorList = new Dictionary<XmlNode, StringBuilder>();
         public static bool NoRuntimeErrors = false;
-        public static readonly XmlNode PatternStar = StaticXMLUtils.getNode("<pattern>*</pattern>");
-        public static readonly XmlNode ThatStar = StaticXMLUtils.getNode("<that>*</that>");
+        public static readonly XmlNode PatternStar = StaticXMLUtils.getNode(true, "<pattern>*</pattern>");
+        public static readonly XmlNode ThatStar = StaticXMLUtils.getNode(true, "<that>*</that>");
         public static readonly XmlNode TheTemplateOverwrite = StaticXMLUtils.getNode("<template></template>");
-        public static readonly XmlNode TopicStar = StaticXMLUtils.getNode("<topic name=\"*\"/>");
+        public static readonly XmlNode TopicStar = StaticXMLUtils.getNode(true, "<topic name=\"*\"/>");
         public static readonly XmlNode XmlStar = PatternStar.FirstChild;
         public static bool ThatWideStar;
         public static bool useInexactMatching;
@@ -175,8 +175,11 @@ namespace RTParser.Utils
 
         public static XmlNode getTemplateNode(string sentence)
         {
-            string makeTemplate = "<template>" + sentence + "</template>";
-            var vv = getDocNode(makeTemplate, false, false, StringOnlyDoc);
+            if (!sentence.Trim().StartsWith("<template"))
+            {
+                sentence = "<template>" + sentence + "</template>";
+            }
+            var vv = getDocNode(false, sentence, false, false, StringOnlyDocPreserve);
             return vv;
         }
 
@@ -948,7 +951,7 @@ namespace RTParser.Utils
         internal static string ForInputTemplate(string sentenceIn)
         {
             string patternSide =
-                VisibleRendering(getNode("<pattern>" + sentenceIn + "</pattern>").ChildNodes, PatternSideRendering);
+                VisibleRendering(getNode(true, "<pattern>" + sentenceIn + "</pattern>").ChildNodes, PatternSideRendering);
             return ForOutputTemplate(patternSide);
         }
 

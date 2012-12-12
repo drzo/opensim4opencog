@@ -574,7 +574,7 @@ namespace RTParser
             {
                 output = "<template>" + sGuard.PatternNode.OuterXml + " GUARDBOM " + output +
                                   "</template>";
-                templateNode = getNodeAndSetSibling(output, false, false, sOutput);
+                templateNode = getNodeAndSetSibling(false, output, false, false, sOutput);
                 
                 childOriginal = false;
             }

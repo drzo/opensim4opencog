@@ -1516,7 +1516,7 @@ namespace RTParser.Utils
                 {
                     patternString = MatchKeyClean(patternString.Replace(thatString, ""));
                 }
-                XmlNode newLineInfoPattern = getNodeAndSetSibling("<pattern>" + patternString + "</pattern>", false,
+                XmlNode newLineInfoPattern = getNodeAndSetSibling(true, "<pattern>" + patternString + "</pattern>", false,
                                                                  false, patternNode);
                 //TODO BEFORE COMMIT DMILES
                 LineInfoElementImpl.SetParentFromNode(newLineInfoPattern, patternNode);

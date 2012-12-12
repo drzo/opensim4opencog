@@ -657,7 +657,20 @@ namespace RTParser
         {
             currentRequest = requestornull;
             var ei = GetEvalInstance();
-            return ei.Evaluate(cmd);
+            object result;
+            bool result_set;
+
+            string r = ei.Evaluate(cmd, out result, out result_set);
+
+            if (r != null)
+                writeDebugLine("CSharpExec: error on input '{0}' left over was '{1}' " + cmd, r);
+
+            if (result_set == false)
+            {
+                writeDebugLine("CSharpExec: The expression '{0}' did not set a result", cmd);
+            }
+
+            return result;
         }
 
         private object SIPrologExec(string cmd, Request requestornull)
