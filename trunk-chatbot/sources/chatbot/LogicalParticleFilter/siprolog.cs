@@ -171,7 +171,7 @@ namespace LogicalParticleFilter1
             {
                 if (focus.probability > 0)
                 {
-                    ensureCompiled(focus);
+                    ensureCompiled(focus, ContentBackingStore.Prolog);
                 }
 
             }
@@ -234,7 +234,7 @@ namespace LogicalParticleFilter1
                 Warn("No KB named " + startMT);
                 return null;
             }
-            ensureCompiled(focus);
+            ensureCompiled(focus, ContentBackingStore.Prolog);
 
             RuleList VKB = new RuleList();
             // Prefix
@@ -690,7 +690,7 @@ function hidetip()
             {
                 PNode focus = KBGraph.Contains(focusMT);
                 if (focus == null) continue;
-                ensureCompiled(focus);
+                ensureCompiled(focus, ContentBackingStore.Prolog);
                 lock (focus.CompileLock) lock (focus.pdb.rules) foreach (Rule r in focus.pdb.rules)
                     {
                         VKB.Add(r);
@@ -731,11 +731,19 @@ function hidetip()
             {
                 ensureHalfCompiled(focus);
                 if (focus.SyncFromNow == forType) return;
+                ensureSynced(focus);
+            }
+        }
+        private void ensureSynced(PNode focus)
+        {
+            lock (focus.CompileLock)
+            {
+                ensureHalfCompiled(focus);
                 while (true)
                 {
                     if (focus.SyncFromNow == ContentBackingStore.None) return;
                     var prev = focus.SyncFromNow;
-                    ensureSynced(focus);
+                    ensureSynced0(focus);
                     if (prev == focus.SyncFromNow)
                     {
                         Warn("Synced on " + focus + " still the same: " + prev);
@@ -745,7 +753,7 @@ function hidetip()
             }
         }
 
-        private void ensureSynced(PNode focus)
+        private void ensureSynced0(PNode focus)
         {
             while (true)
             {
@@ -900,15 +908,13 @@ function hidetip()
             //replaces KB with a fresh rule set
             focus.Clear();
             appendKB_unlocked(ruleSet, focus);
-            if (lazyTranslate) return;
-            ensureCompiled(focus);
         }
 
         /// <summary>
         /// Appends KB with rule set
         /// </summary>
         /// <param name="ruleSet"></param>
-        /// <param name="startMT"></param>
+        /// <param name="focus"></param>
         ///
         public void appendKB(RuleList ruleSet, PNode focus)
         {
@@ -928,10 +934,16 @@ function hidetip()
         }
         public void appendKB_unlocked(string ruleSet, PNode focus)
         {
-            if (ruleSet.Trim() == "") return;
+            if (ruleSet != null && ruleSet.Trim() == "") return;
             string startMT = focus.Id;
-            var outr = parseRuleset(ruleSet, startMT);
-            appendKB_unlocked(outr, focus);
+            {
+                Dictionary<string, RuleList> tempKB = ParseKEText(startMT, ruleSet);
+                foreach (string kb in tempKB.Keys)
+                {
+                    var subKB = MakeRepositoryKB(kb);
+                    lock (subKB.CompileLock) appendKB_unlocked(tempKB[kb], subKB);
+                }
+            }
         }
         public void appendKB_unlocked(RuleList ruleSet, PNode focus)
         {
@@ -1045,27 +1057,28 @@ function hidetip()
             if (ruleSet != null)
             {
                 var pMT = curKB;
-                Dictionary<string, string> tempKB = ParseKEText(startMT, ruleSet);
+                Dictionary<string, RuleList> tempKB = ParseKEText(startMT, ruleSet);
                 foreach (string kb in tempKB.Keys)
                 {
                     ConsoleWriteLine("INSERT INTO :{0}", kb);
                     //insertKB(tempKB[kb], kb);
-                    appendKB(tempKB[kb], kb);
+                    appendKB(tempKB[kb], MakeRepositoryKB(kb));
                 }
                 curKB = pMT;
             }
         }
 
-        Dictionary<string, string> ParseKEText(string startMT, string ruleSet)
+        Dictionary<string, RuleList> ParseKEText(string startMT, string ruleSet)
         {
             curKB = startMT;
-            Dictionary<string, string> tempKB = new Dictionary<string, string>();
-            string[] lines = ruleSet.Split('\n');
+            Dictionary<string, RuleList> tempKB = new Dictionary<string, RuleList>();
+            ///string[] lines = ruleSet.Split('\n');
             string curConst = "";
             {
-                foreach (string line0 in lines)
+                do
                 {
-                    var line = line0.Trim();
+                    if (ruleSet.Trim() == "") break;
+                    string line = toEndOfLine(ref ruleSet);
                     if (line.StartsWith(";doc;"))
                     {
                         var line5 = line.Substring(5).Trim() + " .";
@@ -1073,7 +1086,11 @@ function hidetip()
                         DocumentTerm(t, false);
                         continue;
                     }
-                    if (line.StartsWith(";")) continue;
+                    if (line.StartsWith(";") || line.StartsWith("%")) continue;
+                    if (line.StartsWith("."))
+                    {
+                        
+                    }
                     if (line.StartsWith("exit:")) break;
                     if (line.Contains(":") && !line.Contains(":-"))
                     {
@@ -1121,7 +1138,7 @@ function hidetip()
                         }
                         if (cmd == "chemsys")
                         {
-                            string[] sep = { "chemsys:" };
+                            string[] sep = {"chemsys:"};
                             args = line.Split(sep, StringSplitOptions.RemoveEmptyEntries);
                             val = args[0].Trim();
                             if (chemSysCommandProcessor != null)
@@ -1136,8 +1153,8 @@ function hidetip()
                             newPred = newPred.Replace(",,", ",0,");
                             if (!newPred.Contains(":"))
                             {
-                                if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = "";
-                                tempKB[curKB] = tempKB[curKB] + newPred;
+                                if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = new RuleList();
+                                tempKB[curKB].Add(ParseRule(new Tokeniser(newPred), curKB));
 
                             }
                             continue;
@@ -1153,8 +1170,8 @@ function hidetip()
                             curKB = val;
                             val = atomize(val);
                             string uniPred = String.Format("module({0}).\n", val);
-                            if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = "";
-                            tempKB[curKB] = tempKB[curKB] + uniPred;
+                            if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = new RuleList();
+                            tempKB[curKB].Add(ParseRule(new Tokeniser(uniPred), curKB));
                             continue;
                         }
 
@@ -1164,19 +1181,54 @@ function hidetip()
                         {
                             val = atomize(val);
                             string binaryPred = String.Format("{0}({1},{2}).\n", cmd, curConst, val);
-                            if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = "";
-                            tempKB[curKB] = tempKB[curKB] + binaryPred;
-
+                            var rule = ParseRule(new Tokeniser(binaryPred), curKB);
+                            if (rule != null)
+                            {
+                                if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = new RuleList();
+                                tempKB[curKB].Add(rule);
+                                continue;
+                            } 
+                            else
+                            {
+                                // fall thru to other reader.. the ":" confused us
+                            }
                         }
                     }
-                    else
+                    //else
                     {
-                        if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = "";
-                        tempKB[curKB] = tempKB[curKB] + "\n" + line;
+                        string was = line;
+                        var rule = ParseRule(new Tokeniser(was), curKB);
+                        if (rule == null)
+                        {
+                            Tokeniser newTokeniser = new Tokeniser(was);
+                            string kb = curKB;
+                            debugginParser = true;
+                            rule = ParseRule(newTokeniser, kb);
+                            debugginParser = false;
+                            Warn("Could not parse: " + was);
+                            continue;
+                        }
+                        if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = new RuleList();
+                        tempKB[curKB].Add(rule);
                     }
-                }
+                } while (ruleSet.Trim() != "");
             }
             return tempKB;
+        }
+
+        private string toEndOfLine(ref string ruleSet)
+        {
+            ruleSet = ruleSet.TrimStart();
+            int eol = ruleSet.IndexOf('\n');
+            if (eol == -1)
+            {
+                var line0 = ruleSet;
+                ruleSet = "";
+                return line0;
+            }
+            var line = ruleSet.Substring(0, eol + 1).TrimEnd('\r', '\n');
+            ruleSet = ruleSet.Substring(eol + 1);
+            return line;
         }
 
         public string findBestAliasMt(string hint)
@@ -3767,6 +3819,7 @@ function hidetip()
             public string remainder;
             public string type;
             public string current;
+            public string prev, prevType;
 
             public Tokeniser(string input)
             {
@@ -3778,6 +3831,8 @@ function hidetip()
 
             public void consume()
             {
+                this.prev = current;
+                this.prevType = type;
                 if (this.type == "eof") return;
                 // Eat any leading WS
                 Match r = Regex.Match(this.remainder, @"^\s*(.*)$");
@@ -3793,8 +3848,8 @@ function hidetip()
                     return;
                 }
 
-                // Decimal numbers
-                r = Regex.Match(this.remainder, @"^([0-9]*\.[0-9]*)(.*)$");
+                // Decimal numbers book suggests: @"^([-+]?[0-9]*\.[0-9]+|[0-9]+)(.*)$".
+                r = Regex.Match(this.remainder, @"^([-]?[0-9]*[\.]?[0-9]+[0-9]*)(.*)$");
                 //r = this.remainder.match(/^(-[0-9][0-9]*)(.*)$/);
                 if (r.Success)
                 {
@@ -3936,7 +3991,11 @@ function hidetip()
             }
 
             //if (tk.type != "id")  return null;
-            if ((tk.type != "id") && (tk.type != "var")) return null;
+            if ((tk.type != "id") && (tk.type != "var"))
+            {
+                debugChck();
+                return null;
+            }
             var name = tk.current;
             tk.consume();
 
@@ -3947,6 +4006,7 @@ function hidetip()
                 {
                     return new Term(name, new PartList());
                 }
+                debugChck(); 
                 return null;
             }
             tk.consume();
@@ -3959,10 +4019,18 @@ function hidetip()
                 if (tk.type == "eof") return null;
 
                 var part = ParsePart(tk);
-                if (part == null) return null;
+                if (part == null)
+                {
+                    debugChck();
+                    return null;
+                }
 
                 if (tk.current == ",") tk.consume();
-                else if (tk.current != ")") return null;
+                else if (tk.current != ")")
+                {
+                    debugChck();
+                    return null;
+                }
 
                 // Add the current Part onto the list...
                 p.AddPart(part);
@@ -4005,7 +4073,11 @@ function hidetip()
                 while (true)
                 {
                     var t = ParsePart(tk);
-                    if (t == null) return null;
+                    if (t == null)
+                    {
+                        debugChck();
+                        return null;
+                    }
 
                     l.Insert(i++, t);
                     if (tk.current != ",") break;
@@ -4048,10 +4120,18 @@ function hidetip()
                 if (tk.type == "eof") return null;
 
                 var part = ParsePart(tk);
-                if (part == null) return null;
+                if (part == null)
+                {
+                    debugChck();
+                    return null;
+                }
 
                 if (tk.current == ",") tk.consume();
-                else if (tk.current != ")") return null;
+                else if (tk.current != ")")
+                {
+                    debugChck();
+                    return null;
+                }
 
                 // Add the current Part onto the list...
                 p.AddPart(part);
@@ -4059,6 +4139,14 @@ function hidetip()
             tk.consume();
 
             return new Term(name, p);
+        }
+
+        [ThreadStatic]
+        public static bool debugginParser = false;
+        private static void debugChck()
+        {
+            if (!debugginParser) return;
+            Warn("debugChck");
         }
 
         static private Part MakeList(Part li, Part append)
@@ -4089,7 +4177,10 @@ function hidetip()
                 tk.consume();
             }
 
-            if (i == 0) return null;
+            if (i == 0)
+            {
+                return null;
+            }
             return p;
         }
         #endregion

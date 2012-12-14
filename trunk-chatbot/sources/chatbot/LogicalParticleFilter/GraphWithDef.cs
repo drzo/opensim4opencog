@@ -1000,7 +1000,7 @@ yago	http://dbpedia.org/class/yago/
             rdfRemoteEndpointToKB(endp,
                                   prolog100Mt,
                                   "SELECT DISTINCT ?o WHERE { ?s a ?o } LIMIT 100",
-                                  "isa($?o$,'http://www.w3.org/2002/07/owl#Class')");
+                                  "isa($?o$,{http://www.w3.org/2002/07/owl#Class}).\n");
 
             PNode kb2 = MakeRepositoryKB(prefix + "RdfServerURI");
             kb2.SourceKind = ContentBackingStore.RdfServerURI;
@@ -1379,7 +1379,21 @@ yago	http://dbpedia.org/class/yago/
 
             public double probability = 1.0;
             public ContentBackingStore SourceKind = ContentBackingStore.Prolog;
-            public ContentBackingStore SyncFromNow = ContentBackingStore.None;
+            
+            private ContentBackingStore _SyncFromNow = ContentBackingStore.None;
+            public ContentBackingStore SyncFromNow
+            {
+                get { return _SyncFromNow; }
+                set
+                {
+                    if (_SyncFromNow == value) return;
+                    if (value != ContentBackingStore.None && _SyncFromNow != ContentBackingStore.None)
+                    {
+                        Warn("Might be losing Data: SyncFromNow {0}=>{1}", _SyncFromNow, value);
+                    }
+                    _SyncFromNow = value;
+                }
+            }
 
             List<PEdge> incomingEdgeList = new List<PEdge>();
             List<PEdge> outgoingEdgeList = new List<PEdge>();
@@ -2656,7 +2670,7 @@ yago	http://dbpedia.org/class/yago/
                     case NodeType.Blank:
                         break;
                     case NodeType.Uri:
-                        return "''";
+                        return "{}";
                         break;
                     case NodeType.Literal:
                         return "\"\"";
