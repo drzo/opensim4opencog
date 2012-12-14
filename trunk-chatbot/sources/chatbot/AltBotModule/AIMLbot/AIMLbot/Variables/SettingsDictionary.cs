@@ -87,7 +87,7 @@ namespace RTParser.Variables
         int Count { get; }
         ICollection<string> Keys { get; }
         bool IsOrdered { get; set; }
-        void Add(string name, string value);
+        void Set(string name, string value);
         //string this[string name] { get; }
         void Clear();
         void Remove(string name);
@@ -181,7 +181,7 @@ namespace RTParser.Variables
             set { throw new NotImplementedException(); }
         }
 
-        public void Add(string name, string value)
+        public void Set(string name, string value)
         {
             name = KeyCase.Default.NormalizeKey(name);
             var valArg = MakeArg(value);
@@ -283,7 +283,7 @@ namespace RTParser.Variables
             string before = GetValue(name);
             if (before == null)
             {
-                Add(name, "");
+                Set(name, "");
             }
         }
 
@@ -357,13 +357,13 @@ namespace RTParser.Variables
             return false;
         }
 
-        public void Add(string name, string value)
+        public void Set(string name, string value)
         {
             if (orderedKeys != null)
             {
                 if (!orderedKeys.Contains(name)) orderedKeys.Add(name);
             } 
-            if (settingsHash0 != null) settingsHash0.Add(name, value);
+            if (settingsHash0 != null) settingsHash0.Set(name, value);
             if (settingsHash != null) settingsHash[name] = value;
         }
 
@@ -405,7 +405,7 @@ namespace RTParser.Variables
                 {
                     if (!settingsHash0.ContainsKey(name))
                     {
-                        settingsHash0.Add(name, null);
+                        settingsHash0.Set(name, null);
                     }
                 }
             }
@@ -1556,8 +1556,12 @@ namespace RTParser.Variables
                 //found = this.removeSettingReal(name);
                 if (value != null)
                 {
-                    this.settingsHash.Add(normalizedName, value);
+                    this.settingsHash.Set(normalizedName, value);
                     //this.settingsHash.AddKey(name);
+                }
+                else
+                {
+                    removeSetting(normalizedName);
                 }
                 updateListeners(name, value, true, !found);
             }
@@ -1593,7 +1597,7 @@ namespace RTParser.Variables
 
         private DataUnifiable MakeLocalValue(string name, DataUnifiable value)
         {
-            DataUnifiable oldSetting = grabSetting(name);
+            DataUnifiable oldSetting = grabSetting0(name, false);
             bool isCollection = IsCollection(name);            
             if (isCollection)
             {
@@ -1928,7 +1932,7 @@ namespace RTParser.Variables
                 if (normalizedName.Length > 0)
                 {
                     this.removeSetting(name);
-                    this.settingsHash.Add(normalizedName, value);
+                    this.settingsHash.Set(normalizedName, value);
                 }
             }
             return true;
@@ -2090,7 +2094,7 @@ namespace RTParser.Variables
                             if (value == old) return true;
                             this.removeFromHash(name);
                             SettingsLog("UPDATE Setting Local '" + name + "'=" + str(value));
-                            this.settingsHash.Add(normalizedName, value);
+                            this.settingsHash.Set(normalizedName, value);
                             // check blackboard
                             if ((isBBPrefixCorrect()) && (this.bot.myChemistry != null))
                             {
@@ -2316,8 +2320,8 @@ namespace RTParser.Variables
                                 DataUnifiable v = localValue(name, normalizedName);
                                 if (bbValue != v)
                                 {
-                                    this.removeFromHash(normalizedName);
-                                    this.settingsHash.Add(normalizedName, bbValue);
+                                   // this.removeFromHash(normalizedName);
+                                    this.settingsHash.Set(normalizedName, bbValue);
                                 }
                             }
                             return bbValue;
@@ -2364,7 +2368,7 @@ namespace RTParser.Variables
                         if (this.orderedKeysContains(normalizedName))
                         {
                             this.removeFromHash(normalizedName);
-                            this.settingsHash.Add(normalizedName, bbValue);
+                            this.settingsHash.Set(normalizedName, bbValue);
                         }
                         return bbValue;
                     }

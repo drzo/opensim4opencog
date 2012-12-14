@@ -833,6 +833,7 @@ function hidetip()
                         {
                             focus.pdb.index.Clear();
                             rules.RemoveAt(i);
+                            focus.SyncFromNow = ContentBackingStore.Prolog;
                             return val;
                         }
                         var or = ParseRule(new Tokeniser(newFact), focusMT);
