@@ -3,6 +3,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <StartWorkingDirectory>C:\development\opensim4opencog\current\bin\</StartWorkingDirectory>
     <StartArguments>--name Nephrael Rae</StartArguments>
+    <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
   </PropertyGroup>
   <PropertyGroup>
     <PublishUrlHistory />

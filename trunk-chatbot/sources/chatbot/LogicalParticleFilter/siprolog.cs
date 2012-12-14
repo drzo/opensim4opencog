@@ -238,11 +238,11 @@ namespace LogicalParticleFilter1
 
             RuleList VKB = new RuleList();
             // Prefix
-            lock (focus.pdb.rules) foreach (Rule r in focus.pdb.rules)
-                {
-                    VKB.Add(r);
-                    r.optHomeMt = startMT;
-                }
+            lock (focus.CompileLock) lock (focus.pdb.rules) foreach (Rule r in focus.pdb.rules)
+            {
+                VKB.Add(r);
+                r.optHomeMt = startMT;
+            }
             if (!followGenlMt) return VKB;
             foreach (PEdge E in focus.OutgoingEdges)
             {
@@ -691,7 +691,7 @@ function hidetip()
                 PNode focus = KBGraph.Contains(focusMT);
                 if (focus == null) continue;
                 ensureCompiled(focus);
-                lock (focus.pdb.rules) foreach (Rule r in focus.pdb.rules)
+                lock (focus.CompileLock) lock (focus.pdb.rules) foreach (Rule r in focus.pdb.rules)
                     {
                         VKB.Add(r);
                     }
@@ -718,7 +718,7 @@ function hidetip()
         {
             PNode focus = KBGraph.Contains(focusMT);
             if (focus == null) return;
-            focus.ClearProlog();
+            focus.Clear();
             ensureCompiled(focus);
         }
         private void ensureCompiled(PNode focus)
@@ -751,15 +751,10 @@ function hidetip()
                     focus.pushRdfGraphToPrologKB();
                     continue;
                 }
-                if (focus.SyncFromNow == ContentBackingStore.PrologMemory)
+                if (focus.SyncFromNow == ContentBackingStore.Prolog)
                 {
                     focus.SyncFromNow = ContentBackingStore.None;
                     focus.pushPrologKBToRdfGraph();
-                    continue;
-                }
-                if (focus.SyncFromNow == ContentBackingStore.PrologSource)
-                {
-                    ensureHalfCompiled(focus);
                     continue;
                 }
                 if (focus.SyncFromNow == ContentBackingStore.RdfServerURI)
@@ -789,23 +784,12 @@ function hidetip()
                     {
                         //string uri = "" + focus.Repository;
                         focus.Repository = null;
-                        focus.dirty = false;
                         focus.SyncFromNow = ContentBackingStore.RdfMemory;
                         return;
                     }
-                case ContentBackingStore.PrologSource:
+                case ContentBackingStore.Prolog:
                     {
-                        compileRuleListFromPrologSource(focus);
-                        return;
-                    }
-                case ContentBackingStore.PrologMemory:
-                    {
-                        if (focus.ruleset != null)
-                        {
-                            focus.ruleset = null;
-                        }
-                        focus.dirty = false;
-                        focus.SyncFromNow = ContentBackingStore.PrologMemory;
+                        focus.SyncFromNow = ContentBackingStore.Prolog;
                         return;
                     }
                 default:
@@ -823,12 +807,20 @@ function hidetip()
         }
         public string replaceInKB(string oldFact, string newFact, string focusMT)
         {
+            Warn("String using public Rule replaceInKB(Rule oldFact, Rule newFact, PNode focus)");
             PNode focus = KBGraph.Contains(focusMT);
             if (focus == null) return null;
+            lock(focus.CompileLock)
+            {
+                return replaceInKB_unlocked(oldFact, newFact, focus);
+            }
+        }
+        private string replaceInKB_unlocked(string oldFact, string newFact, PNode focus)
+        {
             ensureCompiled(focus);
             oldFact = oldFact.Replace(", ", ",");
             oldFact = oldFact.Replace("\n", "");
-            focusMT = focus.id;
+            string focusMT = focus.id;
             var rules = focus.pdb.rules;
             lock (rules) for (int i = 0; i < rules.Count; i++)
                 {
@@ -837,7 +829,6 @@ function hidetip()
                     if (val.Replace(", ", ",").StartsWith(oldFact))
                     {
                         // we null out ruleset so that the accessor knows all rules are in the PDB
-                        focus.ruleset = null;
                         if (String.IsNullOrEmpty(newFact))
                         {
                             focus.pdb.index.Clear();
@@ -847,7 +838,7 @@ function hidetip()
                         var or = ParseRule(new Tokeniser(newFact), focusMT);
                         or.optHomeMt = focusMT;
                         rules[i] = or;
-                        focus.SyncFromNow = ContentBackingStore.PrologMemory;
+                        focus.SyncFromNow = ContentBackingStore.Prolog;
                         return val;
                     }
                 }
@@ -856,27 +847,29 @@ function hidetip()
         public Rule replaceInKB(Rule oldFact, Rule newFact, PNode focus)
         {
             if (focus == null) return null;
-            ensureCompiled(focus);
-            var rules = focus.pdb.rules;
-            lock (rules) for (int i = 0; i < rules.Count; i++)
-                {
-                    Rule r = (Rule)rules[i];
-                    string val = r.ToString();
-                    if (r.SameClause(oldFact))
+            lock (focus.CompileLock)
+            {
+                ensureCompiled(focus);
+                var rules = focus.pdb.rules;
+                lock (rules)
+                    for (int i = 0; i < rules.Count; i++)
                     {
-                        // we null out ruleset so that the accessor knows all rules are in the PDB
-                        focus.ruleset = null;
-                        if (newFact == null)
+                        Rule r = (Rule) rules[i];
+                        string val = r.ToString();
+                        if (r.SameClause(oldFact))
                         {
+                            focus.SyncFromNow = ContentBackingStore.Prolog;
                             focus.pdb.index.Clear();
-                            rules.RemoveAt(i);
-                            return r;
+                            if (newFact == null)
+                            {
+                                rules.RemoveAt(i);
+                                return r;
+                            }
+                            rules[i] = newFact;
+                            return oldFact;
                         }
-                        rules[i] = newFact;
-                        focus.SyncFromNow = ContentBackingStore.PrologMemory;
-                        return oldFact;
                     }
-                }
+            }
             return null;
         }
 
@@ -896,15 +889,8 @@ function hidetip()
         public void insertKB_unlocked(string ruleSet, PNode focus, string startMT)
         {
             //replaces KB with a fresh rule set
-            if (!focus.IsDataFrom(ContentBackingStore.PrologSource))
-            {
-                focus.Clear();
-                appendKB_unlocked(ruleSet, focus);
-                return;
-            }
-            focus.ruleset = ruleSet;
-            focus.dirty = true;
-
+            focus.Clear();
+            appendKB_unlocked(ruleSet, focus);
             if (lazyTranslate) return;
             ensureCompiled(focus);
         }
@@ -940,7 +926,7 @@ function hidetip()
         }
         public void appendKB_unlocked(RuleList ruleSet, PNode focus)
         {
-            if (focus.IsDataFrom(ContentBackingStore.PrologMemory))
+            if (focus.IsDataFrom(ContentBackingStore.Prolog))
             {
                 focus.pdb.index.Clear();
                 lock (focus.pdb.rules)
@@ -950,55 +936,20 @@ function hidetip()
                         focus.pdb.rules.Add(r);
                     }
                 }
-                focus.SyncFromNow = ContentBackingStore.PrologMemory;
+                focus.SyncFromNow = ContentBackingStore.Prolog;
                 return;
             }
-            if (!focus.IsDataFrom(ContentBackingStore.PrologSource))
+            Warn("KB " + focus + " is not from Prolog but instead from " + focus.SourceKind);
+        }
+        public PNode FindOrCreateKB(string startMT)
+        {
+            lock (KBGraph)
             {
-                Warn("KB " + focus + " is not from sourcecode but instead from " + focus.SourceKind);
-                return;
+                return FindOrCreateKB_unlocked(startMT);
             }
-
-            if (!focus.dirty)
-            {
-                if ((focus.ruleset != null) && (focus.ruleset.Length > (maxMtSize * 1.2)))
-                {
-                    focus.ruleset = focus.ruleset + "\n" + ruleSet.ToSource() + "\n";
-                    while ((focus.ruleset != null) && (focus.ruleset.Length > maxMtSize))
-                    {
-                        int p1 = focus.ruleset.IndexOf("\n");
-                        focus.ruleset = focus.ruleset.Substring(p1 + 1);
-                        focus.dirty = true;
-                    }
-                    focus.SyncFromNow = ContentBackingStore.PrologSource;
-                    if (lazyTranslate) return;
-                    ensureCompiled(focus);
-
-                }
-                else
-                {
-                    focus.ruleset = focus.ruleset + "\n" + ruleSet.ToSource() + "\n";
-                    focus.pdb.index.Clear();
-                    lock (focus.pdb.rules)
-                    {
-                        foreach (Rule r in ruleSet)
-                        {
-                            focus.pdb.rules.Add(r);
-                        }
-                    }
-                    focus.SyncFromNow = ContentBackingStore.PrologMemory;
-                }
-                return;
-            }
-
-            focus.ruleset = focus.ruleset + "\n" + ruleSet.ToSource() + "\n";
-            focus.dirty = true;
-            focus.SyncFromNow = ContentBackingStore.PrologSource;
-            if (lazyTranslate) return;
-            ensureCompiled(focus);
         }
 
-        public PNode FindOrCreateKB(string startMT)
+        private PNode FindOrCreateKB_unlocked(string startMT)
         {
             PNode focus = KBGraph.Contains(startMT.ToString());
             if (focus == null)
@@ -2598,7 +2549,16 @@ function hidetip()
             public Rule this[int i]
             {
                 get { lock (Sync) return (Rule)arrayList[i]; }
-                set { lock (Sync) arrayList[i] = value; }
+                set
+                {
+                    lock (Sync)
+                    {
+                        var old = this[i];
+                        if (ReferenceEquals(old, value)) return;
+                        arrayList[i] = value;
+                        Release(old);
+                    }
+                }
             }
 
             public object Sync
@@ -3120,7 +3080,11 @@ function hidetip()
             }
             public object Functor0
             {
-                get { return Functor0Function(); }
+                get
+                {
+                    if (Functor0Function != null) return Functor0Function();
+                    return _name;
+                }
             }
             public object INodeToObject()
             {
@@ -3192,6 +3156,7 @@ function hidetip()
             public override string type { get { return "Atom"; } }
             public Atom(Object head, string quoting)
             {
+                quoted = quoting;
                 _name = head;
                 if (head is INode)
                 {
@@ -3199,15 +3164,16 @@ function hidetip()
                 }
                 else if (head is string)
                 {
-                    hash_code = _name.GetHashCode();
-                    Functor0Function = () => _name;
+                    aname = (string) head;
+                    hash_code = aname.GetHashCode();
                 }
-                else
-                {
-                    Functor0Function = () => _name;
-                }
-                quoted = quoting;
             }
+
+            private object ReturnObject()
+            {
+                return _name;
+            }
+
             public override void print()
             {
                 Console.Write(this.ToPLStringReadable());
@@ -4814,13 +4780,13 @@ function hidetip()
         /// When the KB is dirty
         /// mt.ruleset  Sourcecode is what we'd compile from
         /// </summary>
-        PrologSource,
+        //PrologSource,
 
         /// <summary>
         /// When the KB is dirty
         /// mt.pdb.rules  Prolog rule list is what we'd compile from
         /// </summary>
-        PrologMemory,
+        Prolog,
     }
 
     public class DontTouchThisTextWriter : TextWriter
