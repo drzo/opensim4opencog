@@ -1480,29 +1480,41 @@ namespace RTParser
                     writeToLog("Loaded Corpus Bigrams: '{0}'", file);
                 }
             }
-            if (wordNetEngine == null)
-            {
-                Console.WriteLine("*** Start WN-Load ***");
-                wordNetEngine = new WordNetEngine(PathToWordNet, true);
-                Console.WriteLine("*** DONE WN-Load ***");
-            }
-            else
-            {
-                Console.WriteLine("*** REUSING WN-Load ***");
-            }
+            initWordNet(PathToWordNet);
             if (this.LuceneIndexer == null)
             {
                 Console.WriteLine("*** Start Lucene ***");
                 var myLuceneIndexer = new MyLuceneIndexer(PathToLucene, fieldName, this, wordNetEngine);
-                this.LuceneIndexer = myLuceneIndexer;
+                this.LuceneIndexer = this.LuceneIndexer;
                 myLuceneIndexer.TheBot = this;
                 TripleStore = myLuceneIndexer.TripleStoreProxy;
-                myLuceneIndexer.wordNetEngine = wordNetEngine;
                 Console.WriteLine("*** DONE Lucene ***");
             }
             else
             {
                 Console.WriteLine("*** REUSING Lucene ***");
+            }
+        }
+
+        public void initWordNet(string wordNetPath)
+        {
+            lock (AltBot.WordNetEngineLock)
+            {
+                if (wordNetEngine == null)
+                {
+                    Console.WriteLine("*** Start WN-Load ***");
+                    wordNetEngine = new WordNetEngine(PathToWordNet, true);
+                    Console.WriteLine("*** DONE WN-Load ***");
+                }
+                else
+                {
+                    Console.WriteLine("*** REUSING WN-Load ***");
+                }
+                var myLuceneIndexer = this.LuceneIndexer as MyLuceneIndexer;
+                if (myLuceneIndexer != null)
+                {
+                    myLuceneIndexer.wordNetEngine = wordNetEngine;
+                }
             }
         }
 

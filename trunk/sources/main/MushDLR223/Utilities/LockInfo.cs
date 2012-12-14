@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -334,12 +335,17 @@ namespace MushDLR223.Utilities
             if (s == null) return;
             if (bad != null) bad(s);
         }
+        static Dictionary<object, Thread> myPool = new Dictionary<object, Thread>();
         static public string CheckLocked(object lockObj)
         {
+            if (DontRealyLock) return null;
             bool[] o = { false };
             Thread n = new Thread(() => isUnlocked(o, lockObj));
             n.Start();
-            n.Join();
+            if (!n.Join(2000))
+            {
+                return "Could not join";
+            }
             bool lockingIt = o[0];
             if (!lockingIt)
             {
@@ -357,11 +363,14 @@ namespace MushDLR223.Utilities
         }
         static private void isUnlocked(bool[] o, object lockObj)
         {
-            o[0] = true;
             if (Monitor.TryEnter(lockObj))
             {
                 Monitor.Exit(lockObj);
                 o[0] = false;
+            }
+            else
+            {
+                o[0] = true;
             }
         }
     }

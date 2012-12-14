@@ -105,11 +105,23 @@ namespace RTParser
         [NonSerialized] 
         public SIProlog prologEngine = new SIProlog();
 
+        static public object BotInitLock  = new object();
+        static public object WordNetEngineLock
+        {
+            get { return BotInitLock; }
+        }
         static private WordNetEngine _wordNetEngine;
         public WordNetEngine wordNetEngine
         {
-            get { return _wordNetEngine; }
-            set { _wordNetEngine = _wordNetEngine ?? value; }
+            get
+            {
+                lock (WordNetEngineLock) return _wordNetEngine;
+            }
+            set
+            {
+                LockInfo.CheckLocked(WordNetEngineLock);                
+                _wordNetEngine = _wordNetEngine ?? value;
+            }
         }
 
         [NonSerialized ]

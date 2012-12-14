@@ -83,7 +83,13 @@ namespace RTParser.AIMLTagHandlers
                         }
                     }
             }
-
+            if (ourWordNetEngine == null)
+            {
+                writeDebugLine("Wordnet engine not loaded .. returning AND_FALSE");
+                {
+                    return AND_FALSE;
+                }
+            }
             try { synPatternSet = ourWordNetEngine.GetSynSets(re, ourPOS); }
             catch (Exception)
             {

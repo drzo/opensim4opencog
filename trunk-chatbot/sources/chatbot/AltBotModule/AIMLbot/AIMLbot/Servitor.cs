@@ -654,11 +654,7 @@ namespace AltAIMLbot
             curBot.loadChanging = false;
 
         }
-        public void initWordNet(string wordNetPath)
-        {
-            Console.WriteLine("*** Servitor init WN-Load ***");
-            curBot.wordNetEngine = curBot.wordNetEngine ?? new WordNetEngine(wordNetPath, true);
-        }
+
         public bool setGuestEvalObject(object guestObj)
         {
             if (curBot == null) return false;
