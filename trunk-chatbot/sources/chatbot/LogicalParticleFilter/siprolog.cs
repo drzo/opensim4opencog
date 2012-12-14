@@ -723,9 +723,14 @@ function hidetip()
         }
         private void ensureCompiled(PNode focus)
         {
+            ensureCompiled(focus, focus.SourceKind);
+        }
+        private void ensureCompiled(PNode focus, ContentBackingStore forType)
+        {
             lock (focus.CompileLock)
             {
                 ensureHalfCompiled(focus);
+                if (focus.SyncFromNow == forType) return;
                 while (true)
                 {
                     if (focus.SyncFromNow == ContentBackingStore.None) return;
@@ -850,7 +855,10 @@ function hidetip()
             if (focus == null) return null;
             lock (focus.CompileLock)
             {
-                ensureCompiled(focus);
+                if (focus.IsOutOfSyncFor(ContentBackingStore.Prolog))
+                {
+                    ensureCompiled(focus);
+                }
                 var rules = focus.pdb.rules;
                 lock (rules)
                     for (int i = 0; i < rules.Count; i++)

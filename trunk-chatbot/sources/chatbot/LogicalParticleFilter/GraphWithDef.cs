@@ -1615,6 +1615,11 @@ yago	http://dbpedia.org/class/yago/
             {
                 lock (CompileLock) RdfStore.pushRulesToGraph();
             }
+
+            public bool IsOutOfSyncFor(ContentBackingStore type)
+            {
+                return type != SyncFromNow && SyncFromNow != ContentBackingStore.None;
+            }
         }
         public class GraphWithDef {
 
