@@ -40,7 +40,7 @@ namespace RaptorDB
 
         public int Count
         {
-            get { return _Dictionary.Count; }
+            get { lock (_Padlock) return _Dictionary.Count; }
         }
 
         public ICollection<KeyValuePair<TKey, TValue>> GetList()
@@ -56,7 +56,10 @@ namespace RaptorDB
         public void Add(TKey key, TValue value)
         {
             lock (_Padlock)
-                _Dictionary.Add(key, value);
+            {
+                if (_Dictionary.ContainsKey(key) == false) 
+                    _Dictionary.Add(key, value);
+            }
         }
 
         public TKey[] Keys()
@@ -99,6 +102,8 @@ namespace RaptorDB
 
         public void Remove(T key)
         {
+            if (key == null)
+                return;
             lock (_padlock)
                 _list.Remove(key);
         }

@@ -108,7 +108,8 @@ namespace AltAIMLbot.Utils
         /// <returns>The XML node</returns>
         public static XmlNode getNode(string outerXML)
         {
-            XmlDocument temp = new XmlDocumentLineInfo();
+            //XmlDocument temp = new XmlDocumentLineInfo();
+            var temp = new XmlDocument();
             temp.PreserveWhitespace = true;
             temp.LoadXml(outerXML);
             return temp.FirstChild;

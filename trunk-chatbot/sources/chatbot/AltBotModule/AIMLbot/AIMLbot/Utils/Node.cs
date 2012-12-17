@@ -1680,21 +1680,21 @@ namespace AltAIMLbot.Utils
         //http://www.codeproject.com/Articles/190504/RaptorDB
         //http://www.codeproject.com/Articles/316816/RaptorDB-The-Key-Value-Store-V2
 
-        public RaptorDB.RaptorDBString[] templatedb = null;
-        public RaptorDB.RaptorDBString[] childdb = null;
-        public RaptorDB.RaptorDBString[] childtrunkdb = null;
-        public RaptorDB.RaptorDBString[] childcntdb = null;
-        public RaptorDB.RaptorDBString[] scoredb = null;
-        public RaptorDB.RaptorDBString[] filenamedb = null;
-        public RaptorDB.RaptorDBString[] worddb = null;
-        public RaptorDB.RaptorDBString loadeddb;
-        public RaptorDB.RaptorDBString crondb;
+        public RaptorDB.KeyStoreString[] templatedb = null;
+        public RaptorDB.KeyStoreString[] childdb = null;
+        public RaptorDB.KeyStoreString[] childtrunkdb = null;
+        public RaptorDB.KeyStoreString[] childcntdb = null;
+        public RaptorDB.KeyStoreString[] scoredb = null;
+        public RaptorDB.KeyStoreString[] filenamedb = null;
+        public RaptorDB.KeyStoreString[] worddb = null;
+        public RaptorDB.KeyStoreString loadeddb;
+        public RaptorDB.KeyStoreString crondb;
 
         public Dictionary<string, string> childcache = new Dictionary<string, string>();
         public Dictionary<string, Node> nodecache = new Dictionary<string, Node>();
 
-        public int slices = 7; //17;
-        public int trunkLevel = 7; //5;
+        public int slices = 63; //7;
+        public int trunkLevel = 6; //5;
         public bool verify = true;
         public AltBot bot = null;
         public string _dbdir = "";
@@ -1710,15 +1710,15 @@ namespace AltAIMLbot.Utils
             
             string ourPath = Directory.CreateDirectory(dbdirectory).FullName;
             string ourDirectory = Path.GetDirectoryName(ourPath);
-            loadeddb = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "loadeddb", false);
-            crondb = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "crondbdb", false);
-            templatedb = new RaptorDBString[slices];
-            childdb = new RaptorDBString[slices];
-            childtrunkdb = new RaptorDBString[slices];
-            childcntdb = new RaptorDBString[slices];
-            scoredb = new RaptorDBString[slices];
-            filenamedb = new RaptorDBString[slices];
-            worddb = new RaptorDBString[slices];
+            loadeddb = new RaptorDB.KeyStoreString(ourDirectory + Path.DirectorySeparatorChar + "loadeddb", false);
+            crondb = new RaptorDB.KeyStoreString(ourDirectory + Path.DirectorySeparatorChar + "crondbdb", false);
+            templatedb = new KeyStoreString[slices];
+            childdb = new KeyStoreString[slices];
+            childtrunkdb = new KeyStoreString[slices];
+            childcntdb = new KeyStoreString[slices];
+            scoredb = new KeyStoreString[slices];
+            filenamedb = new KeyStoreString[slices];
+            worddb = new KeyStoreString[slices];
             allLoaded = false;
         }
 
@@ -1730,15 +1730,15 @@ namespace AltAIMLbot.Utils
             string ourPath = Directory.CreateDirectory(dbdirectory).FullName;
             string ourDirectory = Path.GetDirectoryName(ourPath);
 
-            loadeddb = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "loadeddb", false);
-            crondb = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "crondbdb", false);
-            templatedb = new RaptorDBString[slices];
-            childdb = new RaptorDBString[slices];
-            childtrunkdb = new RaptorDBString[slices];
-            childcntdb = new RaptorDBString[slices];
-            scoredb = new RaptorDBString[slices];
-            filenamedb = new RaptorDBString[slices];
-            worddb = new RaptorDBString[slices];
+            loadeddb = new RaptorDB.KeyStoreString(ourDirectory + Path.DirectorySeparatorChar + "loadeddb", false);
+            crondb = new RaptorDB.KeyStoreString(ourDirectory + Path.DirectorySeparatorChar + "crondbdb", false);
+            templatedb = new KeyStoreString[slices];
+            childdb = new KeyStoreString[slices];
+            childtrunkdb = new KeyStoreString[slices];
+            childcntdb = new KeyStoreString[slices];
+            scoredb = new KeyStoreString[slices];
+            filenamedb = new KeyStoreString[slices];
+            worddb = new KeyStoreString[slices];
             allLoaded = false;
         }
 
@@ -1759,13 +1759,13 @@ namespace AltAIMLbot.Utils
 
             for (int i = 0; i < slices; i++)
             {
-                templatedb[i] = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "templatedb" + i.ToString(), false);
-                childdb[i] = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "childdb" + i.ToString(), false);
-                childtrunkdb[i] = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "childtrunkdb" + i.ToString(), false);
-                childcntdb[i] = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "childcntdb" + i.ToString(), false);
-                scoredb[i] = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "scoredb" + i.ToString(), false);
-                filenamedb[i] = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "filenamedb" + i.ToString(), false);
-                worddb[i] = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "worddb" + i.ToString(), false);
+                templatedb[i] = new RaptorDB.KeyStoreString(ourDirectory + Path.DirectorySeparatorChar + "templatedb" + i.ToString(), false);
+                childdb[i] = new RaptorDB.KeyStoreString(ourDirectory + Path.DirectorySeparatorChar + "childdb" + i.ToString(), false);
+                childtrunkdb[i] = new RaptorDB.KeyStoreString(ourDirectory + Path.DirectorySeparatorChar + "childtrunkdb" + i.ToString(), false);
+                childcntdb[i] = new RaptorDB.KeyStoreString(ourDirectory + Path.DirectorySeparatorChar + "childcntdb" + i.ToString(), false);
+                scoredb[i] = new RaptorDB.KeyStoreString(ourDirectory + Path.DirectorySeparatorChar + "scoredb" + i.ToString(), false);
+                filenamedb[i] = new RaptorDB.KeyStoreString(ourDirectory + Path.DirectorySeparatorChar + "filenamedb" + i.ToString(), false);
+                worddb[i] = new RaptorDB.KeyStoreString(ourDirectory + Path.DirectorySeparatorChar + "worddb" + i.ToString(), false);
 
                 Console.WriteLine("OpenAll {0}:'{1}'", i,ourDirectory + Path.DirectorySeparatorChar + "templatedb" + i.ToString());
             }
@@ -2190,12 +2190,12 @@ namespace AltAIMLbot.Utils
                             {
                             if (trunk)
                             {
-                                childtrunkdb[pslice].RemoveKey(childkey);
+                                //childtrunkdb[pslice].RemoveKey(childkey);
                                 childtrunkdb[pslice].Set(childkey, childtxt);
                             }
                             else
                             {
-                                childdb[pslice].RemoveKey(childkey);
+                                //childdb[pslice].RemoveKey(childkey);
                                 childdb[pslice].Set(childkey, childtxt);
                             }
                             if (childcache.ContainsKey(childkey))

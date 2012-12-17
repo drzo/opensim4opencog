@@ -36,7 +36,7 @@ namespace RaptorDB
 
     internal class Page<T>
     {
-        public Page(bool b) // kludge so the compiler doesn't complain
+        public Page() // kludge so the compiler doesn't complain
         {
             DiskPageNumber = -1;
             RightPageNumber = -1;
@@ -75,18 +75,19 @@ namespace RaptorDB
         private IndexFile<T> _index;
         private bool _AllowDuplicates = true;
         private int _LastIndexedRecordNumber = 0;
+        private int _maxPageItems = 0;
 
         public MGIndex(string path, string filename, byte keysize, ushort maxcount, bool allowdups)
         {
             string dirSep = "" + Path.DirectorySeparatorChar; // "\\";
             _AllowDuplicates = allowdups;
             _index = new IndexFile<T>(path + dirSep + filename, keysize, maxcount);
-
+			_maxPageItems = maxcount;
             // load page list
             _index.GetPageList(_pageListDiskPages, _pageList, out _LastIndexedRecordNumber);
             if (_pageList.Count == 0)
             {
-                Page<T> page = new Page<T>(false);
+                Page<T> page = new Page<T>();
                 page.FirstKey = (T)RDBDataType<T>.GetEmpty();
                 page.DiskPageNumber = _index.GetNewPageNumber();
                 page.isDirty = true;
@@ -95,28 +96,70 @@ namespace RaptorDB
             }
         }
 
-        //public int Count(bool includeDuplicates)
-        //{
-        //    int i = 0;
-        //    foreach (var k in _pageList)
-        //    {
-        //        i += k.Value.UniqueCount;
-        //        if (includeDuplicates)
-        //        {
-        //            // FEATURE : count duplicates
-        //        }
-        //    }
-
-        //    return i;
-        //}
-
         public int GetLastIndexedRecordNumber()
         {
             return _LastIndexedRecordNumber;
         }
 
+        public WAHBitArray Query(T from, T to, int maxsize)
+        {           
+            // FIX : add BETWEEN code here
+            T temp = default(T);
+            if (from.CompareTo(to) > 0) // check values order
+            {
+                temp = from;
+                from = to;
+                to = temp;
+            }
+            // find first page and do > than
+            bool found = false;
+            int startpos = FindPageOrLowerPosition(from, ref found);
+
+
+            // find last page and do < than
+            int endpos = FindPageOrLowerPosition(to, ref found);
+
+
+            // do all pages in between
+
+            return new WAHBitArray();
+        }
+
+        public WAHBitArray Query(RDBExpression exp, T from, int maxsize)
+        {
+            T key = from;
+            if (exp == RDBExpression.Equal || exp == RDBExpression.NotEqual)
+                return doEqualOp(exp, key, maxsize);
+
+            // FIX : optimize complement search if page count less for the complement pages
+            //bool found = false;
+            //int last = _pageList.Count - 1;
+            //int pos = FindPageOrLowerPosition(key, ref found);
+
+            if (exp == RDBExpression.Less || exp == RDBExpression.LessEqual)
+            {
+                //long c = (pos+1) * _maxPageItems * 70 / 100; // 70% full pages
+                //long inv = maxsize - c;
+                //if (c < inv)
+                    return doLessOp(exp, key);
+                //else
+        //{
+
+        //}
+            }
+            else if (exp == RDBExpression.Greater || exp == RDBExpression.GreaterEqual)
+            {
+                return doMoreOp(exp, key);
+            }
+
+            return new WAHBitArray(); // blank results 
+        }
+
+        private object _setlock = new object();
         public void Set(T key, int val)
         {
+            lock (_setlock)
+            {
             PageInfo pi;
             Page<T> page = LoadPage(key, out pi);
 
@@ -137,6 +180,8 @@ namespace RaptorDB
             {
                 // new item 
                 ki = new KeyInfo(val);
+                    if (_AllowDuplicates)
+                        SaveDuplicate(key, ref ki);
                 pi.UniqueCount++;
                 page.tree.Add(key, ki);
             }
@@ -146,6 +191,7 @@ namespace RaptorDB
 
             _LastIndexedRecordNumber = val;
             page.isDirty = true;
+        }
         }
 
         public bool Get(T key, out int val)
@@ -187,31 +233,9 @@ namespace RaptorDB
             _index.Shutdown();
         }
 
-        // FEATURE : bool includeDuplices, int start, int count)
-        public IEnumerable<KeyValuePair<T, int>> Enumerate(T fromkey)
+        public void FreeMemory()
         {
-            List<KeyValuePair<T, int>> list = new List<KeyValuePair<T, int>>();
-            // enumerate
-            PageInfo pi;
-            Page<T> page = LoadPage(fromkey, out pi);
-            T[] keys = page.tree.Keys();
-            Array.Sort<T>(keys);
-
-            int p = Array.BinarySearch<T>(keys, fromkey);
-            for (int i = p; i < keys.Length; i++)
-                list.Add(new KeyValuePair<T, int>(keys[i], page.tree[keys[i]].RecordNumber));
-
-            while (page.RightPageNumber != -1)
-            {
-                page = LoadPage(page.RightPageNumber);
-                keys = page.tree.Keys();
-                Array.Sort<T>(keys);
-
-                foreach (var k in keys)
-                    list.Add(new KeyValuePair<T, int>(k, page.tree[k].RecordNumber));
-            }
-
-            return list;
+            _index.BitmapFlush();
         }
 
         public IEnumerable<int> GetDuplicates(T key)
@@ -239,25 +263,118 @@ namespace RaptorDB
             Page<T> page = LoadPage(key, out pi);
             bool b = page.tree.Remove(key);
             if (b)
+            {
+                pi.UniqueCount--;
+                // FEATURE : decrease dup count
+            }
                 page.isDirty = true;
-            //if (b)
-            //{
-            //    pi.UniqueCount--;
-            //    // FEATURE : decrease dup count
-            //}
             return b;
         }
 
-        public Statistics GetStatistics()
-        {
-            Statistics s = new Statistics();
-            s.TotalSplitTime = _totalsplits;
-            s.PageCount = _pageList.Count;
+        //public Statistics GetStatistics()
+            //{
+        //    Statistics s = new Statistics();
+        //    s.TotalSplitTime = _totalsplits;
+        //    s.PageCount = _pageList.Count;
 
-            return s;
-        }
+        //    return s;
+            //}
 
         #region [  P R I V A T E  ]
+        private WAHBitArray doMoreOp(RDBExpression exp, T key)
+        {
+            bool found = false;
+            int pos = FindPageOrLowerPosition(key, ref found);
+            WAHBitArray result = new WAHBitArray();
+            if (pos < _pageList.Count)
+            {
+                // all the pages after
+                for (int i = pos + 1; i < _pageList.Count; i++)
+                    doPageOperation(ref result, i);
+            }
+            // key page
+            Page<T> page = LoadPage(_pageList.GetValue(pos).PageNumber);
+            T[] keys = page.tree.Keys();
+            Array.Sort(keys);
+
+            // find better start position rather than 0
+            pos = Array.IndexOf<T>(keys, key);
+            if (pos == -1) pos = 0;
+
+            for (int i = pos; i < keys.Length; i++)
+            {
+                T k = keys[i];
+                int bn = page.tree[k].DuplicateBitmapNumber;
+
+                if (k.CompareTo(key) > 0)
+                    result = result.Or(_index.GetDuplicateBitmap(bn));
+
+                if (exp == RDBExpression.GreaterEqual && k.CompareTo(key) == 0)
+                    result = result.Or(_index.GetDuplicateBitmap(bn));
+            }
+            return result;
+        }
+
+        private WAHBitArray doLessOp(RDBExpression exp, T key)
+        {
+            bool found = false;
+            int pos = FindPageOrLowerPosition(key, ref found);
+            WAHBitArray result = new WAHBitArray();
+            if (pos > 0)
+            {
+                // all the pages before
+                for (int i = 0; i < pos - 1; i++)
+                    doPageOperation(ref result, i);
+            }
+            // key page
+            Page<T> page = LoadPage(_pageList.GetValue(pos).PageNumber);
+            T[] keys = page.tree.Keys();
+            Array.Sort(keys);
+            for (int i = 0; i < keys.Length; i++)
+            {
+                T k = keys[i];
+                if (k.CompareTo(key) > 0)
+                    break;
+                int bn = page.tree[k].DuplicateBitmapNumber;
+
+                if (k.CompareTo(key) < 0)
+                    result = result.Or(_index.GetDuplicateBitmap(bn));
+
+                if (exp == RDBExpression.LessEqual && k.CompareTo(key) == 0)
+                    result = result.Or(_index.GetDuplicateBitmap(bn));
+            }
+            return result;
+        }
+
+        private WAHBitArray doEqualOp(RDBExpression exp, T key, int maxsize)
+        {
+            PageInfo pi;
+            Page<T> page = LoadPage(key, out pi);
+            KeyInfo k;
+            if (page.tree.TryGetValue(key, out k))
+            {
+                int bn = k.DuplicateBitmapNumber;
+
+                if (exp == RDBExpression.Equal)
+                    return _index.GetDuplicateBitmap(bn);
+                else
+                    return _index.GetDuplicateBitmap(bn).Not(maxsize); 
+            }
+            else
+                return new WAHBitArray();
+        }
+
+        private void doPageOperation(ref WAHBitArray res, int pageidx)
+        {
+            Page<T> page = LoadPage(_pageList.GetValue(pageidx).PageNumber);
+            T[] keys = page.tree.Keys(); // avoid sync issues
+            foreach (var k in keys)
+            {
+                int bn = page.tree[k].DuplicateBitmapNumber;
+
+                res = res.Or(_index.GetDuplicateBitmap(bn));
+            }
+        }
 
         private double _totalsplits = 0;
         private void SplitPage(Page<T> page)
@@ -265,7 +382,7 @@ namespace RaptorDB
             // split the page
             DateTime dt = FastDateTime.Now;
 
-            Page<T> newpage = new Page<T>(false);
+            Page<T> newpage = new Page<T>();
             newpage.DiskPageNumber = _index.GetNewPageNumber();
             newpage.RightPageNumber = page.RightPageNumber;
             newpage.isDirty = true;

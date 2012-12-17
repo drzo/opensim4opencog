@@ -34,6 +34,8 @@ namespace RaptorDB
         ILog log = LogManager.GetLogger(typeof(IndexFile<T>));
         private BitmapIndex _bitmap;
         IGetBytes<T> _T = null;
+        private bool _inMemory = false;
+        private object _fileLock = new object();
 
         public IndexFile(string filename, byte maxKeySize, ushort pageNodeCount)
         {
@@ -83,24 +85,29 @@ namespace RaptorDB
 
         public IEnumerable<int> GetDuplicatesRecordNumbers(int recno)
         {
-            return _bitmap.GetBitmap(recno).GetBitIndexes(true);
+            return GetDuplicateBitmap(recno).GetBitIndexes();
         }
 
-        private int NodeHeaderCount(int nextpage, ref long c)
+        public WAHBitArray GetDuplicateBitmap(int recno)
         {
-            SeekPage(nextpage);
-            byte[] b = new byte[_BlockHeader.Length];
-            _file.Read(b, 0, _BlockHeader.Length);
-
-            if (b[0] == _BlockHeader[0] && b[1] == _BlockHeader[1] && b[2] == _BlockHeader[2] && b[3] == _BlockHeader[3])
-            {
-                short count = Helper.ToInt16(b, 5);
-                int rightpage = Helper.ToInt32(b, 11);
-                c += count;
-                return rightpage;
-            }
-            return 0;
+            return _bitmap.GetBitmap(recno);
         }
+
+        //private int NodeHeaderCount(int nextpage, ref long c)
+        //{
+        //    SeekPage(nextpage);
+        //    byte[] b = new byte[_BlockHeader.Length];
+        //    _file.Read(b, 0, _BlockHeader.Length);
+
+        //    if (b[0] == _BlockHeader[0] && b[1] == _BlockHeader[1] && b[2] == _BlockHeader[2] && b[3] == _BlockHeader[3])
+        //    {
+        //        short count = Helper.ToInt16(b, 5);
+        //        int rightpage = Helper.ToInt32(b, 11);
+        //        c += count;
+        //        return rightpage;
+        //    }
+        //    return 0;
+        //}
 
         private byte[] CreateBlockHeader(byte type, ushort itemcount, int rightpagenumber)
         {
@@ -116,6 +123,8 @@ namespace RaptorDB
 
         private void CreateFileHeader(int rowsindexed)
         {
+            lock (_fileLock)
+            {
             // max key size
             byte[] b = Helper.GetBytes(_maxKeySize, false);
             Buffer.BlockCopy(b, 0, _FileHeader, 3, 1);
@@ -135,6 +144,7 @@ namespace RaptorDB
                 _file.Write(pagezero, 0, _PageLength);
             }
             _file.Flush();
+        }
         }
 
         private bool ReadFileHeader()
@@ -184,6 +194,8 @@ namespace RaptorDB
 
         public void Shutdown()
         {
+            if (_inMemory == true)
+                return;
             log.Debug("Shutdown IndexFile");
             if (_file != null)
             {
@@ -215,6 +227,8 @@ namespace RaptorDB
 
         private int LoadPageListData(int page, SafeSortedList<T, PageInfo> PageList)
         {
+            lock (_fileLock)
+            {
             // load page list data
             int nextpage = -1;
             SeekPage(page);
@@ -246,9 +260,12 @@ namespace RaptorDB
 
             return nextpage;
         }
+        }
 
         internal void SavePage(Page<T> node)
         {
+            lock (_fileLock)
+            {
             int pnum = node.DiskPageNumber;
             if (pnum > _LastPageNumber)
                 throw new Exception("should not be here: page out of bounds");
@@ -284,9 +301,12 @@ namespace RaptorDB
             }
             _file.Write(page, 0, page.Length);
         }
+        }
 
         public Page<T> LoadPageFromPageNumber(int number)
         {
+            lock (_fileLock)
+            {
             SeekPage(number);
             byte[] b = new byte[_PageLength];
             _file.Read(b, 0, _PageLength);
@@ -294,7 +314,7 @@ namespace RaptorDB
             if (b[0] == _BlockHeader[0] && b[1] == _BlockHeader[1] && b[2] == _BlockHeader[2] && b[3] == _BlockHeader[3])
             {
                 // create node here
-                Page<T> page = new Page<T>(false);
+                    Page<T> page = new Page<T>();
 
                 short count = Helper.ToInt16(b, 5);
                 if (count > _PageNodeCount)
@@ -317,11 +337,13 @@ namespace RaptorDB
             else
                 throw new Exception("Page read error header invalid, number = " + number);
         }
+        }
         #endregion
-
 
         internal void SavePageList(SafeSortedList<T, PageInfo> _pages, List<int> diskpages)
         {
+            lock (_fileLock)
+            {
             // save page list
             int c = (_pages.Count / Global.PageItemCount) + 1;
             // allocate pages needed 
@@ -351,6 +373,7 @@ namespace RaptorDB
             }
             SeekPage(diskpages[diskpages.Count - 1]);
             _file.Write(lastpage, 0, lastpage.Length);
+            }
         }
 
         private void CreatePageListData(SafeSortedList<T, PageInfo> _pages, int i, byte[] page, int index, int j)

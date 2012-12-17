@@ -1064,7 +1064,7 @@ namespace RTParser.Utils
             sentence = ApplySubstitutions.Substitute(OutputSubstitutions, xmlsentenceIn);
             if (sentenceIn != sentence)
             {
-                writeToLog("SUBTS: " + sentenceIn + " -> " + sentence);
+                if (writeToLog!=null) writeToLog("SUBTS: " + sentenceIn + " -> " + sentence);
             }
             sentence = AltBot.CleanupCyc(sentence);
             sentence = ApplySubstitutions.Substitute(OutputSubstitutions, sentence);

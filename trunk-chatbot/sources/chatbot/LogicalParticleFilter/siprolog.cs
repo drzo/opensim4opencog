@@ -714,6 +714,25 @@ function hidetip()
             return focus.Probability;
         }
 
+        public void markKBScratchpad(string focusMT)
+        {
+            PNode focus = KBGraph.Contains(focusMT);
+            if (focus == null) return;
+            focus.SyncFromNow = ContentBackingStore.Prolog;
+        }
+        public void markKBRDF(string focusMT)
+        {
+            PNode focus = KBGraph.Contains(focusMT);
+            if (focus == null) return;
+            focus.SyncFromNow = ContentBackingStore.RdfMemory;
+        }
+        public void markKBSyncType(string focusMT,ContentBackingStore syncType)
+        {
+            PNode focus = KBGraph.Contains(focusMT);
+            if (focus == null) return;
+            focus.SyncFromNow = syncType;
+        }
+
         public void clearKB(string focusMT)
         {
             PNode focus = KBGraph.Contains(focusMT);
@@ -721,6 +740,8 @@ function hidetip()
             focus.Clear();
             ensureCompiled(focus);
         }
+
+
         private void ensureCompiled(PNode focus)
         {
             ensureCompiled(focus, focus.SourceKind);

@@ -426,6 +426,8 @@ namespace LogicalParticleFilter1
         public void setSolution(GoapState cState, string solutionMt, string nowMt, string backgroundMt)
         {
             // Make the description in cState the focus
+            prologEngine.markKBScratchpad(solutionMt);
+
             prologEngine.clearKB(solutionMt);
             prologEngine.clearConnectionsFromMt(solutionMt);
             if (backgroundMt !=null) prologEngine.connectMT(solutionMt, backgroundMt);
@@ -448,6 +450,7 @@ namespace LogicalParticleFilter1
         }
         public void commitSolution(GoapState cState, string solutionMt, string nowMt, string backgroundMt)
         {
+            prologEngine.markKBScratchpad(solutionMt);
             planNode = cState;
             // Modules/Actions are in reverse order from now to goal so flip them
             cState.modList.Reverse();
@@ -559,6 +562,7 @@ namespace LogicalParticleFilter1
             }
 
             SIProlog.ConsoleWriteLine(postScript);
+            prologEngine.markKBRDF(solutionMt);
 
         }
 
