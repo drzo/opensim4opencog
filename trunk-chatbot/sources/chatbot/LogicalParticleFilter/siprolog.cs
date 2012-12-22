@@ -3169,13 +3169,14 @@ function hidetip()
                 get
                 {
                     if (!IsUri) return null;
-                    string localAname;
-                    //if (aname != null) return aname;
+                    string localAname = aname;
+                    if (localAname != null) return localAname;
                     string s = AsValuedNode().AsString();
                     string oprefix, ouri, path = s;
                     if (!GraphWithDef.DevolveURI(rdfDefinations.NamespaceMap, path, out ouri, out oprefix,
                                                  out localAname)) return null;
 
+                    aname = localAname = string.Intern(localAname);
                     return localAname;
                 }
             }
