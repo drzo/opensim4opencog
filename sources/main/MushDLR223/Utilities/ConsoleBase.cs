@@ -1105,21 +1105,21 @@ namespace MushDLR223.Utilities
             {
                 lock (m_syncRoot)
                 {
-                    format = SafeFormat(format, args);
                     try
                     {
                         if (color != ForegroundColor)  // ConsoleColor.White
                             ForegroundColor = color;
-                        SystemWriteLine0(format);
+                        SystemWriteLine0(format, args);
                         ResetColor();
                     }
                     catch (ArgumentNullException)
                     {
                         // Some older systems dont support coloured text.
-                        SystemWriteLine0(format);
+                        SystemWriteLine0(format, args);
                     }
                     catch (FormatException e)
                     {
+                        format = SafeFormat(format, args);
                         SystemWriteLine0("FormatException " + format + " ex=" + e);
                     }
                 }
