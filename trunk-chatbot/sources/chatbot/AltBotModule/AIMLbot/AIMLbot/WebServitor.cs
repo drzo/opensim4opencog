@@ -10,6 +10,8 @@ using System.IO;
 using System.Threading;
 using System.Xml;
 using System.Web;
+using LogicalParticleFilter1;
+using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 
 namespace AltAIMLbot
@@ -161,7 +163,7 @@ namespace AltAIMLbot
         {
                 var context = (HttpListenerContext)listenerContext;
             tl_context = context;
-            tl_title = context.Request.Url.AbsoluteUri;
+            WebLinksWriter.tl_title = context.Request.Url.AbsoluteUri;
             tl_serverRoot = GetServerRoot(context.Request.UserHostName);
             try
             {
@@ -246,11 +248,11 @@ namespace AltAIMLbot
                     string path2 = "." + justURL;
                     string query = NVC["q"];
                     string action = NVC["a"];
-                    tl_title = path;
+                    WebLinksWriter.tl_title = path;
                     Console.WriteLine("WEBPOST path={0},action={1},query={2},btx={3}", path, action, query, behaviorName);
                     if (path2.Contains("./siprolog/"))
                     {
-                        tl_AsHTML = false;
+                        WebLinksWriter.tl_AsHTML = false;
                         context.Response.StatusCode = (int)HttpStatusCode.OK;
                         //+using (Stream s = context.Response.OutputStream )
                         using (var writer = HtmlStreamWriter(context))
@@ -317,7 +319,7 @@ namespace AltAIMLbot
 
         public static void READ(HttpListenerContext context)
         {
-            tl_BodyDepth = 0;
+            WebLinksWriter.tl_BodyDepth = 0;
             //GET (READ from DB)
             string [] sections = context.Request.RawUrl.Split('?');
             string justURL = sections[0];
@@ -328,8 +330,8 @@ namespace AltAIMLbot
                 behaviorName = context.Request.QueryString["btx"] ?? "";
             }
             string behaviorFile = ourServitor.curBot.myBehaviors.behaviorDiskName(behaviorName);
-            tl_MultiPage = null;
-            tl_AsHTML = true;
+            WebLinksWriter.tl_MultiPage = null;
+            WebLinksWriter.tl_AsHTML = true;
             string mt = context.Request.QueryString["mt"];
             if (mt!=null)
             {
@@ -340,13 +342,13 @@ namespace AltAIMLbot
                     //+using (Stream s = context.Response.OutputStream )
                     using (var writer = HtmlStreamWriter(context))
                     {
-                        tl_MultiPage = writer;
+                        WebLinksWriter.tl_MultiPage = writer;
                         foreach (string mtT in mbf)
                         {
                             mt = mtT;
                             WILDCARD_READ(context, justURL, behaviorName, behaviorFile, mt);
                         }
-                        tl_MultiPage = null;
+                        WebLinksWriter.tl_MultiPage = null;
                         writer.Close();
                     }
                     return;
@@ -361,14 +363,14 @@ namespace AltAIMLbot
                     //+using (Stream s = context.Response.OutputStream )
                     using (var writer = HtmlStreamWriter(context))
                     {
-                        tl_MultiPage = writer;
+                        WebLinksWriter.tl_MultiPage = writer;
                         foreach (string behaviorT in mbf)
                         {
                             behaviorName = behaviorT;
                             behaviorFile = ourServitor.curBot.myBehaviors.behaviorDiskName(behaviorName);
                             WILDCARD_READ(context, justURL, behaviorName, behaviorFile, mt);
                         }
-                        tl_MultiPage = null;
+                        WebLinksWriter.tl_MultiPage = null;
                         writer.Close();
                     }
                     return;
@@ -386,12 +388,12 @@ namespace AltAIMLbot
             string path = "." + justURL;
             string query = context.Request.QueryString["q"];
             string action = context.Request.QueryString["a"];
-            tl_title = path;
+            WebLinksWriter.tl_title = path;
             Console.WriteLine("WEBGET path={0},action={1},query={2},btx={3}", path, action, query, behaviorName);
             //serverRoot
             if (path.Contains("./plot/"))
             {
-                tl_AsHTML = false;
+                WebLinksWriter.tl_AsHTML = false;
                 context.Response.StatusCode = (int) HttpStatusCode.OK;
                 //+using (Stream s = context.Response.OutputStream )
                 using (var writer = HtmlStreamWriter(context))
@@ -401,7 +403,7 @@ namespace AltAIMLbot
             if (path.Contains("./xrdf/"))
             {
                 // AsHTML = false for when function already understands it is printing HTML
-                tl_AsHTML = false;
+                WebLinksWriter.tl_AsHTML = false;
                 context.Response.StatusCode = (int) HttpStatusCode.OK;
                 //+using (Stream s = context.Response.OutputStream )
                 using (var writer = HtmlStreamWriter(context))
@@ -419,7 +421,7 @@ namespace AltAIMLbot
             }
             if (path.Contains("./siprolog/"))
             {
-                tl_AsHTML = false;
+                WebLinksWriter.tl_AsHTML = false;
                 context.Response.StatusCode = (int) HttpStatusCode.OK;
                 //+using (Stream s = context.Response.OutputStream )
                 using (var writer = HtmlStreamWriter(context))
@@ -466,7 +468,7 @@ namespace AltAIMLbot
 
             if (path.Contains("./analysisllist/"))
             {
-                tl_AsHTML = true;
+                WebLinksWriter.tl_AsHTML = true;
                 string furi = justURL;
                 //+using (Stream s = context.Response.OutputStream )
                 using (var writer = HtmlStreamWriter(context))
@@ -513,7 +515,7 @@ namespace AltAIMLbot
 
                 if (path.EndsWith("/list/"))
                 {
-                    tl_AsHTML = true;
+                    WebLinksWriter.tl_AsHTML = true;
                     context.Response.StatusCode = (int) HttpStatusCode.OK;
                     //context.Response.ContentLength64 = 0;
                     string[] fileList;
@@ -554,6 +556,12 @@ namespace AltAIMLbot
                 s.Write(msg, 0, msg.Length);
 
         }
+
+        private static TextWriter HtmlStreamWriter(HttpListenerContext context)
+        {
+            return WebLinksWriter.HtmlStreamWriter(context);
+        }
+
         public static void UPDATE(HttpListenerContext context)
         {
             //PUT (Update DB)
@@ -853,57 +861,7 @@ namespace AltAIMLbot
         }
 
         [ThreadStatic]
-        public static int tl_BodyDepth;
-        [ThreadStatic]
-        public static bool tl_AsHTML;
-        [ThreadStatic]
         public static HttpListenerContext tl_context;
-        [ThreadStatic]
-        public static string tl_title;
-        [ThreadStatic]
-        public static TextWriter tl_MultiPage;
-
-        private static void WriteHtmlPreBody(TextWriter writer, string title)
-        {
-            if (!tl_AsHTML) return;
-            tl_title = title ?? tl_title;
-            if (tl_BodyDepth == 0)
-            {
-                writer.WriteLine("<html><head><title>{0}</title></head><body>", tl_title);
-            }
-            tl_BodyDepth++;
-        }
-
-        private static void WriteHtmlPostBody(TextWriter writer)
-        {
-            if (!tl_AsHTML) return;
-            tl_BodyDepth--;
-            if (tl_BodyDepth == 0)
-            {
-                writer.WriteLine("</body></html>");
-            }
-        }
-
-        private static TextWriter HtmlStreamWriter(HttpListenerContext context)
-        {
-            if (tl_MultiPage != null) return tl_MultiPage;
-            Stream s = context.Response.OutputStream;
-            TextWriter writer = new StreamWriter(s);
-            if (tl_AsHTML)
-            {
-                var writer1 = writer;
-                WriteHtmlPreBody(writer, tl_title);
-                WriteLinksWriter writer2 = WriteLinksWriter.EnsureWriteLinksWriter(writer, null);
-                writer = writer2;
-                writer2.OnClose = () =>
-                {
-                    tl_AsHTML = true;
-                    tl_BodyDepth = 1;
-                    WriteHtmlPostBody(writer1);
-                };              
-            }
-            return writer;
-        }
 
         public static void analyse(
            TextWriter writer, string path, string behaviorName,string rawURL)
@@ -921,11 +879,11 @@ namespace AltAIMLbot
                     analyse(writer, path, behavorT, rawURL);
                 }
                 return;
-            } 
-            
-            tl_title = string.Format("analyse path={0},behaviorName={1},rawURL={2}", path, behaviorName,
+            }
+
+            WebLinksWriter.tl_title = string.Format("analyse path={0},behaviorName={1},rawURL={2}", path, behaviorName,
                                      rawURL);
-            Console.WriteLine(tl_title);
+            Console.WriteLine(WebLinksWriter.tl_title);
             path = HostSystem.FileSystemPath(path);
             if (!File.Exists(path))
             {
@@ -998,242 +956,6 @@ namespace AltAIMLbot
                 relateToRootParent(writer, childNode, rootURI, nodeType, resourcePrefix, resourceExtension, relation);
             }
         }
-    }
-
-    public class WriteLinksWriter : TextWriter
-    {
-        private readonly TextWriter w;
-        public Action OnClose;
-        private bool selfWriting = false;
-        public LinkifyArgPred LinkifyArg = LinkifyArgDefault;
-
-        public override void Close()
-        {
-            if (KeepOpen) return;
-            ReallyClose();
-        }
-
-        public override void Flush()
-        {
-            w.Flush();
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (KeepOpen) return;
-            ReallyClose();
-            if (disposing)
-            {
-                w.Dispose();
-            }
-        }
-
-        private bool IsClosed = false;
-        private void ReallyClose()
-        {
-            lock(this)
-            {
-                if (IsClosed) return;
-                IsClosed = true;
-            }
-            w.Flush();
-            if (OnClose != null)
-            {
-                try
-                {
-                    OnClose();
-                }
-                catch (Exception)
-                {
-                }
-            }
-            w.Close();
-        }
-
-        private bool KeepOpen
-        {
-            get
-            {
-                if (WebServitor.tl_MultiPage != null)
-                {
-                    //Flush();
-                    return true;
-                }
-                return false;
-            }
-        }
-
-        static public WriteLinksWriter EnsureWriteLinksWriter(TextWriter tw, LinkifyArgPred pred)
-        {
-            if (tw is WriteLinksWriter) return (WriteLinksWriter)tw;
-            return new WriteLinksWriter(tw) {LinkifyArg = pred ?? LinkifyArgDefault};
-        }
-
-        private WriteLinksWriter(TextWriter writer)
-        {
-            this.w = writer;
-        }
-
-
-        public override void Write(char[] buffer, int index, int count)
-        {
-            w.Write(buffer, index, count);
-        }
-
-        public override void WriteLine(string format)
-        {
-            WriteLineParms("{0}", EntityFormat(format));
-        }
-        public override void WriteLine(object arg0)
-        {
-            WriteLineParms("{0}", arg0);
-        }
-        public override void WriteLine(string format, object arg0)
-        {
-            WriteLineParms(format, arg0);
-        }
-        public override void WriteLine(string format, object arg0, object arg1)
-        {
-            WriteLineParms(format, arg0, arg1);
-        }
-        public override void WriteLine(string format, object arg0, object arg1, object arg2)
-        {
-            WriteLineParms(format, arg0, arg1, arg2);
-        }
-        public override void WriteLine(string format, params object[] arg)
-        {
-            var args = LinkifyArgs(arg);
-            WriteLineParms(format, args);
-        }
-
-        public void WriteLineParms(string format, params object[] arg)
-        {
-            WriteParms(format, arg);
-            w.WriteLine("<br/>");
-        }
-
-        public override void Write(string format)
-        {
-            WriteParms(format);
-        }
-        public override void Write(object arg0)
-        {
-            WriteParms("{0}", arg0);
-        }
-        public override void Write(string format, object arg0)
-        {
-            WriteParms(format, arg0);
-        }
-        public override void Write(string format, object arg0, object arg1)
-        {
-            WriteParms(format, arg0, arg1);
-        }
-        public override void Write(string format, object arg0, object arg1, object arg2)
-        {
-            WriteParms(format, arg0, arg1, arg2);
-        }
-        public override void Write(string format, params object[] arg)
-        {
-            var args = LinkifyArgs(arg);
-            WriteParms(format, args);
-        }
-        public void WriteParms(string format, params object[] arg)
-        {
-            var args = LinkifyArgs(arg);
-            selfWriting = true;
-            try
-            {
-                if (arg.Length > 0)
-                {
-                    format = EntityFormat(format);
-                }
-                else
-                {
-                    string newForm;
-                    if (LinkifyArg(format, out newForm))
-                    {
-                        format = newForm;
-                    }
-                }
-                w.Write(format, args);
-            }
-            finally
-            {
-                selfWriting = false;
-            }
-        }
-
-        private string EntityFormat(string format)
-        {
-            return format.Replace("<", "&lt;").Replace(">", "&gt;");
-        }
-
-
-        public object[] LinkifyArgs(object[] arg)
-        {
-            for (int i = 0; i < arg.Length; i++)
-            {
-                object o = arg[i];
-                string newVal;
-                if (LinkifyArg(o, out newVal))
-                {
-                    arg[i] = newVal;
-                }
-            }
-            return arg;
-        }
-
-        public delegate bool LinkifyArgPred(object o, out string val);
-
-        private static bool LinkifyArgDefault(object o, out string s)
-        {
-            s = "" + o;
-            if (o is Uri)
-            {
-                s = ((Uri) o).AbsoluteUri;
-            }
-            if (s.StartsWith("http"))
-            {
-                string link = s;
-                if (link.ToLower().EndsWith(".btx"))
-                {
-                    link = link.Replace("/behavior/", "/scheduler/");
-                    link = link + "?a=info";
-                }
-                s = string.Format("<a href='{0}'>{1}</a>", link, s);
-                return true;
-            }
-            return false;
-        }
-
-        public override Encoding Encoding
-        {
-            get { return w.Encoding;  }
-        }
-
-        public override int GetHashCode()
-        {
-            return w.GetHashCode();
-        }
-        public override IFormatProvider FormatProvider
-        {
-            get
-            {
-                return w.FormatProvider;
-            }
-        }
-        public override string NewLine
-        {
-            get
-            {
-                return w.NewLine;
-            }
-            set
-            {
-                w.NewLine = value;
-            }
-        }
-
     }
 
     //Using System.Collections.Specialized;

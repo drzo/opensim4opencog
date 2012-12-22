@@ -72,7 +72,16 @@ namespace LogicalParticleFilter1
 
         // natural language to MT name
         public Dictionary<string, string> aliasMap = new Dictionary<string, string>();
-
+        [ThreadStatic]
+        public static SourceLanguage tl_console_language = SourceLanguage.Prolog;
+        public static string tl_languageName
+        {
+            get
+            {
+                if (tl_console_language == null) return null;
+                return tl_console_language.Name;
+            }
+        }
         public static SIProlog CurrentProlog;
         public SIProlog()
         {
@@ -263,8 +272,10 @@ namespace LogicalParticleFilter1
             //}
             return VKB;
         }
+
         public void webWriter(TextWriter writer, string action, string query, string mt, string serverRoot)
         {
+            writer = WebLinksWriter.AddWarnWriter(writer);
             serverRoot = "/";
             if (action == "autorefresh")
             {
@@ -312,7 +323,7 @@ function hidetip()
             TOCmenu(writer, serverRoot);
             webWriter0(writer, action, query, mt, serverRoot, true);
             writer.WriteLine("</html>");
-
+            WebLinksWriter.RemoveWarnWriter(writer);
         }
 
         private void TOCmenu(TextWriter writer, string serverRoot)
@@ -453,7 +464,7 @@ function hidetip()
 
             if (qnode != null)
             {
-                ensureCompiled(qnode);
+                ensureCompiled(qnode, ContentBackingStore.Prolog);
             }
             var kbContents = findVisibleKBRulesSorted(mt);
             int total = kbContents.Count;
@@ -466,6 +477,10 @@ function hidetip()
             foreach (Rule r in kbContents)
             {
                 WriteRule(writer, r, qnode);
+            }
+            if (qnode != null)
+            {
+                ensureCompiled(qnode, ContentBackingStore.RdfMemory);
             }
             var gwf = FindRepositoryKB(mt);
             if (gwf != null)
@@ -499,7 +514,8 @@ function hidetip()
             {
                 toolTip = string.Format("onmouseover=\"showtip('{0}')\" ", rdf.ToString().Replace("\"", "\\\"").Replace("'", "\\'"));
             }*/
-            writer.WriteLine("<font color='{0}' {1}>{2}</font>{3}<br/>", color, toolTip, r.ToString(), ext);
+            writer.WriteLine("<font color='{0}' {1}>{2}</font>{3}<br/>", color, toolTip,
+                           WebLinksWriter.EntityFormat(r.ToSource(SourceLanguage.Prolog)), ext);
         }
 
         [ThreadStatic] static int tl_StructToStringDepth = 4;
@@ -738,97 +754,55 @@ function hidetip()
             PNode focus = KBGraph.Contains(focusMT);
             if (focus == null) return;
             focus.Clear();
-            ensureCompiled(focus);
         }
 
-
-        private void ensureCompiled(PNode focus)
-        {
-            ensureCompiled(focus, focus.SourceKind);
-        }
-        private void ensureCompiled(PNode focus, ContentBackingStore forType)
+        internal void ensureCompiled(PNode focus, ContentBackingStore forType)
         {
             lock (focus.CompileLock)
             {
-                ensureHalfCompiled(focus);
-                if (focus.SyncFromNow == forType) return;
-                ensureSynced(focus);
-            }
-        }
-        private void ensureSynced(PNode focus)
-        {
-            lock (focus.CompileLock)
-            {
-                ensureHalfCompiled(focus);
                 while (true)
                 {
-                    if (focus.SyncFromNow == ContentBackingStore.None) return;
+                    if (!focus.IsOutOfSyncFor(forType)) return;
                     var prev = focus.SyncFromNow;
-                    ensureSynced0(focus);
+                    syncStep(focus);
                     if (prev == focus.SyncFromNow)
                     {
                         Warn("Synced on " + focus + " still the same: " + prev);
-                        return;
+                        break;
                     }
+                }
+                if (focus.IsOutOfSyncFor(forType))
+                {
+                    Warn("Cant ready KB " + focus + " for use by " + forType);
                 }
             }
         }
-
-        private void ensureSynced0(PNode focus)
+        internal void syncStep(PNode focus)
         {
             while (true)
             {
                 if (focus.SyncFromNow == ContentBackingStore.None) return;
+                if (focus.SyncFromNow == ContentBackingStore.RdfServerURI)
+                {
+                    focus.SyncFromNow = ContentBackingStore.None;
+                    focus.populateRDFMemoryFromRepository();
+                    focus.SyncFromNow = ContentBackingStore.RdfMemory;
+                    // go to next line
+                }
                 if (focus.SyncFromNow == ContentBackingStore.RdfMemory)
                 {
                     focus.SyncFromNow = ContentBackingStore.None;
-                    focus.pushRdfGraphToPrologKB();
-                    continue;
-                }
-                if (focus.SyncFromNow == ContentBackingStore.Prolog)
-                {
-                    focus.SyncFromNow = ContentBackingStore.None;
-                    focus.pushPrologKBToRdfGraph();
-                    continue;
-                }
-                if (focus.SyncFromNow == ContentBackingStore.RdfServerURI)
-                {
-                    ensureHalfCompiled(focus);
-                    continue;
-                }
-                Warn("Cant ensured synced on " + focus);
+                    focus.pushRdfGraphToPrologKB(true);
                 return;
             }
-        }
-
-        private void ensureHalfCompiled(PNode focus)
+                if (focus.SyncFromNow == ContentBackingStore.Prolog)
         {
-            if (focus == null) return;
-            if (!focus.dirty) return;
-            var rkb = MakeRepositoryKB(focus.Id);
-            switch (focus.SourceKind)
-            {
-                case ContentBackingStore.RdfServerURI:
-                    {
-                        pullKBFromRdfServer(focus);
+                    focus.SyncFromNow = ContentBackingStore.None;
+                    focus.pushPrologKBToRdfGraph(true);
                         return;
                     }
-                    break;
-                case ContentBackingStore.RdfMemory:
-                    {
-                        //string uri = "" + focus.Repository;
-                        focus.Repository = null;
-                        focus.SyncFromNow = ContentBackingStore.RdfMemory;
                         return;
                     }
-                case ContentBackingStore.Prolog:
-                    {
-                        focus.SyncFromNow = ContentBackingStore.Prolog;
-                        return;
-                    }
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
         }
 
         public string retractKB(string fact, string focusMT)
@@ -851,7 +825,7 @@ function hidetip()
         }
         private string replaceInKB_unlocked(string oldFact, string newFact, PNode focus)
         {
-            ensureCompiled(focus);
+            ensureCompiled(focus, ContentBackingStore.Prolog);
             oldFact = oldFact.Replace(", ", ",");
             oldFact = oldFact.Replace("\n", "");
             string focusMT = focus.id;
@@ -882,12 +856,10 @@ function hidetip()
         public Rule replaceInKB(Rule oldFact, Rule newFact, PNode focus)
         {
             if (focus == null) return null;
+
             lock (focus.CompileLock)
             {
-                if (focus.IsOutOfSyncFor(ContentBackingStore.Prolog))
-                {
-                    ensureCompiled(focus);
-                }
+                ensureCompiled(focus, ContentBackingStore.Prolog);
                 var rules = focus.pdb.rules;
                 lock (rules)
                     for (int i = 0; i < rules.Count; i++)
@@ -1117,6 +1089,11 @@ function hidetip()
                     {
                         string[] args = line.Split(':');
                         string cmd = args[0].Trim().ToLower();
+                        // if any non letters in our KE text directive parse it as prolog instead
+                        if (!Regex.Match(cmd, "^[a-z]+$").Success)
+                        {
+                            break;
+                        }
                         string val = args[1].Trim();
                         if (cmd == "tbc")
                         {
@@ -1223,9 +1200,9 @@ function hidetip()
                         {
                             Tokeniser newTokeniser = new Tokeniser(was);
                             string kb = curKB;
-                            debugginParser = true;
+                            tl_spy_prolog_reader = true;
                             rule = ParseRule(newTokeniser, kb);
-                            debugginParser = false;
+                            tl_spy_prolog_reader = false;
                             Warn("Could not parse: " + was);
                             continue;
                         }
@@ -2046,7 +2023,7 @@ function hidetip()
             //if (first.name < second.name) cmp = "lt";
             //else if (first.name > second.name) cmp = "gt";
 
-            var env2 = unify((Part)thisTerm.ArgList[2], Atom.Make(cmp), environment);
+            var env2 = unify((Part)thisTerm.ArgList[2], Atom.FromSource(cmp), environment);
 
             if (env2 == null)
             {
@@ -2092,7 +2069,7 @@ function hidetip()
             //if (first.name < second.name) cmp = "lt";
             //else if (first.name > second.name) cmp = "gt";
 
-            var env2 = unify((Part)thisTerm.partlist.ArgList[2], Atom.Make(cmp), environment);
+            var env2 = unify((Part)thisTerm.partlist.ArgList[2], Atom.FromSource(cmp), environment);
 
             if (env2 == null)
             {
@@ -2218,7 +2195,7 @@ function hidetip()
             // Turn anslist into a proper list and unify with 'into'
 
             // optional here: nil anslist -> fail?
-            Part answers = Atom.Make(FUNCTOR_NIL);
+            Part answers = Atom.FromSource(FUNCTOR_NIL);
 
             /*
             print("Debug: anslist = [");
@@ -2375,7 +2352,7 @@ function hidetip()
 
 
             // Convert back into an atom...
-            var env2 = unify((Part)ourParList.ArgList[2], Atom.Make(ret), environment);
+            var env2 = unify((Part)ourParList.ArgList[2], Atom.FromSource(ret), environment);
 
             if (env2 == null)
             {
@@ -2536,7 +2513,7 @@ function hidetip()
                 string result = "";
                 foreach (string k in this.Keys)
                 {
-                    result += String.Format("{0} = ", k) + ((Part)this[k]).ToPLStringReadable() + "\n";
+                    result += String.Format("{0} = ", k) + ((Part)this[k]).ToSource(tl_console_language) + "\n";
                 }
                 return result;
             }
@@ -2684,12 +2661,12 @@ function hidetip()
                 return ret;
             }
 
-            public string ToSource()
+            public string ToSource(SourceLanguage language)
             {
                 var ret = new StringWriter();
                 foreach (Rule rule in arrayList)
                 {
-                    ret.WriteLine(rule.ToSource());
+                    ret.WriteLine(rule.ToSource(language));
                 }
                 return ret.ToString();
             }
@@ -2785,7 +2762,7 @@ function hidetip()
             }
             protected Exception Missing(string p)
             {
-                return ErrorBadOp("{0} Missing '{1}' for {2}", type, p, this.ToPLStringReadable());
+                return ErrorBadOp("{0} Missing '{1}' for {2}", type, p, this.ToSource(tl_console_language));
             }
             public abstract string type { get; }
             virtual public string name
@@ -2809,11 +2786,11 @@ function hidetip()
 
             public abstract void print();
 
-            public abstract string ToPLStringReadable();
+            public abstract string ToSource(SourceLanguage language);
 
             public override string ToString()
             {
-                return ToPLStringReadable();
+                return ToSource(tl_console_language);
             }
 
             public virtual double AsDouble()
@@ -3023,7 +3000,7 @@ function hidetip()
                 }
                 //  ConsoleWrite(")");
             }
-            public override string ToPLStringReadable()
+            public override string ToSource(SourceLanguage language)
             {
                 string result = "";
                 bool com = false;
@@ -3031,7 +3008,7 @@ function hidetip()
                 foreach (Part p in tlist)
                 {
                     if (com) result += (", ");
-                    result += p.ToPLStringReadable();
+                    result += p.ToSource(language);
                     com = true;
                 }
                 // result += ")";
@@ -3121,31 +3098,88 @@ function hidetip()
             #endregion
         }
 
-        public static Dictionary<string, Atom> AtomTable = new Dictionary<string, Atom>();
+        public static Dictionary<INode, Atom> AtomTable = new Dictionary<INode, Atom>();
 
         public interface IAtomic
         {
             int CompareTo(IAtomic atomic);
+            INode AsRDFNode();
+            /// <summary>
+            /// Tries if possible to return a IValuedNJode
+            /// </summary>
+            /// <returns></returns>
             IValuedNode AsValuedNode();
             string AsString();
             bool Unify(IAtomic atomic);
             double AsDouble();
             object Functor0 { get; }
+            bool IsNode { get; }
         }
+
+        public const string SYNTAX_UriQuotes = "<>"; // uri
+        public const string SYNTAX_DoubleQuotes = "\"\""; // strings
+        public const string SYNTAX_AtomQuotes = "''"; // atoms and unqualified names
+        public const string SYNTAX_NoQuotes = ""; // numbers - if an atom is set to have no quotes that is just how it round trips
+        public const string SYNTAX_LiteralDataType = "{}";
+        public const string MustGuessQuotes = null;
+
+        static public Part MakeTermPostReader(String f, PartList partlist)
+        {
+            if (partlist.Length == 0) return Atom.FromName(f);
+            if (f == "$obj")
+            {
+                Part partlist1 = partlist[0];
+                if (partlist1.name == "$literal")
+                {
+                    return Atom.MakeLiteral(partlist[1].AsString(), partlist[2].AsString(), partlist[3].AsString());
+                }
+                Warn("Not sure how to create a " + partlist);
+            }
+            return new Term(f, partlist);
+        }
+
         public class Atom : Part, IAtomic
         {
             public override bool SameClause(Part term, PlHashtable varlist)
             {
                 var term2 = term as Atom;
-                if (term2 == null) return false;
+                if (ReferenceEquals(term2, null)) return false;
                 return this.Equals(term2);
             }
 
-            readonly public Object _name;
+            public Object objRef;
             string aname;
-            string prefix;
-            string uri;
-            private Func<object> Functor0Function;
+            string rname;
+            public string Namespace
+            {
+                get
+                {
+                    if (!IsUri) return null;
+                    string localAname;
+                    //if (aname != null) return aname;
+                    string oprefix, ouri , path = AsValuedNode().AsString();
+                    if(!GraphWithDef.DevolveURI(rdfDefinations.NamespaceMap, path, out ouri, out oprefix,
+                                                            out localAname)) return null;
+
+                    return oprefix;
+                }
+            }
+            public string LocalName
+            {
+                get
+                {
+                    if (!IsUri) return null;
+                    string localAname;
+                    //if (aname != null) return aname;
+                    string s = AsValuedNode().AsString();
+                    string oprefix, ouri, path = s;
+                    if (!GraphWithDef.DevolveURI(rdfDefinations.NamespaceMap, path, out ouri, out oprefix,
+                                                 out localAname)) return null;
+
+                    return localAname;
+                }
+            }
+            private readonly Func<object, object> Functor0Function;
             public override string name
             {
                 get
@@ -3156,21 +3190,21 @@ function hidetip()
                     {
 
                     }
-                    aname = f;
-                    return f;
+                    aname = string.Intern(f);
+                    return aname;
                 }
             }
             public object Functor0
             {
                 get
                 {
-                    if (Functor0Function != null) return Functor0Function();
-                    return _name;
+                    if (Functor0Function != null) return Functor0Function(objRef);
+                    return objRef;
                 }
             }
-            public object INodeToObject()
+            static public object INodeToObject(object obj)
             {
-                var _name = this._name as INode;
+                var _name = (INode) obj;
                 {
                     if (_name is StringNode)
                     {
@@ -3218,6 +3252,8 @@ function hidetip()
                     string localAname;
                     //if (aname != null) return aname;
                     string path = _name.AsValuedNode().AsString();
+                    if (_name is ILiteralNode) return path;
+                    string prefix, uri;
                     bool devolved = GraphWithDef.DevolveURI(rdfDefinations.NamespaceMap, path, out uri, out prefix,
                                                             out localAname);
                     bool noaname = string.IsNullOrEmpty(localAname);
@@ -3236,13 +3272,16 @@ function hidetip()
             public int hash { get { return GetHashCode(); } }
             public string quoted = null;
             public override string type { get { return "Atom"; } }
-            public Atom(Object head, string quoting)
+            public Atom(Object head)
             {
-                quoted = quoting;
-                _name = head;
+                //quoted = quoting;
+                //aname = bareAtomName;
+                objRef = head;
                 if (head is INode)
                 {
                     Functor0Function = INodeToObject;
+                    // call once to populate the data
+                    var localAname = "" + INodeToObject(objRef);
                 }
                 else if (head is string)
                 {
@@ -3250,55 +3289,162 @@ function hidetip()
                     hash_code = aname.GetHashCode();
                 }
             }
-
-            private object ReturnObject()
+            private static bool MustBeQuoted(string localAname)
             {
-                return _name;
+                if (Regex.Match(localAname, @"^([a-z0-9][a-zA-Z0-9_]*)$").Success)
+                {
+                    return false;
+                }
+                if (Regex.Match(localAname, @"^([-]?[0-9]*[\.]?[0-9]+[0-9]*)$").Success)
+                {
+                    return false;
+                }
+                return true;
             }
 
             public override void print()
             {
-                Console.Write(this.ToPLStringReadable());
+                Console.Write(this.ToSource(tl_console_language));
             }
 
             public bool IsLiteral
             {
-                get { return _name is ILiteralNode; }
+                get { return objRef is ILiteralNode; }
+            }
+            public bool IsNode
+            {
+                get { return objRef is INode; }
+            }
+            public bool IsValueNode
+            {
+                get { return objRef is IValuedNode; }
             }
             public bool IsString
             {
-                get { return !(_name is IUriNode) && !(_name is NumericNode); }
+                get { return objRef is String || (!(objRef is IUriNode) && !(objRef is NumericNode)); }
+            }
+            public bool IsUri
+            {
+                get { return  objRef is IUriNode; }
             }
             public string IsReadable
             {
-                get { return ToPLStringReadable() + " as " + _name.GetType(); }
+                get { return ToSource(tl_console_language) + " as " + objRef.GetType() + "=" + objRef; }
             }
-            public override string ToPLStringReadable()
+            public override string ToSource(SourceLanguage language)
             {
-                string name = this.name;
-                if (this.name == "nil")
+                if (true || this.rname == null)
                 {
-                    return "[]";
+                    this.rname = string.Intern(StringReadable);
                 }
-                if (quoted == null)
+                return this.rname;
+            }
+
+            public bool IsLocalPrefix
+            {
+                get
                 {
-                    char fc = name[0];
-                    if (char.IsLetter(fc) && char.IsLower(fc))
+                    var node = objRef as IUriNode;
+                    if (node != null)
                     {
-                        if (name.IndexOfAny(" ".ToCharArray()) == -1)
-                        {
-                            return name;
-                        }
+                        if (node.ToString().StartsWith(RoboKindURI)) return true;
                     }
-                    if (_name is NumericNode) return name;
-                    return "\"" + name + "\"";
+                    return false;
                 }
-                return quoted[0] + name + quoted[1];
+            }
+            public string StringReadable
+            {
+                get
+                {
+                    string name = this.name;
+                    if (name == "nil")
+                    {
+                        return "[]";
+                    }
+                    if (objRef is NumericNode) return name;
+                    if (objRef is INode)
+                    {
+                        var node = objRef as IUriNode;
+                        if (node != null)
+                        {
+                            string url = null;
+                            var ns = Namespace;
+                            if (IsLocalPrefix || ns == RoboKindPrefix || ns == "siprolog")
+                            {
+                                return aq(LocalName);
+                            }
+                            if (ns != null)
+                            {
+                                url = ns + ":" + LocalName;
+                            }
+                            if (url == null)
+                            {
+                                url = node.ToString();
+                            }
+                            if (quoted == null || quoted.Length < 2)
+                            {
+                                return "<" + url + ">";
+                            }
+                            return quoted[0] + (url) + quoted[1];
+                        }
+                        ILiteralNode litnode = objRef as ILiteralNode;
+                        // all the below are now Literal Nodes of some type  (we divide into  "strings", numbers and "strings with"^"meaning" and 
+                        if (litnode == null)
+                        {
+                            throw ErrorBadOp("Cant find the nodetype on  " + node);
+                        }
+
+
+                        var ivnode = litnode.AsValuedNode();
+                        var value = litnode.Value;
+                        var dt = litnode.DataType;
+                        var lt = litnode.Language;
+                        var et = ivnode.EffectiveType;
+
+                        if (lt == "" && (dt != null && dt.AbsoluteUri == XmlSpecsHelper.XmlSchemaDataTypeString))
+                        {
+                            return q(value);
+                        }
+                        return "'$obj'('$literal'," + q(value) + "," + q(lt) + "," + q(et) + ")";
+                    }
+                    if (quoted == null || quoted=="")
+                    {
+                        char fc = name[0];
+                        if (char.IsLetter(fc) && char.IsLower(fc))
+                        {
+                            if (name.IndexOfAny("'\"?!@#$%^&*(){}:;/,<>".ToCharArray()) == -1 && !(name.IndexOfAny("+-".ToCharArray()) > 0))
+                            {
+                                if (MustBeQuoted(name))
+                                {
+                                    return q(name);
+                                }
+                                return name;
+                            }
+                        }
+                        return q(name);
+                        quoted = MustBeQuoted(name) ? SYNTAX_DoubleQuotes : "";
+                    }
+                    if (quoted == "")
+                    {
+                        return name;
+                    }
+                    return quoted[0] + name + quoted[1];
+                }
+            }
+
+            private static string q(string s)
+            {
+                return "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+            }
+            private static string aq(string s)
+            {
+                if (!Atom.MustBeQuoted(s)) return s;
+                return "'" + s.Replace("\\", "\\\\").Replace("'", "\\'") + "'";
             }
 
             public override string ToString()
             {
-                if (_name is StringNode)
+                if (objRef is StringNode)
                 {
                     return name;
                 }
@@ -3306,28 +3452,69 @@ function hidetip()
             }
             public static Atom MakeString(string s)
             {
-                return MakeAtom(s, "\"\"", null);
+                return MakeLiteral(s, "", XmlSpecsHelper.XmlSchemaDataTypeString);
             }
-            public static Atom Make(string s)
+
+            public static Atom MakeLiteral(string s, string langspec, string dataType)
             {
-                if (s == "") return MakeAtom("", "\"\"", null);
-                if (s == "[]" || s == FUNCTOR_NIL) s = "'robokind:nil'";
-                if (s == "." || s == FUNCTOR_CONS) s = "'robokind:cons'";
+                string syntax = SYNTAX_LiteralDataType;
+                if (string.IsNullOrEmpty(dataType))
+                {
+                    syntax = SYNTAX_DoubleQuotes;
+                    return MakeNodeAtom(rdfDefinations.CreateLiteralNode(s, langspec ?? ""));
+                }
+                return MakeNodeAtom(rdfDefinations.CreateLiteralNode(s, UriFactory.Create(dataType)));
+            }
+
+            public static Atom MakeUri(string s)
+            {
+                return MakeNodeAtom(rdfDefinations.CreateUriNode(UriFactory.Create(s)));
+            }
+            public static Atom FromName(string s)
+            {
+                return MakeNodeAtom(MakeNode(s, SYNTAX_AtomQuotes));
+            }
+
+            /// <summary>
+            /// Reads the string that came in from the prolog reader and
+            ///  then detects what rdf/sparql expresions 
+            /// </summary>
+            /// <param name="s"></param>
+            /// <returns></returns>
+            public static Atom FromSource(string s)
+            {
                 char c0 = s[0];
                 int sl = s.Length;
-                char cL = s[sl - 1];
-                string quoting = "\"\"";
+                if (sl == 1) return FromName(s);
+
+                string quoting = MustGuessQuotes;
+                if (s == "[]" || s == FUNCTOR_NIL) s = "'rdf:nil'";
+                //if (s == "." || s == FUNCTOR_CONS) s = "'robokind:cons'";
                 INode makeNode = null;
                 bool isNumberMaybe = c0 == '+' || c0 == '-' || char.IsDigit(c0);
                 if (isNumberMaybe)
                 {
                     makeNode = GraphWithDef.CExtracted(rdfDefinations, s);
-                    quoting = null;
+                    if (makeNode != null)
+                    {
+                        return MakeNodeAtom(makeNode);
+                    }
+                    quoting = SYNTAX_NoQuotes;
                 }
+                Requote(ref s, ref quoting);
+                return FromSourceReader(s, quoting);
+            }
+
+            private static void Requote(ref string s, ref string quoting)
+            {
+                char c0 = s[0];
+                int sl = s.Length;
+                char cL = s[sl - 1];
+                if (sl == 1) cL = '\0';
                 if (c0 == '"' && cL == c0)
                 {
                     s = s.Substring(1, sl - 2);
-                    quoting = "" + c0 + cL;
+                    quoting = SYNTAX_DoubleQuotes;
                 }
                 if (c0 == '\'' && cL == c0)
                 {
@@ -3339,19 +3526,107 @@ function hidetip()
                     s = s.Substring(1, sl - 2);
                     quoting = "" + c0 + cL;
                 }
-                return MakeAtom(s, quoting, makeNode);
+                if (c0 == '{' && cL == '}')
+                {
+                    // Warn("Tried to make atom from: {0}", s);
+                    //return null;
+                    s = s.Substring(1, sl - 2);
+                    quoting = "<>";// +c0 + cL;
+                }
             }
 
-            public static Atom MakeAtom(string s, string quoting, INode makeNode)
+            public static Atom FromSourceReader(string s, string syntaxQuoting)
             {
+                var prev = tl_console_language;
+                try
+                {
+                    return FromSource0(s, syntaxQuoting);
+                }
+                finally
+                {
+                    tl_console_language = prev;
+                }
+            }
+            public static Atom FromSource0(string s, string quoting)
+            {
+                if (s == "[]" || s == FUNCTOR_NIL)
+                {
+                    s = "rdf:nil";
+                }               
+                if (quoting==MustGuessQuotes)
+                {
+                    if (s.Contains(":") || s.Contains("/"))
+                    {
+                        quoting = SYNTAX_UriQuotes;
+                    }
+                }
+                if (s == null)
+                {
+                    Warn("FromSource read NULL");
+                    return null;
+                }
+                if (s == "")
+                {
+                    if (quoting == SYNTAX_DoubleQuotes)
+                    {
+                        return MakeString(s);
+                    }
+                    Warn("FromSource read EOF");
+                    return null;
+                }
+                if (quoting == SYNTAX_DoubleQuotes)
+                {
+                    return MakeString(s);
+                }
+                if (quoting == null && s[0] == '$')
+                {
+                    quoting = SYNTAX_AtomQuotes;
+                }
+                return MakeNodeAtom(MakeNode(s, quoting));
+            }
+
+            public static INode MakeNode(string s, string quoting)
+            {
+                switch (quoting)
+                {
+                    case null:
+                        {
+
+                            return GetValuedNode(s);
+                        }
+                    case SYNTAX_DoubleQuotes:
+                        {
+                            return Atom.MakeString(s).AsRDFNode();
+                        }
+                    case "":
+                        {
+                            return GraphWithDef.CExtracted(rdfDefinations, s);
+                        }
+                    case "{}":
+                    case "<>":
+                    case "''":
+                        {
+                            return GraphWithDef.C(rdfDefinations, s);
+                        }
+                    default:
+                        return GetValuedNode(s);
+                        throw ErrorBadOp(s + " " + quoting);
+                }
+            }
+
+            public static Atom MakeNodeAtom(INode makeNode)
+            {
+                string s = makeNode.ToString();
                 lock (AtomTable)
                 {
-                    string atomKey = quoting + s;
-                    Atom atom;
-                    if (!AtomTable.TryGetValue(atomKey, out atom))
+                    //string atomKey = quoting.ToString() + s;
+                    Atom atom = null;
+                    if (true ||
+                        (!AtomTable.TryGetValue(makeNode, out atom) ||
+                         (makeNode != null && (atom.objRef != null && atom.objRef != makeNode))))
                     {
-                        makeNode = makeNode ?? MakeNode(s, quoting);
-                        atom = AtomTable[atomKey] = new Atom(makeNode, quoting);
+                        atom = new Atom(makeNode);
+                        //AtomTable[atomKey] = atom;
                         return atom;
                     }
                     return atom;
@@ -3369,7 +3644,7 @@ function hidetip()
                 {
                     return true;
                 }
-                if (AsValuedNode().CompareTo(atomic.AsValuedNode()) == 0)
+                if (AsRDFNode().CompareTo(atomic.AsRDFNode()) == 0)
                 {
                     if (!Functor0.Equals(atomic.Functor0))
                     {
@@ -3389,14 +3664,25 @@ function hidetip()
                 return AsValuedNode().AsDouble();
             }
 
-            public int CompareTo(IAtomic atomic)
-            {
-                return AsValuedNode().CompareTo(atomic.AsValuedNode());
-            }
-
             public IValuedNode AsValuedNode()
             {
-                if (_name is INode) return ((INode)_name).AsValuedNode();
+                var node = AsRDFNode();
+                if (node == null)
+                {
+                    Warn("not a valuednode " + this);
+                }
+                return node.AsValuedNode();
+            }
+
+            public int CompareTo(IAtomic atomic)
+            {
+                return AsRDFNode().CompareTo(atomic.AsRDFNode());
+            }
+
+            public INode AsRDFNode()
+            {
+                if (objRef is INode) return ((INode) objRef);
+                Warn("Cant make an RDF node");
                 return null;
             }
 
@@ -3421,14 +3707,30 @@ function hidetip()
             {
                 if (ReferenceEquals(null, other)) return false;
                 if (ReferenceEquals(this, other)) return true;
+                if (IsNode && other.IsNode) return AsRDFNode().Equals(other.AsRDFNode());
                 return Equals(other.Functor0, Functor0);
             }
 
+
+            public static bool operator ==(Atom a, Atom b)
+            {
+                return NodeEquality(a.AsRDFNode(), b.AsRDFNode());
+            }
+
+            public static bool operator !=(Atom a, Atom b)
+            {
+                return !(a == b);
+            }
+
+            public static bool NodeEquality(INode x, INode y)
+            {
+                return x.Equals(y);
+            }
             public override int GetHashCode()
             {
                 if (!hash_code.HasValue)
                 {
-                    hash_code = (_name != null ? _name.GetHashCode() : 0);
+                    hash_code = (objRef != null ? objRef.GetHashCode() : 0);
                 }
                 return hash_code.Value;
             }
@@ -3440,7 +3742,7 @@ function hidetip()
             public override string type { get { return "Variable"; } }
             public Variable(string head) { _name = head; }
             public override void print() { ConsolePrint(this.name); }
-            public override string ToPLStringReadable() { return this.name; }
+            public override string ToSource(SourceLanguage language) { return this.name; }
 
             override public bool IsGround
             {
@@ -3573,7 +3875,7 @@ function hidetip()
             }
 
 
-            public override string ToPLStringReadable()
+            public override string ToSource(SourceLanguage language)
             {
                 string result = "";
                 if (IsListName(this.name))
@@ -3589,21 +3891,21 @@ function hidetip()
                         while (IsList(x))
                         {
                             if (com) result += ", ";
-                            result += ((Term)x).ArgList[0].ToPLStringReadable(); // May need to case var/atom/term
+                            result += ((Term)x).ArgList[0].ToSource(language); // May need to case var/atom/term
                             com = true;
                             x = ((Term)x).ArgList[1];
                         }
                         if (x is Variable)
                         {
                             result += " | ";
-                            result += x.ToPLStringReadable();
+                            result += x.ToSource(language);
                         }
                         result += "]";
                         return result;
                     }
                 }
                 result += "" + this.name + "(";
-                result += this.partlist.ToPLStringReadable();
+                result += this.partlist.ToSource(language);
                 result += ")";
                 return result;
             }
@@ -3697,17 +3999,17 @@ function hidetip()
 
             public override string ToString()
             {
-                return ToSource();
+                return ToSource(tl_console_language);
             }
-            public string ToSource()
+            public string ToSource(SourceLanguage language)
             {
                 if (this.body == null)
                 {
-                    return this.head.ToPLStringReadable() + ".";
+                    return this.head.ToSource(language) + ".";
                 }
                 else
                 {
-                    return this.head.ToPLStringReadable() + " :- " + this.body.ToPLReadableString() + ".";
+                    return this.head.ToSource(language) + " :- " + this.body.ToSource(language) + ".";
                 }
             }
 
@@ -3772,16 +4074,16 @@ function hidetip()
             }
             public override string ToString()
             {
-                return ToPLReadableString();
+                return ToSource(tl_console_language);
             }
 
-            public string ToPLReadableString()
+            public string ToSource(SourceLanguage language)
             {
                 string result = "";
 
                 for (var i = 0; i < this.plist.Length; i++)
                 {
-                    result += ((Term)this.plist.ArgList[i]).ToPLStringReadable();
+                    result += ((Term)this.plist.ArgList[i]).ToSource(language);
                     if (i < this.plist.Length - 1)
                         result += ", ";
                 }
@@ -3837,23 +4139,37 @@ function hidetip()
         // The Tiny-Prolog parser goes here.
         public class Tokeniser
         {
+            public override string ToString()
+            {
+                return "before=" + previousToks + " now=" + currentTok + " remainder:" + remainder;
+            }
             public string remainder;
+            public string typeSyntax;
             public string type;
             public string current;
-            public string prev, prevType;
-
+            public string previousToks = "";
+            public string currentTok
+            {
+                get
+                {
+                    return "[" + type + ",\"" + current + "\"],";
+                }
+            }
             public Tokeniser(string input)
             {
                 this.remainder = input;
                 this.current = null;
+                this.typeSyntax = null;
                 this.type = null;	// "eof", "id", "var", "punc" etc.
-                this.consume();	// Load up the first token.
+                this.consume0();	// Load up the first token.
             }
-
             public void consume()
             {
-                this.prev = current;
-                this.prevType = type;
+                previousToks = previousToks + currentTok;
+                consume0();
+            }
+            internal void consume0()
+            {
                 if (this.type == "eof") return;
                 // Eat any leading WS
                 Match r = Regex.Match(this.remainder, @"^\s*(.*)$");
@@ -3865,6 +4181,7 @@ function hidetip()
                 if (this.remainder == "")
                 {
                     this.current = null;
+                    this.typeSyntax = SYNTAX_NoQuotes;
                     this.type = "eof";
                     return;
                 }
@@ -3876,6 +4193,7 @@ function hidetip()
                 {
                     this.remainder = r.Groups[2].Value;
                     this.current = r.Groups[1].Value;
+                    this.typeSyntax = SYNTAX_NoQuotes;
                     this.type = "id";
                     return;
                 }
@@ -3888,6 +4206,7 @@ function hidetip()
                 {
                     this.remainder = r.Groups[2].Value;
                     this.current = r.Groups[1].Value;
+                    this.typeSyntax = SYNTAX_NoQuotes;
                     this.type = "punc";
                     return;
                 }
@@ -3898,9 +4217,73 @@ function hidetip()
                 {
                     this.remainder = r.Groups[2].Value;
                     this.current = r.Groups[1].Value;
+                    this.typeSyntax = SYNTAX_NoQuotes;
                     this.type = "var";
                     return;
                 }
+                ParseType[] parseTypes = {
+                                               new ParseType("{}", true, true), 
+                                               new ParseType(SYNTAX_UriQuotes, false, true),
+                                               new ParseType(SYNTAX_DoubleQuotes, true, true),
+                                               new ParseType(SYNTAX_AtomQuotes, false, false)
+                                           };
+
+                int remLen = remainder.Length;
+                foreach (ParseType parseType in parseTypes)
+                {
+                    if (!this.remainder.StartsWith(parseType.StartSequence)) continue;
+                    int remIndex = parseType.StartSequence.Length;
+                    if (parseType.CantHaveNext.Contains(remainder[remIndex])) continue;
+                    string endSeq = parseType.EndSequence;
+                    int endLen = endSeq.Length;
+                    if (remLen < endLen) continue;
+                    char endChar = '\0';
+                    if (endLen > 0)
+                    {
+                        endChar = endSeq[0];
+                    }
+                    string soFar = "";
+                    string isError = null;
+                    do
+                    {
+                        char next = remainder[remIndex];
+                        if (parseType.EscapeChars.Contains(next))
+                        {
+                            remIndex++;
+                            next = remainder[remIndex];
+                            soFar += next;
+                            continue;
+                        }
+                        if (next == endChar && (endLen == 1 || remainder.Substring(next).StartsWith(endSeq)))
+                        {
+                            // found endchar
+                            isError = null;
+                            break;
+                        }
+                        if (parseType.CantHave.Contains(next))
+                        {
+                            isError = string.Format("CantHaveChar: '{0}'", next);
+                            break;
+                        }
+                        soFar += next;
+                        remIndex++;
+                    } while (remIndex < remLen);
+
+                    if (!string.IsNullOrEmpty(isError))
+                    {
+                        if (tl_spy_prolog_reader)
+                        {
+                            Warn("not using quote type becasue: " + isError);
+                        }
+                        continue;
+                    }
+                    current = soFar;
+                    remainder = remainder.Substring(remIndex + 1);
+                    type = parseType.typeName;
+                    typeSyntax = parseType.quoteName;
+                    return;
+                }
+
 
                 // URLs in curly-bracket pairs
                 r = Regex.Match(this.remainder, @"^(\{[^\}]*\})(.*)$");
@@ -3909,6 +4292,7 @@ function hidetip()
                 {
                     this.remainder = r.Groups[2].Value;
                     this.current = r.Groups[1].Value;
+                    this.typeSyntax = "{}";
                     this.type = "id";
                     return;
                 }
@@ -3922,26 +4306,31 @@ function hidetip()
                 {
                     this.remainder = r.Groups[2].Value;
                     this.current = r.Groups[1].Value;
+                    this.typeSyntax = SYNTAX_DoubleQuotes;
                     this.type = "id";
                     return;
                 }
 
-                r = Regex.Match(this.remainder, @"^([a-zA-Z0-9][a-zA-Z0-9_]*)(.*)$");
+                // Strings of alphanumerics with "_" and ":" 
+                r = Regex.Match(this.remainder, @"^([a-zA-Z0-9][a-zA-Z0-9_\:]*)(.*)$");
                 //r = this.remainder.match(/^([a-zA-Z0-9][a-zA-Z0-9_]*)(.*)$/);
                 if (r.Success)
                 {
                     this.remainder = r.Groups[2].Value;
                     this.current = r.Groups[1].Value;
+                    this.typeSyntax = SYNTAX_NoQuotes;
                     this.type = "id";
                     return;
                 }
 
+                // negative integers
                 r = Regex.Match(this.remainder, @"^(-[0-9][0-9]*)(.*)$");
                 //r = this.remainder.match(/^(-[0-9][0-9]*)(.*)$/);
                 if (r.Success)
                 {
                     this.remainder = r.Groups[2].Value;
                     this.current = r.Groups[1].Value;
+                    this.typeSyntax = SYNTAX_NoQuotes;
                     this.type = "id";
                     return;
                 }
@@ -3953,12 +4342,20 @@ function hidetip()
                 {
                     this.remainder = r.Groups[2].Value;
                     this.current = r.Groups[1].Value;
+                    this.typeSyntax = SYNTAX_NoQuotes;
                     this.type = "id";
                     return;
                 }
 
-                this.current = null;
+                if (tl_spy_prolog_reader)
+                {
+                    Warn("Unconsumed " + remainder);
+                    return;
+                }
+                
+                this.current = null;               
                 this.type = "eof";
+                this.typeSyntax = SYNTAX_NoQuotes;
 
             }
         }
@@ -4014,7 +4411,7 @@ function hidetip()
             //if (tk.type != "id")  return null;
             if ((tk.type != "id") && (tk.type != "var"))
             {
-                debugChck();
+                prolog_reader_debug();
                 return null;
             }
             var name = tk.current;
@@ -4027,7 +4424,7 @@ function hidetip()
                 {
                     return new Term(name, new PartList());
                 }
-                debugChck(); 
+                prolog_reader_debug(); 
                 return null;
             }
             tk.consume();
@@ -4042,14 +4439,14 @@ function hidetip()
                 var part = ParsePart(tk);
                 if (part == null)
                 {
-                    debugChck();
+                    prolog_reader_debug();
                     return null;
                 }
 
                 if (tk.current == ",") tk.consume();
                 else if (tk.current != ")")
                 {
-                    debugChck();
+                    prolog_reader_debug();
                     return null;
                 }
 
@@ -4084,7 +4481,7 @@ function hidetip()
                 if (tk.type == "punc" && tk.current == "]")
                 {
                     tk.consume();
-                    return Atom.Make(FUNCTOR_NIL);
+                    return Atom.FromSource(FUNCTOR_NIL);
                 }
 
                 // Get a list of parts into l
@@ -4096,7 +4493,7 @@ function hidetip()
                     var t = ParsePart(tk);
                     if (t == null)
                     {
-                        debugChck();
+                        prolog_reader_debug();
                         return null;
                     }
 
@@ -4116,7 +4513,7 @@ function hidetip()
                 }
                 else
                 {
-                    append = Atom.Make(FUNCTOR_NIL);
+                    append = Atom.FromSource(FUNCTOR_NIL);
                 }
                 if (tk.current != "]") return null;
                 tk.consume();
@@ -4129,9 +4526,13 @@ function hidetip()
             }
 
             var name = tk.current;
+            var quotingType = tk.typeSyntax;
             tk.consume();
 
-            if (tk.current != "(") return Atom.Make(name);
+            if (tk.current != "(")
+            {
+                return Atom.FromSourceReader(name, quotingType);
+            }
             tk.consume();
 
             PartList p = new PartList();
@@ -4143,14 +4544,14 @@ function hidetip()
                 var part = ParsePart(tk);
                 if (part == null)
                 {
-                    debugChck();
+                    prolog_reader_debug();
                     return null;
                 }
 
                 if (tk.current == ",") tk.consume();
                 else if (tk.current != ")")
                 {
-                    debugChck();
+                    prolog_reader_debug();
                     return null;
                 }
 
@@ -4159,14 +4560,14 @@ function hidetip()
             }
             tk.consume();
 
-            return new Term(name, p);
+            return MakeTermPostReader(name, p);
         }
 
         [ThreadStatic]
-        public static bool debugginParser = false;
-        private static void debugChck()
+        public static bool tl_spy_prolog_reader = false;
+        private static void prolog_reader_debug()
         {
-            if (!debugginParser) return;
+            if (!tl_spy_prolog_reader) return;
             Warn("debugChck");
         }
 
@@ -4459,14 +4860,14 @@ function hidetip()
                 }
                 if (xvar && !yvar)
                 {
-                    PEnv subEnv = unify(new Variable(((Term)x).name), Atom.Make(((Term)y).name), env);
+                    PEnv subEnv = unify(new Variable(((Term)x).name), Atom.MakeUri(((Term)y).name), env);
                     if (subEnv == null)
                         return null;
                     return unify(((Term)x).partlist, ((Term)y).partlist, subEnv);
                 }
                 if (!xvar && yvar)
                 {
-                    PEnv subEnv = unify(Atom.Make(((Term)x).name), new Variable(((Term)y).name), env);
+                    PEnv subEnv = unify(Atom.MakeUri(((Term)x).name), new Variable(((Term)y).name), env);
                     if (subEnv == null)
                         return null;
                     return unify(((Term)x).partlist, ((Term)y).partlist, subEnv);
@@ -4881,6 +5282,65 @@ function hidetip()
         }
     }
 
+    internal class ParseType 
+    {
+        public ParseType(string quoteName0, bool canHaveSpaceAfterStart0, bool multiLine0)
+        {
+            quoteName = quoteName0;
+            StartSequence = "" + quoteName0[0];
+            EndSequence = "" + quoteName0[quoteName0.Length - 1];
+            CantHaveSpaceAfterStart = canHaveSpaceAfterStart0;
+            MultiLine = multiLine0;
+        }
+        public string StartSequence;
+        public string EndSequence;
+        public string typeName = "id";
+        public string quoteName = "atom";
+        public bool MultiLine
+        {
+            set
+            {
+                CantHave += "\r\n";
+            }
+            get
+            {
+                return CantHave.Contains('\n');
+            }
+        }
+        public bool CantHaveSpaceAfterStart
+        {
+            set
+            {
+                CantHaveNext += " ";
+            }
+            get
+            {
+                return CantHaveNext.Contains(" ");
+            }
+        }
+        public string EscapeChars = "\\";
+        public string CantHave = "";
+        public string CantHaveNext = "";
+    }
+
+    public class SourceLanguage
+    {
+        public static SourceLanguage Prolog = new SourceLanguage("prolog");
+
+        public static SourceLanguage Notation3 = new SourceLanguage("notation3");
+        
+        readonly public string Name;
+
+        public override string ToString()
+        {
+            return base.ToString() + ":" + Name;
+        }
+        private SourceLanguage(string lang)
+        {
+            this.Name = lang;
+        }
+    }
+
     public enum ContentBackingStore
     {
         None = 0,
@@ -4889,13 +5349,13 @@ function hidetip()
         /// When the KB is dirty
         /// mt.Repository URI is what we'd compile from
         /// </summary>
-        RdfServerURI,
+        RdfServerURI = 3,
 
         /// <summary>
         /// When the KB is dirty
         /// mt.RDFStore.Triples is what we'd compile from
         /// </summary>
-        RdfMemory,
+        RdfMemory = 2,
 
         /// <summary>
         /// When the KB is dirty
@@ -4907,7 +5367,7 @@ function hidetip()
         /// When the KB is dirty
         /// mt.pdb.rules  Prolog rule list is what we'd compile from
         /// </summary>
-        Prolog,
+        Prolog = 4,
     }
 
     public class DontTouchThisTextWriter : TextWriter

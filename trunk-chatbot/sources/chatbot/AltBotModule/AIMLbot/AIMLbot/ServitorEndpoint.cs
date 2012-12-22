@@ -7,6 +7,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using LogicalParticleFilter1;
+using MushDLR223.Utilities;
 using RTParser;
 using VDS.RDF;
 using VDS.RDF.Parsing;
@@ -50,21 +51,28 @@ namespace AltAIMLbot
 
         public void webWriter(HttpListenerContext context, TextWriter writer, string action, string query, string path, string mt, string serverRoot)
         {
+            writer = WebLinksWriter.AddWarnWriter(writer);
             mt = mt ?? "rdfMT";
             BeginsWith("./xrdf/", ref path);
-            SIProlog.PNode graph = null;
+            SIProlog.PNode graph = prologEngine.MakeRepositoryKB(mt);
             if (query == "rdf2pl")
-            {
-                graph = prologEngine.MakeRepositoryKB(mt);
-                graph.pushRdfGraphToPrologKB();
-            } if (query == "pl2rdf" || true)
-            {
-                graph = prologEngine.MakeRepositoryKB(mt);
-                graph.pushPrologKBToRdfGraph();
+            {                
+                graph.pushRdfGraphToPrologKB(true);
             }
-            graph.RdfStore.prologEngine.webWriter(writer, null, null, graph.id, serverRoot);
+            if (query == "pl2rdf")
+            {
+                graph.pushPrologKBToRdfGraph(true);
+            }
+            if (query == "syncfromremote")
+            {
+                graph.populateRDFMemoryFromRepository();
+            }
+            if (graph != null)
+            {
+                graph.RdfStore.prologEngine.webWriter(writer, null, null, graph.id, serverRoot);
+            }
+            WebLinksWriter.RemoveWarnWriter(writer);
             return;
-            ////throw new NotImplementedException();
         }
 
 
