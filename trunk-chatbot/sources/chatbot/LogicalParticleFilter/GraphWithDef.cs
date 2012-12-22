@@ -104,6 +104,7 @@ namespace LogicalParticleFilter1
         }
 
         static public string RoboKindURI = "http://cogserver:8123/onto/robokind#";
+        public static string RoboKindMtURI = RoboKindURI;// "http://cogserver:8123/mt/";
         public static string RoboKindPrefix = "robokind";
         public static string RoboKindPrefixPrepend = RoboKindPrefix + ":";
         private static CIDictionary<string, PredicateProperty> SharedGlobalPredDefs = new CIDictionary<string, PredicateProperty>(KeyCase.Default);
@@ -1016,6 +1017,8 @@ yago	http://dbpedia.org/class/yago/
                     {
                         //new[] {"http://budapest.rkbexplorer.com/sparql"},
                         new[] {"dbpedia", "http://dbpedia.org/sparql"},
+                     //   new[] {"josekiBooks", "http://cogbotserver:2020"},
+                      //  new[] {"cogPoint", "http://cogbotserver:8181"},
                         //new[] {"hebis", "http://lod.hebis.de/sparql"},
                     })
             {
@@ -1542,7 +1545,7 @@ yago	http://dbpedia.org/class/yago/
             {
                 get
                 {
-                    string prefix = string.Format("sk={0}", SourceKind);
+                    string prefix = string.Format("source={0}", SourceKind);
                     if (probability != 1.0)
                     {
                         prefix += string.Format(" prob={0}", probability);
@@ -1550,7 +1553,7 @@ yago	http://dbpedia.org/class/yago/
                     string pq = "";
                     var buri = RdfStore.rdfGraph.BaseUri;
                     if (buri != null) pq = buri.PathAndQuery;
-                    return string.Format("{0} size={1} dirty={2} triples={3} sf={4} uri={5} base={6}",
+                    return string.Format("{0} size={1} dirty={2} triples={3} sync={4} uri={5} base={6}",
                                          prefix, pdb.rules.Count, dirty,
                                          RdfStore.rdfGraph.Triples.Count,
                                          SyncFromNow, Repository, pq);
@@ -2649,6 +2652,14 @@ yago	http://dbpedia.org/class/yago/
             }
             static public bool DevolveURI(INamespaceMapper mapper, string s, out string uri, out string prefix, out string atom)
             {
+                if (IsAbsoluteURI(s))
+                {
+                    string tries = HttpUtility.UrlDecode(s);
+                    if (tries != s)
+                    {
+                        s = tries;
+                    }
+                }
                 bool ret = DevolveURI0(mapper, s, out uri, out prefix, out atom);
                 if (atom == "")
                 {
@@ -2671,7 +2682,7 @@ yago	http://dbpedia.org/class/yago/
                 }
                 if (atom.Length == 0 || (!char.IsLetterOrDigit(atom[0]) && !atom.StartsWith("#C_") && !atom.StartsWith("$")))
                 {
-                    Warn("strange atom='{0}' prefix='{1}' uri='{2}' ", atom, prefix, uri);
+                //    Warn("strange atom='{0}' prefix='{1}' uri='{2}' ", atom, prefix, uri);
                     //string satom = HttpUtility.UrlEncode(atom);
                 }
                 if (atom == uri) return ret;
@@ -2890,11 +2901,49 @@ yago	http://dbpedia.org/class/yago/
             {
                 try
                 {
-                    rdfGraph.LoadFromUri(uri);
+                    LoadFromUri0(uri);
                 }
                 catch (Exception e)
                 {
                     Warn("LoadFromURI({0}) Caused: {1}", uri, e);
+                }
+            }
+
+            private void LoadFromUri0(Uri endpointURI)
+            {
+                Graph g = new Graph();
+                g.NamespaceMap.Import(rdfGraph.NamespaceMap);
+                g.LoadFromUri(endpointURI);
+                var gt = g.Triples;
+                if (gt.Count > 0)
+                {
+                    rdfGraph.NamespaceMap.Import(g.NamespaceMap);
+                    rdfGraph.Assert(gt);
+                    if (gt.SubjectNodes.Count() > 1)
+                    {
+                        // we have actual data
+                        return;
+                    }
+                }
+                //Define a remote endpoint
+                //Use the DBPedia SPARQL endpoint with the default Graph set to DBPedia
+                SparqlRemoteEndpoint endpoint = new SparqlRemoteEndpoint(endpointURI);
+
+                //Use the extension method ExecuteQuery() to make the query against the Graph
+                try
+                {
+                    //Object results = g.ExecuteQuery(query);
+                    //Make a SELECT query against the Endpoint
+                    SparqlResultSet results = endpoint.QueryWithResultSet("SELECT ?s ?p ?o WHERE { ?s ?p ?o } LIMIT 1400");
+                    foreach (SparqlResult set in results)
+                    {
+                        rdfGraph.Assert(MakeTriple(set["s"], set["p"], set["o"]));
+                    }
+                }
+                catch (RdfQueryException queryEx)
+                {
+                    //There was an error executing the query so handle it here
+                    Warn("While endpointURI={0}\n\n{1}", endpointURI, queryEx);
                 }
             }
         }

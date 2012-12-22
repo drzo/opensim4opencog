@@ -734,15 +734,15 @@ function hidetip()
         {
             PNode focus = KBGraph.Contains(focusMT);
             if (focus == null) return;
-            focus.SyncFromNow = ContentBackingStore.Prolog;
+            focus.SourceKind = ContentBackingStore.Prolog;
         }
         public void markKBRDF(string focusMT)
         {
             PNode focus = KBGraph.Contains(focusMT);
             if (focus == null) return;
-            focus.SyncFromNow = ContentBackingStore.RdfMemory;
+            focus.SourceKind = ContentBackingStore.RdfMemory;
         }
-        public void markKBSyncType(string focusMT,ContentBackingStore syncType)
+        public void markKBSyncType(string focusMT, ContentBackingStore syncType)
         {
             PNode focus = KBGraph.Contains(focusMT);
             if (focus == null) return;
@@ -1249,8 +1249,10 @@ function hidetip()
             text = text.Replace("?", " questionmark ");
             text = text.Replace("!", " exclamationmark ");
             text = text.Replace(".", " periodmark ");
+            while (text.Contains("\n")) text = text.Replace("\n", " ");
+            while (text.Contains("\r")) text = text.Replace("\r", " ");
             while (text.Contains("  ")) text = text.Replace("  ", " ");
-            text = "[" + text.Replace(" ", ",").Trim() + "]";
+            text = "[\"" + text.Replace(" ", "\",\"").Trim() + "\"]";
             while (text.Contains("[,")) text = text.Replace("[,", "[");
             while (text.Contains(",]")) text = text.Replace(",]", "]");
             while (text.Contains(",,")) text = text.Replace(",,", ",");
