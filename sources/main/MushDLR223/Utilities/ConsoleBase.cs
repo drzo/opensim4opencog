@@ -436,7 +436,7 @@ namespace MushDLR223.Utilities
         static DLRConsole()
         {
             SafelyRun(() => DetectMainEnv(null));
-            OverrideConsoleOutput();
+            if (!IsOnMonoUnix)OverrideConsoleOutput();
         }
 
         private static void OverrideConsoleOutput()
