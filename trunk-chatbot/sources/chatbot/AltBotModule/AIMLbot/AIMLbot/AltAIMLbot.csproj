@@ -152,6 +152,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AIMLTagHandlers\ketext.cs" />
+    <Compile Include="AIMLTagHandlers\logicact.cs" />
     <Compile Include="AIMLTagHandlers\logictext.cs" />
     <Compile Include="AIMLTagHandlers\prolist.cs" />
     <Compile Include="BayesClassifier.cs" />

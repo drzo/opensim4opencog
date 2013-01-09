@@ -27,3 +27,9 @@ C:\development\opensim4opencog\current\bin\Aima.NET.XML
 C:\development\opensim4opencog\current\sources\chatbot\AltBotModule\Aima.NET\obj\Debug\ResolveAssemblyReference.cache
 C:\development\opensim4opencog\current\sources\chatbot\AltBotModule\Aima.NET\obj\Debug\Aima.NET.dll
 C:\development\opensim4opencog\current\sources\chatbot\AltBotModule\Aima.NET\obj\Debug\Aima.NET.pdb
+D:\dev\Cogbot2012-10-01\bin\Aima.NET.dll
+D:\dev\Cogbot2012-10-01\bin\Aima.NET.pdb
+D:\dev\Cogbot2012-10-01\bin\Aima.NET.XML
+D:\dev\Cogbot2012-10-01\sources\chatbot\AltBotModule\Aima.NET\obj\Debug\ResolveAssemblyReference.cache
+D:\dev\Cogbot2012-10-01\sources\chatbot\AltBotModule\Aima.NET\obj\Debug\Aima.NET.dll
+D:\dev\Cogbot2012-10-01\sources\chatbot\AltBotModule\Aima.NET\obj\Debug\Aima.NET.pdb

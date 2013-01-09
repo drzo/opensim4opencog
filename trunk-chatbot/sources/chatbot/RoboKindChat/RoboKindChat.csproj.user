@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <StartWorkingDirectory>C:\development\opensim4opencog\current\bin\</StartWorkingDirectory>
-    <StartArguments>--name Nephrael Rae</StartArguments>
+    <StartWorkingDirectory>D:\dev\Cogbot2012-10-01\bin</StartWorkingDirectory>
+    <StartArguments>--name Simple One</StartArguments>
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <PropertyGroup>

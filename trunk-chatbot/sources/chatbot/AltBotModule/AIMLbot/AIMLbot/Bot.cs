@@ -86,6 +86,8 @@ namespace RTParser
         public Cron myCron = null;
         public bool inCritical = false;
         private bool _blockCron = false;
+         
+
         public bool blockCron
         {
             get
@@ -649,6 +651,7 @@ namespace RTParser
         public delegate void LogMessageDelegate();
 
         public sayProcessorDelegate sayProcessor;
+        public systemPersonaDelegate personaProcessor = null;
 
         public string lastBehaviorChatInput;
         public string lastBehaviorChatOutput;
@@ -1761,6 +1764,9 @@ namespace RTParser
 
                     case "logictext":
                         return new AltAIMLbot.AIMLTagHandlers.logictext(this, user, query, request, result, node);
+                    case "ketext":
+                        return new AltAIMLbot.AIMLTagHandlers.ketext(this, user, query, request, result, node);
+                    
                     case "prolist":
                         return new AltAIMLbot.AIMLTagHandlers.prolist(this, user, query, request, result, node);
 
@@ -2313,10 +2319,15 @@ The AltAIMLbot program.
         }
         public string getBBHash(string key)
         {
+            if (string.IsNullOrEmpty(key)) return "";
+
             string gs = getBBHash0(key);
             if (!string.IsNullOrEmpty(gs)) return gs;
-            gs = GlobalSettings.grabSetting(key, false);
-            if (!string.IsNullOrEmpty( gs)) return gs;
+            if (GlobalSettings != null)
+            {
+                gs = GlobalSettings.grabSetting(key, false);
+                if (!string.IsNullOrEmpty(gs)) return gs;
+            }
             if (key.StartsWith("bot"))
             {
                 key = key.Substring(3);
@@ -2545,6 +2556,7 @@ namespace AltAIMLbot
     /// 
         public delegate void sayProcessorDelegate(string message);
         public delegate void systemProcessorDelegate(string message);
+        public delegate void systemPersonaDelegate(string message);
 
     public class myConst
     {

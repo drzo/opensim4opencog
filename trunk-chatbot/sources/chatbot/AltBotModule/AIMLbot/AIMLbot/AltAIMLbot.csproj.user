@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">System.Collections.Hashtable+ValueCollection</Platform>
-    <ReferencePath>C:\development\opensim4opencog\current\bin\</ReferencePath>
+    <ReferencePath>D:\dev\Cogbot2012-10-01\bin\</ReferencePath>
     <LastOpenVersion>9.0.21022</LastOpenVersion>
     <ProjectView>ShowAllFiles</ProjectView>
     <ProjectTrust>0</ProjectTrust>

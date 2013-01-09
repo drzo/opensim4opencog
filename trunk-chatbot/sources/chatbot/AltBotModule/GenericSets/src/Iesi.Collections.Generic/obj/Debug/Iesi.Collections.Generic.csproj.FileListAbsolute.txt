@@ -14,3 +14,9 @@ C:\development\opensim4opencog\current\bin\Iesi.Collections.Generic.XML
 C:\development\opensim4opencog\current\sources\chatbot\AltBotModule\GenericSets\src\Iesi.Collections.Generic\obj\Debug\ResolveAssemblyReference.cache
 C:\development\opensim4opencog\current\sources\chatbot\AltBotModule\GenericSets\src\Iesi.Collections.Generic\obj\Debug\Iesi.Collections.Generic.dll
 C:\development\opensim4opencog\current\sources\chatbot\AltBotModule\GenericSets\src\Iesi.Collections.Generic\obj\Debug\Iesi.Collections.Generic.pdb
+D:\dev\Cogbot2012-10-01\bin\Iesi.Collections.Generic.dll
+D:\dev\Cogbot2012-10-01\bin\Iesi.Collections.Generic.pdb
+D:\dev\Cogbot2012-10-01\bin\Iesi.Collections.Generic.XML
+D:\dev\Cogbot2012-10-01\sources\chatbot\AltBotModule\GenericSets\src\Iesi.Collections.Generic\obj\Debug\ResolveAssemblyReference.cache
+D:\dev\Cogbot2012-10-01\sources\chatbot\AltBotModule\GenericSets\src\Iesi.Collections.Generic\obj\Debug\Iesi.Collections.Generic.dll
+D:\dev\Cogbot2012-10-01\sources\chatbot\AltBotModule\GenericSets\src\Iesi.Collections.Generic\obj\Debug\Iesi.Collections.Generic.pdb

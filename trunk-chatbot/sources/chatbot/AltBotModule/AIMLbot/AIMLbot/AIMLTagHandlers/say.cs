@@ -62,6 +62,12 @@ namespace AltAIMLbot.AIMLTagHandlers
                         string message = this.TemplateNodeInnerText;
                         //if (bot.saySapi) message = this.TemplateNodeInnerXml;
                         Console.WriteLine("  SayA msg1:{0}", message);
+                        string lastOut = this.bot.getBBHash("TTSText");
+                        // avoid repeats
+                        if (message == lastOut)
+                        {
+                            return string.Empty;
+                        }
                         //if (message.Length > 0) this.user.bot.sayProcessor(message);
                         this.bot.setBBHash("TTSText", message);
                         //this.user.bot.bbSetHash("TTSText", message);
