@@ -162,11 +162,11 @@ namespace AltAIMLbot
         public static void processRequest(object listenerContext)
         {
                 var context = (HttpListenerContext)listenerContext;
+            try
+            {
             tl_context = context;
             WebLinksWriter.tl_title = context.Request.Url.AbsoluteUri;
             tl_serverRoot = GetServerRoot(context.Request.UserHostName);
-            try
-            {
 
                 switch (context.Request.HttpMethod)
                 {
@@ -186,18 +186,35 @@ namespace AltAIMLbot
                         ERR(context);
                         break;
                 }
-                context.Response.Close();
+
+                //if ((context != null) && (context.Response != null))
+                //    context.Response.Close();
+                    
+            }
+            catch (Exception e)
+            {
+                if ((context != null) && (context.Response != null))
+                {
+                    //context.Response.Close();
+                    //context.Response.Abort();
+                    Console.WriteLine("EXCEPTION WebServitor:{0}", e.Message);
+                    return;
+                }
 
             }
-            catch
+           // finally
+           // {
+            if ((context != null) && (context.Response != null))
             {
-                context.Response.Close();
-
-            }
-            finally
-            {
+                Console.WriteLine("Webservitor processRequest close");
                 context.Response.Close();
             }
+            else
+            {
+                if ((context != null) && (context.Response == null)) Console.WriteLine("Webservitor processRequest (context.Response == null)");
+                if (context == null) Console.WriteLine("Webservitor processRequest (context == null)");
+            }
+          //  }
         }
         public static string  filenameToBehaviorname(string name)
         {
@@ -389,7 +406,7 @@ namespace AltAIMLbot
             string query = context.Request.QueryString["q"];
             string action = context.Request.QueryString["a"];
             WebLinksWriter.tl_title = path;
-            Console.WriteLine("WEBGET path={0},action={1},query={2},btx={3}", path, action, query, behaviorName);
+            Console.WriteLine("WEBGET path={0},action={1},query={2},btx={3},mt={4}", path, action, query, behaviorName,mt);
             //serverRoot
             if (path.Contains("./plot/"))
             {
@@ -424,9 +441,18 @@ namespace AltAIMLbot
                 WebLinksWriter.tl_AsHTML = false;
                 context.Response.StatusCode = (int) HttpStatusCode.OK;
                 //+using (Stream s = context.Response.OutputStream )
-                using (var writer = HtmlStreamWriter(context))
-                    ourServitor.prologEngine.webWriter(writer, action, query, mt, serverRoot);
-                return;
+                try
+                {
+                    lock (ourServitor)
+                    {
+                        using (var writer = HtmlStreamWriter(context))
+                            ourServitor.prologEngine.webWriter(writer, action, query, mt, serverRoot);
+                    }
+                 }
+                catch
+                {
+                }
+               return;
             }
 
             if (path.Contains("./analysis/"))

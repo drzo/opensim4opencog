@@ -128,6 +128,7 @@ namespace LogicalParticleFilter1
 
         public void connectMT(string childMT, string parentMT)
         {
+            //Console.WriteLine("MTSYS: connectMT({0},{1})", childMT, parentMT);
             KBGraph.Connect(childMT, parentMT);
         }
         public void disconnectMT(string childMT, string parentMT)
@@ -277,7 +278,7 @@ namespace LogicalParticleFilter1
         {
             writer = WebLinksWriter.AddWarnWriter(writer);
             serverRoot = "/";
-            if (action == "autorefresh")
+            if ((action == "autorefresh")||(action=="autoquery"))
             {
                 writer.WriteLine("<META HTTP-EQUIV=\"REFRESH\" content=\"10\">");
             }
@@ -420,6 +421,10 @@ function hidetip()
                         case "query":
                             interactQuery(writer, queryv, mt, serverRoot);
                             break;
+                        case "autoquery":
+                            interactQuery(writer, queryv, mt, serverRoot);
+                            return;
+                            break;
                     }
                     webWriter0(writer, null, null, mt, serverRoot, false);
                 }
@@ -478,6 +483,7 @@ function hidetip()
             {
                 WriteRule(writer, r, qnode);
             }
+
             if (qnode != null)
             {
                 ensureCompiled(qnode, ContentBackingStore.RdfMemory);
@@ -673,6 +679,12 @@ function hidetip()
             writer.WriteLine(" <INPUT TYPE='submit' VALUE='submit'/>");
             writer.WriteLine(" </FORM>");
             writer.WriteLine(" <form method='get' ACTION='{1}siprolog/'>", mt, serverRoot);
+            writer.WriteLine(" AutoQuery: <INPUT TYPE='text' name='q'/>");
+            MtSelector(writer, mt);
+            writer.WriteLine(" <INPUT TYPE='hidden' name='a' VALUE='autoquery'/>");
+            writer.WriteLine(" <INPUT TYPE='submit' VALUE='submit'/>");
+            writer.WriteLine(" </FORM>");
+            writer.WriteLine(" <form method='get' ACTION='{1}siprolog/'>", mt, serverRoot);
             writer.WriteLine(" Append: <INPUT TYPE='text' name='q'/>");
             MtSelector(writer, mt);
             writer.WriteLine(" <INPUT TYPE='hidden' name='a' VALUE='append'/>");
@@ -758,6 +770,11 @@ function hidetip()
 
         internal void ensureCompiled(PNode focus, ContentBackingStore forType)
         {
+            //if (DLRConsole.IsOnMonoUnix)
+            //{
+            //    focus.SyncFromNow = ContentBackingStore.None;
+            //   return; // KHC: in realbot no rdf to sync for now
+            //}
             lock (focus.CompileLock)
             {
                 while (true)
@@ -779,6 +796,12 @@ function hidetip()
         }
         internal void syncStep(PNode focus)
         {
+            //if (DLRConsole.IsOnMonoUnix)
+            //{
+            //    focus.SyncFromNow = ContentBackingStore.None;
+            //    return; // KHC: in realbot no rdf to sync for now
+            //}
+
             while (true)
             {
                 if (focus.SyncFromNow == ContentBackingStore.None) return;
@@ -1063,7 +1086,7 @@ function hidetip()
 
         Dictionary<string, RuleList> ParseKEText(string startMT, string ruleSet)
         {
-            curKB = startMT;
+            string curKB = startMT;
             Dictionary<string, RuleList> tempKB = new Dictionary<string, RuleList>();
             ///string[] lines = ruleSet.Split('\n');
             string curConst = "";
@@ -1072,144 +1095,164 @@ function hidetip()
                 {
                     if (ruleSet.Trim() == "") break;
                     string line = toEndOfLine(ref ruleSet);
-                    if (line.StartsWith(";doc;"))
+                    try
                     {
-                        var line5 = line.Substring(5).Trim() + " .";
-                        Term t = ParseTerm(new Tokeniser(line5), startMT) as Term;
-                        DocumentTerm(t, false);
-                        continue;
-                    }
-                    if (line.StartsWith(";") || line.StartsWith("%")) continue;
-                    if (line.StartsWith("."))
-                    {
-                        
-                    }
-                    if (line.StartsWith("exit:")) break;
-                    if (line.Contains(":") && !line.Contains(":-"))
-                    {
-                        string[] args = line.Split(':');
-                        string cmd = args[0].Trim().ToLower();
-                        // if any non letters in our KE text directive parse it as prolog instead
-                        if (!Regex.Match(cmd, "^[a-z]+$").Success)
+                        if (line.StartsWith(";doc;"))
                         {
-                            break;
-                        }
-                        string val = args[1].Trim();
-                        if (cmd == "tbc")
-                        {
+                            var line5 = line.Substring(5).Trim() + " .";
+                            Term t = ParseTerm(new Tokeniser(line5), startMT) as Term;
+                            DocumentTerm(t, false);
                             continue;
                         }
-                        if (cmd == "mt")
+                        if (line.StartsWith(";") || line.StartsWith("%")) continue;
+                        if (line.StartsWith("."))
                         {
-                            curKB = val;
-                            continue;
+                            
                         }
-                        if (cmd == "constant")
+                        if (line.StartsWith("exit:")) break;
+                        if (line.Contains(":") && !line.Contains(":-"))
                         {
-                            curConst = atomize(val).Replace(".", "");
-                            continue;
-                        }
-                        if (cmd == "const")
-                        {
-                            curConst = atomize(val).Replace(".", "");
-                            continue;
-                        }
-                        if (cmd == "genlmt")
-                        {
-                            connectMT(curKB, val);
-                            continue;
-                        }
-                        if (cmd == "genlmtconst")
-                        {
-                            connectMT(curKB, curConst);
-                            continue;
-                        }
-                        if (cmd == "alias")
-                        {
-                            aliasMap[val] = curKB;
-                            continue;
-                        }
-                        if (cmd == "include")
-                        {
-                            loadKEFile(curKB, val);
-                            continue;
-                        }
-                        if (cmd == "chemsys")
-                        {
-                            string[] sep = {"chemsys:"};
-                            args = line.Split(sep, StringSplitOptions.RemoveEmptyEntries);
-                            val = args[0].Trim();
-                            if (chemSysCommandProcessor != null)
+                            string[] args = line.Split(':');
+                            string cmd = args[0].Trim().ToLower();
+                            // if any non letters in our KE text directive parse it as prolog instead
+                            if (!Regex.Match(cmd, "^[a-z]+$").Success)
                             {
-                                chemSysCommandProcessor(val);
+                                break;
                             }
-                            string[] args2 = val.Split(',');
-                            string head = args2[0];
-                            string newhead = head + "(";
-                            string oldhead = head + ",";
-                            string newPred = val.Replace(oldhead, newhead) + ").\n";
-                            newPred = newPred.Replace(",,", ",0,");
-                            if (!newPred.Contains(":"))
+                            string val = args[1].Trim();
+                            if (cmd == "tbc")
                             {
+                                continue;
+                            }
+                            if (cmd == "mt")
+                            {
+                                curKB = val;
+                                continue;
+                            }
+                            if (cmd == "constant")
+                            {
+                                curConst = atomize(val).Replace(".", "");
+                                continue;
+                            }
+                            if (cmd == "const")
+                            {
+                                curConst = atomize(val).Replace(".", "");
+                                continue;
+                            }
+                            if (cmd == "genlmt")
+                            {
+                                connectMT(curKB, val);
+                                continue;
+                            }
+                            if (cmd == "nonmt")
+                            {
+                                disconnectMT(curKB, val);
+                                continue;
+                            }
+ 
+                            if (cmd == "genlmtconst")
+                            {
+                                connectMT(curKB, curConst);
+                                continue;
+                            }
+                            if (cmd == "alias")
+                            {
+                                aliasMap[val] = curKB;
+                                continue;
+                            }
+                            if (cmd == "include")
+                            {
+                                loadKEFile(curKB, val);
+                                continue;
+                            }
+                            if (cmd == "chemsys")
+                            {
+                                string[] sep = {"chemsys:"};
+                                args = line.Split(sep, StringSplitOptions.RemoveEmptyEntries);
+                                val = args[0].Trim();
+                                if (chemSysCommandProcessor != null)
+                                {
+                                    chemSysCommandProcessor(val);
+                                }
+                                string[] args2 = val.Split(',');
+                                string head = args2[0];
+                                string newhead = head + "(";
+                                string oldhead = head + ",";
+                                string newPred = val.Replace(oldhead, newhead) + ").\n";
+                                newPred = newPred.Replace(",,", ",0,");
+                                if (!newPred.Contains(":"))
+                                {
+                                    if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = new RuleList();
+                                    tempKB[curKB].Add(ParseRule(new Tokeniser(newPred), curKB));
+
+                                }
+                                continue;
+                            }
+
+                            if (cmd == "module")
+                            {
+                                // A Macro for CEMA/GOAP
+                                // same as 
+                                //  mt:module_name
+                                //  module(module_name).
+
+                                curKB = val;
+                                val = atomize(val);
+                                string uniPred = String.Format("module({0}).\n", val);
                                 if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = new RuleList();
-                                tempKB[curKB].Add(ParseRule(new Tokeniser(newPred), curKB));
-
+                                tempKB[curKB].Add(ParseRule(new Tokeniser(uniPred), curKB));
+                                continue;
                             }
-                            continue;
-                        }
 
-                        if (cmd == "module")
-                        {
-                            // A Macro for CEMA/GOAP
-                            // same as 
-                            //  mt:module_name
-                            //  module(module_name).
-
-                            curKB = val;
-                            val = atomize(val);
-                            string uniPred = String.Format("module({0}).\n", val);
-                            if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = new RuleList();
-                            tempKB[curKB].Add(ParseRule(new Tokeniser(uniPred), curKB));
-                            continue;
-                        }
-
-                        //default is to make a binary pred of "cmd(curConst,val)."
-                        val = val.Replace(".", "");
-                        if (val.Length > 0)
-                        {
-                            val = atomize(val);
-                            string binaryPred = String.Format("{0}({1},{2}).\n", cmd, curConst, val);
-                            var rule = ParseRule(new Tokeniser(binaryPred), curKB);
-                            if (rule != null)
+                            //default is to make a binary pred of "cmd(curConst,val)."
+                            val = val.Replace(".", "");
+                            if (val.Length > 0)
                             {
+                                val = atomize(val);
+                                string binaryPred = String.Format("{0}({1},{2}).\n", cmd, curConst, val);
+                                var rule = ParseRule(new Tokeniser(binaryPred), curKB);
+                                if (rule != null)
+                                {
+                                    if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = new RuleList();
+                                    tempKB[curKB].Add(rule);
+                                    continue;
+                                } 
+                                else
+                                {
+                                    // fall thru to other reader.. the ":" confused us
+                                }
+                            }
+                        }
+                        //else
+                        {
+                            string was = line;
+                            try
+                            {
+                                var rule = ParseRule(new Tokeniser(was), curKB);
+                                if (rule == null)
+                                {
+                                    Tokeniser newTokeniser = new Tokeniser(was);
+                                    string kb = curKB;
+                                    tl_spy_prolog_reader = true;
+                                    rule = ParseRule(newTokeniser, kb);
+                                    tl_spy_prolog_reader = false;
+                                    Warn("Could not parse: " + was);
+                                    continue;
+                                }
                                 if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = new RuleList();
                                 tempKB[curKB].Add(rule);
-                                continue;
-                            } 
-                            else
+                            }
+                            catch (Exception e)
                             {
-                                // fall thru to other reader.. the ":" confused us
+                                Console.WriteLine("EXCEPTION: in line '{0}' caused '{1}'", line,e.Message);
                             }
                         }
                     }
-                    //else
+                    catch (Exception e)
                     {
-                        string was = line;
-                        var rule = ParseRule(new Tokeniser(was), curKB);
-                        if (rule == null)
-                        {
-                            Tokeniser newTokeniser = new Tokeniser(was);
-                            string kb = curKB;
-                            tl_spy_prolog_reader = true;
-                            rule = ParseRule(newTokeniser, kb);
-                            tl_spy_prolog_reader = false;
-                            Warn("Could not parse: " + was);
-                            continue;
-                        }
-                        if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = new RuleList();
-                        tempKB[curKB].Add(rule);
+                        Console.WriteLine("EXCEPTION: in line '{0}' caused '{1}'", line, e.Message);
                     }
-                } while (ruleSet.Trim() != "");
+                  } while (ruleSet.Trim() != "");
             }
             return tempKB;
         }
@@ -2594,17 +2637,17 @@ function hidetip()
                 r.rdfRuleCache = null;
                 INode tripleInst = ruleCache.RuleNode;
                 if (tripleInst == null) return;
-                ConsoleWriteLine("Remove Rule: " + r);
+                //ConsoleWriteLine("Remove Rule: " + r);
                 IGraph graph = ruleCache.ContainingGraph ?? tripleInst.Graph;
                 IEnumerable<Triple> found = LockInfo.CopyOf(graph.GetTriples(tripleInst));
                 int fnd = 0;
                 foreach (Triple triple in found)
                 {
-                    ConsoleWriteLine("Remove triple: " + triple);
+                 //   ConsoleWriteLine("Remove triple: " + triple);
                     triple.Graph.Retract(triple);
                     fnd++;
                 }
-                ConsoleWriteLine("Removed triples: " + fnd);
+                //ConsoleWriteLine("Removed triples: " + fnd);
             }
 
             public Rule this[int i]
