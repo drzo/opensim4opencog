@@ -901,6 +901,16 @@ namespace AltAIMLbot
                             yield return result;
                         }
                         break;
+// Kinect via Mt
+                     case "updatepersona":
+                        foreach (RunStatus result in ProcessUpdatePersona(myNode))
+                        {
+                            myResult = result;
+                            SetCurNodeIdStatus(myResult);
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;                       
 // Chatmapper
                     case "loadchatmapper":
                         foreach (RunStatus result in ProcessLoadChatMapper(myNode))
@@ -5415,6 +5425,57 @@ namespace AltAIMLbot
         }
 
         #endregion
+       // <loadchatmaper path="chatmapper\example.xml"/>
+        public IEnumerable<RunStatus> ProcessUpdatePersona(XmlNode myNode)
+        {
+            // Append some si_text 
+            RunStatus rs = RunStatus.Success;
+            List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
+            string innerStr = myNode.InnerXml.Trim();
+            string mtName = "audioSourceMt";
+            string angleQuery = "audioSourceAngle(ANG)";
+            string faceQuery = "faceRect(avgx,LOC)";
+            string faceMt = "faceTrackerMt";
+            string angStr = "0.0";
+            string locStr = "0.0";
+            float angRot;
+            // Try face first then last noise
+            bot.servitor.prologEngine.askQuery(faceQuery, faceMt, out bingingsList);
+            foreach (Dictionary<string, string> bindings in bingingsList)
+            {
+                foreach (string key in bindings.Keys)
+                {
+                    if (key == "LOC") locStr = bindings[key];
+                }
+            }
+            angRot = float.Parse(locStr);
+            angRot = (angRot - 0.5f) * 180f;
+            while (angRot < 0) angRot = angRot + 360;
+                // Try last noise
+            if (locStr == "0.0")
+            {
+                bot.servitor.prologEngine.askQuery(angleQuery, mtName, out bingingsList);
+                foreach (Dictionary<string, string> bindings in bingingsList)
+                {
+                    foreach (string key in bindings.Keys)
+                    {
+                        if (key == "ANG") angStr = bindings[key];
+                    }
+                }
+                angRot = float.Parse(angStr) * 3;
+                while (angRot < 0) angRot = angRot + 360;
+            }
+
+            if (bot.personaProcessor != null)
+            {
+                string rotCommand = String.Format("face {0}", angRot);
+                bot.personaProcessor(rotCommand);
+            }
+            yield return rs;
+            yield break;
+        }
+
+
         #region ChatMapperImport
         // <loadchatmaper path="chatmapper\example.xml"/>
         public IEnumerable<RunStatus> ProcessLoadChatMapper(XmlNode myNode)

@@ -76,6 +76,8 @@ namespace AltAIMLbot
         {
             get
             {
+                //return false; //KHC DEBUG MONOBOT
+
                 //return true;
                 if (curBot != null && curBot.GlobalSettings != null)
                 {
@@ -570,13 +572,13 @@ namespace AltAIMLbot
             startFSMEngine();
             Console.WriteLine("Servitor startBehaviorEngine");
             startBehaviorEngine();
+            Console.WriteLine(" Servitor beginning Coppelia");
+            InitCoppelia();
             Console.WriteLine("Servitor startCronEngine");
             startCronEngine();
             curBot.myBehaviors.keepTime("activation", RunStatus.Success);
             curBot.myBehaviors.activationTime("activation", RunStatus.Success);
 
-            Console.WriteLine(" Servitor beginning Coppelia");
-            InitCoppelia();
             Console.WriteLine(" Servitor startup complete");
         }
 
@@ -1077,6 +1079,7 @@ namespace AltAIMLbot
         public  bool checkNewPersonality()
         {
             bool loadedCore = false;
+            //return loadedCore; // KHC DEBUG MONOBOT
 
             lock (curBot)
             {
@@ -1144,7 +1147,7 @@ namespace AltAIMLbot
             while (true)
             {
                 Thread.Sleep(interval);
-                updateTime();
+               // updateTime(); // KHC:DEBUG OFF FOR MONO
                 // Tick the microThreader
 
                 if (!mLoadCompleteAndPersonalityShouldBeDefined) continue;
@@ -1278,6 +1281,10 @@ namespace AltAIMLbot
             {
                 //myChemistry.m_cBus.setHash("mdollsay", myResp);
                 //myChemistry.m_cBus.setHash("mdollsayuttid", lastuutid.ToString());
+                string lastOut = getBBHash("TTSText");
+                // avoid repeats
+                if (message == lastOut) return;
+
                 setBBHash("TTSText", message);
                 Random Rgen = new Random();
            

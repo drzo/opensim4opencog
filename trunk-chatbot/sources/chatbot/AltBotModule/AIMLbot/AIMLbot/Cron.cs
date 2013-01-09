@@ -244,7 +244,9 @@ namespace AltAIMLbot
         private bool contains(Object list, int val)
         {
             // -1 represents the star * from the crontab
-            return ((ArrayList)list).Contains(val) || ((ArrayList)list).Contains(-1);
+            //return ((ArrayList)list).Contains(val) || ((ArrayList)list).Contains(-1);
+            //KHC: quick patch for parser err or reload
+            return ((ArrayList)list).Contains(val) || ((ArrayList)list).Contains(-1) || ((ArrayList)list).Contains(1);
         }
         private string decodeList(Object list)
         {

@@ -407,6 +407,7 @@ namespace AIMLBotModule
             if (MyBot.useServitor)
             {
                 MyBot.servitor.curBot.sayProcessor = new sayProcessorDelegate(TalkActive);
+                MyBot.servitor.curBot.personaProcessor = new systemPersonaDelegate(PersonaActive);
             }
             MyBot.GlobalSettings.addSetting("name", String.Format("{0}", myName));
             String[] sname = myName.Split(' ');
@@ -981,6 +982,47 @@ namespace AIMLBotModule
         {
             Chat(client, message, ChatType.Normal, 20);
         }
+
+        public void PersonaActive(string command)
+        {
+            string[] args = command.Split(' ');
+            string cmd = args[0].ToLower();
+            if (cmd == "face")
+            {
+                int heading = 0;
+                if (!int.TryParse(args[1], out heading)) // rotate help
+                    return; // " face [angle]";
+                double rad = 0.0174532925d * heading;
+               
+
+                // and the rotate command
+                //float DEG_TO_RAD = 180f / (float)Math.PI;
+                Vector3 cur = WorldSystem.TheSimAvatar.SimPosition;
+                // Parse the number             
+                //float angle;
+                //if (!float.TryParse(args[1], out angle)) // rotate help
+                //    return ; // " rotate [angle]";
+                //float angleTarget = (angle / DEG_TO_RAD);
+                float angleTarget = (float)rad;
+
+                if (WorldSystem.TheSimAvatar.ZHeading != angleTarget)
+                {
+                    //float newAngle = WorldSystem.TheSimAvatar.ZHeading + (angle / DEG_TO_RAD);
+                    float newAngle = angleTarget;
+                    cur.X += (float)Math.Cos(newAngle) * 20;
+                    cur.Y -= (float)Math.Sin(newAngle) * 20;
+                    client.Self.Movement.TurnToward(cur);
+                    client.Self.Movement.Camera.LookAt(client.Self.SimPosition, cur);
+                }
+                client.Self.Movement.UpdateFromHeading(rad, true);
+                client.Self.Movement.SendUpdate(true);
+
+                //string.Format("Turned To {0}", DEG_TO_RAD * newAngle)
+                return;
+
+            }
+        }
+
         private string AddedToNextResponse = "";// new StringWriter();
         private string firstUser = null;
         private string lastKnownUser = null;
@@ -1007,7 +1049,7 @@ namespace AIMLBotModule
                 MyBot.DefaultPredicates.updateSetting("name", myUser.UserName);
                 MyBot.updateRTP2Sevitor(myUser);
                 MyBot.servitor.curBot.sayProcessor = new sayProcessorDelegate(TalkActive);
-
+                MyBot.servitor.curBot.personaProcessor = new systemPersonaDelegate(PersonaActive);
                 string answer = MyBot.servitor.respondToChat(input);
                 SUnifiable result = answer;
                 if (result == null)

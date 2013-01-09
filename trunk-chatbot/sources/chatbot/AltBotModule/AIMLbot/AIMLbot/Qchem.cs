@@ -111,7 +111,7 @@ namespace AltAIMLbot
                     for (int i = 0; i < vlen; i++)
                     {
                         double v1 = Vlist[i];
-                        string point = String.Format("trace({0},{1},{2}).\n", ID, ourSoup.biochemticks - (vlen-i), v1);
+                        string point = String.Format("trace({0},{1},{2}).\n", ID, ourSoup.biochemticks - (vlen-i), v1.ToString("0.000"));
                         tlog += point;
                     }
                     prologEngine.insertKB(tlog, mt);
@@ -124,7 +124,7 @@ namespace AltAIMLbot
                     foreach (string ID in ourSoup.Chemicals.Keys)
                     {
                         double v1 = (double)ourSoup.Chemicals[ID];
-                        string point = String.Format("bioNow({0},{1}).\n", ID, v1);
+                        string point = String.Format("bioNow({0},{1}).\n", ID, v1.ToString("0.000"));
                         tlog2 += point;
                     }
                     prologEngine.insertKB(tlog2, bioNow);
@@ -450,7 +450,7 @@ namespace AltAIMLbot
                     foreach (String RuleID in IORules.Keys)
                     {
                         SoupIORule ER = (SoupIORule)IORules[RuleID];
-                        if (ER.emitter)
+                        if ((ER!=null)&&(ER.emitter))
                         {
                             ER.processRule(this);
                         }
@@ -462,7 +462,7 @@ namespace AltAIMLbot
                     foreach (String RuleID in IORules.Keys)
                     {
                         SoupIORule ER = (SoupIORule)IORules[RuleID];
-                        if (!ER.emitter)
+                        if ((ER!=null)&&(!ER.emitter))
                         {
                             ER.processRule(this);
                         }
@@ -537,7 +537,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("ERR:tickBioChemistry :{0}", e.Message);
+                Console.WriteLine("ERR:tickBioChemistry :{0}\n{1}", e.Message,e.StackTrace );
             }
         }
 
