@@ -562,7 +562,7 @@ namespace LogicalParticleFilter1
             }
 
             SIProlog.ConsoleWriteLine(postScript);
-            prologEngine.markKBRDF(solutionMt);
+            prologEngine.markKBNonScratchPad(solutionMt);
 
         }
 

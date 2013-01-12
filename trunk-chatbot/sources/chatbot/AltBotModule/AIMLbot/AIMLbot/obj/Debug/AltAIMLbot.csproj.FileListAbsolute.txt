@@ -33,8 +33,6 @@ C:\development\opensim4opencog\current\bin\AltAIMLbot.pdb
 C:\development\opensim4opencog\current\bin\AltAIMLbot.XML
 C:\development\opensim4opencog\current\sources\chatbot\AltBotModule\AIMLbot\AIMLbot\obj\Debug\AltAIMLbot.dll
 C:\development\opensim4opencog\current\sources\chatbot\AltBotModule\AIMLbot\AIMLbot\obj\Debug\AltAIMLbot.pdb
-C:\development\opensim4opencog\current\sources\chatbot\AltBotModule\AIMLbot\AIMLbot\obj\Debug\RTParser.GUI.AIMLPadEditor.resources
-C:\development\opensim4opencog\current\sources\chatbot\AltBotModule\AIMLbot\AIMLbot\obj\Debug\AltAIMLbot.csproj.GenerateResource.Cache
 D:\dev\Cogbot2012-10-01\sources\chatbot\AltBotModule\AIMLbot\AIMLbot\obj\Debug\ResolveAssemblyReference.cache
 D:\dev\Cogbot2012-10-01\bin\AltAIMLbot.dll
 D:\dev\Cogbot2012-10-01\bin\AltAIMLbot.pdb

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define MERGED_RDFSTORE
+using System;
 using System.Collections.Generic;
 using System.Collections;
 using System.Data;
@@ -22,6 +23,9 @@ using StringWriter = System.IO.StringWriter;
 
 using TermList = LogicalParticleFilter1.SIProlog.PartListImpl;
 using PartList = LogicalParticleFilter1.SIProlog.PartListImpl;
+#if MERGED_RDFSTORE
+using GraphWithDef = LogicalParticleFilter1.SIProlog.PNode;
+#endif
 
 using System.Threading;
 //using GraphWithDef = LogicalParticleFilter1.SIProlog.;
@@ -45,6 +49,7 @@ namespace LogicalParticleFilter1
         // https://github.com/abresas/prologjs
         // https://github.com/crcx/chrome_prolog
 
+        public static int DeveloperSanityChecks = 0;
         //public QueryContext test; 
         /// <summary>
         ///  A plain old super simple prolog interpreter
@@ -60,10 +65,20 @@ namespace LogicalParticleFilter1
         public int maxMtSize = 64000;
         public const string FUNCTOR_CONS = "cons";//const
         public const string FUNCTOR_NIL = "nil";// "nil";
+        private static Term _TERM_TRUE = null;
+
         public delegate void chemSysDelegate(string cmd);
         public chemSysDelegate chemSysCommandProcessor = null;
 
         public bool lazyTranslate = false; // translate KB text to internal on entry or on first use
+        private static ulong _CONSP = 0;
+        public static ulong CONSP
+        {
+            get
+            {
+                return ++_CONSP;
+            }
+        }
 
         public static PGraph GlobalKBGraph = new PGraph();
         public PGraph KBGraph = GlobalKBGraph ?? new PGraph();
@@ -368,6 +383,8 @@ function hidetip()
                         if (queryv.ToLower() == "preds")
                         {
                             writer.WriteLine("<h2>Siprolog Preds List</h2>");
+                            SharedGlobalPredDefsDirty = true;
+                            UpdateSharedGlobalPredDefs();
                             lock (SharedGlobalPredDefs)
                             {
                                 foreach (var kpp in SharedGlobalPredDefs)
@@ -375,6 +392,8 @@ function hidetip()
                                     kpp.Value.WriteHtmlInfo(writer);
                                 }
                             }
+                            UpdateSharedGlobalPredDefs();
+                            WriteMtInfo(writer, rdfDefMT, serverRoot, false);
                             return;
                         }
                         if (queryv.ToLower() == "listing")
@@ -470,17 +489,49 @@ function hidetip()
             if (qnode != null)
             {
                 ensureCompiled(qnode, ContentBackingStore.Prolog);
+                if (DeveloperSanityChecks > 1)
+                {
+                    var kbContents0 = findVisibleKBRulesSorted(mt);
+                    ensureCompiled(qnode, ContentBackingStore.RdfMemory);
+                    ensureCompiled(qnode, ContentBackingStore.Prolog);
+                    var kbContents1 = findVisibleKBRulesSorted(mt);
+                    if (kbContents0.Count != kbContents1.Count)
+                    {
+                        Warn("findVisibleKBRulesSorted changed size {0}->{1}", kbContents0.Count, kbContents1.Count);
+                    }
+                }
             }
             var kbContents = findVisibleKBRulesSorted(mt);
             int total = kbContents.Count;
             int local = 0;
+            int showInheritedCount = 300;
             if (qnode != null) local = qnode.pdb.rules.Count;
+            int inherited = total - local;
+            bool showInherited = (local > inherited);
+            if (local == 0) showInherited = true;
+            if (inherited < showInheritedCount)
+            {
+                showInheritedCount = inherited;
+            }
             writer.WriteLine(
-                "<h3> KB Contents (<font color='blue'>Blue local</font> {0}) (<font color='darkgreen'>Green Inherited</font> {1})</h3>",
-                local, total - local);
+                "<h3> KB Contents (<font color='blue'>Blue local</font> {0}) (<font color='darkgreen'>Green Inherited ({2})</font> {1})</h3>",
+                local, inherited,
+                !showInherited ? "unshown" :
+                showInheritedCount >= inherited ? "all shown" : "showing the first " + showInheritedCount);
             if (toplevel) writer.WriteLine("<hr/>");
+            int shown = 0;
+            var qnodeID = qnode == null ? mt : qnode.id;
             foreach (Rule r in kbContents)
             {
+                var rmt = r.optHomeMt;
+                bool localMT = (qnodeID == rmt);
+                if (!localMT)
+                {
+                    if (!showInherited)
+                        continue;
+                    shown++;
+                    if (shown > showInheritedCount) showInherited = false;
+                }
                 WriteRule(writer, r, qnode);
             }
 
@@ -747,12 +798,13 @@ function hidetip()
             PNode focus = KBGraph.Contains(focusMT);
             if (focus == null) return;
             focus.SourceKind = ContentBackingStore.Prolog;
+            focus.SyncFrequency = FrequencyOfSync.Never;
         }
-        public void markKBRDF(string focusMT)
+        public void markKBNonScratchPad(string focusMT)
         {
             PNode focus = KBGraph.Contains(focusMT);
             if (focus == null) return;
-            focus.SourceKind = ContentBackingStore.RdfMemory;
+            focus.SyncFrequency = FrequencyOfSync.AsNeeded;
         }
         public void markKBSyncType(string focusMT, ContentBackingStore syncType)
         {
@@ -770,11 +822,15 @@ function hidetip()
 
         internal void ensureCompiled(PNode focus, ContentBackingStore forType)
         {
-            //if (DLRConsole.IsOnMonoUnix)
-            //{
+            if (DLRConsole.IsOnMonoUnix)
+            {
             //    focus.SyncFromNow = ContentBackingStore.None;
-            //   return; // KHC: in realbot no rdf to sync for now
-            //}
+                if (forType != ContentBackingStore.Prolog)
+                {
+                    if (focus.SyncFrequency == FrequencyOfSync.Never) return;
+                }
+               return; // KHC: in realbot no rdf to sync for now
+            }
             lock (focus.CompileLock)
             {
                 while (true)
@@ -796,15 +852,18 @@ function hidetip()
         }
         internal void syncStep(PNode focus)
         {
-            //if (DLRConsole.IsOnMonoUnix)
-            //{
-            //    focus.SyncFromNow = ContentBackingStore.None;
-            //    return; // KHC: in realbot no rdf to sync for now
-            //}
+            if (DLRConsole.IsOnMonoUnix)
+            {
+                if (focus.SourceKind != ContentBackingStore.Prolog)
+                {
+                    return; // KHC: in realbot no rdf to sync for now
+                }
+            }
 
             while (true)
             {
                 if (focus.SyncFromNow == ContentBackingStore.None) return;
+                if (focus.SyncFrequency == FrequencyOfSync.Never) return;
                 if (focus.SyncFromNow == ContentBackingStore.RdfServerURI)
                 {
                     focus.SyncFromNow = ContentBackingStore.None;
@@ -816,16 +875,16 @@ function hidetip()
                 {
                     focus.SyncFromNow = ContentBackingStore.None;
                     focus.pushRdfGraphToPrologKB(true);
-                return;
-            }
+                    return;
+                }
                 if (focus.SyncFromNow == ContentBackingStore.Prolog)
-        {
+                {
                     focus.SyncFromNow = ContentBackingStore.None;
                     focus.pushPrologKBToRdfGraph(true);
-                        return;
-                    }
-                        return;
-                    }
+                    return;
+                }
+                return;
+            }
         }
 
         public string retractKB(string fact, string focusMT)
@@ -896,10 +955,12 @@ function hidetip()
                             if (newFact == null)
                             {
                                 rules.RemoveAt(i);
-                                return r;
                             }
-                            rules[i] = newFact;
-                            return oldFact;
+                            else
+                            {
+                                rules[i] = newFact;
+                            }
+                            return r;
                         }
                     }
             }
@@ -914,16 +975,12 @@ function hidetip()
         public void insertKB(string ruleSet, string startMT)
         {
             PNode focus = FindOrCreateKB(startMT);
-            lock (focus.CompileLock)
-            {
-                insertKB_unlocked(ruleSet, focus, startMT);
-            }
+            insertKB(ruleSet, focus);
         }
-        public void insertKB_unlocked(string ruleSet, PNode focus, string startMT)
+        public void insertKB(string ruleSet, PNode focus)
         {
             //replaces KB with a fresh rule set
-            focus.Clear();
-            appendKB_unlocked(ruleSet, focus);
+            lock (focus.CompileLock) loadIntoKB(ruleSet, focus, true);
         }
 
         /// <summary>
@@ -936,35 +993,60 @@ function hidetip()
         {
             lock (focus.CompileLock)
             {
-                appendKB_unlocked(ruleSet, focus);
+                loadIntoKB(ruleSet, focus, false);
             }
         }
         public void appendKB(string ruleSet, string startMT)
         {
             // Adds a string rule set
-            PNode focus = FindOrCreateKB(startMT);
-            lock (focus.CompileLock)
-            {
-                appendKB_unlocked(ruleSet, focus);
-            }
+            loadIntoKB(ruleSet, startMT, false);
         }
-        public void appendKB_unlocked(string ruleSet, PNode focus)
+
+        public void loadIntoKB(string ruleSet, PNode focus, bool clearFirst)
+        {
+            if (clearFirst) focus.Clear();
+            loadIntoKB(ruleSet, focus.Id, clearFirst);
+        }
+        public void loadIntoKB(string ruleSet, String startMT, bool clearFirst)
         {
             if (ruleSet != null && ruleSet.Trim() == "") return;
-            string startMT = focus.Id;
             {
                 Dictionary<string, RuleList> tempKB = ParseKEText(startMT, ruleSet);
                 foreach (string kb in tempKB.Keys)
                 {
                     var subKB = MakeRepositoryKB(kb);
-                    lock (subKB.CompileLock) appendKB_unlocked(tempKB[kb], subKB);
+                    loadIntoKB(tempKB[kb], subKB, clearFirst);
                 }
             }
         }
-        public void appendKB_unlocked(RuleList ruleSet, PNode focus)
+        public void loadIntoKB(RuleList ruleSet, PNode focus, bool clearFirst)
         {
+            lock (focus.CompileLock)
+            {
+                loadIntoKB_unlocked(ruleSet, focus, clearFirst);
+                if (DeveloperSanityChecks > 0)
+                {
+                    ensureCompiled(focus, focus.SourceKind);
+                    if (DeveloperSanityChecks > 1)
+                    {
+                        ensureCompiled(focus, ContentBackingStore.Prolog);
+                        ensureCompiled(focus, ContentBackingStore.RdfMemory);
+                    }
+                }
+            }
+        }
+
+        public void loadIntoKB_unlocked(RuleList ruleSet, PNode focus, bool clearFirst)
+        {
+            if (clearFirst) focus.Clear();
             if (focus.IsDataFrom(ContentBackingStore.Prolog))
             {
+                if (clearFirst)
+                {
+                    focus.pdb.rules = ruleSet;
+                    focus.SyncFromNow = ContentBackingStore.Prolog;
+                    return;
+                }
                 focus.pdb.index.Clear();
                 lock (focus.pdb.rules)
                 {
@@ -976,7 +1058,18 @@ function hidetip()
                 focus.SyncFromNow = ContentBackingStore.Prolog;
                 return;
             }
-            Warn("KB " + focus + " is not from Prolog but instead from " + focus.SourceKind);
+            var rdfGraphWithDefs = focus.RdfStore;
+            foreach (Rule rule in ruleSet)
+            {
+                try
+                {
+                    rdfGraphWithDefs.AddRuleToRDF(rule);
+                }
+                catch (Exception e)
+                {
+                    Warn(e);
+                }
+            }
         }
         public PNode FindOrCreateKB(string startMT)
         {
@@ -988,7 +1081,7 @@ function hidetip()
 
         private PNode FindOrCreateKB_unlocked(string startMT)
         {
-            PNode focus = KBGraph.Contains(startMT.ToString());
+            PNode focus = KBGraph.Contains(startMT);
             if (focus == null)
             {
                 focus = MakeRepositoryKB(startMT);// //new PNode(startMT);
@@ -998,31 +1091,46 @@ function hidetip()
         }
 
         /// <summary>
-        /// Appends KB with a file
+        /// loads a file (clear and overwrite)
         /// </summary>
         /// <param name="filename"></param>
         /// <param name="startMT"></param>
         public void loadKB(string filename, string startMT)
         {
             //loads a file (clear and overwrite)
+            loadKEText(startMT, FromStream(filename), true);
+        }
+
+        private static string FromStream(string filename)
+        {
+            var fi = new FileInfo(filename);
+            if (!File.Exists(filename))
+            {
+                var newfilename = "aiml/shared_ke/" + filename;
+                if (File.Exists(newfilename))
+                {
+                    filename = newfilename;
+                }
+            }
+          
             if (File.Exists(filename))
             {
-                StreamReader streamReader = new StreamReader(filename);
-                string ruleSet = streamReader.ReadToEnd();
-                streamReader.Close();
-                loadKEText(startMT, ruleSet);
+                filename = new FileInfo(filename).FullName;      
             }
+
+            StreamReader streamReader = new StreamReader(filename, true);
+            string ruleSet = streamReader.ReadToEnd();
+            streamReader.Close();
+            return ruleSet;
         }
 
         public string atomize(string atomName)
-        {
+        {           
             if (atomName.Length > 1)
             {
-                atomName = atomName.Substring(0, 1).ToLower() + atomName.Substring(1);
-            }
-            else
-            {
-                atomName = atomName.Substring(0, 1).ToLower();
+                atomName = atomName.Trim('.', ' ');
+                char c0 = atomName[0];
+                if (char.IsLetter(c0) && char.IsUpper(c0)) return "'" + atomName + "'";
             }
             return atomName;
         }
@@ -1047,14 +1155,11 @@ function hidetip()
             // you can say "mt:microtheory" to route the following lines into the MT
             // "genlmt:parentmt" will make a graph connection
             // the rest is to be determined
+            string source = FromStream(filename);
 
-            if (File.Exists(filename))
+            if (source != null)
             {
-                StreamReader streamReader = new StreamReader(filename);
-                string ruleSet = streamReader.ReadToEnd();
-                streamReader.Close();
-                curKB = startMT = startMT ?? curKB ?? "baseKB";
-                loadKEText(startMT, ruleSet);
+                loadKEText(startMT, source);
             }
             else
             {
@@ -1064,29 +1169,40 @@ function hidetip()
 
 
         /// <summary>
-        /// Appends KBs
+        /// Replaces KBs (use loadKEText(string startMT, string ruleSet, false)) intead
         /// </summary>
         /// <param name="startMT"></param>
         /// <param name="ruleSet"></param>
         public void loadKEText(string startMT, string ruleSet)
         {
+            loadKEText(startMT, ruleSet, true);
+        }
+        public void loadKEText(string startMT, string ruleSet, bool clearFirst)
+        {
             if (ruleSet != null)
             {
-                var pMT = curKB;
+                var restoreThreadKB = curKB;
                 Dictionary<string, RuleList> tempKB = ParseKEText(startMT, ruleSet);
                 foreach (string kb in tempKB.Keys)
                 {
-                    ConsoleWriteLine("INSERT INTO :{0}", kb);
+                    RuleList newRules = tempKB[kb];
+                    var focus = MakeRepositoryKB(kb);
+                    ConsoleWriteLine("{0} {1} Rules INTO {2}",
+                                     clearFirst ? "REPLACING" : "APPENDING",
+                                     newRules.Count,
+                                     focus);
                     //insertKB(tempKB[kb], kb);
-                    appendKB(tempKB[kb], MakeRepositoryKB(kb));
+                    loadIntoKB(newRules, focus, clearFirst);
                 }
-                curKB = pMT;
+                curKB = restoreThreadKB;
             }
         }
 
         Dictionary<string, RuleList> ParseKEText(string startMT, string ruleSet)
         {
-            string curKB = startMT;
+            // if startMT is null use the global variable
+            string parseKB = startMT ?? curKB;
+            // code below uses parseKB
             Dictionary<string, RuleList> tempKB = new Dictionary<string, RuleList>();
             ///string[] lines = ruleSet.Split('\n');
             string curConst = "";
@@ -1094,6 +1210,7 @@ function hidetip()
                 do
                 {
                     if (ruleSet.Trim() == "") break;
+                    bool readProlog = false;
                     string line = toEndOfLine(ref ruleSet);
                     try
                     {
@@ -1105,64 +1222,79 @@ function hidetip()
                             continue;
                         }
                         if (line.StartsWith(";") || line.StartsWith("%")) continue;
+                        if (line.StartsWith("exit:")) return tempKB;
                         if (line.StartsWith("."))
                         {
-                            
+                            continue;
                         }
-                        if (line.StartsWith("exit:")) break;
-                        if (line.Contains(":") && !line.Contains(":-"))
+                        do
                         {
+                            if (!line.Contains(":") || line.Contains(":-"))
+                            {
+                                readProlog = true;
+                                break;
+                            }
                             string[] args = line.Split(':');
                             string cmd = args[0].Trim().ToLower();
                             // if any non letters in our KE text directive parse it as prolog instead
                             if (!Regex.Match(cmd, "^[a-z]+$").Success)
                             {
+                                readProlog = true;
                                 break;
                             }
-                            string val = args[1].Trim();
+                            // we need to trim off period and and spaces before the period
+                            string val = TrimAndRemoveTrailingPeriod(args[1]);
                             if (cmd == "tbc")
                             {
                                 continue;
                             }
                             if (cmd == "mt")
                             {
+                                parseKB = val;
                                 curKB = val;
                                 continue;
                             }
-                            if (cmd == "constant")
+                            if (cmd == "base")
                             {
-                                curConst = atomize(val).Replace(".", "");
+                                // todo process base                            
                                 continue;
                             }
-                            if (cmd == "const")
+                            if (cmd == "const" || cmd == "constant" || cmd == "comment")
                             {
-                                curConst = atomize(val).Replace(".", "");
+                                curConst = val;
+                                continue;
+                            }
+                            if (cmd == "predicate")
+                            {
+                                Term t = ParseTerm(new Tokeniser(val), startMT) as Term;
+                                DocumentTerm(t, false);
+                                curConst = t.name;
                                 continue;
                             }
                             if (cmd == "genlmt")
                             {
-                                connectMT(curKB, val);
+                                connectMT(parseKB, val);
                                 continue;
                             }
                             if (cmd == "nonmt")
                             {
-                                disconnectMT(curKB, val);
+                                disconnectMT(parseKB, val);
                                 continue;
                             }
- 
+
                             if (cmd == "genlmtconst")
                             {
-                                connectMT(curKB, curConst);
+                                connectMT(parseKB, curConst);
                                 continue;
                             }
                             if (cmd == "alias")
                             {
-                                aliasMap[val] = curKB;
+                                aliasMap[val] = parseKB;
                                 continue;
                             }
                             if (cmd == "include")
                             {
-                                loadKEFile(curKB, val);
+                                loadKEFile(parseKB, val);
                                 continue;
                             }
                             if (cmd == "chemsys")
@@ -1182,8 +1314,8 @@ function hidetip()
                                 newPred = newPred.Replace(",,", ",0,");
                                 if (!newPred.Contains(":"))
                                 {
-                                    if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = new RuleList();
-                                    tempKB[curKB].Add(ParseRule(new Tokeniser(newPred), curKB));
+                                    if (!tempKB.ContainsKey(parseKB)) tempKB[parseKB] = new RuleList();
+                                    tempKB[parseKB].Add(ParseRule(new Tokeniser(newPred), parseKB));
 
                                 }
                                 continue;
@@ -1196,65 +1328,91 @@ function hidetip()
                                 //  mt:module_name
                                 //  module(module_name).
 
+                                parseKB = val;
                                 curKB = val;
                                 val = atomize(val);
                                 string uniPred = String.Format("module({0}).\n", val);
-                                if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = new RuleList();
-                                tempKB[curKB].Add(ParseRule(new Tokeniser(uniPred), curKB));
+                                if (!tempKB.ContainsKey(parseKB)) tempKB[parseKB] = new RuleList();
+                                tempKB[parseKB].Add(ParseRule(new Tokeniser(uniPred), parseKB));
                                 continue;
                             }
 
                             //default is to make a binary pred of "cmd(curConst,val)."
-                            val = val.Replace(".", "");
+                            val = TrimAndRemoveTrailingPeriod(val);
+                            cmd = TrimAndRemoveTrailingPeriod(args[0]);
                             if (val.Length > 0)
                             {
                                 val = atomize(val);
-                                string binaryPred = String.Format("{0}({1},{2}).\n", cmd, curConst, val);
-                                var rule = ParseRule(new Tokeniser(binaryPred), curKB);
+                                string binaryPred = String.Format("{0}({1},{2}).\n", cmd, atomize(curConst), val);
+                                var rule = ParseRule(new Tokeniser(binaryPred), parseKB);
                                 if (rule != null)
                                 {
-                                    if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = new RuleList();
-                                    tempKB[curKB].Add(rule);
+                                    if (!tempKB.ContainsKey(parseKB)) tempKB[parseKB] = new RuleList();
+                                    tempKB[parseKB].Add(rule);
                                     continue;
-                                } 
+                                }
                                 else
                                 {
+                                    readProlog = true;
+                                    break;
                                     // fall thru to other reader.. the ":" confused us
                                 }
                             }
+                        } while (false);
+                        if (!readProlog)
+                        {
+                            continue;
                         }
                         //else
                         {
                             string was = line;
-                            try
+                            Tokeniser firstTokenizer = new Tokeniser(was);
+                            var rule = ParseRule(firstTokenizer, parseKB);
+                            if (rule == null)
                             {
-                                var rule = ParseRule(new Tokeniser(was), curKB);
-                                if (rule == null)
+                                if (!was.EndsWith("."))
                                 {
-                                    Tokeniser newTokeniser = new Tokeniser(was);
-                                    string kb = curKB;
-                                    tl_spy_prolog_reader = true;
-                                    rule = ParseRule(newTokeniser, kb);
-                                    tl_spy_prolog_reader = false;
+                                    firstTokenizer = new Tokeniser(was + ".");
+                                    rule = ParseRule(firstTokenizer, parseKB);
+                                }
+                            }
+                            string remainder = firstTokenizer.remainder;
+                            if (remainder.Trim().Length > 0)
+                            {
+                                prolog_reader_debug("remainder found");
+                                ruleSet = remainder + "\n" + ruleSet;
+                            }
+                            if (rule == null)
+                            {
+                                if (trace)
+                                {
                                     Warn("Could not parse: " + was);
                                     continue;
                                 }
-                                if (!tempKB.ContainsKey(curKB)) tempKB[curKB] = new RuleList();
-                                tempKB[curKB].Add(rule);
+                                Tokeniser newTokeniser = new Tokeniser(was);
+                                string kb = parseKB;
+                                tl_spy_prolog_reader = true;
+                                rule = ParseRule(newTokeniser, kb);
+                                tl_spy_prolog_reader = false;
+                                Warn("Could not parse: " + was);
+                                continue;
                             }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine("EXCEPTION: in line '{0}' caused '{1}'", line,e.Message);
-                            }
+                            if (!tempKB.ContainsKey(parseKB)) tempKB[parseKB] = new RuleList();
+                            tempKB[parseKB].Add(rule);
                         }
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine("EXCEPTION: in line '{0}' caused '{1}'", line, e.Message);
                     }
-                  } while (ruleSet.Trim() != "");
+                } while (ruleSet.Trim() != "");
             }
             return tempKB;
+        }
+
+        private string TrimAndRemoveTrailingPeriod(string val)
+        {
+            return val.Trim().TrimEnd('.').TrimEnd();
         }
 
         private string toEndOfLine(ref string ruleSet)
@@ -1324,11 +1482,19 @@ function hidetip()
         public void parseRuleset()
         {
             inGlobalTest();
-            var outr = parseRuleset(testruleset, "");
+            var testKB = "testKB";
+            clearKB(testKB);
+            var outr = parseRuleset(testruleset, testKB);
             testdb.rules = outr;
         }
         public RuleList parseRuleset(string rulesIn, string homeMt)
         {
+            var pmt = ParseKEText(homeMt, rulesIn);
+            if (pmt != null && pmt.Count == 1)
+            {
+                var ruleList0 = pmt.Values.FirstOrDefault();
+                return ruleList0;
+            }
             string[] rules = rulesIn.Split('\n');
             RuleList ruleList = new RuleList();
             var outi = 0;
@@ -1344,7 +1510,7 @@ function hidetip()
                     or.optHomeMt = homeMt;
                     ruleList.Add(or);
                     // print ("Rule "+outi+" is : ");
-                    if (show) or.print();
+                    if (show) or.print(Console.Write);
                 }
             }
             return ruleList;
@@ -1420,7 +1586,7 @@ function hidetip()
 
             Dictionary<string, string> bindingsDict = new Dictionary<string, string>();
             string query = inQuery;
-            PartList qlist = ParseBody(new Tokeniser(query), queryMT);
+            PartList qlist = ParseBody(query, queryMT);
             if (qlist == null)
             {
                 Warn("An error occurred parsing the query '{0}.\n", query);
@@ -1429,9 +1595,10 @@ function hidetip()
             Body q = new Body(qlist);
             if (show)
             {
-                Console.Write("Query is: ");
-                q.print();
-                ConsoleWriteLine("\n\n");
+                Action<string> w = Console.Write;
+                w("Query is: ");
+                q.print(w);
+                w("\n\n");
             }
 
             var ctx = MakeQueryContext(queryMT, true, null);
@@ -1452,7 +1619,7 @@ function hidetip()
         public void askQuery(string inQuery, string queryMT)
         {
             var query = inQuery;
-            var qlist = ParseBody(new Tokeniser(query), queryMT);
+            var qlist = ParseBody(query, queryMT);
             if (qlist == null)
             {
                 Warn("An error occurred parsing the query '{0}.\n", query);
@@ -1461,9 +1628,10 @@ function hidetip()
             Body q = new Body(qlist);
             if (show)
             {
-                Console.Write("Query is: ");
-                q.print();
-                ConsoleWriteLine("\n\n");
+                Action<string> w = Console.Write;
+                w("Query is: ");
+                q.print(w);
+                w("\n\n");
             }
 
             var vs = varNames(q.plist);
@@ -1503,7 +1671,7 @@ function hidetip()
         public void askQuery(string query, string queryMT, out List<Dictionary<string, string>> outBindings)
         {
             outBindings = new List<Dictionary<string, string>>();
-            PartList qlist = ParseBody(new Tokeniser(query), queryMT);
+            PartList qlist = ParseBody(query, queryMT);
             if (qlist == null)
             {
                 Warn("An error occurred parsing the query '{0}.\n", query);
@@ -1523,9 +1691,10 @@ function hidetip()
                 Body q = new Body(qlist);
                 if (show)
                 {
-                    Console.Write("Query is: ");
-                    q.print();
-                    ConsoleWriteLine("\n\n");
+                    Action<string> w = Console.Write;
+                    w("Query is: ");
+                    q.print(w);
+                    w("\n\n");
                 }
 
                 var context = varNames(q.plist);
@@ -1548,7 +1717,7 @@ function hidetip()
                     1,
                     delegate(PEnv env)
                     {
-                        if (context.Length == 0)
+                        if (context.Arity == 0)
                         {
                             //TRUE
                         }
@@ -1567,7 +1736,7 @@ function hidetip()
                                 outBindingStrings.Add(bindDictStrings);
                             }
 
-                            for (var i = 0; i < context.Length; i++)
+                            for (var i = 0; i < context.Arity; i++)
                             {
                                 string k = (((Variable)context.ArgList[i]).name);
                                 //string v = ((Atom)value(new Variable(((Variable)context.alist[i]).name + ".0"), env)).ToString();
@@ -1578,7 +1747,11 @@ function hidetip()
                                 }
                                 if (doStrings)
                                 {
-                                    string v = part.ToString();
+                                    string v = part.ToSource(SourceLanguage.Text);
+                                    if (v.Contains("http"))
+                                    {
+                                      Warn("Returning RDF to external code");   
+                                    }
                                     bindDictStrings[k] = v;
                                 }
 
@@ -1596,7 +1769,7 @@ function hidetip()
         public void parseQuery()
         {
             inGlobalTest();
-            PartList qlist = ParseBody(new Tokeniser(testquery), null);
+            PartList qlist = ParseBody(testquery, null);
             if (qlist == null)
             {
                 Warn("An error occurred parsing the query '{0}.\n", testquery);
@@ -1605,9 +1778,10 @@ function hidetip()
             Body q = new Body(qlist);
             if (show)
             {
-                Console.Write("Query is: ");
-                q.print();
-                ConsoleWriteLine("\n\n");
+                Action<string> w = Console.Write;
+                w("Query is: ");
+                q.print(w);
+                w("\n\n");
             }
 
             var vs = varNames(q.plist);
@@ -1634,15 +1808,16 @@ function hidetip()
 
         private void inGlobalTest()
         {
-            throw ErrorBadOp("inGlobalTest");
+            tl_spy_prolog_reader = true;
+           /// throw ErrorBadOp("inGlobalTest");
         }
         #endregion
         #region interfaceUtils
 
         public static PartList termVarNames(Term t)
         {
-            PartList outv = varNames(t.partlist);
-            if (t.headIsVar())
+            PartList outv = varNames(t.ArgList);
+            if (t.headIsVar)
             {
                 outv.AddPart(new Variable(t.name));
             }
@@ -1655,31 +1830,31 @@ function hidetip()
 
 
             TermList termList = plist.ArgList;
-            for (var i = 0; i < plist.Length; i++)
+            for (var i = 0; i < plist.Arity; i++)
             {
                 Part part = termList[i];
                 if (((Part)part) is IAtomic) continue;
 
                 if (((Part)part) is Variable)
                 {
-                    for (var j = 0; j < outv.Length; j++)
+                    for (var j = 0; j < outv.Arity; j++)
                         if (((Variable)outv.ArgList[j]).name == ((Variable)part).name) goto mainc;
                     //outv.InsertPart(outv.Length, plist.alist[i]);
                     outv.AddPart((Variable)part);
                 }
                 else if (((Part)part) is Term)
                 {
-                    PartList o2 = varNames(((Term)part).partlist);
+                    PartList o2 = varNames(((Term)part).ArgList);
 
-                    for (var j = 0; j < o2.Length; j++)
+                    for (var j = 0; j < o2.Arity; j++)
                     {
-                        for (var k = 0; k < outv.Length; k++)
+                        for (var k = 0; k < outv.Arity; k++)
                             if (((Variable)o2.ArgList[j]).name == ((Variable)outv.ArgList[k]).name) goto innerc;
                         //outv.InsertPart(outv.Length, o2.alist[j]);
                         outv.AddPart(o2.ArgList[j]);
                     innerc: j = j;
                     }
-                    if (((Term)part).headIsVar())
+                    if (((Term)part).headIsVar)
                     {
                         outv.AddPart(new Variable(((Term)part).name));
                     }
@@ -1688,9 +1863,9 @@ function hidetip()
                 {
                     PartList o2 = varNames(((PartList)part));
 
-                    for (var j = 0; j < o2.Length; j++)
+                    for (var j = 0; j < o2.Arity; j++)
                     {
-                        for (var k = 0; k < outv.Length; k++)
+                        for (var k = 0; k < outv.Arity; k++)
                             if (((Variable)o2.ArgList[j]).name == ((Variable)outv.ArgList[k]).name) goto innerc2;
                         //outv.InsertPart(outv.Length, o2.alist[j]);
                         outv.AddPart(o2.ArgList[j]);
@@ -1724,8 +1899,9 @@ function hidetip()
                 //What if the pred is a variable ?
                 var term = (Term)list;
                 string nextName = term.name;
-                var tpl = term.partlist;
-                if (term.headIsVar())
+                var tpl = term.ArgList;
+                bool termheadIsVar = term.headIsVar;
+                if (termheadIsVar)
                 {
                     nextName = nextName + "." + level.ToString();
                 }
@@ -1733,19 +1909,19 @@ function hidetip()
                 {
                     if (tpl.IsGround)
                     {
-                        Term outv0 = new Term(nextName, tpl);
+                        Term outv0 = new Term(nextName, termheadIsVar, tpl);
                         outv0.parent = parent;
                         return (T)(object)outv0;
                     }
                 }
-                Term outv = new Term(nextName, (PartList)renameVariables<PartList>(tpl, level, parent)) { excludeThis = term.excludeThis };
+                Term outv = new Term(nextName,termheadIsVar, (PartList)renameVariables<PartList>(tpl, level, parent)) { excludeThis = term.excludeThis };
                 outv.parent = parent;
                 return (T)(object)outv;
             }
 
             PartList outl = new PartList();
             PartList inL = (PartList)list;
-            for (var i = 0; i < inL.Length; i++)
+            for (var i = 0; i < inL.Arity; i++)
             {
                 outl.AddPart(renameVariables((Part)inL.ArgList[i], level, parent));
                 /*
@@ -1786,7 +1962,7 @@ function hidetip()
         public ProveResult prove(PartList goalList, PEnv environment, PDB dbIn, int level, reportDelegate reportFunction)
         {
             //DEBUG: print ("in main prove...\n");
-            if (goalList.Length == 0)
+            if (goalList.Arity == 0)
             {
                 reportFunction(environment);
 
@@ -1811,7 +1987,7 @@ function hidetip()
             // Then prove the new goallist. (recursive call)
 
             Term thisTerm = (Term)goalList.First();
-            if (trace) { Console.Write("Debug:LEVEL {0} thisterm = ", level); thisTerm.print(); Console.Write(" Environment:"); environment.print(); Console.Write("\n"); }
+            if (trace) { Console.Write("Debug:LEVEL {0} thisterm = ", level); thisTerm.print(Console.Write); Console.Write(" Environment:"); environment.print(Console.Write); Console.Write("\n"); }
 
 
             PDB db;
@@ -1840,14 +2016,14 @@ function hidetip()
                 // Stick the new body list
                 PartList newGoals = new PartList();
                 int j;
-                for (j = 1; j < goalList.Length; j++)
+                for (j = 1; j < goalList.Arity; j++)
                 {
                     newGoals.InsertPart(j - 1, goalList.ArgList[j]);
                 }
                 return builtin(thisTerm, newGoals, environment, db, level + 1, reportFunction);
             }
 
-            bool termIsVar = thisTerm.headIsVar();
+            bool termIsVar = thisTerm.headIsVar;
             if (db.index.Count == 0)
             {
                 db.initIndex();
@@ -1875,7 +2051,7 @@ function hidetip()
                 }
             }
 
-            if (trace) { Console.Write("Debug: in rule selection. thisTerm = "); thisTerm.print(); Console.Write("\n"); }
+            if (trace) { Console.Write("Debug: in rule selection. thisTerm = "); thisTerm.print(Console.Write); Console.Write("\n"); }
             //for (var i = 0; i < db.rules.Count; i++)
             lock (localRules)
             {
@@ -1889,7 +2065,7 @@ function hidetip()
                         if (trace)
                         {
                             Console.Write("DEBUG: excluding rule number " + i + " in attempt to satisfy ");
-                            thisTerm.print();
+                            thisTerm.print(Console.Write);
                             Console.Write("\n");
                         }
                         continue;
@@ -1898,7 +2074,7 @@ function hidetip()
                     // We'll need better unification to allow the 2nd-order
                     // rule matching ... later.
                     Term rulehead = rule.head;
-                    bool ruleIsVar = rulehead.headIsVar();
+                    bool ruleIsVar = rulehead.headIsVar;
                     if ((termIsVar == false) && (ruleIsVar == false))
                     {
                         // normal operation, both are atomic
@@ -1923,7 +2099,7 @@ function hidetip()
                     if (trace)
                     {
                         Console.Write("Debug: in rule selection[{0} of {1}]. rule = ", i, localRules.Count);
-                        rule.print();
+                        rule.print(Console.Write);
                         Console.Write("\n");
                     }
 
@@ -1936,14 +2112,14 @@ function hidetip()
                     }
                     else
                     {
-                        renamedHead = new Term(rulehead.name,
-                                               renameVariables(rulehead.partlist, level, thisTerm));
+                        renamedHead = new Term(rulehead.name, rulehead.headIsVar,
+                                               renameVariables(rulehead.ArgList, level, thisTerm));
                     }
                     // renamedHead.ruleNumber = i;
                     if (trace)
                     {
                         Console.Write("DEBUG:  renamedHead = ");
-                        renamedHead.print();
+                        renamedHead.print(Console.Write);
                         Console.Write("\n");
                     }
 
@@ -1953,11 +2129,11 @@ function hidetip()
                         if (trace)
                         {
                             Console.Write("DEBUG:  unify( thisTerm=");
-                            thisTerm.print();
+                            thisTerm.print(Console.Write);
                             Console.Write(", renamedHead = ");
-                            renamedHead.print();
+                            renamedHead.print(Console.Write);
                             Console.Write(" in Env:");
-                            environment.print();
+                            environment.print(Console.Write);
                             Console.Write(") failed \n");
                         }
                         continue;
@@ -2000,7 +2176,7 @@ function hidetip()
                         if (trace)
                         {
                             Console.Write("Debug: this goal ");
-                            thisTerm.print();
+                            thisTerm.print(Console.Write);
                             Console.Write(" has been cut.\n");
                         }
                         break;
@@ -2010,7 +2186,7 @@ function hidetip()
                         if (trace)
                         {
                             Console.Write("Debug: parent goal ");
-                            ((Term)thisTerm.parent).print();
+                            ((Term)thisTerm.parent).print(Console.Write);
                             Console.Write(" has been cut.\n");
                             ;
                         }
@@ -2091,14 +2267,14 @@ function hidetip()
             // Rename the variables in the head and body
             // var renamedHead = new Term(rule.head.name, renameVariables(rule.head.partlist.list, level));
 
-            var first = value((Part)thisTerm.partlist.ArgList[0], environment) as IAtomic;
+            var first = value((Part)thisTerm.ArgList.ArgList[0], environment) as IAtomic;
             if (first == null)
             {
                 //print("Debug: Comparitor needs First bound to an Atom, failing\n");
                 return null;
             }
 
-            var second = value((Part)thisTerm.partlist.ArgList[1], environment) as IAtomic;
+            var second = value((Part)thisTerm.ArgList.ArgList[1], environment) as IAtomic;
             if (second == null)
             {
                 //print("Debug: Comparitor needs Second bound to an Atom, failing\n");
@@ -2114,7 +2290,7 @@ function hidetip()
             //if (first.name < second.name) cmp = "lt";
             //else if (first.name > second.name) cmp = "gt";
 
-            var env2 = unify((Part)thisTerm.partlist.ArgList[2], Atom.FromSource(cmp), environment);
+            var env2 = unify((Part)thisTerm.ArgList.ArgList[2], Atom.FromSource(cmp), environment);
 
             if (env2 == null)
             {
@@ -2193,7 +2369,7 @@ function hidetip()
             first.parent = thisTerm;
 
             int j;
-            for (j = 0; j < goalList.Length; j++)
+            for (j = 0; j < goalList.Arity; j++)
             {
                 newGoals.InsertPart(j + 1, goalList.ArgList[j]);
             }
@@ -2207,12 +2383,6 @@ function hidetip()
             return null;
         }
 
-        private Term GetNewGoalPartList(Term thisTerm, int level, PartList subgoal)
-        {
-            Term newGoal = new Term(subgoal.name, (PartList)renameVariables(((PartList)subgoal), level, thisTerm));
-            newGoal.parent = thisTerm;
-            return newGoal;
-        }
         public ProveResult BagOf(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
         {
             // bagof(Term, ConditionTerm, ReturnList)
@@ -2224,7 +2394,8 @@ function hidetip()
 
             Part collect = renameVariables(collect0, level, thisTerm);
             //var newGoal = new Term(subgoal.name, renameVariables(subgoal.ArgList, level, thisTerm));
-            Term newGoal = new Term(subgoal.name, (PartList)renameVariables(((PartList)subgoal), level, thisTerm));
+            Term newGoal = new Term(subgoal.name, false,
+                                    (PartList) renameVariables(((PartList) subgoal), level, thisTerm));
             newGoal.parent = thisTerm;
 
             //var newGoals = [];
@@ -2251,7 +2422,7 @@ function hidetip()
             print("]\n");
             */
 
-            for (int i = anslist.Length; i > 0; i--)
+            for (int i = anslist.Arity; i > 0; i--)
             {
                 answers = MakeList(anslist.ArgList[i - 1], answers);
             }
@@ -2439,7 +2610,7 @@ function hidetip()
             {
                 Warn("SStangly constructed term: " + thisTerm);
             }
-            return thisTerm.partlist;
+            return thisTerm.ArgList;
         }
 
         public ProveResult ExternalAndParse(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
@@ -2546,11 +2717,14 @@ function hidetip()
         public class PEnv : PlHashtable
         {
 
-            public void print()
+            public void print(Action<string> w)
             {
                 foreach (string k in this.Keys)
                 {
-                    Console.Write("{0} = ", k); ((Part)this[k]).print(); Console.WriteLine();
+                    w(k); 
+                    w(" = ");
+                    this[k].print(w);
+                    w("\n");
                 }
             }
             public override string ToString()
@@ -2590,6 +2764,17 @@ function hidetip()
         public class RuleList : IEnumerable
         {
             internal List<Rule> arrayList = new List<Rule>();
+            public static Func<Rule, Rule, bool> DefaultRuleEquality = SameClauses;
+
+            private static bool SameClauses(Rule arg1, Rule arg2)
+            {
+                if (arg1 == null || arg2 == null)
+                {
+                    return arg1 == arg2;
+                }
+                return arg1.SameClause(arg2);
+            }
+
             internal PDB syncPDB;
             /// <summary>
             /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
@@ -2600,7 +2785,8 @@ function hidetip()
             /// <filterpriority>2</filterpriority>
             public override string ToString()
             {
-                return StructToString(this);
+                string named = syncPDB != null ? (syncPDB.startMt+": ") : "ruleList: ";
+                return named + "count=" + Count + ToSource(SourceLanguage.Prolog);
             }
             public string AToString
             {
@@ -2613,11 +2799,14 @@ function hidetip()
 
             public void Add(Rule r)
             {
-                lock (Sync) arrayList.Add(r);
+                lock (Sync)
+                {
+                    arrayList.Add(r);
+                    ClearPdbIndexes();
+                }
             }
             public RuleList()
             {
-
             }
 
             public void RemoveAt(int i)
@@ -2627,16 +2816,40 @@ function hidetip()
                     Rule r = this[i];
                     Release(r);
                     arrayList.RemoveAt(i);
+                    ClearPdbIndexes();
                 }
             }
 
-            private void Release(Rule r)
+            private static void Release(Rule r)
             {
                 var ruleCache = r.rdfRuleCache;
                 if (ruleCache == null) return;
                 r.rdfRuleCache = null;
                 INode tripleInst = ruleCache.RuleNode;
-                if (tripleInst == null) return;
+                if (tripleInst != null && tripleInst.NodeType == NodeType.Blank)
+                {
+                    Release(tripleInst, ruleCache, r);
+                    return;
+                }
+                //ConsoleWriteLine("Remove Rule: " + r);
+                IGraph graph = ruleCache.ContainingGraph ?? tripleInst.Graph;
+                IEnumerable<Triple> found = ruleCache.ToTriples;
+                int fnd = 0;
+                foreach (Triple triple in found)
+                {
+                 //   ConsoleWriteLine("Remove triple: " + triple);
+                    triple.Graph.Retract(triple);
+                    fnd++;
+                }
+            }
+
+            private static void Release(INode tripleInst, RdfRules ruleCache, Rule r)
+            {
+
+                if (tripleInst.NodeType != NodeType.Blank)
+                {
+                    Warn("Removing non Bnode " + r);
+                }
                 //ConsoleWriteLine("Remove Rule: " + r);
                 IGraph graph = ruleCache.ContainingGraph ?? tripleInst.Graph;
                 IEnumerable<Triple> found = LockInfo.CopyOf(graph.GetTriples(tripleInst));
@@ -2659,8 +2872,15 @@ function hidetip()
                     {
                         var old = this[i];
                         if (ReferenceEquals(old, value)) return;
+                        if (false && value == null)
+                        {
+                            // nulling should remove the item
+                            arrayList.RemoveAt(i);
+                            return;
+                        }
                         arrayList[i] = value;
                         Release(old);
+                        ClearPdbIndexes();
                     }
                 }
             }
@@ -2672,7 +2892,7 @@ function hidetip()
                     return arrayList;
                 }
             }
-            public void Clear()
+            private void ClearPdbIndexes()
             {
                 lock (Sync)
                 {
@@ -2686,11 +2906,18 @@ function hidetip()
                             }
                         }
                     }
+                }
+            }
+            public void Clear()
+            {
+                lock (Sync)
+                {
                     foreach (Rule rule in arrayList)
                     {
                         Release(rule);
                     }
                     arrayList.Clear();
+                    ClearPdbIndexes();
                 }
             }
 
@@ -2702,18 +2929,48 @@ function hidetip()
             public RuleList Copy()
             {
                 var ret = new RuleList();
-                ret.arrayList.AddRange(arrayList);
+                lock (Sync) ret.arrayList.AddRange(arrayList);
                 return ret;
             }
 
             public string ToSource(SourceLanguage language)
             {
                 var ret = new StringWriter();
-                foreach (Rule rule in arrayList)
+                lock (Sync) foreach (Rule rule in arrayList)
                 {
                     ret.WriteLine(rule.ToSource(language));
                 }
                 return ret.ToString();
+            }
+            public bool Contains(Rule rule)
+            {
+                return IndexOf(rule, -1, DefaultRuleEquality) != -1;
+            }
+            public int IndexOf(Rule rule)
+            {
+                return IndexOf(rule, -1, DefaultRuleEquality);
+            }
+
+            public int IndexOf(int startAfter, Predicate<Rule> compare)
+            {
+                lock (Sync)
+                {
+                    RuleList rules = this;
+                    for (int i = startAfter + 1; i < rules.Count; i++)
+                    {
+                        Rule r = (Rule)rules[i];
+                        if (compare(r))
+                        {
+                            return i;
+                        }
+                    }
+                }
+                return startAfter;
+            }
+
+            public int IndexOf(Rule rule, int startAfter, Func<Rule, Rule, bool> compare)
+            {
+                return IndexOf(startAfter, r => compare(rule, r));
             }
         }
         public class PDB
@@ -2754,7 +3011,7 @@ function hidetip()
 
             public void initIndex()
             {
-                index["_varpred_"] = new RuleList();
+                var inx = index["_varpred_"] = new RuleList();
                 var rules = this.rules;
                 lock (rules) for (int i = 0; i < rules.Count; i++)
                     {
@@ -2762,9 +3019,9 @@ function hidetip()
                         string name = rule.head.name;
                         if (!index.ContainsKey(name)) { index[name] = new RuleList(); }
                         index[name].Add(rule);
-                        if (rule.head.headIsVar())
+                        if (rule.head.headIsVar)
                         {
-                            index["_varpred_"].Add(rule);
+                            inx.Add(rule);
                         }
                     }
 
@@ -2783,6 +3040,7 @@ function hidetip()
                         _rules.Clear();
                     }
                     _rules = value;
+                    _rules.syncPDB = this;
                 }
             }
 
@@ -2796,7 +3054,41 @@ function hidetip()
 
         public abstract class Part : IHasParent
         {
-            public abstract bool SameClause(Part term, PlHashtable varlist);
+            public static bool operator ==(Part a, Part b)
+            {
+                var an = ReferenceEquals(a, null);
+                var bn = ReferenceEquals(b, null);
+                if (an || bn) return an && bn;
+                return a.Equals(b);
+            }
+            public static bool operator !=(Part a, Part b)
+            {
+                return !(a == b);
+            }
+            /// <summary>
+            /// Prolog Structure compare '=='/2
+            /// </summary>
+            /// <param name="term"></param>
+            /// <param name="varlist"></param>
+            /// <returns></returns>
+            public abstract bool SameClause(Part term, IDictionary<string, string> varlist);
+            /// <summary>
+            /// Like Prolog '=='/2, but it requires variables to have the same identity
+            /// </summary>
+            /// <param name="obj"></param>
+            /// <returns></returns>
+            public abstract bool Equals(Part obj);
+            sealed public override bool Equals(object obj)
+            {
+                if (!(obj is Part)) return false;
+                return Equals((Part)obj);
+            }
+
+            public abstract int GetPlHashCode();
+            sealed public override int GetHashCode()
+            {
+                return GetPlHashCode();
+            }
             public virtual bool IsGround
             {
                 get { return true; }
@@ -2812,28 +3104,34 @@ function hidetip()
             public abstract string type { get; }
             virtual public string name
             {
-                get { throw Missing("Functor/Name"); }
+                get { throw Missing("Name"); }
+            }
+            virtual public object Functor0
+            {
+                get { throw Missing("Functor"); }
             }
             public virtual int Arity
             {
                 get { throw Missing("Arity"); }
             }
-            public virtual TermList ArgList
+            public virtual PartList ArgList
             {
                 get { throw Missing("ArgList"); }
             }
-
             public virtual IHasParent TParent
             {
                 set { }
                 get { return null; }
             }
 
-            public abstract void print();
+            public virtual void print(Action<string> w)
+            {
+                w(ToSource(tl_console_language));            
+            }
 
             public abstract string ToSource(SourceLanguage language);
 
-            public override string ToString()
+            sealed public override string ToString()
             {
                 return ToSource(tl_console_language);
             }
@@ -2861,7 +3159,7 @@ function hidetip()
 
         public class PartListImpl : Part, IEnumerable<Part>, IHasParent
         {
-            private string fuctor;
+            //private string fuctor;
             public override IHasParent TParent
             {
                 get
@@ -2883,16 +3181,35 @@ function hidetip()
             // Part = Variable | Atom | Term
             //public string name;
 
-            public override bool SameClause(Part term, PlHashtable varlist)
+            public override bool SameClause(Part term, IDictionary<string, string> varlist)
             {
                 var term2 = term as PartListImpl;
                 if (term2 == null) return false;
+                if (term2.Arity != Arity) return false;
                 int i = 0;
                 foreach (var s in this)
                 {
                     if (!term2[i++].SameClause(s, varlist)) return false;
                 }
                 return true;
+            }
+
+            public override bool Equals(Part term)
+            {
+                var term2 = term as PartListImpl;
+                if (term2 == null) return false;
+                if (term2.Arity != Arity) return false;
+                int i = 0;
+                foreach (var s in this)
+                {
+                    if (!term2[i++].Equals(s)) return false;
+                }
+                return true;
+            }
+
+            public override int GetPlHashCode()
+            {
+                return Arity;
             }
 
             override public bool IsGround
@@ -2993,7 +3310,7 @@ function hidetip()
                 throw ErrorBadOp("inserting outof order");
             }
 
-            public int Length
+            override public int Arity
             {
                 get
                 {
@@ -3033,14 +3350,14 @@ function hidetip()
 
             }
 
-            public override void print()
+            public override void print(Action<string> writer)
             {
                 bool com = false;
                 // ConsoleWrite("plist(");
                 foreach (Part p in tlist.ToList())
                 {
-                    if (com) ConsolePrint(", ");
-                    p.print();
+                    if (com) writer(", ");
+                    p.print(writer);
                     com = true;
                 }
                 //  ConsoleWrite(")");
@@ -3168,9 +3485,13 @@ function hidetip()
         public const string SYNTAX_LiteralDataType = "{}";
         public const string MustGuessQuotes = null;
 
-        static public Part MakeTermPostReader(String f, PartList partlist)
+        static public Part MakeTermPostReader(String f, bool isHeadVar, PartList partlist)
         {
-            if (partlist.Length == 0) return Atom.FromName(f);
+            if (partlist.Arity == 0)
+            {
+                if (isHeadVar) return new Variable(f);
+                return Atom.FromName(f);
+            }
             if (f == "$obj")
             {
                 Part partlist1 = partlist[0];
@@ -3180,16 +3501,37 @@ function hidetip()
                 }
                 Warn("Not sure how to create a " + partlist);
             }
-            return new Term(f, partlist);
+            return new Term(f, isHeadVar, partlist);
         }
-
-        public class Atom : Part, IAtomic
+        public class Atom : AtomBase, IAtomic
         {
-            public override bool SameClause(Part term, PlHashtable varlist)
+            public Atom(object head)
+                : base(head)
+            {
+            }
+
+            public static bool operator ==(Atom a, Atom b)
+            {
+                return NodeEquality(a.AsRDFNode(), b.AsRDFNode());
+            }
+
+            public static bool operator !=(Atom a, Atom b)
+            {
+                return !(a == b);
+            }
+
+            public static bool NodeEquality(INode x, INode y)
+            {
+                return x.Equals(y);
+            }
+        }
+        abstract public class AtomBase : Part
+        {
+            public override bool SameClause(Part term, IDictionary<string, string> varlist)
             {
                 var term2 = term as Atom;
                 if (ReferenceEquals(term2, null)) return false;
-                return this.Equals(term2);
+                return this.Unify(term2);
             }
 
             public Object objRef;
@@ -3244,13 +3586,39 @@ function hidetip()
             {
                 get
                 {
+                    if (Functor00==null)
+                    {
+                        Functor00 = Functor000;
+                    }
+                    return Functor00;
+                }
+            }
+            private object Functor00;
+            public object Functor000
+            {
+                get
+                {
                     if (Functor0Function != null) return Functor0Function(objRef);
                     return objRef;
                 }
             }
             static public object INodeToObject(object obj)
             {
-                var _name = (INode) obj;
+                var _name = ToValueNode((INode) obj);
+                if (!(_name is IValuedNode))
+                {
+                    var vnode = _name.AsValuedNode();
+                    if (ReferenceEquals(null, vnode))
+                    {
+                    }
+                    else
+                    {
+                        if (!ReferenceEquals(vnode, _name))
+                        {
+                            _name = vnode;
+                        }
+                    }
+                }
                 {
                     if (_name is StringNode)
                     {
@@ -3295,10 +3663,22 @@ function hidetip()
                             return (byte)_name.AsValuedNode().AsInteger();
                         }
                     }
+                    if (!(_name is IUriNode))
+                    {
+                        if (_name is IBlankNode)
+                        {
+                            return _name;
+                        }
+                        if (_name is ILiteralNode)
+                        {
+                            var vnode = _name.AsValuedNode();
+                            return vnode.AsString();
+                        }
+                        return _name;
+                    }
                     string localAname;
                     //if (aname != null) return aname;
                     string path = _name.AsValuedNode().AsString();
-                    if (_name is ILiteralNode) return path;
                     string prefix, uri;
                     bool devolved = GraphWithDef.DevolveURI(rdfDefinations.NamespaceMap, path, out uri, out prefix,
                                                             out localAname);
@@ -3318,26 +3698,41 @@ function hidetip()
             public int hash { get { return GetHashCode(); } }
             public string quoted = null;
             public override string type { get { return "Atom"; } }
-            public Atom(Object head)
+            public AtomBase(Object head)
             {
                 //quoted = quoting;
                 //aname = bareAtomName;
                 objRef = head;
                 if (head is INode)
                 {
+                    objRef = ToValueNode((INode)head);
                     Functor0Function = INodeToObject;
                     // call once to populate the data
-                    var localAname = "" + INodeToObject(objRef);
+                    if (DeveloperSanityChecks > 1)
+                    {
+                        var localAname = "" + INodeToObject(objRef);
+                    }
                 }
                 else if (head is string)
                 {
-                    aname = (string) head;
+                    aname = (string)head;
                     hash_code = aname.GetHashCode();
+                }
+                else
+                {
+                    Warn("unknown atom class: " + objRef.GetType());
+                }
+                string s = ToSource(SourceLanguage.Text);
+                if (!IsString && s.Contains("http"))
+                {
+                    rname = null;
+                    aname = null;
+
                 }
             }
             private static bool MustBeQuoted(string localAname)
             {
-                if (Regex.Match(localAname, @"^([a-z0-9][a-zA-Z0-9_]*)$").Success)
+                if (Regex.Match(localAname, @"^([a-z][a-zA-Z0-9_]*)$").Success)
                 {
                     return false;
                 }
@@ -3348,9 +3743,9 @@ function hidetip()
                 return true;
             }
 
-            public override void print()
+            public override void print(Action<string> w)
             {
-                Console.Write(this.ToSource(tl_console_language));
+                w(this.ToSource(tl_console_language));
             }
 
             public bool IsLiteral
@@ -3377,8 +3772,12 @@ function hidetip()
             {
                 get { return ToSource(tl_console_language) + " as " + objRef.GetType() + "=" + objRef; }
             }
-            public override string ToSource(SourceLanguage language)
+            public override sealed string ToSource(SourceLanguage language)
             {
+                if (language == SourceLanguage.Text)
+                {
+                    return name;
+                }
                 if (true || this.rname == null)
                 {
                     this.rname = string.Intern(StringReadable);
@@ -3407,10 +3806,11 @@ function hidetip()
                     {
                         return "[]";
                     }
-                    if (objRef is NumericNode) return name;
                     if (objRef is INode)
                     {
-                        var node = objRef as IUriNode;
+                        var node1 = ToValueNode((INode)this.objRef);
+                        if (node1 is NumericNode) return name;
+                        var node = node1 as IUriNode;
                         if (node != null)
                         {
                             string url = null;
@@ -3427,13 +3827,17 @@ function hidetip()
                             {
                                 url = node.ToString();
                             }
-                            if (quoted == null || quoted.Length < 2)
+                            if (quoted == null || quoted.Length != 2)
                             {
                                 return "<" + url + ">";
                             }
                             return quoted[0] + (url) + quoted[1];
                         }
-                        ILiteralNode litnode = objRef as ILiteralNode;
+                        if (node1 is IBlankNode)
+                        {
+                            return "<" + node1 + ">";
+                        }
+                        ILiteralNode litnode = node1 as ILiteralNode;
                         // all the below are now Literal Nodes of some type  (we divide into  "strings", numbers and "strings with"^"meaning" and 
                         if (litnode == null)
                         {
@@ -3445,7 +3849,8 @@ function hidetip()
                         var value = litnode.Value;
                         var dt = litnode.DataType;
                         var lt = litnode.Language;
-                        var et = ivnode.EffectiveType;
+                        string et = String.Empty;// ivnode.EffectiveType;
+                        if (dt != null) et = dt.AbsoluteUri;
 
                         if (lt == "" && (dt != null && dt.AbsoluteUri == XmlSpecsHelper.XmlSchemaDataTypeString))
                         {
@@ -3488,14 +3893,6 @@ function hidetip()
                 return "'" + s.Replace("\\", "\\\\").Replace("'", "\\'") + "'";
             }
 
-            public override string ToString()
-            {
-                if (objRef is StringNode)
-                {
-                    return name;
-                }
-                return name;
-            }
             public static Atom MakeString(string s)
             {
                 return MakeLiteral(s, "", XmlSpecsHelper.XmlSchemaDataTypeString);
@@ -3635,17 +4032,17 @@ function hidetip()
             {
                 switch (quoting)
                 {
-                    case null:
-                        {
-
-                            return GetValuedNode(s);
-                        }
                     case SYNTAX_DoubleQuotes:
                         {
                             return Atom.MakeString(s).AsRDFNode();
                         }
                     case "":
+                    case null:
                         {
+                            if (IsVarName(s))
+                            {
+                                return rdfDefinations.CreateVariableNode(s);
+                            }
                             return GraphWithDef.CExtracted(rdfDefinations, s);
                         }
                     case "{}":
@@ -3686,17 +4083,9 @@ function hidetip()
 
             public bool Unify(IAtomic atomic)
             {
-                if (ReferenceEquals(this, atomic))
+                if (ReferenceEquals(null, atomic))
                 {
-                    return true;
-                }
-                if (AsRDFNode().CompareTo(atomic.AsRDFNode()) == 0)
-                {
-                    if (!Functor0.Equals(atomic.Functor0))
-                    {
-                        return true;
-                    }
-                    return true;
+                    return false;
                 }
                 if (Functor0.Equals(atomic.Functor0))
                 {
@@ -3741,38 +4130,29 @@ function hidetip()
             /// <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:System.Object"/>. 
             ///                 </param><exception cref="T:System.NullReferenceException">The <paramref name="obj"/> parameter is null.
             ///                 </exception><filterpriority>2</filterpriority>
-            public override bool Equals(object obj)
+            public override bool Equals(Part obj)
             {
                 return Equals(obj as IAtomic);
-            }
-            public bool Equals(Atom obj)
-            {
-                return Equals((IAtomic)obj);
             }
             public bool Equals(IAtomic other)
             {
                 if (ReferenceEquals(null, other)) return false;
                 if (ReferenceEquals(this, other)) return true;
-                if (IsNode && other.IsNode) return AsRDFNode().Equals(other.AsRDFNode());
+                if (IsNode && other.IsNode)
+                {
+                    INode mynode = AsRDFNode();
+                    INode othernode = other.AsRDFNode();
+                    if (mynode.Equals(othernode))
+                    {
+                        return true;
+                    }
+                    return false;
+                }
                 return Equals(other.Functor0, Functor0);
             }
 
 
-            public static bool operator ==(Atom a, Atom b)
-            {
-                return NodeEquality(a.AsRDFNode(), b.AsRDFNode());
-            }
-
-            public static bool operator !=(Atom a, Atom b)
-            {
-                return !(a == b);
-            }
-
-            public static bool NodeEquality(INode x, INode y)
-            {
-                return x.Equals(y);
-            }
-            public override int GetHashCode()
+            public override int GetPlHashCode()
             {
                 if (!hash_code.HasValue)
                 {
@@ -3784,29 +4164,72 @@ function hidetip()
         public class Variable : Part
         {
             public string _name;
+            public bool Anonymous = false;
             public override string name { get { return _name; } }
             public override string type { get { return "Variable"; } }
-            public Variable(string head) { _name = head; }
-            public override void print() { ConsolePrint(this.name); }
-            public override string ToSource(SourceLanguage language) { return this.name; }
+            public Variable(string head)
+            {
+                if (head == null || head == "_")
+                {
+                    Anonymous = true;
+                    head = "ANON_" + SIProlog.CONSP;
+                }
+                _name = head;
+            }
+            public override void print(Action<string> w) { w(ToSource(tl_console_language)); }
+            public override string ToSource(SourceLanguage language)
+            {
+                if (language != SourceLanguage.Prolog) return "?" + this.name;
+                if (Anonymous) return "_";
+                return this.name;
+            }
 
             override public bool IsGround
             {
                 get { return false; }
             }
-            public override bool SameClause(Part term, PlHashtable varlist)
+            public override bool Equals(Part term)
             {
+                if (Object.ReferenceEquals(this, term)) return true;
                 var term2 = term as Variable;
                 if (term2 == null) return false;
-                if (term2.name == this.name) return true;
-                Part other;
-                if (!varlist.TryGetValue(name, out other))
+                string thisname = this.name;
+                string term2name = term2.name;
+                if (term2name == thisname)
                 {
-                    varlist[name] = term2;
                     return true;
-                }
-                return other.name == term2.name;
+                } 
+                return false;
             }
+            public override int GetPlHashCode()
+            {
+                return name.GetHashCode();
+            }
+            public override bool SameClause(Part term, IDictionary<string, string> varlist)
+            {
+                if (Object.ReferenceEquals(this, term)) return true;
+                var term2 = term as Variable;
+                if (term2 == null) return false;
+                if (varlist == null)
+                {
+                    if (Anonymous) return term2.Anonymous;
+                    return false;
+                }
+                return SameVar(term2.name, this.name, varlist);
+            }
+        }
+        public static bool SameVar(string term2name, string thisname, IDictionary<string, string> varlist)
+        {
+            if (term2name == thisname) return true;
+            string thisothername;
+            if (!varlist.TryGetValue(thisname, out thisothername))
+            {
+                if (varlist.ContainsKey(term2name)) return false;
+                varlist[thisname] = term2name;
+                varlist[term2name] = thisname;
+                return true;
+            }
+            return thisothername == term2name;
         }
         public static bool IsListName(string s)
         {
@@ -3814,7 +4237,7 @@ function hidetip()
         }
         public static bool IsList(Part x)
         {
-            return x is Term && IsListName(x.name) && ((Term)x).Arity == 2;
+            return x is Term && IsListName(x.name) && x.Arity == 2;
         }
         public interface IHasParent
         {
@@ -3822,126 +4245,133 @@ function hidetip()
         }
         public class Term : Part, IHasParent
         {
-            public override bool SameClause(Part term, PlHashtable varlist)
+            public override bool SameClause(Part term, IDictionary<string, string> varlist)
             {
                 var term2 = term as Term;
                 if (term2 == null) return false;
-                if (term2.name != this.name) return false;
-                return partlist.SameClause(term2.partlist, varlist);
+                if (headIsVar)
+                {
+                    if (!term2.headIsVar) return false;
+                    if (!SameVar(term2.name, this.name, varlist)) return false;
+                }
+                else
+                {
+                    if (term2.headIsVar) return false; 
+                    if (term2.name != this.name) return false;
+                }
+                return ArgList.SameClause(term2.ArgList, varlist);
             }
-            readonly public string _name;
-            public override string name { get { return _name; } }
+            public override bool Equals(Part term)
+            {
+                var term2 = term as Term;
+                if (term2 == null) return false;
+                if (term2.Arity != Arity) return false;
+                if (term2.headIsVar != headIsVar) return false;
+                if (term2.name != this.name) return false;
+                return ArgList.Equals(term2.ArgList);
+            }
+            public override int GetPlHashCode()
+            {
+                return name.GetHashCode() ^ Arity;
+            }
+            //readonly public string _name;
+            //public override string name { get { return _name; } }
             public override string type { get { return "Term"; } }
 
             public override TermList ArgList
             {
-                get { return partlist.ArgList; }
+                get { return partlist0.ArgList; }
             }
 
             override public int Arity
             {
-                get { return partlist.Length; }
+                get
+                {
+                    if (partlist0 == null)
+                    {
+                        return base.Arity;
+                    }
+                    return partlist0.Arity;
+                }
             }
 
             override public bool IsGround
             {
-                get { return partlist.IsGround && !headIsVar(); }
+                get { return partlist0.IsGround && !headIsVar; }
             }
             public override Part CopyTerm
             {
                 get
                 {
-                    return new Term(name, (PartList)partlist.CopyTerm) { parent = null, excludeThis = excludeThis };
+                    return new Term(name, headIsVar, (PartList)partlist0.CopyTerm) { parent = null, excludeThis = excludeThis };
                 }
             }
-            public readonly PartList partlist;
+            private Part _pred = null;
+            public readonly PartList partlist0;
             public bool excludeThis = false;
             public int excludeRule = -1;
             public bool cut = false;
             public IHasParent parent = null;
-
-            readonly private bool? computedHeadIsVar = false;
-            public bool headIsVar()
+            public override string name
             {
-                if (computedHeadIsVar.HasValue) return computedHeadIsVar.Value;
-                // should be [A-Z\_\?]
-                if (!SIProlog.IsVarName(name)) return false;
-                Warn("Head is VAR: " + this);
-                return true;
+                get
+                {
+                    {
+                    }
+                    return _name;
+                }
             }
-            public Term(string head, PartList a0N)
+
+            private string _name;
+            public bool headIsVar;
+            public Term(string head, bool isVar, PartList a0N)
             {
                 _name = head;
-                computedHeadIsVar = SIProlog.IsVarName(head);
-                partlist = a0N;
-                a0N.TParent = this;
-                if (a0N != null && a0N.Length == 1)
+                headIsVar = isVar;
+                partlist0 = a0N;
+                var isVarName = SIProlog.IsVarName(head);
+                if (a0N == null)
+                {
+                    throw ErrorBadOp("Term Arglist NULL: {0}", head);
+                }
+                if (isVar)
+                {
+                    if (!isVarName) throw ErrorBadOp("Pred was supposed to be variable: {0}", this);
+                }
+                else
+                {
+                    if (isVarName) throw ErrorBadOp("Pred was NOT supposed to be variable: {0}", this);
+                }
+                if (a0N.Arity > 0)
                 {
                     Part a0 = a0N.ArgList[0];
                     if (a0 is PartList)
                     {
-                        Warn("Poorly constructed term: " + this);
+                        Warn("Poorly constructed term: {0}", this);
                     }
                 }
-                SIProlog.NameCheck(head);
+                a0N.TParent = this;
             }
-            public override void print()
-            {
-                if (IsListName(this.name))
-                {
-                    Part x = this;
-                    while (IsList(x))
-                    {
-                        x = ((Term)x).ArgList[1];
-                    }
-                    if ((x is IAtomic && ((Atom)x).name == FUNCTOR_NIL) || x is Variable)
-                    {
-                        x = this;
-                        ConsolePrint("[");
-                        var com = false;
-                        while (IsList(x))
-                        {
-                            if (com) ConsolePrint(", ");
-                            (((Term)x).ArgList[0]).print(); // May need to case var/atom/term
-                            com = true;
-                            x = ((Term)x).ArgList[1];
-                        }
-                        if (x is Variable)
-                        {
-                            ConsolePrint(" | ");
-                            x.print();
-                        }
-                        ConsolePrint("]");
-                        return;
-                    }
-                }
-                ConsolePrint("" + this.name + "(");
-                this.partlist.print();
-                ConsolePrint(")");
-            }
-
+           
 
             public override string ToSource(SourceLanguage language)
             {
+                language = language.Inner();
                 string result = "";
-                if (IsListName(this.name))
+                if (IsListName(this.name) && Arity == 2)
                 {
                     Part x = this;
-                    while (IsList(x))
-                        x = ((Term)x).ArgList[1];
-                    if ((x is IAtomic && x.name == FUNCTOR_NIL) || x is Variable)
                     {
-                        x = this;
                         result += "[";
                         var com = false;
                         while (IsList(x))
                         {
                             if (com) result += ", ";
-                            result += ((Term)x).ArgList[0].ToSource(language); // May need to case var/atom/term
+                            result += x.ArgList[0].ToSource(language); // May need to case var/atom/term
                             com = true;
-                            x = ((Term)x).ArgList[1];
+                            x = x.ArgList[1];
                         }
-                        if (x is Variable)
+                        if (x.ToSource(SourceLanguage.Prolog) != "[]")
                         {
                             result += " | ";
                             result += x.ToSource(language);
@@ -3950,15 +4380,39 @@ function hidetip()
                         return result;
                     }
                 }
-                result += "" + this.name + "(";
-                result += this.partlist.ToSource(language);
+                if (Arity == 0)
+                {
+                    if (name == "cut")
+                    {
+                        return "!";
+                    }
+                    return ReadableName;
+                }
+                PartListImpl argList = this.ArgList;
+                if (argList == null)
+                {
+                    return result + "()";
+                }
+                result += "" + ReadableName + "(";
+                result += argList.ToSource(language);
                 result += ")";
                 return result;
             }
 
+            protected string ReadableName
+            {
+                get
+                {
+                    var name = this.name;
+                    if (headIsVar) return name;
+                    if (IsVarName(name)) return "'" + name + "'";
+                    return name;
+                }
+            }
+
             override public void Visit(PartReplacer func)
             {
-                partlist.Visit(func);
+                ArgList.Visit(func);
                 /*
                 int argNum = 0;
                 foreach (var arg in Args)
@@ -3994,12 +4448,13 @@ function hidetip()
         public static bool IsVarName(string name)
         {
             // should be [A-Z\_\?]
-            string firstChar = name.Substring(0, 1);
-            if (firstChar == "." || firstChar == "[")
+            if (name.Length == 0) return false;
+            char firstChar = name[0];
+            if (firstChar == '?' || firstChar == '_')
             {
-                return false;
+                return true;
             }
-            return (firstChar == firstChar.ToUpper());
+            return char.IsLetter(firstChar) && char.IsUpper(firstChar);
         }
 
 
@@ -4027,25 +4482,25 @@ function hidetip()
                 else
                     this.body = null;
             }
-            public void print()
+            public void print(Action<string> w)
             {
                 if (this.body == null)
                 {
-                    this.head.print();
-                    ConsoleWriteLine(".");
+                    this.head.print(w);
+                    w(".");
                 }
                 else
                 {
-                    this.head.print();
-                    Console.Write(" :- ");
-                    this.body.print();
-                    ConsoleWriteLine(".");
+                    this.head.print(w);
+                    w(" :- ");
+                    this.body.print(w);
+                    w(".");
                 }
             }
 
             public override string ToString()
             {
-                return ToSource(tl_console_language);
+                return ToSource(tl_console_language ?? SourceLanguage.Prolog);
             }
             public string ToSource(SourceLanguage language)
             {
@@ -4109,13 +4564,13 @@ function hidetip()
                 plist = l;
                 plist.parent = this;
             }
-            public void print()
+            public void print(Action<string> w)
             {
-                for (var i = 0; i < this.plist.Length; i++)
+                for (var i = 0; i < this.plist.Arity; i++)
                 {
-                    ((Term)this.plist.ArgList[i]).print();
-                    if (i < this.plist.Length - 1)
-                        Console.Write(", ");
+                    ((Term)this.plist.ArgList[i]).print(w);
+                    if (i < this.plist.Arity - 1)
+                        w(", ");
                 }
             }
             public override string ToString()
@@ -4127,10 +4582,10 @@ function hidetip()
             {
                 string result = "";
 
-                for (var i = 0; i < this.plist.Length; i++)
+                for (var i = 0; i < this.plist.Arity; i++)
                 {
                     result += ((Term)this.plist.ArgList[i]).ToSource(language);
-                    if (i < this.plist.Length - 1)
+                    if (i < this.plist.Arity - 1)
                         result += ", ";
                 }
                 return result;
@@ -4187,30 +4642,66 @@ function hidetip()
         {
             public override string ToString()
             {
-                return "before=" + previousToks + " now=" + currentTok + " remainder:" + remainder;
+                return "now=" + currentTok + " before=" + previousToks + " remainder:" + remainder;
             }
             public string remainder;
             public string typeSyntax;
             public string type;
             public string current;
             public string previousToks = "";
+
+            public string prev_typeSyntax;
+            public string prev_type;
+            public string prev_current;
+            public string initial;
+
             public string currentTok
             {
                 get
                 {
-                    return "[" + type + ",\"" + current + "\"],";
+                    return "[" + type + ",\"" + current + ",\"" + typeSyntax + "\"],";
                 }
+            }
+            public Tokeniser(Tokeniser copyThis)
+            {
+                this.initial = copyThis.initial;
+                this.previousToks = copyThis.previousToks;
+                this.prev_current = copyThis.prev_current;
+                this.prev_type = copyThis.prev_type;
+                this.prev_typeSyntax = copyThis.prev_typeSyntax;
+                this.remainder = copyThis.remainder;
+                this.current = copyThis.current;
+                this.typeSyntax = copyThis.typeSyntax;
+                this.type = copyThis.type;
+            }
+            public Tokeniser Clone()
+            {
+                return new Tokeniser(this);
             }
             public Tokeniser(string input)
             {
+                this.initial = input;
+                Init(input);
+            }
+
+            public void Init(string input)
+            {
+                previousToks = null;
+                this.prev_current = null;
+                this.prev_type = null;
+                this.prev_typeSyntax = null;
                 this.remainder = input;
                 this.current = null;
                 this.typeSyntax = null;
-                this.type = null;	// "eof", "id", "var", "punc" etc.
-                this.consume0();	// Load up the first token.
+                this.type = null; // "eof", "id", "var", "punc" etc.
+                this.consume0(); // Load up the first token.
             }
+
             public void consume()
             {
+                prev_current = current;
+                prev_type = type;
+                prev_typeSyntax = typeSyntax;
                 previousToks = previousToks + currentTok;
                 consume0();
             }
@@ -4323,6 +4814,15 @@ function hidetip()
                         }
                         continue;
                     }
+                    int remainderLen = remainder.Length;
+                    if (remIndex + 1 > remainderLen)
+                    {
+                        if (tl_spy_prolog_reader)
+                        {
+                            Warn("not using quote type becasue: is is past end of file: " + this);
+                        }
+                        continue;
+                    }
                     current = soFar;
                     remainder = remainder.Substring(remIndex + 1);
                     type = parseType.typeName;
@@ -4412,115 +4912,85 @@ function hidetip()
         {
             // A rule is a Head followed by . or by :- Body
 
-            Term h = (Term)ParseHead(tk, mt);
-            if (h == null) return null;
-
+            var p = ParseHead(tk, mt);
+            if (p == null)
+            {
+                prolog_reader_debug("cant parse Rule head: " + tk);
+                return null;
+            }
+            Term h = p as Term;
+            if (h == null)
+            {
+                if (!(p is Atom))
+                {
+                    prolog_reader_debug("didn't parse Rule head as atom or term: " + tk);
+                    // return null;
+                }
+                h = AsTerm(p);
+            }
             if (tk.current == ".")
             {
                 // A simple rule.
+                tk.consume();
                 return new Rule(h);
             }
 
-            if (tk.current != ":-") return null;
+            if (tk.current != ":-")
+            {
+                prolog_reader_debug("Rule neck missing: " + tk); 
+                return null;
+            }
             tk.consume();
             PartList b = ParseBody(tk, mt);
-
-            if (tk.current != ".") return null;
-
-            return new Rule(h, b);
+            if (b == null)
+            {
+                prolog_reader_debug("Rule body not present: " + tk);
+                return null;
+            }
+            if (tk.current == "." || tk.current == "eof")
+            {
+                tk.consume();
+                return new Rule(h, b);
+            }
+            prolog_reader_debug("Rule body not terminated: " + tk); 
+            return null;
         }
 
-        public object ParseHead(Tokeniser tk, string mt)
+        static Term AsTerm(Part p)
+        {
+            Term h = p as Term;
+            if (h == null)
+            {
+                if (!(p is Atom))
+                {
+                    Warn("Not an Atom: " + p);
+                    // return null;
+                }
+                h = new Term(p.name, p is Variable, new PartListImpl());
+            }
+            return h;
+        }
+
+        public Term ParseHead(Tokeniser tk, string mt)
         {
             // A head is simply a term. (errors cascade back up)
             return ParseTerm(tk, mt);
         }
 
-        static public object ParseTerm(Tokeniser tk, string mt)
+        static public Term ParseTerm(Tokeniser tk, string mt)
         {
-            // Term -> [NOTTHIS] id ( optParamList )
-
-            if (tk.type == "punc" && tk.current == "!")
-            {
-                // Parse ! as cut/0
-                tk.consume();
-                return new Term("cut", new PartList());
-            }
-
-            var notthis = false;
-            if (tk.current == "NOTTHIS")
-            {
-                notthis = true;
-                tk.consume();
-            }
-
-            //if (tk.type != "id")  return null;
-            if ((tk.type != "id") && (tk.type != "var"))
-            {
-                prolog_reader_debug();
-                return null;
-            }
-            var name = tk.current;
-            tk.consume();
-
-            if (tk.current != "(")
-            {
-                // fail shorthand for fail(), ie, fail/0
-                if (name == "fail")
-                {
-                    return new Term(name, new PartList());
-                }
-                prolog_reader_debug(); 
-                return null;
-            }
-            tk.consume();
-
-            PartList p = new PartList();
-
-            var i = 0;
-            while (tk.current != ")")
-            {
-                if (tk.type == "eof") return null;
-
-                var part = ParsePart(tk);
-                if (part == null)
-                {
-                    prolog_reader_debug();
-                    return null;
-                }
-
-                if (tk.current == ",") tk.consume();
-                else if (tk.current != ")")
-                {
-                    prolog_reader_debug();
-                    return null;
-                }
-
-                // Add the current Part onto the list...
-                p.AddPart(part);
-            }
-            tk.consume();
-
-            var term = new Term(name, p);
-            if (notthis) term.excludeThis = true;
-            return term;
+            Part p = ParsePart(tk);
+            return AsTerm(p);
         }
 
         // This was a beautiful piece of code. It got kludged to add [a,b,c|Z] sugar.
         static public Part ParsePart(Tokeniser tk)
         {
+            string mt = CurrentProlog.curKB;
             // Part -> var | id | id(optParamList)
-            // Part -> [ listBit ] ::-> cons(...)
-            if (tk.type == "var")
+            // Part -> [ listBit ] ::-> cons(...)     
+            if (tk.type == "punc" && tk.current == "[")
             {
-                var n = tk.current;
-                tk.consume();
-                return new Variable(n);
-            }
-
-            if (tk.type != "id")
-            {
-                if (tk.type != "punc" || tk.current != "[") return null;
                 // Parse a list (syntactic sugar goes here)
                 tk.consume();
                 // Special case: [] = Atom.Make(nil).
@@ -4539,7 +5009,7 @@ function hidetip()
                     var t = ParsePart(tk);
                     if (t == null)
                     {
-                        prolog_reader_debug();
+                        prolog_reader_debug("cant parse List Part " + tk);
                         return null;
                     }
 
@@ -4553,15 +5023,17 @@ function hidetip()
                 if (tk.current == "|")
                 {
                     tk.consume();
-                    if (tk.type != "var") return null;
-                    append = new Variable(tk.current);
-                    tk.consume();
+                    append = ParsePart(tk);
                 }
                 else
                 {
                     append = Atom.FromSource(FUNCTOR_NIL);
                 }
-                if (tk.current != "]") return null;
+                if (tk.current != "]")
+                {
+                    prolog_reader_debug("Unclosed List " + tk);
+                    return null;
+                }
                 tk.consume();
                 // Return the new cons.... of all this rubbish.
                 for (--i; i >= 0; i--)
@@ -4570,60 +5042,112 @@ function hidetip()
                 }
                 return append;
             }
-
+            var notthis = false;
+            if (tk.current == "NOTTHIS")
+            {
+                notthis = true;
+                tk.consume();
+            }
+            var type = tk.type;
             var name = tk.current;
             var quotingType = tk.typeSyntax;
             tk.consume();
-
-            if (tk.current != "(")
+            if (quotingType == SYNTAX_DoubleQuotes)
             {
                 return Atom.FromSourceReader(name, quotingType);
             }
-            tk.consume();
+            // fail shorthand for fail(), ie, fail/0
+            if (type == "id" && name == "fail")
+            {
+                return MakeTerm("fail");
+            }
+            // Parse ! as cut/0
+            if (type == "punc" && name == "!")
+            {
+                return MakeTerm("cut");
+            }
+            // Parse [id|var](ParamList)
+            if (tk.current == "(")
+            {
+                tk.consume();
+
+                PartList p = ParseConjuncts(tk, mt, ")", ",", false);
+                if (p == null)
+                {
+                    prolog_reader_debug("cant read termargs " + tk);
+                    return null;
+                }
+                Part term = MakeTermPostReader(name, type == "var", p);
+                if (term is Term)
+                {
+                    if (notthis) ((Term) term).excludeThis = true;
+                }
+                return term;
+            }
+            if (type == "var")
+            {
+                return new Variable(name);
+            }
+            return Atom.FromSourceReader(name, quotingType);
+        }
+        static public PartList ParseConjuncts(Tokeniser tk, string mt, string requiredEnd, string sep, bool eofReturnsPart)
+        {
+            // Body -> Term {, Term...}
 
             PartList p = new PartList();
-            //int ix = 0;
-            while (tk.current != ")")
+            var i = 0;
+            while (true)
             {
-                if (tk.type == "eof") return null;
-
-                var part = ParsePart(tk);
-                if (part == null)
+                if (tk.current == requiredEnd)
                 {
-                    prolog_reader_debug();
+                    tk.consume();
+                    break;
+                }
+                if (tk.current == "eof")
+                {
+                    if (!eofReturnsPart)
+                    {
+                        prolog_reader_debug("read EOF " + tk);
+                        return null;
+                    }
+                    break;
+                }
+                if (tk.current == sep)
+                {
+                    tk.consume();
+                    continue;
+                }
+                Part t = ParsePart(tk);
+                if (t == null)
+                {
+                    prolog_reader_debug("cant read Conjuct item " + tk);
                     return null;
                 }
-
-                if (tk.current == ",") tk.consume();
-                else if (tk.current != ")")
-                {
-                    prolog_reader_debug();
-                    return null;
-                }
-
-                // Add the current Part onto the list...
-                p.AddPart(part);
+                p.AddPart(t);
+                i++;
             }
-            tk.consume();
 
-            return MakeTermPostReader(name, p);
+            if (i == 0)
+            {
+                prolog_reader_debug("no items read " + tk);
+                return null;
+            }
+            return p;
         }
+
 
         [ThreadStatic]
         public static bool tl_spy_prolog_reader = false;
-        private static void prolog_reader_debug()
+
+        private static void prolog_reader_debug(string why)
         {
             if (!tl_spy_prolog_reader) return;
-            Warn("debugChck");
+            Warn("prolog_reader_debug: " + why);
         }
 
         static private Part MakeList(Part li, Part append)
         {
-            PartList frag = new PartList();
-            frag.AddPart((Part)li);
-            frag.AddPart(append);
-            append = new Term(FUNCTOR_CONS, frag);
-            return append;
+            return MakeTerm(FUNCTOR_CONS, li, append);
         }
         public PartList ParseBody(string query, string mt)
         {
@@ -4659,9 +5183,10 @@ function hidetip()
         // Print out an environment's contents.
         public void printEnv(PEnv env)
         {
+            Action<string> w = Console.Write;
             if (env == null)
             {
-                ConsoleWriteLine("null\n");
+                w("null\n");
                 return;
             }
             var k = false;
@@ -4669,32 +5194,33 @@ function hidetip()
             foreach (string i in env.Keys)
             {
                 k = true;
-                Console.Write(" " + i + " = ");
-                ((Part)env[i]).print();
-                ConsoleWriteLine("\n");
+                w(" " + i + " = ");
+                ((Part)env[i]).print(w);
+                w("\n");
             }
-            if (!k) ConsoleWriteLine("true\n");
+            if (!k) w("true\n");
         }
 
         public void printVars(PartList which, PEnv environment)
         {
+            Action<string> w = Console.Write;
             // Print bindings.
-            if (which.Length == 0)
+            if (which.Arity == 0)
             {
-                ConsoleWriteLine("true\n");
+                w("true\n");
             }
             else
             {
-                for (var i = 0; i < which.Length; i++)
+                for (var i = 0; i < which.Arity; i++)
                 {
-                    Console.Write(((Variable)which.ArgList[i]).name);
-                    Console.Write(" = ");
+                    w(((Variable)which.ArgList[i]).name);
+                    w(" = ");
                     //((Atom)value(new Variable(((Variable)which.alist[i]).name + ".0"), environment)).print();
-                    value(new Variable(((Variable)which.ArgList[i]).name + ".0"), environment).print();
-                    ConsoleWriteLine("\n");
+                    value(new Variable(((Variable)which.ArgList[i]).name + ".0"), environment).print(w);
+                    w("\n");
                 }
             }
-            ConsoleWriteLine("\n");
+            w("\n");
         }
 
         // The value of x in a given environment
@@ -4702,20 +5228,20 @@ function hidetip()
         {
             if (x is Term)
             {
-                PartList p = new PartList(((Term)x).ArgList, env);
-                return new Term(((Term)x).name, p);
+                PartList p = new PartList(x.ArgList, env);
+                return new Term(x.name, ((Term) x).headIsVar, p);
             }
             if (x is PartList)
             {
-                PartList p = new PartList(((PartList)x).ArgList, env);
+                PartList p = new PartList(x.ArgList, env);
                 return p;
             }
             if (!(x is Variable))
                 return x;		// We only need to check the values of variables...
 
-            if (!env.ContainsKey(((Variable)x).name))
+            Part binding; //** HASH/DICTIONARY NEEDED ** 
+            if (!env.TryGetValue(x.name, out binding))
                 return x;
-            Part binding = (Part)env[((Variable)x).name]; //** HASH/DICTIONARY NEEDED ** 
             if (binding == null)
                 return x;		// Just the variable, no binding.
             return value(binding, env);
@@ -4753,7 +5279,7 @@ function hidetip()
             if (x is Variable)
             {
                 if (trace) ConsoleWriteLine("     MATCH");
-                return newEnv(((Variable)x).name, y, env);
+                return newEnv(x.name, y, env);
             }
             if (y is Variable)
             {
@@ -4772,37 +5298,37 @@ function hidetip()
             // x.type == y.type == Term...
             if (x is Term && y is Term)
             {
-                bool xvar = ((Term)x).headIsVar();
-                bool yvar = ((Term)y).headIsVar();
+                bool xvar = x.headIsVar();
+                bool yvar = y.headIsVar();
                 if (!xvar && !yvar)
                 {
                     if (x.name != y.name)
                         return null;	// Ooh, so first-order.
                 }
 
-                if (((Term)x).Arity != ((Term)y).Arity) 
+                if (x.Arity != y.Arity) 
                     return null;
 
-                for (var i = 0; i < ((Term)x).Arity; i++)
+                for (var i = 0; i < x.Arity; i++)
                 {
-                    env = unify((Part)((Term)x).ArgList[i], (Part)((Term)y).ArgList[i], env);
+                    env = unify((Part)x.ArgList[i], (Part)y.ArgList[i], env);
                     if (env == null)
                         return null;
                 }
                 if (!xvar && yvar)
                 {
                     if (trace) ConsoleWriteLine("     MATCH");
-                    return newEnv(((Term)y).name, Atom.Make(((Term)x).name), env);
+                    return newEnv(y.name, Atom.Make(x.name), env);
                 }
                 if (xvar && !yvar)
                 {
                     if (trace) ConsoleWriteLine("     MATCH");
-                    return newEnv(((Term)x).name, Atom.Make(((Term)y).name), env);
+                    return newEnv(x.name, Atom.Make(y.name), env);
                 }
                 if (xvar && yvar)
                 {
                     if (trace) ConsoleWriteLine("     MATCH");
-                    return newEnv(((Term)x).name, new Variable(((Term)y).name), env);
+                    return newEnv(x.name, new Variable(y.name), env);
                 }
 
             }
@@ -4810,18 +5336,18 @@ function hidetip()
             if (x is PartList && y is PartList)
             {
 
-                if (((PartList)x).name != ((PartList)y).name)
+                if (x.name != y.name)
                     return null;	// Ooh, so first-order.
-                if (((PartList)x).Length != ((PartList)y).Length)
+                if (x.Length != y.Length)
                 {
                     // TODO: fix list layout. sometimes we get the list with an outer wrapper PartList
-                    while (((PartList)x).Length != ((PartList)y).Length)
+                    while (x.Length != y.Length)
                     {
-                        if ((((PartList)x).Length == 1) && ((PartList)x).alist[0] is PartList)
+                        if ((x.Length == 1) && x.alist[0] is PartList)
                         {
-                            //if (((PartList)((PartList)x).alist[0]).Length == ((PartList)y).Length)
+                            //if (((PartList)x.alist[0]).Length == y.Length)
                            // {
-                                x = ((PartList)((PartList)x).alist[0]);
+                                x = ((PartList)x.alist[0]);
                            // }
                            // else
                            //     return null;
@@ -4832,9 +5358,9 @@ function hidetip()
                     if (trace) { ConsoleWrite("     inner-unify X="); x.print(); ConsoleWrite("  Y="); y.print(); ConsoleWriteLine(); }
                   
                 }
-                for (var i = 0; i < ((PartList)x).Length; i++)
+                for (var i = 0; i < x.Length; i++)
                 {
-                    env = unify((Part)((PartList)x).alist[i], (Part)((PartList)y).alist[i], env);
+                    env = unify((Part)x.alist[i], (Part)y.alist[i], env);
                     if (env == null) 
                         return null;
                 }
@@ -4847,9 +5373,11 @@ function hidetip()
         {
             TextWriter Console = System.Console.Error;
 
-            x = value(x, env);
-            y = value(y, env);
-            if (trace) { Console.Write("     unify X="); x.print(); Console.Write("  Y="); y.print(); Console.WriteLine(); }
+            // unify will deref nonvars as needed (saves from copyterm semantics)
+
+            if (x is Variable) x = value(x, env);
+            if (y is Variable) y = value(y, env);
+            if (trace) { Console.Write("     unify X="); x.print(Console.Write); Console.Write("  Y="); y.print(Console.Write); Console.WriteLine(); }
 
             // both atoms/constants
             if (x is IAtomic && y is IAtomic)
@@ -4868,7 +5396,7 @@ function hidetip()
             // both lists, both empty
             if (x is PartList && y is PartList)
             {
-                if (((PartList)x).Length == 0 && ((PartList)y).Length == 0)
+                if (x.Arity == 0 && y.Arity == 0)
                 {
                     if (trace) ConsoleWriteLine("     MATCH");
                     return env;
@@ -4880,7 +5408,7 @@ function hidetip()
             if (x is Variable)
             {
                 if (trace) ConsoleWriteLine("     MATCH");
-                return newEnv(((Variable)x).name, y, env);
+                return newEnv(x.name, y, env);
             }
             if (y is Variable)
             {
@@ -4895,79 +5423,79 @@ function hidetip()
 
             if (x is Term)
             {
-                bool xvar = ((Term)x).headIsVar();
-                bool yvar = ((Term)y).headIsVar();
+                if (x.Arity != y.Arity) return null;
+                bool xvar = ((Term)x).headIsVar;
+                bool yvar = ((Term)y).headIsVar;
                 if (!xvar && !yvar)
                 {
                     if (x.name != y.name)
-                        return null;	// Ooh, so first-order.
-                    return unify(((Term)x).partlist, ((Term)y).partlist, env);
+                        return null; // Ooh, so first-order.
+                    return unify(x.ArgList, y.ArgList, env);
 
                 }
-                if (xvar && !yvar)
-                {
-                    PEnv subEnv = unify(new Variable(((Term)x).name), Atom.MakeUri(((Term)y).name), env);
-                    if (subEnv == null)
-                        return null;
-                    return unify(((Term)x).partlist, ((Term)y).partlist, subEnv);
-                }
-                if (!xvar && yvar)
-                {
-                    PEnv subEnv = unify(Atom.MakeUri(((Term)x).name), new Variable(((Term)y).name), env);
-                    if (subEnv == null)
-                        return null;
-                    return unify(((Term)x).partlist, ((Term)y).partlist, subEnv);
-                }
+
                 if (xvar && yvar)
                 {
-                    PEnv subEnv = unify(new Variable(((Term)x).name), new Variable(((Term)y).name), env);
+                    if (!x.ArgList.IsGround || !y.ArgList.IsGround) return null;
+                    PEnv subEnv = unify(new Variable(x.name), new Variable(y.name), env);
                     if (subEnv == null)
                         return null;
-                    return unify(((Term)x).partlist, ((Term)y).partlist, subEnv);
+                    return unify(x.ArgList, y.ArgList, subEnv);
                 }
-
-
+                if (xvar)
+                {
+                    var m = y;
+                    y = x;
+                    x = m;
+                }
+                {
+                    if (!y.ArgList.IsGround) return null;
+                    PEnv subEnv = unify(Atom.FromName(x.name), new Variable(y.name), env);
+                    if (subEnv == null)
+                        return null;
+                    return unify(x.ArgList, y.ArgList, subEnv);
+                }
             }
             if (x is PartList)
             {
-                while (((((PartList)x).Length == 1) && ((PartList)x).ArgList[0] is PartList) && (((PartList)x).Length != ((PartList)y).Length))
+                while (((x.Arity == 1) && x.ArgList[0] is PartList) && (x.Arity != y.Arity))
                 {
                     throw ErrorBadOp("inner partlist");
-                    x = ((PartList)((PartList)x).ArgList[0]);
+                    x = ((PartList)x.ArgList[0]);
                 }
-                while (((((PartList)y).Length == 1) && ((PartList)y).ArgList[0] is PartList) && (((PartList)x).Length != ((PartList)y).Length))
+                while (((y.Arity == 1) && y.ArgList[0] is PartList) && (x.Arity != y.Arity))
                 {
                     throw ErrorBadOp("inner partlist");
-                    y = ((PartList)((PartList)y).ArgList[0]);
+                    y = ((PartList)y.ArgList[0]);
                 }
 
-                if (((PartList)x).Length != ((PartList)y).Length)
+                if (x.Arity != y.Arity)
                 {
-                    while (((PartList)x).Length != ((PartList)y).Length)
+                    return null;
+                    while (x.Arity != y.Arity)
                     {
-                        if (((PartList)y).Length < ((PartList)x).Length)
+                        if (y.Arity < x.Arity)
                         {
                             PartList temp = (PartList)x;
                             x = y;
                             y = temp;
 
                         }
-                        /*if ((((PartList)x).Length == 1) && ((PartList)x).alist[0] is PartList)
+                        /*if ((x.Length == 1) && x.alist[0] is PartList)
                         {
-                            x = ((PartList)((PartList)x).alist[0]);
+                            x = ((PartList)x.alist[0]);
                         }
                         else*/
-                        return null;
                     }
-
+                    return null;
                 }
-                if (trace) { Console.Write("     inner-unify X="); x.print(); Console.Write("  Y="); y.print(); Console.WriteLine(); }
-                if (false /*&& (((PartList)x).name != ((PartList)y).name)*/)
+                if (trace) { Console.Write("     inner-unify X="); x.print(Console.Write); Console.Write("  Y="); y.print(Console.Write); Console.WriteLine(); }
+                if (false /*&& (x.name != y.name)*/)
                     return null;	// Ooh, so first-order.
 
-                for (var i = 0; i < ((PartList)x).Length; i++)
+                for (var i = 0; i < x.Arity; i++)
                 {
-                    env = unify((Part)((PartList)x).ArgList[i], (Part)((PartList)y).ArgList[i], env);
+                    env = unify((Part)x.ArgList[i], (Part)y.ArgList[i], env);
                     if (env == null)
                         return null;
                 }
@@ -5237,7 +5765,7 @@ function hidetip()
                 if (node == null) return;
                 if (indentation > 4) return;
                 for (int i = 0; i < indentation; ++i) Console.Write(" ");
-                ConsoleWriteLine(node.Id);
+                Console.WriteLine(node.Id);
 
                 foreach (PEdge e in node.OutgoingEdges)
                 {
@@ -5324,7 +5852,38 @@ function hidetip()
 
         public static Term MakeTerm(string name, params Part[] parts)
         {
-            return new Term(name, new PartList(parts));
+            return new Term(name, false, new PartList(parts));
+        }
+        public static Term TERM_TRUE
+        {
+            get
+            {
+                if (_TERM_TRUE==null)
+                {
+                    _TERM_TRUE = MakeTerm("true");
+                }
+                return _TERM_TRUE;
+            }
+        }
+            
+        public static Part RuleBodyToTerm(PartListImpl rulebody)
+        {
+            if (IsBodyAlwaysTrue(rulebody))
+                return TERM_TRUE;
+            return MakeTerm(",", rulebody);
+        }
+        public static bool IsBodyAlwaysTrue(PartListImpl rulebody)
+        {
+            return rulebody == null || rulebody.Count == 0 ||
+                (rulebody.Count == 1 && TERM_TRUE.Equals(rulebody[0]));
+        }
+        public static Part RuleToTerm(Part head, PartListImpl rulebody)
+        {
+            if (IsBodyAlwaysTrue(rulebody))
+            {
+                return head;
+            }
+            return MakeTerm(":-", head, SIProlog.RuleBodyToTerm(rulebody));
         }
     }
 
@@ -5374,8 +5933,14 @@ function hidetip()
         public static SourceLanguage Prolog = new SourceLanguage("prolog");
 
         public static SourceLanguage Notation3 = new SourceLanguage("notation3");
+
+        public static SourceLanguage Text = new SourceLanguage("text")
+                                                {
+                                                    InnerLang = Prolog
+                                                };
         
         readonly public string Name;
+        public SourceLanguage InnerLang;
 
         public override string ToString()
         {
@@ -5385,8 +5950,19 @@ function hidetip()
         {
             this.Name = lang;
         }
+
+        internal SourceLanguage Inner()
+        {
+            return InnerLang ?? this;
+        }
     }
 
+    public enum FrequencyOfSync
+    {
+        AsNeeded = 0,
+        Never = 1,
+        Always = 2,
+    }
     public enum ContentBackingStore
     {
         None = 0,

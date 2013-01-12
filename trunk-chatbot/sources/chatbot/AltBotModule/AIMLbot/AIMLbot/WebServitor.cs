@@ -111,6 +111,7 @@ namespace AltAIMLbot
                     }
                     Console.WriteLine("Listener Adding:" + pfadd);
                     listener.Prefixes.Add(pfadd);
+                    Console.WriteLine("Listener Added:" + pfadd);
                 }
                 catch (Exception e)
                 {
@@ -127,10 +128,10 @@ namespace AltAIMLbot
                     Console.WriteLine(e.Message);
                 }
 
-                if (provideAnalysis) loadAnalyzer();
                 listenerThread = new Thread(new ThreadStart(clientListener));
                 listenerThread.Start();
             }
+            if (provideAnalysis) loadAnalyzer();
         }
 
         public static void clientListener()

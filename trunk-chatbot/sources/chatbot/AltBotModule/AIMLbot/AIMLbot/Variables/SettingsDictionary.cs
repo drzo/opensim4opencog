@@ -184,18 +184,19 @@ namespace RTParser.Variables
         public void Set(string name, string value)
         {
             name = KeyCase.Default.NormalizeKey(name);
+            var key = MakeKey(name);
             var valArg = MakeArg(value);
             //Remove(name);
             var before = GetArgVal(name, false);
             if (valArg == before) return;
             if (before != null)
             {
-                prologEngine.replaceInKB(RuleForNameValue(MakeArg(name), before),
-                                         RuleForNameValue(MakeArg(name), valArg), pnodeMt);
+                prologEngine.replaceInKB(RuleForNameValue(key, before),
+                                         RuleForNameValue(key, valArg), pnodeMt);
             }
             else
             {
-                prologEngine.appendKB(new SIProlog.RuleList() { RuleForNameValue(MakeArg(name), valArg) }, pnodeMt);
+                prologEngine.appendKB(new SIProlog.RuleList() { RuleForNameValue(key, valArg) }, pnodeMt);
             }
             var now = GetArgVal(name, false);
             if (now != valArg)
@@ -209,6 +210,10 @@ namespace RTParser.Variables
         {
             return LogicalParticleFilter1.SIProlog.Atom.MakeString(value);
         }
+        private LogicalParticleFilter1.SIProlog.Atom MakeKey(string value)
+        {
+            return LogicalParticleFilter1.SIProlog.Atom.FromName(value);
+        }
 
         public void Clear()
         {
@@ -220,7 +225,7 @@ namespace RTParser.Variables
             name = KeyCase.Default.NormalizeKey(name);
             SIProlog.Part valArg = GetArgVal(name, false);
             if (valArg == null) return;
-            SIProlog.Rule remove = RuleForNameValue(MakeArg(name), valArg);
+            SIProlog.Rule remove = RuleForNameValue(MakeKey(name), valArg);
             var didit = prologEngine.retractKB(remove, pnodeMt);
             var valarg2 = GetArgVal(name, false);
             if (null != valarg2)
@@ -234,7 +239,7 @@ namespace RTParser.Variables
         {
             normalizedName = KeyCase.Default.NormalizeKey(normalizedName);
             var bingingsList = new List<Dictionary<string, SIProlog.Part>>();
-            this.prologEngine.askQuery(QueryForNameValue(MakeArg(normalizedName), new SIProlog.Variable("VALUE")),
+            this.prologEngine.askQuery(QueryForNameValue(MakeKey(normalizedName), new SIProlog.Variable("VALUE")),
                                        dictMt, followGenlMt,
                                        bingingsList, null);
             int cnt = bingingsList.Count;

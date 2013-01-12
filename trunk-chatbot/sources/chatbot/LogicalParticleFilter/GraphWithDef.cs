@@ -1,3 +1,4 @@
+#define MERGED_RDFSTORE
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -22,7 +23,9 @@ using ListOfBindings = System.Collections.Generic.List<System.Collections.Generi
 using StringWriter=System.IO.StringWriter;
 using VDS.RDF.Writing.Formatting;
 using PartList = LogicalParticleFilter1.SIProlog.PartListImpl;
-
+#if MERGED_RDFSTORE
+using GraphWithDef = LogicalParticleFilter1.SIProlog.PNode;
+#endif
 namespace LogicalParticleFilter1
 {
 //    using GraphWithDef = SIProlog.PNode;
@@ -60,6 +63,7 @@ namespace LogicalParticleFilter1
                              StringSplitOptions.RemoveEmptyEntries).Length;
         }
 
+#if !MERGED_RDFSTORE
         public static SIProlog.RdfRules RdfRuleValue(this SIProlog.Rule prologRule)
         {
             // termVarNames
@@ -71,19 +75,21 @@ namespace LogicalParticleFilter1
                 {
                     string prologRuleoptHomeMt = prologRule.optHomeMt;
                     SIProlog.PGraph gg = SIProlog.GlobalKBGraph;
-                    LogicalParticleFilter1.SIProlog.GraphWithDef kb = prolog.MakeRepositoryKB(prologRuleoptHomeMt).RdfStore;
+                    var kb = prolog.MakeRepositoryKB(prologRuleoptHomeMt).RdfStore;
                     SIProlog.GraphWithDef.FromRule(prologRule, kb.rdfGraph);
                     rr = prologRule.rdfRuleCache;
                 }
                 return rr;
             }
         }
+#endif
     }
 
     public partial class SIProlog
     {        
         static readonly internal Graph rdfDefinations = new Graph();
         const string rdfDefMT = "rdfGlobalDefsMt";
+        public const string TripleName = "triple";
         private GraphWithDef rdfDefSync;
         public CIDictionary<string, GraphWithDef> GraphForMT = new CIDictionary<string, GraphWithDef>(new KeyCase(NormalizeKBName));
 
@@ -107,7 +113,8 @@ namespace LogicalParticleFilter1
         public static string RoboKindMtURI = RoboKindURI;// "http://cogserver:8123/mt/";
         public static string RoboKindPrefix = "robokind";
         public static string RoboKindPrefixPrepend = RoboKindPrefix + ":";
-        private static CIDictionary<string, PredicateProperty> SharedGlobalPredDefs = new CIDictionary<string, PredicateProperty>(KeyCase.Default);
+        private static readonly CIDictionary<string, PredicateProperty> SharedGlobalPredDefs = new CIDictionary<string, PredicateProperty>(KeyCase.Default);
+        public static bool SharedGlobalPredDefsDirty = false;
         private static CIDictionary<string, RDFArgSpec> SharedGlobalArgTypeDefs = new CIDictionary<string, RDFArgSpec>(KeyCase.Default);
 
         private void defineRDFExtensions()
@@ -116,16 +123,35 @@ namespace LogicalParticleFilter1
             Options.LiteralValueNormalization = true;
             Options.LiteralEqualityMode = LiteralEqualityMode.Loose;
 
-            rdfDefinations.BaseUri = UriFactory.Create(RoboKindURI);
+            var uriAgainIs = UriFactory.Create(RoboKindURI);
+            rdfDefinations.BaseUri = uriAgainIs;
             LoadGraphPrefixes(rdfDefinations);
+            rdfDefinations.BaseUri = uriAgainIs;
             rdfDefSync =
                 rdfDefSync ??
                 //KBGraph.Contains(rdfDefMT) ??
                 new GraphWithDef(rdfDefMT, this, rdfDefinations);
-            forReaderTripleStoreGraph.BaseUri = UriFactory.Create(RoboKindURI);
+            forReaderTripleStoreGraph.BaseUri = uriAgainIs;
             EnsureReaderNamespaces(forReaderTripleStoreGraph);
-            loadKB("aiml/shared_ke/argdefs.txt", rdfDefMT);
-            mtest();
+            var rdfKB = FindOrCreateKB(rdfDefMT);
+            rdfKB.SourceKind = ContentBackingStore.RdfMemory;
+            rdfDefSync.IncludeRDFUri(new FileInfo("aiml/shared_ke/PrologToRDFConversion.owl").FullName);
+            loadKEText(rdfDefMT, FromStream("aiml/shared_ke/argdefs.txt"), false);
+            if (DeveloperSanityChecks > 0) Program.RunAllTests(this);
+        }
+
+        public void UpdateSharedGlobalPredDefs()
+        {
+            lock (SharedGlobalPredDefs)
+            {
+                if (!SharedGlobalPredDefsDirty)
+                    return;
+                SharedGlobalPredDefsDirty = false;
+                foreach (var defs in SharedGlobalPredDefs.Values)
+                {
+                    foreach (var t in defs.DefinitionalRDFEnsurerd) rdfGraphAssert(rdfDefinations, t, true, true);
+                }
+            }
         }
 
         private static void EnsureReaderNamespaces(IGraph graph)
@@ -195,16 +221,31 @@ namespace LogicalParticleFilter1
         {
             lock (GraphForMT)
             {
-                GraphWithDef graph;
-                newlyCreated = !GraphForMT.TryGetValue(mt, out graph);
-                if (newlyCreated)
+#if MERGED_RDFSTORE
+                lock (KBGraph)
+#endif
                 {
-                    Graph newGraph = new Graph();
-                    newGraph.BaseUri = UriFactory.Create(UriOfMt(mt));
-                    graph = GraphForMT[mt] = new GraphWithDef(mt, this, newGraph);
-                   // var node = graph.PrologKB;
+                    GraphWithDef graph;
+                    newlyCreated = !GraphForMT.TryGetValue(mt, out graph);
+                    if (newlyCreated)
+                    {
+                        PNode pnode = KBGraph.Contains(mt);
+                        if (pnode != null)
+                        {
+                            GraphForMT[mt] = pnode;
+                            newlyCreated = false;
+                            return pnode;
+                        } 
+                        Graph newGraph = new Graph();
+                        newGraph.BaseUri = UriFactory.Create(UriOfMt(mt));
+                        graph = new GraphWithDef(mt, this, newGraph);
+#if MERGED_RDFSTORE
+                        KBGraph.AddNode(graph);
+#endif
+                        // var node = graph.PrologKB;
+                    }
+                    return graph.PrologKB;
                 }
-                return graph.PrologKB;
             }
         }
 
@@ -242,10 +283,10 @@ namespace LogicalParticleFilter1
             //Use the DBPedia SPARQL endpoint with the default Graph set to DBPedia
             SparqlRemoteEndpoint endpoint = new SparqlRemoteEndpoint(new Uri(endpointURI));
 
-            var gwd = MakeRepositoryKB(graphKBName);
-            RdfRules rules = new RdfRules(gwd.RdfStore.rdfGraph);
+            var focus = MakeRepositoryKB(graphKBName);
+            RdfRules ruleDefs = new RdfRules(focus.RdfStore.rdfGraph);
 
-            string miniMt = "";
+            StringWriter miniMt = new StringWriter();
 
             //Use the extension method ExecuteQuery() to make the query against the Graph
             try
@@ -253,47 +294,48 @@ namespace LogicalParticleFilter1
                 //Object results = g.ExecuteQuery(query);
                 //Make a SELECT query against the Endpoint
                 SparqlResultSet results = endpoint.QueryWithResultSet(query);
-                miniMt = GetMiniMt(results, assertTemplate, graphKBName, gwd.RdfStore, show, null, rules);
+                GetMiniMt(results, assertTemplate, graphKBName, focus.RdfStore, show, null, miniMt, ruleDefs);
             }
             catch (RdfQueryException queryEx)
             {
                 //There was an error executing the query so handle it here
                 Warn("While endpointURI={0}\n\n{1}", endpointURI, queryEx);
             }
-            insertKB(miniMt, graphKBName);
+            insertKB(miniMt.ToString(), graphKBName);
         }
 
         public void rdfImportToKB(IGraph g, string graphKBName, string query, string assertTemplate)
         {
             EnsureReaderNamespaces(g);
-            string miniMt = "";
+            StringWriter miniMt = new StringWriter();
             var repo = MakeRepositoryKB(graphKBName);
-            RdfRules rules = new RdfRules(g);
+            RdfRules ruleDefs = new RdfRules(g);
             //Use the extension method ExecuteQuery() to make the query against the Graph
             try
             {
                 Object results = g.ExecuteQuery(query);
-                miniMt = GetMiniMt(results, assertTemplate, graphKBName, repo.RdfStore, show, null, rules);
+                List<Rule> newTriples = new List<Rule>();
+                GetMiniMt(results, assertTemplate, graphKBName, repo.RdfStore, show, null, miniMt, ruleDefs);
             }
             catch (RdfQueryException queryEx)
             {
                 //There was an error executing the query so handle it here
                 Warn(queryEx);
             }
-            insertKB(miniMt, graphKBName);
+            string miniMtSources = miniMt.ToString();
+            insertKB(miniMtSources, graphKBName);
         }
 
-        private string GetMiniMt(object results, string assertTemplate, string graphKBName, GraphWithDef repo, bool show, List<Rule> triples, RdfRules rules)
-        {
+        private void GetMiniMt(object results, string assertTemplate, string graphKBName, GraphWithDef repo, bool show, ICollection<Rule> newRules, TextWriter ruleSources, RdfRules ruleDefs)
+        {           
             assertTemplate = assertTemplate ?? "triple($?s$,$?p$,$?o$).\n";
-            bool MakeRules = triples != null && assertTemplate.Trim().EndsWith(".");
+            bool MakeRules = newRules != null && assertTemplate.Trim().EndsWith(".");
             var outMap = new Dictionary<string, string>();
             outMap["s"] = "unknownSubject";
             outMap["p"] = "unknownPredicate";
             outMap["o"] = "unknownObject";
-            outMap["mt"] = repo.PlReadble(GraphWithDef.CUrlNode(repo.definations, repo.rdfGraph.BaseUri.AbsoluteUri, false, false), rules);
+            outMap["mt"] = repo.PlReadble(repo.definations.CreateUriNode(repo.rdfGraph.BaseUri), ruleDefs);
 
-            string miniMt = "";
             if (results is SparqlResultSet)
             {
                 //SELECT/ASK queries give a SparqlResultSet
@@ -317,7 +359,7 @@ namespace LogicalParticleFilter1
                     foreach (string vname in r.Variables)
                     {
                         INode value = r[vname];
-                        string strVal = repo.PlReadble(value, rules);
+                        string strVal = repo.PlReadble(value, ruleDefs);
                         assertIt = assertIt.Replace("$?" + vname + "$", strVal);
                         if (show) ConsoleWriteLine("BIND: {0} = {1}", vname, strVal);
                     }
@@ -332,13 +374,13 @@ namespace LogicalParticleFilter1
                     {
                         Rule rule = ParseRule(new Tokeniser(assertIt), graphKBName);
                         if (show) ConsoleWriteLine("RULE_IG: {0}", rule);
-                        triples.Add(rule);
+                        newRules.Add(rule);
                     }
                     else
                     {
                         if (show) ConsoleWriteLine("TRIPLE_IG: {0}", assertIt);
-                        miniMt += assertIt;
                     }
+                    if (ruleSources != null) ruleSources.WriteLine(assertIt);
                 }
             }
             else if (results is IGraph)
@@ -348,7 +390,7 @@ namespace LogicalParticleFilter1
                 var rset = resGraph.Triples;
                 outMap["mt"] =
                     repo.PlReadble(GraphWithDef.CUrlNode(repo.definations, resGraph.BaseUri.AbsoluteUri, false, false),
-                                   rules);
+                                   ruleDefs);
                 if (show)
                 {
                     ConsoleWriteLine("IGraphResultSet.Count = {0}", rset.Count);
@@ -358,9 +400,9 @@ namespace LogicalParticleFilter1
                 {
                     var assertIt = assertTemplate;
                     //Do whatever you want with each Triple
-                    outMap["s"] = repo.PlReadble(t.Subject, rules);
-                    outMap["p"] = repo.PlReadble(t.Predicate, rules);
-                    outMap["o"] = repo.PlReadble(t.Object, rules);
+                    outMap["s"] = repo.PlReadble(t.Subject, ruleDefs);
+                    outMap["p"] = repo.PlReadble(t.Predicate, ruleDefs);
+                    outMap["o"] = repo.PlReadble(t.Object, ruleDefs);
                     foreach (KeyValuePair<string, string> map in outMap)
                     {
                         assertIt = assertIt.Replace("$?" + map.Key + "$", map.Value);
@@ -369,22 +411,23 @@ namespace LogicalParticleFilter1
                     {
                         Rule rule = ParseRule(new Tokeniser(assertIt), graphKBName);
                         if (show) ConsoleWriteLine("RULE_IG: {0}", rule);
-                        triples.Add(rule);
+                        newRules.Add(rule);
                     }
                     else
                     {
                         if (show) ConsoleWriteLine("TRIPLE_IG: {0}", assertIt);
-                        miniMt += assertIt;
                     }
+                    if (ruleSources != null) ruleSources.WriteLine(assertIt);
                 }
             }
             else
             {
                 //If you don't get a SparqlResutlSet or IGraph something went wrong 
                 //but didn't throw an exception so you should handle it here
-                Warn("ERROR: Cant understand " + results.GetType() + " " + results);
+                if (results == null) throw ErrorBadOp("ERROR: no Results From NULL Query Object for " + graphKBName);
+                throw ErrorBadOp("ERROR: Cant how understand " + results.GetType() + " " + results + " to import to " +
+                                 graphKBName);
             }
-            return miniMt;
         }
 
         public void pushRulesToGraph(string mt, GraphWithDef rdfGraphWithDefs, bool includeInherited)
@@ -441,6 +484,7 @@ namespace LogicalParticleFilter1
                 //StringParser.Parse(rdfGraph, rdfLine);
                 // }
             }
+            newTriples.RequirementsMet = true;
             newTriples.AssertTriples(rdfGraphWithDefs.definations, true, true);
         }
 
@@ -469,7 +513,8 @@ namespace LogicalParticleFilter1
                 }
             }
 
-            private bool _requirementsMet;
+            private bool _requirementsMet = true;
+            private HashSet<INode> RequiredAnteceedantVars = new HashSet<INode>();
             public IGraph ContainingGraph;
             public IGraph def
             {
@@ -492,28 +537,15 @@ namespace LogicalParticleFilter1
                 Graph ig = new Graph();
                 ig.NamespaceMap.Import(graphNamespace);
                 AssertTriples(ig, false, true);
-                sw.WriteLine("# subjs= {0} metreq={1}", Subjects.Count, RequirementsMet);
-                sw.WriteLine("BEGIN:");
-                DumpTriplesPlain(ig.Triples, sw, "{0}", ig);
+                sw.WriteLine("# subjs= {0} metreq={1} ", Subjects.Count, RequirementsMet);
+                sw.WriteLine("BEGIN: ");
+                DumpTriplesPlain(ig.Triples, sw, " {0}", ig);
+                sw.WriteLine("EOT.");
+                sw.WriteLine("TOTRIPLES: ");
+                DumpTriplesPlain(ToTriples, sw, " {0}", ig);
                 sw.WriteLine("EOT.");
                 //WriteGraph(sw, ig, "rdfs triples", true, false);
                 return sw.ToString();
-            }
-
-            static void WriteTripleBlock(Graph ig, ICollection ts, INamespaceMapper graphNamespace, StringWriter sw)
-            {
-                if (ts == null || ts.Count == 0)
-                {
-                    sw.WriteLine("{ }");
-                    return;
-                }
-                sw.WriteLine("{");
-                var formatter = new SparqlFormatter(graphNamespace);
-                foreach (Triple trip0 in ts)
-                {
-                    DumpOneTriple(ig, trip0, formatter, sw, "{0}");
-                }
-                sw.WriteLine("}");
             }
 
             public RdfRules(IGraph graph)
@@ -530,6 +562,7 @@ namespace LogicalParticleFilter1
                     return;
                 }
                // CheckTriple(triple); ;
+                _requirementsMet = false;
                 Requirements.Add(triple);
             }
             public void AddProducing(Triple triple)
@@ -557,6 +590,18 @@ namespace LogicalParticleFilter1
                 {
                     return;
                 }
+                if (triple.Object.NodeType == NodeType.Variable)
+                {
+                    _requirementsMet = false;
+                    RequiredAnteceedantVars.Add(triple.Object);
+                }
+                if (triple.Subject.NodeType == NodeType.Variable)
+                {
+                    _requirementsMet = false;
+                    RequiredAnteceedantVars.Add(triple.Subject);
+                }
+
+                _requirementsMet = false;
                 Consequences.Add(triple);
             }
 
@@ -573,9 +618,9 @@ namespace LogicalParticleFilter1
                 get
                 {
                     if (_requirementsMet) return true;
-                    if (RuleNode == null)
+                    if (_ruleNode == null)
                     {
-                        return false;
+                        return ToTriples.Count() == Producing.Count;
                     }
                     if (Requirements.Count == 0) return true;
                     return false;
@@ -591,12 +636,16 @@ namespace LogicalParticleFilter1
                 {
                     if (_ruleNode == null)
                     {
-                        _ruleNode = def.CreateBlankNode();
+                        ///_ruleNode = def.CreateBlankNode();
                     }
                     return _ruleNode;
                 }
                 set
                 {
+                    if (value.NodeType != NodeType.Blank)
+                    {
+                        Warn("Rule node should be a Bnode.. not " + value);
+                    }
                     _ruleNode = value;
                 }
             }
@@ -604,7 +653,6 @@ namespace LogicalParticleFilter1
             {
                 get
                 {
-                    bool skipProducing = false;
                     ICollection<Triple> temp = new HashSet<Triple>();
                     if (Requirements.Count > 0)
                     {
@@ -615,37 +663,100 @@ namespace LogicalParticleFilter1
                         else
                         {
                             temp.Add(GraphWithDef.CreateImplication(_graph, Requirements, Producing));
-                            skipProducing = true;
+                            return temp;
                         }
                     }
                     else
                     {
+                        bool generateAnteceedant = RequiredAnteceedantVars.Count > 0;
                         if (Consequences.Count > 0)
                         {
-                            temp = Consequences;
-                            skipProducing = false;
+                            if (generateAnteceedant)
+                            {
+                                var p = new List<Triple>(Producing);
+                                var c = new List<Triple>(Consequences);
+                                if (p.Count == 0)
+                                {
+                                    foreach (Triple consequence in c)
+                                    {
+                                        if (ContainsVariable(consequence))
+                                        {
+                                            p.Add(consequence);
+                                        }
+                                    }
+                                    foreach (Triple consequence in p)
+                                    {
+                                        c.Remove(consequence);
+                                    }
+                                }
+                                if (p.Count > 0)
+                                {
+                                    if (c.Count == 0)
+                                    {
+                                        Warn("cant have Consequent");
+                                    }
+                                    else
+                                    {
+                                        temp.Add(GraphWithDef.CreateImplication(_graph, p, c));
+                                        foreach (var t in Producing)
+                                        {
+                                            temp.Add(t);
+                                        }
+                                        return temp;
+                                    }
+                                }
+                                else
+                                {
+                                    Warn("cant precondition Consequent");
+                                }
+                            }
+                            else
+                            {
+                                foreach (Triple consequence in Consequences)
+                                {
+                                    temp.Add(consequence);
+                                }
+                            }
                         }
                         else
                         {
-                          
+                            if (Producing.Count == 0)
+                            {
+                                return temp;
+                            }
                         }
-                    }
-                    if (skipProducing)
-                    {
-                        return temp;
                     }
                     foreach (var t in Producing)
                     {
                         temp.Add(t);
-                    }
+                    }                   
                     return temp;
                 }
             }
 
+            private static bool ContainsVariable(Triple triple)
+            {
+                if (triple.Object.NodeType == NodeType.Variable)
+                {
+                    return true;
+                }
+                if (triple.Subject.NodeType == NodeType.Variable)
+                {
+                    return true;
+                }
+                if (triple.Predicate.NodeType == NodeType.Variable)
+                {
+                    return true;
+                }
+                return false;
+            }
+
             public string AssertTriples(IGraph kb, bool checkWff, bool saveToKB)
             {
+                var ToTriples = this.ToTriples;
+
                 string bad = "";
-                if (saveToKB && !RequirementsMet)
+                if (saveToKB && !RequirementsMet && checkWff)
                 {
                     bad = "Meet requirements please! ";
                     saveToKB = false;
@@ -671,7 +782,7 @@ namespace LogicalParticleFilter1
                     }
                     return "";
                 }
-                bad += " " + ToString();
+               // bad += " " + ToString();
                 if (saveToKB)
                 {
                     throw ErrorBadOp(bad);
@@ -686,12 +797,14 @@ namespace LogicalParticleFilter1
                 {
                     bad += rdfGraphAssert(kb, triple, true, false);
                 }
+                if (string.IsNullOrEmpty(bad)) return null;
                 return bad;
             }
 
             internal void AddSubject(INode rdf)
             {
-                Subjects.Add(rdf);
+                if (rdf == null) return;
+                if (!Subjects.Contains(rdf)) Subjects.Add(rdf);
             }
 
             public void Clear()
@@ -705,11 +818,15 @@ namespace LogicalParticleFilter1
             {
                 AddRequirement(MakeTriple(s,
                            GraphWithDef.PredicateToProperty(sp),
-                           GraphWithDef.PartToRdf(o, this)));
+                           GraphWithDef.PartToRdf(o, this), false));
             }
         }
 
         public static Triple MakeTriple(INode s, INode p, INode o)
+        {
+            return MakeTriple(s, p, o, true);
+        }
+        public static Triple MakeTriple(INode s, INode p, INode o, bool toplevel)
         {
             IGraph sGraph = o.Graph;
             if (!ReferenceEquals(sGraph, p.Graph))
@@ -725,19 +842,45 @@ namespace LogicalParticleFilter1
                 s = s.CopyNode(sGraph, true);
             }
             Triple newTriple = new Triple(s, p, o);
-            string warn = "";
-            if (s is ILiteralNode)
+            string warn0 = "";
+            Action<string> warn = s0 =>
+                                      {
+                                          warn0 += s0 + " \n";
+                                      };
+            if (p.NodeType != NodeType.Uri)
             {
-                warn += "s = LiteralNode (" + s + ")";
+                warn("pred " + p + " is not URI");
+            }
+            if (s.NodeType == NodeType.GraphLiteral)
+            {
+                if (toplevel)
+                {
+                    IUriNode uri = p as IUriNode;
+                    if (uri == null || !uri.Uri.ToString().Contains("log"))
+                    {
+                        warn("s = not logical (" + s + ")");
+                    }
+                }
+            }
+            else
+            {
+                if (s is ILiteralNode)
+                {
+                    warn("s = LiteralNode (" + s + ")");
+                }
+                if (toplevel && !GraphWithDef.CanBeSubjectNode(s))
+                {
+                    warn("s = !CanBeSubjectNode (" + s + ")");
+                }
             }
             if (p is ILiteralNode)
             {
-                warn += "p = LiteralNode (" + p + ")";
+                warn("p = LiteralNode (" + p + ")");
             }
-            if (warn != "")
+            if (warn0 != "")
             {
-                warn += "bad triple =" + newTriple;
-                Warn(warn);
+                warn("bad triple =" + newTriple);
+                Warn(warn0);
             }
             return newTriple;
         }
@@ -753,7 +896,10 @@ namespace LogicalParticleFilter1
             if (checkWff)
             {
                 string bad = CheckTriple(triple);
-                if (!string.IsNullOrEmpty(bad)) return bad;
+                if (!string.IsNullOrEmpty(bad))
+                {
+                    return bad;
+                }
             }
             if (!saveToKB) return "";
             lock (rdfGraph)
@@ -807,8 +953,8 @@ namespace LogicalParticleFilter1
         {
             var graph = MakeRepositoryKB(queryMT);
             ensureCompiled(graph, ContentBackingStore.RdfMemory);
-                    return graph.RdfStore.rdfGraph;
-                }
+            return graph.RdfStore.rdfGraph;
+        }
 
         public static void EnsureGraphPrefixes(IGraph graph)
         {
@@ -983,6 +1129,7 @@ yago	http://dbpedia.org/class/yago/
 
         public void mtest()
         {
+
             IGraph g = new Graph();
             g.BaseUri = UriFactory.Create(RoboKindURI);
 
@@ -1008,6 +1155,7 @@ yago	http://dbpedia.org/class/yago/
             rdfxmlwriter.Save(g, "HelloWorld.rdf");
 
             MakeRepositoryKB("testRDF").SourceKind = ContentBackingStore.Prolog;
+            if (DeveloperSanityChecks < 2) return;
             rdfImportToKB(g,
                           "testRDF",
                           "SELECT * WHERE { ?s ?p ?o }",
@@ -1017,8 +1165,8 @@ yago	http://dbpedia.org/class/yago/
                     {
                         //new[] {"http://budapest.rkbexplorer.com/sparql"},
                         new[] {"dbpedia", "http://dbpedia.org/sparql"},
-                     //   new[] {"josekiBooks", "http://cogbotserver:2020"},
-                      //  new[] {"cogPoint", "http://cogbotserver:8181"},
+                        //   new[] {"josekiBooks", "http://cogbotserver:2020"},
+                        //  new[] {"cogPoint", "http://cogbotserver:8181"},
                         //new[] {"hebis", "http://lod.hebis.de/sparql"},
                     })
             {
@@ -1082,6 +1230,25 @@ yago	http://dbpedia.org/class/yago/
         public static PNode BaseKB;
         public static PNode EverythingPSC;
 
+        public static INode ToValueNode(INode obj)
+        {
+            var _name = (INode)obj;
+            if (!(_name is IValuedNode))
+            {
+                var vnode = _name.AsValuedNode();
+                if (ReferenceEquals(null, vnode))
+                {
+                }
+                else
+                {
+                    if (!ReferenceEquals(vnode, _name))
+                    {
+                        _name = vnode;
+                    }
+                }
+            }
+            return _name;
+        }
 
         public static INode GetValuedNode(string s)
         {
@@ -1207,7 +1374,7 @@ yago	http://dbpedia.org/class/yago/
 
             public bool SameClause(Rule rule)
             {
-                var vars = new PlHashtable();
+                var vars = new Dictionary<string,string>();
                 if (!head.SameClause(rule.head, vars))
                 {
                     return false;
@@ -1224,7 +1391,8 @@ yago	http://dbpedia.org/class/yago/
                 get
                 {
                     if (body == null) return 0;
-                    return body.plist.Length;
+                    if (IsBodyAlwaysTrue(body.plist)) return 0;
+                    return body.plist.Arity;
                 }
             }
         }
@@ -1240,7 +1408,19 @@ yago	http://dbpedia.org/class/yago/
             public readonly Dictionary<int, RDFArgSpec> argDefs;
             public INode classNode;
             public string assertionMt;
-            public List<Triple> inations = new List<Triple>();
+            public readonly List<Triple> DefinitionalRDF = new List<Triple>();
+            public List<Triple> DefinitionalRDFEnsurerd
+            {
+                get
+                {
+                    if (DefinitionalRDF.Count == 0)
+                    {
+                        RdfDocumentPred(rdfDefinations);
+                    }
+                    return DefinitionalRDF;
+                }
+            }
+
 
             /// <summary>
             /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
@@ -1283,7 +1463,35 @@ yago	http://dbpedia.org/class/yago/
                 {
                     writer.WriteLine(" Arg " + def.Key + " = " + def.Value.ArgNameInfo);
                 }
+                DumpTriplesPlain(DefinitionalRDFEnsurerd, writer, "{0}", rdfDefinations);
                 writer.WriteLine("</pre>");
+            }
+
+            public void RdfDocumentPred(Graph rdef)
+            {
+                {
+                    classNode = classNode ?? GraphWithDef.C(rdef, RoboKindURI + classname);
+                    DefinitionalRDF.Add(MakeTriple(classNode, GraphWithDef.InstanceOf, GraphWithDef.PrologPredicateClass));
+                    for (int i = 0; i < arity; i++)
+                    {
+                        RDFArgSpec adef = GraphWithDef.GetAdef(this, i + 1, false);
+                        if (adef == null)
+                        {
+                            adef = GraphWithDef.GetAdef(this, i + 1, true);
+                        }
+                        var subj = adef.GetRefNode(rdfDefinations);
+                        DefinitionalRDF.Add(MakeTriple(subj, GraphWithDef.InstanceOf, GraphWithDef.PrologPredicate));
+                        DefinitionalRDF.Add(MakeTriple(subj, GraphWithDef.C(rdef, "rdfs:domain"), classNode));
+                        DefinitionalRDF.Add(MakeTriple(subj, GraphWithDef.C(rdef, "rdfs:range"),
+                                                       GraphWithDef.C(rdef, "rdfs:Literal")));
+                        var localArgTypes = GraphWithDef.localArgTypes;
+                        lock (localArgTypes) if (!localArgTypes.Contains(adef)) localArgTypes.Add(adef);
+                    }
+                    if (PNode.QueryPredicateInfo(name, "prologMappingType") == "DirectOneToOneMapping")
+                    {
+                    }
+                }
+
             }
         }
 
@@ -1291,6 +1499,7 @@ yago	http://dbpedia.org/class/yago/
         {
             public RDFArgSpec(int hintArgNum1Based)
             {
+                SharedGlobalPredDefsDirty = true;
                 argNumHint = hintArgNum1Based;
             }
             private string predicateArgName = "_";
@@ -1348,6 +1557,7 @@ yago	http://dbpedia.org/class/yago/
 
             public void AddRangeTypeName(string functor)
             {
+                SharedGlobalPredDefsDirty = true;
                 functor = ProperCase(functor);
                 if (argNames.Add(functor) || !predicateArgName.ToLower().Contains(functor.ToLower()))
                 {
@@ -1355,7 +1565,7 @@ yago	http://dbpedia.org/class/yago/
                 }
             }
 
-            private string ProperCase(string functor)
+            private static string ProperCase(string functor)
             {
                 functor = functor.Substring(0, 1).ToUpper() + functor.Substring(1);
                 return functor;
@@ -1367,14 +1577,31 @@ yago	http://dbpedia.org/class/yago/
             }
         }
 
-        public partial class PNode:IComparable 
+        public partial class PNode : IComparable
         {
             public string id;
             public object CompileLock
             {
                 get
                 {
-                    lock (GlobalEdgeListLock) return this;//.rules;
+                    var lockobj = this;
+                    bool needsUnlock = true;
+                    try
+                    {
+                        needsUnlock = Monitor.TryEnter(lockobj, TimeSpan.FromSeconds(4));
+                        if (!needsUnlock)
+                        {
+                            return new object();
+                        }
+                        return lockobj;
+                    }
+                    finally
+                    {
+                        if (needsUnlock)
+                        {
+                            Monitor.Exit(lockobj);
+                        }
+                    }
                 }
             }
 
@@ -1399,7 +1626,7 @@ yago	http://dbpedia.org/class/yago/
 
             public double probability = 1.0;
             public ContentBackingStore SourceKind = ContentBackingStore.Prolog;
-            
+
             private ContentBackingStore _SyncFromNow = ContentBackingStore.None;
             public ContentBackingStore SyncFromNow
             {
@@ -1424,7 +1651,15 @@ yago	http://dbpedia.org/class/yago/
                 set { id = value; }
             }
             object _repository;
+#if MERGED_RDFSTORE
+            public GraphWithDef RdfStore
+            {
+                get { return this; }
+            }
+#else
             public GraphWithDef RdfStore;
+#endif
+
 
             public object Repository
             {
@@ -1449,11 +1684,6 @@ yago	http://dbpedia.org/class/yago/
             {
                 get { return probability; }
                 set { probability = value; }
-            }
-
-            public PNode(string id)
-                : this(id, null)
-            {            
             }
             public override int GetHashCode()
             {
@@ -1483,14 +1713,7 @@ yago	http://dbpedia.org/class/yago/
             {
                 return !(node1 == node2);
             }
-            public PNode(string id, object info)
-            {
-                this.id = id;
-                pdb = new PDB(true);
-                pdb.startMt = id;
-                pdb.followedGenlMt = false;
-                this._repository = info;
-            }
+
 
             public override string ToString()
             {
@@ -1552,8 +1775,8 @@ yago	http://dbpedia.org/class/yago/
                     }
                     string pq = "";
                     var buri = RdfStore.rdfGraph.BaseUri;
-                    if (buri != null) pq = buri.PathAndQuery;
-                    return string.Format("{0} size={1} dirty={2} triples={3} sync={4} uri={5} base={6}",
+                    if (buri != null) pq = "" + buri;
+                    return string.Format("{0} size={1} dirty={2} triples={3} sync={4} repo={5} base={6}",
                                          prefix, pdb.rules.Count, dirty,
                                          RdfStore.rdfGraph.Triples.Count,
                                          SyncFromNow, Repository, pq);
@@ -1587,10 +1810,10 @@ yago	http://dbpedia.org/class/yago/
                     if (e.EndNode == otherNode)
                     {
                         if (e.StartNode.outgoingEdgeList.Contains(e))
-                                e.StartNode.outgoingEdgeList.Remove(e);
-                        if (e.EndNode.incomingEdgeList.Contains(e)) 
-                                e.EndNode.incomingEdgeList.Remove(e);
-                        return ;
+                            e.StartNode.outgoingEdgeList.Remove(e);
+                        if (e.EndNode.incomingEdgeList.Contains(e))
+                            e.EndNode.incomingEdgeList.Remove(e);
+                        return;
                     }
                 }
 
@@ -1683,9 +1906,25 @@ yago	http://dbpedia.org/class/yago/
                 RdfStore.LoadFromUri(from);
                 SyncFromNow = ContentBackingStore.RdfMemory;
             }
-        }
-        public class GraphWithDef {
+#if MERGED_RDFSTORE
+#else
 
+            public PNode(string id)
+                : this(id, null)
+            {
+            }
+                        
+            public PNode(string id, object info)
+            {
+                this.id = id;
+                pdb = new PDB(true);
+                pdb.startMt = id;
+                pdb.followedGenlMt = false;
+                this._repository = info;
+            }
+        }
+
+        public partial class GraphWithDef {
             public IGraph definations
             {
                 get { return rdfGraph ?? rdfDefinations ?? rdfGraph; }
@@ -1714,12 +1953,13 @@ yago	http://dbpedia.org/class/yago/
             {
                 return "PrologKB=" + PrologKB + StructToString(this);
             }
+#endif
             public string AToString
             {
                 get { return ToString(); }
             }
 
-            public IGraph _rdfGraph;
+            readonly public IGraph _rdfGraph;
             public IGraph rdfGraph
             {
                 get
@@ -1735,7 +1975,27 @@ yago	http://dbpedia.org/class/yago/
             static public List<Term> localPredInstances = new List<Term>();
             private PNode kbNode;
             public SIProlog prologEngine;
-
+            
+#if MERGED_RDFSTORE
+            public PNode PrologKB
+            {
+                get { return this; }
+            }
+            public PNode(string plMt, SIProlog prolog, IGraph data)
+            {
+                this.prologEngine = prolog;
+                prologMt = plMt;
+                this.id = plMt;
+                pdb = new PDB(true);
+                pdb.startMt = plMt;
+                pdb.followedGenlMt = false;
+                PrologKB.id = plMt;
+                _rdfGraph = data;
+                prolog.KBGraph.AddNode(this);
+                prologEngine.GraphForMT[plMt] = this;
+                EnsureGraphPrefixes(rdfGraph);
+            }
+#else
             public PNode PrologKB
             {
                 get
@@ -1745,14 +2005,25 @@ yago	http://dbpedia.org/class/yago/
                         {
                             kbNode = prologEngine.KBGraph.Contains(prologMt);
                             if (kbNode != null) return kbNode;
-                            kbNode = new PNode(prologMt) {RdfStore = this, id=prologMt};
+                            kbNode = new PNode(prologMt) {RdfStore = this, id = prologMt};
                             prologEngine.KBGraph.AddNode(kbNode);
                         }
+                    if (kbNode.RdfStore == null)
+                    {
+                        kbNode.RdfStore = this;
+                    }
+                    else if (kbNode.RdfStore != this)
+                    {
+                        kbNode.RdfStore = this;
+                    }
                     return kbNode;
                 }
-                set { kbNode = value; }
+                set
+                {
+                    kbNode = value;
+                    kbNode.RdfStore = this;
+                }
             }
-
             public GraphWithDef(string plMt, SIProlog prolog, IGraph data)
             {                
                 this.prologEngine = prolog;
@@ -1761,6 +2032,7 @@ yago	http://dbpedia.org/class/yago/
                 _rdfGraph = data;
                 EnsureGraphPrefixes(rdfGraph);
             }
+#endif
 
             static private PredicateProperty AddDefs(Rule rule)
             {
@@ -1796,21 +2068,8 @@ yago	http://dbpedia.org/class/yago/
                     def = GetPredDef(predName, arity, out newlyCreated);
                     if (newlyCreated)
                     {
-                        var classNode = def.classNode = def.classNode ?? C(rdef, RoboKindURI + def.classname);
-                        def.inations.Add(MakeTriple(classNode, InstanceOf, PrologPredicateClass));
-                        for (int i = 0; i < arity; i++)
-                        {
-                            RDFArgSpec adef = GetAdef(def, i + 1, false);
-                            if (adef == null)
-                            {
-                                adef = GetAdef(def, i + 1, true);
-                            }
-                            var subj = adef.GetRefNode(rdfDefinations);
-                            def.inations.Add(MakeTriple(subj, InstanceOf, PrologPredicate));
-                            def.inations.Add(MakeTriple(subj, C(rdef, "rdfs:domain"), classNode));
-                            def.inations.Add(MakeTriple(subj, C(rdef, "rdfs:range"), C(rdef, "rdfs:Literal")));
-                            if (!localArgTypes.Contains(adef)) localArgTypes.Add(adef);
-                        }
+                        SharedGlobalPredDefsDirty = true;
+                        def.RdfDocumentPred(rdef);
                     }
                 }
                 lock (localPreds)
@@ -1818,11 +2077,13 @@ yago	http://dbpedia.org/class/yago/
                     if (!localPreds.Contains(def))
                     {
                         localPreds.Add(def);
+                        SharedGlobalPredDefsDirty = true;
                     }
                 }
-                if (newlyCreated)
+                //if (newlyCreated)
                 {
-                    foreach (Triple t in def.inations)
+                    SharedGlobalPredDefsDirty = true;
+                    foreach (Triple t in def.DefinitionalRDF)
                     {
                         rdfGraphAssert(rdef, t);
                     }
@@ -1936,7 +2197,8 @@ yago	http://dbpedia.org/class/yago/
                         newUri = new Uri(p);
                         return def.CreateUriNode(newUri);
                     }
-                    return C(def, Tools.ResolveQName(p0, def.NamespaceMap, def.BaseUri));
+                    string qname = Tools.ResolveQName(p0, def.NamespaceMap, def.BaseUri);
+                    return C(def, qname);
                 }
                 catch (Exception)
                 {
@@ -2074,20 +2336,20 @@ yago	http://dbpedia.org/class/yago/
 
             public static RdfRules FromRule(Rule rule, IGraph kb)
             {
+                if (rule.rdfRuleCache != null) return rule.rdfRuleCache;
                 if (IsRdfPrecoded(rule.head))
                 {
                     return null;
                 }
-                if (rule.rdfRuleCache != null) return rule.rdfRuleCache;
-                if (kb.BaseUri == null)
-                {
-
-                }
+              
                 var rdfRules = rule.rdfRuleCache = new RdfRules(kb);
                 PartList pl = null;
                 if (rule.body != null)
                 {
-                    pl = (PartList) rule.body.plist.CopyTerm;
+                    if (!IsBodyAlwaysTrue(rule.body.plist))
+                    {
+                        pl = (PartList)rule.body.plist.CopyTerm;
+                    }
                 }
                 Term rulehead = (Term) rule.head.CopyTerm;
                 AddData(rulehead, pl, rdfRules);
@@ -2096,7 +2358,7 @@ yago	http://dbpedia.org/class/yago/
                   //  EnsureGraphPrefixes(kb, () => UriOfMt(rule.optHomeMt));
                     rdfRules.AddProducing(MakeTriple(rdfRules.RuleNode,
                                                      kb.CreateUriNode("siprolog:sourceCode"),
-                                                     kb.CreateLiteralNode(rule.ToString(), "prolog")));
+                                                     kb.CreateLiteralNode(rule.ToSource(SourceLanguage.Prolog), "prolog")));
                 }
                 rdfRules.AssertTriples(kb, true, true);
                 return rdfRules;
@@ -2105,24 +2367,44 @@ yago	http://dbpedia.org/class/yago/
             public void AddRuleToRDF(Rule rule)
             {
                 if (rule.rdfRuleCache != null) return;
-                string before = rule.ToString();
+                string before = rule.ToSource(SourceLanguage.Prolog);
                 FromRule(rule, rdfGraph);
-                string after = rule.ToString();
+                string after = rule.ToSource(SourceLanguage.Prolog);
                 if (before != after)
                 {
+                  //  Warn("Manipulated rule: " + before + "->" + after);
                 }
             }
 
             static bool IsRdfPrecoded(Term thisTerm)
             {
-                string key = thisTerm.name + "_" + thisTerm.Arity;
-                if (key == "not_1") return true;
+                var name = thisTerm.name;
+                string key = name + "_" + thisTerm.Arity;
+                if (key == "not_1")
+                {
+                    return true;
+                }
+                if (key == "unify_2")
+                {
+                    return true;
+                }
+                if (key.Contains("sameAs"))
+                {
+                    return true;
+                }
+                if (key.Contains(":"))
+                {
+                    return true;
+                }
+                if (QueryPredicateInfo(name, "prologMappingType") == "PrologOnlyPredicate")
+                {
+                    return true;
+                }
                 return false;
             }
-            static bool IsRdfBuiltIn(Term thisTerm, RdfRules rules)
+            static bool IsRdfBuiltIn(string name, int arity, Part thisTerm, RdfRules rules)
             {
-                //return false;
-                int arity = thisTerm.Arity;
+
                 if (arity < 2)
                 {
                     if (arity == 1 && IsLitteral(thisTerm.ArgList[0], rules))
@@ -2131,17 +2413,77 @@ yago	http://dbpedia.org/class/yago/
                     }
                     return true;
                 }
-                if (arity > 2) return false;
-                string name = thisTerm.name;
+                if (arity > 2)
+                {
+                    if (name == TripleName) return true;
+                    return false;
+                }
+                if (arity == 2 && name.StartsWith("prolog")) return true;
                 if (arity == 2 && name.Contains(":")) return true;
                 lock (PDB.builtin)
                 {
-                    if(PDB.builtin.ContainsKey(name + "/" + arity))
+                    if (PDB.builtin.ContainsKey(name + "/" + arity))
+                    {
+                        return true;
+                    }
+                }
+
+                if (QueryPredicateInfo(name, "prologMappingType") == "DirectOneToOneMapping")
+                {
+                    return true;
+                }
+                if (QueryPredicateInfo(name, "prologMappingTypeEquivalent") != null)
+                {
+                    return true;
+                }
+                string type = QueryPredicateInfo(name, "rdf:type");
+                if (type != null)
+                {
+                    if (type.EndsWith("Property"))
                     {
                         return true;
                     }
                 }
                 return false;
+            }
+
+            public static string QueryPredicateInfo(string thisTerm, string pred)
+            {
+                SparqlParameterizedString query = new SparqlParameterizedString("SELECT ?object WHERE { @subj @pred ?object }");
+                query.SetParameter("subj", C(rdfDefinations, thisTerm));
+                query.SetParameter("pred", C(rdfDefinations, pred));
+                object result = rdfDefinations.ExecuteQuery(query);
+                if (result == null)
+                {
+                    return null;
+                }
+                SparqlResultSet rs = result as SparqlResultSet;
+                string answer = null;
+                if (rs.Count > 0)
+                {
+                    var res = rs[0];
+                    var r = res["object"];
+                    answer = GetTextString(r);
+                }
+                return answer;
+            }
+
+            private static string GetTextString(INode r)
+            {               
+                var sr = "" + r;
+                var vn = ToValueNode(r);
+                if (vn != r) r = vn;
+                if (r is IUriNode)
+                {
+                    IUriNode uriNode = r as IUriNode;
+                    sr = uriNode.Uri.Fragment;
+                }
+                else if (r is ILiteralNode)
+                {
+                    sr = ((ILiteralNode)r).Value;
+                }
+                if (sr.StartsWith("#")) sr = sr.Substring(1);
+                return sr;
             }
 
             private static bool IsLitteral(Part arg0, RdfRules triples)
@@ -2156,6 +2498,7 @@ yago	http://dbpedia.org/class/yago/
                 var varNames = new List<string>();
                 var newVarNames = new List<string>();
                 int newVarCount;
+               /// head = ToTranslated(head, triples);
                 lock (head)
                 {
                     rulebody = AnalyzeHead(head, true, varNames, newVarNames, out newVarCount, rulebody);
@@ -2251,7 +2594,36 @@ yago	http://dbpedia.org/class/yago/
                     }
                     rulebody = bpl;
                 }
-                var ruleSubject = CreateConsequentNode(head, rdfRules, false);
+                AddData2(head, rulebody, rdfRules);
+            }
+
+            private static void AddData2(Term head, PartListImpl rulebodyIn, RdfRules rdfRules)
+            {
+                PartList rulebody = null;
+                if (!IsBodyAlwaysTrue(rulebodyIn))
+                {
+                    rulebody = new PartListImpl();
+                    foreach(Term tin in rulebodyIn)
+                    {
+                        Term t = ToTranslated(tin, rdfRules);
+                        if (t != null) rulebody.AddPart(t);
+                    }
+                }
+                if (head.name == "rdfinfo")
+                {
+                    var pl = SIProlog.CurrentProlog;
+                    foreach (var arg in head.ArgList)
+                    {
+
+                        pl.appendKB(new RuleList() {new Rule((Term) arg)}, pl.FindOrCreateKB(rdfDefMT));
+                    }
+                    return;
+                }
+                var ruleSubject = CreateConsequentNode(head, rdfRules, rulebody != null);
+                if (ruleSubject != null)
+                {
+                    rdfRules.RuleNode = ruleSubject;
+                }
                 if (rulebody != null)
                 {
                     foreach (Part p in rulebody.ArgList)
@@ -2266,9 +2638,7 @@ yago	http://dbpedia.org/class/yago/
                     bad += " in DB " + rdfRules.ToString();
                     Warn(bad);
                 }
-                rdfRules.RuleNode = ruleSubject;
                 rdfRules.RequirementsMet = string.IsNullOrEmpty(rdfRules.Check(definations));
-                return;
             }
 
             static private void GatherTermAntecedants(Part part, RdfRules anteceeds)
@@ -2276,28 +2646,24 @@ yago	http://dbpedia.org/class/yago/
                 if (part is Term)
                 {
                     var rdf = CreateAntecedantNode((Term) part, anteceeds);
-                    anteceeds.AddSubject(rdf);
                     if (rdf != null)
                     {
-
+                        anteceeds.AddSubject(rdf);
                     }
                     return;
                 }
                 throw ErrorBadOp("Part is not a Term " + part);
             }
 
+            private static bool IsTriple(Term term)
+            {
+                if( term.name == TripleName) return true;
+                return false;
+            }
+
             static private Term unifyvar(Part p1, Variable p2)
             {
                 return MakeTerm("unify", p1, p2);
-            }
-
-            private bool ContainsUnknowns(RdfRules headtriples)
-            {
-                foreach (Triple triple in headtriples.ToTriples)
-                {
-                    
-                }
-                return false;
             }
 
             public static Triple CreateImplication(IGraph def, ICollection<Triple> bodytriples, ICollection<Triple> headtriples)
@@ -2317,15 +2683,18 @@ yago	http://dbpedia.org/class/yago/
                 return group;
             }
 
-            static private INode CreateSubject(Term term, RdfRules triples, bool isPrecond)
+            static private INode CreateTriplesWithGeneratedSubject(Term term, RdfRules triples, bool isPrecond)
             {
-                if (IsRdfBuiltIn(term, triples))
+                if (IsRdfBuiltIn(term.name, term.Arity, term, triples))
                 {
                     Warn("RDFBuiltin passed to Create Subject");
-                    if (BuiltinToRDF(term, triples)) return triples.RuleNode;
+                    INode bio;
+                    if (BuiltinToRDF(!isPrecond, term, triples, isPrecond ? (Action<Triple>)triples.AddRequirement : triples.AddConsequent, out bio))
+                        return bio;
                 }
                 var headDef = GetPredicateProperty(term);
-                INode subj = CreateInstance(headDef, triples, isPrecond ? NodeType.Variable : NodeType.Uri);
+                INode subj = CreateInstance(headDef, term, triples, isPrecond ? NodeType.Variable : NodeType.Uri);
+                triples.AddSubject(subj);
                 var conds = AddTriplesSubject(term, triples, subj);
                 foreach (Triple triple in conds)
                 {
@@ -2338,6 +2707,7 @@ yago	http://dbpedia.org/class/yago/
                         triples.AddConsequent(triple);
                     }
                 }
+                if (subj.NodeType != NodeType.Blank) return null;
                 return subj;
             }
 
@@ -2363,21 +2733,21 @@ yago	http://dbpedia.org/class/yago/
                         argDef = GetAdef(headDef, argNum, true);
                     }
                     INode pred = argDef.GetRefNode(rdfDefinations);
-                    conds.Add(MakeTriple(subj, pred, obj));
+                    conds.Add(MakeTriple(subj, pred, obj, false));
                     argNum++;
                 }
                 return conds;
             }
 
-            static private INode CreateConsequentNode(Term term, RdfRules triples, bool isVar)
+            static private INode CreateConsequentNode(Term term, RdfRules triples, bool hasBody)
             {
                 term = ToTranslated(term, triples);
-                if (IsRdfBuiltIn(term, triples))
+                if (IsRdfBuiltIn(term.name, term.Arity, term, triples))
                 {
-                    if (BuiltinToRDF(term, triples)) return triples.RuleNode;
+                    INode bio;
+                    if (BuiltinToRDF(!hasBody, term, triples, triples.AddConsequent, out bio)) return null;
                 }
-                bool isPrecond = isVar;
-                var rdf0 = CreateSubject(term, triples, isPrecond);
+                var rdf0 = CreateTriplesWithGeneratedSubject(term, triples, false);
                 triples.AddSubject(rdf0);
                 return rdf0;
             }
@@ -2385,11 +2755,14 @@ yago	http://dbpedia.org/class/yago/
             static private INode CreateAntecedantNode(Term term, RdfRules triples)
             {
                 term = ToTranslated(term, triples);
-                if (IsRdfBuiltIn(term, triples))
+                if (IsRdfBuiltIn(term.name, term.Arity, term, triples))
                 {
-                    if (BuiltinToRDF(term, triples)) return triples.RuleNode;
+                    INode bio;
+                    if (BuiltinToRDF(false, term, triples, triples.AddRequirement, out bio)) return bio;
                 }
-                return CreateSubject(term, triples, true);
+                var rdf0 = CreateTriplesWithGeneratedSubject(term, triples, true);
+                triples.AddSubject(rdf0);
+                return rdf0;
             }
 
             private static Term ToTranslated(Term term, RdfRules triples)
@@ -2402,7 +2775,7 @@ yago	http://dbpedia.org/class/yago/
                         return ToTranslated(
                             MakeTerm("rdf:type", arg0, Atom.FromSource(PredicateToType(term.name))), triples);
                     return ToTranslated(
-                        MakeTerm("unaryTypeTrue", arg0, Atom.FromSource(PredicateToType(term.name))), triples);
+                        MakeTerm("prologUnaryTrue", arg0, Atom.FromSource(PredicateToType(term.name))), triples);
                 }
                 if (term.Arity == 2) return term;
                 if (term.Arity > 2)
@@ -2414,28 +2787,40 @@ yago	http://dbpedia.org/class/yago/
                 return term;
             }
 
-            static private bool BuiltinToRDF(Term term, RdfRules antecedants)
+            static private bool BuiltinToRDF(bool toplevel, Term term, RdfRules antecedants, Action<Triple> howToAdd, out INode bio)
             {
                 var definations = antecedants.def;
                 int arity = term.Arity;
                 if (arity == 2)
                 {
-                    antecedants.AddRequirement(MakeTriple(PartToRdf(term.ArgList[0], antecedants),
-                                              PredicateToProperty(term.name),
-                                              PartToRdf(term.ArgList[1], antecedants)));
+                    bio = PartToRdf(term.ArgList[0], antecedants);
+                    howToAdd(MakeTriple(bio,
+                                        PredicateToProperty(term.name),
+                                        PartToRdf(term.ArgList[1], antecedants), toplevel));
+                    bio = null;
+                    return true;
+                }
+                if (term.name == TripleName && arity == 3)
+                {
+                    var al = term.ArgList;
+                    bio = PartToRdf(al[0], antecedants);
+                    howToAdd(MakeTriple(bio, PartToRdf(al[1], antecedants),
+                               PartToRdf(al[2], antecedants)));
+                    bio = null;
                     return true;
                 }
                 if (arity == 1)
                 {
-                    INode partToRdf = PartToRdf(term.ArgList[0], antecedants);
-                    if (!(partToRdf is ILiteralNode))
+                    bio = PartToRdf(term.ArgList[0], antecedants);
+                    if (!(bio is ILiteralNode))
                     {
                         var dataType = C(definations, PredicateToType(term.name));
-                        antecedants.AddRequirement(MakeTriple(partToRdf, InstanceOf, dataType));
+                        howToAdd(MakeTriple(bio, InstanceOf, dataType));
                         return true;
                     }
                 }          
-                ErrorBadOp("Cant Create Bultin from " + term);
+                ErrorBadOp("Cannot create RDF (Builtin) from " + term);
+                bio = null;
                 return false;                
             }
 
@@ -2465,6 +2850,43 @@ yago	http://dbpedia.org/class/yago/
                     return C(rdfDefinations, "owl:sameAs");
                 }
                 return C(rdfDefinations, AsURIString(binaryPred));
+            }
+            static private INode CreateInstance(PredicateProperty headDef, Term term, RdfRules graph, NodeType nodeType)
+            {
+                int instanceOnArg = 0;
+                var name = term.name;
+                if (QueryPredicateInfo(name, "prologMappingType") == "DirectOneToOneMapping")
+                {
+                    instanceOnArg = 1;
+                }
+                string iarg = QueryPredicateInfo(name, "prologInstanceArg");
+                if (iarg != null)
+                {
+                    int arg;
+                    if (int.TryParse(iarg, out arg))
+                    {
+                        instanceOnArg = arg;
+                    }
+                }
+                if (instanceOnArg > 0)
+                {
+                    INode inst = PartToRdf(term.ArgList[instanceOnArg - 1], graph);
+                    if (!CanBeSubjectNode(inst))
+                    {
+                        Warn("Incompatible Subject node " + inst + " in " + term);
+                    }
+                    return inst;
+                }
+                return CreateInstance(headDef, graph, nodeType);
+            }
+
+            public static bool CanBeSubjectNode(INode node)
+            {
+                if (node==null)
+                    return false;
+                if (node.NodeType == NodeType.Blank) return true;
+                if (node.NodeType == NodeType.Uri) return true;
+                return false;
             }
 
             static private INode CreateInstance(PredicateProperty headDef, RdfRules graph, NodeType nodeType)
@@ -2496,17 +2918,10 @@ yago	http://dbpedia.org/class/yago/
                 }
                 var a = InstanceOf;
                 var cn = headDef.classNode = headDef.classNode ?? C(rdfDefinations, RoboKindURI + headDef.classname);
-                graph.AddProducing(MakeTriple(iln, a, cn));
+                graph.AddProducing(MakeTriple(iln, a, cn, false));
                 return iln;
             }
 
-            public static ulong CONSP
-            {
-                get
-                {
-                    return ++_CONSP;
-                }
-            }
             static public INode PartToRdf(Part part, RdfRules triples)
             {
                 var definations = triples.def;
@@ -2555,6 +2970,8 @@ yago	http://dbpedia.org/class/yago/
                 if (node is IBlankNode)
                 {
                     var vnode = (IBlankNode) node;
+                    var atom = Atom.MakeNodeAtom(vnode);
+                    return atom;
                     node = triples.def.CreateUriNode(UriFactory.Create("_:" + vnode.InternalID));
                 }
 
@@ -2641,7 +3058,7 @@ yago	http://dbpedia.org/class/yago/
             }
 
             private static HashSet<string> MissingNameSpaces = new HashSet<string>();
-            private static ulong _CONSP = 0;
+            public FrequencyOfSync SyncFrequency = FrequencyOfSync.AsNeeded;
 
             static private void DiscoverNameSpace(string uri)
             {
@@ -2775,10 +3192,24 @@ yago	http://dbpedia.org/class/yago/
                 var focus = PrologKB;
                 WarnAndClear(focus, ContentBackingStore.Prolog, clearRDFMemory, focus.ClearRDFCache, ContentBackingStore.RdfMemory);
                 prologEngine.pushRulesToGraph(prologMt, this, focus.RdfCacheShouldGenlPrologMt);
+                SaveOffRDF();
+            }
+
+            private void SaveOffRDF()
+            {
+                string rdfdir = "rdfcache";
+                if (Directory.Exists(rdfdir))
+                {
+                    lock (CompileLock)
+                    {
+                        rdfGraph.SaveToFile(rdfdir + "/" + prologMt + ".n3", new Notation3Writer());
+                    }
+                }
             }
 
             internal void pushGraphToKB(bool clearPrologFirst)
             {
+                SaveOffRDF();
                 var focus = PrologKB;
                 WarnAndClear(focus, ContentBackingStore.RdfMemory, clearPrologFirst, focus.ClearPrologCache,
                              ContentBackingStore.Prolog);
@@ -2786,18 +3217,20 @@ yago	http://dbpedia.org/class/yago/
                 if (trips.Count == 0) return;
                 lock (trips)
                 {
-                    RdfRules rules = new RdfRules(rdfGraph);
-                    rules.Producing.AddRange(trips);
                     focus.pdb.index.Clear();
                     foreach (Triple triple in trips)
                     {
-                        var term = MakeTerm("triple",
+                        RdfRules rules = new RdfRules(rdfGraph);
+                        var term = MakeTerm(TripleName,
                                             RdfToPart(triple.Subject, rules),
                                             RdfToPart(triple.Predicate, rules),
                                             RdfToPart(triple.Object, rules));
                         var rule = new Rule(term);
                         rule.rdfRuleCache = rules;
-                        focus.pdb.rules.Add(rule);
+                        if (!focus.pdb.rules.Contains(rule))
+                        {
+                            focus.pdb.rules.Add(rule);
+                        }
                     }
                 }
             }
@@ -2821,6 +3254,7 @@ yago	http://dbpedia.org/class/yago/
                 }
                 else
                 {
+                    focus.SyncFromNow = ContentBackingStore.None;
                     focus.SyncFromNow = destContent;
                 }
             }
@@ -2830,21 +3264,17 @@ yago	http://dbpedia.org/class/yago/
                 get { return rdfGraph.Triples; }
             }
 
-            public object WriteTriple(Triple arg)
+            public string PlReadble(INode subject0, RdfRules rules)
             {
-                //Notation3Writer()
-                return arg.ToString();
-            }
-
-            public string PlReadble(INode subject, RdfRules rules)
-            {
-                Part part1 = RdfToPart(subject, rules);
+                var subject1 = ToValueNode(subject0);
+                Part part1 = RdfToPart(subject1, rules);
                 INode subject2 = PartToRdf(part1, rules);
-                if (subject2 != subject)
+                if (subject2 != subject1)
                 {
-                    Warn("PlReadble not round tripping! INodes " + NodeDesc(subject) + "->" + NodeDesc(subject2));
+                    Warn("PlReadble not round tripping! INodes " + NodeDesc(subject1) + "->" + NodeDesc(subject2));
                 }
                 string readable = part1.ToSource(SourceLanguage.Prolog);
+                if (SIProlog.DeveloperSanityChecks < 2) return readable;
                 Tokeniser oldTokenizer = new Tokeniser(readable);
                 Part part2 = ParsePart(oldTokenizer);
                 if (part2 == null || !part2.Equals(part1))
@@ -2855,12 +3285,12 @@ yago	http://dbpedia.org/class/yago/
                     Tokeniser newTokeniser = new Tokeniser(readable);
                     part2 = ParsePart(newTokeniser);
                     tl_spy_prolog_reader = false;
-                    Warn("PlReadble not round tripping! re-readablity Node=" + NodeDesc(subject) + " part1=" +
+                    Warn("PlReadble not round tripping! re-readablity Node=" + NodeDesc(subject1) + " part1=" +
                          PartDesc(part1) + ".ToPLReadable()->" + readable);
                 }
-                if ((part2 is Variable && subject.NodeType != NodeType.Variable))
+                if ((part2 is Variable && subject1.NodeType != NodeType.Variable))
                 {
-                    Warn("PlReadble not round tripping! Making a prolog variable? " + NodeDesc(subject) + " part1= " + PartDesc(part1));
+                    Warn("PlReadble not round tripping! Making a prolog variable? " + NodeDesc(subject1) + " part1= " + PartDesc(part1));
                 }
                 return readable;
             }
@@ -2875,28 +3305,6 @@ yago	http://dbpedia.org/class/yago/
                 return subject + "{type=" + subject.type + " impl=" + subject.GetType() + "}";
             }
 
-            private static string ToQuoting(NodeType type)
-            {
-                switch (type)
-                {
-                    case NodeType.Blank:
-                        break;
-                    case NodeType.Uri:
-                        return "{}";
-                        break;
-                    case NodeType.Literal:
-                        return SYNTAX_DoubleQuotes;
-                        break;
-                    case NodeType.GraphLiteral:
-                        break;
-                    case NodeType.Variable:
-                        break;
-                    default:
-                        break;
-                }
-                throw ErrorBadOp("to quoting on " + type);
-            }
-           
             public void LoadFromUri(Uri uri)
             {
                 try
@@ -2946,6 +3354,18 @@ yago	http://dbpedia.org/class/yago/
                     Warn("While endpointURI={0}\n\n{1}", endpointURI, queryEx);
                 }
             }
+
+            public void IncludeRDFUri(string filename)
+            {
+                Graph g = new Graph();
+                g.NamespaceMap.Import(rdfGraph.NamespaceMap);
+                g.BaseUri = rdfGraph.BaseUri;
+                Uri loadFrom = new Uri(new Uri(filename).AbsoluteUri);
+                g.LoadFromUri(loadFrom);
+                ConsoleWriteLine("Loading " + g.Triples.Count + " from " + loadFrom);
+                rdfGraph.Merge(g, true);
+                ConsoleWriteLine("Merged " + rdfGraph.Triples.Count + " to " + rdfGraph);
+            }
         }
         public static void Warn(string format, params object[] args)
         {
@@ -2958,6 +3378,7 @@ yago	http://dbpedia.org/class/yago/
                 {
                     WarnWriter.WriteLine("<hr/><pre><font color=\"red\">{0}</font></pre><hr/>", write);
                     WarnWriter.Flush();
+                    return;
                 }
                 catch (Exception)
                 {
@@ -3162,16 +3583,6 @@ yago	http://dbpedia.org/class/yago/
                 return gatherNames;
             }
             return null;
-        }
-
-        private void pullKBFromRdfServer_OLD(PNode focus)
-        {
-            string uri = "" + focus.Repository;
-            rdfRemoteEndpointToKB(uri,
-                                  focus.Id,
-                                  "SELECT * WHERE { ?s ?p ?o } LIMIT " + maxMtSize,
-                                  null);
-            focus.SyncFromNow = ContentBackingStore.RdfMemory;
         }
 
     }

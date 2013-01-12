@@ -16,12 +16,16 @@ namespace LogicalParticleFilter1
     class Program
     {
        static SymbolicParticleFilter ourFilter = new SymbolicParticleFilter();
-       static SIProlog prologEngine= new  SIProlog();
+        public static SIProlog prologEngine;
 
        // test case from http://mason.gmu.edu/~gcaldero/docs/CS687_P4_bayes.lisp
         //
+        static private bool w1Loaded = false;
+
         static void world1()
         {
+            if (w1Loaded) return;
+            w1Loaded = true;
             ourFilter.prototype.variables.Add("in(r0)", 0.8);
             ourFilter.prototype.variables.Add("in(r1)", 0.05);
             ourFilter.prototype.variables.Add("in(r2)", 0.05);
@@ -317,35 +321,46 @@ namespace LogicalParticleFilter1
         }
         static void Main(string[] args)
         {
-            testProlog4();
+            runningTests = null;
+            RunAllTests(new SIProlog());
+        }
+
+        static SIProlog runningTests;
+        public static void RunAllTests(SIProlog testIt)
+        {
+            if (runningTests != null)
+            {
+                SIProlog.Warn("Already started tests");
+                return;
+            }          
+            runningTests = testIt;
+            prologEngine = testIt;
+            //testProlog4();
             testPrologBuiltins();
-            testRDFServer();
-           // testCema();
+            //testRDFServer();
+            testCema();
             testSat();
-            return;
-           // testProlog1();
-           // testProlog2();
-           // testProlog3();
-           // testPrologBuiltins();
+            //return;
+            testProlog1();
+            testProlog2();
+            testKBload();
+            testProlog3();
+            testPrologBuiltins();
             prologEngine.mtest();
             prologEngine.askQuery("triple(SUBJECT,PRED,OBJ)", "testRDF");
-            prologEngine.askQuery("triple(SUBJECT,PRED,OBJ)", "dbpediaKB");
+            prologEngine.askQuery("triple(SUBJECT,PRED,OBJ)", "dbpediaRdfMemory");
 
             testProlog4();
-            return;
+            //p1();
+            p2();
+            p3();
 
-            p1();
-            //p2();
-            //p3();
-        
             ourFilter.defMeanParticle();
             //ourFilter.dump();
             Console.WriteLine("meanP raw:{0}", ourFilter.meanParticle.ToString());
             ourFilter.meanParticle.normalize(ourFilter.constraintSet);
             Console.WriteLine("meanP norm:{0}", ourFilter.meanParticle.ToString());
             Console.WriteLine("done");
-
-
         }
     }
 }

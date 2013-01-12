@@ -1324,8 +1324,28 @@ namespace RTParser
                                                                           user, true);
                                 if (outputSentence.Length > 0)
                                 {
-                                    result.AddOutputSentences(outputSentence);
-                                    saveResult = true;
+                                    bool useOutput = true;
+                                    Result userLastResult = user.LastResult;
+                                    if (userLastResult != null)
+                                    {
+                                        var oses = userLastResult.OutputSentences;
+                                        foreach (var os in oses)
+                                        {
+                                            if (os.AsString().Contains(outputSentence))
+                                            {
+                                                useOutput = false;
+                                            }
+                                        }
+                                    }
+                                    if (useOutput)
+                                    {
+                                        result.AddOutputSentences(outputSentence);
+                                        saveResult = true;
+                                    }
+                                    else
+                                    {
+                                        result.resultCount++;
+                                    }
                                 }
                                 else
                                 {
