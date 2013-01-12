@@ -1,0 +1,277 @@
+<?xml version="1.0"?>
+
+
+<!DOCTYPE rdf:RDF [
+    <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
+    <!ENTITY dc "http://purl.org/dc/elements/1.1/" >
+    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
+    <!ENTITY rk "http://cogbotserver/onto/robokind#" >
+    <!ENTITY grddl "http://www.w3.org/2003/g/data-view#" >
+    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
+    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+]>
+
+
+<rdf:RDF xmlns="http://cogbotserver/onto/robokind#"
+     xml:base="http://cogbotserver/onto/robokind#"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:rk="http://cogbotserver/onto/robokind#"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:grddl="http://www.w3.org/2003/g/data-view#">
+    <owl:Ontology rdf:about="http://cogbotserver/onto/robokind">
+        <owl:versionInfo>$Date: 2012/11/15 10:54:12 $</owl:versionInfo>
+        <rdfs:comment>
+  This ontology partially describes the built-in classes and
+  properties that together form the basis of the RDF/XML syntax of OWL 2.
+  The content of this ontology is based on Tables 6.1 and 6.2
+  in Section 6.4 of the OWL 2 RDF-Based Semantics specification,
+  available at http://www.w3.org/TR/owl2-rdf-based-semantics/.
+  Please note that those tables do not include the different annotations
+  (labels, comments and rdfs:isDefinedBy links) used in this file.
+  Also note that the descriptions provided in this ontology do not
+  provide a complete and correct formal description of either the syntax
+  or the semantics of the introduced terms (please see the OWL 2
+  recommendations for the complete and normative specifications).
+  Furthermore, the information provided by this ontology may be
+  misleading if not used with care. This ontology SHOULD NOT be imported
+  into OWL ontologies. Importing this file into an OWL 2 DL ontology
+  will cause it to become an OWL 2 Full ontology and may have other,
+  unexpected, consequences.
+   </rdfs:comment>
+        <dc:title>Cogbot Schema vocabulary</dc:title>
+        <owl:versionIRI rdf:resource="http://cogbotserver/onto/robokind"/>
+        <grddl:namespaceTransformation rdf:resource="http://dev.w3.org/cvsweb/2009/owl-grddl/owx2rdf.xsl"/>
+        <owl:imports rdf:resource="http://www.w3.org/2000/01/rdf-schema"/>
+        <owl:imports rdf:resource="http://www.w3.org/2002/07/owl"/>
+        <rdfs:isDefinedBy rdf:resource="http://www.w3.org/TR/owl2-mapping-to-rdf/"/>
+        <rdfs:isDefinedBy rdf:resource="http://www.w3.org/TR/owl2-rdf-based-semantics/"/>
+        <rdfs:seeAlso rdf:resource="http://www.w3.org/TR/owl2-rdf-based-semantics/#table-axiomatic-classes"/>
+        <rdfs:seeAlso rdf:resource="http://www.w3.org/TR/owl2-rdf-based-semantics/#table-axiomatic-properties"/>
+        <rdfs:isDefinedBy rdf:resource="http://www.w3.org/TR/owl2-syntax/"/>
+    </owl:Ontology>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Annotation properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Datatypes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://cogbotserver/onto/robokind#prologMappingType -->
+
+    <owl:ObjectProperty rdf:about="&rk;prologMappingType">
+        <rdfs:domain rdf:resource="&rk;PrologInRDFPredicate"/>
+        <rdfs:range rdf:resource="&rk;PrologPredicateMappingType"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Data properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://cogbotserver/onto/robokind#prologArity -->
+
+    <owl:DatatypeProperty rdf:about="&rk;prologArity">
+        <rdf:type rdf:resource="&owl;FunctionalProperty"/>
+        <rdfs:comment>Expected arity of Prolog Predicate</rdfs:comment>
+        <rdfs:domain rdf:resource="&rk;PrologInRDFPredicate"/>
+        <rdfs:range rdf:resource="&xsd;nonNegativeInteger"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://cogbotserver/onto/robokind#prologAxiomValueArg -->
+
+    <owl:DatatypeProperty rdf:about="&rk;prologAxiomValueArg">
+        <rdfs:comment>If the Assertion is an Instance.. then Axiom created has some truth value found in this argument of the original</rdfs:comment>
+        <rdfs:domain rdf:resource="&rk;PrologInRDFPredicate"/>
+        <rdfs:range rdf:resource="&xsd;nonNegativeInteger"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://cogbotserver/onto/robokind#prologInstanceArg -->
+
+    <owl:DatatypeProperty rdf:about="&rk;prologInstanceArg">
+        <rdf:type rdf:resource="&owl;FunctionalProperty"/>
+        <rdfs:comment>The subject is in this arg</rdfs:comment>
+        <rdfs:range rdf:resource="&xsd;nonNegativeInteger"/>
+        <rdfs:domain rdf:resource="&owl;ObjectProperty"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://cogbotserver/onto/robokind#PrologArgPredicate -->
+
+    <owl:Class rdf:about="&rk;PrologArgPredicate">
+        <rdfs:subClassOf rdf:resource="&owl;FunctionalProperty"/>
+        <rdfs:subClassOf rdf:resource="&owl;ObjectProperty"/>
+    </owl:Class>
+    
+
+
+    <!-- http://cogbotserver/onto/robokind#PrologInRDFPredicate -->
+
+    <owl:Class rdf:about="&rk;PrologInRDFPredicate">
+        <rdfs:subClassOf rdf:resource="&owl;ObjectProperty"/>
+    </owl:Class>
+    
+
+
+    <!-- http://cogbotserver/onto/robokind#PrologPredicateMappingType -->
+
+    <owl:Class rdf:about="&rk;PrologPredicateMappingType"/>
+    
+
+
+    <!-- http://www.w3.org/1999/02/22-rdf-syntax-ns#Property -->
+
+    <owl:Class rdf:about="&rdf;Property"/>
+    
+
+
+    <!-- http://www.w3.org/2002/07/owl#FunctionalProperty -->
+
+    <owl:Class rdf:about="&owl;FunctionalProperty"/>
+    
+
+
+    <!-- http://www.w3.org/2002/07/owl#ObjectProperty -->
+
+    <owl:Class rdf:about="&owl;ObjectProperty">
+        <rdfs:label>ObjectProperty</rdfs:label>
+        <rdfs:subClassOf rdf:resource="&rdf;Property"/>
+        <rdfs:comment>The class of object properties.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="http://www.w3.org/2002/07/owl#"/>
+    </owl:Class>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Individuals
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://cogbotserver/onto/robokind#DirectOneToOneMapping -->
+
+    <owl:NamedIndividual rdf:about="&rk;DirectOneToOneMapping">
+        <rdf:type rdf:resource="&rk;PrologPredicateMappingType"/>
+        <rdfs:comment>The Assertion Predicate is mapped literally .. this means the prologInstanceArg must be 1 with a URI in first arg</rdfs:comment>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://cogbotserver/onto/robokind#InstanceOnArg -->
+
+    <owl:NamedIndividual rdf:about="&rk;InstanceOnArg">
+        <rdf:type rdf:resource="&rk;PrologPredicateMappingType"/>
+        <rdfs:comment>States that if the predicate is instanced On an Argument the Arg becomes the &quot;Subject&quot; this can still be used on Arity 2 Predicates</rdfs:comment>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://cogbotserver/onto/robokind#MapEachArgToProperty -->
+
+    <owl:NamedIndividual rdf:about="&rk;MapEachArgToProperty">
+        <rdf:type rdf:resource="&rk;PrologPredicateMappingType"/>
+        <rdfs:comment>The assertion is Instanced as a PrologAssertion and each argument is the Object in pred_arg1(assertionInstance,arg1Value) </rdfs:comment>
+    </owl:NamedIndividual>
+
+
+
+    <!-- http://cogbotserver/onto/robokind#PrologOnlyPredicate -->
+
+    <owl:NamedIndividual rdf:about="&rk;PrologOnlyPredicate">
+        <rdf:type rdf:resource="&rk;PrologPredicateMappingType"/>
+        <rdfs:comment>Prolog only predicates are predicates that are intended to not be represented in RDF</rdfs:comment>
+    </owl:NamedIndividual>
+
+
+
+    <!-- http://cogbotserver/onto/robokind#MappingTODO -->
+
+    <owl:NamedIndividual rdf:about="&rk;MappingTODO">
+        <rdf:type rdf:resource="&rk;PrologPredicateMappingType"/>
+        <rdfs:comment>This means that we cannot yet map this predicate</rdfs:comment>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // General axioms
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <rdf:Description>
+        <rdf:type rdf:resource="&owl;AllDifferent"/>
+        <owl:distinctMembers rdf:parseType="Collection">
+            <rdf:Description rdf:about="&rk;DirectOneToOneMapping"/>
+            <rdf:Description rdf:about="&rk;MapEachArgToProperty"/>
+            <rdf:Description rdf:about="&rk;PrologOnlyPredicate"/>
+        </owl:distinctMembers>
+    </rdf:Description>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 3.3.1957) http://owlapi.sourceforge.net -->
+

@@ -1,0 +1,120 @@
+mt:rdfGlobalDefsMt
+
+;; ========================================================= ;;
+predicate: prologMappingType(PrologPredicate,PrologPredicateMappingType)
+;; ========================================================= ;;
+
+;; ========================================================= ;;
+predicate: prologMappingTypeEquivalent(Prolog,prologMappingType).
+triple(prologMappingTypeEquivalent,prologMappingType,'DirectOneToOneMapping').
+;; ========================================================= ;;
+
+;; ========================================================= ;;
+predicate: unify(Part1,Part2).
+prologMappingTypeEquivalent(unify,{owl:sameAs}).
+;; ========================================================= ;;
+
+;; ========================================================= ;;
+predicate: external(Format,Params,Output).
+predicate: external2(Format,Params,Output).
+;; ========================================================= ;;
+
+;; ========================================================= ;;
+predicate: chatVar(Name,Value).
+const: chatVar.
+prologInstanceArg: 1.
+prologMappingType: MapEachArgToProperty.
+;; ========================================================= ;;
+
+chatVar(fee,"bar").
+
+
+;; ========================================================= ;;
+predicate: coppeliaAction(Action, Positive, Negative).
+prologMappingType(coppeliaAction,'MapEachArgToProperty').
+prologInstanceArg(coppeliaAction,1).
+;; ========================================================= ;;
+
+
+;; ========================================================= ;;
+predicate: coppeliaActionMoralBelief(Actor,Action,Moral,Value).
+;; the zero below means the subject for the RDF will be the AssertionID
+prologInstanceArg: 0.
+prologAxiomValueArg: 4.
+prologMappingType: MapEachArgToProperty.
+;; ========================================================= ;;
+
+
+;; ========================================================= ;;
+predicate: coppeliaActionState(Actor,Action,State,Value).
+prologInstanceArg: 0.
+prologAxiomValueArg: 4.
+prologMappingType: MapEachArgToProperty.
+;; ========================================================= ;;
+
+
+;; ========================================================= ;;
+predicate: coppeliaAgentFeature(Actor,Feature,Value).
+prologInstanceArg: 0.
+prologAxiomValueArg: 3.
+prologMappingType: MapEachArgToProperty.
+;; ========================================================= ;;
+
+
+
+;; ========================================================= ;;
+predicate: coppeliaAmbition(Actor,State,Value).
+prologInstanceArg: 0.
+prologAxiomValueArg: 3.
+prologMappingType: MapEachArgToProperty.
+;; ========================================================= ;;
+
+
+
+;; ========================================================= ;;
+predicate: coppeliaDesired(State,Value).
+prologMappingType: DirectOneToOneMapping.
+;; ========================================================= ;;
+
+
+;; ========================================================= ;;
+predicate: coppeliaMoral(Moral,ValueInitial).
+prologInstanceArg: 0.
+prologAxiomValueArg: 2.
+prologMappingType: MapEachArgToProperty.
+;; ========================================================= ;;
+
+
+;; ========================================================= ;;
+predicate: coppeliaState(State,ValueInitial).
+prologInstanceArg: 0.
+prologAxiomValueArg: 2.
+prologMappingType: MapEachArgToProperty.
+;; ========================================================= ;;
+
+
+;; ========================================================= ;;
+predicate: coppeliaMoralAmbition(Actor,Moral,Value).
+prologInstanceArg: 0.
+prologAxiomValueArg: 3.
+prologMappingType: MapEachArgToProperty.
+;; ========================================================= ;;
+
+
+;; ========================================================= ;;
+predicate: coppeliaResponse(Action,Response).
+prologMappingType(coppeliaMoralAmbition,'DirectOneToOneMapping').
+;; ========================================================= ;;
+
+
+;; ========================================================= ;;
+predicate: express(Action,SpeechText).
+prologMappingType(express,'DirectOneToOneMapping').
+;; ========================================================= ;;
+
+
+;; ========================================================= ;;
+predicate: openInteractions(Class,Action).
+prologMappingType(openInteractions,'DirectOneToOneMapping').
+;; ========================================================= ;;
+
