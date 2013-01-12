@@ -129,15 +129,16 @@ namespace LogicalParticleFilter1
             rdfDefinations.BaseUri = uriAgainIs;
             rdfDefSync =
                 rdfDefSync ??
-                //KBGraph.Contains(rdfDefMT) ??
+                //FindKB(rdfDefMT) ??
                 new GraphWithDef(rdfDefMT, this, rdfDefinations);
             forReaderTripleStoreGraph.BaseUri = uriAgainIs;
             EnsureReaderNamespaces(forReaderTripleStoreGraph);
             var rdfKB = FindOrCreateKB(rdfDefMT);
             rdfKB.SourceKind = ContentBackingStore.RdfMemory;
             rdfDefSync.IncludeRDFUri(new FileInfo("aiml/shared_ke/PrologToRDFConversion.owl").FullName);
-            loadKEText(rdfDefMT, FromStream("aiml/shared_ke/argdefs.txt"), false);
-            if (DeveloperSanityChecks > 0) Program.RunAllTests(this);
+            loadKEText(rdfDefMT, FromStream("aiml/shared_ke/argdefs.txt"), false);            
+            if (RdfDeveloperSanityChecks > 0) Program.RunAllTests(this);
+            DontRDFSync = DLRConsole.IsOnMonoUnix || true;
         }
 
         public void UpdateSharedGlobalPredDefs()
@@ -229,7 +230,7 @@ namespace LogicalParticleFilter1
                     newlyCreated = !GraphForMT.TryGetValue(mt, out graph);
                     if (newlyCreated)
                     {
-                        PNode pnode = KBGraph.Contains(mt);
+                        PNode pnode = FindKB(mt);
                         if (pnode != null)
                         {
                             GraphForMT[mt] = pnode;
@@ -434,8 +435,9 @@ namespace LogicalParticleFilter1
         {
             // Possibly called by the Sparql endpoint before servicing a query
             // Is there anything we want to update rdfGraph with ?
+            PNode focus = FindRepositoryKB(mt);
             var bingingsList = new ListOfBindings();
-            askQuery(ParseBody("triple(S,P,O)", mt), mt, false, bingingsList, null);
+            askQuery(ParseBody("triple(S,P,O)", mt), mt, includeInherited, bingingsList, null);
             bool useTripeQuery = true;
             if (bingingsList == null || bingingsList.Count <= 0)
             {
@@ -452,6 +454,7 @@ namespace LogicalParticleFilter1
                         Warn(e);
                     }
                 }
+                return;
             }
 
             var rdfGraph = rdfGraphWithDefs.rdfGraph;
@@ -1155,7 +1158,7 @@ yago	http://dbpedia.org/class/yago/
             rdfxmlwriter.Save(g, "HelloWorld.rdf");
 
             MakeRepositoryKB("testRDF").SourceKind = ContentBackingStore.Prolog;
-            if (DeveloperSanityChecks < 2) return;
+            if (RdfDeveloperSanityChecks < 2) return;
             rdfImportToKB(g,
                           "testRDF",
                           "SELECT * WHERE { ?s ?p ?o }",
@@ -2003,7 +2006,7 @@ yago	http://dbpedia.org/class/yago/
                     if (kbNode == null)
                         lock (prologEngine.KBGraph)
                         {
-                            kbNode = prologEngine.KBGraph.Contains(prologMt);
+                            kbNode = prologEngine.FindKB(prologMt);
                             if (kbNode != null) return kbNode;
                             kbNode = new PNode(prologMt) {RdfStore = this, id = prologMt};
                             prologEngine.KBGraph.AddNode(kbNode);
@@ -2366,13 +2369,18 @@ yago	http://dbpedia.org/class/yago/
 
             public void AddRuleToRDF(Rule rule)
             {
+                if (prologEngine.DontRDFSync)
+                {
+                    Warn("Trying to Add Rule TO rdf: " + rule);
+                    return;
+                }
                 if (rule.rdfRuleCache != null) return;
                 string before = rule.ToSource(SourceLanguage.Prolog);
                 FromRule(rule, rdfGraph);
                 string after = rule.ToSource(SourceLanguage.Prolog);
                 if (before != after)
                 {
-                  //  Warn("Manipulated rule: " + before + "->" + after);
+                    Warn("Manipulated rule: " + before + "->" + after);
                 }
             }
 
@@ -3274,7 +3282,7 @@ yago	http://dbpedia.org/class/yago/
                     Warn("PlReadble not round tripping! INodes " + NodeDesc(subject1) + "->" + NodeDesc(subject2));
                 }
                 string readable = part1.ToSource(SourceLanguage.Prolog);
-                if (SIProlog.DeveloperSanityChecks < 2) return readable;
+                if (SIProlog.RdfDeveloperSanityChecks < 2) return readable;
                 Tokeniser oldTokenizer = new Tokeniser(readable);
                 Part part2 = ParsePart(oldTokenizer);
                 if (part2 == null || !part2.Equals(part1))
@@ -3585,6 +3593,11 @@ yago	http://dbpedia.org/class/yago/
             return null;
         }
 
+
+        internal bool HasKBNamed(string startMt)
+        {
+            lock (KBGraph) return FindKB(startMt) != null;
+        }
     }
 
 

@@ -49,7 +49,8 @@ namespace LogicalParticleFilter1
         // https://github.com/abresas/prologjs
         // https://github.com/crcx/chrome_prolog
 
-        public static int DeveloperSanityChecks = 0;
+        public static int RdfDeveloperSanityChecks = 0;
+        public bool DontRDFSync = false;
         //public QueryContext test; 
         /// <summary>
         ///  A plain old super simple prolog interpreter
@@ -161,7 +162,7 @@ namespace LogicalParticleFilter1
 
         public string visibleKBText(string startMT)
         {
-            PNode focus = KBGraph.Contains(startMT);
+            PNode focus = FindKB(startMT);
             if (focus == null) return null;
             string VKB = "";
             foreach (PEdge E in focus.OutgoingEdges)
@@ -219,7 +220,7 @@ namespace LogicalParticleFilter1
 
         public List<PNode> findVisibleKBS(string startMT, List<PNode> vlist)
         {
-            PNode focus = KBGraph.Contains(startMT);
+            PNode focus = FindKB(startMT);
             if (focus == null) return null;
             if (vlist.Contains(focus))
             {
@@ -253,7 +254,7 @@ namespace LogicalParticleFilter1
             // Depth-first or breath-first ?
             // Prefix or postfix ??
             // should have one that takes a KB shopping list
-            PNode focus = KBGraph.Contains(startMT);
+            PNode focus = FindKB(startMT);
             if (focus == null)
             {
                 Warn("No KB named " + startMT);
@@ -463,7 +464,7 @@ function hidetip()
             tl_ServerRoot = serverRoot;
             tl_writer = writer;
             writer.WriteLine("<h2>Siprolog Mt {0}</h2>", mt);
-            PNode qnode = KBGraph.Contains(mt);
+            PNode qnode = FindKB(mt);
             if (qnode != null)
             {
                 writer.WriteLine("<h3> OutgoingEdges </h3>");
@@ -489,7 +490,7 @@ function hidetip()
             if (qnode != null)
             {
                 ensureCompiled(qnode, ContentBackingStore.Prolog);
-                if (DeveloperSanityChecks > 1)
+                if (RdfDeveloperSanityChecks > 2)
                 {
                     var kbContents0 = findVisibleKBRulesSorted(mt);
                     ensureCompiled(qnode, ContentBackingStore.RdfMemory);
@@ -534,10 +535,18 @@ function hidetip()
                 }
                 WriteRule(writer, r, qnode);
             }
+            if (qnode == null) return;
 
+            if (!qnode.IsDataFrom(ContentBackingStore.Prolog))
+            {
+                WriteMtInfoRDF(writer, qnode, mt, serverRoot, toplevel);
+            }
+        }
+        public void WriteMtInfoRDF(TextWriter writer, PNode qnode, string mt, string serverRoot, bool toplevel)
+        {
             if (qnode != null)
             {
-                ensureCompiled(qnode, ContentBackingStore.RdfMemory);
+                if (qnode.SyncFrequency != FrequencyOfSync.Never) ensureCompiled(qnode, ContentBackingStore.RdfMemory);
             }
             var gwf = FindRepositoryKB(mt);
             if (gwf != null)
@@ -767,7 +776,7 @@ function hidetip()
             RuleList VKB = new RuleList();
             foreach (string focusMT in kbList)
             {
-                PNode focus = KBGraph.Contains(focusMT);
+                PNode focus = FindKB(focusMT);
                 if (focus == null) continue;
                 ensureCompiled(focus, ContentBackingStore.Prolog);
                 lock (focus.CompileLock) lock (focus.pdb.rules) foreach (Rule r in focus.pdb.rules)
@@ -781,41 +790,41 @@ function hidetip()
 
         public void setMtProbability(string focusMT, double prob)
         {
-            PNode focus = KBGraph.Contains(focusMT);
+            PNode focus = FindKB(focusMT);
             if (focus == null) return;
             focus.Probability = prob;
         }
 
         public double getMtProbability(string focusMT)
         {
-            PNode focus = KBGraph.Contains(focusMT);
+            PNode focus = FindKB(focusMT);
             if (focus == null) return 0;
             return focus.Probability;
         }
 
         public void markKBScratchpad(string focusMT)
         {
-            PNode focus = KBGraph.Contains(focusMT);
+            PNode focus = FindKB(focusMT);
             if (focus == null) return;
             focus.SourceKind = ContentBackingStore.Prolog;
             focus.SyncFrequency = FrequencyOfSync.Never;
         }
         public void markKBNonScratchPad(string focusMT)
         {
-            PNode focus = KBGraph.Contains(focusMT);
+            PNode focus = FindKB(focusMT);
             if (focus == null) return;
             focus.SyncFrequency = FrequencyOfSync.AsNeeded;
         }
         public void markKBSyncType(string focusMT, ContentBackingStore syncType)
         {
-            PNode focus = KBGraph.Contains(focusMT);
+            PNode focus = FindKB(focusMT);
             if (focus == null) return;
             focus.SyncFromNow = syncType;
         }
 
         public void clearKB(string focusMT)
         {
-            PNode focus = KBGraph.Contains(focusMT);
+            PNode focus = FindKB(focusMT);
             if (focus == null) return;
             focus.Clear();
         }
@@ -898,7 +907,7 @@ function hidetip()
         public string replaceInKB(string oldFact, string newFact, string focusMT)
         {
             Warn("String using public Rule replaceInKB(Rule oldFact, Rule newFact, PNode focus)");
-            PNode focus = KBGraph.Contains(focusMT);
+            PNode focus = FindKB(focusMT);
             if (focus == null) return null;
             lock(focus.CompileLock)
             {
@@ -1024,10 +1033,10 @@ function hidetip()
             lock (focus.CompileLock)
             {
                 loadIntoKB_unlocked(ruleSet, focus, clearFirst);
-                if (DeveloperSanityChecks > 0)
+                if (RdfDeveloperSanityChecks > 0)
                 {
                     ensureCompiled(focus, focus.SourceKind);
-                    if (DeveloperSanityChecks > 1)
+                    if (RdfDeveloperSanityChecks > 1)
                     {
                         ensureCompiled(focus, ContentBackingStore.Prolog);
                         ensureCompiled(focus, ContentBackingStore.RdfMemory);
@@ -1081,13 +1090,18 @@ function hidetip()
 
         private PNode FindOrCreateKB_unlocked(string startMT)
         {
-            PNode focus = KBGraph.Contains(startMT);
+            PNode focus = FindKB(startMT);
             if (focus == null)
             {
                 focus = MakeRepositoryKB(startMT);// //new PNode(startMT);
                 //KBGraph.AddNode(focus);
             }
             return focus;
+        }
+
+        public PNode FindKB(string mt)
+        {
+            return KBGraph.Contains(mt);
         }
 
         /// <summary>
@@ -3708,7 +3722,7 @@ function hidetip()
                     objRef = ToValueNode((INode)head);
                     Functor0Function = INodeToObject;
                     // call once to populate the data
-                    if (DeveloperSanityChecks > 1)
+                    if (RdfDeveloperSanityChecks > 1)
                     {
                         var localAname = "" + INodeToObject(objRef);
                     }
@@ -5992,10 +6006,10 @@ function hidetip()
         Prolog = 4,
     }
 
-    public class DontTouchThisTextWriter : TextWriter
+    public class NonClosingTextWriter : TextWriter
     {
         private TextWriter noClose;
-        public DontTouchThisTextWriter(TextWriter writer)
+        public NonClosingTextWriter(TextWriter writer)
         {
             noClose = writer;
         }
