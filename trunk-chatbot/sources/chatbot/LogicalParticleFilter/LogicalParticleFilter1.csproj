@@ -70,8 +70,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cema.cs" />
+    <Compile Include="siprolog_rdf_rules.cs" />
+    <Compile Include="siprolog_rdf_sync.cs" />
+    <Compile Include="siprolog_rdf_translate.cs" />
+    <Compile Include="siprolog_rdf_writers.cs" />
+    <Compile Include="siprolog_kb_pnode.cs" />
+    <Compile Include="siprolog_rdf_query.cs" />
+    <Compile Include="siprolog_rdf_namespaces.cs" />
+    <Compile Include="siprolog_database.cs" />
+    <Compile Include="siprolog_atomic.cs" />
+    <Compile Include="siprolog_writers.cs" />
+    <Compile Include="siprolog_objects.cs" />
+    <Compile Include="siprolog_parser.cs" />
     <Compile Include="GOAP.cs" />
-    <Compile Include="GraphWithDef.cs" />
+    <Compile Include="siprolog_rdf_objects.cs" />
     <Compile Include="ID3Classifier.cs">
       <SubType>Component</SubType>
     </Compile>
