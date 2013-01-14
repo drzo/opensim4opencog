@@ -313,4 +313,34 @@ namespace MushDLR223.Utilities
             return writer;
         }
     }
+    public class NonClosingTextWriter : TextWriter
+    {
+        private TextWriter noClose;
+        public NonClosingTextWriter(TextWriter writer)
+        {
+            noClose = writer;
+        }
+
+        public override Encoding Encoding
+        {
+            get { return noClose.Encoding; }
+        }
+        public override void Flush()
+        {
+            noClose.Flush();
+        }
+        public override void Close()
+        {
+            noClose.Flush();
+        }
+
+        public override void Write(char[] buffer, int index, int count)
+        {
+            noClose.Write(buffer, index, count);
+        }
+        public override void Write(object value)
+        {
+            noClose.Write(value);
+        }
+    }
 }
