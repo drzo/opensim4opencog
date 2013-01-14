@@ -491,7 +491,7 @@ namespace LogicalParticleFilter1
             #endregion
         }
 
-        public static Dictionary<INode, Atom> AtomTable = new Dictionary<INode, Atom>();
+        public static Dictionary<String, Atom> AtomTable = new Dictionary<String, Atom>();
 
         public interface IAtomic
         {

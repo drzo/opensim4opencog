@@ -63,7 +63,17 @@ namespace LogicalParticleFilter1
             Options.InternUris = true;
             Options.LiteralValueNormalization = true;
             Options.LiteralEqualityMode = LiteralEqualityMode.Loose;
-            RdfDeveloperSanityChecks = Environment.MachineName.Contains("ENKI") ? 2 : 1;
+            if (DLRConsole.IsOnMonoUnix)
+            {
+                RdfDeveloperSanityChecks = 0;
+                DontRDFSync = true;
+            }
+            string machineName = Environment.MachineName;
+            if (machineName == "ENKI" || machineName.ToUpper() == "TITAN")
+            {
+                RdfDeveloperSanityChecks = 3;
+                DontRDFSync = false;
+            }
             var uriAgainIs = UriFactory.Create(RoboKindURI);
             rdfDefinations.BaseUri = uriAgainIs;
             LoadGraphPrefixes(rdfDefinations);
@@ -79,7 +89,6 @@ namespace LogicalParticleFilter1
             rdfDefSync.IncludeRDFUri(new FileInfo("aiml/shared_ke/PrologToRDFConversion.owl").FullName);
             loadKEText(rdfDefMT, FromStream("aiml/shared_ke/argdefs.txt"), false);
             if (RdfDeveloperSanityChecks > 0) Program.RunAllTests(this);
-            DontRDFSync = DLRConsole.IsOnMonoUnix || true;
         }
 
         private static void EnsureReaderNamespaces(IGraph graph)
@@ -88,7 +97,7 @@ namespace LogicalParticleFilter1
             {
                 INamespaceMapper nm = graph.NamespaceMap;
                 if (!nm.HasNamespace(RoboKindPrefix))
-                    nm.Import(rdfDefinations.NamespaceMap);
+                    nm.Import(rdfDefNS);
                 EnsureBaseURIMapped(graph);
             }
         }
@@ -170,7 +179,7 @@ namespace LogicalParticleFilter1
 @prefix robokind: <" +
                 RoboKindURI + @"> .
 ";
-            StringParser.Parse(graph, s, new Notation3Parser());
+
             string ss =
                 @"
 fn http://www.w3.org/2005/xpath-functions
@@ -267,16 +276,36 @@ xslwd	http://www.w3.org/TR/WD-xsl
 xsp	http://www.owl-ontologies.com/2005/08/07/xsp.owl#
 yago	http://dbpedia.org/class/yago/
 ";
-
+            ss = s + ss;
             foreach (string s00 in ss.Split('\n', '\r'))
             {
                 if (string.IsNullOrEmpty(s00)) continue;
                 var s0 = s00.Replace('\t', ' ').Trim();
                 if (s0.StartsWith("#")) continue;
+                if (s0.StartsWith("@prefix "))
+                {
+                    s0 = s0.Substring("@prefix ".Length).TrimStart();
+                    s0 = s0.TrimEnd('.', ' ');
+                }
+                while (s0.Contains("  ")) s0 = s0.Replace("  ", " ");
                 if (string.IsNullOrEmpty(s0)) continue;
                 int spc = s0.IndexOf(' ');
                 string prefix = s0.Substring(0, spc).Trim().TrimEnd(' ', ':');
                 string uri = s0.Substring(spc).Trim();
+                if (uri.StartsWith("<") && uri.EndsWith(">"))
+                {
+                    uri = uri.Substring(1, uri.Length - 2).Trim();
+                }
+                if (uri == "#")
+                {
+                    continue;
+                    uri = graph.BaseUri.AbsoluteUri;
+                }
+                if (string.IsNullOrEmpty(prefix))
+                {
+                    continue;
+                    prefix = ":";//"Warn("adding null prefix " + uri);
+                }
                 if (nm.HasNamespace(prefix))
                 {
                     var prev = nm.GetNamespaceUri(prefix).ToString();

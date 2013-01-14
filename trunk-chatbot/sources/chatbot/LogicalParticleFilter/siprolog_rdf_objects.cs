@@ -390,71 +390,121 @@ namespace LogicalParticleFilter1
                 }
                 return C(def, p);
             }
-
             static public INode C(IGraph def, string p0)
+            {
+                return ResolveC<INode>(def.NamespaceMap, p0, (a, b, c) => C2(def, a, b, c));
+            }
+            static public INode C2(IGraph def, string prefix, string p, NodeType nt)
+            {
+                if (prefix == "_")
+                {
+                    return def.CreateBlankNode(p);
+                }
+                if (prefix == "?")
+                {
+                    return def.CreateVariableNode(p);
+                }
+                if (nt == NodeType.Literal)
+                {
+                    if (!string.IsNullOrEmpty(prefix)) return def.CreateLiteralNode(p, UriFactory.Create(prefix));
+                    return def.CreateLiteralNode(p);
+                }
+                if (prefix == ":")
+                {
+                    return def.CreateUriNode(":" + p);
+                }
+                bool protop;
+                string cc = CombinePrefix(prefix, p, out protop);
+                if (protop) return def.CreateUriNode(UriFactory.Create(cc));
+                return def.CreateUriNode(cc);
+            }
+
+            public static string CombinePrefix(string prefix, string p, out bool protop)
+            {
+                prefix = prefix.TrimStart('+', ':');
+                string cc = prefix + p;
+                protop = cc.Contains(":/");
+                if (prefix == "")
+                {
+                    return p;
+                }
+                if (prefix == p)
+                {
+                    return p;
+                }
+                var lastCharOk = "#/?=";
+                if (!protop) lastCharOk = ":";
+
+                if (!prefix.Contains(":"))
+                {
+                    char lc = prefix[prefix.Length - 1];
+                    if (lastCharOk.IndexOf(lc) == -1)
+                    {
+                        prefix = prefix + lastCharOk[0];
+                    }
+                }
+                cc = prefix + p;
+                return cc;
+            }
+
+            static public T ResolveC<T>(INamespaceMapper def, string p0, Func<string, string, NodeType, T> CC)
             {
                 var p = p0.Trim();
                 if (p.StartsWith("_:"))
                 {
-                    return def.CreateBlankNode(p.Substring(2));
+                    return CC("_", p.Substring(2), NodeType.Blank);
                 }
                 if (p.StartsWith("?"))
                 {
-                    return def.CreateVariableNode(p.Substring(1));
+                    return CC("?", p.Substring(1), NodeType.Variable);
                 }
-                int colm = p.IndexOf(":");
-                bool uir = p.Contains("#") || colm == 0 || colm > 1;
-                bool triedURINode = false;
-
-
-                try
+                if (p.StartsWith(":"))
                 {
-                    Uri newUri;
-                    if (colm == -1)
+                    return CC(":", p.Substring(1), NodeType.Uri);
+                }
+                int colm = p.LastIndexOf(":");
+                int colmp = p.LastIndexOf(":/");
+                int uir = p.LastIndexOf("#");
+                if (colm == -1 && uir == -1)
+                {
+                    lock (GuessedNameSpace)
                     {
-                        lock (GuessedNameSpace)
+                        KeyValuePair<string, string> uriGuess;
+                        if (GuessedNameSpace.TryGetValue(p, out uriGuess))
                         {
-                            KeyValuePair<string, string> uriGuess;
-                            if (GuessedNameSpace.TryGetValue(p, out uriGuess))
+                            var pref = uriGuess.Value ?? (uriGuess.Key + ":");
+                            return CC(pref, p, NodeType.Uri);
+                        }
+                    }
+                    return CC(":", p, NodeType.Uri);
+                }
+                int len = p.Length;
+                string oprefix, ouri, localAname;
+                if (uir < len && DevolveURI(def, p, out ouri, out oprefix,
+                    out localAname, true, false) && localAname != null && oprefix != "+")
+                {
+                    lock (GuessedNameSpace)
+                    {
+                        KeyValuePair<string, string> uriGuess;
+                        bool prev = GuessedNameSpace.TryGetValue(localAname, out uriGuess);
+                        var pg = new KeyValuePair<string, string>(oprefix ?? uriGuess.Key,
+                                                                    ouri ?? uriGuess.Value);
+                        var prefix = pg.Value ?? (pg.Key + ":");
+                        if (prefix != localAname)
+                        {
+                            GuessedNameSpace[localAname] = pg;
+                            if (!string.IsNullOrEmpty(prefix))
                             {
-                                var pref = uriGuess.Value ?? (uriGuess.Key + ":");
-                                return def.CreateUriNode(pref + "" + p);
+                                return CC(prefix, localAname, NodeType.Uri);
                             }
                         }
                     }
-                    else if (IsAbsoluteURI(p))
-                    {
-                        newUri = new Uri(p);
-                        return def.CreateUriNode(newUri);
-                    }
-                    string qname = Tools.ResolveQName(p0, def.NamespaceMap, def.BaseUri);
-                    return C(def, qname);
                 }
-                catch (Exception)
-                {
-                    triedURINode = true;
-                }
-                int badchars = p.IndexOfAny("? ".ToCharArray());
-                if (badchars >= 0)
-                {
-                    return CreateLiteralNode(def, p);
-                }
-                if (!triedURINode)
-                {
-                    var node = CUrlNode(def, p, colm == -1, true);
-                    if (node != null) return node;
-                }
-                badchars = p.IndexOfAny("? ,$.&!@#$%^&*()+".ToCharArray());
-                if (badchars >= 0)
-                {
-                    string p2 = HttpUtility.UrlEncode(HttpUtility.UrlDecode(p));
-                    if (p2 != p)
-                    {
-                        var node = CUrlNode(def, p2, colm == -1, false);
-                        if (node != null) return node;
-                    }
-                }
-                return CreateLiteralNode(def, p);
+
+                if (colmp > 1)
+                    return CC("+", p, NodeType.Uri);
+
+                return CC("", p0, NodeType.Literal);
             }
 
             public static bool IsAbsoluteURI(string s)
@@ -463,56 +513,35 @@ namespace LogicalParticleFilter1
                 return idx > 1 && s.Substring(idx).Contains("/") && Uri.IsWellFormedUriString(s, UriKind.Absolute);
             }
 
-            private static INode CreateLiteralNode(INodeFactory def, string p)
+            /// <summary>
+            /// Generic Helper Function which Resolves Uri References against a Base Uri
+            /// </summary>
+            /// <param name="uriref">Uri Reference to resolve</param>
+            /// <param name="baseUri">Base Uri to resolve against</param>
+            /// <returns>Resolved Uri as a String</returns>
+            /// <exception cref="RdfParseException">RDF Parse Exception if the Uri cannot be resolved for a know reason</exception>
+            /// <exception cref="UriFormatException">Uri Format Exception if one/both of the URIs is malformed</exception>
+            public static String MakeQNameOrUri(String uriref, String baseUri)
             {
-                var vnode = GetValuedNode(p);
-                if (vnode != null) return vnode;
-                return def.CreateLiteralNode(p);
-            }
-
-            static public IUriNode CUrlNode(IGraph definations, string p, bool checkSuffixes, bool allowRelative)
-            {
-                lock (GuessedNameSpace)
+                if (baseUri == "+" || baseUri == "+:")
                 {
-                    KeyValuePair<string, string> uriGuess;
-                    Uri newUri;
-                    if (checkSuffixes && GuessedNameSpace.TryGetValue(p, out uriGuess))
-                    {
-                        var pref = uriGuess.Value ?? (uriGuess.Key + ":");
-                        try
-                        {
-                            return definations.CreateUriNode(pref + "" + p);
-                        }
-                        catch (Exception)
-                        {
-                        }
-                    }
-                    if (IsAbsoluteURI(p))
-                    {
-                        try
-                        {
-                            newUri = new Uri(p);
-                            return definations.CreateUriNode(newUri);
-                        }
-                        catch (Exception)
-                        {
-                        }
-                    }
-                    if (allowRelative && Uri.IsWellFormedUriString(p, UriKind.Relative))
-                    {
-                        try
-                        {
-                            newUri = new Uri(definations.BaseUri + p, UriKind.Absolute);
-                            //var newUri2 = new Uri(definations.BaseUri, newUri);
-                            var r = definations.CreateUriNode(newUri);
-                            return r;
-                        }
-                        catch (Exception)
-                        {
-                        }
-                    }
+                    return uriref;
                 }
-                return null;
+                //uriref = HttpUtility.UrlDecode(uriref);
+                if (string.IsNullOrEmpty(baseUri))
+                {
+                    baseUri = "";
+                    if (!uriref.Contains(":")) uriref = ":" + uriref;
+                    return HttpUtility.UrlEncode(uriref);
+                } else
+                {
+                    if (baseUri.Contains(":"))
+                    {
+                        return baseUri + "" + HttpUtility.UrlEncode(uriref);
+                      //  baseUrireturn  Tools.ResolveQName(uriref, baseUri);
+                    }
+                    return baseUri + ":" + HttpUtility.UrlEncode(uriref);
+                }
             }
 
             static public bool TryCreateCleanUri(Uri baseUri, string relstr, out Uri result)
@@ -624,7 +653,7 @@ namespace LogicalParticleFilter1
                 throw ErrorBadOp("ToRDF on " + part);
             }
 
-            static readonly Dictionary<string, KeyValuePair<string, string>> GuessedNameSpace = new Dictionary<string, KeyValuePair<string, string>>();
+            public static readonly Dictionary<string, KeyValuePair<string, string>> GuessedNameSpace = new Dictionary<string, KeyValuePair<string, string>>();
             static public Part RdfToPart(INode node, RdfRules triples)
             {
                 if (node is IVariableNode)
@@ -648,7 +677,7 @@ namespace LogicalParticleFilter1
                 if (node is IUriNode)
                 {
                     var vnode = (IUriNode)node;
-                    var atom = MakeUri(vnode.Uri.AbsoluteUri, triples, vnode);
+                    var atom = Atom.MakeNodeAtom(vnode);
                     return atom;
                 }
 
@@ -658,80 +687,29 @@ namespace LogicalParticleFilter1
                 {
                     throw ErrorBadOp("Cant find the nodetype on  " + node);
                 }
-                return Atom.MakeNodeAtom(litnode);
-            }
-
-            public static Atom MakeUri(string s, RdfRules triples, IUriNode node)
-            {
-                if (node != null && s == null)
-                {
-                    s = node.Uri.OriginalString;
-                    var relitive = node.Uri.IsAbsoluteUri;
-                    var uri2 = node.Uri.AbsoluteUri;
-                    var quri = node.Uri.Query;
-                }
-
-                var tl_language = SourceLanguage.Notation3;
-                do
-                {
-                    if (node != null)
-                    {
-                        var s2 = node.ToString();
-                        var uri2 = node.Uri.AbsoluteUri;
-                        if (s2 == uri2 && s == s2)
-                        {
-                            return Atom.MakeNodeAtom(node);
-                        }
-                    }
-
-                    var definations = triples.def;
-                    string prefix, uri, atom;
-                    if (DevolveURI(definations.NamespaceMap, s, out uri, out prefix, out atom) || atom != null)
-                    {
-
-                        Atom atomMake = Atom.MakeNodeAtom(node);
-                        lock (GuessedNameSpace)
-                        {
-                            KeyValuePair<string, string> gns;
-                            bool fnd = GuessedNameSpace.TryGetValue(atom, out gns);
-                            GuessedNameSpace[atom] = new KeyValuePair<string, string>(prefix ?? gns.Key,
-                                                                                      uri ?? gns.Value);
-                        }
-                        return atomMake;
-                    }
-                } while (false);
-                do
-                {
-                    string quoting = MustGuessQuotes;
-                    int hash = s.IndexOf("#");
-                    s = s.Substring(1 + hash);
-                    if (hash == -1 && !s.Contains(":/"))
-                    {
-                        hash = s.IndexOf(":");
-                        if (hash > 0)
-                        {
-                            s = s.Substring(1 + hash);
-                            quoting = SYNTAX_AtomQuotes;
-                        }
-                    }
-                    if (hash == -1)
-                    {
-                        quoting = SYNTAX_AtomQuotes;
-                    }
-                    return Atom.MakeNodeAtom(Atom.MakeNode(s, quoting));
-                } while (false);
+                return Atom.MakeNodeAtomFixme(litnode);
             }
 
             private static HashSet<string> MissingNameSpaces = new HashSet<string>();
 
-            static private void DiscoverNameSpace(string uri)
+            static public void AddNamespace(string prefix, string uri)
             {
                 if (MissingNameSpaces.Add(uri))
                 {
                     Warn("New namespace that was missing: " + uri);
                 }
             }
-            static public bool DevolveURI(INamespaceMapper mapper, string s, out string uri, out string prefix, out string atom)
+            static public bool DevolveURI(INamespaceMapper mapper, string s, out string uri, out string prefix, out string atom, bool discoverNamepaces,  bool useSpecialPrefix)
+            {
+                bool ret = DevolveURI(mapper, s, out uri, out prefix, out atom, discoverNamepaces);
+                if (useSpecialPrefix && prefix == null && atom == "" && !string.IsNullOrEmpty(uri))
+                {
+                    atom = uri;
+                    prefix = "+";
+                }
+                return ret;
+            }
+            static public bool DevolveURI(INamespaceMapper mapper, string s, out string uri, out string prefix, out string atom, bool guessNamespaces)
             {
                 if (IsAbsoluteURI(s))
                 {
@@ -741,51 +719,16 @@ namespace LogicalParticleFilter1
                         s = tries;
                     }
                 }
-                bool ret = DevolveURI0(mapper, s, out uri, out prefix, out atom);
-                if (atom == "")
-                {
-                    string idea = prefix + ":" + atom;
-                    if (idea.Length == 1)
-                    {
-                        atom = uri;
-                    }
-                    else
-                    {
-                        if (uri.Length > 0)
-                        {
-                            atom = uri;
-                        }
-                        else
-                        {
-                            atom = idea;
-                        }
-                    }
-                }
-                if (atom.Length == 0 || (!char.IsLetterOrDigit(atom[0]) && !atom.StartsWith("#C_") && !atom.StartsWith("$")))
-                {
-                    //    Warn("strange atom='{0}' prefix='{1}' uri='{2}' ", atom, prefix, uri);
-                    //string satom = HttpUtility.UrlEncode(atom);
-                }
-                if (atom == uri) return ret;
-                if (prefix == null && uri != null)
-                {
-                    atom = s;
-                    uri = s;
-                    return ret;
+                bool ret = DevolveURIWithNamespace(mapper, s, out uri, out prefix, out atom);
 
-                    if (!uri.Contains("/ns/") && !uri.Contains("robokind") && atom != uri)
-                    {
-                        DiscoverNameSpace(uri);
-                    }
-                    else
-                    {
-                        atom = uri;
-                    }
-                }
-                return ret;
+                if (ret) return true;
+                if (!guessNamespaces) return false;
+                ret = DevolveURIGuessOnly(s, out uri, out prefix, out atom);
+                if (!ret) return false;
+                return true;
             }
 
-            static public bool DevolveURI0(INamespaceMapper mapper, string s, out string uri, out string prefix, out string atom)
+            static public bool DevolveURIWithNamespace(INamespaceMapper mapper, string s, out string uri, out string prefix, out string atom)
             {
                 atom = null;
                 uri = null;
@@ -795,13 +738,14 @@ namespace LogicalParticleFilter1
                     prefix = pfx;
                     var uril = mapper.GetNamespaceUri(prefix);
                     uri = uril.ToString();
-                    if (uri.Length > 0 && s.StartsWith(uri))
+                    int len = uri.Length;
+                    if (len > 0 && s.StartsWith(uri))
                     {
                         if (string.IsNullOrEmpty(prefix))
                         {
                             prefix = mapper.GetPrefix(uril);
                         }
-                        atom = s.Substring(uri.Length);
+                        atom = s.Substring(len);
                         return true;
                     }
                     string prefixc = prefix + ":";
@@ -815,6 +759,14 @@ namespace LogicalParticleFilter1
                 uri = null;
                 prefix = null;
 
+                return false;
+            }
+
+            static public bool DevolveURIGuessOnly(string s, out string uri, out string prefix, out string atom)
+            {
+                atom = null;
+                uri = null;
+                prefix = null;
                 int hash = s.LastIndexOf("#");
                 if (hash > 0)
                 {
@@ -827,7 +779,7 @@ namespace LogicalParticleFilter1
                 int slash = s.LastIndexOf("/");
                 if (col2 > 0)
                 {
-                    if (slash != col2 + 1)
+                    if (slash > col2 + 1)
                     {
                         uri = s.Substring(0, slash + 1);
                         prefix = null;
@@ -847,26 +799,32 @@ namespace LogicalParticleFilter1
                     atom = s.Substring(col + 1);
                     return true;
                 }
-
                 return false;
             }
-
 
             static public string PlReadble(INode subject0, RdfRules rules)
             {
                 var subject1 = ToValueNode(subject0);
                 Part part1 = RdfToPart(subject1, rules);
+                string readable = part1.ToSource(SourceLanguage.Prolog);
+                if (SIProlog.RdfDeveloperSanityChecks < 2) return readable;
                 INode subject2 = PartToRdf(part1, rules);
                 if (subject2 != subject1)
                 {
-                    Warn("PlReadble not round tripping! INodes " + NodeDesc(subject1) + "->" + NodeDesc(subject2));
+                    if (!subject1.Equals(subject2))
+                    {
+                        Warn("PlReadble not round tripping! INodes " + NodeDesc(subject1) + "->" + NodeDesc(subject2));
+                    }
                 }
-                string readable = part1.ToSource(SourceLanguage.Prolog);
-                if (SIProlog.RdfDeveloperSanityChecks < 2) return readable;
                 Tokeniser oldTokenizer = new Tokeniser(readable);
                 Part part2 = ParsePart(oldTokenizer);
                 if (part2 == null || !part2.Equals(part1))
                 {
+                    if (part2 != null)
+                    {
+                        part2.Equals(part1);
+                    }
+                    readable = part1.ToSource(SourceLanguage.Prolog);
                     string readable2 = null;
                     if (part2 != null) readable2 = part2.ToSource(SourceLanguage.Prolog);
                     tl_spy_prolog_reader = true;

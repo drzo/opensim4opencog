@@ -648,15 +648,14 @@ namespace LogicalParticleFilter1
 
         public PNode FindOrCreateKB(string startMT)
         {
-            PNode focus = FindKB(startMT);
-            if (focus == null)
+            return FindOrCreateKB(startMT, true);
+        }
+        public PNode FindOrCreateKB(string startMT, bool addDefaultGenlMts)
+        {
+            lock (KBGraph)
             {
-                lock (KBGraph)
-                {
-                    focus = FindOrCreateKB_unlocked(startMT); // //new PNode(startMT);}
-                }
+                return FindOrCreateKB_unlocked(startMT, addDefaultGenlMts);
             }
-            return focus;
         }
 
         public PNode FindKB(string mt)

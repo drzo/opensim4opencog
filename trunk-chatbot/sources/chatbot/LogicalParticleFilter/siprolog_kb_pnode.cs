@@ -32,50 +32,37 @@ namespace LogicalParticleFilter1
         static public List<RDFArgSpec> localArgTypes = new List<RDFArgSpec>();
         static public List<Term> localPredInstances = new List<Term>();
 
-        private PNode FindOrCreateKB_unlocked(string mt)
+        private PNode FindOrCreateKB_unlocked(string mt, bool addDefaultGenlMts)
         {
             bool newlyCreated;
-            var node = FindOrCreateKB_unlocked(mt, out newlyCreated);
-            if (newlyCreated)
+            var node = FindOrCreateKB_unlocked_Actual(mt, out newlyCreated);
+            if (newlyCreated && addDefaultGenlMts)
             {
-                EverythingPSC = EverythingPSC ?? FindOrCreateKB_unlocked("everythingPSC", out newlyCreated);
-                BaseKB = BaseKB ?? FindOrCreateKB_unlocked("baseKB", out newlyCreated);
+                EverythingPSC = EverythingPSC ?? FindOrCreateKB_unlocked_Actual("everythingPSC", out newlyCreated);
+                BaseKB = BaseKB ?? FindOrCreateKB_unlocked_Actual("baseKB", out newlyCreated);
                 if (node != EverythingPSC && node != BaseKB)
                 {
                     EverythingPSC.CreateEdgeTo(node);
                     node.CreateEdgeTo(BaseKB);
                 }
-                //connectMT(epsc.Id, mt); // 
-                //connectMT(mt, basekb.Id); // 
             }
             return node;
         }
 
-        private PNode FindOrCreateKB_unlocked(string mt, out bool newlyCreated)
+        private PNode FindOrCreateKB_unlocked_Actual(string mt, out bool newlyCreated)
         {
-            lock (GraphForMT)
+            PNode graph;
+            newlyCreated = !GraphForMT.TryGetValue(mt, out graph);
+            if (newlyCreated)
             {
-                lock (KBGraph)
-                {
-                    PNode graph;
-                    newlyCreated = !GraphForMT.TryGetValue(mt, out graph);
-                    if (newlyCreated)
-                    {
-                        PNode pnode = FindKB(mt);
-                        if (pnode != null)
-                        {
-                            GraphForMT[mt] = pnode;
-                            newlyCreated = false;
-                            return pnode;
-                        }
-                        Graph newGraph = new Graph();
-                        newGraph.BaseUri = UriFactory.Create(UriOfMt(mt));
-                        graph = new PNode(mt, this, newGraph);
-                        KBGraph.AddNode(graph);
-                    }
-                    return graph.PrologKB;
-                }
+                Graph newGraph = new Graph();
+                Uri nsURI = UriFactory.Create(UriOfMt(mt));;
+                newGraph.BaseUri = nsURI;
+                rdfDefNS.AddNamespace(mt, nsURI);
+                EnsureReaderNamespaces(newGraph);
+                graph = new PNode(mt, this, newGraph);
             }
+            return graph.PrologKB;
         }
 
         public partial class PNode : IComparable
@@ -446,13 +433,13 @@ namespace LogicalParticleFilter1
             {
                 this.prologEngine = prolog;
                 this.id = plMt;
+                prolog.KBGraph.AddNode(this);
+                prologEngine.GraphForMT[plMt] = this;
                 pdb = new PDB(true);
                 pdb.startMt = plMt;
                 pdb.followedGenlMt = false;
                 PrologKB.id = plMt;
                 _rdfGraph = data;
-                prolog.KBGraph.AddNode(this);
-                prologEngine.GraphForMT[plMt] = this;
                 EnsureGraphPrefixes(rdfGraph);
             }
 
@@ -732,9 +719,7 @@ namespace LogicalParticleFilter1
                 PNode srcNode = Contains(idSrc);
                 if (srcNode == null)
                 {
-                    srcNode = SIProlog.CurrentProlog.FindOrCreateKB(idSrc);// //new PNode(startMT);
-                    //srcNode = new PNode(idSrc);
-                    //AddNode(srcNode);
+                    srcNode = SIProlog.CurrentProlog.FindOrCreateKB(idSrc);
                 }
                 return srcNode;
             }

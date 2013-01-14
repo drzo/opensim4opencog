@@ -331,6 +331,7 @@ namespace LogicalParticleFilter1
         public const string SYNTAX_AtomQuotes = "''"; // atoms and unqualified names
         public const string SYNTAX_NoQuotes = ""; // numbers - if an atom is set to have no quotes that is just how it round trips
         public const string SYNTAX_LiteralDataType = "{}";
+        public const string SYNTAX_GraphLiteralType = "[]";
         public const string MustGuessQuotes = null;
 
         static public Part MakeTermPostReader(String f, bool isHeadVar, PartList partlist)

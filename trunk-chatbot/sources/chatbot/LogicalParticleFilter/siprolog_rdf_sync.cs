@@ -138,9 +138,7 @@ namespace LogicalParticleFilter1
                 //CONSTRUCT/DESCRIBE queries give a IGraph
                 IGraph resGraph = (IGraph)results;
                 var rset = resGraph.Triples;
-                outMap["mt"] =
-                    GraphWithDef.PlReadble(GraphWithDef.CUrlNode(repo.definations, resGraph.BaseUri.AbsoluteUri, false, false),
-                                   ruleDefs);
+                outMap["mt"] = "<" + resGraph.BaseUri.AbsoluteUri + ">";
                 if (show)
                 {
                     ConsoleWriteLine("IGraphResultSet.Count = {0}", rset.Count);
