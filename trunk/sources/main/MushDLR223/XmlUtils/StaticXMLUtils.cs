@@ -23,8 +23,13 @@ namespace MushDLR223.Utilities
 
     public class StaticXMLUtils
     {
-        public static bool TurnOffDebugMessages = true;
+        public static FirstUse<T> InitOnce<T>(Func<T> func)
+        {
+            return (FirstUse<T>) func;
+        }
 
+        public static bool TurnOffDebugMessages = true;
+        public static readonly object StaticXMLUtilsInitLock = new object();
         public static R WithoutTrace<R>(ITraceable itrac, Func<R> func)
         {
             bool needExit = false;
@@ -1077,6 +1082,7 @@ namespace MushDLR223.Utilities
                     doc.InfoString = "new StringOnlyDoc";
                     return doc;
                 }
+                lock (StaticXMLUtilsInitLock) stringOnlyDocNoPreserve = stringOnlyDocNoPreserve ?? new XmlDocumentLineInfo("getNode(ANYTHING)", false);
                 return stringOnlyDocNoPreserve;
             }
         }
@@ -1091,6 +1097,7 @@ namespace MushDLR223.Utilities
                     doc.PreserveWhitespace = true;
                     return doc;
                 }
+                lock (StaticXMLUtilsInitLock) stringOnlyDocPreserve = stringOnlyDocPreserve ?? new XmlDocumentLineInfo("getNode(ANYTHING)", true);
                 return stringOnlyDocPreserve;
             }
         }
@@ -1504,8 +1511,8 @@ namespace MushDLR223.Utilities
         public static char[] isValueSetChars = " ".ToCharArray();
         public static string isValueSetStart = "+++";
         public static int isValueSetSkip = isValueSetStart.Length;
-        public static readonly XmlDocumentLineInfo stringOnlyDocPreserve = new XmlDocumentLineInfo("getNode(ANYTHING)", true);
-        public static readonly XmlDocumentLineInfo stringOnlyDocNoPreserve = new XmlDocumentLineInfo("getNode(ANYTHING)", false);
+        private static XmlDocumentLineInfo stringOnlyDocPreserve;
+        private static XmlDocumentLineInfo stringOnlyDocNoPreserve;
         public static bool DontFragment = true;
         public static string XXXX(string res)
         {
