@@ -5,10 +5,218 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using System.Xml;
 using MushDLR223.ScriptEngines;
 
 namespace MushDLR223.Utilities
 {
+    public struct Boxed<T>
+    {
+        public FirstUse<T> io;
+        public static implicit operator T(Boxed<T> value)
+        {
+            return value.io.Value;
+        }
+        public static implicit operator Boxed<T>(Func<T> value)
+        {
+            return (Boxed<T>)(FirstUse<T>)value;
+        }
+
+    }
+    public static class InitOnceExtensionsTest
+    {
+        static void Main()
+        {
+            var m = new Func<int>(() => 1);
+            var vg = m.ToFirstUse();
+            var v = vg.Value;
+            int i = vg;
+
+            int? foo = 1;
+            var f3 = foo + 2;
+            FirstUse<int> bi = (Func<int>)(() => 1);
+            int f4 = 1 + bi;
+            int f5 = (int)new Nullable<int>(f4).ToFirstUseN();
+            int f6 = (int)((int?)f4).ToFirstUseN();           
+        }
+    }
+    public static class InitOnceExtensions
+    {
+        /// <summary>
+        /// Makes an Initializer to be called only on first use
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        public static FirstUse<T> ToFirstUse<T>(this Func<T> func)
+        {
+            return func;
+        }
+        /// <summary>
+        /// Makes an Initializer to be called only on first use
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        public static FirstUse<T> ToFirstUse<T>(this T? func) where T : struct
+        {
+            return (Func<T>)(() => func.Value);
+        }
+        public static T? ToFirstUseN<T>(this T? func) where T : struct
+        {
+            return new Nullable<T>(new FirstUse<T>(() => func.Value));
+        }
+        /// <summary>
+        /// Makes an Initializer to be called only on first use
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        public static FirstUse<T> ToFirstUse<T>(this Boxed<T> func)
+        {
+            return func.io;
+        }
+        /// <summary>
+        /// Makes an Initializer to be called only on first use
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        public static FirstUse<T> ToFirstUse<T>(this FirstUse<T> func)
+        {
+            return func;
+        }
+        /// <summary>
+        /// Makes an Initializer to be called only on first use
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        public static FirstUse<T> ToFirstUse<T>(this object func)
+        {
+            return (Delegate)func;
+        }
+        /// <summary>
+        /// Makes an Initializer to be called only on first use
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        public static FirstUse<T> ToFirstUse<T>(this Delegate func)
+        {
+            return (Func<T>)func;
+        }
+        /// <summary>
+        /// Makes an Initializer to be called only on first use
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        public static FirstUse<T> ToFirstUse<T>(AnyFunc func)
+        {
+            return (Func<T>)(() => (T)func());
+        }
+        /// <summary>
+        /// Makes an Initializer to be called only on first use
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        public static FirstUse<T> ToFirstUse<T>(AnyFunc<T> func)
+        {
+            return (Func<T>) (() => func());
+           
+        }
+    }
+    
+    public delegate object AnyFunc(params object[] args);
+    public delegate T AnyFunc<T>(params object[] args);
+
+    public struct FirstUse<T> // : Nullable<T>
+    {
+        public static implicit operator T(FirstUse<T> value)
+        {
+            return value.Value;
+        } 
+        public static implicit operator Boxed<T>(FirstUse<T> value)
+        {
+            return new Boxed<T>() { io = value };
+        }
+        public static implicit operator Func<T>(FirstUse<T> value)
+        {
+            return () => value.Value;
+        }
+        public static implicit operator FirstUse<T>(T value)
+        {
+            return new FirstUse<T>()
+            {
+                m_value = value,
+                m_isValid = true,
+                m_valueFactory = (() => value)
+            };
+
+        }
+        public static implicit operator FirstUse<T>(Func<T> value)
+        {
+            return new FirstUse<T>()
+            {
+                m_valueFactory = value
+            };
+        }
+        public static implicit operator FirstUse<T>(Delegate value)
+        {
+            return new FirstUse<T>()
+            {
+                m_valueFactory = (Func<T>)value
+            };
+        }
+
+        private T m_value;
+        private bool m_isValid;
+        // a delegate that returns the created value, if null the created value will be default(T)
+        private Func<T> m_valueFactory;
+
+        public FirstUse(Func<T> func)
+        {
+            m_valueFactory = func;
+            m_value = default(T);
+            m_isValid = false;
+        }
+        internal bool HasValue
+        {
+            get
+            {
+                // once we have m_isValid true.. the value is valid!
+                if (m_isValid) return true;
+                // if m_isValid is false we might need to be waiting on a m_valueFactory invokation on another thread
+                lock (m_valueFactory.GetType()) return m_isValid;
+            }
+        }
+        public T Value
+        {
+            get
+            {
+                // once we have m_isValid true.. the value is valid!
+                //if (m_isValid) return m_value;
+                // if m_isValid is false we might need to be waiting on a m_valueFactory invokation on another thread
+                lock (m_valueFactory.GetType())
+                {
+                    if (!m_isValid)
+                    {
+                        m_value = m_valueFactory();
+                        m_isValid = true;
+                    }
+                    return m_value;
+                }
+            }
+        }
+
+        public static FirstUse<T> F(Func<T> func)
+        {
+            return new FirstUse<T>(func);
+        }
+    }
+
     public class LockInfo
     {
 
@@ -372,6 +580,11 @@ namespace MushDLR223.Utilities
             {
                 o[0] = true;
             }
+        }
+
+        public static T WithLock<T>(object lockObj, Func<T> func)
+        {
+            lock (lockObj) return func();
         }
     }
 

@@ -56,7 +56,7 @@ namespace MushDLR223.Utilities
         {
             lock (locker)
             {
-                //sw.WriteLine();
+                sw.WriteLine();
                 Flush();
             }
         }
@@ -70,10 +70,17 @@ namespace MushDLR223.Utilities
             string toWrite = "";
             lock (locker)
             {
-                StringWriter s = sw;
+                toWrite = sw.ToString();
+                int lastlf = toWrite.LastIndexOf('\n');
+                if (lastlf == -1)
+                {
+                    return;
+                }
                 sw = new StringWriter();
-                s.Flush();
-                toWrite = s.ToString().TrimEnd();
+                string nextWrite = toWrite.Substring(lastlf).TrimStart();
+                sw.Write(nextWrite);
+                var thisWrite = toWrite.Substring(0, lastlf).TrimEnd();
+                toWrite = thisWrite;
             }
             try
             {

@@ -1591,6 +1591,9 @@ namespace MushDLR223.Utilities
             }
         }
 
+        [ThreadStatic] private static bool SkipPrintingThisThread = false;
+        public static HashSet<Thread> Printers = new HashSet<Thread>();
+        public static HashSet<Thread> Skippers = new HashSet<Thread>();
         public static int DebugLevel = 0;
         public static void DebugWriteLine(string format, params object[] args)
         {
@@ -1606,6 +1609,15 @@ namespace MushDLR223.Utilities
                 return;
             }
             if (printStr == null) return;
+            Thread ct = Thread.CurrentThread;
+            Printers.Add(ct);
+            if (PrintOnlyThisThread != null && PrintOnlyThisThread != ct)
+            {
+                return;
+            }
+            if (SkipPrintingThisThread) return;
+            if (Skippers.Contains(ct)) return;
+
             string sender;
             string getCallerFormat = GetCallerFormat(printStr, out sender);
             ExecWithMaxTime(() => WriteNewLine(DeriveColor(sender), sender, ConsoleColor.Gray, "{0}", printStr), 2000);
@@ -2164,6 +2176,7 @@ namespace MushDLR223.Utilities
                                                               };
 
         private TextWriter NULL_OUTPUT = new NULL_OUTPUT_TW();
+        public static Thread PrintOnlyThisThread;
 
         protected static List<TextWriter> Outputs
         {

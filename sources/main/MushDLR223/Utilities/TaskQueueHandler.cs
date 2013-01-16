@@ -1947,7 +1947,10 @@ namespace MushDLR223.Utilities
         {
             Enqueue0(NamedTask(named, evt));
         }
-
+        public void EnqueueNot(String named, TASK evt)
+        {
+            evt();
+        }
         public void AddFirst(String named, TASK evt)
         {
             AddFirst0(NamedTask(named, evt));
