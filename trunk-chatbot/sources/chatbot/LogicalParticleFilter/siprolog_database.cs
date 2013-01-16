@@ -305,7 +305,7 @@ namespace LogicalParticleFilter1
             /// <filterpriority>2</filterpriority>
             public override string ToString()
             {
-                return StructToString(this);
+                return threadLocal.StructToString(this);
             }
             public string AToString
             {
@@ -337,7 +337,7 @@ namespace LogicalParticleFilter1
                 lock (rules) for (int i = 0; i < rules.Count; i++)
                     {
                         Rule rule = (Rule)rules[i];
-                        string name = rule.head.name;
+                        string name = rule.head.fname;
                         if (!index.ContainsKey(name)) { index[name] = new RuleList(); }
                         index[name].Add(rule);
                         if (rule.head.headIsVar)
@@ -417,6 +417,7 @@ namespace LogicalParticleFilter1
             }
             public string ToSource(SourceLanguage language)
             {
+                language = language.Inner();
                 if (this.body == null)
                 {
                     return this.head.ToSource(language) + ".";
@@ -536,19 +537,32 @@ namespace LogicalParticleFilter1
     {
         public static SourceLanguage Prolog = new SourceLanguage("prolog");
 
-        public static SourceLanguage Notation3 = new SourceLanguage("notation3");
+        public static SourceLanguage Notation3 = new SourceLanguage("notation3")
+        {
+            NodeFormatter = new Notation3Formatter()
+        };
+
+        public static SourceLanguage Turtle = new SourceLanguage("turtle")
+        {
+            NodeFormatter = new TurtleFormatter()
+        };
 
         public static SourceLanguage Text = new SourceLanguage("text")
+                                                {
+                                                    InnerLang = Prolog
+                                                };
+        static SourceLanguage()
         {
-            InnerLang = Prolog
-        };
+
+        }
 
         readonly public string Name;
         public SourceLanguage InnerLang;
+        public INodeFormatter NodeFormatter;
 
         public override string ToString()
         {
-            return base.ToString() + ":" + Name;
+            return  "slang:" + Name;
         }
         private SourceLanguage(string lang)
         {

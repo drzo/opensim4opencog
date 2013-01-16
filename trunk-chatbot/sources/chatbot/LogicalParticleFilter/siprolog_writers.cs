@@ -240,8 +240,8 @@ function hidetip()
 
         public void WriteMtInfo(TextWriter writer, string mt, string serverRoot, bool toplevel)
         {
-            tl_ServerRoot = serverRoot;
-            tl_writer = writer;
+            threadLocal.tl_ServerRoot = serverRoot;
+            threadLocal.tl_writer = writer;
             writer.WriteLine("<h2>Siprolog Mt {0}</h2>", mt);
             PNode qnode = FindKB(mt);
             if (qnode != null)
@@ -252,7 +252,7 @@ function hidetip()
                 KBGraph.PrintToWriterInEdges(qnode, 0, writer, serverRoot);
                 mt = qnode.Id;
             }
-            tl_mt = mt;
+            threadLocal.tl_mt = mt;
             //KBGraph.ShowGenlMts(qnode, null, 0, writer, serverRoot);
             writer.WriteLine("<h3> KB Operations for {0}</h3>&nbsp;", mt);
             writer.WriteLine("<a href='{0}plot/?mt={1}&q=plot(X,Y)'>Plot Mt</a>&nbsp;", serverRoot, mt);
@@ -350,7 +350,7 @@ function hidetip()
             var mt = r.optHomeMt;
             bool localMT = qnode.id == mt;
             string color = localMT ? "blue" : "darkgreen";
-            string ext = localMT ? "" : string.Format("&nbsp;&nbsp;%<a href='{0}xrdf/?mt={1}'>{1}</a>", tl_ServerRoot, mt);
+            string ext = localMT ? "" : string.Format("&nbsp;&nbsp;%<a href='{0}xrdf/?mt={1}'>{1}</a>", threadLocal.tl_ServerRoot, mt);
 
 
             string toolTip = "";
@@ -363,8 +363,41 @@ function hidetip()
                            WebLinksWriter.EntityFormat(r.ToSource(SourceLanguage.Prolog)), ext);
         }
 
+    }
+
+    public static class threadLocal
+    {
+        [ThreadStatic] public static SourceLanguage tl_console_language = null;//SourceLanguage.Text;
+        public static string tl_languageName
+        {
+            get
+            {
+                if (tl_console_language == null) return null;
+                return tl_console_language.Name;
+            }
+        }
         [ThreadStatic]
-        static int tl_StructToStringDepth = 4;
+        internal static string tl_ServerRoot;
+        [ThreadStatic]
+        internal static string tl_mt;
+        [ThreadStatic]
+        internal static string tl_rule_mt;
+        internal static string curKB
+        {
+            get
+            {
+                return tl_mt;
+            }
+            set
+            {
+                tl_mt = value;
+            }
+        }
+        [ThreadStatic]
+        internal static TextWriter tl_writer;
+
+        [ThreadStatic]
+        private static int tl_StructToStringDepth = 4;
         public static string StructToString(object t)
         {
             int before = tl_StructToStringDepth;
@@ -386,7 +419,7 @@ function hidetip()
         {
             if (t == null) return "NULL";
             Type structType = t.GetType();
-            if (t is IConvertible || t is String || t is Uri || t is Stream || t is Part) return "" + t;
+            if (t is IConvertible || t is String || t is Uri || t is Stream || t is IComparable<string>) return "" + t;
             if (tl_StructToStringDepth > depth)
             {
                 tl_StructToStringDepth = depth;
@@ -471,8 +504,11 @@ function hidetip()
 
             return result.ToString().TrimEnd();
         }
-
-
+ 
+    }
+    public partial class SIProlog
+    {
+ 
         public void interactQuery(TextWriter writer, string query, string mt, string serverRoot)
         {
             int testdepth = 64;

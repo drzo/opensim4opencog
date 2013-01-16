@@ -8,7 +8,7 @@ namespace LogicalParticleFilter1
     // Should I include the particle evaluation delegate with each observation
     // or should it be passed in by the PF algorithm
     // and what should I do if I have both ?
-    public class Action
+    public class PFAction
     {
         // The action description
         // A probability over a set of Davisonian slots ???
@@ -178,7 +178,7 @@ namespace LogicalParticleFilter1
         public Particle sumParticle = new Particle();
         public Particle meanParticle = new Particle();
         public bool initialized = false;
-        public Action inputAct = new Action();
+        public PFAction inputAct = new PFAction();
         public Observation inputObservation = new Observation();
         public double totalLikelihood = 0;
         public double totalWeight = 0;
@@ -353,7 +353,7 @@ namespace LogicalParticleFilter1
             return transformParticle(inputAct, p);
         }
 
-        public Particle transformParticle (Action act, Particle p)
+        public Particle transformParticle (PFAction act, Particle p)
         {
             //Particle nextParticle = new Particle(p);
             Particle nextParticle = new Particle();
@@ -610,7 +610,7 @@ namespace LogicalParticleFilter1
             string [] actArry = actionList.Split('|');
             string [] obsArry = observationList.Split('|');
 
-            inputAct = new Action();
+            inputAct = new PFAction();
             inputObservation = new Observation();
 
             foreach (string a in actArry)

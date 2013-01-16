@@ -53,13 +53,13 @@ namespace LogicalParticleFilter1
                         string ret = cm.Id;
                         if (!string.IsNullOrEmpty(ret)) return ret;
                     }
-                    return CurrentProlog.curKB;
+                    return threadLocal.curKB;
                 }
             }
 
             public static RdfRules FromRule(PNode pnode, Rule rule, IGraph kb)
             {
-                var temp = CurrentProlog.curKB;
+                var temp = threadLocal.curKB;
                 var tCompilingRule = CompilingRule;
                 var tCompilingMt = CompilingMt;
                 try
@@ -81,7 +81,7 @@ namespace LogicalParticleFilter1
                 {
                     CompilingRule = tCompilingRule;
                     CompilingMt = tCompilingMt;
-                    CurrentProlog.curKB = temp;
+                    threadLocal.curKB = temp;
                 }
             }
 
@@ -117,7 +117,7 @@ namespace LogicalParticleFilter1
 
             static bool IsRdfPrecoded(Term thisTerm)
             {
-                var name = thisTerm.name;
+                var name = thisTerm.fname;
                 int arity = thisTerm.Arity;
                 if (QueryPredicateInfoOnce(name, "prologMappingType") == "PrologOnlyPredicate")
                 {
@@ -282,7 +282,7 @@ namespace LogicalParticleFilter1
                         a.Visit(pr);
                         return a;
                     }
-                    string an = a.name;
+                    string an = ((Variable)a).vname;
                     if (newVarNames != null && newVarNames.Contains(an))
                     {
                         // Dont copy previously copied vars
@@ -374,7 +374,7 @@ namespace LogicalParticleFilter1
                         if (t != null) rulebody.AddPart(t);
                     }
                 }
-                if (head.name == "rdfinfo")
+                if (head.fname == "rdfinfo")
                 {
                     var pl = SIProlog.CurrentProlog;
                     foreach (var arg in head.ArgList)
@@ -422,7 +422,7 @@ namespace LogicalParticleFilter1
 
             private static bool IsTriple(Term term)
             {
-                if (term.name == TripleName) return true;
+                if (term.fname == TripleName) return true;
                 return false;
             }
 
@@ -450,7 +450,7 @@ namespace LogicalParticleFilter1
 
             static private INode CreateTriplesWithGeneratedSubject(Term term, RdfRules triples, bool isPrecond)
             {
-                if (IsRdfBuiltIn(term.name, term.Arity, term, triples))
+                if (IsRdfBuiltIn(term.fname, term.Arity, term, triples))
                 {
                     Warn("RDFBuiltin passed to Create Subject");
                     INode bio;
@@ -489,7 +489,7 @@ namespace LogicalParticleFilter1
                         if (argDef == null)
                         {
                             argDef = GetAdef(headDef, argNum, true);
-                            argDef.AddRangeTypeName(part.name);
+                            argDef.AddRangeTypeName(((Variable)part).vname);
                         }
                     }
                     INode obj = PartToRdf(part, triples);
@@ -508,7 +508,7 @@ namespace LogicalParticleFilter1
             {
                 var term = termIn;
                 term = ToTranslated(term, triples);
-                if (IsRdfBuiltIn(term.name, term.Arity, term, triples))
+                if (IsRdfBuiltIn(term.fname, term.Arity, term, triples))
                 {
                     INode bio;
                     if (BuiltinToRDF(!hasBody, term, triples, triples.AddConsequent, out bio)) return null;
@@ -523,7 +523,7 @@ namespace LogicalParticleFilter1
             {
                 var term = termIn;
                 term = ToTranslated(term, triples);
-                if (IsRdfBuiltIn(term.name, term.Arity, term, triples))
+                if (IsRdfBuiltIn(term.fname, term.Arity, term, triples))
                 {
                     INode bio;
                     if (BuiltinToRDF(false, term, triples, triples.AddRequirement, out bio))
@@ -538,15 +538,15 @@ namespace LogicalParticleFilter1
 
             private static Term ToTranslated(Term term, RdfRules triples)
             {
-                if (term.Arity == 0) return ToTranslated(MakeTerm("asserted", Atom.FromSource(term.name)), triples);
+                if (term.Arity == 0) return ToTranslated(MakeTerm("asserted", Atom.FromSource(term.fname)), triples);
                 if (term.Arity == 1)
                 {
                     Part arg0 = term.ArgList[0];
                     if (false && !IsLitteral(arg0, triples))
                         return ToTranslated(
-                            MakeTerm("rdf:type", arg0, Atom.FromSource(PredicateToType(term.name))), triples);
+                            MakeTerm("rdf:type", arg0, Atom.FromSource(PredicateToType(term.fname))), triples);
                     return ToTranslated(
-                        MakeTerm("prologUnaryTrue", arg0, Atom.FromSource(PredicateToType(term.name))), triples);
+                        MakeTerm("prologUnaryTrue", arg0, Atom.FromSource(PredicateToType(term.fname))), triples);
                 }
                 if (term.Arity == 2) return term;
                 if (term.Arity > 2)
@@ -566,12 +566,12 @@ namespace LogicalParticleFilter1
                 {
                     bio = PartToRdf(term.ArgList[0], antecedants);
                     howToAdd(MakeTriple(bio,
-                                        PredicateToProperty(term.name),
+                                        PredicateToProperty(term.fname),
                                         PartToRdf(term.ArgList[1], antecedants), toplevel));
                     bio = null;
                     return true;
                 }
-                if (term.name == TripleName && arity == 3)
+                if (term.fname == TripleName && arity == 3)
                 {
                     var al = term.ArgList;
                     bio = PartToRdf(al[0], antecedants);
@@ -585,7 +585,7 @@ namespace LogicalParticleFilter1
                     bio = PartToRdf(term.ArgList[0], antecedants);
                     if (!(bio is ILiteralNode))
                     {
-                        var dataType = C(definations, PredicateToType(term.name));
+                        var dataType = C(definations, PredicateToType(term.fname));
                         howToAdd(MakeTriple(bio, InstanceOf, dataType));
                         return true;
                     }
@@ -652,7 +652,7 @@ namespace LogicalParticleFilter1
 
             static private INode CreateInstance(PredicateProperty headDef, Term term, RdfRules graph, NodeType nodeType)
             {
-                var name = term.name;
+                var name = term.fname;
                 int instanceOnArg = GetInstanceOnArg(name);
                 if (instanceOnArg > 0)
                 {
@@ -764,7 +764,7 @@ namespace LogicalParticleFilter1
             /// <filterpriority>2</filterpriority>
             public override string ToString()
             {
-                return StructToString(this);
+                return threadLocal.StructToString(this);
             }
             public string AToString
             {
@@ -865,7 +865,7 @@ namespace LogicalParticleFilter1
             /// <filterpriority>2</filterpriority>
             public override string ToString()
             {
-                return StructToString(this);
+                return threadLocal.StructToString(this);
             }
             public string AToString
             {
@@ -885,7 +885,7 @@ namespace LogicalParticleFilter1
                 //AddRangeTypeName("_Arg" + argNumber1Based);
             }
 
-            private bool IsOkName(string func)
+            public static bool IsOkName(string func)
             {
                 if (string.IsNullOrEmpty(func)) return false;
                 foreach (var c in func)
@@ -898,7 +898,7 @@ namespace LogicalParticleFilter1
             public void AddRangeTypeName(string functor)
             {
                 functor = ProperCase(functor);
-                if (IsOkName(functor)) return;
+                if (!IsOkName(functor)) return;
                 if (argNames.Add(functor) || !predicateArgName.ToLower().Contains(functor.ToLower()))
                 {
                     SharedGlobalPredDefsDirty = true;

@@ -11,7 +11,6 @@ using System.Threading;
 using System.Xml;
 using System.Web;
 using System.Web.UI;
-
 using VDS.RDF;
 using VDS.RDF.Parsing;
 using VDS.RDF.Query;
@@ -23,19 +22,18 @@ using VDS.RDF.Update.Commands;
 using VDS.RDF.Web;
 using VDS.RDF.Web.Configuration.Server;
 
-
 namespace LogicalParticleFilter1
 {
     public class PFEndpoint
     {
         public static void ConsoleWriteLine(string format, params object[] args)
         {
-            SIProlog.ConsoleWriteLine(format, args);
+            Console.Error.WriteLine(format, args);
         }
 
         public  HttpListener listener = new HttpListener();
         public  string startUpPath = null;
-        public  SIProlog ourEngine = null;
+        public SIProlog ourEngine = null;
         static public int serverPort = 8181;
         static public string serverRoot
         {
@@ -44,8 +42,8 @@ namespace LogicalParticleFilter1
                 return "http://CogbotServer:" + serverPort + "/";
             }
         }
-        [ThreadStatic]
-        public  SparqlServerConfiguration _config ;
+
+        [ThreadStatic] public SparqlServerConfiguration _config;
         public Dictionary<string, SparqlServerConfiguration> Configs = new Dictionary<string, SparqlServerConfiguration>();
 
 
@@ -134,21 +132,23 @@ namespace LogicalParticleFilter1
         }
 
         // maybe http://localhost:8888/aiml/zenoaeronaut_resident/bstore/READ_ALICEINWONDERLAND.BTX
-        public IGraph ourConfigGraph()
+        public IGraph ourConfigGraph(string expectedPath)
         {
             IGraph g = new Graph();
+            var endnode = g.CreateUriNode(new Uri("dotnetrdf:" + expectedPath));
+
             TurtleParser parser = new TurtleParser();
             LoadIfExists("configuration.ttl", parser, g);
             LoadIfExists("localConfig.ttl",parser, g);
             //parser.Load(g, @"..\..\plugins\configuration.ttl");
             //parser.Load(g, @"..\..\plugins\localConfig.ttl");
-
+            string endnodeStr = "<" + endnode + ">";
             //g.Assert(MakeTriple(endnode, pa, dhh));
-            parser.Load(g, new StringReader( @"<dotnetrdf:/*> a <dnr:HttpHandler> ."));
-            parser.Load(g, new StringReader( @"<dotnetrdf:/*> <dnr:type> ""VDS.RDF.Web.SparqlServer"" ."));
-            parser.Load(g, new StringReader(@"<dotnetrdf:/*> <dnr:queryProcessor> <dotnetrdf:qProc> ."));
-            parser.Load(g, new StringReader(@"<dotnetrdf:/*> <dnr:updateProcessor> <dotnetrdf:uProc> ."));
-            parser.Load(g, new StringReader(@"<dotnetrdf:/*> <dnr:protocolProcessor> <dotnetrdf:pProc> ."));
+            parser.Load(g, new StringReader(endnodeStr + @" a <dnr:HttpHandler> ."));
+            parser.Load(g, new StringReader(endnodeStr + @" <dnr:type> ""VDS.RDF.Web.SparqlServer"" ."));
+            parser.Load(g, new StringReader(endnodeStr + @" <dnr:queryProcessor> <dotnetrdf:qProc> ."));
+            parser.Load(g, new StringReader(endnodeStr + @" <dnr:updateProcessor> <dotnetrdf:uProc> ."));
+            parser.Load(g, new StringReader(endnodeStr + @" <dnr:protocolProcessor> <dotnetrdf:pProc> ."));
 
             parser.Load(g, new StringReader(@"<dotnetrdf:queryProcessor> a <rdf:Property> ."));
             parser.Load(g, new StringReader(@"<dotnetrdf:updateProcessor> a <rdf:Property> ."));
@@ -171,8 +171,11 @@ namespace LogicalParticleFilter1
 
             parser.Load(g, new StringReader(@"<dotnetrdf:store> a <dnr:TripleStore> ."));
             parser.Load(g, new StringReader(@"<dotnetrdf:store> <dnr:type> ""VDS.RDF.TripleStore""  ."));
-
-            return g;
+            g.Assert(new Triple(endnode, g.CreateUriNode("rdfs:comment"),
+                                g.CreateLiteralNode("expected path = " + expectedPath)));
+            IGraph ocg = ourEngine.NewGraph("ourConfigGraph_" + HttpUtility.UrlEncode(expectedPath));
+            ocg.Merge(g);
+            return ocg;
         }
 
         private void LoadIfExists(string path, TurtleParser parser, IGraph graph)
@@ -207,7 +210,7 @@ namespace LogicalParticleFilter1
                     return true;
                 } 
                 
-                IGraph g = ourConfigGraph();
+                IGraph g = ourConfigGraph(expectedPath);
                 //IUriNode objNode = g.CreateUriNode(UriFactory.Create("dotnetrdf:" + expectedPath));
                 INode objNode = g.GetUriNode(new Uri("dotnetrdf:" + expectedPath));
                 if (objNode == null)

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -88,25 +89,54 @@ namespace LogicalParticleFilter1
 
         // natural language to MT name
         public Dictionary<string, string> aliasMap = new Dictionary<string, string>();
-        [ThreadStatic]
-        public static SourceLanguage tl_console_language = SourceLanguage.Prolog;
-        public static string tl_languageName
+        public static SIProlog CurrentProlog
         {
             get
             {
-                if (tl_console_language == null) return null;
-                return tl_console_language.Name;
+                lock (GlobalKBGraph)
+                {
+                    if (_currentProlog == null)
+                    {
+                        _currentProlog = new SIProlog();
+                    }
+                }
+                return _currentProlog;
+
+                
+            }
+            set
+            {
+                if (_currentProlog != null && _currentProlog != value)
+                {
+                    Warn("Setting another current Prolog " + _currentProlog.CreationTrace);
+                }
+                _currentProlog = value;
             }
         }
-        public static SIProlog CurrentProlog;
-        public SIProlog()
+        public static SIProlog _currentProlog;
+        public readonly string CreationTrace;
+        private SIProlog()
+        {
+            var rs = new StringWriter();
+            var fs = new System.Diagnostics.StackTrace(true).GetFrames();
+            foreach (StackFrame frame in fs)
+            {
+                rs.WriteLine("" + frame);
+            }
+            this.CreationTrace = rs.ToString();
+            lock (GlobalKBGraph)
+            {
+                SIPrologInit();
+            }
+        }
+        public void SIPrologInit()
         {
             CurrentProlog = this;
             DLRConsole.TransparentCallers.Add(GetType());
             DLRConsole.SetIgnoreSender("KEYVALUELISTSIPROLOG", true);
             defineBuiltIns();
             defineRDFExtensions();
-            tl_mt = "baseKB";
+            threadLocal.tl_mt = "baseKB";
             connectMT("stdlib", "root");
             insertKB(standardLib(), "stdlib");
         }
@@ -754,20 +784,21 @@ namespace LogicalParticleFilter1
         {
             if (ruleSet != null)
             {
-                var restoreThreadKB = curKB;
+                var restoreThreadKB = threadLocal.curKB;
                 Dictionary<string, RuleList> tempKB = ParseKEText(startMT, ruleSet);
                 foreach (string kb in tempKB.Keys)
                 {
                     RuleList newRules = tempKB[kb];
                     var focus = FindOrCreateKB(kb);
-                    ConsoleWriteLine("{0} {1} Rules INTO {2}",
-                                     clearFirst ? "REPLACING" : "APPENDING",
-                                     newRules.Count,
-                                     focus);
-                    //insertKB(tempKB[kb], kb);
+                    int oldCount = focus.Size;
+                    int addCount = newRules.Count;
+                    ConsoleWriteLine("{0}APPENDING {1} Rules INTO {2}",
+                                     (clearFirst ? ("REMOVING " + oldCount + " and ") : ""),
+                                     addCount, focus);
                     loadIntoKB(newRules, focus, clearFirst);
+//                    int newCount = focus.Size;
                 }
-                curKB = restoreThreadKB;
+                threadLocal.curKB = restoreThreadKB;
             }
         }
 
@@ -1057,9 +1088,9 @@ namespace LogicalParticleFilter1
 
                             for (var i = 0; i < context.Arity; i++)
                             {
-                                string k = (((Variable)context.ArgList[i]).name);
+                                string k = (((Variable)context.ArgList[i]).vname);
                                 //string v = ((Atom)value(new Variable(((Variable)context.alist[i]).name + ".0"), env)).ToString();
-                                var part = value(new Variable(((Variable)context.ArgList[i]).name + ".0"), env);
+                                var part = value(new Variable(((Variable)context.ArgList[i]).vname + ".0"), env);
                                 if (doParts)
                                 {
                                     bindDictParts[k] = part;
@@ -1104,7 +1135,7 @@ namespace LogicalParticleFilter1
             PartList outv = varNames(t.ArgList);
             if (t.headIsVar)
             {
-                outv.AddPart(new Variable(t.name));
+                outv.AddPart(new Variable(t.fvname));
             }
             return outv;
         }
@@ -1123,7 +1154,7 @@ namespace LogicalParticleFilter1
                 if (((Part)part) is Variable)
                 {
                     for (var j = 0; j < outv.Arity; j++)
-                        if (((Variable)outv.ArgList[j]).name == ((Variable)part).name) goto mainc;
+                        if (((Variable)outv.ArgList[j]).vname == ((Variable)part).vname) goto mainc;
                     //outv.InsertPart(outv.Length, plist.alist[i]);
                     outv.AddPart((Variable)part);
                 }
@@ -1134,14 +1165,14 @@ namespace LogicalParticleFilter1
                     for (var j = 0; j < o2.Arity; j++)
                     {
                         for (var k = 0; k < outv.Arity; k++)
-                            if (((Variable)o2.ArgList[j]).name == ((Variable)outv.ArgList[k]).name) goto innerc;
+                            if (((Variable)o2.ArgList[j]).vname == ((Variable)outv.ArgList[k]).vname) goto innerc;
                         //outv.InsertPart(outv.Length, o2.alist[j]);
                         outv.AddPart(o2.ArgList[j]);
                     innerc: j = j;
                     }
                     if (((Term)part).headIsVar)
                     {
-                        outv.AddPart(new Variable(((Term)part).name));
+                        outv.AddPart(new Variable(((Term)part).fvname));
                     }
                 }
                 else if (((Part)part) is PartList)
@@ -1151,7 +1182,7 @@ namespace LogicalParticleFilter1
                     for (var j = 0; j < o2.Arity; j++)
                     {
                         for (var k = 0; k < outv.Arity; k++)
-                            if (((Variable)o2.ArgList[j]).name == ((Variable)outv.ArgList[k]).name) goto innerc2;
+                            if (((Variable)o2.ArgList[j]).vname == ((Variable)outv.ArgList[k]).vname) goto innerc2;
                         //outv.InsertPart(outv.Length, o2.alist[j]);
                         outv.AddPart(o2.ArgList[j]);
                     innerc2: j = j;
@@ -1177,13 +1208,13 @@ namespace LogicalParticleFilter1
             }
             else if (list is Variable)
             {
-                return (T)(object)new Variable(((Variable)list).name + "." + level.ToString());
+                return (T)(object)new Variable(((Variable)list).vname + "." + level.ToString());
             }
             else if (list is Term)
             {
                 //What if the pred is a variable ?
                 var term = (Term)list;
-                string nextName = term.name;
+                string nextName = term.fname;
                 var tpl = term.ArgList;
                 bool termheadIsVar = term.headIsVar;
                 if (termheadIsVar)
@@ -1257,7 +1288,7 @@ namespace LogicalParticleFilter1
             if (level > deepest)
             {
                 deepest = level;
-                deepestName = ((Term)goalList.ArgList[0]).name;
+                deepestName = ((Term)goalList.ArgList[0]).fname;
             }
             if (level >= maxdepth)
             {
@@ -1277,12 +1308,12 @@ namespace LogicalParticleFilter1
 
             PDB db;
             //PDB db;
-            if (thisTerm.name == "callMt")
+            if (thisTerm.fname == "callMt")
             {
                 // db.rules = findVisibleKBRules(queryMT);
                 string queryMT = ((IAtomic)thisTerm.ArgList[0]).AsString();
                 db = MakeQueryContext(queryMT, true, null);
-                tl_mt = queryMT;
+                threadLocal.tl_mt = queryMT;
                 thisTerm = thisTerm.ArgList[1] as Term;
             }
             else
@@ -1292,12 +1323,12 @@ namespace LogicalParticleFilter1
 
             // Do we have a builtin?
 
-            builtinDelegate builtin = (builtinDelegate)PDB.builtin[thisTerm.name + "/" + thisTerm.Arity];
+            builtinDelegate builtin = (builtinDelegate)PDB.builtin[thisTerm.fname + "/" + thisTerm.Arity];
 
             //if (trace) { Console.Write("Debug: searching for builtin " + thisTerm.name + "/" + ((PartList)((PartList)thisTerm.partlist).list).length + "\n"); }
             if (builtin != null)
             {
-                if (trace) { Console.Write("builtin with name " + thisTerm.name + " found; calling prove() on it...\n"); }
+                if (trace) { Console.Write("builtin with name " + thisTerm.fname + " found; calling prove() on it...\n"); }
                 // Stick the new body list
                 PartList newGoals = new PartList();
                 int j;
@@ -1322,8 +1353,8 @@ namespace LogicalParticleFilter1
             }
             else
             {
-                if (db.index.ContainsKey(thisTerm.name))
-                    localRules = db.index[thisTerm.name].arrayList;
+                RuleList fndRL;
+                if (db.index.TryGetValue(thisTerm.fname, out fndRL)) localRules = fndRL.arrayList;
                 else
                     localRules = new List<Rule>();
 
@@ -1343,7 +1374,7 @@ namespace LogicalParticleFilter1
                 int i = -1;
                 foreach (Rule rule in localRules)
                 {
-                    tl_rule_mt = rule.optHomeMt ?? tl_rule_mt;
+                    threadLocal.tl_rule_mt = rule.optHomeMt ?? threadLocal.tl_rule_mt;
                     i++;
                     if (thisTerm.excludeRule == i)
                     {
@@ -1363,7 +1394,7 @@ namespace LogicalParticleFilter1
                     if ((termIsVar == false) && (ruleIsVar == false))
                     {
                         // normal operation, both are atomic
-                        if (rulehead.name != thisTerm.name) continue;
+                        if (rulehead.fname != thisTerm.fname) continue;
                     }
                     if ((termIsVar == false) && (ruleIsVar == true))
                     {
@@ -1397,7 +1428,7 @@ namespace LogicalParticleFilter1
                     }
                     else
                     {
-                        renamedHead = new Term(rulehead.name, rulehead.headIsVar,
+                        renamedHead = new Term(rulehead.fname, rulehead.headIsVar,
                                                renameVariables(rulehead.ArgList, level, thisTerm));
                     }
                     // renamedHead.ruleNumber = i;
@@ -1679,7 +1710,7 @@ namespace LogicalParticleFilter1
 
             Part collect = renameVariables(collect0, level, thisTerm);
             //var newGoal = new Term(subgoal.name, renameVariables(subgoal.ArgList, level, thisTerm));
-            Term newGoal = new Term(subgoal.name, false,
+            Term newGoal = new Term(subgoal.fname, false,
                                     (PartList)renameVariables(((PartList)subgoal), level, thisTerm));
             newGoal.parent = thisTerm;
 
@@ -1872,7 +1903,7 @@ namespace LogicalParticleFilter1
                 first1 = null;
                 second1 = null;
                 // we like lists terminated with []
-                if ((conslist is Atom && conslist.name == FUNCTOR_NIL))
+                if ((conslist is Atom && conslist.fname == FUNCTOR_NIL))
                 {
                     return false;
                 }
@@ -1920,7 +1951,7 @@ namespace LogicalParticleFilter1
             Part second = (Part)value((Term)ourParList.ArgList[1], environment);
             Part next;
             int i = 1;
-            while (second is Term && IsListName(((Term)second).name))
+            while (second is Term && IsListName(((Term)second).fname))
             {
                 next = (PartList)((Term)second).ArgList[0];
                 next = (Part)((PartList)next).ArgList[0];
@@ -2069,10 +2100,10 @@ namespace LogicalParticleFilter1
             {
                 for (var i = 0; i < which.Arity; i++)
                 {
-                    w(((Variable)which.ArgList[i]).name);
+                    w(((Variable)which.ArgList[i]).vname);
                     w(" = ");
                     //((Atom)value(new Variable(((Variable)which.alist[i]).name + ".0"), environment)).print();
-                    value(new Variable(((Variable)which.ArgList[i]).name + ".0"), environment).print(w);
+                    value(new Variable(which.ArgList[i].vname + ".0"), environment).print(w);
                     w("\n");
                 }
             }
@@ -2085,7 +2116,7 @@ namespace LogicalParticleFilter1
             if (x is Term)
             {
                 PartList p = new PartList(x.ArgList, env);
-                return new Term(x.name, ((Term)x).headIsVar, p);
+                return new Term(x.fname, ((Term)x).headIsVar, p);
             }
             if (x is PartList)
             {
@@ -2096,7 +2127,7 @@ namespace LogicalParticleFilter1
                 return x;		// We only need to check the values of variables...
 
             Part binding; //** HASH/DICTIONARY NEEDED ** 
-            if (!env.TryGetValue(x.name, out binding))
+            if (!env.TryGetValue(x.vname, out binding))
                 return x;
             if (binding == null)
                 return x;		// Just the variable, no binding.
@@ -2264,12 +2295,12 @@ namespace LogicalParticleFilter1
             if (x is Variable)
             {
                 if (trace) ConsoleWriteLine("     MATCH");
-                return newEnv(x.name, y, env);
+                return newEnv(x.vname, y, env);
             }
             if (y is Variable)
             {
                 if (trace) ConsoleWriteLine("     MATCH");
-                return newEnv(((Variable)y).name, x, env);
+                return newEnv(((Variable)y).vname, x, env);
             }
             // both lists or terms
             if (x.type != y.type)
@@ -2284,7 +2315,7 @@ namespace LogicalParticleFilter1
                 bool yvar = ((Term)y).headIsVar;
                 if (!xvar && !yvar)
                 {
-                    if (x.name != y.name)
+                    if (x.fname != y.fname)
                         return null; // Ooh, so first-order.
                     return unify(x.ArgList, y.ArgList, env);
 
@@ -2293,7 +2324,7 @@ namespace LogicalParticleFilter1
                 if (xvar && yvar)
                 {
                     if (!x.ArgList.IsGround || !y.ArgList.IsGround) return null;
-                    PEnv subEnv = unify(new Variable(x.name), new Variable(y.name), env);
+                    PEnv subEnv = unify(new Variable(x.fvname), new Variable(y.fvname), env);
                     if (subEnv == null)
                         return null;
                     return unify(x.ArgList, y.ArgList, subEnv);
@@ -2306,7 +2337,7 @@ namespace LogicalParticleFilter1
                 }
                 {
                     if (!y.ArgList.IsGround) return null;
-                    PEnv subEnv = unify(Atom.FromName(x.name), new Variable(y.name), env);
+                    PEnv subEnv = unify(Atom.FromName(x.fname), new Variable(y.fvname), env);
                     if (subEnv == null)
                         return null;
                     return unify(x.ArgList, y.ArgList, subEnv);

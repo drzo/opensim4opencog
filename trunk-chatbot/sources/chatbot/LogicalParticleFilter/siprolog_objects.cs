@@ -83,7 +83,13 @@ namespace LogicalParticleFilter1
             return MakeTerm(":-", head, SIProlog.RuleBodyToTerm(rulebody));
         }
 
-        public abstract class Part : IHasParent
+        static internal SourceLanguage tl_console_language
+        {
+            get { return threadLocal.tl_console_language ?? SourceLanguage.Text; }
+            set { threadLocal.tl_console_language = value; }
+        }
+
+        public abstract class Part : IHasParent, IComparable<string>
         {
             public static bool operator ==(Part a, Part b)
             {
@@ -133,10 +139,7 @@ namespace LogicalParticleFilter1
                 return ErrorBadOp("{0} Missing '{1}' for {2}", type, p, this.ToSource(tl_console_language));
             }
             public abstract string type { get; }
-            virtual public string name
-            {
-                get { throw Missing("Name"); }
-            }
+
             virtual public object Functor0
             {
                 get { throw Missing("Functor"); }
@@ -160,8 +163,51 @@ namespace LogicalParticleFilter1
                 w(ToSource(tl_console_language));
             }
 
+            public virtual string Text
+            {
+                get
+                {
+                    return ToSource(SourceLanguage.Text);
+                }
+            }
             public abstract string ToSource(SourceLanguage language);
+            /// <summary>
+            /// Returns a string representation readable with PartPart(..);
+            /// </summary>
+            public virtual string StringReadable
+            {
+                get
+                {
+                    return ToSource(SourceLanguage.Prolog);
+                }
+            }
+            /// <summary>
+            /// Returns URI as their Turtle expression as found in <>
+            /// Literals/Strings as their Values without quotes
+            /// BNodes as their _ID
+            /// Variables as their ID
+            /// Terms as their Functor
+            /// </summary>
+            /// <returns></returns>
+            virtual public string vname
+            {
+                get { throw Missing("VarName"); }
+            }
+            virtual public string fname
+            {
+                get { throw Missing("FunctorName"); }
+            }
+            virtual public string fvname
+            {
+                get { throw Missing("FunctorVarName"); }
+            }
 
+            /// <summary>
+            /// Returns a string representation probably not readable with PartPart(..);
+            /// but makes sense to humans:
+            ///  Atoms: name
+            ///  Variables: varname
+            /// </summary>
             sealed public override string ToString()
             {
                 return ToSource(tl_console_language);
@@ -186,6 +232,16 @@ namespace LogicalParticleFilter1
             {
                 throw Missing("AsString");
             }
+
+
+            #region IComparable<string> Members
+
+            int IComparable<string>.CompareTo(string other)
+            {
+                return Text.CompareTo(other);
+            }
+
+            #endregion
         }
 
         public class PartListImpl : Part, IEnumerable<Part>, IHasParent
@@ -513,8 +569,8 @@ namespace LogicalParticleFilter1
         public class Variable : Part
         {
             public string _name;
+            public override string vname { get { return _name; } }
             public bool Anonymous = false;
-            public override string name { get { return _name; } }
             public override string type { get { return "Variable"; } }
             public Variable(string head)
             {
@@ -528,9 +584,9 @@ namespace LogicalParticleFilter1
             public override void print(Action<string> w) { w(ToSource(tl_console_language)); }
             public override string ToSource(SourceLanguage language)
             {
-                if (language != SourceLanguage.Prolog) return "?" + this.name;
+                if (language != SourceLanguage.Prolog) return "?" + this.vname;
                 if (Anonymous) return "_";
-                return this.name;
+                return this.vname;
             }
 
             override public bool IsGround
@@ -542,8 +598,8 @@ namespace LogicalParticleFilter1
                 if (Object.ReferenceEquals(this, term)) return true;
                 var term2 = term as Variable;
                 if (term2 == null) return false;
-                string thisname = this.name;
-                string term2name = term2.name;
+                string thisname = this.vname;
+                string term2name = term2.vname;
                 if (term2name == thisname)
                 {
                     return true;
@@ -552,7 +608,7 @@ namespace LogicalParticleFilter1
             }
             public override int GetPlHashCode()
             {
-                return name.GetHashCode();
+                return vname.GetHashCode();
             }
             public override bool SameClause(Part term, IDictionary<string, string> varlist)
             {
@@ -564,7 +620,7 @@ namespace LogicalParticleFilter1
                     if (Anonymous) return term2.Anonymous;
                     return false;
                 }
-                return SameVar(term2.name, this.name, varlist);
+                return SameVar(term2.vname, this.vname, varlist);
             }
         }
         public static bool SameVar(string term2name, string thisname, IDictionary<string, string> varlist)
@@ -586,7 +642,7 @@ namespace LogicalParticleFilter1
         }
         public static bool IsList(Part x)
         {
-            return x is Term && IsListName(x.name) && x.Arity == 2;
+            return x is Term && IsListName(((Term)x).fname) && x.Arity == 2;
         }
         public interface IHasParent
         {
@@ -601,12 +657,12 @@ namespace LogicalParticleFilter1
                 if (headIsVar)
                 {
                     if (!term2.headIsVar) return false;
-                    if (!SameVar(term2.name, this.name, varlist)) return false;
+                    if (!SameVar(term2.fname, this.fname, varlist)) return false;
                 }
                 else
                 {
                     if (term2.headIsVar) return false;
-                    if (term2.name != this.name) return false;
+                    if (term2.fname != this.fname) return false;
                 }
                 return ArgList.SameClause(term2.ArgList, varlist);
             }
@@ -616,12 +672,12 @@ namespace LogicalParticleFilter1
                 if (term2 == null) return false;
                 if (term2.Arity != Arity) return false;
                 if (term2.headIsVar != headIsVar) return false;
-                if (term2.name != this.name) return false;
+                if (term2.fname != this.fname) return false;
                 return ArgList.Equals(term2.ArgList);
             }
             public override int GetPlHashCode()
             {
-                return name.GetHashCode() ^ Arity;
+                return fname.GetHashCode() ^ Arity;
             }
             //readonly public string _name;
             //public override string name { get { return _name; } }
@@ -652,7 +708,8 @@ namespace LogicalParticleFilter1
             {
                 get
                 {
-                    return new Term(name, headIsVar, (PartList)partlist0.CopyTerm) { parent = null, excludeThis = excludeThis };
+                    return new Term(headIsVar ? fvname : fname, headIsVar, (PartList) partlist0.CopyTerm)
+                               {parent = null, excludeThis = excludeThis};
                 }
             }
             private Part _pred = null;
@@ -661,16 +718,32 @@ namespace LogicalParticleFilter1
             public int excludeRule = -1;
             public bool cut = false;
             public IHasParent parent = null;
-            public override string name
+            public override string fname
             {
                 get
                 {
-                    {
-                    }
                     return _name;
                 }
             }
-
+            public override string fvname
+            {
+                get
+                {
+                    if (headIsVar) return _name;
+                    return base.fvname;
+                }
+            }
+            /// <summary>
+            /// If the entire term is a var
+            /// </summary>
+            public override string vname
+            {
+                get
+                {
+                    if (Arity == 0) return fvname;
+                    return base.vname;
+                }
+            }
             private string _name;
             public bool headIsVar;
             public Term(string head, bool isVar, PartList a0N)
@@ -707,7 +780,7 @@ namespace LogicalParticleFilter1
             {
                 language = language.Inner();
                 string result = "";
-                if (IsListName(this.name) && Arity == 2)
+                if (IsListName(this.fname) && Arity == 2)
                 {
                     Part x = this;
                     {
@@ -731,7 +804,7 @@ namespace LogicalParticleFilter1
                 }
                 if (Arity == 0)
                 {
-                    if (name == "cut")
+                    if (fname == "cut")
                     {
                         return "!";
                     }
@@ -752,8 +825,8 @@ namespace LogicalParticleFilter1
             {
                 get
                 {
-                    var name = this.name;
-                    if (headIsVar) return name;
+                    if (headIsVar) return fvname;
+                    var name = this.fname;
                     if (IsVarName(name)) return "'" + name + "'";
                     return name;
                 }

@@ -31,10 +31,6 @@ namespace LogicalParticleFilter1
 {
     public partial class SIProlog
     {
-        public static NamespaceMapper rdfDefNS
-        {
-            get { return (NamespaceMapper)rdfDefinations.NamespaceMap; }
-        }
         public class Atom : Part, IAtomic
         {
 
@@ -137,6 +133,13 @@ namespace LogicalParticleFilter1
                     return GetNamespacePrefix(ns);
                 }
             }
+            public string NamespaceOLD
+            {
+                get
+                {
+                    return NamespaceX();
+                }
+            }
             public string NamespaceX()
             {
                 string localAname = prefixNs;
@@ -174,7 +177,7 @@ namespace LogicalParticleFilter1
                 }
             }
             private Func<object, object> Functor0Function;
-            public override string name
+            public string name
             {
                 get
                 {                    
@@ -182,12 +185,36 @@ namespace LogicalParticleFilter1
                     {
                         return localValue;
                     }
-                    if (localValue == "") return NamespaceUri;
                     var localName = LocalName ?? this.localValue;
+                    if (string.IsNullOrEmpty(localName))
+                    {
+                        localName = NamespaceUri;
+                    }
                     if (!string.IsNullOrEmpty(localName)) return localName;
                     var f = "" + Functor0;
                     var fi = string.Intern(f);
                     return fi;
+                }
+            }
+            public override string fname
+            {
+                get
+                {
+                    return name;
+                }
+            }
+            public override string fvname
+            {
+                get
+                {
+                    return fname;
+                }
+            }
+            public override string vname
+            {
+                get
+                {
+                    return fvname;
                 }
             }
             public object Functor0
@@ -306,15 +333,15 @@ namespace LogicalParticleFilter1
             public int hash { get { return GetHashCode(); } }
             public string quoted = null;
             public override string type { get { return "Atom"; } }
-            public Atom(string prefix, string name, string quoteType)
+            public Atom(string prefix, string localName, string quoteType)
             {
-                if (false && string.IsNullOrEmpty(name) && quoteType != SYNTAX_DoubleQuotes)
+                if (string.IsNullOrEmpty(localName) && string.IsNullOrEmpty(prefix) && quoteType != SYNTAX_DoubleQuotes)
                 {
-                    name = prefix;
-                    prefix = "+";
+                    localName = prefix;
+                    prefix = "";
                 }
                 prefixNs = prefix;
-                localValue = name;
+                localValue = localName;
                 quoted = quoteType;
                 hash_code = this.name.GetHashCode();
                 SanityCheck();
@@ -328,13 +355,20 @@ namespace LogicalParticleFilter1
                     hash_code = name.GetHashCode();
                 }
             }
-
+            public string AtomKey
+            {
+                get
+                {
+                    return MakeAtomKey(prefixNs, localValue, quoted);
+                }
+            }
             private void AddToAtomTable()
             {
                 if (localValue == "C_AKJ315005-tax")
                 {
                 }
-                lock (AtomTable) AtomTable[MakeAtomKey(prefixNs, localValue, quoted)] = this;
+                string key = AtomKey;
+                AtomTable[key] = this;
             }
 
             private bool SanityCheck()
@@ -346,6 +380,11 @@ namespace LogicalParticleFilter1
                 if (ReferenceEquals(this, PrologEmptyString)) return true;
                 if (prefixNs == "+")
                 {
+                    Warn("OLD +ish Atom: " + IsReadable);
+                }
+                if (string.IsNullOrEmpty(prefixNs))
+                {
+                    if (!IsLiteral) Warn("OLD +ish Atom: " + IsReadable);
                 }
                 do
                 {
@@ -362,23 +401,25 @@ namespace LogicalParticleFilter1
                         {
                             break;
                         }
-                        Warn("Imporoper Atom");
+                        Warn("Imporoper Atom: " + IsReadable);
                         return false;
                     }
                     break;
                 } while (true);
                 var localAname = "" + INodeToObject(objRef);
                 string s = ToSource(SourceLanguage.Text);
-                if (prefixNs != "+" && !IsString && s.Contains("http"))
+                if (prefixNs != "+" && !IsString && !string.IsNullOrEmpty(localValue) && s.Contains("http"))
                 {
                     stringReadableCache = null;
+                    Warn("Text represention is lossy! " + s);
                     return false;
                     ///localValue = null;
                 }
+                stringReadableCache = null;
                 return true;
             }
 
-            public Atom(object head)
+            protected Atom(object head, bool typeCheck)
             {
                 if (head is INode)
                 {
@@ -390,7 +431,7 @@ namespace LogicalParticleFilter1
                     return;
                 }
                 _objRef = head;
-                Warn("unknown atom class: " + head.GetType());
+                if (typeCheck) Warn("unknown atom class: " + head.GetType());
             }
             public bool Init(INode head)
             {
@@ -534,6 +575,7 @@ namespace LogicalParticleFilter1
             {
                 get
                 {
+                    if (quoted == SYNTAX_DoubleQuotes) return true;
                     if (prefixNs == XmlString) return true;
                     var objRef = this._objRef;
                     if (objRef == null)
@@ -552,7 +594,16 @@ namespace LogicalParticleFilter1
             }
             public string IsReadable
             {
-                get { return ToSource(tl_console_language) + " as " + objRef.GetType() + "=" + objRef; }
+                get {
+                    return ToSource(tl_console_language) + " as " + objRef.GetType() + "=" + objRef + "=" +
+                           StringReadable; }
+            }
+            public override string Text
+            {
+                get
+                {
+                    return name;
+                }
             }
             public override sealed string ToSource(SourceLanguage language)
             {
@@ -560,7 +611,19 @@ namespace LogicalParticleFilter1
                 {
                     return name;
                 }
-                if (true || this.stringReadableCache == null)
+                language = language.Inner();
+                var nf = language.NodeFormatter;
+                if (nf != null)
+                {
+                    return AsRDFNode().ToString(nf);
+                }
+                if (language != SourceLanguage.Prolog)
+                {
+                    object o = Functor0;
+                    if (o == null) return null;
+                    return "" + Functor0;
+                }
+                if (this.stringReadableCache == null)
                 {
                     this.stringReadableCache = string.Intern(StringReadable);
                 }
@@ -572,10 +635,9 @@ namespace LogicalParticleFilter1
                 get
                 {
                     if (!IsUri) return false;
-                    string ns = Namespace;
-                    if (ns == ":") return true;
-                    if (ns.StartsWith(RoboKindURI)
-                        || ns == RoboKindPrefixPrepend || ns == "siprolog:")
+                    if (prefixNs == ":") return true;
+                    string ns = NamespaceOLD;
+                    if (ns == RoboKindPrefix || ns == "rk" || ns == "siprolog" || ns.StartsWith(RoboKindURI))
                     {
                         return true;
                     }
@@ -583,22 +645,38 @@ namespace LogicalParticleFilter1
                 }
             }
 
-            public string StringReadable
+            public override string StringReadable
             {
                 get
+               {
+                   return ToStringReadable(false, null);
+               }
+            }
+            public string ToStringReadable(bool fullURI, string localBase)
+            {                
                 {
                     var objRef = this._objRef;
                     ILiteralNode litnode = objRef as ILiteralNode;
                     if (litnode != null) return StringLiteralReadable;
-
                     string name = this.name;
+                    if (objRef is NumericNode) return name;
+                    var prefixNs = this.prefixNs;
+                    var localValue = this.localValue;
+                    if (IsString)
+                    {
+                        return q(localValue);
+                    }
+                    if (!IsUri)
+                    {
+                        Warn("Non URI");
+                    }
                     if (name == "nil")
                     {
                         return "[]";
                     }
-                    if (IsString)
+                    if (string.IsNullOrEmpty(prefixNs))
                     {
-                        return q(localValue);
+                        return aq(name);
                     }
                     if (prefixNs == ":")
                     {
@@ -623,10 +701,13 @@ namespace LogicalParticleFilter1
                         // to return namespace declarations
                         return urlq(prefixNs);
                     }
-                    var ns = Namespace ?? prefixNs;
+                    var ns = (fullURI ? NamespaceUri : Namespace) ?? prefixNs;
                     bool usedAbsolute;
                     string url = GraphWithDef.CombinePrefix(ns, name, out usedAbsolute);
-                    if (objRef is NumericNode) return name;
+                    if (fullURI && !usedAbsolute)
+                    {
+                        Warn("Could not resolve full namespace");
+                    }
                     if (url == null)
                     {
                         var node1 = ToValueNode((INode) objRef);
@@ -675,7 +756,8 @@ namespace LogicalParticleFilter1
                         string et = String.Empty;// ivnode.EffectiveType;
                         if (dt != null) et = dt.AbsoluteUri;
 
-                        if (lt == "" && (dt != null && dt.AbsoluteUri == XmlString))
+                        //if (lt == "" && (dt != null && et == XmlString))
+                        if (lt == "" && lt == "" && quoted == SYNTAX_DoubleQuotes)
                         {
                             return q(value);
                         }
@@ -705,7 +787,9 @@ namespace LogicalParticleFilter1
 
             public static Atom MakeString(string s)
             {
-                return MakeLiteral(s, "", "");
+                // dmiles: for now less stack than MakeLiteral
+                return MakeNewAtom("", s, SYNTAX_DoubleQuotes);
+                // return MakeLiteral(s, "", "");
             }
 
             public static Atom MakeLiteral(string s, string langspec, string dataType)
@@ -958,17 +1042,18 @@ namespace LogicalParticleFilter1
                     prefix = prefix.TrimEnd(':');
                     atomKey = MakeAtomKey(prefix, p, quoting);
                 }
-                
+
+                Atom atom = null;
                 lock (AtomTable)
                 {
-                    Atom atom = null;
                     if (!AtomTable.TryGetValue(atomKey, out atom))
                     {
+                        // Atom constructor puts itself in AtomTable
                         atom = new Atom(prefix, p, quoting);
-                        return atom;
                     }
-                    return atom;
                 }
+
+                return atom;
             }
 
             public static string MakeAtomKey(string prefix, string s, string quoting0)
@@ -1048,25 +1133,32 @@ namespace LogicalParticleFilter1
                     Warn("Bad atom??! " + makeNode);
                 }
                 string atomKey = MakeAtomKey(prefixNs, localValue, quoted);
+                Atom atom = null;
                 lock (AtomTable)
                 {
-                    Atom atom = null;
                     if (!AtomTable.TryGetValue(atomKey, out atom))
                     {
-                        atom = new Atom(makeNode);
-                        return atom;
+                        // Atom constructor puts itself in AtomTable
+                        return new Atom(makeNode);
                     }
-                    if (!makeNode.Equals(atom.objRef))
-                    {
-                        Warn("Bad atom key??! " + atomKey);
-                    }
-                    return atom;
                 }
+                if (!makeNode.Equals(atom.objRef))
+                {
+                    Warn("Bad atom key??! " + atomKey);
+                }
+                return atom;
             }
 
             override public string AsString()
             {
-                return AsValuedNode().AsString();
+                string n = name;
+                if (RdfDeveloperSanityChecks == 0) return name;
+                string v = AsValuedNode().AsString();
+                if (n != v)
+                {
+                    Warn("A string is misbehaving " + IsReadable);
+                }
+                return n;
             }
 
             public bool Unify(IAtomic atomic)

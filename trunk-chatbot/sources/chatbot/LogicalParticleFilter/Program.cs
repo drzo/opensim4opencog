@@ -177,7 +177,7 @@ namespace LogicalParticleFilter1
             prologEngine.askQuery("canSense(WHAT2)", "sense2MT");
             prologEngine.askQuery("canSense(WHAT3)", "spindleMT");
             prologEngine.askQuery("isa(john,JOHN_IS)", "spindleMT");
-            prologEngine.KBGraph.PrintToConsole();
+            //prologEngine.KBGraph.PrintToConsole();
         }
         static void testProlog4()
         {
@@ -322,7 +322,7 @@ namespace LogicalParticleFilter1
         static void Main(string[] args)
         {
             runningTests = null;
-            RunAllTests(new SIProlog());
+            RunAllTests(SIProlog.CurrentProlog);
         }
 
         static SIProlog runningTests;

@@ -55,7 +55,7 @@ namespace LogicalParticleFilter1
             newlyCreated = !GraphForMT.TryGetValue(mt, out graph);
             if (newlyCreated)
             {
-                Graph newGraph = new Graph();
+                Graph newGraph = NewGraph(mt);
                 Uri nsURI = UriFactory.Create(UriOfMt(mt));;
                 newGraph.BaseUri = nsURI;
                 rdfDefNS.AddNamespace(mt, nsURI);
@@ -118,7 +118,7 @@ namespace LogicalParticleFilter1
             private ContentBackingStore _SyncFromNow = ContentBackingStore.None;
             public ContentBackingStore SyncFromNow
             {
-                get { return _SyncFromNow; }
+                get { lock (CompileLock) return _SyncFromNow; }
                 set
                 {
                     if (_SyncFromNow == value) return;
@@ -127,6 +127,20 @@ namespace LogicalParticleFilter1
                         Warn("Might be losing Data: SyncFromNow {0}=>{1}", _SyncFromNow, value);
                     }
                     _SyncFromNow = value;
+                }
+            }
+
+            public ContentBackingStore SyncCurrent
+            {
+                get
+                {
+                    lock (CompileLock)
+                    {
+                        if (SyncFromNow == ContentBackingStore.None)
+                            return SourceKind;
+                        return SyncFromNow;
+                    }
+
                 }
             }
 
@@ -413,8 +427,8 @@ namespace LogicalParticleFilter1
                 get { return ToString(); }
             }
 
-            readonly public IGraph _rdfGraph;
-            public IGraph rdfGraph
+            readonly public Graph _rdfGraph;
+            public Graph rdfGraph
             {
                 get
                 {
@@ -429,7 +443,7 @@ namespace LogicalParticleFilter1
             {
                 get { return this; }
             }
-            public PNode(string plMt, SIProlog prolog, IGraph data)
+            public PNode(string plMt, SIProlog prolog, Graph data)
             {
                 this.prologEngine = prolog;
                 this.id = plMt;
@@ -495,6 +509,17 @@ namespace LogicalParticleFilter1
                 get { return rdfGraph.Triples; }
             }
 
+            public int Size
+            {
+                get
+                {
+                    var cur = SyncCurrent;
+                    if (cur == ContentBackingStore.Prolog) return pdb.rules.Count;
+                    if (cur == ContentBackingStore.RdfMemory) return rdfGraph.Triples.Count;
+                    throw ErrorBadOp("Cant get size of " + this);
+                }
+            }
+
             public void LoadFromUri(Uri uri)
             {
                 try
@@ -552,9 +577,12 @@ namespace LogicalParticleFilter1
                 g.BaseUri = rdfGraph.BaseUri;
                 Uri loadFrom = new Uri(new Uri(filename).AbsoluteUri);
                 g.LoadFromUri(loadFrom);
-                ConsoleWriteLine("Loading " + g.Triples.Count + " from " + loadFrom);
+                int loadCount = g.Triples.Count;
+                ConsoleWriteLine("Loading " + loadCount + " from " + loadFrom);
+                int oldCount = rdfGraph.Triples.Count;
                 rdfGraph.Merge(g, true);
-                ConsoleWriteLine("Merged " + rdfGraph.Triples.Count + " to " + rdfGraph);
+                int addedCount = rdfGraph.Triples.Count - oldCount;
+                ConsoleWriteLine("Merge add " + addedCount + " new to " + rdfGraph);
             }
 
             public void AddRuleToRDF(Rule rule)

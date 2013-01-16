@@ -28,8 +28,33 @@ namespace LogicalParticleFilter1
 
     public partial class SIProlog
     {
-        static readonly internal Graph rdfDefinations = new Graph();
         const string rdfDefMT = "rdfGlobalDefsMt";
+        internal static NamespaceMapper _sharedNS = new NamespaceMapper();
+        public static NamespaceMapper rdfDefNS
+        {
+            get
+            {
+                lock (rdfDefMT)
+                {
+                    if (_sharedNS != null) return _sharedNS;
+                    var rdfd = rdfDefinations;
+                    if (rdfd != null)
+                    {
+                        return _sharedNS = (NamespaceMapper)rdfd.NamespaceMap;
+                    }
+                    return _sharedNS;
+                }
+            }
+        }
+
+        internal static readonly FirstUse<Graph> _rdfDefinations = new Func<Graph>(() => CurrentProlog.NewGraph(rdfDefMT));
+        internal static Graph rdfDefinations
+        {
+            get
+            {
+                return _rdfDefinations;
+            }
+        }
         public const string TripleName = "triple";
         private PNode rdfDefSync;
         public CIDictionary<string, PNode> GraphForMT = new CIDictionary<string, PNode>(new KeyCase(NormalizeKBName));
@@ -51,7 +76,7 @@ namespace LogicalParticleFilter1
         }
 
         static public string RoboKindURI = "http://cogserver:8123/onto/robokind#";
-        public static string RoboKindMtURI = RoboKindURI;// "http://cogserver:8123/mt/";
+        public static string RoboKindMtURI = "http://cogserver:8123/onto/rkmt/";// "http://cogserver:8123/mt/";
         public static string RoboKindPrefix = "robokind";
         public static string RoboKindPrefixPrepend = RoboKindPrefix + ":";
         private static readonly CIDictionary<string, PredicateProperty> SharedGlobalPredDefs = new CIDictionary<string, PredicateProperty>(KeyCase.Default);
@@ -83,12 +108,10 @@ namespace LogicalParticleFilter1
                 //FindKB(rdfDefMT) ??
                 new PNode(rdfDefMT, this, rdfDefinations);
             forReaderTripleStoreGraph.BaseUri = uriAgainIs;
-            EnsureReaderNamespaces(forReaderTripleStoreGraph);
             var rdfKB = FindOrCreateKB(rdfDefMT);
             rdfKB.SourceKind = ContentBackingStore.RdfMemory;
             rdfDefSync.IncludeRDFUri(new FileInfo("aiml/shared_ke/PrologToRDFConversion.owl").FullName);
             loadKEText(rdfDefMT, FromStream("aiml/shared_ke/argdefs.txt"), false);
-            if (RdfDeveloperSanityChecks > 0) Program.RunAllTests(this);
         }
 
         private static void EnsureReaderNamespaces(IGraph graph)

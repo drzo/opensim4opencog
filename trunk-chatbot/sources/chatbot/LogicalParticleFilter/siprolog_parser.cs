@@ -37,7 +37,7 @@ namespace LogicalParticleFilter1
         Dictionary<string, RuleList> ParseKEText(string startMT, string ruleSet)
         {
             // if startMT is null use the global variable
-            string parseKB = startMT ?? curKB;
+            string parseKB = startMT ?? threadLocal.curKB;
             // code below uses parseKB
             Dictionary<string, RuleList> tempKB = new Dictionary<string, RuleList>();
             ///string[] lines = ruleSet.Split('\n');
@@ -87,7 +87,7 @@ namespace LogicalParticleFilter1
                             if (cmd == "mt")
                             {
                                 parseKB = val;
-                                curKB = val;
+                                threadLocal.curKB = val;
                                 continue;
                             }
                             if (cmd == "base")
@@ -104,7 +104,7 @@ namespace LogicalParticleFilter1
                             {
                                 Term t = ParseTerm(new Tokeniser(val), startMT) as Term;
                                 DocumentTerm(t, false);
-                                curConst = t.name;
+                                curConst = t.fname;
                                 continue;
                             }
                             if (cmd == "genlmt")
@@ -165,7 +165,7 @@ namespace LogicalParticleFilter1
                                 //  module(module_name).
 
                                 parseKB = val;
-                                curKB = val;
+                                threadLocal.curKB = val;
                                 val = atomize(val);
                                 string uniPred = String.Format("module({0}).\n", val);
                                 if (!tempKB.ContainsKey(parseKB)) tempKB[parseKB] = new RuleList();
@@ -344,7 +344,7 @@ namespace LogicalParticleFilter1
             if (f == "$obj")
             {
                 Part partlist1 = partlist[0];
-                if (partlist1.name == "$literal")
+                if (partlist1.fname == "$literal")
                 {
                     return Atom.MakeLiteral(partlist[1].AsString(), partlist[2].AsString(), partlist[3].AsString());
                 }
@@ -682,7 +682,7 @@ namespace LogicalParticleFilter1
                     Warn("Not an Atom: " + p);
                     // return null;
                 }
-                h = new Term(p.name, p is Variable, new PartListImpl());
+                h = new Term(p.fname, p is Variable, new PartListImpl());
             }
             return h;
         }
@@ -702,7 +702,7 @@ namespace LogicalParticleFilter1
         // This was a beautiful piece of code. It got kludged to add [a,b,c|Z] sugar.
         static public Part ParsePart(Tokeniser tk)
         {
-            string mt = CurrentProlog.curKB;
+            string mt = threadLocal.curKB;
             // Part -> var | id | id(optParamList)
             // Part -> [ listBit ] ::-> cons(...)     
             if (tk.type == "punc" && tk.current == "[")

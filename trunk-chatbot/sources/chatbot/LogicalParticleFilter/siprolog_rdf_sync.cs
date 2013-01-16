@@ -76,7 +76,7 @@ namespace LogicalParticleFilter1
             insertKB(miniMtSources, graphKBName);
         }
 
-        static private void GetMiniMt(object results, string assertTemplate, string graphKBName, PNode repo, bool show, ICollection<Rule> newRules, TextWriter ruleSources, RdfRules ruleDefs)
+        private void GetMiniMt(object results, string assertTemplate, string graphKBName, PNode repo, bool show, ICollection<Rule> newRules, TextWriter ruleSources, RdfRules ruleDefs)
         {
             assertTemplate = assertTemplate ?? "triple($?s$,$?p$,$?o$).\n";
             bool MakeRules = newRules != null && assertTemplate.Trim().EndsWith(".");
@@ -122,7 +122,7 @@ namespace LogicalParticleFilter1
                     }
                     if (MakeRules)
                     {
-                        Rule rule = CurrentProlog.ParseRule(new Tokeniser(assertIt), graphKBName);
+                        Rule rule = ParseRule(new Tokeniser(assertIt), graphKBName);
                         if (show) ConsoleWriteLine("RULE_IG: {0}", rule);
                         newRules.Add(rule);
                     }
@@ -157,7 +157,7 @@ namespace LogicalParticleFilter1
                     }
                     if (MakeRules)
                     {
-                        Rule rule = CurrentProlog.ParseRule(new Tokeniser(assertIt), graphKBName);
+                        Rule rule = ParseRule(new Tokeniser(assertIt), graphKBName);
                         if (show) ConsoleWriteLine("RULE_IG: {0}", rule);
                         newRules.Add(rule);
                     }
@@ -275,7 +275,7 @@ namespace LogicalParticleFilter1
         public void mtest()
         {
 
-            IGraph g = new Graph();
+            IGraph g = NewGraph("mtest");
             g.BaseUri = UriFactory.Create(RoboKindURI);
 
             IUriNode dotNetRDF = g.CreateUriNode(UriFactory.Create("http://www.dotnetrdf.org"));

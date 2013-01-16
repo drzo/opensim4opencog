@@ -67,7 +67,7 @@ namespace LogicalParticleFilter1
 
         static string UriOfMt(string plMt)
         {
-            return RoboKindURI.TrimEnd('#', '/') + "/" + plMt + "#";
+            return RoboKindMtURI.TrimEnd('#', '/') + "/" + plMt + "#";
         }
 
         public static Triple MakeTriple(INode s, INode p, INode o)
@@ -172,26 +172,6 @@ namespace LogicalParticleFilter1
         }
 
         static readonly Graph forReaderTripleStoreGraph = new Graph();
-        static TurtleParser forReaderTurtleParser = new TurtleParser();
-        [ThreadStatic]
-        private string tl_ServerRoot;
-        [ThreadStatic]
-        private string tl_mt;
-        [ThreadStatic]
-        private string tl_rule_mt;
-        private string curKB
-        {
-            get
-            {
-                return tl_mt;
-            }
-            set
-            {
-                tl_mt = value;
-            }
-        }
-        [ThreadStatic]
-        private TextWriter tl_writer;
 
         public static PNode BaseKB;
         public static PNode EverythingPSC;
@@ -285,7 +265,7 @@ namespace LogicalParticleFilter1
             static public PredicateProperty GetPredicateProperty(Term term)
             {
                 DocumentTerm(term, true);
-                return GetPredicateProperty(term.name, term.Arity);
+                return GetPredicateProperty(term.fname, term.Arity);
             }
             static public PredicateProperty GetPredicateProperty(string predName0, int arity)
             {
@@ -607,7 +587,7 @@ namespace LogicalParticleFilter1
                 }
                 if (part is Variable)
                 {
-                    return definations.CreateVariableNode(part.name);
+                    return definations.CreateVariableNode(((Variable)part).vname);
                 }
                 Part car, cdr;
                 if (GetCons(part, out car, out cdr))
@@ -855,14 +835,14 @@ namespace LogicalParticleFilter1
         public static void DocumentTerm(Term term, bool varnamesOnly)
         {
             bool newlyCreated;
-            PredicateProperty pp = GraphWithDef.GetPredDef(term.name, term.Arity, out newlyCreated);
+            PredicateProperty pp = GraphWithDef.GetPredDef(term.fname, term.Arity, out newlyCreated);
             int argNum = 0;
             foreach (Part part in term.ArgList)
             {
                 argNum++;
                 if (varnamesOnly) if (!(part is Variable)) continue;
                 var argDef = GraphWithDef.GetAdef(pp, argNum, true);
-                argDef.AddRangeTypeName(part.name);
+                argDef.AddRangeTypeName(part.Text);
             }
         }
 
