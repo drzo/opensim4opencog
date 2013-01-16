@@ -14,22 +14,22 @@ using RTParser.Variables;
 
 namespace RTParser.Database
 {
-    public class NamedValuesFromSettings: StaticAIMLUtils
+    public class NamedValuesFromSettings: CommonStaticUtils
     {
         static public bool UseLuceneForGet = false;
         static public bool UseLuceneForSet = false;
         static public Unifiable GetSettingForType(string subject, SubQuery query, ISettingsDictionary dict, string name, out string realName, string gName, Unifiable defaultVal, out bool succeed, XmlNode node)
         {
             Request request = query.Request;
-            OutputDelegate writeToLog = request.writeToLog ?? DEVNULL;
+            OutputDelegate writeToLog = request.writeToLog ?? TextPatternUtils.DEVNULL;
             AltBot TargetBot = request.TargetBot;
             ISettingsDictionary udict;
             string dictName = AIMLTagHandlerU.GetNameOfDict(query, subject ?? dict.NameSpace, node, out udict);
             // try to use a global blackboard predicate
             User gUser = TargetBot.ExemplarUser;
 
-            defaultVal = AltBot.GetAttribValue(node, "default,defaultValue", defaultVal);
-            gName = AltBot.GetAttribValue(node, "global_name", gName);
+            defaultVal = StaticXMLUtils.GetAttribValue(node, "default,defaultValue", defaultVal);
+            gName = StaticXMLUtils.GetAttribValue(node, "global_name", gName);
 
             string realName0;
 
@@ -238,7 +238,7 @@ namespace RTParser.Database
 
             if (oldMatch != null)
             {
-                if (!IsPredMatch(oldMatch, oldValue, null))
+                if (!StaticAIMLUtils.IsPredMatch(oldMatch, oldValue, null))
                 {
                     shouldSet = false;
                 }
@@ -248,7 +248,7 @@ namespace RTParser.Database
 
             if (newMatch != null)
             {
-                if (!IsPredMatch(newMatch, newValueU, null))
+                if (!StaticAIMLUtils.IsPredMatch(newMatch, newValueU, null))
                 {
                     shouldSet = false;
                 }
@@ -257,7 +257,7 @@ namespace RTParser.Database
 
             if (wontvalue != null)
             {
-                if (IsPredMatch(wontvalue, newValueU, null))
+                if (StaticAIMLUtils.IsPredMatch(wontvalue, newValueU, null))
                 {
                     shouldSet = false;
                 }
@@ -286,5 +286,103 @@ namespace RTParser.Database
             }
             return setReturn;
         }
+    }
+}
+namespace AltAIMLbot.Utils
+{
+    public class CommonStaticUtils // : StaticXMLUtils
+    {
+        public static OutputDelegate DEVNULL = TextFilter.DEVNULL;
+
+        public static string ReTrimAndspace(string s)
+        {
+            return StaticAIMLUtils.ReTrimAndspace(s);
+        }
+        public static bool DifferentBesidesCase(string s1, string s2)
+        {
+            return StaticAIMLUtils.DifferentBesidesCase(s1, s2);
+        }
+
+        public static bool IsSomething(Unifiable s, out Unifiable something)
+        {
+            return StaticAIMLUtils.IsSomething(s, out something);
+        }
+
+        public static string SafeFormat(string f, params object[] args)
+        {
+            return StaticAIMLUtils.SafeFormat(f, args);
+        }
+        public static void writeDebugLine(string f, params object[] args)
+        {
+            StaticAIMLUtils.writeDebugLine(f, args);
+        }
+        public static bool IsEMPTY(Object unifiable)
+        {
+            return StaticAIMLUtils.IsEMPTY(unifiable);
+        }
+
+
+        public static bool IsMissing(Object unifiable)
+        {
+            return StaticAIMLUtils.IsMissing(unifiable);
+        }
+
+        public static bool IsNull(Object unifiable)
+        {
+            return StaticAIMLUtils.IsNull(unifiable);
+        }
+        public static bool IsValue(Unifiable unifiable)
+        {
+            return StaticAIMLUtils.IsValue(unifiable);
+        }
+        public static bool IsTrue(Unifiable unifiable)
+        {
+            return StaticAIMLUtils.IsTrue(unifiable);
+        }
+        public static bool IsFalse(Unifiable unifiable)
+        {
+            return StaticAIMLUtils.IsFalse(unifiable);
+        }
+        public static bool IsNullOrEmpty(Object unifiable)
+        {
+            return StaticAIMLUtils.IsNullOrEmpty(unifiable);
+        }
+        public static bool IsIncomplete(Object unifiable)
+        {
+            return StaticAIMLUtils.IsIncomplete(unifiable);
+        }
+        public static string ToLower(string unifiable)
+        {
+            return StaticAIMLUtils.ToLower(unifiable);
+        }
+        public static string ToUpper(string unifiable)
+        {
+            return StaticAIMLUtils.ToUpper(unifiable);
+        }
+        public static string Trim(string unifiable)
+        {
+            return StaticAIMLUtils.Trim(unifiable);
+        }
+
+        public static bool IsUnknown(object unifiable)
+        {
+            return StaticAIMLUtils.IsUnknown(unifiable);
+        }
+
+        public static string InnerXmlText(XmlNode node)
+        {
+            return StaticAIMLUtils.InnerXmlText(node);
+        }
+
+        internal static bool IsTrueOrYes(string str)
+        {
+            return StaticAIMLUtils.IsTrueOrYes(str);
+        }
+
+        public static bool IsFalseOrNo(string str)
+        {
+            return StaticAIMLUtils.IsFalseOrNo(str);
+        }
+
     }
 }

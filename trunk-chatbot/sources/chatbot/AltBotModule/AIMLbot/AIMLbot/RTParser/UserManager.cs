@@ -45,7 +45,7 @@ namespace RTParser
                 catch (Exception e)
                 {
                     writeToLog(e);
-                    if (NoRuntimeErrors) return default(R);
+                    if (StaticAIMLUtils.NoRuntimeErrors) return default(R);
                     throw;
                 }
             }
@@ -279,7 +279,7 @@ namespace RTParser
             if (fromname != null && !IsLegalUserName(fromname))
             {
                 writeToLog("ERROR: BAd???? FindUser: " + fromname);
-                if (!NoRuntimeErrors)
+                if (!StaticAIMLUtils.NoRuntimeErrors)
                 {
                     throw new NullReferenceException("FindUser: " + fromname);
                 }
@@ -288,7 +288,7 @@ namespace RTParser
             if (IsLastKnownUser(fromname)) return LastUser;
             if (fromname == null)
             {
-                if (!NoRuntimeErrors)
+                if (!StaticAIMLUtils.NoRuntimeErrors)
                 {
                     throw new NullReferenceException("FindUser: " + fromname);
                 }
@@ -916,7 +916,7 @@ namespace RTParser
         public bool IsLastKnownUser(string fromname)
         {
             if (LastUser != null && LastUser.IsNamed(fromname)) return false;
-            return (string.IsNullOrEmpty(fromname) || Trim(fromname) == "null");
+            return (string.IsNullOrEmpty(fromname) || fromname.Trim() == "null");
         }
 
         public static bool IsOkForNameChar(char s)

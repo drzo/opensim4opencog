@@ -262,7 +262,7 @@ namespace RTParser.Utils
             {
                 info = ((TemplateInfo)info).CategoryInfo;
             }
-            return CleanWhitepaces("" + info);
+            return StaticAIMLUtils.CleanWhitepaces("" + info);
         }
 
         public bool ContainsPattern(KeyValuePair<Unifiable, Node> pair)

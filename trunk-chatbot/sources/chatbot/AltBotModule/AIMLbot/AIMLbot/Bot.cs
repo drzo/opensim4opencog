@@ -105,7 +105,14 @@ namespace RTParser
         public RandomMemory myRandMem = new RandomMemory();
 
         [NonSerialized] 
-        public SIProlog prologEngine = new SIProlog();
+        private readonly FirstUse<SIProlog> _prologEngine = (Func<SIProlog>) (() => SIProlog.CurrentProlog);
+        public SIProlog prologEngine
+        {
+            get
+            {
+                lock (BotInitLock) return _prologEngine;
+            }
+        }
 
         static public object BotInitLock  = new object();
         static public object WordNetEngineLock
@@ -232,7 +239,24 @@ namespace RTParser
         /// An List<> containing the tokens used to split the input into sentences during the 
         /// normalization process
         /// </summary>
-        static public List<string> Splitters = new List<string>();
+        static public IEnumerable<string> Splitters
+        {
+            get
+            {
+                lock(Splitters0)
+                {
+                    if (Splitters0.Count > 0) return Splitters0.ToArray();
+                }
+                var Splitters1 = new List<string>();
+                Splitters1.Add(".");
+                Splitters1.Add("!");
+                Splitters1.Add("?");
+                Splitters1.Add(";");
+                return Splitters1;
+            }
+
+        }
+        public static List<string> Splitters0 = new List<string>();
 
         /// <summary>
         /// A buffer to hold log messages to be written out to the log file when a max size is reached
@@ -670,7 +694,7 @@ namespace RTParser
         /// Loads AIML from .aiml files into the graphmaster "brain" of the bot
         /// Loads the AIML from files found in the bot's AIMLpath into the bot's brain
         /// </summary>
-        public void loadAIMLFromFiles()
+        private void loadAIMLFromFiles_unlocked()
         {
             loadGlobalBotSettings();
             string botname = GlobalSettings.grabSetting("name");
@@ -748,9 +772,10 @@ namespace RTParser
             AddExcuteHandler("cs", CSharpExec);
             AddExcuteHandler("siprolog", SIPrologExec);
 
-            testCaseRunner = testCaseRunner ?? new TestCaseRunner(null);
-            XmlNodeEvaluators.Add(testCaseRunner);
-
+            if (prologEngine != prologEngine)
+            {
+                Console.WriteLine("Cannot maintain a stable wormhole while loading SIPro)");
+            } 
             if (TheCycS == null)
             {
                 TheCycS = new CycDatabase(this);
@@ -814,7 +839,7 @@ namespace RTParser
             if (named.ToUpper().EndsWith("MT")) named = named.Substring(0, named.Length - 2);
             named = ToMtCase(named);
             string mtName = "chat" + named + "Mt";
-            KeyValueListSIProlog v = new KeyValueListSIProlog(prologEngine,
+            KeyValueListSIProlog v = new KeyValueListSIProlog(() => prologEngine,
                                                               mtName, "chatVar");
             var dict = new SettingsDictionaryReal(mtName, this,
                                               (KeyValueList) v ?? new KeyValueListCSharp(null, new Dictionary<string, string>()));
@@ -983,8 +1008,13 @@ namespace RTParser
         /// <param name="pathToSplitters">Path to the config file</param>
         private void loadSplitters(string pathToSplitters)
         {
+            lock (Splitters0) loadSplitters_ul(pathToSplitters);
+        }
+        private void loadSplitters_ul(string pathToSplitters)
+        {
             if (pathToSplitters == null) return;
             FileInfo splittersFile = new FileInfo(pathToSplitters);
+            var Splitters = Splitters0;
             if (splittersFile.Exists)
             {
                 XmlDocument splittersXmlDoc = new XmlDocument();

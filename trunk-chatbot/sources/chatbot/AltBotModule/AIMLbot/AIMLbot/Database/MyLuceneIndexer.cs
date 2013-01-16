@@ -827,7 +827,7 @@ namespace RTParser.Database
             string userFilter = "";
             // Do we only want responses with the current user name in it ?
             // As in "what is my favorite color?" 
-            string onlyUserStr = AltBot.GetAttribValue(templateNode, "onlyUser", "false").ToLower();
+            string onlyUserStr = StaticXMLUtils.GetAttribValue(templateNode, "onlyUser", "false").ToLower();
             if (onlyUserStr.Equals("true"))
             {
                 userFilter = TripleStoreProxy.Entify(TheBot.BotUserID);
@@ -851,10 +851,10 @@ namespace RTParser.Database
 
                 int numHits;
 
-                string maxReplyStr = AltBot.GetAttribValue(templateNode, "max", "1").ToLower();
+                string maxReplyStr = StaticXMLUtils.GetAttribValue(templateNode, "max", "1").ToLower();
                 int maxReply = Int16.Parse(maxReplyStr);
-                
-                string thresholdStr = AltBot.GetAttribValue(templateNode, "threshold", null);
+
+                string thresholdStr = StaticXMLUtils.GetAttribValue(templateNode, "threshold", null);
                 if (!string.IsNullOrEmpty(thresholdStr))
                 {
                     float parsed;

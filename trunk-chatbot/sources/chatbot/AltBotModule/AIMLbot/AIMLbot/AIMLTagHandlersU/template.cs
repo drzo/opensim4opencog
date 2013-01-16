@@ -82,7 +82,7 @@ namespace RTParser.AIMLTagHandlers
             return templateResult;
             string THINKYTAG = think.THINKYTAG;
             string tr = templateResult;
-            string tr2 = AltBot.ReplaceAll(tr.Replace(THINKYTAG + ".", " "), THINKYTAG, " ").Replace("  ", " ").Trim();
+            string tr2 = ReplaceAll(tr.Replace(THINKYTAG + ".", " "), THINKYTAG, " ").Replace("  ", " ").Trim();
             if (tr != tr2)
             {
                 if (tr2 == "")

@@ -69,9 +69,9 @@ namespace RTParser.AIMLTagHandlers
             }
             if (currentNodeName == "genlmt")
             {
-                string name = AltBot.GetAttribValue(templateNode, "name,mt,to,super,into", null);
-                string removeTo = AltBot.GetAttribValue(templateNode, "remove", null);
-                string from = AltBot.GetAttribValue(templateNode, "graph,from", null);
+                string name = GetAttribValue(templateNode, "name,mt,to,super,into", null);
+                string removeTo = GetAttribValue(templateNode, "remove", null);
+                string from = GetAttribValue(templateNode, "graph,from", null);
                 bool deleteLink = false;
                 if (name == null)
                 {
@@ -99,8 +99,8 @@ namespace RTParser.AIMLTagHandlers
             }
             if (currentNodeName == "sraigraph")
             {
-                string name = AltBot.GetAttribValue(templateNode, "name,mt,to,super,into", null);
-                string from = AltBot.GetAttribValue(templateNode, "graph,from", null);
+                string name = GetAttribValue(templateNode, "name,mt,to,super,into", null);
+                string from = GetAttribValue(templateNode, "graph,from", null);
                 if (name == null)
                 {
                     name = Trim(templateNode.InnerText);
@@ -179,7 +179,7 @@ namespace RTParser.AIMLTagHandlers
                 total++;
                 string nodeOuterXml = ToXmlValue(node);
                 WriteLine(nodeOuterXml);
-                string p = AltBot.GetAttribValue(node,"PASSED","FALSE");
+                string p = GetAttribValue(node,"PASSED","FALSE");
                 if (p=="False")
                 {
                     writeThrus++;

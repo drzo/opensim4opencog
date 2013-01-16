@@ -252,6 +252,10 @@ namespace RTParser
 
         public void StartHttpServer()
         {
+            lock (initialSettingsLoadedLock) StartHttpServer_unlocked();
+        }
+        private void StartHttpServer_unlocked()
+        {
             if (HttpTextServer != null) return;
             string[] oArgs;
             if (UseHttpd > 0 && this.HttpTextServer == null)
@@ -291,6 +295,12 @@ namespace RTParser
                     if (s == "--cycon")
                     {
                         myBot.CycEnabled = true;
+                        continue;
+                    }
+                    if (s == "--noaiml")
+                    {
+                        myBot.needAimlFilesLoaded = false;
+                        myBot.servitor.skiploadingAimlFiles = true;
                         continue;
                     }
                     if (s == "--cycoff")
@@ -1046,7 +1056,7 @@ namespace RTParser
                     r = myUser.GetResult(i);
                     console("-----------------------------------------------------------------");
                     if (r != null)
-                        AltBot.PrintResult(r, console, printOptions);
+                        StaticAIMLUtils.PrintResult(r, console, printOptions);
                 }
                 else
                 {
@@ -1074,16 +1084,16 @@ namespace RTParser
                     TimeSpan sleepBetween = TimeSpan.FromMilliseconds(500);
                     console("-----------------------------------------------------------------");
                     console("-------DISABLED--------------------------------------");
-                    AltBot.PrintTemplates(myUser.DisabledTemplates, console, printOptions, sleepBetween);
+                    StaticAIMLUtils.PrintTemplates(myUser.DisabledTemplates, console, printOptions, sleepBetween);
                     console("-----------------------------------------------------------------");
                     console("-------PROOF--------------------------------------");
-                    AltBot.PrintTemplates(myUser.ProofTemplates, console, printOptions, sleepBetween);
+                    StaticAIMLUtils.PrintTemplates(myUser.ProofTemplates, console, printOptions, sleepBetween);
                     console("-----------------------------------------------------------------");
                     console("-------CHILD--------------------------------------");
-                    AltBot.PrintTemplates(myUser.UsedChildTemplates, console, printOptions, sleepBetween);
+                    StaticAIMLUtils.PrintTemplates(myUser.UsedChildTemplates, console, printOptions, sleepBetween);
                     console("-----------------------------------------------------------------");
                     console("-------USED--------------------------------------");
-                    AltBot.PrintTemplates(myUser.VisitedTemplates, console, printOptions, sleepBetween);
+                    StaticAIMLUtils.PrintTemplates(myUser.VisitedTemplates, console, printOptions, sleepBetween);
                     console("-----------------------------------------------------------------");
 
                     if (args == "clear" || args == "reset")
@@ -1146,7 +1156,7 @@ namespace RTParser
                 console("-----------------------------------------------------------------");
                 var result = robot.ChatWithToplevelResults(ur, request.CurrentResult);//, myUser, targetBotUser, myUser.ListeningGraph);
                 console("-----------------------------------------------------------------");
-                AltBot.PrintResult(result, console, printOptions);
+                StaticAIMLUtils.PrintResult(result, console, printOptions);
                 console("-----------------------------------------------------------------");
                 return true;
             }

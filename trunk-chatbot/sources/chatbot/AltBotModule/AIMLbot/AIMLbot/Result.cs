@@ -189,7 +189,7 @@ namespace AltAIMLbot
         {
             this.request = parent;
             ExitQueue = new CommitQueue();
-            matchable = matchable ?? MakeMatchable(rawInput);
+            matchable = matchable ?? StaticAIMLUtils.MakeMatchable(rawInput);
             SubQueries = new List<SubQuery>();
             MaxCanEvalResult = 10;
             request = parent;
@@ -678,7 +678,7 @@ namespace AltAIMLbot
                 if (ti == null) return;
                 return;
             }
-            unifiable = Trim(unifiable);
+            unifiable = StaticAIMLUtils.Trim(unifiable);
             if (unifiable == "")
             {
                 writeToLog("ERROR assing '' output " + ti);
@@ -727,7 +727,7 @@ namespace AltAIMLbot
         }
         private void AddOutputSentences11(string unifiable, bool addToFront)
         {
-            unifiable = Trim(unifiable).Replace("\n", " ").Replace("\r", " ");
+            unifiable = StaticAIMLUtils.Trim(unifiable).Replace("\n", " ").Replace("\r", " ");
             string[] sentNow = unifiable.Split(new[] { "<br/>", "&p;", "<p/>" }, StringSplitOptions.RemoveEmptyEntries);
             if (AlreadyUsed.Contains(unifiable))
             {
@@ -782,7 +782,7 @@ namespace AltAIMLbot
                 {
                     OutputSentences.Remove(unifiable);
                 }
-                if (ContainsXml(unifiable))
+                if (StaticAIMLUtils.ContainsXml(unifiable))
                 {
                     writeToLog("ERROR:  AddRssult: " + Requester.UserID + " " + unifiable);
                 }
@@ -894,7 +894,7 @@ namespace AltAIMLbot
         private List<string> GetSents(string[] splitters, string unifiable)
         {
             List<string> strings = new List<string>();
-            if (Trim(unifiable).Length == 0) return strings;
+            if (StaticAIMLUtils.Trim(unifiable).Length == 0) return strings;
             int firstindex = unifiable.Length;
             string fsplitter = null;
             foreach (var splitter in splitters)
@@ -916,7 +916,7 @@ namespace AltAIMLbot
                 return strings;
             }
             string sub = unifiable.Substring(0, firstindex + fsplitter.Length - 1);
-            strings.Add(Trim(sub));
+            strings.Add(StaticAIMLUtils.Trim(sub));
             unifiable = unifiable.Substring(sub.Length);
             strings.AddRange(GetSents(splitters, unifiable));
             return strings;

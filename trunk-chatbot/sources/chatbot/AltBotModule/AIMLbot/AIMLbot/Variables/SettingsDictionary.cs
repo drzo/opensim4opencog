@@ -112,13 +112,24 @@ namespace RTParser.Variables
         }
         public string predicateName;
         public string arg1Name;
-        private LogicalParticleFilter1.SIProlog prologEngine;
-
-        public KeyValueListSIProlog(SIProlog pl, string mtName, string predicate)
+        private FirstUse<SIProlog> _prologEngine;
+        private SIProlog prologEngine
         {
-            prologEngine = pl;
+            get
+            {
+                return _prologEngine;
+            }
+        }
+
+        public KeyValueListSIProlog(Func<LogicalParticleFilter1.SIProlog> pl, string mtName, string predicate)
+        {
+            _prologEngine = (Func<SIProlog>) (() =>
+                                                  {
+                                                      var plv = pl();
+                                                      plv.FindOrCreateKB(mtName);
+                                                      return plv;
+                                                  });
             dictMt = mtName;
-            pl.FindOrCreateKB(mtName);
             predicateName = predicate;
         }
 
@@ -189,20 +200,23 @@ namespace RTParser.Variables
             //Remove(name);
             var before = GetArgVal(name, false);
             if (valArg == before) return;
+            SIProlog.Rule newRule = RuleForNameValue(key, valArg);
             if (before != null)
             {
                 prologEngine.replaceInKB(RuleForNameValue(key, before),
-                                         RuleForNameValue(key, valArg), pnodeMt);
+                                         newRule, pnodeMt);
             }
             else
             {
-                prologEngine.appendKB(new SIProlog.RuleList() { RuleForNameValue(key, valArg) }, pnodeMt);
+                prologEngine.appendKB(new SIProlog.RuleList() { newRule }, pnodeMt);
             }
+            if (SIProlog.RdfDeveloperSanityChecks < 1) return;
             var now = GetArgVal(name, false);
             if (now != valArg)
             {
-                return;
-                throw new NotImplementedException("asserting " + valArg);
+                string err = "BUG asserting: " + newRule + " found " + (now != null ? now.StringReadable : "MISSINGVALUE");
+                if (SIProlog.RdfDeveloperSanityChecks > 1) 
+                    throw new NotImplementedException(err);
             }
         }
 
@@ -271,12 +285,13 @@ namespace RTParser.Variables
 
         private string ArgToValue(SIProlog.Part res)
         {
-            return res.AsString();
+            return res.Text;
         }
 
         private SIProlog.Rule RuleForNameValue(SIProlog.Part name, SIProlog.Part value)
         {
-            return new SIProlog.Rule(SIProlog.MakeTerm(predicateName, name, value));
+            SIProlog.Rule newRule =  new SIProlog.Rule(SIProlog.MakeTerm(predicateName, name, value));;
+            return newRule;
         }
         private SIProlog.PartListImpl QueryForNameValue(SIProlog.Part name, SIProlog.Part value)
         {

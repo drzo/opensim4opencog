@@ -21,7 +21,7 @@ namespace RTParser
     /// <summary>
     /// Encapsulates an AIML Tag Proccessor.
     /// </summary>
-    public partial class TagHandlerProcessor : StaticAIMLUtils
+    public partial class TagHandlerProcessor // : StaticAIMLUtils
     {
 
         internal AIMLTagHandlerU GetTagHandler(User user, SubQuery query, Request request, Result result, XmlNode node,
@@ -62,7 +62,7 @@ namespace RTParser
         internal AIMLTagHandlerU GetTagHandlerU(User user, SubQuery query, Request request, Result result, XmlNode node, bool liText)
         {
             AIMLTagHandlerU tagHandlerU = getBespokeTags(user, query, request, result, node);
-            string nodeNameLower = ToLower(node.LocalName);
+            string nodeNameLower = StaticAIMLUtils.ToLower(node.LocalName);
             AltBot targetBot = query.TargetBot;
             if (Equals(null, tagHandlerU))
             {
@@ -380,7 +380,7 @@ namespace RTParser
                 }
             }
             if (tagHandlerU != null) return tagHandlerU;
-            if (IsHtmlTag(node.Name))
+            if (StaticAIMLUtils.IsHtmlTag(node.Name))
             {
                 return new recursiveVerbatum(node, targetBot, user, query, request, result, node, true);
             }
@@ -517,7 +517,7 @@ namespace RTParser
 
                 if (superTrace)
                 {
-                    writeDebugLine("SuperTrace=" + templateSucceeded + ": " + templateInfo);
+                    StaticAIMLUtils.writeDebugLine("SuperTrace=" + templateSucceeded + ": " + templateInfo);
                 }
                 return th;
             }
@@ -574,7 +574,7 @@ namespace RTParser
             {
                 output = "<template>" + sGuard.PatternNode.OuterXml + " GUARDBOM " + output +
                                   "</template>";
-                templateNode = getNodeAndSetSibling(false, output, false, false, sOutput);
+                templateNode = StaticAIMLUtils.getNodeAndSetSibling(false, output, false, false, sOutput);
                 
                 childOriginal = false;
             }
@@ -587,7 +587,7 @@ namespace RTParser
                                                                request, result, request.Requester, parentHandlerU,
                                                                protectChild, copyParent, tagHandlerU, suspendingLimits, out templateSucceeded);
 
-            templateSucceeded = !IsFalse(outputSentenceOut);
+            templateSucceeded = !StaticAIMLUtils.IsFalse(outputSentenceOut);
 
             if (outputSentenceOut == null)
             {
@@ -614,7 +614,7 @@ namespace RTParser
             }
             outputSentenceOut = outputSentenceOut ?? "";
             string left, outputSentence;
-            if (!SplitOff(outputSentenceOut, "GUARDBOM", out left, out outputSentence))
+            if (!StaticAIMLUtils.SplitOff(outputSentenceOut, "GUARDBOM", out left, out outputSentence))
             {
                 left = null;
                 outputSentence = outputSentenceOut;
@@ -668,18 +668,18 @@ namespace RTParser
             }
             try
             {
-                templateSucceeded = !IsFalse(left);
+                templateSucceeded = !StaticAIMLUtils.IsFalse(left);
                 if (!templateSucceeded)
                 {
                     createdOutput = false;
                     return tagHandlerU;
                 }
-                string lang = GetAttribValue(sGuard.PatternNode, "lang", "cycl").ToLower();
+                string lang = StaticXMLUtils.GetAttribValue(sGuard.PatternNode, "lang", "cycl").ToLower();
 
                 try
                 {
                     Unifiable ss = Proc.SystemExecute(left, lang, request);
-                    if (IsFalse(ss) || IsNullOrEmpty(ss))
+                    if (StaticAIMLUtils.IsFalse(ss) || StaticAIMLUtils.IsNullOrEmpty(ss))
                     {
                         if (isTraced)
                             writeToLog("GUARD FALSE '{0}' TEMPLATE={1}", request,
@@ -783,7 +783,7 @@ namespace RTParser
                 {
                     return outputSentence;
                 }
-                if (IsSilentTag(node) && !Unifiable.IsEMPTY(outputSentence))
+                if (StaticAIMLUtils.IsSilentTag(node) && !Unifiable.IsEMPTY(outputSentence))
                 {
                     return "";
                 }
@@ -826,10 +826,10 @@ namespace RTParser
                 {
                     tagHandlerU.QueryHasSuceeded = true;
                 }
-                string s = Trim(TextNodeValue(node));
+                string s = StaticAIMLUtils.Trim(StaticAIMLUtils.TextNodeValue(node));
                 if (!String.IsNullOrEmpty(s))
                 {
-                    return ValueText(s);
+                    return StaticAIMLUtils.ValueText(s);
                 }
                 //return s;
             }
@@ -848,7 +848,7 @@ namespace RTParser
             {
                 object gn = request.Graph;
                 if (query != null) gn = query.Graph;
-                string s = SafeFormat("WARNING! Request " + request.WhyComplete +
+                string s = StaticAIMLUtils.SafeFormat("WARNING! Request " + request.WhyComplete +
                                          ". User: {0} raw input: {3} \"{1}\" processing {2} templates: \"{4}\"",
                                          request.Requester.UserID, Unifiable.DescribeUnifiable(request.rawInput),
                                          (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()), gn, node);
@@ -873,7 +873,7 @@ namespace RTParser
                 }
                 if (node.NodeType == XmlNodeType.Text)
                 {
-                    string s = Trim(TextNodeValue(node));
+                    string s = StaticAIMLUtils.Trim(StaticAIMLUtils.TextNodeValue(node));
                     if (String.IsNullOrEmpty(s))
                     {
                         return Unifiable.Empty;
@@ -888,7 +888,7 @@ namespace RTParser
                     return Unifiable.Empty;
                 }
                 string nodeInner = node.InnerXml;
-                TargetBot.EvalAiml(node, request, del ?? DEVNULL);
+                TargetBot.EvalAiml(node, request, del ?? StaticAIMLUtils.DEVNULL);
                 return node.InnerXml;
             }
 
@@ -898,7 +898,7 @@ namespace RTParser
             if (protectChild)
             {
                 copyParent = true;
-                LineInfoElementImpl newnode = CopyNode(node, copyParent);
+                LineInfoElementImpl newnode = StaticAIMLUtils.CopyNode(node, copyParent);
                 newnode.ReadOnly = false;
                 node = newnode;
             }
@@ -957,7 +957,7 @@ namespace RTParser
             {
 
             }
-            var st = IsSilentTag(node);
+            var st = StaticAIMLUtils.IsSilentTag(node);
             var ine = Unifiable.IsNullOrEmpty(cp);
             if (!ine || st)
             {
@@ -977,5 +977,10 @@ namespace RTParser
             return cp;
         }
 
+
+        public static string ParentTextAndSourceInfo(XmlNode node)
+        {
+            return StaticXMLUtils.ParentTextAndSourceInfo(node);
+        }
     }
 }

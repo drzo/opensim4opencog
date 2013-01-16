@@ -383,12 +383,12 @@ namespace AltAIMLParser
             string unifiableToVMString = Unifiable.ToVMString(rawInput);
             var cq = CurrentQuery;
 
-            if (IsNullOrEmpty(unifiableToVMString))
+            if (StaticAIMLUtils.IsNullOrEmpty(unifiableToVMString))
             {
                 if (cq != null)
                 {
                     unifiableToVMString = cq.FullPath;
-                    if (IsNullOrEmpty(unifiableToVMString))
+                    if (StaticAIMLUtils.IsNullOrEmpty(unifiableToVMString))
                     {
                         unifiableToVMString = cq.ToString();
                     }
@@ -446,7 +446,7 @@ namespace AltAIMLParser
             TargetSettings = user.Predicates;
             IsToplevelRequest = parent == null;
             this.Stage = SideEffectStage.UNSTARTED;
-            matchable = matchable ?? MakeMatchable(rawInput);
+            matchable = matchable ?? StaticAIMLUtils.MakeMatchable(rawInput);
             qsbase = this;
             SuspendSearchLimits = true;
             Graph = graphMaster;
@@ -1479,7 +1479,7 @@ namespace AltAIMLParser
 
         public ISettingsDictionary GetDictionary0(string named, ISettingsDictionary dictionary)
         {
-            named = ToLower(named);
+            named = StaticAIMLUtils.ToLower(named);
             if (named == null)
             {
                 if (dictionary != null) return dictionary;
@@ -1584,7 +1584,7 @@ namespace AltAIMLParser
         public bool CanProcess(string starContent)
         {
             return true;
-            matchable = matchable ?? MakeMatchable(rawInput);
+            matchable = matchable ?? StaticAIMLUtils.MakeMatchable(rawInput);
             if (matchable == starContent)
             {
                 return false;

@@ -146,11 +146,13 @@ namespace RTParser.Utils
         public static bool DebugSRAIs = true;
         public static Dictionary<XmlNode, StringBuilder> ErrorList = new Dictionary<XmlNode, StringBuilder>();
         public static bool NoRuntimeErrors = false;
-        public static readonly XmlNode PatternStar = StaticXMLUtils.getNode(true, "<pattern>*</pattern>");
-        public static readonly XmlNode ThatStar = StaticXMLUtils.getNode(true, "<that>*</that>");
-        public static readonly XmlNode TheTemplateOverwrite = StaticXMLUtils.getNode("<template></template>");
-        public static readonly XmlNode TopicStar = StaticXMLUtils.getNode(true, "<topic name=\"*\"/>");
-        public static readonly XmlNode XmlStar = PatternStar.FirstChild;
+        public static readonly FirstUse<XmlNode> PatternStar = InitOnce(() => StaticXMLUtils.getNode(true, "<pattern>*</pattern>"));
+        public static readonly FirstUse<XmlNode> ThatStar = new Func<XmlNode>(() => StaticXMLUtils.getNode(true, "<that>*</that>"));
+
+        public static readonly FirstUse<XmlNode> TheTemplateOverwrite = (Func<XmlNode>) (() => getNode("<template></template>"));
+
+        public static readonly FirstUse<XmlNode> TopicStar = (Func<XmlNode>) (() => StaticXMLUtils.getNode(true, "<topic name=\"*\"/>"));
+        public static readonly FirstUse<XmlNode> XmlStar = FirstUse<XmlNode>.F((() => PatternStar.Value.FirstChild));
         public static bool ThatWideStar;
         public static bool useInexactMatching;
         public static OutputDelegate userTraceRedir;
@@ -955,13 +957,53 @@ namespace RTParser.Utils
             return ForOutputTemplate(patternSide);
         }
 
-        public static List<string> SentenceBreaker(string sentence, Func<string,string> post)
+        const string SYMS = "\\/!@#$*()<>{}[]|;'!.?\t\n\r";
+        static private char[] symc = SYMS.ToCharArray();
+        static private readonly char[] symcs = (" "+SYMS).ToCharArray();
+        
+        public static List<string> SentenceBreaker(string sentence, Func<string, string> post)
         {
             var OutputSentences = new List<string>();
+            if (string.IsNullOrEmpty(sentence)) return OutputSentences;
             sentence = StaticAIMLUtils.ReplacePairs(sentence, " />", "/>", " >", ">",
                                                     "<br>", "<br/>", "<p>", "<p/>", "</p>", "<p/>",
                                                     "<br/>", "\n", "<p/>", "\n",
                                                     "\r", "\n").Replace("\n", " \n ");
+            if (sentence.Trim(symcs).Length == 0)
+            {
+                return OutputSentences;
+            }
+            bool dontBreak = false;
+            if (sentence.StartsWith("<!--"))
+            {
+                string s1 = sentence;
+                int endof = sentence.IndexOf("-->");
+                if (endof == sentence.Length - 3)
+                {
+                    dontBreak = true;
+                }
+            }
+            if (sentence.StartsWith("@"))
+            {
+                dontBreak = true;
+            }
+            else if (sentence.IndexOfAny(symc) == -1)
+            {
+                dontBreak = true;
+            }
+            if (dontBreak)
+            {
+                string s1 = sentence;
+                if (post != null)
+                {
+                    s1 = post(s1);
+                }
+                if (!string.IsNullOrEmpty(s1))
+                {
+                    OutputSentences.Add(s1);
+                }
+                return OutputSentences;
+            }        
             var sp = new HashSet<string>();
             sp.Add(".");
             sp.Add("!");

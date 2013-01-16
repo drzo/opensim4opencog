@@ -247,14 +247,14 @@ namespace RTParser.Utils
 
         private R LoaderOper<R>(Func<R> action, GraphMaster gm, LoaderOptions loadOpts)
         {
-            OutputDelegate prev = userTraceRedir;
+            OutputDelegate prev = StaticAIMLUtils.userTraceRedir;
             try
             {
-                userTraceRedir = gm.writeToLog;
+                StaticAIMLUtils.userTraceRedir = gm.writeToLog;
                 try
                 {
                     if (!loadOpts.NeedsLoaderLock) return action();
-                    lock (ErrorList)
+                    lock (StaticAIMLUtils.ErrorList)
                     {
                         lock (gm.LockerObject)
                         {
@@ -269,14 +269,14 @@ namespace RTParser.Utils
                 catch (Exception e)
                 {
                     writeToLog("ERROR: LoaderOper {0}", e);
-                    if (NoRuntimeErrors) return default(R);
+                    if (StaticAIMLUtils.NoRuntimeErrors) return default(R);
                     throw;
                     //return default(R);
                 }
             }
             finally
             {
-                userTraceRedir = prev;
+                StaticAIMLUtils.userTraceRedir = prev;
             }
         }
 
@@ -733,7 +733,7 @@ namespace RTParser.Utils
                 // the <topic> nodes will contain more <category> nodes
                 //string currentNodeName = currentNode.Name.ToLower();
 
-                ThreadStart ts = EnterTag(request, currentNode, query);                 
+                ThreadStart ts = StaticAIMLUtils.EnterTag(request, currentNode, query);                 
                 try
                 {
                     loadOpts.CtxGraph = request.Graph;
@@ -1110,11 +1110,12 @@ namespace RTParser.Utils
 
         public Dictionary<XmlNode, StringBuilder> DumpErrors(OutputDelegate action, bool clr)
         {
+            var ErrorList = StaticAIMLUtils.ErrorList;
             lock (ErrorList)
             {
                 var el = ErrorList;
                 int ct = el.Count;
-                if (clr) ErrorList = new Dictionary<XmlNode, StringBuilder>();
+                if (clr) StaticAIMLUtils.ErrorList = new Dictionary<XmlNode, StringBuilder>();
                 if (action != null)
                 {
                     foreach (KeyValuePair<XmlNode, StringBuilder> kv in el)
@@ -1135,6 +1136,7 @@ namespace RTParser.Utils
                 writeToLog("XMLERRORNODE: " + node + " " + LocationInfo(node));
             }
             writeToLog("XMLERROR: " + errors + " \n in " + node + " " + LocationInfo(node));
+            var ErrorList = StaticAIMLUtils.ErrorList;
             lock (ErrorList)
             {
                 StringBuilder stingBuilder;
@@ -1212,7 +1214,7 @@ namespace RTParser.Utils
                 return null;
             }
 
-            if (loaderOpts.DebugFiles && !ContansNoInfo(topicTagText.InnerXml))
+            if (loaderOpts.DebugFiles && !StaticAIMLUtils.ContansNoInfo(topicTagText.InnerXml))
             {
                 string s = GetAttribValue(topicTagText, "name", Unifiable.STAR);
                 if (topicName != s)
@@ -1308,7 +1310,7 @@ namespace RTParser.Utils
         private string VisibleChildsRenderingOrStar(XmlNode nodeI)
         {
             if (nodeI == null) return "*";
-            return VisibleRendering(nodeI.ChildNodes, PatternSideRendering);
+            return VisibleRendering(nodeI.ChildNodes, StaticAIMLUtils.PatternSideRendering);
         }
 
         private bool UnusableCategory(XmlNode templateNode)
@@ -1411,7 +1413,7 @@ namespace RTParser.Utils
             {
                 return null;
             }
-            string patternTxt = VisibleRendering(extractedXML.ChildNodes, PatternSideRendering);
+            string patternTxt = VisibleRendering(extractedXML.ChildNodes, StaticAIMLUtils.PatternSideRendering);
             if (patternTxt == "")
             {
                 patternTxt = GetAttribValue(extractedXML, "value," + tagName + ",match,name", null);
@@ -1514,7 +1516,7 @@ namespace RTParser.Utils
                 }
                 if (thatString != null)
                 {
-                    patternString = MatchKeyClean(patternString.Replace(thatString, ""));
+                    patternString = StaticAIMLUtils.MatchKeyClean(patternString.Replace(thatString, ""));
                 }
                 XmlNode newLineInfoPattern = getNodeAndSetSibling(true, "<pattern>" + patternString + "</pattern>", false,
                                                                  false, patternNode);
@@ -1536,7 +1538,7 @@ namespace RTParser.Utils
                 RenderOptions patternSideRendering;
                 if (!PatternSideRenderingCache.TryGetValue(tagname, out patternSideRendering))
                 {
-                    patternSideRendering = new RenderOptions(PatternSideRendering);
+                    patternSideRendering = new RenderOptions(StaticAIMLUtils.PatternSideRendering);
                     patternSideRendering.skip.Add(tagname);
                     PatternSideRenderingCache[tagname] = patternSideRendering;
                 }
@@ -1674,14 +1676,14 @@ namespace RTParser.Utils
             {
                 normalizedPattern = Trim(pattern);
                 // clip only one off
-                if (isUserInput) normalizedPattern = CleanPunct(normalizedPattern);
+                if (isUserInput) normalizedPattern = StaticAIMLUtils.CleanPunct(normalizedPattern);
                 if (false)
                 {
-                    normalizedPattern = MatchKeyClean(normalizedPattern);
-                    normalizedThat = MatchKeyClean(that);
-                    normalizedTopic = MatchKeyClean(topicName);
+                    normalizedPattern = StaticAIMLUtils.MatchKeyClean(normalizedPattern);
+                    normalizedThat = StaticAIMLUtils.MatchKeyClean(that);
+                    normalizedTopic = StaticAIMLUtils.MatchKeyClean(topicName);
                 }
-                normalizedThat = CleanPunct(that.Trim());
+                normalizedThat = StaticAIMLUtils.CleanPunct(that.Trim());
                 normalizedTopic = topicName.Trim();
             }
             else
@@ -1712,7 +1714,7 @@ namespace RTParser.Utils
                     normalizedTopic = Unifiable.STAR;
                 }
 
-                if (ThatWideStar)
+                if (StaticAIMLUtils.ThatWideStar)
                 {
                     if (!isUserInput)
                         normalizedThat = "* " + normalizedThat;
@@ -1730,20 +1732,15 @@ namespace RTParser.Utils
                 Unifiable addTagStart = isUserInput ? Unifiable.TagStartText : null;
 
                 //useInexactMatching = true;
-                if (useInexactMatching)
+
+                if (StaticAIMLUtils.useInexactMatching)
                 {
-                    if (!isUserInput)
-                    {
-                        normalizedPattern = PadStars(normalizedPattern);
-                        normalizedThat = PadStars(normalizedThat);
-                        normalizedTopic = PadStars(normalizedTopic);
-                    }
-                    else
-                    {
-                        normalizedPattern = NoWilds(normalizedPattern);
-                        normalizedThat = NoWilds(normalizedThat);
-                        normalizedTopic = NoWilds(normalizedTopic);
-                    }
+                    Func<string, string> PadStarsOrNoWilds = isUserInput
+                                                                 ? (Func<string, string>) StaticAIMLUtils.NoWilds
+                                                                 : StaticAIMLUtils.PadStars;
+                    normalizedPattern = PadStarsOrNoWilds(normalizedPattern);
+                    normalizedThat = PadStarsOrNoWilds(normalizedThat);
+                    normalizedTopic = PadStarsOrNoWilds(normalizedTopic);
                 }
                 else
                 {
@@ -1755,7 +1752,7 @@ namespace RTParser.Utils
                     if (!normalizedThat.ToUpper().Contains(" AND "))
                     {
                         writeToLog("ERROR in that: " + that + " -> " + normalizedThat);
-                        normalizedThat = CleanPunct(that);
+                        normalizedThat = StaticAIMLUtils.CleanPunct(that);
                     }
                 }
 

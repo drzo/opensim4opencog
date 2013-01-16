@@ -16,7 +16,7 @@ namespace RTParser
     /// <summary>
     /// Encapsulates an AIML Custom Tag Proccessor.
     /// </summary>
-    public partial class TagHandlerProcessor : StaticAIMLUtils
+    public partial class TagHandlerProcessor // : StaticAIMLUtils
     {
         /// <summary>
         /// Holds information about the available custom tag handling classes (if loaded)

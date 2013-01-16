@@ -397,7 +397,7 @@ namespace RTParser.Utils
                 // this is a removall specfier!
                 if (templateNode.ChildNodes.Count == 0)
                 {
-                    if (templateNode != StaticAIMLUtils.TheTemplateOverwrite)
+                    if (templateNode != StaticAIMLUtils.TheTemplateOverwrite.Value)
                     {
                         //  writeToLog("TheTemplateOverwrite1: onlyNonSilent=" + onlyNonSilent + " " + templateNode.OuterXml + " " + LocationInfo(cateNode));
                     }

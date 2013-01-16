@@ -372,7 +372,7 @@ namespace RTParser.Utils
         private static bool IsStarLikeNode(XmlNode thatInfo)
         {
             if (thatInfo == null || thatInfo.ChildNodes.Count == 0) return true;
-            XmlNode staticAIMLUtilsXmlStar = StaticAIMLUtils.XmlStar;
+            XmlNode staticAIMLUtilsXmlStar = StaticAIMLUtils.XmlStar.Value;
             if (thatInfo == staticAIMLUtilsXmlStar) return true;
             XmlNode thatInfoLastChild = thatInfo.LastChild;
             return thatInfoLastChild == staticAIMLUtilsXmlStar && thatInfo.FirstChild == thatInfoLastChild;

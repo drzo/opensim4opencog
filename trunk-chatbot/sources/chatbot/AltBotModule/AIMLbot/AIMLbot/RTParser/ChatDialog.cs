@@ -160,7 +160,7 @@ namespace RTParser
             get { return SizeC + DefaultStartGraph.Size + DefaultHeardSelfSayGraph.Size; }
         }
 
-        private static GraphMaster TheListenerGraph;
+        ///private static GraphMaster TheListenerGraph;
 
         /// <summary>
         /// The "brain" of the Proccessor
@@ -637,7 +637,7 @@ namespace RTParser
                 if (writeToLog != null) writeToLog("ChatWithNonGraphmaster: " + swToString);
                 else
                 {
-                    writeToLog = DEVNULL;
+                    writeToLog = StaticAIMLUtils.DEVNULL;
                 }
                 if (myBotBotDirective)
                 {
@@ -653,7 +653,7 @@ namespace RTParser
             }
             ChatLabel label = request.PushScope;
             var orig = request.ResponderOutputs;
-            if (AlwaysUseImmediateAimlInImput && ContainsAiml(rawInputString))
+            if (AlwaysUseImmediateAimlInImput && StaticAIMLUtils.ContainsAiml(rawInputString))
             {
                 try
                 {
@@ -771,7 +771,7 @@ namespace RTParser
 
         private void ProcessSubQueriesAndIncreasLimits(Request request, Result result, ref bool isTraced, bool printedSQs, OutputDelegate writeToLog)
         {
-            writeToLog = writeToLog ?? DEVNULL;
+            writeToLog = writeToLog ?? StaticAIMLUtils.DEVNULL;
             int sqc = result.SubQueries.Count;
             int solutions;
             bool hasMoreSolutions;
@@ -803,7 +803,7 @@ namespace RTParser
         }
         private void PostProcessSubqueries(Request request, Result result, bool isTraced, OutputDelegate writeToLog)
         {
-            writeToLog = writeToLog ?? DEVNULL;
+            writeToLog = writeToLog ?? StaticAIMLUtils.DEVNULL;
             {
                 if (isTraced)
                 {
@@ -1212,7 +1212,7 @@ namespace RTParser
 
         private Result ImmediateAIMLNode(Request parentRequest, XmlNode templateNode)
         {
-            string requestName = ToTemplateXML(templateNode);
+            string requestName = StaticAIMLUtils.ToTemplateXML(templateNode);
             AltBot request0Proccessor = this;
             GuardInfo sGuard = null;
             Request request = null;
@@ -1293,7 +1293,7 @@ namespace RTParser
 
         public string ToHeard(string message)
         {
-            string trim = ToEmptyOrNot(message);
+            string trim = StaticAIMLUtils.ToEmptyOrNot(message);
             if (string.IsNullOrEmpty(trim)) return trim;
 
             if (message.StartsWith("  "))
@@ -1306,7 +1306,7 @@ namespace RTParser
             if (false && message.Contains("<"))
             {
                 string messageIn = message;
-                message = ForInputTemplate(message);
+                message = StaticAIMLUtils.ForInputTemplate(message);
                 //if (messageIn != message) writeDebugLine("heardSelfSay - ForInputTemplate: " + messageIn + " -> " + message);
             }
 
@@ -1332,7 +1332,7 @@ namespace RTParser
             if (testBR.ToUpper().Contains(" BR "))
             {
                 message =
-                    ReTrimAndspace(ReplacePairs(message, " br ", " \n ", " BR ", " \n ", " NOP ", " ", " nop ", " "));
+                    ReTrimAndspace(StaticAIMLUtils.ReplacePairs(message, " br ", " \n ", " BR ", " \n ", " NOP ", " ", " nop ", " "));
             }
             return message;
         }
@@ -1352,8 +1352,8 @@ namespace RTParser
                 return "";
             }
 
-            string sentence = VisibleRendering(StaticAIMLUtils.getTemplateNode(sentenceIn).ChildNodes,
-                                               PatternSideRendering);
+            string sentence = StaticAIMLUtils.VisibleRendering(StaticAIMLUtils.getTemplateNode(sentenceIn).ChildNodes,
+                                               StaticAIMLUtils.PatternSideRendering);
 
             sentence = ReTrimAndspace(sentence);
             if (DifferentBesidesCase(sentenceIn, sentence))
@@ -1395,7 +1395,7 @@ namespace RTParser
                 sentenceIn = sentence;
             }
 
-            if (!checkEndsAsSentence(sentenceIn))
+            if (!StaticAIMLUtils.checkEndsAsSentence(sentenceIn))
             {
                 sentenceIn += ".";
             }
@@ -1408,7 +1408,7 @@ namespace RTParser
             string sentence;
             sentence = ApplySubstitutions.Substitute(InputSubstitutions, sentenceIn);
             //sentence = string.Join(" ", sentence.Split(toCharArray, StringSplitOptions.RemoveEmptyEntries));
-            sentence = ReTrimAndspace(sentence);
+            sentence = StaticAIMLUtils.ReTrimAndspace(sentence);
             if (DifferentBesidesCase(sentenceIn, sentence))
             {
                 writeToLog("InputSubst: " + sentenceIn + " -> " + sentence);

@@ -59,9 +59,9 @@ namespace RTParser.AIMLTagHandlers
                     const bool expandOnNoHits = true; // actually WordNet
                     const float threshold = 0.0f;
                     Unifiable templateNodeInnerValue = ProcessChildNode(((XmlNode)node));
-                    string failPrefix = AltBot.GetAttribValue(((XmlNode)node), "failprefix", "").ToLower();
-                    string passPrefix = AltBot.GetAttribValue(((XmlNode)node), "passprefix", "").ToLower();
-                    string resultPrefix = AltBot.GetAttribValue(((XmlNode)node), "resultprefix", "").ToLower();
+                    string failPrefix = GetAttribValue(((XmlNode)node), "failprefix", "").ToLower();
+                    string passPrefix = GetAttribValue(((XmlNode)node), "passprefix", "").ToLower();
+                    string resultPrefix = GetAttribValue(((XmlNode)node), "resultprefix", "").ToLower();
                     if (!string.IsNullOrEmpty(failPrefix))
                     {
                         //on <dbquery> failure, use a <srai> fallback
@@ -144,7 +144,7 @@ namespace RTParser.AIMLTagHandlers
                     return FAIL;
                 }
                 float reliability;
-                string failPrefix = AltBot.GetAttribValue(templateNode, "failprefix", "").ToLower();
+                string failPrefix = GetAttribValue(templateNode, "failprefix", "").ToLower();
                 Unifiable converseMemo = TargetBot.LuceneIndexer.AskQuery(searchTerm1, this.writeToLog,
                                                                           () =>
                                                                               {

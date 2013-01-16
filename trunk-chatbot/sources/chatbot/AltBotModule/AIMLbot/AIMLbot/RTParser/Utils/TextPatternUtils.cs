@@ -57,7 +57,7 @@ namespace RTParser.Utils
 
         static TextPatternUtils()
         {
-            XmlDocumentLineInfo.TextFormatter = CleanWildcards;
+            //XmlDocumentLineInfo.TextFormatter = CleanWildcards;
         }
 
         public static bool IsTrue(Unifiable v)
@@ -456,7 +456,7 @@ namespace RTParser.Utils
             return s;
         }
 
-        protected static bool ContansNoInfo(Unifiable cond)
+        public static bool ContansNoInfo(Unifiable cond)
         {
             return cond == null || cond == Unifiable.STAR || cond == Unifiable.Empty;
         }
@@ -493,7 +493,7 @@ namespace RTParser.Utils
             return normalizedPattern;
         }
 
-        protected static string NoWilds(string pattern)
+        public static string NoWilds(string pattern)
         {
             pattern = Trim(pattern);
             int pl = pattern.Length;
@@ -554,7 +554,7 @@ namespace RTParser.Utils
               return param1.ToUpper();
           }*/
 
-        protected static bool MessagePrefixName(string sep, string message, out string toWhom, out string fromWhom, out string newMessage)
+        public static bool MessagePrefixName(string sep, string message, out string toWhom, out string fromWhom, out string newMessage)
         {
             if (!SplitOff(message, sep, out fromWhom, out newMessage))
             {
@@ -574,7 +574,7 @@ namespace RTParser.Utils
             return true;
         }
 
-        protected static int CountOf(string source, string findStr)
+        public static int CountOf(string source, string findStr)
         {
             int found = 0;
             int from = 0;

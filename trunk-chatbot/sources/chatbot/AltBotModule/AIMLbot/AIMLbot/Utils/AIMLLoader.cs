@@ -672,7 +672,7 @@ namespace AltAIMLbot.Utils
             var patterns = StaticXMLUtils.FindNodes("pattern", node);            
             var thats = StaticXMLUtils.FindNodes("that", node);
             var templates = StaticXMLUtils.FindNodes("template", node);
-            if (thats.Count == 0) thats = new List<XmlNode>() {StaticAIMLUtils.XmlStar};
+            if (thats.Count == 0) thats = new List<XmlNode>() {StaticAIMLUtils.XmlStar.Value};
 
             foreach (XmlNode template in templates)
             {

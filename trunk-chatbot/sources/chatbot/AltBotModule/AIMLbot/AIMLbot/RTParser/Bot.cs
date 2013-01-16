@@ -46,7 +46,7 @@ namespace RTParser
     /// Encapsulates a Proccessor. If no settings.xml file is found or referenced the Proccessor will try to
     /// default to safe settings.
     /// </summary>
-    public partial class AltBot : StaticAIMLUtils, IChatterBot
+    public partial class AltBot : CommonStaticUtils, IChatterBot
     {
         /* public static implicit operator AltBot(AltBot ab)
          {
@@ -86,8 +86,6 @@ namespace RTParser
                 return null;
             }
         }
-        private readonly List<XmlNodeEvaluator> XmlNodeEvaluators = new List<XmlNodeEvaluator>();
-        private TestCaseRunner testCaseRunner;
 
         private static int skipMany;
         public static bool UseBreakpointOnError;
@@ -100,9 +98,9 @@ namespace RTParser
                 if (GlobalSettings != null)
                 {
                     Unifiable lts = GlobalSettings.grabSetting("ListeningToSelf");
-                    if (IsUnknown(lts)) return false;
-                    if (IsFalse(lts)) return false;
-                    if (IsTrue(lts)) return true;
+                    if (Unifiable.IsUnknown(lts)) return false;
+                    if (Unifiable.IsFalse(lts)) return false;
+                    if (Unifiable.IsTrue(lts)) return true;
                     return true;
                 }
 
@@ -118,9 +116,9 @@ namespace RTParser
                 if (GlobalSettings != null)
                 {
                     Unifiable lts = GlobalSettings.grabSetting("ProcessHeardPreds");
-                    if (IsUnknown(lts)) return false;
-                    if (IsFalse(lts)) return false;
-                    if (IsTrue(lts)) return true;
+                    if (Unifiable.IsUnknown(lts)) return false;
+                    if (Unifiable.IsFalse(lts)) return false;
+                    if (Unifiable.IsTrue(lts)) return true;
                     return true;
                 }
 
@@ -164,7 +162,7 @@ namespace RTParser
         public Request GetBotRequest(string s)
         {
             var botAsUser1 = BotAsUser ?? LastUser;
-            s = Trim(s);
+            s = Unifiable.Trim(s);
             if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
             var r = new MasterRequest(s, botAsUser1, Unifiable.EnglishNothing, botAsUser1, this, null,
                                               DefaultStartGraph);
@@ -665,7 +663,7 @@ namespace RTParser
         public string PushSearchPath(string directory)
         {
             if (directory == null) return null;
-            directory = Trim(directory);
+            directory = directory.Trim();
             if (directory.Length == 0)
             {
                 directory = ".";
@@ -701,7 +699,10 @@ namespace RTParser
         #region Settings methods
 
         private bool initialSettingsLoaded = false;
-        private readonly object initialSettingsLoadedLock = new object();
+        internal object initialSettingsLoadedLock
+        {
+            get { return this; }
+        }
         /// <summary>
         /// Loads AIML from .aiml files into the graphmaster "brain" of the Proccessor
         /// </summary>
@@ -722,11 +723,11 @@ namespace RTParser
             //MyBot.GlobalSettings.addSetting("name", client.BotLoginParams.FirstName+ " " + client.BotLoginParams.LastName);
         }
 
-        public void loadAIMLFromDefaults()
+        public void loadAIMLFromFiles()
         {
             lock (initialSettingsLoadedLock)
             {
-                loadAIMLFromFiles();
+                loadAIMLFromFiles_unlocked();
             }
         }
 
@@ -1430,7 +1431,7 @@ The AIMLbot program.
             graphPath = GraphMaster.DeAliasGraphName(graphPath);
             if (false && !graphPath.Contains("_to_"))
             {
-                graphPath = ToLower(ConsolidSpaces(Trim(graphPath + "_to_" + this.NamePath)));
+                graphPath = ToLower(StaticXMLUtils.ConsolidSpaces(Trim(graphPath + "_to_" + this.NamePath)));
             }
             GraphMaster g;
             lock (GraphsByName)
@@ -1552,7 +1553,7 @@ The AIMLbot program.
                 if (IsOkForNameChar(s))
                     sk += s;
             }
-            path = OlderReference(path, sk);
+            path = StaticXMLUtils.OlderReference(path, sk);
             return NoSpaceLowerCaseName(path);
         }
 
@@ -1711,6 +1712,7 @@ The AIMLbot program.
             {
                 saveServitor();
             }
+            RunOnBotCreatedHooks();
             return ret;
         }
 
@@ -1774,7 +1776,7 @@ The AIMLbot program.
             return official ?? thisBotAsUser.UserDirectory;
         }
 
-        private void RunOnBotCreatedHooks()
+        internal void RunOnBotCreatedHooks()
         {
             lock (OnBotCreatedHooks)
             {
@@ -1828,8 +1830,8 @@ The AIMLbot program.
 
                 if (StaticInitStarted) return;
                 StaticInitStarted = true;
-                TheListenerGraph = GraphMaster.FindOrCreate("listener", null);
-                TheListenerGraph.SilentTagsInPutParallel = false;
+                //TheListenerGraph = GraphMaster.FindOrCreate("listener", null);
+                ///TheListenerGraph.SilentTagsInPutParallel = false;
                 // var defaultGraph = GraphsByName["default"] = GraphMaster.FindOrCreate("default");
                 // defaultGraph.RemovePreviousTemplatesFromNodes = false;               
                 AddSettingsAliases("lastuserid", "you");
@@ -2064,8 +2066,13 @@ The AIMLbot program.
         }
 
 
+        private readonly ListAsSet<XmlNodeEvaluator> XmlNodeEvaluators = new ListAsSet<XmlNodeEvaluator>();
+        private TestCaseRunner testCaseRunner;
         public IEnumerable<XmlNodeEval> GetEvaluators(XmlNode node)
         {
+            testCaseRunner = testCaseRunner ?? new TestCaseRunner(null);
+            XmlNodeEvaluators.Add(testCaseRunner);
+
             var nodes = new List<XmlNodeEval>();
             foreach (XmlNodeEvaluator xmlNodeEvaluator in XmlNodeEvaluators)
             {

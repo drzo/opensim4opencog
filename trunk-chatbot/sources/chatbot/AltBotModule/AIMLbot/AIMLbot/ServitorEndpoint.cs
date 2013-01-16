@@ -47,6 +47,7 @@ namespace AltAIMLbot
             prologEngine.appendKB("triple(this,can,work).\n", "rdfMT");
 
             myServer.beginService(prologEngine);
+            prologEngine.EndpointCreated(myServer);
         }
 
         public void webWriter(HttpListenerContext context, TextWriter writer, string action, string query, string path, string mt, string serverRoot)

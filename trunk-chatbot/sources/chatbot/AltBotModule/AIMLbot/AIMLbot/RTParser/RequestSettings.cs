@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using AltAIMLbot.Utils;
 using RTParser.Utils;
 
 namespace RTParser
@@ -68,7 +69,7 @@ namespace RTParser
         }
     }
 
-    abstract public class QuerySettings : StaticAIMLUtils, QuerySettingsSettable
+    abstract public class QuerySettings : QuerySettingsSettable
     {
         public static int UNLIMITED = 999;
 
@@ -298,6 +299,19 @@ namespace RTParser
         public int UseLuceneForSetMaxDepth { get; set; }
 
         public virtual int DebugLevel { get; set; }
+
+        public static bool IsSomething(Unifiable s, out Unifiable something)
+        {
+            return StaticAIMLUtils.IsSomething(s, out something);
+        }
+        public static bool IsNullOrEmpty(Object unifiable)
+        {
+            return StaticAIMLUtils.IsNullOrEmpty(unifiable);
+        }
+        public static string SafeFormat(string f, params object[] args)
+        {
+            return StaticAIMLUtils.SafeFormat(f, args);
+        }
     }
 
     public interface QuerySettingsReadOnly

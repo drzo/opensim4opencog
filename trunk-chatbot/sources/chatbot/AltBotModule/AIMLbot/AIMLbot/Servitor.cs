@@ -654,7 +654,7 @@ namespace AltAIMLbot
 
             myServitorEndpoint.StartServer();
             curBot.loadChanging = false;
-
+            curBot.RunOnBotCreatedHooks();
         }
 
         public bool setGuestEvalObject(object guestObj)

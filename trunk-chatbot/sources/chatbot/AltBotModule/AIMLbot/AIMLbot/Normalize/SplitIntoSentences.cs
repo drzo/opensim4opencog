@@ -179,12 +179,14 @@ namespace RTParser.Normalize
         {
             return (new SplitIntoSentences(null)).TransformU(input);
         }
-        private string TrimEndTokens(string s)
+        private static string TrimEndTokens(string s)
         {
-            string[] tokens = (string[])AltBot.Splitters.ToArray();
+            if (s.StartsWith("@")) return s;
+            var tokens = AltBot.Splitters;
             s = s.TrimEnd();
             foreach (string t0 in tokens)
             {
+                if (t0 == "?") continue;
                 string t = t0.TrimEnd();
                 if (s.EndsWith(t))
                 {

@@ -21,7 +21,7 @@ namespace AltAIMLbot.Utils
     /// interrogation of the graphmaster.
     /// </summary>
     [Serializable]
-    public class SubQuery : StaticAIMLUtils, ISettingsDictionary, IComparable<SubQuery>, RequestOrQuery, UndoStackHolder,
+    public class SubQuery : CommonStaticUtils, ISettingsDictionary, IComparable<SubQuery>, RequestOrQuery, UndoStackHolder,
                             ConversationScopeHolder, SituationInConversation
     {
         #region Attributes
@@ -667,12 +667,12 @@ namespace AltAIMLbot.Utils
         {
             if (ShouldCommit)
             {
-                writeDebugLine("Commiting Sidefffect " + effectName);
+                StaticAIMLUtils.writeDebugLine("Commiting Sidefffect " + effectName);
                 action();
             }
             else
             {
-                writeDebugLine("Skipping Sidefffect " + effectName);
+                StaticAIMLUtils.writeDebugLine("Skipping Sidefffect " + effectName);
             }
         }
 
@@ -701,13 +701,13 @@ namespace AltAIMLbot.Utils
         {
             if (Pattern == null)
             {
-                return ReferenceCompare(this, other);
+                return StaticAIMLUtils.ReferenceCompare(this, other);
             }
             int compare = Pattern.CompareTo(other.Pattern);
             if (compare != 0) return compare;
-            compare = CollectionCompare(Templates, other.Templates, TemplateInfoImpl.CompareTemplates);
+            compare = StaticAIMLUtils.CollectionCompare(Templates, other.Templates, TemplateInfoImpl.CompareTemplates);
             if (compare != 0) return compare;
-            return ReferenceCompare(this, other);
+            return StaticAIMLUtils.ReferenceCompare(this, other);
         }
 
         public bool Equals(SubQuery other)
@@ -723,11 +723,11 @@ namespace AltAIMLbot.Utils
                 Equals(other.Request, Request)
                 && Equals(other.Result, Result)
                 //  && Equals(other.TopLevel, TopLevel)                        
-                && CollectionEquals(other.GuardStar, GuardStar)
-                && CollectionEquals(other.InputStar, InputStar)
-                && CollectionEquals(other.ThatStar, ThatStar)
-                && CollectionEquals(other.TopicStar, TopicStar)
-                && SetsEquals(other.Flags, Flags)
+                && StaticAIMLUtils.CollectionEquals(other.GuardStar, GuardStar)
+                && StaticAIMLUtils.CollectionEquals(other.InputStar, InputStar)
+                && StaticAIMLUtils.CollectionEquals(other.ThatStar, ThatStar)
+                && StaticAIMLUtils.CollectionEquals(other.TopicStar, TopicStar)
+                && StaticAIMLUtils.SetsEquals(other.Flags, Flags)
                 //  && other.HasFailed == HasFailed
                 //  && other.HasSuceeded == HasSuceeded
                 //  && other.GetDictValue == GetDictValue
@@ -769,7 +769,7 @@ namespace AltAIMLbot.Utils
                 //  && other.GetDictValue == GetDictValue
                 //  && other.SetDictValue == SetDictValue                
                 //  && other.IsTraced.Equals(IsTraced)
-                && SetsEquals(other.Templates, Templates)
+                && StaticAIMLUtils.SetsEquals(other.Templates, Templates)
                 && Equals(other.Graph, Graph)
                 ;
             if (!same) return false;

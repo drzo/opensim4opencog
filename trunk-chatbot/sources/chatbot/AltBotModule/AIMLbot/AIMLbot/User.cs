@@ -100,7 +100,7 @@ namespace RTParser
     /// <summary>
     /// Encapsulates information and history of a user who has interacted with the bot
     /// </summary>
-    public class MasterUser : StaticAIMLUtils, IUser, IDisposable, ISettingsDictionary, UserConversationScope,
+    public class MasterUser : AltAIMLbot.Utils.CommonStaticUtils, IUser, IDisposable, ISettingsDictionary, UserConversationScope,
                                      UserDuringProcessing,
                                      User
     {
@@ -667,9 +667,10 @@ namespace RTParser
                     this.Predicates.InsertFallback(() => bot.AllUserPreds);
                 }
                 UserID = userID;                
-                UserName = fullname;
+                //UserName = fullname;
+                SetMeMyselfAndI(fullname);
                 blackBoardThat = "";
-                WithoutTrace(Predicates,() => SetMeMyselfAndI(fullname));
+                StaticAIMLUtils.WithoutTrace(Predicates, () => SetMeMyselfAndI(fullname));
                 //this.Predicates.addSetting("topic", "NOTOPIC");
                 if (false && SaveTimer == null)
                 {
@@ -1084,10 +1085,10 @@ namespace RTParser
                 }
 
                 // the (_JustSaid != value) holds back the infinate looping                
-                if (_JustSaid == null || SymTrim(_JustSaid).ToUpper() != SymTrim(value).ToUpper())
+                if (_JustSaid == null || TextPatternUtils.SymTrim(_JustSaid).ToUpper() != StaticAIMLUtils.SymTrim(value).ToUpper())
                 {
                     Unifiable something;
-                    if (IsSomething(value, out something))
+                    if (StaticAIMLUtils.IsSomething(value, out something))
                     {
                         value = something;
                         _JustSaid = value;
@@ -1175,11 +1176,11 @@ namespace RTParser
 
         private UserConversationScope LastReponderFromDictionary()
         {
-            foreach (var name in NamesStrings("you,lastusername,lastuserid"))
+            foreach (var name in StaticXMLUtils.NamesStrings("you,lastusername,lastuserid"))
             {
                 string name1 = name;
                 string lname =
-                    WithoutTrace(Predicates,
+                    StaticXMLUtils.WithoutTrace(Predicates,
                                  () =>
                                  {
                                      string realName;
@@ -1266,7 +1267,7 @@ namespace RTParser
             }
             string output;
             string cmd;
-            if (!SplitOff(input, " ", out cmd, out output))
+            if (!StaticAIMLUtils.SplitOff(input, " ", out cmd, out output))
             {
                 cmd = "";
                 output = input;
@@ -1406,7 +1407,7 @@ namespace RTParser
 
         public void SetOutputSentences(string args, User responder)
         {
-            args = ForOutputTemplate(args);
+            args = StaticAIMLUtils.ForOutputTemplate(args);
             Result result = GetResult(0, false, responder);
             if (result != null)
                 result.SetOutput = args;
@@ -1516,7 +1517,7 @@ namespace RTParser
                 return;
             }
             // or WriteLine but this is spammy 
-            OutputDelegate logger = DEVNULL;
+            OutputDelegate logger = StaticAIMLUtils.DEVNULL;
             logger("DEBUG9 Saving User Directory {0}", userdir);
             ((SettingsDictionaryReal)Predicates).SaveTo(userdir, "user.predicates", "UserPredicates.xml");
             GraphMaster gm = rbot.GetGraph(UserID, StartGraph);

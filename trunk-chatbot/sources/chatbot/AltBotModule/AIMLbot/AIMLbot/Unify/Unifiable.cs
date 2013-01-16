@@ -1518,73 +1518,6 @@ namespace RTParser
         public abstract bool WillMatch0(string word, SubQuery query);
 
 
-        public static bool IsEMPTY(Object unifiable)
-        {
-            return StaticAIMLUtils.IsEMPTY(unifiable);
-        }
-
-
-        public static bool IsMissing(Object unifiable)
-        {
-            return StaticAIMLUtils.IsMissing(unifiable);
-        }
-
-        public static bool IsNull(Object unifiable)
-        {
-            return StaticAIMLUtils.IsNull(unifiable);
-        }
-        public static bool IsValue(Unifiable unifiable)
-        {
-            return StaticAIMLUtils.IsValue(unifiable);
-        }
-        public static bool IsTrue(Unifiable unifiable)
-        {
-            return StaticAIMLUtils.IsTrue(unifiable);
-        }
-        public static bool IsFalse(Unifiable unifiable)
-        {
-            return StaticAIMLUtils.IsFalse(unifiable);
-        }
-        public static bool IsNullOrEmpty(Object unifiable)
-        {
-            return StaticAIMLUtils.IsNullOrEmpty(unifiable);
-        }
-        public static bool IsIncomplete(Object unifiable)
-        {
-            return StaticAIMLUtils.IsIncomplete(unifiable);
-        }
-        public static string ToLower(string unifiable)
-        {
-            return StaticAIMLUtils.ToLower(unifiable);
-        }
-        public static string ToUpper(string unifiable)
-        {
-            return StaticAIMLUtils.ToUpper(unifiable);
-        }
-        public static string Trim(string unifiable)
-        {
-            return StaticAIMLUtils.Trim(unifiable);
-        }
-
-        public static bool IsUnknown(object unifiable)
-        {
-            return StaticAIMLUtils.IsUnknown(unifiable);
-        }
-
-        public static string InnerXmlText(XmlNode node)
-        {
-            return StaticAIMLUtils.InnerXmlText(node);
-        }
-
-        internal static bool IsTrueOrYes(string str)
-        {
-            return StaticAIMLUtils.IsTrueOrYes(str);
-        }
-
-        public static bool IsFalseOrNo(string str)
-        {
-            return StaticAIMLUtils.IsFalseOrNo(str);
-        }
 
         public abstract void SetFromString(string inlist);
 
@@ -1599,7 +1532,7 @@ namespace RTParser
     }
 
     [Serializable]
-    public abstract class BaseUnifiable //: StaticAIMLUtils
+    public abstract class BaseUnifiable : CommonStaticUtils //: StaticAIMLUtils
     {
         public abstract string SpecialName { get; }
         public abstract string OverlyMatchableString { get; }

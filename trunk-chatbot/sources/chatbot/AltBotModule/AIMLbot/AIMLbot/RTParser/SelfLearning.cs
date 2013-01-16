@@ -365,8 +365,8 @@ namespace RTParser
 
         public static string NoSpaceLowerCaseName(string path)
         {
-            path = ToLower(Trim(ConsolidSpaces(path)));
-            return OlderReference(
+            path = ToLower(Trim(StaticXMLUtils.ConsolidSpaces(path)));
+            return StaticXMLUtils.OlderReference(
                 path,
                 path
                     .Replace(" ", "_").Replace(".", "_")
