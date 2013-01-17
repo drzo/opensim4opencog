@@ -182,7 +182,7 @@ namespace MushDLR223.Utilities
             m_value = default(T);
             m_isValid = false;
         }
-        internal bool HasValue
+        public bool HasValue
         {
             get
             {
