@@ -129,6 +129,7 @@ function setIframeSource()
 	theUrl = theSelect.options[theSelect.selectedIndex].value;
 	theIframe.src = theUrl;
 }
+
 function validateBrowserForm() 
 {
 	var theAction = document.getElementById('action');
@@ -136,7 +137,22 @@ function validateBrowserForm()
 	var theMt = document.getElementById('mt');
 	var theIframe = document.getElementById('myIframe');
 	var theUrl;
-	theUrl = ""/siprolog/?a=""+theAction.value+""&mt=""+theMt.value+""&q=""+theQuery.value
+    var theActionValue = theAction.value;
+    var theMtValue = theMt.value;
+    var theQueryValue =theQuery.value;
+
+	theUrl = ""/siprolog/?a=""+theActionValue+""&mt=""+theMtValue+""&q=""+theQueryValue;
+    if (theActionValue =='clear') {theUrl =""/plot/?mt=""+theMtValue+""&q=clear""; };
+    if (theActionValue =='plot') {theUrl =""/plot/?mt=""+theMtValue+""&q=plot(X,Y)""; };
+    if (theActionValue =='scope') {theUrl =""/plot/?mt=""+theMtValue+""&a=autorefresh&q=plot(X,Y)""; };
+    if (theActionValue =='watch') {theUrl =""/siprolog/?mt=""+theMtValue+""&a=autorefresh""; };
+    if (theActionValue =='clearcache') {theUrl =""/xrdf/?mt=""+theMtValue+""&q=clearcache""; };
+    if (theActionValue =='syncfromremote') {theUrl =""/xrdf/?mt=""+theMtValue+""&q=syncfromremote""; };
+    if (theActionValue =='synctoremote') {theUrl =""/xrdf/?mt=""+theMtValue+""&q=synctoremote""; };
+    if (theActionValue =='pl2rdf') {theUrl =""/xrdf/?mt=""+theMtValue+""&q=pl2rdf""; };
+    if (theActionValue =='rdf2pl') {theUrl =""/xrdf/?mt=""+theMtValue+""&q=rdf2pl""; };
+
+
 	theIframe.src = theUrl;
     return false;
 }
@@ -649,7 +665,8 @@ function validateBrowserForm()
 
             writer.WriteLine(" <form id='bfoot1' method='post' ACTION='' onsubmit='return validateBrowserForm()' >", mt, serverRoot);
             
-            writer.WriteLine(" Query: <INPUT TYPE='text' name='q' id='query'/>");
+            writer.WriteLine(" Query: <INPUT TYPE='text' name='q' id='query' style='80%'/>");
+            writer.WriteLine(" <br/><label> Select a Mt:");
             writer.WriteLine(" <label> Select a Mt:");
             writer.WriteLine("<select name=\"mt\" id=\"mt\" >");
             foreach (PNode p in KBGraph.SortedTopLevelNodes)
@@ -665,6 +682,16 @@ function validateBrowserForm()
                 writer.WriteLine("<option value='autoquery'>autoquery</option>");
                 writer.WriteLine("<option value='append'>append</option>");
                 writer.WriteLine("<option value='insert'>overwrite</option>");
+                writer.WriteLine("<option value='plot'>Plot Mt</option>");
+                writer.WriteLine("<option value='scope'>Scope Mt</option>");
+                writer.WriteLine("<option value='autorefresh'>Watch Mt</option>");
+                writer.WriteLine("<option value='clear'>Clear Prolog KB</option>");
+                writer.WriteLine("<option value='clearcache'>Clear RDF Cache for KB</option>");
+                writer.WriteLine("<option value='syncfromremote'>Sync From Remote</option>");
+                writer.WriteLine("<option value='synctoremote'>Sync To Remote</option>");
+                writer.WriteLine("<option value='pl2rdf'>Prolog2RDF</option>");
+                writer.WriteLine("<option value='rdf2pl'>RDF2Prolog</option>");
+
             writer.WriteLine("</select>");
             writer.WriteLine("</label>");
             writer.WriteLine(" <INPUT TYPE='submit' VALUE='submit'/>");
