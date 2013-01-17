@@ -68,6 +68,10 @@ namespace LogicalParticleFilter1
         public const string FUNCTOR_CONS = "cons";//const
         public const string FUNCTOR_NIL = "nil";// "nil";
         private static Term _TERM_TRUE = null;
+        public static string CogbotServerWithPort
+        {
+            get { return GlobalSharedSettings.CogbotServerWithPort; }
+        }
 
         public delegate void chemSysDelegate(string cmd);
         public chemSysDelegate chemSysCommandProcessor = null;
@@ -135,7 +139,7 @@ namespace LogicalParticleFilter1
             DLRConsole.TransparentCallers.Add(GetType());
             DLRConsole.SetIgnoreSender("KEYVALUELISTSIPROLOG", true);
             defineBuiltIns();
-            defineRDFExtensions();
+            if (rdfDefSync == null) defineRDFExtensions();
             threadLocal.tl_mt = "baseKB";
             connectMT("stdlib", "root");
             insertKB(standardLib(), "stdlib");
@@ -642,38 +646,7 @@ namespace LogicalParticleFilter1
 
         public void loadIntoKB_unlocked(RuleList ruleSet, PNode focus, bool clearFirst)
         {
-            if (clearFirst) focus.Clear();
-            if (focus.IsDataFrom(ContentBackingStore.Prolog))
-            {
-                if (clearFirst)
-                {
-                    focus.pdb.rules = ruleSet;
-                    focus.SyncFromNow = ContentBackingStore.Prolog;
-                    return;
-                }
-                focus.pdb.index.Clear();
-                lock (focus.pdb.rules)
-                {
-                    foreach (Rule r in ruleSet)
-                    {
-                        focus.pdb.rules.Add(r);
-                    }
-                }
-                focus.SyncFromNow = ContentBackingStore.Prolog;
-                return;
-            }
-            var rdfGraphWithDefs = focus.RdfStore;
-            foreach (Rule rule in ruleSet)
-            {
-                try
-                {
-                    rdfGraphWithDefs.AddRuleToRDF(rule);
-                }
-                catch (Exception e)
-                {
-                    Warn(e);
-                }
-            }
+            focus.AddRules(ruleSet, clearFirst);
         }
 
         public PNode FindOrCreateKB(string startMT)
@@ -1124,7 +1097,7 @@ namespace LogicalParticleFilter1
 
         private void inGlobalTest()
         {
-            tl_spy_prolog_reader = true;
+            //tl_spy_prolog_reader = true;
             /// throw ErrorBadOp("inGlobalTest");
         }
         #endregion

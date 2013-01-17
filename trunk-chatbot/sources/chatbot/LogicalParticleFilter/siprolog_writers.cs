@@ -446,13 +446,19 @@ function validateBrowserForm()
             writer.WriteLine("<font color='{0}' {1}>{2}</font>{3}<br/>", color, toolTip,
                            WebLinksWriter.EntityFormat(r.ToSource(SourceLanguage.Prolog)), ext);
         }
-
+        public static LocalIOSettings threadLocal
+        {
+            get
+            {
+                if (null == GlobalSharedSettings.LocalSettings) GlobalSharedSettings.LocalSettings = new LocalIOSettings();
+                return GlobalSharedSettings.LocalSettings;
+            }
+        }
     }
-
-    public static class threadLocal
+    public class LocalIOSettings
     {
-        [ThreadStatic] public static SourceLanguage tl_console_language = null;//SourceLanguage.Text;
-        public static string tl_languageName
+        public SourceLanguage tl_console_language = null;//SourceLanguage.Text;
+        public string tl_languageName
         {
             get
             {
@@ -460,13 +466,10 @@ function validateBrowserForm()
                 return tl_console_language.Name;
             }
         }
-        [ThreadStatic]
-        internal static string tl_ServerRoot;
-        [ThreadStatic]
-        internal static string tl_mt;
-        [ThreadStatic]
-        internal static string tl_rule_mt;
-        internal static string curKB
+        internal string tl_ServerRoot;
+        internal string tl_mt;
+        internal string tl_rule_mt;
+        internal string curKB
         {
             get
             {
@@ -477,11 +480,43 @@ function validateBrowserForm()
                 tl_mt = value;
             }
         }
-        [ThreadStatic]
-        internal static TextWriter tl_writer;
-
+        internal TextWriter tl_writer;
+    }
+    public static class GlobalSharedSettings
+    {
+        [ThreadStatic] public static LocalIOSettings LocalSettings = new LocalIOSettings();
         [ThreadStatic]
         private static int tl_StructToStringDepth = 4;
+
+        public static string CogbotServerWithPort
+        {
+            get
+            {
+                return string.Format("{0}:{1}", serverHost, serverPort);
+            }
+            set
+            {
+                foreach (string s in new[] { "http://", "https://", @"\\" })
+                {
+                    if (value.StartsWith(s))
+                    {
+                        value = value.Substring(s.Length);
+                    }
+                }
+                int fs = value.IndexOfAny("/\\".ToCharArray());
+                if (fs > 0) value = value.Substring(0, fs - 1);
+                if (!value.Contains(":"))
+                {
+                    throw new ArgumentException("needs a port number");
+                }
+                string[] sp = value.Split(':');
+                serverHost = sp[0];
+                serverPort = short.Parse(sp[1]);
+            }
+        }
+        public static String serverHost = "cogbotserver";
+        public static int serverPort = 8123;
+
         public static string StructToString(object t)
         {
             int before = tl_StructToStringDepth;

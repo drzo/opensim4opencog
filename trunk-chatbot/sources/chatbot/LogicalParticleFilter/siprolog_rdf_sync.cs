@@ -310,8 +310,8 @@ namespace LogicalParticleFilter1
                     {
                         //new[] {"http://budapest.rkbexplorer.com/sparql"},
                         new[] {"dbpedia", "http://dbpedia.org/sparql"},
-                        //   new[] {"josekiBooks", "http://cogbotserver:2020"},
-                        //  new[] {"cogPoint", "http://cogbotserver:8181"},
+                        //   new[] {"josekiBooks", "http://cogserver:2020"},
+                        // new[] {"cogPoint", "http://cogserver:8181"},
                         //new[] {"hebis", "http://lod.hebis.de/sparql"},
                     })
             {

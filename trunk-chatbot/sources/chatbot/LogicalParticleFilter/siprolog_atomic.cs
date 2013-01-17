@@ -34,16 +34,6 @@ namespace LogicalParticleFilter1
         public class Atom : Part, IAtomic
         {
 
-            public static bool operator ==(Atom a, Atom b)
-            {
-                return NodeEquality(a.AsRDFNode(), b.AsRDFNode());
-            }
-
-            public static bool operator !=(Atom a, Atom b)
-            {
-                return !(a == b);
-            }
-
             public static bool NodeEquality(INode x, INode y)
             {
                 return x.Equals(y);
@@ -62,7 +52,9 @@ namespace LogicalParticleFilter1
                 {
                     if (_objRef == null)
                     {
-                        _objRef = MakeNodeInside(prefixNs, localValue, quoted);
+                        var mn = MakeNodeInside(prefixNs, localValue, quoted);
+                        if (RdfDeveloperSanityChecks > 2) return mn;
+                        _objRef = mn;
                     }
                     return _objRef;
                 }
@@ -375,9 +367,9 @@ namespace LogicalParticleFilter1
             {
                 if (RdfDeveloperSanityChecks <= 1) return true;
                 var name = this.name;
-
-                if (ReferenceEquals(null, PrologEmptyString)) return true;
-                if (ReferenceEquals(this, PrologEmptyString)) return true;
+                FirstUse<Atom> pes = PrologEmptyString;
+                if (!pes.HasValue) return true;
+                if (ReferenceEquals(this, pes.Value)) return true;
                 if (prefixNs == "+")
                 {
                     Warn("OLD +ish Atom: " + IsReadable);
@@ -637,7 +629,7 @@ namespace LogicalParticleFilter1
                     if (!IsUri) return false;
                     if (prefixNs == ":") return true;
                     string ns = NamespaceOLD;
-                    if (ns == RoboKindPrefix || ns == "rk" || ns == "siprolog" || ns.StartsWith(RoboKindURI))
+                    if (GetBasePrefix(ns) == ":")
                     {
                         return true;
                     }
@@ -788,6 +780,7 @@ namespace LogicalParticleFilter1
             public static Atom MakeString(string s)
             {
                 // dmiles: for now less stack than MakeLiteral
+                if (s == "") return PrologEmptyString;
                 return MakeNewAtom("", s, SYNTAX_DoubleQuotes);
                 // return MakeLiteral(s, "", "");
             }
@@ -821,26 +814,13 @@ namespace LogicalParticleFilter1
                 char c0 = s[0];
                 int sl = s.Length;
                 if (sl == 1) return FromName(s);
-
-                string quoting = MustGuessQuotes;
-                if (s == "[]" || s == FUNCTOR_NIL) return PrologNIL;
-                //if (s == "." || s == FUNCTOR_CONS) s = "'robokind:cons'";
-                INode makeNode = null;
-                bool isNumberMaybe = c0 == '+' || c0 == '-' || char.IsDigit(c0);
-                if (isNumberMaybe)
-                {
-                    makeNode = GraphWithDef.CExtracted(rdfDefinations, s);
-                    if (makeNode != null)
-                    {
-                        return MakeNodeAtom(makeNode);
-                    }
-                    quoting = SYNTAX_NoQuotes;
-                }
-                return FromSourceReader(s, quoting);
+                return FromSourceReader(s, MustGuessQuotes);
             }
 
-            public static Atom PrologEmptyString = MakeString("");
-            static public Atom PrologNIL = MakeNewAtom(NamespaceMapper.RDF, "nil", SYNTAX_UriQuotes);
+            public static FirstUse<Atom> PrologEmptyString = (Func<Atom>)(() => MakeNewAtom("", "", SYNTAX_DoubleQuotes));
+
+            public static FirstUse<Atom> PrologNIL =
+                (Func<Atom>) (() => MakeNewAtom(NamespaceMapper.RDF, "nil", SYNTAX_UriQuotes));
 
             private static void Requote(ref string s, ref string quoting)
             {
@@ -892,48 +872,58 @@ namespace LogicalParticleFilter1
             }
             public static Atom FromSource0(string s, string quoting)
             {
+                if (s == null)
+                {
+                    Warn("FromSource read NULL");
+                    return null;
+                }
+                int slen = s.Length;
+
                 if (quoting == MustGuessQuotes)
                 {
                     Requote(ref s, ref quoting);
                 }
-                if (s == "[]" || s == FUNCTOR_NIL)
+                if (quoting == SYNTAX_DoubleQuotes)
+                {
+                    if (slen == 0) return PrologEmptyString;
+                    return MakeString(s);
+                }
+                bool slengt1 = slen > 1;
+                if (slengt1 && (s == "[]" || s == FUNCTOR_NIL))
                 {
                     return PrologNIL;
                 }
-                if (s == null)
-                {
-                    Warn("FromSource read NULL");
-                    return null;
-                }
-
-                bool uriIsh = s.Contains(":") || s.Contains(":/") || s.Contains("#");
+                bool uriIsh = slengt1 && (s.Contains(":") || s.Contains(":/") || s.Contains("#"));
                 NodeType nodeType = uriIsh ? NodeType.Uri : NodeType.Blank;
-                if (quoting == MustGuessQuotes)
+                if (uriIsh)
                 {
-                    if (uriIsh)
+                    if (quoting == MustGuessQuotes)
                     {
                         quoting = SYNTAX_UriQuotes;
                     }
                 }
-                if (s == null)
+                else if (quoting == MustGuessQuotes || quoting == SYNTAX_NoQuotes)
                 {
-                    Warn("FromSource read NULL");
-                    return null;
-                }
-                if (s == "")
-                {
-                    if (quoting == SYNTAX_DoubleQuotes)
+                    //if (s == "." || s == FUNCTOR_CONS) s = "'robokind:cons'";
+                    char c0 = s[0];
+                    bool isNumberMaybe = (slengt1 && (c0 == '+' || c0 == '-')) || char.IsDigit(c0);
+                    if (isNumberMaybe)
                     {
-                        return PrologEmptyString;
+                        bool decm = slengt1 && s.Contains(".");
+                        long intv;
+                        if (!decm && long.TryParse(s, out intv))
+                        {
+                            return MakeNodeAtom(new LongNode(rdfDefinations, intv));
+                        }
+                        double dbl;
+                        if (decm && double.TryParse(s, out dbl))
+                        {
+                            return MakeNodeAtom(new DoubleNode(rdfDefinations, dbl));
+                        }
+                        quoting = SYNTAX_NoQuotes;
                     }
-                    Warn("FromSource read EOF");
-                    return null;
                 }
-                if (quoting == SYNTAX_DoubleQuotes)
-                {
-                    return MakeString(s);
-                }
-                if (quoting == null && s[0] == '$')
+                if (quoting == MustGuessQuotes && s[0] == '$')
                 {
                     nodeType = NodeType.Uri;
                     quoting = SYNTAX_AtomQuotes;
@@ -1033,7 +1023,11 @@ namespace LogicalParticleFilter1
                 {
                     Warn("bad prefix! " + atomKey);
                 }
-                if (prefix != ":" && prefix.EndsWith(":"))
+                if (prefix == ":")
+                {
+
+                }
+                else if (prefix.EndsWith(":"))
                 {
                     if (prefix.Length < 3)
                     {
@@ -1042,7 +1036,13 @@ namespace LogicalParticleFilter1
                     prefix = prefix.TrimEnd(':');
                     atomKey = MakeAtomKey(prefix, p, quoting);
                 }
-
+                if (!prefix.EndsWith("#") &&
+                    (prefix.Contains("query")
+                    || prefix.Contains("sparql")
+                    || prefix.Contains("#")))
+                {
+                    Warn("are we using the base? " + prefix);
+                }
                 Atom atom = null;
                 lock (AtomTable)
                 {
@@ -1055,8 +1055,20 @@ namespace LogicalParticleFilter1
 
                 return atom;
             }
-
-            public static string MakeAtomKey(string prefix, string s, string quoting0)
+            private static string GetBasePrefix(string p0)
+            {
+                if (string.IsNullOrEmpty(p0)) return p0;
+                const string localP = ":";
+                if (p0 == ":" || p0 == localP || p0 == RoboKindPrefix || p0 == "rk" || p0 == "siprolog") 
+                    return localP;
+                if (p0 == RoboKindURI) return localP;
+                if (p0.StartsWith(RoboKindURI) || p0.StartsWith(RoboKindMtURI))
+                {
+                    return localP;
+                }
+                return p0;
+            }
+            private static string GetBaseQuoting(string quoting0)
             {
                 string quoting;
                 switch (quoting0)
@@ -1072,13 +1084,39 @@ namespace LogicalParticleFilter1
                         quoting = SYNTAX_NoQuotes;
                         break;
                     default:
+                        quoting = MustGuessQuotes;
+                        break;
+                }
+                return quoting;
+            }
+            public static string MakeAtomKey(string prefix, string s, string quoting0)
+            {
+                //string prefix = GetBasePrefix(prefix0);
+                string quoting = GetBaseQuoting(quoting0);
+                if (quoting == MustGuessQuotes)
+                {
+                    {
                         throw ErrorBadOp(s + " " + quoting0);
+                    }
                 }
                 return "" + prefix + "^" + s + "^" + quoting + "^";
             }
-
-
             public static INode MakeNodeInside(string prefix, string s, string quoting)
+            {
+                INode makeNodeInside = MakeNodeInside_0(prefix, s, quoting);
+                if (RdfDeveloperSanityChecks < 2) return makeNodeInside;
+                string p0, s0, q0;
+                if (!ToRoundTripConstructor(makeNodeInside, out p0, out s0, out q0))
+                {
+                    Warn("No Round Trip Constructor: " + makeNodeInside);
+                }
+                if (GetBasePrefix(p0) != GetBasePrefix(prefix) || s != s0 || GetBaseQuoting(quoting) != GetBaseQuoting(q0))
+                {
+                    Warn("Broken Round Trip Constructor: " + makeNodeInside);
+                }
+                return makeNodeInside;
+            }
+            public static INode MakeNodeInside_0(string prefix, string s, string quoting)
             {
                 switch (quoting)
                 {
@@ -1163,15 +1201,7 @@ namespace LogicalParticleFilter1
 
             public bool Unify(IAtomic atomic)
             {
-                if (ReferenceEquals(null, atomic))
-                {
-                    return false;
-                }
-                if (Functor0.Equals(atomic.Functor0))
-                {
-                    return true;
-                }
-                return false;
+                return SameAs(atomic, false);
             }
 
             public override double AsDouble()
@@ -1213,20 +1243,27 @@ namespace LogicalParticleFilter1
             ///                 </exception><filterpriority>2</filterpriority>
             public override bool Equals(Part obj)
             {
-                return Equals(obj as IAtomic);
+                return SameAs(obj as IAtomic, true);
             }
-            public bool Equals(IAtomic other)
+            public bool SameAs(IAtomic other0, bool identityMatch)
             {
+                Atom other = other0 as Atom;
                 if (ReferenceEquals(null, other)) return false;
                 if (ReferenceEquals(this, other)) return true;
-                if (this.name != ((Atom)other).name)
+                if (this.localValue != other.localValue)
                 {
                     return false;
                 }
                 if (this.prefixNs != ((Atom)other).prefixNs)
                 {
                     Warn("Non matching prefixes {0}!={1}", this.prefixNs, ((Atom)other).prefixNs);
+                    
+                    if (!identityMatch) return true;
                     return false;
+                }
+                if (identityMatch)
+                {
+                    if (this.quotedType != other.quotedType) return false;
                 }
                 if (IsNode && other.IsNode)
                 {
@@ -1241,6 +1278,10 @@ namespace LogicalParticleFilter1
                 return Equals(other.Functor0, Functor0);
             }
 
+            protected string quotedType
+            {
+                get { return GetBaseQuoting(quoted); }
+            }
 
             public override int GetPlHashCode()
             {

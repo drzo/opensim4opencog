@@ -411,7 +411,22 @@ namespace LogicalParticleFilter1
                     return this;
                 }
             }
-
+            public Part a1
+            {
+                get
+                {
+                    if (Arity < 1) return null;
+                    return tlist[0];
+                }
+            }
+            public Part a2
+            {
+                get
+                {
+                    if (Arity < 2) return null;
+                    return tlist[1];
+                }
+            }
             //public PartList(string head) { name = head; }
             public PartListImpl(params Part[] lS)
             {
@@ -865,6 +880,15 @@ namespace LogicalParticleFilter1
             }
 
             #endregion
+
+            public Part a1
+            {
+                get { return ArgList.a1; }
+            }
+            public Part a2
+            {
+                get { return ArgList.a2; }
+            }
         }
 
         public static bool IsVarName(string name)

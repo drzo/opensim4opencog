@@ -152,7 +152,7 @@ namespace LogicalParticleFilter1
 
                 if (arity < 2)
                 {
-                    if (arity == 1 && IsLitteral(thisTerm.ArgList[0], rules))
+                    if (arity == 1 && !IsLitteral(thisTerm.ArgList[0], rules))
                     {
                         return false;
                     }
@@ -376,11 +376,9 @@ namespace LogicalParticleFilter1
                 }
                 if (head.fname == "rdfinfo")
                 {
-                    var pl = SIProlog.CurrentProlog;
                     foreach (var arg in head.ArgList)
                     {
-
-                        pl.appendKB(new RuleList() { new Rule((Term)arg) }, pl.FindOrCreateKB(rdfDefMT));
+                        rdfDefSync.AddRules(new RuleList() {new Rule((Term) arg)}, false);
                     }
                     return;
                 }
@@ -764,7 +762,7 @@ namespace LogicalParticleFilter1
             /// <filterpriority>2</filterpriority>
             public override string ToString()
             {
-                return threadLocal.StructToString(this);
+                return GlobalSharedSettings.StructToString(this);
             }
             public string AToString
             {
@@ -865,7 +863,7 @@ namespace LogicalParticleFilter1
             /// <filterpriority>2</filterpriority>
             public override string ToString()
             {
-                return threadLocal.StructToString(this);
+                return GlobalSharedSettings.StructToString(this);
             }
             public string AToString
             {

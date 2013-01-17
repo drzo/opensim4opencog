@@ -25,24 +25,30 @@ namespace AltAIMLbot
         
         [ThreadStatic]
         public static string tl_serverRoot;
-        public static string GlobalServerRoot = null;
+        public static string GlobalServerHostWithPort
+        {
+            get
+            {
+                return GlobalSharedSettings.CogbotServerWithPort;
+            }
+            set
+            {
+                GlobalSharedSettings.CogbotServerWithPort = value;
+            }
+        }
         public static string serverRoot
         {
             get
             {
                 if (tl_serverRoot != null) return tl_serverRoot;
-                if (GlobalServerRoot != null)
-                {
-                    return GlobalServerRoot;
-                }
-                return "http://CogbotServer:" + serverPort + "/";
+                return "http://" + GlobalServerHostWithPort + "/";
             }
-            set { GlobalServerRoot = value; }
+            set { GlobalServerHostWithPort = value; }
         }
 
         public static string GetServerRoot(string hostSuggest)
         {
-            string sr = GlobalServerRoot;
+            string sr = GlobalServerHostWithPort;
             sr = sr.Replace("127.0.0.1:", "locahost:");
             sr = sr.Replace("+:", "locahost:");
             sr = sr.Replace("*:", "locahost:");
@@ -52,7 +58,17 @@ namespace AltAIMLbot
             sr = sr.Replace(s, hostSuggest);
             return sr;
         }
-        public static int serverPort = 8123;
+        public static int serverPort
+        {
+            get
+            {
+                return GlobalSharedSettings.serverPort;
+            }
+            set
+            {
+                GlobalSharedSettings.serverPort = value;
+            }
+        }
         public static string kpfile = @".\wikilink\phraseScore";
         public static string wsfile = @".\wikilink\count.phrase.sense.txt";
         public static string bslfile = @".\wikilink\behavior.stoplist.txt";
@@ -991,7 +1007,7 @@ namespace AltAIMLbot
 
     public class RemotePoster
     {
-        public string remoteURL="http://localhost:8123/siprolog/";
+        public string remoteURL = "http://" + WebServitor.GlobalServerHostWithPort + "/siprolog/";
 
         public RemotePoster(string targetURL)
         {

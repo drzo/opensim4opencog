@@ -56,7 +56,7 @@ namespace LogicalParticleFilter1
             }
         }
         public const string TripleName = "triple";
-        private PNode rdfDefSync;
+        internal static PNode rdfDefSync;
         public CIDictionary<string, PNode> GraphForMT = new CIDictionary<string, PNode>(new KeyCase(NormalizeKBName));
 
         public static string NormalizeKBName(object arg)
@@ -75,8 +75,8 @@ namespace LogicalParticleFilter1
             return NormalizeKBName(kb1) == NormalizeKBName(kb2);
         }
 
-        static public string RoboKindURI = "http://cogserver:8123/onto/robokind#";
-        public static string RoboKindMtURI = "http://cogserver:8123/onto/rkmt/";// "http://cogserver:8123/mt/";
+        public static string RoboKindURI = "http://" + CogbotServerWithPort + "/onto/robokind#";
+        public static string RoboKindMtURI = "http://" + CogbotServerWithPort + "/onto/rkmt/";
         public static string RoboKindPrefix = "robokind";
         public static string RoboKindPrefixPrepend = RoboKindPrefix + ":";
         private static readonly CIDictionary<string, PredicateProperty> SharedGlobalPredDefs = new CIDictionary<string, PredicateProperty>(KeyCase.Default);
@@ -101,7 +101,7 @@ namespace LogicalParticleFilter1
             }
             var uriAgainIs = UriFactory.Create(RoboKindURI);
             rdfDefinations.BaseUri = uriAgainIs;
-            LoadGraphPrefixes(rdfDefinations);
+            lock (rdfDefNS) LoadGraphPrefixes(rdfDefNS);
             rdfDefinations.BaseUri = uriAgainIs;
             rdfDefSync =
                 rdfDefSync ??
@@ -119,15 +119,19 @@ namespace LogicalParticleFilter1
             lock (graph)
             {
                 INamespaceMapper nm = graph.NamespaceMap;
-                if (!nm.HasNamespace(RoboKindPrefix))
-                    nm.Import(rdfDefNS);
-                EnsureBaseURIMapped(graph);
+                lock (nm) if (!nm.HasNamespace(RoboKindPrefix)) 
+                    lock (rdfDefNS) nm.Import(rdfDefNS);
+                lock (nm) EnsureBaseURIMapped(graph, nm);
             }
         }
 
-        private static void EnsureBaseURIMapped(IGraph graph)
-        {
-            INamespaceMapper nm = graph.NamespaceMap;
+        /// <summary>
+        /// Must lock (nm) and probably graph or it may throw a InvalidOperationException
+        /// </summary>
+        /// <param name="graph"></param>
+        /// <param name="nm"></param>
+        private static void EnsureBaseURIMapped(IGraph graph, INamespaceMapper nm)
+        {      
             bool hsBlank = nm.HasNamespace("");
             var BaseUri = graph.BaseUri;
             if (!hsBlank)
@@ -163,9 +167,8 @@ namespace LogicalParticleFilter1
             EnsureReaderNamespaces(graph);
         }
 
-        public static void LoadGraphPrefixes(IGraph graph)
+        public static void LoadGraphPrefixes(INamespaceMapper nm)
         {
-            var nm = graph.NamespaceMap;
             if (nm.HasNamespace(RoboKindPrefix))
             {
                 return;
@@ -198,7 +201,7 @@ namespace LogicalParticleFilter1
 @prefix grddl: <http://www.w3.org/2003/g/data-view#> .
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix siprolog: <http://cogbotserver:8123/siprolog#> .
+@prefix siprolog: <http://" + CogbotServerWithPort + @"/siprolog#> .
 @prefix robokind: <" +
                 RoboKindURI + @"> .
 ";
@@ -322,7 +325,7 @@ yago	http://dbpedia.org/class/yago/
                 if (uri == "#")
                 {
                     continue;
-                    uri = graph.BaseUri.AbsoluteUri;
+                  //  uri = graph.BaseUri.AbsoluteUri;
                 }
                 if (string.IsNullOrEmpty(prefix))
                 {

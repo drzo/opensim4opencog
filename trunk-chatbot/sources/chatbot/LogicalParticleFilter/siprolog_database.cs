@@ -305,7 +305,7 @@ namespace LogicalParticleFilter1
             /// <filterpriority>2</filterpriority>
             public override string ToString()
             {
-                return threadLocal.StructToString(this);
+                return GlobalSharedSettings.StructToString(this);
             }
             public string AToString
             {

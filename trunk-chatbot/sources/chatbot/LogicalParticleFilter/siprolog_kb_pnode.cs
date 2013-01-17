@@ -58,7 +58,7 @@ namespace LogicalParticleFilter1
                 Graph newGraph = NewGraph(mt);
                 Uri nsURI = UriFactory.Create(UriOfMt(mt));;
                 newGraph.BaseUri = nsURI;
-                rdfDefNS.AddNamespace(mt, nsURI);
+                lock (rdfDefNS) rdfDefNS.AddNamespace(mt, nsURI);
                 EnsureReaderNamespaces(newGraph);
                 graph = new PNode(mt, this, newGraph);
             }
@@ -587,14 +587,15 @@ namespace LogicalParticleFilter1
             public void IncludeRDFUri(string filename)
             {
                 Graph g = new Graph();
-                g.NamespaceMap.Import(rdfGraph.NamespaceMap);
+                var nm = rdfGraph.NamespaceMap;
+                lock (nm) g.NamespaceMap.Import(nm);
                 g.BaseUri = rdfGraph.BaseUri;
                 Uri loadFrom = new Uri(new Uri(filename).AbsoluteUri);
                 g.LoadFromUri(loadFrom);
                 int loadCount = g.Triples.Count;
                 ConsoleWriteLine("Loading " + loadCount + " from " + loadFrom);
                 int oldCount = rdfGraph.Triples.Count;
-                rdfGraph.Merge(g, true);
+                lock (rdfGraph) rdfGraph.Merge(g, true);
                 int addedCount = rdfGraph.Triples.Count - oldCount;
                 ConsoleWriteLine("Merge add " + addedCount + " new to " + rdfGraph);
             }
@@ -614,6 +615,44 @@ namespace LogicalParticleFilter1
                 if (before != after)
                 {
                     SIProlog.Warn("Manipulated rule: " + before + "->" + after);
+                }
+            }
+
+            public void AddRules(RuleList ruleSet, bool clearFirst)
+            {
+                var focus = this;
+                if (clearFirst) focus.Clear();
+
+                if (focus.IsDataFrom(ContentBackingStore.Prolog))
+                {
+                    if (clearFirst)
+                    {
+                        focus.pdb.rules = ruleSet;
+                        focus.SyncFromNow = ContentBackingStore.Prolog;
+                        return;
+                    }
+                    focus.pdb.index.Clear();
+                    lock (focus.pdb.rules)
+                    {
+                        foreach (Rule r in ruleSet)
+                        {
+                            focus.pdb.rules.Add(r);
+                        }
+                    }
+                    focus.SyncFromNow = ContentBackingStore.Prolog;
+                    return;
+                }
+                var rdfGraphWithDefs = focus.RdfStore;
+                foreach (Rule rule in ruleSet)
+                {
+                    try
+                    {
+                        rdfGraphWithDefs.AddRuleToRDF(rule);
+                    }
+                    catch (Exception e)
+                    {
+                        Warn(e);
+                    }
                 }
             }
         }

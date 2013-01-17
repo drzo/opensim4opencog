@@ -508,19 +508,19 @@ namespace LogicalParticleFilter1
                     return uriref;
                 }
                 //uriref = HttpUtility.UrlDecode(uriref);
-                if (string.IsNullOrEmpty(baseUri))
+                if (string.IsNullOrEmpty(baseUri) || baseUri == ":")
                 {
                     baseUri = "";
-                    if (!uriref.Contains(":")) uriref = ":" + uriref;
-                    return HttpUtility.UrlEncode(uriref);
+                    if (uriref.StartsWith(":")) uriref = uriref.Substring(1);
+                    return string.Format(":{0}", HttpUtility.UrlEncode(uriref));
                 } else
                 {
-                    if (baseUri.Contains(":"))
+                    if (baseUri.Contains(":") || baseUri.EndsWith("#"))
                     {
-                        return baseUri + "" + HttpUtility.UrlEncode(uriref);
+                        return string.Format("{0}{1}", baseUri, HttpUtility.UrlEncode(uriref));
                       //  baseUrireturn  Tools.ResolveQName(uriref, baseUri);
                     }
-                    return baseUri + ":" + HttpUtility.UrlEncode(uriref);
+                    return string.Format("{0}:{1}", baseUri, HttpUtility.UrlEncode(uriref));
                 }
             }
 
@@ -574,7 +574,6 @@ namespace LogicalParticleFilter1
             }
             static public INode PartToRdf(Part part, RdfRules triples)
             {
-                var definations = triples.def;
                 if (part is Atom)
                 {
                     Atom atom = ((Atom)part);
@@ -587,11 +586,13 @@ namespace LogicalParticleFilter1
                 }
                 if (part is Variable)
                 {
+                    var definations = triples.def;
                     return definations.CreateVariableNode(((Variable)part).vname);
                 }
                 Part car, cdr;
                 if (GetCons(part, out car, out cdr))
                 {
+                    var definations = triples.def;
                     var rdf = definations.CreateVariableNode("CONS" + CONSP);
                     triples.AddRequirement(rdf, "rdf:first", car);
                     triples.AddRequirement(rdf, "rdf:rest", cdr);
@@ -713,17 +714,17 @@ namespace LogicalParticleFilter1
                 atom = null;
                 uri = null;
                 prefix = null;
-                foreach (var pfx in mapper.Prefixes)
+                foreach (var pfx in LockInfo.WithLock<IEnumerable<string>>(mapper, mapper.Prefixes.ToArray))
                 {
                     prefix = pfx;
-                    var uril = mapper.GetNamespaceUri(prefix);
+                    var uril = LockInfo.WithLock(mapper, () => mapper.GetNamespaceUri(pfx));
                     uri = uril.ToString();
                     int len = uri.Length;
                     if (len > 0 && s.StartsWith(uri))
                     {
                         if (string.IsNullOrEmpty(prefix))
                         {
-                            prefix = mapper.GetPrefix(uril);
+                            prefix = LockInfo.WithLock(mapper, () => mapper.GetPrefix(uril));
                         }
                         atom = s.Substring(len);
                         return true;

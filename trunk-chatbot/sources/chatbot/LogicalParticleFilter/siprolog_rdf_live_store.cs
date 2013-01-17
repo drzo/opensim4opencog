@@ -49,6 +49,8 @@ namespace LogicalParticleFilter1
 
         public void RunREPL()
         {
+            bool queryMode = false;
+            LocalIOSettings threadLocal = GlobalSharedSettings.LocalSettings;
             while (true)
             {
                 ConsoleWriteLine("-----------------------------------------------------------------");
@@ -66,7 +68,32 @@ namespace LogicalParticleFilter1
                 {
                     Environment.Exit(Environment.ExitCode);
                 }
-                askQuery(input, threadLocal.curKB);
+                do
+                {
+                    if (input == "") break;
+                    if (input.StartsWith("?-"))
+                    {
+                        input = input.Substring(2);
+                        queryMode = true;
+                        continue;
+                    }
+                    if (input.StartsWith(":-"))
+                    {
+                        input = input.Substring(2);
+                        queryMode = false;
+                        continue;
+                    }
+
+                    if (queryMode)
+                    {
+                        askQuery(input, threadLocal.curKB);
+                    }
+                    else
+                    {
+                        appendKB(input, threadLocal.curKB);
+                    }
+                    break;
+                } while (true);
             }
         }
 

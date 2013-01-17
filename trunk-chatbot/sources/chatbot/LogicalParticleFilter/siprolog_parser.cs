@@ -36,6 +36,10 @@ namespace LogicalParticleFilter1
     {
         Dictionary<string, RuleList> ParseKEText(string startMT, string ruleSet)
         {
+            return ParseKEText(startMT, ruleSet, false);
+        }
+        Dictionary<string, RuleList> ParseKEText(string startMT, string ruleSet, bool immeadiate)
+        {
             // if startMT is null use the global variable
             string parseKB = startMT ?? threadLocal.curKB;
             // code below uses parseKB
@@ -677,12 +681,16 @@ namespace LogicalParticleFilter1
             Term h = p as Term;
             if (h == null)
             {
-                if (!(p is Atom))
+                if (p is Atom)
                 {
-                    Warn("Not an Atom: " + p);
-                    // return null;
+                    return  new Term(p.fname,false, new PartListImpl());
                 }
-                h = new Term(p.fname, p is Variable, new PartListImpl());
+                if (p is Variable)
+                {
+                    return new Term(p.vname, true, new PartListImpl());
+                }
+                Warn("Cant make term from: " + p);
+                // return null;
             }
             return h;
         }

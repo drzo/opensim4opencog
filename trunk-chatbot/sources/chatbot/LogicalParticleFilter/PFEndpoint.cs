@@ -39,13 +39,17 @@ namespace LogicalParticleFilter1
         {
             get
             {
-                return "http://CogbotServer:" + serverPort + "/";
+                return "http://" + GlobalSharedSettings.serverHost + ":" + serverPort + "/";
             }
         }
 
         [ThreadStatic] public SparqlServerConfiguration _config;
         public Dictionary<string, SparqlServerConfiguration> Configs = new Dictionary<string, SparqlServerConfiguration>();
 
+        public override string ToString()
+        {
+            return base.ToString() + "" + serverRoot;
+        }
 
         public  bool IsMicrosoftCLR()
         {
