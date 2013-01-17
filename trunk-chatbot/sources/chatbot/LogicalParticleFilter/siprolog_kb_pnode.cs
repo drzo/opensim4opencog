@@ -338,6 +338,10 @@ namespace LogicalParticleFilter1
             {
                 return string.Format("<a href='{1}siprolog/?mt={0}'>{0}</a>&nbsp;({2})", id, serverRoot, DebugInfo.Replace(" ", "&nbsp;"));
             }
+            internal string ToOptionLink(string serverRoot)
+            {
+                return string.Format("<option value='{1}siprolog/?mt={0}'>{0}</option>", id, serverRoot, DebugInfo.Replace(" ", "&nbsp;"));
+            }
 
             public bool IsDataFrom(ContentBackingStore backingStore)
             {
@@ -372,6 +376,11 @@ namespace LogicalParticleFilter1
 
             public void pushRdfGraphToPrologKB(bool clearPrologKB)
             {
+                if (DLRConsole.IsOnMonoUnix)
+                {
+                    return; // KHC: in realbot no rdf to sync for now
+                }
+
                 if (IsOutOfSyncFor(ContentBackingStore.RdfMemory))
                 {
                     Warn("RdfMemory not ready for pushing " + this);
@@ -380,6 +389,11 @@ namespace LogicalParticleFilter1
             }
             public void pushPrologKBToRdfGraph(bool clearRDFMemory)
             {
+                if (DLRConsole.IsOnMonoUnix)
+                {
+                    return; // KHC: in realbot no rdf to sync for now
+                }
+
                 if (IsOutOfSyncFor(ContentBackingStore.Prolog))
                 {
                     Warn("Prolog not ready for pushing " + this);
@@ -890,6 +904,16 @@ namespace LogicalParticleFilter1
                     PrintToConsole(e.EndNode, indentation + 1);
                 }
             }
+            public void PrintToWriterSelectMts(TextWriter writer, string serverRoot)
+            {
+                writer.WriteLine("<select name=\"location\" id=\"location\" onchange=\"setIframeSource()\">");
+                foreach (PNode node in SortedTopLevelNodes)
+                {
+                    PrintToWriterOutEdgesOptions(node, 0, writer, serverRoot);
+
+                }
+                writer.WriteLine("</select>");
+            }
 
             public void PrintToWriterTreeMts(TextWriter writer, string serverRoot)
             {
@@ -898,6 +922,21 @@ namespace LogicalParticleFilter1
                 {
                     PrintToWriterOutEdges(node, 0, writer, serverRoot);
 
+                }
+                writer.WriteLine("</ul>");
+            }
+            public void PrintToWriterOutEdgesOptions(PNode node, int indentation, TextWriter writer, string serverRoot)
+            {
+                if (node == null) return;
+                //writer.Write("<p>");
+                //for (int i = 0; i < indentation; ++i) writer.Write(" ");
+                //ConsoleWriteLine(node.Id);
+                if (node == SIProlog.BaseKB && indentation > 1) return;
+                writer.WriteLine("<li>{0}</li>", node.ToLink(serverRoot));
+                writer.WriteLine("<ul>");
+                foreach (PEdge e in node.OutgoingEdges)
+                {
+                    if (indentation < 10) PrintToWriterOutEdges(e.EndNode, indentation + 1, writer, serverRoot);
                 }
                 writer.WriteLine("</ul>");
             }
@@ -917,6 +956,7 @@ namespace LogicalParticleFilter1
                 }
                 writer.WriteLine("</ul>");
             }
+
             public void PrintToWriterInEdges(TextWriter writer, string serverRoot)
             {
                 writer.WriteLine("<ul>");

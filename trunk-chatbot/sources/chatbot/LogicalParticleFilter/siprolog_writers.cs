@@ -37,6 +37,13 @@ namespace LogicalParticleFilter1
 
         public static void Warn(string format, params object[] args)
         {
+            if (DLRConsole.IsOnMonoUnix)
+            {
+                // KHC : temp mono linux patch
+                Console.WriteLine(format, args);
+                return;
+            }
+
             DLRConsole.DebugLevel = 6;
             string write = DLRConsole.SafeFormat(format, args);
             TextWriter WarnWriter = WebLinksWriter.WarnWriter;
@@ -87,7 +94,7 @@ function showtip(current,e,text)
       thetitle=text.split('<br>')
       if (thetitle.length > 1)
       {
-        thetitles=""
+        thetitles=""""
         for (i=0; i<thetitle.length-1; i++)
            thetitles += thetitle[i] + ""\r\n""
         current.title = thetitles
@@ -112,6 +119,15 @@ function hidetip()
     if (document.layers)
         document.tooltip.visibility=""hidden""
 }
+
+function setIframeSource() {
+	var theSelect = document.getElementById('location');
+	var theIframe = document.getElementById('myIframe');
+	var theUrl;
+	
+	theUrl = theSelect.options[theSelect.selectedIndex].value;
+	theIframe.src = theUrl;
+}
 </script>
 </head>
 ";
@@ -125,6 +141,7 @@ function hidetip()
         private void TOCmenu(TextWriter writer, string serverRoot)
         {
             writer.WriteLine("<a href='{0}siprolog/?q=list'>List Mts</a> ", serverRoot);
+            writer.WriteLine("<a href='{0}siprolog/?q=selector'>Browse Mts</a> ", serverRoot);
             writer.WriteLine("<a href='{0}siprolog/?q=preds'>List Preds</a> ", serverRoot);
             writer.WriteLine("<a href='{0}siprolog/?q=listing'>List All KB Rules</a> ", serverRoot);
             writer.WriteLine("<a href='{0}query'>Sparql Query</a>", PFEndpoint.serverRoot);
@@ -160,6 +177,40 @@ function hidetip()
                             KBGraph.PrintToWriterTreeMts(writer, serverRoot);
                             return;
                         }
+                        if (queryv.ToLower() == "selector")
+                        {
+                            writer.WriteLine("<table width='100%' style='height: 100%;' cellpadding='10' cellspacing='0' border='0'>");
+                            //header
+                            writer.WriteLine ("<tr>");
+                            writer.WriteLine ("<td colspan='2' style='height: 100px;' bgcolor='#777d6a'>");
+                            writer.WriteLine("<h2>Siprolog Mt Selector view</h2>");
+                            writer.WriteLine("</td/tr>");
+                            //left column
+                            writer.WriteLine("<tr>");
+                            writer.WriteLine("<td width='20%' valign='top' bgcolor='#999f8e'>");
+                            writer.WriteLine("<form id=\"form1\" name=\"form1\" method=\"post\" action=\"\"> <label> Select a Mt:");
+
+                            writer.WriteLine("<select name=\"location\" id=\"location\" onchange=\"setIframeSource()\"  size='32'>");
+                            foreach (PNode p in KBGraph.SortedTopLevelNodes)
+                            {
+                                writer.WriteLine(p.ToOptionLink(serverRoot) );
+                            }
+                            writer.WriteLine("</select>");
+                            writer.WriteLine("</label></form>");
+                            writer.WriteLine("</td>");
+                            writer.WriteLine("<td width='80%' valign='top' bgcolor='#d2d8c7'>");
+
+                            writer.WriteLine("<p>&nbsp;</p>");
+                            writer.WriteLine("<iframe id='myIframe' src='"+serverRoot+"siprolog/?mt=baseKB' width='100%' height='100%' frameborder='0' marginheight='0' marginwidth='0'></iframe>");
+                            writer.WriteLine("<p>&nbsp;</p>");
+                            writer.WriteLine("</td></tr></table>");
+
+                            //writer.WriteLine("<h2>Siprolog Mt Treed</h2>");
+                            //KBGraph.PrintToWriterTreeMts(writer, serverRoot);
+                            return;
+                        }
+
+
                         if (queryv.ToLower() == "preds")
                         {
                             writer.WriteLine("<h2>Siprolog Preds List</h2>");

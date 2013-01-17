@@ -355,13 +355,22 @@ namespace LogicalParticleFilter1
                 }
                 set
                 {
-                    if (Object.ReferenceEquals(_rules, value)) return;
-                    if (_rules.Count > 0)
-                    {
-                        _rules.Clear();
-                    }
-                    _rules = value;
-                    _rules.syncPDB = this;
+                        if ((value==null) && (_rules==null)) return;
+                        if (_rules !=null)
+                        {
+                            lock (_rules)
+                            {
+                                if (Object.ReferenceEquals(_rules, value)) return;
+                                if  (_rules.Count > 0)
+                                {
+                                    _rules.Clear();
+                                }
+                            }
+                        }
+                        _rules = value;
+                        _rules.syncPDB = this;
+
+
                 }
             }
 
