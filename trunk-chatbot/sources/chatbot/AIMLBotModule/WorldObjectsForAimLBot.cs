@@ -989,10 +989,10 @@ namespace AIMLBotModule
             string cmd = args[0].ToLower();
             if (cmd == "face")
             {
-                int heading = 0;
-                if (!int.TryParse(args[1], out heading)) // rotate help
+                float heading = 0;
+                if (!float.TryParse(args[1], out heading)) // rotate help
                     return; // " face [angle]";
-                double rad = 0.0174532925d * heading;
+                float rad = 0.0174532925f * heading;
                
 
                 // and the rotate command
@@ -1004,6 +1004,78 @@ namespace AIMLBotModule
                 //    return ; // " rotate [angle]";
                 //float angleTarget = (angle / DEG_TO_RAD);
                 float angleTarget = (float)rad;
+                float myTol = 0.0174532925f * 3f;
+                float headTol = 0.0174532925f * 20f;
+                int tries = 0;
+                int maxtries = 30;
+                int tickrate = 60;
+                float delta = (float)tickrate / 1000f;
+                while ((tries<maxtries)&&(Math.Abs(WorldSystem.TheSimAvatar.ZHeading - angleTarget)>myTol))
+                {
+                   
+                    tries++;
+                    float step = 1 - ((float)tries / (float)maxtries);
+                    float delta2 = delta * step;
+                    float headHeading = (float) WorldObjects.GetZHeading(client.Self.Movement.HeadRotation);
+                    float bodyDiff = Math.Abs(WorldSystem.TheSimAvatar.ZHeading - angleTarget);
+                    float headDiff = Math.Abs(headHeading - angleTarget);
+                    if (headDiff < headTol)
+                    {
+
+                        if (headHeading > angleTarget)
+                        {
+                            client.Self.Movement.TurnLeft = true;
+                            client.Self.Movement.HeadRotation = client.Self.Movement.HeadRotation * Quaternion.CreateFromAxisAngle(Vector3.UnitZ, delta2);
+                            
+                            client.Self.Movement.YawPos = true;
+                            client.Self.Movement.SendUpdate(true);
+                            Thread.Sleep(tickrate);
+                            client.Self.Movement.TurnLeft = false;
+                            client.Self.Movement.YawPos = false;
+                            client.Self.Movement.SendUpdate(true);
+                        }
+                        else
+                        {
+                            client.Self.Movement.TurnRight = true;
+                            client.Self.Movement.YawNeg = true;
+                            client.Self.Movement.HeadRotation = client.Self.Movement.HeadRotation * Quaternion.CreateFromAxisAngle(Vector3.UnitZ, -delta2);
+                            client.Self.Movement.SendUpdate(true);
+                            Thread.Sleep(tickrate);
+                            client.Self.Movement.TurnRight = false;
+                            client.Self.Movement.YawNeg = false;
+                            client.Self.Movement.SendUpdate(true);
+                        }
+                    }
+                    else
+                    {
+
+                        if (WorldSystem.TheSimAvatar.ZHeading > angleTarget)
+                        {
+                            client.Self.Movement.TurnLeft = true;
+                            client.Self.Movement.BodyRotation = client.Self.Movement.BodyRotation * Quaternion.CreateFromAxisAngle(Vector3.UnitZ, delta2);
+                            client.Self.Movement.HeadRotation = client.Self.Movement.BodyRotation;
+                            client.Self.Movement.YawPos = true;
+                            client.Self.Movement.SendUpdate(true);
+                            Thread.Sleep(tickrate);
+                            client.Self.Movement.TurnLeft = false;
+                            client.Self.Movement.YawPos = false;
+                            client.Self.Movement.SendUpdate(true);
+                        }
+                        else
+                        {
+                            client.Self.Movement.TurnRight = true;
+                            client.Self.Movement.YawNeg = true;
+                            client.Self.Movement.BodyRotation = client.Self.Movement.BodyRotation * Quaternion.CreateFromAxisAngle(Vector3.UnitZ, -delta2);
+                            client.Self.Movement.HeadRotation = client.Self.Movement.BodyRotation; 
+                            client.Self.Movement.SendUpdate(true);
+                            Thread.Sleep(tickrate);
+                            client.Self.Movement.TurnRight = false;
+                            client.Self.Movement.YawNeg = false;
+                            client.Self.Movement.SendUpdate(true);
+                        }
+                    }
+                }
+
 
                 if (WorldSystem.TheSimAvatar.ZHeading != angleTarget)
                 {
@@ -1013,10 +1085,11 @@ namespace AIMLBotModule
                     cur.Y -= (float)Math.Sin(newAngle) * 20;
                     client.Self.Movement.TurnToward(cur);
                     client.Self.Movement.Camera.LookAt(client.Self.SimPosition, cur);
+
                 }
                 client.Self.Movement.UpdateFromHeading(rad, true);
                 client.Self.Movement.SendUpdate(true);
-
+                
                 //string.Format("Turned To {0}", DEG_TO_RAD * newAngle)
                 return;
 

@@ -441,6 +441,7 @@ namespace RTParser
                     foreach (string key in servitor.curUser.Predicates.Keys)
                     {
                         string v = servitor.curUser.Predicates.grabSetting(key);
+                        if (v == null) v = "";
                         activeUser.Predicates.updateSetting(key, v);
                         /// Console.WriteLine("ALT->RTP Predicates[{0}] = {1}", key, v);
                     }
