@@ -120,13 +120,25 @@ function hidetip()
         document.tooltip.visibility=""hidden""
 }
 
-function setIframeSource() {
+function setIframeSource() 
+{
 	var theSelect = document.getElementById('location');
 	var theIframe = document.getElementById('myIframe');
 	var theUrl;
 	
 	theUrl = theSelect.options[theSelect.selectedIndex].value;
 	theIframe.src = theUrl;
+}
+function validateBrowserForm() 
+{
+	var theAction = document.getElementById('action');
+	var theQuery = document.getElementById('query');
+	var theMt = document.getElementById('mt');
+	var theIframe = document.getElementById('myIframe');
+	var theUrl;
+	theUrl = ""/siprolog/?a=""+theAction.value+""&mt=""+theMt.value+""&q=""+theQuery.value
+	theIframe.src = theUrl;
+    return false;
 }
 </script>
 </head>
@@ -203,8 +215,13 @@ function setIframeSource() {
                             writer.WriteLine("<p>&nbsp;</p>");
                             writer.WriteLine("<iframe id='myIframe' src='"+serverRoot+"siprolog/?mt=baseKB' width='100%' height='100%' frameborder='0' marginheight='0' marginwidth='0'></iframe>");
                             writer.WriteLine("<p>&nbsp;</p>");
-                            writer.WriteLine("</td></tr></table>");
-
+                            writer.WriteLine("</td></tr>");
+                            // Footer section
+                            writer.WriteLine("<tr>");
+                            writer.WriteLine("<td colspan='2' align='center' bgcolor='#777d6a'>");
+                            browserFooter(writer, "", serverRoot);
+                            writer.WriteLine("</td></tr>");
+                            writer.WriteLine("</table>");
                             //writer.WriteLine("<h2>Siprolog Mt Treed</h2>");
                             //KBGraph.PrintToWriterTreeMts(writer, serverRoot);
                             return;
@@ -626,7 +643,34 @@ function setIframeSource() {
             writer.WriteLine(" </FORM>");
 
         }
+        public void browserFooter(TextWriter writer, string mt, string serverRoot)
+        {
+            writer.WriteLine("<hr/>");
 
+            writer.WriteLine(" <form id='bfoot1' method='post' ACTION='' onsubmit='return validateBrowserForm()' >", mt, serverRoot);
+            
+            writer.WriteLine(" Query: <INPUT TYPE='text' name='q' id='query'/>");
+            writer.WriteLine(" <label> Select a Mt:");
+            writer.WriteLine("<select name=\"mt\" id=\"mt\" >");
+            foreach (PNode p in KBGraph.SortedTopLevelNodes)
+            {
+                writer.WriteLine("<option value='{0}'>{0}</option>", p.id);
+            }
+            writer.WriteLine("</select>");
+            writer.WriteLine("</label>");
+
+            writer.WriteLine(" <label> Select action:");
+            writer.WriteLine("<select name=\"a\" id=\"action\" >");
+                writer.WriteLine("<option value='query'>query</option>");
+                writer.WriteLine("<option value='autoquery'>autoquery</option>");
+                writer.WriteLine("<option value='append'>append</option>");
+                writer.WriteLine("<option value='insert'>overwrite</option>");
+            writer.WriteLine("</select>");
+            writer.WriteLine("</label>");
+            writer.WriteLine(" <INPUT TYPE='submit' VALUE='submit'/>");
+            writer.WriteLine(" </FORM>");
+
+        }
         private void MtSelector(TextWriter writer, string mt)
         {
             if (string.IsNullOrEmpty(mt))
