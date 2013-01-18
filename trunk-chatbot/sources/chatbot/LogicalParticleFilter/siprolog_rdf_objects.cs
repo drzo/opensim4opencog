@@ -462,6 +462,7 @@ namespace LogicalParticleFilter1
                             {
                                 return CC(prefix, localAname, NodeType.Uri);
                             }
+                            return CC(prefix, localAname, NodeType.Uri);
                         }
                     }
                 }
@@ -492,8 +493,10 @@ namespace LogicalParticleFilter1
                 {
                     return uriref;
                 }
+                
                 Func<string, string> UE = HttpUtility.UrlEncode;
                 UE = s => s;
+
                 //uriref = HttpUtility.UrlDecode(uriref);
                 if (string.IsNullOrEmpty(baseUri) || baseUri == basePrefixDefault)
                 {

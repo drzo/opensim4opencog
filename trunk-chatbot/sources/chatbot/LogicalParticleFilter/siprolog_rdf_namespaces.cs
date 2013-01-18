@@ -138,12 +138,12 @@ namespace LogicalParticleFilter1
             {
                 if (BaseUri != null)
                 {
-                    nm.AddNamespace("", BaseUri);
+                    //nm.AddNamespace("", BaseUri);
                     return;
                 }
                 var newIdea = UriFactory.Create(RoboKindURI);
                 graph.BaseUri = newIdea;
-                nm.AddNamespace("", newIdea);
+                //nm.AddNamespace("", newIdea);
                 return;
 
             }
@@ -151,11 +151,11 @@ namespace LogicalParticleFilter1
             var previousBlank = previosuBlankURI.AbsoluteUri;
             if (BaseUri != null)
             {
-                if (previousBlank != BaseUri.AbsoluteUri) nm.AddNamespace("", BaseUri);
+                if (previousBlank != BaseUri.AbsoluteUri) ;//nm.AddNamespace("", BaseUri);
                 return;
             }
             var newIdea2 = UriFactory.Create(RoboKindURI);
-            nm.AddNamespace("", newIdea2);
+            //nm.AddNamespace("", newIdea2);
         }
         public static void EnsureGraphPrefixes(IGraph graph)
         {

@@ -200,20 +200,6 @@ namespace LogicalParticleFilter1
             lock (KBGraph) return FindKB(startMt) != null;
         }
 
-        internal static string NameCheck(string name)
-        {
-            if (name == "cons")
-            {
-                return "cons";
-                throw ErrorBadOp(name);
-            }
-            if (name == "nil")
-            {
-                return "nil";
-                throw ErrorBadOp(name);
-            }
-            return name;
-        }
         static internal Exception ErrorBadOp(string f, params object[] args)
         {
             string m = string.Format(f, args);

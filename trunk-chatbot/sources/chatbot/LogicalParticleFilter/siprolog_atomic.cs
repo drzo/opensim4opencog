@@ -72,7 +72,14 @@ namespace LogicalParticleFilter1
                 {
                     ns = ns.Substring(0, ns.Length - 1);
                 }
-                if (rdfDefNS.HasNamespace(ns)) return rdfDefNS.GetNamespaceUri(ns).AbsoluteUri;
+                if (rdfDefNS.HasNamespace(ns))
+                {
+                    var uri =  rdfDefNS.GetNamespaceUri(ns).AbsoluteUri;
+                    if (ns == basePrefixDefault)
+                    {
+                        return "";
+                    }
+                }
                 return ns;
             }
             static string GetNamespacePrefix(string ns)
@@ -357,9 +364,6 @@ namespace LogicalParticleFilter1
             }
             private void AddToAtomTable()
             {
-                if (localValue == "C_AKJ315005-tax")
-                {
-                }
                 string key = AtomKey;
                 AtomTable[key] = this;
             }
@@ -1124,6 +1128,7 @@ namespace LogicalParticleFilter1
                 }
                 if (GetBasePrefix(p0) != GetBasePrefix(prefix) || s != s0 || GetBaseQuoting(quoting) != GetBaseQuoting(q0))
                 {
+                    MakeNodeInside_0(prefix, s, quoting);
                     Warn("Broken Round Trip Constructor: " + makeNodeInside);
                 }
                 return makeNodeInside;
