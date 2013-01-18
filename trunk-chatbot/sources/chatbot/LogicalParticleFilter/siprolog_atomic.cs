@@ -31,6 +31,7 @@ namespace LogicalParticleFilter1
 {
     public partial class SIProlog
     {
+        public const string basePrefixDefault = "#";
         public class Atom : Part, IAtomic
         {
 
@@ -437,7 +438,18 @@ namespace LogicalParticleFilter1
                 Functor0Function = INodeToObject;
                 _objRef = head;
                 _objRef = ToValueNode((INode) head);
-                return ToRoundTripConstructor(head, out prefixNs, out localValue, out quoted);
+                if (ToRoundTripConstructor(head, out prefixNs, out localValue, out quoted))
+                {
+                    return false;
+                }
+                if (RdfDeveloperSanityChecks < 2) return true;
+                _objRef = null;
+                if (head.Equals(objRef))
+                {
+                    return true;
+                }
+                var mn = MakeNodeInside(prefixNs, localValue, quoted);
+                throw ErrorBadOp("cant intern " + head);
             }
 
             static public bool ToRoundTripConstructor(INode head, out string prefixNs,out string localValue,out string quoted)
@@ -627,9 +639,9 @@ namespace LogicalParticleFilter1
                 get
                 {
                     if (!IsUri) return false;
-                    if (prefixNs == ":") return true;
+                    if (prefixNs == basePrefixDefault) return true;
                     string ns = NamespaceOLD;
-                    if (GetBasePrefix(ns) == ":")
+                    if (GetBasePrefix(ns) == basePrefixDefault)
                     {
                         return true;
                     }
@@ -660,6 +672,7 @@ namespace LogicalParticleFilter1
                     }
                     if (!IsUri)
                     {
+                        MakeNodeInside(prefixNs, localValue, quoted); 
                         Warn("Non URI");
                     }
                     if (name == "nil")
@@ -670,7 +683,7 @@ namespace LogicalParticleFilter1
                     {
                         return aq(name);
                     }
-                    if (prefixNs == ":")
+                    if (prefixNs == basePrefixDefault || IsLocalPrefix)
                     {
                         return aq(name);
                     }
@@ -1025,7 +1038,7 @@ namespace LogicalParticleFilter1
                 }
                 if (prefix == ":")
                 {
-
+                    Warn("bad prefix! " + atomKey);
                 }
                 else if (prefix.EndsWith(":"))
                 {
@@ -1058,13 +1071,12 @@ namespace LogicalParticleFilter1
             private static string GetBasePrefix(string p0)
             {
                 if (string.IsNullOrEmpty(p0)) return p0;
-                const string localP = ":";
-                if (p0 == ":" || p0 == localP || p0 == RoboKindPrefix || p0 == "rk" || p0 == "siprolog") 
-                    return localP;
-                if (p0 == RoboKindURI) return localP;
+                if (p0 == "#" || p0 == basePrefixDefault || p0 == RoboKindPrefix || p0 == "rk" || p0 == "siprolog")
+                    return basePrefixDefault;
+                if (p0 == RoboKindURI) return basePrefixDefault;
                 if (p0.StartsWith(RoboKindURI) || p0.StartsWith(RoboKindMtURI))
                 {
-                    return localP;
+                    return basePrefixDefault;
                 }
                 return p0;
             }
@@ -1104,7 +1116,7 @@ namespace LogicalParticleFilter1
             public static INode MakeNodeInside(string prefix, string s, string quoting)
             {
                 INode makeNodeInside = MakeNodeInside_0(prefix, s, quoting);
-                if (RdfDeveloperSanityChecks < 2) return makeNodeInside;
+                if (makeNodeInside != null && RdfDeveloperSanityChecks < 2) return makeNodeInside;
                 string p0, s0, q0;
                 if (!ToRoundTripConstructor(makeNodeInside, out p0, out s0, out q0))
                 {
@@ -1263,7 +1275,11 @@ namespace LogicalParticleFilter1
                 }
                 if (identityMatch)
                 {
-                    if (this.quotedType != other.quotedType) return false;
+                    if (this.quotedType != other.quotedType)
+                    {
+                        return false;
+                    }
+                    return true;
                 }
                 if (IsNode && other.IsNode)
                 {

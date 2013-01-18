@@ -330,7 +330,7 @@ namespace LogicalParticleFilter1
             rdfRemoteEndpointToKB(endp,
                                   prolog100Mt,
                                   "SELECT DISTINCT ?o WHERE { ?s a ?o } LIMIT 100",
-                                  "isa($?o$,{http://www.w3.org/2002/07/owl#Class}).\n");
+                                  "isa($?o$,<http://www.w3.org/2002/07/owl#Class>).\n");
 
             PNode kb2 = FindOrCreateKB(prefix + "RdfServerURI");
             kb2.SourceKind = ContentBackingStore.RdfServerURI;

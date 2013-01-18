@@ -354,18 +354,25 @@ namespace LogicalParticleFilter1
             public static INode CExtracted(IGraph def, string p)
             {
                 bool colm = p.Contains(":");
-                if (!colm)
+                int slen = p.Length;
+                bool slengt1 = slen > 1;
+                if (!colm && p.Length > 0)
                 {
-                    bool decm = p.Contains(".");
-                    long intv;
-                    if (!decm && long.TryParse(p, out intv))
+                    char c0 = p[0];
+                    bool isNumberMaybe = (slengt1 && (c0 == '+' || c0 == '-')) || char.IsDigit(c0);
+                    if (isNumberMaybe)
                     {
-                        return new LongNode(def, intv);
-                    }
-                    double dbl;
-                    if (decm && double.TryParse(p, out dbl))
-                    {
-                        return new DoubleNode(def, dbl);
+                        bool decm = slengt1 && p.Contains(".");
+                        long intv;
+                        if (!decm && long.TryParse(p, out intv))
+                        {
+                            return new LongNode(rdfDefinations, intv);
+                        }
+                        double dbl;
+                        if (decm && double.TryParse(p, out dbl))
+                        {
+                            return new DoubleNode(rdfDefinations, dbl);
+                        }
                     }
                 }
                 return C(def, p);
@@ -389,7 +396,7 @@ namespace LogicalParticleFilter1
                     if (!string.IsNullOrEmpty(prefix)) return def.CreateLiteralNode(p, UriFactory.Create(prefix));
                     return def.CreateLiteralNode(p);
                 }
-                if (prefix == ":")
+                if (prefix == basePrefixDefault)
                 {
                     return def.CreateUriNode(":" + p);
                 }
@@ -399,32 +406,10 @@ namespace LogicalParticleFilter1
                 return def.CreateUriNode(cc);
             }
 
-            public static string CombinePrefix(string prefix, string p, out bool protop)
+            public static string CombinePrefix(string baseUri, string uriref, out bool protop)
             {
-                prefix = prefix.TrimStart('+', ':');
-                string cc = prefix + p;
-                protop = cc.Contains(":/");
-                if (prefix == "")
-                {
-                    return p;
-                }
-                if (prefix == p)
-                {
-                    return p;
-                }
-                var lastCharOk = "#/?=";
-                if (!protop) lastCharOk = ":";
-
-                if (!prefix.Contains(":"))
-                {
-                    char lc = prefix[prefix.Length - 1];
-                    if (lastCharOk.IndexOf(lc) == -1)
-                    {
-                        prefix = prefix + lastCharOk[0];
-                    }
-                }
-                cc = prefix + p;
-                return cc;
+                protop = (baseUri + uriref).Contains(":/");
+                return MakeQNameOrUri(uriref, baseUri);
             }
 
             static public T ResolveC<T>(INamespaceMapper def, string p0, Func<string, string, NodeType, T> CC)
@@ -440,12 +425,12 @@ namespace LogicalParticleFilter1
                 }
                 if (p.StartsWith(":"))
                 {
-                    return CC(":", p.Substring(1), NodeType.Uri);
+                    return CC(basePrefixDefault, p.Substring(1), NodeType.Uri);
                 }
                 int colm = p.LastIndexOf(":");
                 int colmp = p.LastIndexOf(":/");
                 int uir = p.LastIndexOf("#");
-                if (colm == -1 && uir == -1)
+                if (colm == -1 && uir == -1 && false)
                 {
                     lock (GuessedNameSpace)
                     {
@@ -456,7 +441,7 @@ namespace LogicalParticleFilter1
                             return CC(pref, p, NodeType.Uri);
                         }
                     }
-                    return CC(":", p, NodeType.Uri);
+                    return CC(basePrefixDefault, p, NodeType.Uri);
                 }
                 int len = p.Length;
                 string oprefix, ouri, localAname;
@@ -484,7 +469,7 @@ namespace LogicalParticleFilter1
                 if (colmp > 1)
                     return CC("+", p, NodeType.Uri);
 
-                return CC("", p0, NodeType.Literal);
+                return CC(basePrefixDefault, p0, NodeType.Uri);
             }
 
             public static bool IsAbsoluteURI(string s)
@@ -507,38 +492,34 @@ namespace LogicalParticleFilter1
                 {
                     return uriref;
                 }
+                Func<string, string> UE = HttpUtility.UrlEncode;
+                UE = s => s;
                 //uriref = HttpUtility.UrlDecode(uriref);
-                if (string.IsNullOrEmpty(baseUri) || baseUri == ":")
+                if (string.IsNullOrEmpty(baseUri) || baseUri == basePrefixDefault)
                 {
                     baseUri = "";
+                    if (uriref.StartsWith("#") && baseUri.EndsWith("#"))
+                    {
+                        uriref = uriref.Substring(1);
+                    }
                     if (uriref.StartsWith(":")) uriref = uriref.Substring(1);
-                    return string.Format(":{0}", HttpUtility.UrlEncode(uriref));
-                } else
+                    return string.Format(":{0}", UE(uriref));
+                }
+                else
                 {
-                    if (baseUri.Contains(":") || baseUri.EndsWith("#"))
+                    if (uriref.StartsWith("#") && baseUri.EndsWith("#"))
                     {
-                        return string.Format("{0}{1}", baseUri, HttpUtility.UrlEncode(uriref));
-                      //  baseUrireturn  Tools.ResolveQName(uriref, baseUri);
+                        uriref = uriref.Substring(1);
                     }
-                    return string.Format("{0}:{1}", baseUri, HttpUtility.UrlEncode(uriref));
-                }
-            }
-
-            static public bool TryCreateCleanUri(Uri baseUri, string relstr, out Uri result)
-            {
-                try
-                {
-                    if (!Uri.TryCreate(baseUri, relstr, out result))
+                    if (uriref.StartsWith(":")) uriref = uriref.Substring(1);
+                    char lc = baseUri[baseUri.Length - 1];
+                    bool isAbso = baseUri.Contains(":/") || char.IsSymbol(lc);
+                    if (isAbso)
                     {
-                        return false;
+                        return string.Format("{0}{1}", baseUri, UE(uriref));
                     }
+                    return string.Format("{0}:{1}", baseUri, UE(uriref));
                 }
-                catch (UriFormatException ex)
-                {
-                    throw new InvalidOperationException(
-                        String.Format("Can create URI for base={0}, rel={1}", baseUri.ToString(), relstr), ex);
-                }
-                return true;
             }
             public static INode InstanceOf
             {
@@ -680,7 +661,7 @@ namespace LogicalParticleFilter1
                     Warn("New namespace that was missing: " + uri);
                 }
             }
-            static public bool DevolveURI(INamespaceMapper mapper, string s, out string uri, out string prefix, out string atom, bool discoverNamepaces,  bool useSpecialPrefix)
+            static public bool DevolveURI(INamespaceMapper mapper, string s, out string uri, out string prefix, out string atom, bool discoverNamepaces, bool useSpecialPrefix)
             {
                 bool ret = DevolveURI(mapper, s, out uri, out prefix, out atom, discoverNamepaces);
                 if (useSpecialPrefix && prefix == null && atom == "" && !string.IsNullOrEmpty(uri))
