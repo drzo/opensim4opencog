@@ -123,7 +123,7 @@ namespace LogicalParticleFilter1
                 {
                     return true;
                 }
-                if (IsRdfBuiltIn(name, arity, thisTerm, null))
+                if (IsRdfBuiltIn(name, arity, thisTerm, new RdfRules(rdfDefinations)))
                 {
                     return false;
                 }

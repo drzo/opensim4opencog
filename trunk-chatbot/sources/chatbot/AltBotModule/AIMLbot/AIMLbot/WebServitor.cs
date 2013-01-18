@@ -175,8 +175,19 @@ namespace AltAIMLbot
         }
 
         // maybe http://localhost:8888/aiml/zenoaeronaut_resident/bstore/READ_ALICEINWONDERLAND.BTX
-
         public static void processRequest(object listenerContext)
+        {
+            try
+            {
+                processRequest0(listenerContext);
+            }
+            catch
+            {
+
+            }
+        }
+
+        public static void processRequest0(object listenerContext)
         {
                 var context = (HttpListenerContext)listenerContext;
             try
