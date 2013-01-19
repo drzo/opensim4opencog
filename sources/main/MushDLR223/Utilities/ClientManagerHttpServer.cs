@@ -21,6 +21,13 @@ using IHttpRequest = System.Web.HttpRequest;
 using IHttpClientContext = System.Web.HttpContext;
 #endif
 
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
+
 namespace MushDLR223.Utilities
 {
     //.. tonight i am writing them a webserver in .net 

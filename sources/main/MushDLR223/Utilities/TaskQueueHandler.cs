@@ -3,11 +3,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Threading;
 using MushDLR223.ScriptEngines;
 using TASK = System.Threading.ThreadStart;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
+using System.Threading;
 using ThreadState=System.Threading.ThreadState;
-///using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace MushDLR223.Utilities
 {
@@ -514,8 +519,7 @@ namespace MushDLR223.Utilities
                 // zero secs - ten minutes max
                 PauseBetweenOperations = TimeSpanBetween(msWaitBetween, TimeSpan.Zero, TOO_LONG_INTERVAL);
 
-                PingerThread = new Thread(LoopNoAbort(EventQueue_Ping, PingNeverAbortLock))
-                                   {Name = str + " pinger", Priority = ThreadPriority.Lowest};
+                PingerThread = new Thread(LoopNoAbort(EventQueue_Ping, PingNeverAbortLock)) { Name = str + " pinger", Priority = System.Threading.ThreadPriority.Lowest };
             }
             ResetTimedProgress(Total);
             if (!PingerThread.IsAlive) RestartCurrentTask(PingerThread);//.Start();
@@ -700,7 +704,7 @@ namespace MushDLR223.Utilities
                 StackerThread = new Thread(LoopNoAbort(EventQueue_Handler, OneTaskAtATimeLock))
                                     {
                                         Name = tname + " queueworker",
-                                        Priority = ThreadPriority.BelowNormal,
+                                        Priority = System.Threading.ThreadPriority.BelowNormal,
                                     };
             }
             if (!StackerThread.IsAlive)
@@ -2201,7 +2205,7 @@ namespace MushDLR223.Utilities
 
         public void MakeSyncronousTask(TASK action, string name, TimeSpan maxTime)
         {
-            EventWaitHandle IsComplete = new EventWaitHandle(false, EventResetMode.ManualReset);
+            EventWaitHandle IsComplete = new EventWaitHandle(false, System.Threading.EventResetMode.ManualReset);
             Thread t = new Thread(CreateTask(action, name, null, IsComplete));
             Thread tr = new Thread(() =>
                                        {
