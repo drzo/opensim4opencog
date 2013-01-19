@@ -40,7 +40,7 @@ namespace MushDLR223.Utilities
         {
             if (ListModified != null) ListModified();
         }
-        private readonly IList realList = new List<T>();
+        private readonly List<T> realList = new List<T>();
         public List<T> RealListT
         {
             get { return (List<T>)realList; }
@@ -54,7 +54,7 @@ namespace MushDLR223.Utilities
                 if (object.Equals(old, value)) return;
                 OnItemRemoved(old);
                 OnItemAdded(value);
-                realList[index] = value;
+                RealListT[index] = (T)value;
                 ListModified();
             }
         }
@@ -70,23 +70,24 @@ namespace MushDLR223.Utilities
         }
         private void InsertImpl(int index, object value)
         {
+            T valuet = (T) value;
             lock (SyncLock)
             {
                 bool removed = false;
                 if (realList.Count != 0)
                 {
-                    if (realList[0] == value)
+                    if (realList[0].Equals(valuet))
                     {
                         return;
                     }
                     if (Contains(value))
                     {
-                        realList.Remove(value);
+                        realList.Remove(valuet);
                         removed = true;
                     }
                 }
                 if (!removed) OnItemAdded((T)value);
-                realList.Insert(index, value);
+                realList.Insert(index, valuet);
                 OnListModified();
             }
         }
@@ -105,17 +106,33 @@ namespace MushDLR223.Utilities
         ///                 </exception><filterpriority>2</filterpriority>
         public int Add(object value)
         {
+            T valuet = (T)value;
             lock (SyncLock)
             {
-                int indexOf = realList.IndexOf(value);
+                int indexOf = realList.IndexOf(valuet);
                 if (indexOf >= 0)
                 {
                     return indexOf;
                 }
-                return realList.Add(value);
+                realList.Add(valuet);
+                return realList.Count - 1;
             }
         }
 
+        public int Add(T value)
+        {
+            T valuet = (T)value;
+            lock (SyncLock)
+            {
+                int indexOf = realList.IndexOf(valuet);
+                if (indexOf >= 0)
+                {
+                    return indexOf;
+                }
+                realList.Add(valuet);
+                return realList.Count - 1;
+            }
+        }
         /// <summary>
         /// Determines whether the <see cref="T:System.Collections.IList"/> contains a specific value.
         /// </summary>
@@ -126,9 +143,10 @@ namespace MushDLR223.Utilities
         ///                 </param><filterpriority>2</filterpriority>
         public bool Contains(object value)
         {
+            T value0 = (T)value;
             lock (SyncLock)
             {
-                return realList.Contains(value);
+                return realList.Contains(value0);
             }
         }
 
@@ -152,7 +170,8 @@ namespace MushDLR223.Utilities
         ///                 </param><filterpriority>2</filterpriority>
         public int IndexOf(object value)
         {
-            lock (SyncLock) return realList.IndexOf(value);
+            T value0 = (T)value;
+            lock (SyncLock) return realList.IndexOf(value0);
         }
 
         /// <summary>
@@ -282,9 +301,10 @@ namespace MushDLR223.Utilities
         ///                 </exception><filterpriority>2</filterpriority>
         public void CopyTo(Array array, int index)
         {
+            T[] arrayt = (T[])array;
             lock (SyncLock)
             {
-                realList.CopyTo(array, index);
+                realList.CopyTo(arrayt, index);
             }
         }
 

@@ -34,7 +34,16 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
+
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
 using System.Threading;
+
+
 using System.Windows.Forms;
 using log4net;
 using System.Text.RegularExpressions;
@@ -1630,7 +1639,7 @@ namespace MushDLR223.Utilities
             ExecWithMaxTime(() => CALL_SYSTEM_ERR_WRITELINE_REAL(format, args), 1000);
         }
 
-        private static Thread MainThread = Thread.CurrentThread;
+        private static System.Threading.Thread MainThread = System.Threading.Thread.CurrentThread;
         public static void ExecWithMaxTime(Action action, int i)
         {
             try

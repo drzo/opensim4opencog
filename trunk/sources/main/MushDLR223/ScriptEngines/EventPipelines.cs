@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Text;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using System.Threading;
-#if USE_SAFETHREADS
-using Thread = MushDLR223.Utilities.SafeThread;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
 #endif
+using System.Threading;
 
 namespace MushDLR223.ScriptEngines
 {
