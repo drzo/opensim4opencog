@@ -26,6 +26,12 @@ using Apache.Qpid.Client.Failover;
 using Apache.Qpid.Client.Protocol.Listener;
 using Apache.Qpid.Client.State;
 using Apache.Qpid.Framing;
+#if (COGBOT_LIBOMV || USE_STHREADS || true)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
 
 namespace Apache.Qpid.Client.Protocol
 {

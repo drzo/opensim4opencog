@@ -1,6 +1,14 @@
 using System;
 using System.Collections.Generic;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
 using System.Threading;
+
+
 using Cogbot.Actions.Pathfinder;
 using Cogbot;
 using MushDLR223.ScriptEngines;
@@ -12,7 +20,7 @@ using Exception=System.Exception;
 using Math=System.Math;
 using Object=System.Object;
 using String=System.String;
-using Thread=System.Threading.Thread;
+
 using System.Drawing;
 
 namespace Cogbot.World

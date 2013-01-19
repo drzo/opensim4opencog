@@ -20,9 +20,14 @@ using Cogbot.Actions;
 using Cogbot.Actions.Scripting;
 using OpenMetaverse.StructuredData;
 using Settings=OpenMetaverse.Settings;
-#if USE_SAFETHREADS
-using Thread = MushDLR223.Utilities.SafeThread;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
 #endif
+using System.Threading;
+
 using LoginDetails = System.Collections.Generic.IDictionary<string, string>;
 //using Radegast;
 namespace Cogbot
@@ -814,7 +819,7 @@ namespace Cogbot
 
         public static Thread InSTAThread(ThreadStart invoker, string fullName) {
 
-            Thread t = new System.Threading.Thread(new ThreadStart(() =>
+            Thread t = new Thread(new ThreadStart(() =>
             {
                 Thread ct = Thread.CurrentThread;
                 try

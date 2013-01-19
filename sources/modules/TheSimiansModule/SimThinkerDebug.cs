@@ -11,6 +11,14 @@ using MushDLR223.Utilities;
 using Exception=System.Exception;
 using String=System.String;
 
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
+
+
 namespace TheSimiansModule
 {
     public sealed partial class SimThinkerDebug : UserControl

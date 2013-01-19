@@ -30,6 +30,12 @@ using Apache.Qpid.Collections;
 using Apache.Qpid.Framing;
 using Apache.Qpid.Messaging;
 using Apache.Qpid.Protocol;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
 
 namespace Apache.Qpid.Client
 {
