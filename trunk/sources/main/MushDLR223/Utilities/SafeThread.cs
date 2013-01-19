@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 using MushDLR223.Utilities;
@@ -140,7 +141,14 @@ namespace ThreadPoolUtil
         /// </summary>
         public virtual void Start()
         {
+//            savedStartUp = GetStackString();
             threadField.Start();
+        }
+
+        public string GetStackString()
+        {
+            TextWriter sb = new StringWriter();
+            return sb.ToString();
         }
 
         /// <summary>

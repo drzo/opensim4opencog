@@ -132,8 +132,12 @@ namespace MushDLR223.Utilities
     public delegate object AnyFunc(params object[] args);
     public delegate T AnyFunc<T>(params object[] args);
 
-    public struct FirstUse<T> // : Nullable<T>
+    public class FirstUse<T> // : Nullable<T>
     {
+        public FirstUse()
+        {
+            
+        }
         public static implicit operator T(FirstUse<T> value)
         {
             return value.Value;
