@@ -1741,15 +1741,38 @@ namespace LogicalParticleFilter1
         //var EvalContext = [];
         public string ourEval(string expression)
         {
-            Mono.CSharp.Evaluator evaluator = GetEvalInstance();
-            string result = "" + evaluator.Evaluate(expression);
+            string result = "" + ourEvalO(expression);
             //var evaluator = new Evaluator();
             //evaluator.Run("using System;");
 
             // TODO: Insert evquivelent of javascript Eval(x) here, return result in string form
             return result;
         }
+        /// <summary>
+        ///   Evaluates and expression or statement and returns the result.
+        /// </summary>
+        /// <remarks>
+        ///   Evaluates the input string as a C# expression or
+        ///   statement and returns the value.   
+        ///
+        ///   This method will throw an exception if there is a syntax error,
+        ///   of if the provided input is not an expression but a statement.
+        /// </remarks>        
+        public object ourEvalO(string input)
+        {
+            object result;
+            bool result_set;
+            Mono.CSharp.Evaluator evaluator = GetEvalInstance();
+            string r = evaluator.Evaluate(input, out result, out result_set);
 
+            if (r != null)
+                throw new ArgumentException("Syntax error on input: partial input");
+
+            if (result_set == false)
+                throw new ArgumentException("The expression did not set a result");
+
+            return result;
+        }
         private static Evaluator _Evaluator = null;
         private static CompilerContext ctx;
         private static CompilerSettings compset;

@@ -105,14 +105,7 @@ namespace RTParser
         public RandomMemory myRandMem = new RandomMemory();
 
         [NonSerialized] 
-        private readonly FirstUse<SIProlog> _prologEngine = (Func<SIProlog>) (() => SIProlog.CurrentProlog);
-        public SIProlog prologEngine
-        {
-            get
-            {
-                lock (BotInitLock) return _prologEngine;
-            }
-        }
+        public readonly SIProlog prologEngine = SIProlog.CurrentProlog;
 
         static public object BotInitLock  = new object();
         static public object WordNetEngineLock
