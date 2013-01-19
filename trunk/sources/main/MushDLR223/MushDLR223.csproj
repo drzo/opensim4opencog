@@ -103,6 +103,7 @@
     <Compile Include="ScriptEngines\ScriptManager.cs" />
     <Compile Include="ScriptEngines\SysVars.cs" />
     <Compile Include="Utilities\CancellableThreadPool.cs" />
+    <Compile Include="Utilities\SafeThreadPool.cs" />
     <Compile Include="Utilities\ClientManagerHttpServer.cs" />
     <Compile Include="Utilities\ConfigSettingAttribute.cs" />
     <Compile Include="Utilities\ConsoleBase.cs" />
@@ -114,6 +115,7 @@
     <Compile Include="Utilities\SystemHttpServer.cs" />
     <Compile Include="Utilities\TaskQueueHandler.cs" />
     <Compile Include="Utilities\TextFilter.cs" />
+    <Compile Include="Utilities\SafeThread.cs" />
     <Compile Include="Utilities\WebLinksWriter.cs" />
     <Compile Include="Virtualization\AutoClosingStream.cs" />
     <Compile Include="Virtualization\HostSystem.cs" />

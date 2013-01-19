@@ -978,7 +978,7 @@ namespace MushDLR223.Utilities
         {
             if (PauseBetweenOperations >= TOO_SHORT_INTERVAL) 
             {
-                if (PauseBetweenOperations > TimeSpan.Zero) Thread.Sleep(pauseBetweenOperations);
+                if (PauseBetweenOperations > TimeSpan.Zero) ThreadSleep(pauseBetweenOperations);
             }
         }
 
@@ -1077,7 +1077,7 @@ namespace MushDLR223.Utilities
             while (!(IsDisposing))
             {
                 ResetTimedProgress(Every30Secs); 
-                Thread.Sleep(PING_INTERVAL);
+                ThreadSleep(PING_INTERVAL);
 
                 if (IsDisposing) break;
                 //if (!UsePinger) continue;
@@ -1103,6 +1103,13 @@ namespace MushDLR223.Utilities
                 continue;
                 CheckPingerTime(SinceLastPong);
             }
+        }
+
+// ReSharper disable MemberCanBeMadeStatic.Local
+        private void ThreadSleep(TimeSpan interval)
+        // ReSharper restore MemberCanBeMadeStatic.Local
+        {
+            System.Threading.Thread.Sleep(interval);
         }
 
         private void LiveCheck()
