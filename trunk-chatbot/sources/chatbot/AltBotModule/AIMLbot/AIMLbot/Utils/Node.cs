@@ -1704,7 +1704,7 @@ namespace AltAIMLbot.Utils
         public ExternDB()
         {
 
-            Console.WriteLine("ExternDB()");
+            if (Servitor.DebugLevelExternalDb > 0) Console.WriteLine("ExternDB()");
             string dbdirectory = ".\\rapstore\\";
             string _dbdir = dbdirectory;
             
@@ -1725,7 +1725,7 @@ namespace AltAIMLbot.Utils
         public ExternDB(string dbdirectory)
         {
             dbdirectory = HostSystem.FileSystemPath(dbdirectory);
-            Console.WriteLine("ExternDB({0})", dbdirectory);
+            if (Servitor.DebugLevelExternalDb > 0) Console.WriteLine("ExternDB({0})", dbdirectory);
             string _dbdir = dbdirectory;
             string ourPath = Directory.CreateDirectory(dbdirectory).FullName;
             string ourDirectory = Path.GetDirectoryName(ourPath);
@@ -1744,7 +1744,7 @@ namespace AltAIMLbot.Utils
 
         public void OpenAll()
         {
-            Console.WriteLine("OpenAll()");
+            if (Servitor.DebugLevelExternalDb > 0) Console.WriteLine("OpenAll()");
             string dbdirectory = _dbdir;
             dbdirectory = HostSystem.FileSystemPath(dbdirectory);
             string ourPath = Directory.CreateDirectory(dbdirectory).FullName;
@@ -1767,7 +1767,16 @@ namespace AltAIMLbot.Utils
                 filenamedb[i] = new RaptorDB.KeyStoreString(ourDirectory + Path.DirectorySeparatorChar + "filenamedb" + i.ToString(), false);
                 worddb[i] = new RaptorDB.KeyStoreString(ourDirectory + Path.DirectorySeparatorChar + "worddb" + i.ToString(), false);
 
-                Console.WriteLine("OpenAll {0}:'{1}'", i,ourDirectory + Path.DirectorySeparatorChar + "templatedb" + i.ToString());
+                if (Servitor.DebugLevelExternalDb > 1)
+                {
+                    Console.WriteLine("OpenAll {0}:'{1}'", i,
+                                      ourDirectory + Path.DirectorySeparatorChar + "templatedb" + i.ToString());
+                }
+            }
+            if (Servitor.DebugLevelExternalDb == 1)
+            {
+                Console.WriteLine("OpenAll 0-{0}:'{1}{2}templatedb(0-{0})'", slices, ourDirectory,
+                                  Path.DirectorySeparatorChar);
             }
             allLoaded = true;
         }
@@ -1873,7 +1882,7 @@ namespace AltAIMLbot.Utils
             if (loadeddb != null) loadeddb.Shutdown();
             if (crondb != null) crondb.Shutdown();
             //GC.Collect();
-            Console.WriteLine("ExternDB.Close()");
+            if (Servitor.DebugLevelExternalDb > 0) Console.WriteLine("ExternDB.Close()");
         }
         public void prune(int prunelimit)
         {

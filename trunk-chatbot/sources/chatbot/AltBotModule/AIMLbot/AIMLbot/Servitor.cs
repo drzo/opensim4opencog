@@ -61,6 +61,13 @@ namespace AltAIMLbot
         //   - BotConsole.cs Prepare(), 
         //   - WorldObjectsForAimLBot.cs StartupListener00()
 
+        /// <summary>
+        /// dmiles - set 0-2 for verboseness of ExternDB from node
+        /// 
+        ///     search on this field to see what it covers
+        /// </summary>
+        public static int DebugLevelExternalDb = 1;
+
         public  AltBot curBot;
 
         public bool NeedsLoad = true;
