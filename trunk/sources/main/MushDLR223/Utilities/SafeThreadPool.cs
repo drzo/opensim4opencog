@@ -46,10 +46,23 @@ namespace ThreadPoolUtil
                 }
             });
         }
+        public static T Safely<T>(Func<T> func)
+        {
+            try
+            {
+                return func();
+            }
+            catch (Exception e)
+            {
+                Issue(SThread.CurrentThread, e);
+                return default(T);
 
+            }
+        }
         public static WaitHandle AddSafetyWH(WaitHandle handle)
         {
-            return handle;
+            if (true) return handle;
+            return new SafeWaitHandle(handle);
         }
 
         virtual public RegisteredWaitHandle RegisterWaitForSingleObject(WaitHandle waitObject, WaitOrTimerCallback callback, object state, TimeSpan timeOutInterval, bool executeOnlyOnce)
@@ -265,6 +278,21 @@ namespace ThreadPoolUtil
 
     public class SafeWaitHandle : WaitHandle
     {
+
+        public static T Safely<T>(Func<T> func)
+        {
+            return SafeThreadPool.Safely(func);
+        }
+
+        private void SafelyV(Action func)
+        {
+            Safely(() =>
+                       {
+                           func();
+                           return true;
+                       });
+        }
+
         private WaitHandle wrapped;
         public SafeWaitHandle(WaitHandle wrapped0)
         {
@@ -272,21 +300,23 @@ namespace ThreadPoolUtil
         }
         public override void Close()
         {
-            wrapped.Close();
+            SafelyV(wrapped.Close);
         }
         public override System.Runtime.Remoting.ObjRef CreateObjRef(Type requestedType)
         {
-            return wrapped.CreateObjRef(requestedType);
+            return Safely(() => wrapped.CreateObjRef(requestedType));
         }
         public override bool WaitOne()
         {
-            return wrapped.WaitOne();
+            return Safely(() => wrapped.WaitOne());
         }
+
+        [Obsolete("Use the SafeWaitHandle property instead.")]
         public override IntPtr Handle
         {
             get
             {
-                return wrapped.Handle;
+                return Safely(() => wrapped.Handle);
             }
             set
             {
@@ -300,35 +330,36 @@ namespace ThreadPoolUtil
         }
         public override bool Equals(object obj)
         {
-            return wrapped.Equals(obj);
+            return Safely(() => wrapped.Equals(obj));
         }
+
         public override int GetHashCode()
         {
-            return wrapped.GetHashCode();
+            return Safely(() => wrapped.GetHashCode());
         }
         public override bool WaitOne(int millisecondsTimeout)
         {
-            return wrapped.WaitOne(millisecondsTimeout);
+            return Safely(() => wrapped.WaitOne(millisecondsTimeout));
         }
         public override object InitializeLifetimeService()
         {
-            return wrapped.InitializeLifetimeService();
+            return Safely(() => wrapped.InitializeLifetimeService());
         }
         public override string ToString()
         {
-            return wrapped.ToString();
+            return Safely(() => wrapped.ToString());
         }
         public override bool WaitOne(int millisecondsTimeout, bool exitContext)
         {
-            return wrapped.WaitOne(millisecondsTimeout, exitContext);
+            return Safely(() => wrapped.WaitOne(millisecondsTimeout, exitContext));
         }
         public override bool WaitOne(TimeSpan timeout)
         {
-            return wrapped.WaitOne(timeout);
+            return Safely(() => wrapped.WaitOne(timeout));
         }
         public override bool WaitOne(TimeSpan timeout, bool exitContext)
         {
-            return wrapped.WaitOne(timeout, exitContext);
+            return Safely(() => wrapped.WaitOne(timeout, exitContext));
         }
     }
 }
