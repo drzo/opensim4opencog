@@ -2,7 +2,17 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+#if (COGBOT_LIBOMV || USE_STHREADS || true)
+using ThreadPoolUtil;
+using ThreadPoolUtil;
+using ThreadStart = System.Threading.ThreadStart;
+using Timer = System.Threading.Timer;
+using AbandonedMutexException = System.Threading.AbandonedMutexException;
+using ThreadPoolUtil;
+#else
 using System.Threading;
+using Thread = System.Threading.Thread;
+#endif
 using Cogbot.World;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -249,7 +259,7 @@ namespace Cogbot
                         RegionMasterSimulatorsCatchUps = false;
                         CatchUpQueue.AddFirst(DoCatchup);
                     }
-                    client.Settings.USE_LLSD_LOGIN = false;
+                    client.Settings.USE_LLSD_LOGIN = true;
                 }
                 else
                 {

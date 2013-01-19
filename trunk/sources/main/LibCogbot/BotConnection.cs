@@ -18,6 +18,12 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Utilities;
 using Cogbot.Actions;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
 using System.Threading;
 using System.Collections;
 using Cogbot.ScriptEngines;
@@ -29,9 +35,7 @@ using Settings=OpenMetaverse.Settings;
 using Cogbot.Actions.Agent;
 using System.Text;
 using Type=System.Type;
-#if USE_SAFETHREADS
-using Thread = MushDLR223.Utilities.SafeThread;
-#endif
+
 //using RadegastTab = Radegast.SleekTab;
 
 // older LibOMV
@@ -104,7 +108,7 @@ namespace Cogbot
                     return;
                 }
 
-                Settings.USE_LLSD_LOGIN = false;
+                Settings.USE_LLSD_LOGIN = true;
                 if (DLRConsole.IsOnMonoUnix)
                 {
                     DebugWriteLine("Should use LLSD Login but cant!");

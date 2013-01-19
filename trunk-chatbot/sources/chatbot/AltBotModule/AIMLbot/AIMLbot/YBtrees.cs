@@ -25,6 +25,13 @@ using LAIR.Collections.Generic;
 using CAMeRAVUEmotion;
 using MushDLR223.Utilities;
 
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
+
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 

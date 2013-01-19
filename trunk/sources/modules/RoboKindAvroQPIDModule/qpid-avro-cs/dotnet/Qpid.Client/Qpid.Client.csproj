@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
  
  Licensed to the Apache Software Foundation (ASF) under one
@@ -160,6 +160,10 @@
     <Compile Include="qms\UrlSyntaxException.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\main\MushDLR223\MushDLR223.csproj">
+      <Project>{E64505B9-62DE-4AF1-93C6-DDDB42B7D4E7}</Project>
+      <Name>MushDLR223</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Qpid.Buffer\Qpid.Buffer.csproj">
       <Project>{44384DF2-B0A4-4580-BDBC-EE4BAA87D995}</Project>
       <Name>Qpid.Buffer</Name>

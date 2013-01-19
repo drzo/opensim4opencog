@@ -7,7 +7,18 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.IO;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using ThreadPoolUtil;
+using ThreadStart = System.Threading.ThreadStart;
+using AutoResetEvent = System.Threading.AutoResetEvent;
+using ManualResetEvent = System.Threading.ManualResetEvent;
+using TimerCallback = System.Threading.TimerCallback;
+using Timer = System.Threading.Timer;
+using Interlocked = System.Threading.Interlocked;
+#else
 using System.Threading;
+#endif
 using System.Xml;
 using System.Web;
 using LogicalParticleFilter1;

@@ -14,6 +14,13 @@ using Exception=System.Exception;
 using String=System.String;
 using RTParser.Variables;
 
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
+
 namespace RTParser.GUI
 {
     public sealed partial class AIMLPadEditor : Form

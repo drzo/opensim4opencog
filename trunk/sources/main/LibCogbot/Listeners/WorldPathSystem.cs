@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using Cogbot.World;
-using System.Threading;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
-#if USE_SAFETHREADS
-using Thread = MushDLR223.Utilities.SafeThread;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
 #endif
+using System.Threading;
+
+
 
 namespace Cogbot
 {
@@ -69,7 +74,7 @@ namespace Cogbot
 
         public WorldPathSystem(GridClient gc)
         {
-            MeshingQueue.StackerThread.Priority = ThreadPriority.AboveNormal;
+            MeshingQueue.StackerThread.Priority = System.Threading.ThreadPriority.AboveNormal;
             lock (GlobalRoutes)
             {
                 if ((!gc.Settings.AVATAR_TRACKING)) Error("client.Settings.AVATAR_TRACKING != true");

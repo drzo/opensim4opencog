@@ -3,7 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
 using System.Threading;
+
+
 using System.Xml;
 using AIMLbot;
 using AltAIMLbot;
@@ -1543,7 +1551,7 @@ namespace RTParser
             {
                 errOutput("ThreadAbortException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + AltBot.Now.Subtract(start).TotalSeconds);
             }
-            catch (ThreadInterruptedException e)
+            catch (System.Threading.ThreadInterruptedException e)
             {
                 errOutput("ThreadInterruptedException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + AltBot.Now.Subtract(start).TotalSeconds);
             }

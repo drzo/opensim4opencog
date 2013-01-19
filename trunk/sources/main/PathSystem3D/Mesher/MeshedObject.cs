@@ -3,7 +3,18 @@ using System;
 using System.Drawing;
 using PathSystem3D.Navigation;
 using OpenMetaverse;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using ThreadPoolUtil;
+using ThreadStart = System.Threading.ThreadStart;
+using AutoResetEvent = System.Threading.AutoResetEvent;
+using ManualResetEvent = System.Threading.ManualResetEvent;
+using TimerCallback = System.Threading.TimerCallback;
+using Timer = System.Threading.Timer;
+using Interlocked = System.Threading.Interlocked;
+#else
 using System.Threading;
+#endif
 using THIRDPARTY.OpenSim.Region.Physics.Meshing;
 using System.Collections.Generic;
 using THIRDPARTY.OpenSim.Region.Physics.Manager;

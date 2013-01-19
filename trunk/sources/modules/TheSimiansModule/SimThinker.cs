@@ -12,6 +12,13 @@ using String=System.String;
 using OpenMetaverse;
 using Cogbot;
 
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
+
 namespace TheSimiansModule
 {
     //public class SimianThinkerModule : WorldObjectsModule

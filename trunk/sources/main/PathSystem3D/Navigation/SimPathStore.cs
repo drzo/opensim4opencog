@@ -15,7 +15,18 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using ThreadPoolUtil;
+using ThreadStart = System.Threading.ThreadStart;
+using AutoResetEvent = System.Threading.AutoResetEvent;
+using ManualResetEvent = System.Threading.ManualResetEvent;
+using TimerCallback = System.Threading.TimerCallback;
+using Timer = System.Threading.Timer;
+using Interlocked = System.Threading.Interlocked;
+#else
 using System.Threading;
+#endif
 using System.Windows.Forms;
 using HttpServer;
 using MushDLR223.Utilities;

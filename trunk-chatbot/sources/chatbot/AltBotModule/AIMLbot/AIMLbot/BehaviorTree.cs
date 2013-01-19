@@ -21,6 +21,13 @@ using RTParser;
 using NotImplementedException=sun.reflect.generics.reflectiveObjects.NotImplementedException;
 using LogicalParticleFilter1;
 
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
+
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 

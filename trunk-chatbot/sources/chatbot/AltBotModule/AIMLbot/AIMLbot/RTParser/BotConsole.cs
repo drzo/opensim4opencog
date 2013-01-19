@@ -34,6 +34,13 @@ using Mono.CSharp;
 using Action=System.Action;
 using Attribute=System.Attribute;
 
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
+
 namespace RTParser
 {
     /// <summary>

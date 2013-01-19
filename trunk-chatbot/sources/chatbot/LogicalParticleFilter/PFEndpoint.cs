@@ -7,7 +7,26 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.IO;
+#if (COGBOT_LIBOMV || USE_STHREADS || true)
+using ThreadPoolUtil;
+using ThreadPoolUtil;
+using ThreadStart = System.Threading.ThreadStart;
+using AutoResetEvent = System.Threading.AutoResetEvent;
+using ManualResetEvent = System.Threading.ManualResetEvent;
+using TimerCallback = System.Threading.TimerCallback;
+using Timer = System.Threading.Timer;
+using EventWaitHandle = System.Threading.EventWaitHandle;
+using Timeout = System.Threading.Timeout;
+using SynchronizationLockException = System.Threading.SynchronizationLockException;
+using Interlocked = System.Threading.Interlocked;
+using ThreadExceptionEventHandler = System.Threading.ThreadExceptionEventHandler;
+using ThreadExceptionEventArgs = System.Threading.ThreadExceptionEventArgs;
+using ApartmentState = System.Threading.ApartmentState;
+using ThreadPoolUtil;
+#else
 using System.Threading;
+using Thread = System.Threading.Thread;
+#endif
 using System.Xml;
 using System.Web;
 using System.Web.UI;

@@ -1,7 +1,14 @@
 using System;
 using System.Collections;
 using System.Reflection;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
 using System.Threading;
+
 using Cogbot;
 using Cogbot.Actions;
 using Cogbot;

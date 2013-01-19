@@ -9,6 +9,13 @@ using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using RoboKindAvroQPID;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
+
 
 namespace WorldRoboKindAvroQPIDModule
 {

@@ -3,7 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
 using System.Threading;
+
+
 using System.Xml;
 using System.IO;
 using System.Xml.Serialization;
@@ -2372,7 +2380,7 @@ namespace RTParser.Variables
                 }
             }
             bool isMaskedVar = IsMaskedVar(name);
-            bool needsUnlock = System.Threading.Monitor.TryEnter(orderedKeyLock, TimeSpan.FromSeconds(2));
+            bool needsUnlock = Monitor.TryEnter(orderedKeyLock, TimeSpan.FromSeconds(2));
             //string normalizedName = TransformKey(name);
             // check blackboard
             if ((isBBPrefixCorrect()) && (this.bot.myChemistry != null))

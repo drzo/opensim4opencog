@@ -1,6 +1,13 @@
 using System;
 using System.Collections.Generic;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
 using System.Threading;
+
 using Cogbot.Actions.Pathfinder;
 using Cogbot;
 using MushDLR223.Utilities;
@@ -15,10 +22,6 @@ using String=System.String;
 using System.Drawing;
 using ControlFlags = OpenMetaverse.AgentManager.ControlFlags;
 using UUIDFactory = Cogbot.CogbotHelpers;
-#if USE_SAFETHREADS
-using Thread = MushDLR223.Utilities.SafeThread;
-#endif
-
 
 namespace Cogbot.World
 {
@@ -1159,7 +1162,7 @@ namespace Cogbot.World
                     WorldSystem.SetSimAvatar(this);
                     ApproachThread = new Thread(TrackerLoop);
                     ApproachThread.Name = "TrackerLoop for " + Client;
-                    ApproachThread.Priority = ThreadPriority.Normal;
+                    ApproachThread.Priority = System.Threading.ThreadPriority.Normal;
                     ApproachThread.IsBackground = true;
                     //Client.Self.Movement.UseOnlyThreads.Add(ApproachThread);
                     ApproachThread.Start();

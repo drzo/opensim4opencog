@@ -2,7 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
 using System.Threading;
+
 using System.Windows.Forms;
 using CommandLine;
 using MushDLR223.ScriptEngines;
@@ -405,13 +412,13 @@ namespace Cogbot
         private static void ResizeThreadPools()
         {
             int workerThreads, iocpThreads;
-            System.Threading.ThreadPool.GetMaxThreads(out workerThreads, out iocpThreads);
+            ThreadPool.GetMaxThreads(out workerThreads, out iocpThreads);
 
             if (workerThreads < 500 || iocpThreads < 1000)
             {
                 if (workerThreads < 500) workerThreads = 500;
                 if (iocpThreads < 1000) iocpThreads = 1000;
-                System.Threading.ThreadPool.SetMaxThreads(workerThreads, iocpThreads);
+                ThreadPool.SetMaxThreads(workerThreads, iocpThreads);
             }
         }
 

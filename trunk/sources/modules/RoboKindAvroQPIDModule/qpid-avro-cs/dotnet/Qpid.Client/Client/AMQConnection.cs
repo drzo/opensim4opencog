@@ -33,6 +33,12 @@ using Apache.Qpid.Client.Transport.Socket.Blocking;
 using Apache.Qpid.Collections;
 using Apache.Qpid.Framing;
 using Apache.Qpid.Messaging;
+#if (COGBOT_LIBOMV || USE_STHREADS || true)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
 
 namespace Apache.Qpid.Client
 {

@@ -35,6 +35,12 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
 using System.Threading;
 using Cogbot;
 using Cogbot.Library;
@@ -676,7 +682,7 @@ namespace CogbotRadegastPluginModule
         private void pnlMovement_Click(object sender, EventArgs e)
         {
             client.Self.Jump(true);
-            System.Threading.Thread.Sleep(500);
+            Thread.Sleep(500);
             client.Self.Jump(false);
         }
 

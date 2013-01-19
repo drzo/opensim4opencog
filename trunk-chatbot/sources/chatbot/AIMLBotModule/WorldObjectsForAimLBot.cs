@@ -3,6 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
 using System.Threading;
 using AIMLbot;
 using AltAIMLbot;
@@ -22,7 +28,6 @@ using RTParser.Variables;
 using Exception=System.Exception;
 using Math=System.Math;
 using String=System.String;
-using Thread=System.Threading.Thread;
 using PathSystem3D.Navigation;
 using SUnifiable=System.String;
 using User=AltAIMLbot.User;
@@ -964,7 +969,7 @@ namespace AIMLBotModule
                     }
 
                     // Sleep for a second and increase the amount of characters we've typed
-                    System.Threading.Thread.Sleep(1000);
+                    Thread.Sleep(1000);
                     characters += cps;
                 }
 

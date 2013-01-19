@@ -2,6 +2,26 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+#if (COGBOT_LIBOMV || USE_STHREADS || true)
+using ThreadPoolUtil;
+using ThreadPoolUtil;
+using ThreadStart = System.Threading.ThreadStart;
+using AutoResetEvent = System.Threading.AutoResetEvent;
+using ManualResetEvent = System.Threading.ManualResetEvent;
+using TimerCallback = System.Threading.TimerCallback;
+using Timer = System.Threading.Timer;
+using EventWaitHandle = System.Threading.EventWaitHandle;
+using Timeout = System.Threading.Timeout;
+using SynchronizationLockException = System.Threading.SynchronizationLockException;
+using Interlocked = System.Threading.Interlocked;
+using ThreadExceptionEventHandler = System.Threading.ThreadExceptionEventHandler;
+using ThreadExceptionEventArgs = System.Threading.ThreadExceptionEventArgs;
+using ApartmentState = System.Threading.ApartmentState;
+using ThreadPoolUtil;
+#else
+using System.Threading;
+using Thread = System.Threading.Thread;
+#endif
 
 namespace CAMeRAVUEmotion
 {
@@ -1067,7 +1087,7 @@ namespace CAMeRAVUEmotion
 
                                     threadResponse = -1;
 
-                                    System.Threading.Thread T1 = new System.Threading.Thread(GetResponse);
+                                    Thread T1 = new Thread(GetResponse);
                                     T1.Start();
 
                                     runningThread = true;
@@ -1154,7 +1174,7 @@ namespace CAMeRAVUEmotion
         /// </summary>
         public static void Start()
         {
-            System.Threading.Thread T1 = new System.Threading.Thread(RunModel);
+            Thread T1 = new Thread(RunModel);
             T1.Start();
         }
 
