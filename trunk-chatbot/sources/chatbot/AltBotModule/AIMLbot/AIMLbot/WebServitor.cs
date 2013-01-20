@@ -34,17 +34,22 @@ namespace AltAIMLbot
         public static string startUpPath = null;
         public static Servitor ourServitor = null;
         
+        /// <summary>
+        /// The idea of tl_serverRoot is it my be set by a http client who knows this machine by a 
+        ///  public name such as http://12.1.1.12
+        /// 
+        /// </summary>
         [ThreadStatic]
         public static string tl_serverRoot;
         public static string GlobalServerHostWithPort
         {
             get
             {
-                return GlobalSharedSettings.CogbotServerWithPort;
+                return GlobalSharedSettings.serverWithPort;
             }
             set
             {
-                GlobalSharedSettings.CogbotServerWithPort = value;
+                GlobalSharedSettings.serverWithPort = value;
             }
         }
         public static string serverRoot
@@ -60,7 +65,7 @@ namespace AltAIMLbot
 
         /// <summary>
         /// WithHttp add a http:// prefix if missing
-        ///       and removes a trailing slash if present to allow concatenation;
+        ///       and removes a trailing slash if present to allow easier concatenation;
         /// </summary>
         /// <param name="root0"></param>
         /// <returns></returns>
@@ -73,16 +78,37 @@ namespace AltAIMLbot
             return root;
         }
 
+        /// <summary>
+        ///  Adds a trailing "/" if needed
+        /// </summary>
+        /// <param name="root0"></param>
+        /// <returns></returns>
+        public static string WithSlash(string root0)
+        {
+            if (root0.EndsWith("/")) return root0;
+            return root0 + "/";
+        }
+
         public static string GetServerRoot(string hostSuggest)
         {
             string sr = GlobalServerHostWithPort;
-            sr = sr.Replace("127.0.0.1:", "localhost:");
+            sr = sr.Replace("127.0.0.1", "localhost");
             sr = sr.Replace("+:", "localhost:");
             sr = sr.Replace("*:", "localhost:");
-            var s = tl_context.Request.UserHostAddress;
-            var s1 = tl_context.Response;
-            sr = sr.Replace("localhost:" + serverPort, hostSuggest);
-            sr = sr.Replace(s, hostSuggest);
+            var ctx = tl_context;
+            if (ctx != null)
+            {
+                var r = ctx.Request;
+                if (r != null)
+                {
+                    var s = ctx.Request.UserHostAddress;
+                    if (s != null)
+                    {
+                        sr = sr.Replace("localhost:" + serverPort, hostSuggest);
+                        sr = sr.Replace(s, hostSuggest);
+                    }
+                }
+            }
             return WithHttp(sr);
         }
         public static int serverPort
