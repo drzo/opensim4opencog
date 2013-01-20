@@ -515,7 +515,26 @@ function validateBrowserForm()
                 serverPort = short.Parse(sp[1]);
             }
         }
-        public static String serverHost = "cogbotserver";
+        public static string serverHost
+        {
+            get
+            {
+                return _serverHost ?? "cogbotserver";
+            }
+            set
+            {
+                if (value == "localhost")
+                {
+                    if (_serverHost != null)
+                    {
+                        return;
+                    }
+                }
+                _serverHost = value;
+            }
+        }
+
+        public static String _serverHost = null;
         public static int serverPort = 8123;
 
         public static string StructToString(object t)
