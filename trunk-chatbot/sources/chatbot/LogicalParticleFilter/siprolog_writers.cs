@@ -168,6 +168,7 @@ function validateBrowserForm()
 
         private void TOCmenu(TextWriter writer, string serverRoot)
         {
+            serverRoot = WithSlash(serverRoot);
             writer.WriteLine("<a href='{0}siprolog/?q=list'>List Mts</a> ", serverRoot);
             writer.WriteLine("<a href='{0}siprolog/?q=selector'>Browse Mts</a> ", serverRoot);
             writer.WriteLine("<a href='{0}siprolog/?q=preds'>List Preds</a> ", serverRoot);
@@ -183,6 +184,7 @@ function validateBrowserForm()
         }
         public void webWriter0(TextWriter writer, string action, string queryv, string mt, string serverRoot, bool toplevel)
         {
+            serverRoot = WithSlash(serverRoot);
             try
             {
                 if ((action == null) && (queryv == null) && (mt == null))
@@ -325,7 +327,8 @@ function validateBrowserForm()
 
         public void WriteMtInfo(TextWriter writer, string mt, string serverRoot, bool toplevel)
         {
-            threadLocal.tl_ServerRoot = serverRoot;
+            if (toplevel) threadLocal.tl_ServerRoot = serverRoot;
+            serverRoot = WithSlash(serverRoot);
             threadLocal.tl_writer = writer;
             writer.WriteLine("<h2>Siprolog Mt {0}</h2>", mt);
             PNode qnode = FindKB(mt);
@@ -406,8 +409,16 @@ function validateBrowserForm()
                 WriteMtInfoRDF(writer, qnode, mt, serverRoot, toplevel);
             }
         }
+
+        public static string WithSlash(string root0)
+        {
+            if (root0.EndsWith("/")) return root0;
+            return root0 + "/";
+        }
+
         public void WriteMtInfoRDF(TextWriter writer, PNode qnode, string mt, string serverRoot, bool toplevel)
         {
+            serverRoot = WithSlash(serverRoot);
             if (qnode != null)
             {
                 if (qnode.SyncFrequency != FrequencyOfSync.Never) ensureCompiled(qnode, ContentBackingStore.RdfMemory);
@@ -435,7 +446,7 @@ function validateBrowserForm()
             var mt = r.optHomeMt;
             bool localMT = qnode.id == mt;
             string color = localMT ? "blue" : "darkgreen";
-            string ext = localMT ? "" : string.Format("&nbsp;&nbsp;%<a href='{0}xrdf/?mt={1}'>{1}</a>", threadLocal.tl_ServerRoot, mt);
+            string ext = localMT ? "" : string.Format("&nbsp;&nbsp;%<a href='{0}xrdf/?mt={1}'>{1}</a>", WithSlash(threadLocal.tl_ServerRoot), mt);
 
 
             string toolTip = "";
@@ -489,7 +500,7 @@ function validateBrowserForm()
         [ThreadStatic]
         private static int tl_StructToStringDepth = 4;
 
-        public static string CogbotServerWithPort
+        public static string serverWithPort
         {
             get
             {
@@ -650,6 +661,7 @@ function validateBrowserForm()
  
         public void interactQuery(TextWriter writer, string query, string mt, string serverRoot)
         {
+            serverRoot = WithSlash(serverRoot);
             int testdepth = 64;
 
             List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
@@ -686,6 +698,7 @@ function validateBrowserForm()
         }
         public void interactFooter(TextWriter writer, string mt, string serverRoot)
         {
+            serverRoot = WithSlash(serverRoot);
             writer.WriteLine("<hr/>");
 
             writer.WriteLine(" <form method='get' ACTION='{1}siprolog/'>", mt, serverRoot);
@@ -716,6 +729,7 @@ function validateBrowserForm()
         }
         public void browserFooter(TextWriter writer, string mt, string serverRoot)
         {
+            serverRoot = WithSlash(serverRoot);
             writer.WriteLine("<hr/>");
 
             writer.WriteLine(" <form id='bfoot1' method='post' ACTION='' onsubmit='return validateBrowserForm()' >", mt, serverRoot);
