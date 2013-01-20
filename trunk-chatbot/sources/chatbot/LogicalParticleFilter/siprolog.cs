@@ -70,7 +70,7 @@ namespace LogicalParticleFilter1
         private static Term _TERM_TRUE = null;
         public static string CogbotServerWithPort
         {
-            get { return GlobalSharedSettings.CogbotServerWithPort; }
+            get { return GlobalSharedSettings.serverWithPort; }
         }
 
         public delegate void chemSysDelegate(string cmd);
@@ -605,7 +605,13 @@ namespace LogicalParticleFilter1
         {
             if (ruleSet != null && ruleSet.Trim() == "") return;
             {
-                Dictionary<string, RuleList> tempKB = ParseKEText(startMT, ruleSet);
+                bool immediateMode = true;
+                Dictionary<string, RuleList> tempKB = ParseKEText(startMT, ruleSet, immediateMode, clearFirst);
+                if (immediateMode)
+                {
+                    // Parsing created the side effects
+                    return;
+                }
                 foreach (string kb in tempKB.Keys)
                 {
                     var subKB = FindOrCreateKB(kb);
@@ -741,10 +747,17 @@ namespace LogicalParticleFilter1
         }
         public void loadKEText(string startMT, string ruleSet, bool clearFirst)
         {
-            if (ruleSet != null)
+            if (ruleSet == null) return;
+            bool immediateMode = true;
+            var restoreThreadKB = threadLocal.curKB;
+            try
             {
-                var restoreThreadKB = threadLocal.curKB;
-                Dictionary<string, RuleList> tempKB = ParseKEText(startMT, ruleSet);
+                Dictionary<string, RuleList> tempKB = ParseKEText(startMT, ruleSet, immediateMode, clearFirst);
+                if (immediateMode)
+                {
+                    // Parsing created the side effects
+                    return;
+                }
                 foreach (string kb in tempKB.Keys)
                 {
                     RuleList newRules = tempKB[kb];
@@ -755,8 +768,10 @@ namespace LogicalParticleFilter1
                                      (clearFirst ? ("REMOVING " + oldCount + " and ") : ""),
                                      addCount, focus);
                     loadIntoKB(newRules, focus, clearFirst);
-//                    int newCount = focus.Size;
                 }
+            }
+            finally
+            {
                 threadLocal.curKB = restoreThreadKB;
             }
         }

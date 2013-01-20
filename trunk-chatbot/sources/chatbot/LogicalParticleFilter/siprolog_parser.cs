@@ -34,16 +34,57 @@ namespace LogicalParticleFilter1
 {
     public partial class SIProlog
     {
-        Dictionary<string, RuleList> ParseKEText(string startMT, string ruleSet)
+        Dictionary<string, RuleList> ParseKEText(string startMT, string ruleSet, bool immediate, bool clearFirst)
         {
-            return ParseKEText(startMT, ruleSet, false);
+            var tempKB = new CIDictionary<string, RuleList>(new KeyCase(NormalizeKBName));
+            LoadKEText(startMT, ruleSet, FindOrCreateRuleList(tempKB, immediate, clearFirst), immediate);
+            return tempKB;
         }
-        Dictionary<string, RuleList> ParseKEText(string startMT, string ruleSet, bool immeadiate)
+
+        private Func<string, Action<Rule>> FindOrCreateRuleList(IDictionary<string, RuleList> dict, bool immediate, bool clearFirst)
         {
+            return ((s) =>
+                        {
+                            PNode node = FindKB(s);
+                            if (immediate)
+                            {
+                                if (node == null)
+                                {
+                                    node = FindOrCreateKB(s);
+                                }
+                            }
+                            RuleList rl;
+                            lock (dict)
+                            {
+                                if (!dict.TryGetValue(s, out rl))
+                                {
+                                    if (node != null)
+                                    {
+                                        if (clearFirst && immediate)
+                                        {
+                                            node.Clear();
+                                        }
+                                    }
+                                    rl = dict[s] = new RuleList();
+                                }
+                            }
+                            bool immedAdd = immediate && node != null;
+                            if (!immedAdd) return rl.Add;
+                            return r =>
+                                       {
+                                           rl.Add(r);
+                                           node.AddImmediate(r);
+                                       };
+                        });
+        }
+
+        void LoadKEText(string startMT, string ruleSet, Func<string, Action<Rule>> tempKB, bool immediate)
+        {
+            if (startMT != null) tempKB(startMT);
             // if startMT is null use the global variable
             string parseKB = startMT ?? threadLocal.curKB;
             // code below uses parseKB
-            Dictionary<string, RuleList> tempKB = new Dictionary<string, RuleList>();
+
             ///string[] lines = ruleSet.Split('\n');
             string curConst = "";
             {
@@ -54,6 +95,15 @@ namespace LogicalParticleFilter1
                     string line = toEndOfLine(ref ruleSet);
                     try
                     {
+                        Action CheckImmediate = () =>
+                                                 {
+                                                     if (!immediate)
+                                                     {
+                                                         throw new NotSupportedException(
+                                                             "In parsing from static cannot process: " + line);
+                                                     }
+                                                 };
+
                         if (line.StartsWith(";doc;"))
                         {
                             var line5 = line.Substring(5).Trim() + " .";
@@ -62,7 +112,7 @@ namespace LogicalParticleFilter1
                             continue;
                         }
                         if (line.StartsWith(";") || line.StartsWith("%")) continue;
-                        if (line.StartsWith("exit:")) return tempKB;
+                        if (line.StartsWith("exit:")) return;
                         if (line.StartsWith("."))
                         {
                             continue;
@@ -91,6 +141,7 @@ namespace LogicalParticleFilter1
                             if (cmd == "mt")
                             {
                                 parseKB = val;
+                                var rl = tempKB(parseKB);
                                 threadLocal.curKB = val;
                                 continue;
                             }
@@ -113,17 +164,20 @@ namespace LogicalParticleFilter1
                             }
                             if (cmd == "genlmt")
                             {
+                                CheckImmediate();
                                 connectMT(parseKB, val);
                                 continue;
                             }
                             if (cmd == "nonmt")
                             {
+                                CheckImmediate();
                                 disconnectMT(parseKB, val);
                                 continue;
                             }
 
                             if (cmd == "genlmtconst")
                             {
+                                CheckImmediate();
                                 connectMT(parseKB, curConst);
                                 continue;
                             }
@@ -134,7 +188,7 @@ namespace LogicalParticleFilter1
                             }
                             if (cmd == "include")
                             {
-                                loadKEFile(parseKB, val);
+                                LoadKEText(parseKB, FromStream(val), tempKB, immediate);
                                 continue;
                             }
                             if (cmd == "chemsys")
@@ -154,8 +208,7 @@ namespace LogicalParticleFilter1
                                 newPred = newPred.Replace(",,", ",0,");
                                 if (!newPred.Contains(":"))
                                 {
-                                    if (!tempKB.ContainsKey(parseKB)) tempKB[parseKB] = new RuleList();
-                                    tempKB[parseKB].Add(ParseRule(new Tokeniser(newPred), parseKB));
+                                    tempKB(parseKB)(ParseRule(new Tokeniser(newPred), parseKB));
 
                                 }
                                 continue;
@@ -172,8 +225,7 @@ namespace LogicalParticleFilter1
                                 threadLocal.curKB = val;
                                 val = atomize(val);
                                 string uniPred = String.Format("module({0}).\n", val);
-                                if (!tempKB.ContainsKey(parseKB)) tempKB[parseKB] = new RuleList();
-                                tempKB[parseKB].Add(ParseRule(new Tokeniser(uniPred), parseKB));
+                                tempKB(parseKB)(ParseRule(new Tokeniser(uniPred), parseKB));
                                 continue;
                             }
 
@@ -187,8 +239,7 @@ namespace LogicalParticleFilter1
                                 var rule = ParseRule(new Tokeniser(binaryPred), parseKB);
                                 if (rule != null)
                                 {
-                                    if (!tempKB.ContainsKey(parseKB)) tempKB[parseKB] = new RuleList();
-                                    tempKB[parseKB].Add(rule);
+                                    tempKB(parseKB)(rule);
                                     continue;
                                 }
                                 else
@@ -237,8 +288,7 @@ namespace LogicalParticleFilter1
                                 Warn("Could not parse: " + was);
                                 continue;
                             }
-                            if (!tempKB.ContainsKey(parseKB)) tempKB[parseKB] = new RuleList();
-                            tempKB[parseKB].Add(rule);
+                            tempKB(parseKB)(rule);
                         }
                     }
                     catch (Exception e)
@@ -247,7 +297,6 @@ namespace LogicalParticleFilter1
                     }
                 } while (ruleSet.Trim() != "");
             }
-            return tempKB;
         }
 
         private string TrimAndRemoveTrailingPeriod(string val)
@@ -302,7 +351,7 @@ namespace LogicalParticleFilter1
         }
         public RuleList parseRuleset(string rulesIn, string homeMt)
         {
-            var pmt = ParseKEText(homeMt, rulesIn);
+            var pmt = ParseKEText(homeMt, rulesIn, false, true);
             if (pmt != null && pmt.Count == 1)
             {
                 var ruleList0 = pmt.Values.FirstOrDefault();

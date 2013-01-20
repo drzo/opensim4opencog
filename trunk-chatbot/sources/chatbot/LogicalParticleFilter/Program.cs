@@ -354,9 +354,12 @@ namespace LogicalParticleFilter1
             testProlog3();
             testPrologBuiltins();
             prologEngine.mtest();
-            prologEngine.askQuery("triple(SUBJECT,PRED,OBJ)", "testRDF");
-            if (prologEngine.HasKBNamed("dbpediaRdfMemory")) prologEngine.askQuery("triple(SUBJECT,PRED,OBJ)", "dbpediaRdfMemory");
-
+            if (SIProlog.RdfDeveloperSanityChecks > 2)
+            {
+                prologEngine.askQuery("triple(SUBJECT,PRED,OBJ)", "testRDF");
+                if (prologEngine.HasKBNamed("dbpediaRdfMemory"))
+                    prologEngine.askQuery("triple(SUBJECT,PRED,OBJ)", "dbpediaRdfMemory");
+            }
             testProlog4();
             //p1();
             p2();

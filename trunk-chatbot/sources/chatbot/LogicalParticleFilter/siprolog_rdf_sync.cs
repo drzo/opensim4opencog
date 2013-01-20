@@ -84,7 +84,7 @@ namespace LogicalParticleFilter1
             outMap["s"] = "unknownSubject";
             outMap["p"] = "unknownPredicate";
             outMap["o"] = "unknownObject";
-            outMap["mt"] = GraphWithDef.PlReadble(repo.definations.CreateUriNode(repo.rdfGraph.BaseUri), ruleDefs);
+            outMap["mt"] = Atom.aq(repo.Id);
 
             if (results is SparqlResultSet)
             {
@@ -275,7 +275,7 @@ namespace LogicalParticleFilter1
         public void mtest()
         {
 
-            IGraph g = NewGraph("mtest");
+            var g = NewGraph("mtest");
             g.BaseUri = UriFactory.Create(RoboKindURI);
 
             IUriNode dotNetRDF = g.CreateUriNode(UriFactory.Create("http://www.dotnetrdf.org"));
@@ -300,7 +300,7 @@ namespace LogicalParticleFilter1
             rdfxmlwriter.Save(g, "HelloWorld.rdf");
 
             FindOrCreateKB("testRDF").SourceKind = ContentBackingStore.Prolog;
-            if (RdfDeveloperSanityChecks < 2) return;
+            if (RdfDeveloperSanityChecks < 3) return;
             rdfImportToKB(g,
                           "testRDF",
                           "SELECT * WHERE { ?s ?p ?o }",

@@ -185,6 +185,10 @@ namespace LogicalParticleFilter1
                     {
                         return localValue;
                     }
+                    if (IsNumber)
+                    {
+                        return localValue;
+                    }
                     var localName = LocalName ?? this.localValue;
                     if (string.IsNullOrEmpty(localName))
                     {
@@ -217,7 +221,7 @@ namespace LogicalParticleFilter1
                     return fvname;
                 }
             }
-            public object Functor0
+            public override object Functor0
             {
                 get
                 {
@@ -593,6 +597,15 @@ namespace LogicalParticleFilter1
                     return objRef is String || (!(objRef is IUriNode) && !(objRef is NumericNode));
                 }
             }
+            public bool IsNumber
+            {
+                get
+                {
+                    var ivnode = AsValuedNode();             
+                    if (ivnode != null) return (ivnode.NumericType != VDS.RDF.Query.Expressions.SparqlNumericType.NaN);
+                    return false;
+                }
+            }
 
             protected static string XmlString = XmlSpecsHelper.XmlSchemaDataTypeString;
 
@@ -760,6 +773,11 @@ namespace LogicalParticleFilter1
 
                         var ivnode = litnode.AsValuedNode();
                         var value = litnode.Value;
+                        // numbers
+                        if (ivnode != null && ivnode.NumericType != VDS.RDF.Query.Expressions.SparqlNumericType.NaN)
+                        {
+                            return value;
+                        }
                         var dt = litnode.DataType;
                         var lt = litnode.Language;
                         string et = String.Empty;// ivnode.EffectiveType;

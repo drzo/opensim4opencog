@@ -37,6 +37,8 @@ namespace LogicalParticleFilter1
 {
     public partial class SIProlog
     {
+        public static bool RdfSavedInPDB = false;
+
         public void EndpointCreated(PFEndpoint endpoint)
         {
             if (RdfDeveloperSanityChecks < 2) return;
@@ -103,10 +105,10 @@ namespace LogicalParticleFilter1
             }
         }
 
-        public LiveCallGraph NewGraph(string rdfglobaldefsmt)
+        public LiveCallGraph NewGraph(string kbName)
         {
             LiveCallTripleCollection lcTC = new LiveCallTripleCollection(this);
-            lcTC.defaultKB = rdfglobaldefsmt;
+            lcTC.defaultKB = kbName;
             return new LiveCallGraph(lcTC, rdfDefNS);
         }
     }
@@ -610,6 +612,19 @@ namespace LogicalParticleFilter1
         protected ReaderWriterLockSlim _lockManager = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
         protected bool monitorObjCreation = false;
         protected INodeFactory _factory;
+        internal SIProlog.PNode _pnode;
+        internal SIProlog.PNode pnode
+        {
+            get
+            {
+                if (SIProlog.RdfSavedInPDB) return _pnode;
+                return null;
+            }
+            set
+            {
+                _pnode = value;
+            }
+        }
 
         /// <summary>
         /// Enters the write lock
@@ -847,7 +862,88 @@ namespace LogicalParticleFilter1
 
         public override void Merge(IGraph g, bool keepOriginalGraphUri)
         {
-            WriteOp(() => base.Merge(g, keepOriginalGraphUri));
+            WriteOp(() => MergeB(g, keepOriginalGraphUri));
+        }
+
+        public virtual void MergeB(IGraph g, bool keepOriginalGraphUri)
+        {
+            if (ReferenceEquals(this, g)) throw new RdfException("You cannot Merge an RDF Graph with itself");
+
+            //Check that the merge can go ahead
+            if (!this.RaiseMergeRequested()) return;
+
+            //First copy and Prefixes across which aren't defined in this Graph
+            this._nsmapper.Import(g.NamespaceMap);
+
+            if (this.IsEmpty)
+            {
+                //Empty Graph so do a quick copy
+                foreach (Triple t in g.Triples)
+                {
+                    this.AssertFromGraph(new Triple(Tools.CopyNode(t.Subject, this, keepOriginalGraphUri),
+                                                    Tools.CopyNode(t.Predicate, this, keepOriginalGraphUri),
+                                                    Tools.CopyNode(t.Object, this, keepOriginalGraphUri),
+                                                    t.Context), g);
+                }
+            }
+            else
+            {
+                //Prepare a mapping of Blank Nodes to Blank Nodes
+                Dictionary<INode, IBlankNode> mapping = new Dictionary<INode, IBlankNode>();
+
+                foreach (Triple t in g.Triples)
+                {
+                    INode s, p, o;
+                    if (t.Subject.NodeType == NodeType.Blank)
+                    {
+                        if (!mapping.ContainsKey(t.Subject))
+                        {
+                            IBlankNode temp = this.CreateBlankNode();
+                            if (keepOriginalGraphUri) temp.GraphUri = t.Subject.GraphUri;
+                            mapping.Add(t.Subject, temp);
+                        }
+                        s = mapping[t.Subject];
+                    }
+                    else
+                    {
+                        s = Tools.CopyNode(t.Subject, this, keepOriginalGraphUri);
+                    }
+
+                    if (t.Predicate.NodeType == NodeType.Blank)
+                    {
+                        if (!mapping.ContainsKey(t.Predicate))
+                        {
+                            IBlankNode temp = this.CreateBlankNode();
+                            if (keepOriginalGraphUri) temp.GraphUri = t.Predicate.GraphUri;
+                            mapping.Add(t.Predicate, temp);
+                        }
+                        p = mapping[t.Predicate];
+                    }
+                    else
+                    {
+                        p = Tools.CopyNode(t.Predicate, this, keepOriginalGraphUri);
+                    }
+
+                    if (t.Object.NodeType == NodeType.Blank)
+                    {
+                        if (!mapping.ContainsKey(t.Object))
+                        {
+                            IBlankNode temp = this.CreateBlankNode();
+                            if (keepOriginalGraphUri) temp.GraphUri = t.Object.GraphUri;
+                            mapping.Add(t.Object, temp);
+                        }
+                        o = mapping[t.Object];
+                    }
+                    else
+                    {
+                        o = Tools.CopyNode(t.Object, this, keepOriginalGraphUri);
+                    }
+
+                    this.AssertFromGraph(new Triple(s, p, o, t.Context), g);
+                }
+            }
+
+            this.RaiseMerged();
         }
 
         public override bool ContainsTriple(Triple t)
@@ -869,9 +965,18 @@ namespace LogicalParticleFilter1
         /// <param name="t">The Triple to add to the Graph</param>
         public override bool Assert(Triple t)
         {
+            return AssertFromGraph(t, null);
+        }
+
+        public bool AssertFromGraph(Triple t, IGraph graph)
+        {
             try
             {
                 EnterWriteLock();
+                if (pnode != null)
+                {
+                    pnode.AssertTriple(t, graph);
+                }
                 return base.Assert(t);
             }
             finally

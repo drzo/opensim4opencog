@@ -57,32 +57,47 @@ namespace LogicalParticleFilter1
                 }
             }
 
-            public static RdfRules FromRule(PNode pnode, Rule rule, IGraph kb)
+            public static T InCompiler<T>(PNode pnode, Rule rule, string kbName, Func<T> made)
             {
                 var temp = threadLocal.curKB;
                 var tCompilingRule = CompilingRule;
                 var tCompilingMt = CompilingMt;
+                var tCompilingMtNode = CompilingMtNode;
                 try
                 {
+                    threadLocal.curKB = kbName;
                     CompilingRule = rule;
                     CompilingMt = pnode;
                     CompilingMtNode = C(rdfDefinations, CompilingMtName);
-                    RdfRules made = FromRule0(rule, kb);
-                    if (made == null)
-                    {
-                        made = new RdfRules(kb);
-                        made.AddProducing(MakeTriple(CompilingMtNode,
-                                                     kb.CreateUriNode("siprolog:sourceCode"),
-                                                     kb.CreateLiteralNode(rule.ToSource(SourceLanguage.Prolog), "prolog")));
-                    }
-                    return made;
+                    return made();
                 }
                 finally
                 {
                     CompilingRule = tCompilingRule;
                     CompilingMt = tCompilingMt;
                     threadLocal.curKB = temp;
+                    CompilingMtNode = tCompilingMtNode;
                 }
+            }
+
+            public static RdfRules FromRule(PNode pnode, Rule rule, IGraph kb)
+            {
+                return InCompiler(pnode, rule, pnode.id,
+                                  () =>
+                                      {
+                                          RdfRules made = FromRule0(rule, kb);
+                                          if (made == null)
+                                          {
+                                              made = new RdfRules(kb);
+                                              made.AddProducing(
+                                                  MakeTriple(
+                                                      CompilingMtNode,
+                                                      kb.CreateUriNode("siprolog:sourceCode"),
+                                                      kb.CreateLiteralNode(rule.ToSource(SourceLanguage.Prolog),
+                                                                           "prolog")));
+                                          }
+                                          return made;
+                                      });
             }
 
             public static RdfRules FromRule0(Rule rule, IGraph kb)
@@ -620,7 +635,7 @@ namespace LogicalParticleFilter1
                 }
                 return C(rdfDefinations, AsURIString(binaryPred));
             }
-            private static int GetInstanceOnArg(string name)
+            public static int GetInstanceOnArg(string name)
             {
                 int instanceOnArg = GetInstanceOnArg(name, false);
                 if (instanceOnArg > 0) return instanceOnArg;

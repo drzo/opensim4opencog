@@ -47,12 +47,12 @@ namespace LogicalParticleFilter1
             }
         }
 
-        internal static readonly FirstUse<Graph> _rdfDefinations = new Func<Graph>(() => CurrentProlog.NewGraph(rdfDefMT));
-        internal static Graph rdfDefinations
+        internal static readonly FirstUse<LiveCallGraph> _rdfDefinations = new Func<LiveCallGraph>(() => CurrentProlog.NewGraph(rdfDefMT));
+        internal static LiveCallGraph rdfDefinations
         {
             get
             {
-                return _rdfDefinations;
+                return _rdfDefinations.Value;
             }
         }
         public const string TripleName = "triple";
@@ -96,10 +96,11 @@ namespace LogicalParticleFilter1
             string machineName = Environment.MachineName;
             if (machineName == "ENKI" || machineName.ToUpper() == "TITAN")
             {
-                RdfDeveloperSanityChecks = 3;
+                RdfDeveloperSanityChecks = 2;
                 DontRDFSync = false;
             }
             var uriAgainIs = UriFactory.Create(RoboKindURI);
+            var rdfDefinations = SIProlog.rdfDefinations;
             rdfDefinations.BaseUri = uriAgainIs;
             lock (rdfDefNS) LoadGraphPrefixes(rdfDefNS);
             rdfDefinations.BaseUri = uriAgainIs;
@@ -107,9 +108,12 @@ namespace LogicalParticleFilter1
                 rdfDefSync ??
                 //FindKB(rdfDefMT) ??
                 new PNode(rdfDefMT, this, rdfDefinations);
+            rdfDefinations.pnode = rdfDefSync;
             forReaderTripleStoreGraph.BaseUri = uriAgainIs;
-            var rdfKB = FindOrCreateKB(rdfDefMT);
-            rdfKB.SourceKind = ContentBackingStore.RdfMemory;
+            bool newlyCreated;
+            var rdfKB = FindOrCreateKB_unlocked_Actual(rdfDefMT, out newlyCreated);
+           // rdfKB.SourceKind = ContentBackingStore.RdfMemory;
+            rdfDefinations.pnode = rdfDefSync;
             rdfDefSync.IncludeRDFUri(new FileInfo("aiml/shared_ke/PrologToRDFConversion.owl").FullName);
             loadKEText(rdfDefMT, FromStream("aiml/shared_ke/argdefs.txt"), false);
         }

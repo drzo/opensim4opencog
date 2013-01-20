@@ -61,12 +61,13 @@ namespace LogicalParticleFilter1
             newlyCreated = !GraphForMT.TryGetValue(mt, out graph);
             if (newlyCreated)
             {
-                Graph newGraph = NewGraph(mt);
-                Uri nsURI = UriFactory.Create(UriOfMt(mt));;
+                var newGraph = NewGraph(mt);
+                Uri nsURI = UriFactory.Create(UriOfMt(mt));                
                 newGraph.BaseUri = nsURI;
                 lock (rdfDefNS) rdfDefNS.AddNamespace(mt, nsURI);
                 EnsureReaderNamespaces(newGraph);
                 graph = new PNode(mt, this, newGraph);
+                newGraph.pnode = graph;
             }
             return graph.PrologKB;
         }
@@ -119,7 +120,24 @@ namespace LogicalParticleFilter1
             }
 
             public double probability = 1.0;
-            public ContentBackingStore SourceKind = ContentBackingStore.Prolog;
+            public ContentBackingStore SourceKind
+            {
+                get
+                {
+                    return _SourceKind;
+                }
+                set
+                {
+                    if (!SIProlog.RdfSavedInPDB)
+                    {
+                        if (value != _SourceKind)
+                        {
+                            _SourceKind = value;
+                        }
+                    }
+                }
+            }
+            ContentBackingStore _SourceKind = ContentBackingStore.Prolog;
             public FrequencyOfSync SyncFrequency = FrequencyOfSync.AsNeeded;
             private ContentBackingStore _SyncFromNow = ContentBackingStore.None;
             public ContentBackingStore SyncFromNow
@@ -191,8 +209,7 @@ namespace LogicalParticleFilter1
             }
             public override int GetHashCode()
             {
-                return base.GetHashCode();
-                return id.GetHashCode();
+                return NormalizeKBName(id).GetHashCode();
             }
             public override bool Equals(object obj)
             {
@@ -627,6 +644,10 @@ namespace LogicalParticleFilter1
             public void AddRules(RuleList ruleSet, bool clearFirst)
             {
                 var focus = this;
+                if (focus.pdb.rules == ruleSet)
+                {
+                    return;
+                }
                 if (clearFirst) focus.Clear();
 
                 if (focus.IsDataFrom(ContentBackingStore.Prolog))
@@ -660,6 +681,98 @@ namespace LogicalParticleFilter1
                         Warn(e);
                     }
                 }
+            }
+            public void AssertTriple(Triple triple, IGraph listResolves)
+            {
+                GraphWithDef.InCompiler<bool>(this, null, id, () => AssertTriple_0(triple, listResolves));
+            }
+            public bool AssertTriple_0(Triple triple, IGraph listResolves)
+            {
+                var s = triple.Subject;
+                var p = triple.Predicate;
+                var o = triple.Object;
+                string sp = triple.Predicate.ToString();
+                int argNum = GraphWithDef.GetInstanceOnArg(sp);
+                var pp = Atom.MakeNodeAtom(p);
+                if (argNum == -1)
+                {
+                    // assume it's one to one?
+                    argNum = 1;
+                }
+                if (argNum != 0)
+                {
+                    //1: [a f (b c)]
+                    //2: [b f (a c)]
+                    //3: [c f (a b)]
+                    PartList parts = new PartListImpl();
+                    AddRdfList(parts, o, argNum, s, triple, listResolves);
+                    var rule = new Rule(new Term(pp.fname, false, parts));
+                    rule.optHomeMt = id;
+                    pdb.index.Clear();
+                    pdb.rules.Add(rule);
+                    return true;
+                }
+                // pred + args are in the list [db1 f (a b c)]
+                return false;
+            }
+
+            public static void AddRdfList(PartListImpl parts, INode node, int argNum, INode obj, Triple triple, IGraph listResolves)
+            {
+                if (parts.Count + 1 == argNum)
+                {
+                    AddRdfList(parts, obj, -1, null, triple, listResolves);
+                    AddRdfList(parts, node, -1, null, triple, listResolves);
+                    return;
+                }
+                switch (node.NodeType)
+                {
+                    case NodeType.Literal:
+                        parts.AddPart(Atom.MakeNodeAtom(node));
+                        return;
+                    case NodeType.Variable:
+                        parts.AddPart(new Variable(node.ToString().Substring(1)));
+                        return;
+                    case NodeType.Uri:
+                    case NodeType.Blank:
+                        {
+                            INode f, r;
+                            if (GetRdfList(node, listResolves, out f, out r))
+                            {
+                                AddRdfList(parts, f, argNum, obj, triple, listResolves);
+                                AddRdfList(parts, r, argNum, obj, triple, listResolves);
+                                return;
+                            }
+                        }
+                        parts.AddPart(Atom.MakeNodeAtom(node));
+                        return;
+                    case NodeType.GraphLiteral:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            public static bool GetRdfList(INode n, IGraph g, out INode f, out INode r)
+            {
+                f = r = null;
+                INode rdfRest = g.CreateUriNode(UriFactory.Create(RdfSpecsHelper.RdfListRest));
+                INode rdfFirst = g.CreateUriNode(UriFactory.Create(RdfSpecsHelper.RdfListFirst));
+                foreach (var tf in g.GetTriplesWithSubjectPredicate(n, rdfFirst))
+                {
+                    f = tf.Object;
+                    foreach (var tr in g.GetTriplesWithSubjectPredicate(n, rdfRest))
+                    {
+                        r = tf.Object;
+                        return true;
+                    }
+                    break;
+                }
+                return false;
+            }
+
+            public void AddImmediate(Rule rule)
+            {
+                pdb.rules.Add(rule);
             }
         }
 
