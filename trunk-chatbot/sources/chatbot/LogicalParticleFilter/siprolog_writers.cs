@@ -478,7 +478,9 @@ function validateBrowserForm()
                 return tl_console_language.Name;
             }
         }
-        internal string tl_ServerRoot;
+
+        internal string tl_ServerRoot = GlobalSharedSettings.tl_serverRoot ??
+                                        "http://" + GlobalSharedSettings.serverWithPort + "/";
         internal string tl_mt;
         internal string tl_rule_mt;
         internal string curKB
@@ -496,6 +498,7 @@ function validateBrowserForm()
     }
     public static class GlobalSharedSettings
     {
+        [ThreadStatic] public static string tl_serverRoot;
         [ThreadStatic] public static LocalIOSettings LocalSettings = new LocalIOSettings();
         [ThreadStatic]
         private static int tl_StructToStringDepth = 4;

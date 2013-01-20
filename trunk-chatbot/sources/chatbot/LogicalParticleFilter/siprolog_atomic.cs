@@ -784,7 +784,7 @@ namespace LogicalParticleFilter1
             {
                 return q(s, "\"", "\"");
             }
-            private static string aq(string s)
+            public static string aq(string s)
             {
                 if (!Atom.MustBeQuoted(s)) return s;
                 return q(s, "'", "'");

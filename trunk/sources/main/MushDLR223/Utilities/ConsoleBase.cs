@@ -458,8 +458,11 @@ namespace MushDLR223.Utilities
             SystemConsole.SetOut(new OutputDelegateWriter(DebugWriteLine));
         }
 
+        private static bool detectedMainEnv = false;
         public static void DetectMainEnv(TextWriter Console)
         {
+            if (detectedMainEnv) return;
+            detectedMainEnv = true;
             var osv = Environment.OSVersion;
             Console = Console ?? InitialConsoleOut ?? InitialConsoleERR;
             if (Console != null)

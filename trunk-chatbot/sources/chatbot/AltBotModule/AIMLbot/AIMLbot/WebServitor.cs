@@ -39,8 +39,17 @@ namespace AltAIMLbot
         ///  public name such as http://12.1.1.12
         /// 
         /// </summary>
-        [ThreadStatic]
-        public static string tl_serverRoot;
+        public static string tl_serverRoot
+        {
+            get
+            {
+                return GlobalSharedSettings.tl_serverRoot;
+            }
+            set
+            {
+                GlobalSharedSettings.tl_serverRoot = value;
+            }
+        }
         public static string GlobalServerHostWithPort
         {
             get
