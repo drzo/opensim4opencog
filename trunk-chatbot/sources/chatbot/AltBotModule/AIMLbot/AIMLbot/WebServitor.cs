@@ -51,23 +51,39 @@ namespace AltAIMLbot
         {
             get
             {
-                if (tl_serverRoot != null) return tl_serverRoot;
-                return "http://" + GlobalServerHostWithPort + "/";
+                if (tl_serverRoot != null) return WithHttp(tl_serverRoot);
+                return WithHttp(GlobalServerHostWithPort);
             }
             set { GlobalServerHostWithPort = value; }
+        }
+
+
+        /// <summary>
+        /// WithHttp add a http:// prefix if missing
+        ///       and removes a trailing slash if present to allow concatenation;
+        /// </summary>
+        /// <param name="root0"></param>
+        /// <returns></returns>
+        public static string WithHttp(string root0)
+        {
+            if (root0 == null) return null;
+            var root = root0;
+            if (!root.StartsWith("http://")) root = "http://" + root;
+            if (root.EndsWith("/")) root = root.Substring(0, root.Length - 1);
+            return root;
         }
 
         public static string GetServerRoot(string hostSuggest)
         {
             string sr = GlobalServerHostWithPort;
-            sr = sr.Replace("127.0.0.1:", "locahost:");
-            sr = sr.Replace("+:", "locahost:");
-            sr = sr.Replace("*:", "locahost:");
+            sr = sr.Replace("127.0.0.1:", "localhost:");
+            sr = sr.Replace("+:", "localhost:");
+            sr = sr.Replace("*:", "localhost:");
             var s = tl_context.Request.UserHostAddress;
             var s1 = tl_context.Response;
             sr = sr.Replace("localhost:" + serverPort, hostSuggest);
             sr = sr.Replace(s, hostSuggest);
-            return sr;
+            return WithHttp(sr);
         }
         public static int serverPort
         {
@@ -124,7 +140,7 @@ namespace AltAIMLbot
                 catch (Exception e)
                 {
                     Console.WriteLine("FAIL Listener Adding:" + serverRoot);
-                    Console.WriteLine(e.Message);
+                    Console.WriteLine("" + e);
                 }
                 try
                 {
@@ -143,20 +159,20 @@ namespace AltAIMLbot
                 catch (Exception e)
                 {
                     Console.WriteLine("FAIL Listener Adding:" + pfadd);
-                    Console.WriteLine(e.Message);
+                    Console.WriteLine("" + e);
                 }
                 try
                 {
                     listener.Start();
+                    listenerThread = new Thread(new ThreadStart(clientListener));
+                    listenerThread.Start();
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("FAIL listener.Start()");
-                    Console.WriteLine(e.Message);
+                    Console.WriteLine("" + e);
                 }
 
-                listenerThread = new Thread(new ThreadStart(clientListener));
-                listenerThread.Start();
             }
             if (provideAnalysis) loadAnalyzer();
         }
@@ -546,11 +562,7 @@ namespace AltAIMLbot
                         context.Response.StatusCode = (int) HttpStatusCode.OK;
                         string[] fileList = Directory.GetFiles(behaviorDir);
                         string fileListString = "";
-                        string uriPrefix = "";
-                        if (serverRoot.Contains("http:"))
-                            uriPrefix = serverRoot + "/behavior/";
-                        else
-                            uriPrefix = "http://" + serverRoot + "/behavior/";
+                        string uriPrefix = WithHttp(serverRoot) + "/behavior/";
                         {
                             foreach (string f in fileList)
                             {
@@ -597,11 +609,7 @@ namespace AltAIMLbot
                         fileList = Directory.GetFiles(behaviorDir);
                     }
                     string fileListString = "";
-                    string uriPrefix = "";
-                    if (serverRoot.Contains("http:"))
-                        uriPrefix = serverRoot + "/behavior/";
-                    else
-                        uriPrefix = "http://" + serverRoot + "/behavior/";
+                    string uriPrefix = WithHttp(serverRoot) + "/behavior/";
 
                     //+using (Stream s = context.Response.OutputStream )
                     using (var writer = HtmlStreamWriter(context))
@@ -629,11 +637,7 @@ namespace AltAIMLbot
                             fileList = Directory.GetFiles(behaviorDir);
                         }
                         string fileListString = "";
-                        string uriPrefix = "";
-                        if (serverRoot.Contains("http:"))
-                            uriPrefix = serverRoot + "/behavior/";
-                        else
-                            uriPrefix = "http://" + serverRoot + "/behavior/";
+                        string uriPrefix = WithHttp(serverRoot) + "/behavior/";
 
                         //+using (Stream s = context.Response.OutputStream )
                         using (var writer = HtmlStreamWriter(context))
@@ -758,11 +762,7 @@ namespace AltAIMLbot
         }
         public static string graphMasterToURI(string gmPath)
         {
-            string uriPrefix = "";
-            if (serverRoot.Contains("http:"))
-                uriPrefix = serverRoot + "/graphmaster/";
-            else
-                uriPrefix = "http://" + serverRoot + "/graphmaster/";
+            string uriPrefix = WithHttp(serverRoot) + "/graphmaster/";
 
             //string gmBase = serverRoot + "graphmaster/";
             string gmBase = uriPrefix;

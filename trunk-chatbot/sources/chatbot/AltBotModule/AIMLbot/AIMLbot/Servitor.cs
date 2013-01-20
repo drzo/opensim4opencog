@@ -630,8 +630,11 @@ namespace AltAIMLbot
                 catch { }
             }
 
-            Console.WriteLine("Servitor WebServitor.beginService");
-            WebServitor.beginService(this);
+            ThreadPool.QueueUserWorkItem((o) =>
+                                             {
+                                                 Console.WriteLine("Servitor WebServitor.beginService");
+                                                 WebServitor.beginService(this);
+                                             });
             Thread.Sleep(600);
             Console.WriteLine("Servitor checkNewPersonality");
 
