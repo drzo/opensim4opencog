@@ -174,9 +174,10 @@ function validateBrowserForm()
             writer.WriteLine("<a href='{0}siprolog/?q=listing'>List All KB Rules</a> ", serverRoot);
             writer.WriteLine("<a href='{0}query'>Sparql Query</a>", PFEndpoint.serverRoot);
             writer.WriteLine("<a href='{0}list/'>Behavour List</a>", serverRoot);
+            writer.WriteLine("<a href='{0}listlinks/'>Behavour List Links</a>", serverRoot);
             //writer.WriteLine("<a href='{0}processes/list/'>Processes List</a>", serverRoot);
             writer.WriteLine("<a href='{0}scheduler/?a=liststatus'>Scheduler List</a>", serverRoot);
-            writer.WriteLine("<a href='{0}analysisllist/'>Analysis List</a>", serverRoot);
+            writer.WriteLine("<a href='{0}analysislist/'>Analysis List</a>", serverRoot);
             writer.WriteLine("<a href='{0}graphmaster/?a=list'>Graphmaster List</a>", serverRoot);
             writer.WriteLine("<a href='{0}'>Home</a><br/>", serverRoot);
         }

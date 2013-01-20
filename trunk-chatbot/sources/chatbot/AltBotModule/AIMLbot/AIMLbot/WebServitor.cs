@@ -245,7 +245,7 @@ namespace AltAIMLbot
            // {
             if ((context != null) && (context.Response != null))
             {
-                Console.WriteLine("Webservitor processRequest close");
+                //Console.WriteLine("Webservitor processRequest close");
                 context.Response.Close();
             }
             else
@@ -305,7 +305,7 @@ namespace AltAIMLbot
                     string query = NVC["q"];
                     string action = NVC["a"];
                     WebLinksWriter.tl_title = path;
-                    Console.WriteLine("WEBPOST path={0},action={1},query={2},btx={3}", path, action, query, behaviorName);
+ //                   Console.WriteLine("WEBPOST path={0},action={1},query={2},btx={3}", path, action, query, behaviorName);
                     if (path2.Contains("./siprolog/"))
                     {
                         WebLinksWriter.tl_AsHTML = false;
@@ -445,7 +445,7 @@ namespace AltAIMLbot
             string query = context.Request.QueryString["q"];
             string action = context.Request.QueryString["a"];
             WebLinksWriter.tl_title = path;
-            Console.WriteLine("WEBGET path={0},action={1},query={2},btx={3},mt={4}", path, action, query, behaviorName,mt);
+            //Console.WriteLine("WEBGET path={0},action={1},query={2},btx={3},mt={4}", path, action, query, behaviorName,mt);
             //serverRoot
             if (path.Contains("./plot/"))
             {
@@ -482,7 +482,7 @@ namespace AltAIMLbot
                 //+using (Stream s = context.Response.OutputStream )
                 try
                 {
-                    lock (ourServitor)
+                    lock (ourServitor.prologEngine)
                     {
                         using (var writer = HtmlStreamWriter(context))
                             ourServitor.prologEngine.webWriter(writer, action, query, mt, serverRoot);
@@ -520,20 +520,24 @@ namespace AltAIMLbot
                 context.Response.StatusCode = (int) HttpStatusCode.OK;
                 //+using (Stream s = context.Response.OutputStream )
                 using (var writer = HtmlStreamWriter(context))
+                {
+                    WebLinksWriter.tl_AsHTML = false;
                     if (query != null)
                     {
+
                         analyseGraphMaster(writer, query, justURL);
                     }
                     else
                     {
                         fetchGraphMaster(writer, justURL);
                     }
+                }
                 return;
             }
 
-            if (path.Contains("./analysisllist/"))
+            if (path.Contains("./analysislist/"))
             {
-                WebLinksWriter.tl_AsHTML = true;
+                WebLinksWriter.tl_AsHTML = false;
                 string furi = justURL;
                 //+using (Stream s = context.Response.OutputStream )
                 using (var writer = HtmlStreamWriter(context))
@@ -542,7 +546,11 @@ namespace AltAIMLbot
                         context.Response.StatusCode = (int) HttpStatusCode.OK;
                         string[] fileList = Directory.GetFiles(behaviorDir);
                         string fileListString = "";
-                        string uriPrefix = serverRoot + "behavior/";
+                        string uriPrefix = "";
+                        if (serverRoot.Contains("http:"))
+                            uriPrefix = serverRoot + "/behavior/";
+                        else
+                            uriPrefix = "http://" + serverRoot + "/behavior/";
                         {
                             foreach (string f in fileList)
                             {
@@ -580,7 +588,7 @@ namespace AltAIMLbot
 
                 if (path.EndsWith("/list/"))
                 {
-                    WebLinksWriter.tl_AsHTML = true;
+                    WebLinksWriter.tl_AsHTML = false;
                     context.Response.StatusCode = (int) HttpStatusCode.OK;
                     //context.Response.ContentLength64 = 0;
                     string[] fileList;
@@ -589,7 +597,12 @@ namespace AltAIMLbot
                         fileList = Directory.GetFiles(behaviorDir);
                     }
                     string fileListString = "";
-                    string uriPrefix = serverRoot + "behavior/";
+                    string uriPrefix = "";
+                    if (serverRoot.Contains("http:"))
+                        uriPrefix = serverRoot + "/behavior/";
+                    else
+                        uriPrefix = "http://" + serverRoot + "/behavior/";
+
                     //+using (Stream s = context.Response.OutputStream )
                     using (var writer = HtmlStreamWriter(context))
                     {
@@ -605,10 +618,44 @@ namespace AltAIMLbot
                 }
                 else
                 {
-                    Console.WriteLine("Client requesed nonexistant file {0} => {1}, sending error ...",
-                        justURL, path);
-                    context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                    msg = File.ReadAllBytes(startUpPath + "\\webroot\\error.html");
+                    if (path.EndsWith("/listlinks/"))
+                    {
+                        WebLinksWriter.tl_AsHTML = true;
+                        context.Response.StatusCode = (int)HttpStatusCode.OK;
+                        //context.Response.ContentLength64 = 0;
+                        string[] fileList;
+                        lock (BehaviorTree.FileLock)
+                        {
+                            fileList = Directory.GetFiles(behaviorDir);
+                        }
+                        string fileListString = "";
+                        string uriPrefix = "";
+                        if (serverRoot.Contains("http:"))
+                            uriPrefix = serverRoot + "/behavior/";
+                        else
+                            uriPrefix = "http://" + serverRoot + "/behavior/";
+
+                        //+using (Stream s = context.Response.OutputStream )
+                        using (var writer = HtmlStreamWriter(context))
+                        {
+                            foreach (string f in fileList)
+                            {
+                                string fout = uriPrefix + Path.GetFileName(f);
+                                writer.WriteLine(fout);
+                            }
+                            //msg = System.Text.Encoding.ASCII.GetBytes(fileListString);
+                            writer.Close();
+                        }
+                        return;
+                    }
+                
+                    else
+                    {
+                        Console.WriteLine("Client requesed nonexistant file {0} => {1}, sending error ...",
+                            justURL, path);
+                        context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                        msg = File.ReadAllBytes(startUpPath + "\\webroot\\error.html");
+                    }
                 }
             }
             else
@@ -711,7 +758,15 @@ namespace AltAIMLbot
         }
         public static string graphMasterToURI(string gmPath)
         {
-            string gmBase = serverRoot + "graphmaster/";
+            string uriPrefix = "";
+            if (serverRoot.Contains("http:"))
+                uriPrefix = serverRoot + "/graphmaster/";
+            else
+                uriPrefix = "http://" + serverRoot + "/graphmaster/";
+
+            //string gmBase = serverRoot + "graphmaster/";
+            string gmBase = uriPrefix;
+
             gmPath = gmPath.Replace("<", "{");
             gmPath = gmPath.Replace(">", "}");
             return gmBase + gmPath;
@@ -738,7 +793,11 @@ namespace AltAIMLbot
             foreach (string frag in allPaths)
             {
                 writer.WriteLine("");
-                writer.WriteLine("{0}", frag);
+                string fragtxt = frag;
+                fragtxt = fragtxt.Replace("<", "&lt;");
+                fragtxt = fragtxt.Replace(">", "&gt;");
+
+                writer.WriteLine("{0}", fragtxt);
             }
             writer.WriteLine("");
             
@@ -767,10 +826,15 @@ namespace AltAIMLbot
                 List<string> allPaths = new List<string>();
                 ourServitor.curBot.Graphmaster.searchFullPaths(path,"", allPaths);
                 string gmURI = graphMasterToURI(path);
+
                 foreach (string frag in allPaths)
                 {
                     writer.WriteLine("");
-                    writer.WriteLine("{0}", frag);
+                    string fragtxt = frag;
+                    fragtxt = fragtxt.Replace("<", "&lt;");
+                    fragtxt = fragtxt.Replace(">", "&gt;");
+
+                    writer.WriteLine("{0}", fragtxt);
                     List<string> ngrams = tagify(frag);
                     writer.WriteLine("<{0}> <queryScore> \"{1}\" .", gmURI, irScore);
                     writer.WriteLine("<{0}> <query> \"{1}\" .", gmURI, query);
@@ -866,14 +930,17 @@ namespace AltAIMLbot
         }
         public static List<string>  tagify(string text)
         {
-             text = text.Replace("\"C_", "\" ");
+            text = text.Replace("\"C_", "\" ");
             text = text.Replace("_", " ");
 
-            foreach (string rkey in behaviorStoplist)
+            if (behaviorStoplist != null)
             {
-                if (rkey.Length > 0)
+                foreach (string rkey in behaviorStoplist)
                 {
-                    text = text.Replace(rkey, " ");
+                    if (rkey.Length > 0)
+                    {
+                        text = text.Replace(rkey, " ");
+                    }
                 }
             }
 
@@ -1013,7 +1080,13 @@ namespace AltAIMLbot
             string selfURI = "";
             if (xmlNode.Name.ToLower() == nodeType)
             {
-                selfURI = serverRoot + resourcePrefix + xmlNode.Attributes["id"].Value + resourceExtension;
+                string uriPrefix = "";
+                if (serverRoot.Contains("http:"))
+                    uriPrefix = serverRoot + resourcePrefix;
+                else
+                    uriPrefix = "http://" + serverRoot + "/"+ resourcePrefix;
+
+                selfURI = uriPrefix + xmlNode.Attributes["id"].Value + resourceExtension;
                 writer.WriteLine("<{0}> <{1}> <{2}> .", rootURI, relation, selfURI);
             }
             foreach (XmlNode childNode in xmlNode.ChildNodes)
