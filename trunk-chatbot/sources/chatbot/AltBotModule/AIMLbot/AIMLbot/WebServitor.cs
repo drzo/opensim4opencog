@@ -161,7 +161,7 @@ namespace AltAIMLbot
                 {
 
                     Console.WriteLine("Listener Adding:" + serverRoot);
-                    listener.Prefixes.Add(serverRoot);
+                    listener.Prefixes.Add(WithSlash(serverRoot));
                 }
                 catch (Exception e)
                 {
