@@ -229,7 +229,7 @@ namespace DotLisp
                 {
                     type = paramOut.GetType();
                 }
-                if (paramOut != c)
+                if (paramOut == null || (paramOut != c && type != c.GetType()))
                 {
                     object paramOutO;
                     changed = CoerceOne(paramOut, type, paramInfo, out paramOutO, out changed);
