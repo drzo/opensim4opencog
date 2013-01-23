@@ -5547,7 +5547,7 @@ namespace AltAIMLbot
                 destFile = HostSystem.FileSystemPath(destFile);
                 System.IO.File.WriteAllText(destFile, myCodes);
                 chatDoc.LoadXml (myCodes);
-                bot.loadAIMLFromXML(chatDoc, srcFile +DateTime.Now.ToString());
+                bot.loadAIMLFromXML(chatDoc, "vf:"+srcFile +DateTime.Now.ToString());
 
                 rs = RunStatus.Success;
             }

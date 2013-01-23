@@ -353,8 +353,10 @@ namespace RaptorDB
             val = null;
             T k = key;
                 // search index
+                
                 lock (_indexlock)
                  {
+                     if (_index == null) return false;
                      lock (_archivelock)
                      {
                          if (_index.Get(k, out off))

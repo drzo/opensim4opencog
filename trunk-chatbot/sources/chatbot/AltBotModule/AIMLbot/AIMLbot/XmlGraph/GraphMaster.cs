@@ -1794,6 +1794,111 @@ namespace RTParser.Utils
             root.searchFullPaths(targetPath, inpath, collector);
         }
 
+        public string searchFullPathsJSON(string targetPath, string inpath)
+        {
+            ArrayList collector = new ArrayList();
+            root.searchFullPathsShortCategory(targetPath, inpath, collector);
+            string jsonString = "";
+            Hashtable report = new Hashtable();
+            report.Add("Result", "OK");
+            report.Add("Records", collector);
+            jsonString = JSON.JsonEncode(report);
+            //jsonString = JSON.JsonEncode(new { Result = "OK", Records = collector });
+            return jsonString;
+        }
+
+        public void webWriter(TextWriter writer, string action, string query, string mt, string serverRoot)
+        {
+            writer.WriteLine("<!DOCTYPE html>");
+            serverRoot = "/";
+            //webWriter0(writer, action, query, mt, serverRoot, true);
+            if (action == "autorefresh")
+            {
+                writer.WriteLine("<META HTTP-EQUIV=\"REFRESH\" content=\"10\">");
+            }
+            var s= @"
+<html>
+<head>
+    <meta charset='utf-8' />
+
+
+    <script type='text/javascript' src='/jsbin/jquery-1.9.0.min.js'></script>
+
+    <script type='text/javascript' src='/jsbin/jquery-ui-1.9.2.min.js'></script>
+
+    <script type='text/javascript' src='/jsbin/jtable/jquery.jtable.min.js'></script>
+    <link href='/jsbin/jtable/themes/metro/blue/jtable.css' rel='stylesheet' type='text/css' />
+
+
+</head>
+<body>
+<div class='content-container'>
+    <div class='padded-content-container'>
+        <div id='AIMLContainer'></div>
+    </div>
+</div>
+<script type='text/javascript'>
+    $(document).ready(function () {
+        $('#AIMLContainer').jtable({
+            title: 'AIML Results',
+            sorting: true,
+
+            actions: {
+                listAction: '/graphmasterj/',
+                createAction: '/GettingStarted/CreatePerson',
+                updateAction: '/GettingStarted/UpdatePerson',
+                deleteAction: '/GettingStarted/DeletePerson'
+            },
+            fields: {
+
+                score: {
+                    title: 'score',
+                    width: '5%',
+                    create: false,
+                    edit: false
+                },
+                state1: {
+                    title: 'state1',
+                    width: '5%'
+                },
+                pattern: {
+                    title: 'pattern',
+                    width: '15%'
+                },
+                that: {
+                    title: 'that',
+                    width: '15%'
+                },
+                state2: {
+                    title: 'state2',
+                    width: '5%'
+                },
+                topic: {
+                    title: 'topic',
+                    width: '5%'
+                },
+                template: {
+                    title: 'template',
+                    width: '50%'
+                }
+
+            }
+        });
+        $('#AIMLContainer').jtable('load');
+    });
+</script>
+    <br/>
+
+<br />
+<hr />
+</body>
+</html>
+";
+
+writer.WriteLine(s);
+writer.WriteLine("");
+
+        }
         public void addCategory(string path, string template, string filename, double score, double scale)
         {
             root.addCategory(path, template, filename, score, scale);

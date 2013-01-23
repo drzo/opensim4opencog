@@ -180,6 +180,7 @@ function validateBrowserForm()
             writer.WriteLine("<a href='{0}scheduler/?a=liststatus'>Scheduler List</a>", serverRoot);
             writer.WriteLine("<a href='{0}analysislist/'>Analysis List</a>", serverRoot);
             writer.WriteLine("<a href='{0}graphmaster/?a=list'>Graphmaster List</a>", serverRoot);
+            writer.WriteLine("<a href='{0}aimltable/?a=list'>AimlTable</a>", serverRoot);
             writer.WriteLine("<a href='{0}'>Home</a><br/>", serverRoot);
         }
         public void webWriter0(TextWriter writer, string action, string queryv, string mt, string serverRoot, bool toplevel)

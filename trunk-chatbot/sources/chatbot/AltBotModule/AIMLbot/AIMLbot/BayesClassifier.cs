@@ -1380,7 +1380,7 @@ namespace AltAIMLbot
                         }
 
                         //Arnow should match Arnoff
-                        if (((current == last) && IsVowel(workingString[current - 1])) || StringAt(workingString, (current - 1), "EWSKI", "EWSKY", "OWSKI", "OWSKY")
+                        if (((current == last) &&(current>0)&& IsVowel(workingString[current - 1])) || StringAt(workingString, (current - 1), "EWSKI", "EWSKY", "OWSKI", "OWSKY")
                             || StringAt(workingString, 0, "SCH"))
                         {
                             metaphoneData.Add("", "F");

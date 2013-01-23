@@ -32,6 +32,12 @@ using MushDLR223.Virtualization;
 
 namespace AltAIMLbot.Utils
 {
+    public class shortCategory
+    {
+        public string path;
+        public string template;
+    }
+
     /// <summary>
     /// Encapsulates a node in the graphmaster tree structure
     /// </summary>
@@ -500,11 +506,12 @@ namespace AltAIMLbot.Utils
             }
 
         }
-        public void searchFullPaths(string targetPath,string inpath, List<string> collector)
+
+        public void searchFullPaths(string targetPath, string inpath, List<string> collector)
         {
             string curWord = this.word;
             string ourPath = inpath + " " + curWord;
-            if (targetPath.StartsWith(ourPath.Trim()))
+            if ((targetPath.StartsWith(ourPath.Trim())) || (targetPath == ""))
             {
                 var template = FirstTemplate();
                 if ((template != null) && (template.Length > 1))
@@ -515,11 +522,75 @@ namespace AltAIMLbot.Utils
                 }
                 foreach (Node childNode in ChildNodes)
                 {
-                    childNode.searchFullPaths(targetPath,ourPath, collector);
+                    childNode.searchFullPaths(targetPath, ourPath, collector);
                 }
             }
-
         }
+
+        public Hashtable pathFields(string path)
+        {
+            Hashtable fields = new Hashtable();
+            string[] frags = path.Split('<');
+            int stateindex = 0;
+
+            fields["state1"] = "";
+            fields["pattern"] = "";
+            fields["that"] = "";
+            fields["state2"] = "";
+            fields["topic"] = "";
+
+            foreach (string s in frags)
+            {
+                string[] args = s.Split('>');
+                if (args.Length == 2)
+                {
+                    string key = args[0].ToLower().Trim();
+                    string value = args[1].Trim();
+                    // we have two state positions
+                    if (key == "state")
+                    {
+                        stateindex++;
+                        key = String.Format("state{0}", stateindex);
+                    }
+                    fields[key] = value;
+                }
+            }
+            return fields;
+        }
+
+        public void searchFullPathsShortCategory(string targetPath, string inpath, ArrayList collector)
+        {
+            string curWord = this.word;
+            string ourPath = inpath + " " + curWord;
+            if ((targetPath.StartsWith(ourPath.Trim())) || (targetPath==""))
+            {
+                var template = FirstTemplate();
+                if ((template != null) && (template.Length > 1))
+                {
+                    var encoded = HttpUtility.HtmlEncode(ourPath.Trim());
+
+                    //string serTemplate = String.Format("<ser path=\"{0}\"> {1} </ser>", encoded, template);
+                    //Hashtable myTemp = new Hashtable();
+                    Hashtable myTemp = pathFields(ourPath.Trim());
+                    //myTemp["path"] = encoded;
+                    myTemp["template"] =HttpUtility.HtmlEncode( template);
+
+                    collector.Add(myTemp);
+                }
+                foreach (Node childNode in ChildNodes)
+                {
+                    try
+                    {
+                        childNode.searchFullPathsShortCategory(targetPath, ourPath, collector);
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+        }
+
+
         #endregion
 
         #region Evaluate Node
@@ -1693,8 +1764,8 @@ namespace AltAIMLbot.Utils
         public Dictionary<string, string> childcache = new Dictionary<string, string>();
         public Dictionary<string, Node> nodecache = new Dictionary<string, Node>();
 
-        public int slices = 63; //7;
-        public int trunkLevel = 6; //5;
+        public int slices = 7;//63; //7;
+        public int trunkLevel = 5;//6; //5;
         public bool verify = true;
         public AltBot bot = null;
         public string _dbdir = "";
@@ -1911,10 +1982,11 @@ namespace AltAIMLbot.Utils
         public void rememberLoaded(string filename)
         {
             bool isMt = IsMt(filename);
+            bool isVf = IsVf(filename);
             string orig = filename;
-            if (!isMt) filename = HostSystem.FileSystemPath(filename);
+            if (!isMt && !isVf) filename = HostSystem.FileSystemPath(filename);
             string reftime = DateTime.Now.ToUniversalTime().ToString(); // "indefinite";
-            if (!isMt && File.Exists(filename))
+            if (!isMt && !isVf && File.Exists(filename))
             {
                 DateTime lastWriteTimeUtc = File.GetLastWriteTimeUtc(filename);
                 reftime = lastWriteTimeUtc.ToString();
@@ -1926,11 +1998,12 @@ namespace AltAIMLbot.Utils
         public bool wasLoaded(string filename)
         {
             bool isMt = IsMt(filename);
+            bool isVf = IsVf(filename);
             string orig = filename;
-            if (!isMt) filename = HostSystem.FileSystemPath(filename);
+            if (!isMt && !isVf) filename = HostSystem.FileSystemPath(filename);
             string lf = "";
             string reftime = "indefinite";
-            if (!isMt && File.Exists(filename))
+            if (!isMt && !isVf && File.Exists(filename))
             {
                 DateTime lastWriteTimeUtc = File.GetLastWriteTimeUtc(filename);
                 reftime = lastWriteTimeUtc.ToString();
@@ -1944,6 +2017,10 @@ namespace AltAIMLbot.Utils
         private bool IsMt(string filename)
         {
             return (filename.StartsWith("mt:"));
+        }
+        private bool IsVf(string filename)
+        {
+            return (filename.StartsWith("vf:"));
         }
 
         public void saveCronList(Cron sourceCron)
