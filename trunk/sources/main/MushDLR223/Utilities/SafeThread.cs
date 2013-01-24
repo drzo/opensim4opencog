@@ -1,9 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Threading;
+//using System.Threading;
 using System.Windows.Forms;
 using MushDLR223.Utilities;
+using NativeThread = System.Threading.Thread;
+using ThreadState = System.Threading.ThreadState;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using ThreadStart = System.Threading.ThreadStart;
+using ParameterizedThreadStart = System.Threading.ParameterizedThreadStart;
+using ThreadExceptionEventArgs = System.Threading.ThreadExceptionEventArgs;
+using ThreadPriority = System.Threading.ThreadPriority;
 
 namespace ThreadPoolUtil
 {
@@ -15,7 +23,7 @@ namespace ThreadPoolUtil
         /// <summary>
         /// The instance of SThread
         /// </summary>
-        private System.Threading.Thread threadField;
+        private NativeThread threadField;
         private readonly ThreadStart runnable0;
         private readonly ParameterizedThreadStart runnable1;
         private readonly object param;
@@ -25,7 +33,7 @@ namespace ThreadPoolUtil
         /// </summary>
         protected Thread()
         {
-            threadField = new System.Threading.Thread(new ThreadStart(RunIt));
+            threadField = new NativeThread(RunIt);
             MakeThis(false);
         }
 
@@ -35,12 +43,12 @@ namespace ThreadPoolUtil
         /// <param name="Name">The name of the SThread</param>
         protected Thread(System.String Name)
         {
-            threadField = new System.Threading.Thread(new ThreadStart(RunIt));
+            threadField = new NativeThread(RunIt);
             this.Name = Name;
             MakeThis(false);
         }
 
-        private Thread(System.Threading.Thread start)
+        private Thread(NativeThread start)
         {
             threadField = start;
             MakeThis(false);
@@ -79,9 +87,10 @@ namespace ThreadPoolUtil
         {
             if (needMakeThread)
             {
-                threadField = size != -2 ? new System.Threading.Thread(RunIt, size) : new System.Threading.Thread(RunIt);
+                threadField = size != -2 ? new NativeThread(RunIt, size) : new NativeThread(RunIt);
             }
             lock (AllThreads2Safe) AllThreads2Safe[threadField] = this;
+            CreationStack = SafeThreadPool.StackTraceString();
         }
 
         /// <summary>
@@ -102,15 +111,11 @@ namespace ThreadPoolUtil
             try
             {
                 RegisterThread(threadField);
-                SafeThreadPool.AddSafety((o) => Run())(param);
-            }
-            catch (Exception e)
-            {
-                SafeThreadPool.Issue(threadField, e);
+                SafeThreadPool.SafelyAct(CreationStack, Run);
             }
             finally
             {
-                DeregisterThread(System.Threading.Thread.CurrentThread);
+                DeregisterThread(NativeThread.CurrentThread);
             }
         }
 
@@ -141,14 +146,8 @@ namespace ThreadPoolUtil
         /// </summary>
         public virtual void Start()
         {
-//            savedStartUp = GetStackString();
+            //            savedStartUp = GetStackString();
             threadField.Start();
-        }
-
-        public string GetStackString()
-        {
-            TextWriter sb = new StringWriter();
-            return sb.ToString();
         }
 
         /// <summary>
@@ -162,7 +161,7 @@ namespace ThreadPoolUtil
         /// <summary>
         /// Gets the current SThread instance
         /// </summary>
-        public System.Threading.Thread Instance
+        public NativeThread Instance
         {
             get
             {
@@ -197,7 +196,7 @@ namespace ThreadPoolUtil
         /// <summary>
         /// Gets or sets a value indicating the scheduling priority of a SThread
         /// </summary>
-        public System.Threading.ThreadPriority Priority
+        public ThreadPriority Priority
         {
             get
             {
@@ -207,7 +206,7 @@ namespace ThreadPoolUtil
                 }
                 catch
                 {
-                    return System.Threading.ThreadPriority.Normal;
+                    return ThreadPriority.Normal;
                 }
             }
             set
@@ -330,7 +329,7 @@ namespace ThreadPoolUtil
         {
             return Current();
         }
-        public static System.Threading.Thread CurrentThread
+        public static NativeThread CurrentThread
         {
             get { return Current(); }
         }
@@ -339,7 +338,7 @@ namespace ThreadPoolUtil
         {
             // casting long ms to int ms could lose resolution, however unlikely
             // that someone would want to sleep for that long...
-            System.Threading.Thread.Sleep((int)ms);
+            NativeThread.Sleep((int)ms);
         }
 
         /// <summary>
@@ -350,7 +349,7 @@ namespace ThreadPoolUtil
         {
             if (This == null)
             {
-                This = new Thread(System.Threading.Thread.CurrentThread);
+                This = new Thread(NativeThread.CurrentThread);
             }
             return This;
         }
@@ -369,7 +368,7 @@ namespace ThreadPoolUtil
         public override bool Equals(object obj)
         {
             if (obj == null) return false;
-            if (obj is System.Threading.Thread) return this.threadField.Equals((System.Threading.Thread)obj);
+            if (obj is NativeThread) return this.threadField.Equals((NativeThread)obj);
             if (obj is Thread) return this.threadField.Equals(((Thread)obj).threadField);
             return false;
         }
@@ -378,36 +377,36 @@ namespace ThreadPoolUtil
         /// ?- cliGet('MushDLR223.Utilities.SafeThread','AllThreads',List),cliGet(List,'Count',C).
         /// </summary>
         public static ListAsSet<Thread> AllThreads = new ListAsSet<Thread>();
-        public static Dictionary<System.Threading.Thread, Thread> AllThreads2Safe = new Dictionary<System.Threading.Thread, Thread>();
-        static System.Threading.Thread reaper = new System.Threading.Thread(ReapDeadThreads);
+        public static Dictionary<NativeThread, Thread> AllThreads2Safe = new Dictionary<NativeThread, Thread>();
+        static NativeThread reaper = new NativeThread(ReapDeadThreads);
         private int size = -2;
+        public string CreationStack;
+        public string StartStack;
 
         public static void RegisterCurrentThread()
         {
-            System.Threading.Thread SThread = System.Threading.Thread.CurrentThread;
+            NativeThread SThread = NativeThread.CurrentThread;
             RegisterThread(SThread);
         }
         public static void DeregisterCurrentThread()
         {
-            DeregisterThread(System.Threading.Thread.CurrentThread);
+            DeregisterThread(NativeThread.CurrentThread);
         }
 
         static Thread()
         {
-            Thread.ThreadAdded += dummy;
-            Thread.ThreadRemoved += dummy;
+            ThreadAdded += dummy;
+            ThreadRemoved += dummy;
             Application.ThreadException += OnThreadException;
             Application.ThreadExit += OnThreadExit;
-            ThreadPool.Impl = new SafeThreadPool();           
-            
-
+            ThreadPool.Impl = new SafeThreadPool();
         }
-        private static void dummy(System.Threading.Thread obj)
+        private static void dummy(NativeThread obj)
         {
         }
-        public static event Action<System.Threading.Thread> ThreadAdded;
-        public static event Action<System.Threading.Thread> ThreadRemoved;
-        static public void RegisterThread(System.Threading.Thread systhread)
+        public static event Action<NativeThread> ThreadAdded;
+        public static event Action<NativeThread> ThreadRemoved;
+        static public void RegisterThread(NativeThread systhread)
         {
             if (!AllThreads.Contains(systhread))
             {
@@ -420,12 +419,12 @@ namespace ThreadPoolUtil
             if (ThreadAdded != null) ThreadAdded(systhread);
             //AllThreads2Safe.Remove(systhread);
         }
-        static public void DeregisterThread(System.Threading.Thread SThread)
+        static public void DeregisterThread(NativeThread systhread)
         {
-            AllThreads.Remove(SThread);
-            if (ThreadRemoved != null) ThreadRemoved(SThread);
+            AllThreads.Remove(systhread);
+            if (ThreadRemoved != null) ThreadRemoved(systhread);
         }
-        private static void OnThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
+        private static void OnThreadException(object sender, ThreadExceptionEventArgs e)
         {
             //is it on this SThread? DeregisterCurrentThread();           
         }
@@ -434,11 +433,11 @@ namespace ThreadPoolUtil
         {
             DeregisterCurrentThread();
         }
-        public static implicit operator System.Threading.Thread(Thread st)
+        public static implicit operator NativeThread(Thread st)
         {
             return st.AsThread;
         }
-        public static implicit operator Thread(System.Threading.Thread st)
+        public static implicit operator Thread(NativeThread st)
         {
             lock (AllThreads2Safe)
             {
@@ -454,7 +453,7 @@ namespace ThreadPoolUtil
         {
             while (true)
             {
-                System.Threading.Thread.Sleep(3000);
+                NativeThread.Sleep(3000);
                 foreach (var thread in AllThreads)
                 {
                     ThreadState state = thread.ThreadState;
@@ -474,7 +473,7 @@ namespace ThreadPoolUtil
             set { threadField.ApartmentState = value; }
         }
 
-        public System.Threading.Thread AsThread
+        public NativeThread AsThread
         {
             get { return threadField; }
         }
@@ -510,11 +509,11 @@ namespace ThreadPoolUtil
 
         public static void Sleep(int i)
         {
-            System.Threading.Thread.Sleep(i);
+            NativeThread.Sleep(i);
         }
         public static void Sleep(TimeSpan i)
         {
-            System.Threading.Thread.Sleep(i);
+            NativeThread.Sleep(i);
         }
 
         public bool Join(TimeSpan i)
@@ -524,7 +523,7 @@ namespace ThreadPoolUtil
 
         public static void ResetAbort()
         {
-            System.Threading.Thread.ResetAbort();
+            NativeThread.ResetAbort();
         }
 
 
@@ -548,7 +547,7 @@ namespace ThreadPoolUtil
         public static void MemoryBarrier()
         {
             Unsupported();
-            System.Threading.Thread.MemoryBarrier();
+            NativeThread.MemoryBarrier();
         }
 
         private static void Unsupported()
@@ -558,7 +557,22 @@ namespace ThreadPoolUtil
 
         public static void SpinWait(int iterations)
         {
-            System.Threading.Thread.SpinWait(iterations);
+            NativeThread.SpinWait(iterations);
+        }
+
+        public bool RanExit = false;
+        public Exception LastException;
+
+        public virtual void RunOnExit()
+        {
+            if (RanExit) return;
+            RanExit = true;
+        }
+
+        public virtual bool HandleException(Exception e)
+        {
+            RunOnExit();
+            return false;
         }
     }
 
