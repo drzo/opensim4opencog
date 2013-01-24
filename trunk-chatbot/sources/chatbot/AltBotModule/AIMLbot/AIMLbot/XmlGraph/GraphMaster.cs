@@ -1855,41 +1855,49 @@ namespace RTParser.Utils
                     title: 'score',
                     width: '5%',
                     create: false,
+                    defaultValue: '0',
                     edit: false
                 },
                 state1: {
                     type: 'textarea',
                     title: 'state1',
+                    defaultValue: '*',
                     width: '5%'
                 },
                 pattern: {
                     type: 'textarea',
                     title: 'pattern',
+                    defaultValue: '*',
                     width: '15%'
                 },
                 that: {
                     type: 'textarea',
                     title: 'that',
+                    defaultValue: '*',
                     width: '15%'
                 },
                 state2: {
                     type: 'textarea',
                     title: 'state2',
+                    defaultValue: '*',
                     width: '5%'
                 },
                 topic: {
                     type: 'textarea',
                     title: 'topic',
+                    defaultValue: '*',
                     width: '5%'
                 },
                 template: {
                     type: 'textarea',
                     title: 'template',
+                    defaultValue: '<template>OK</template>',
                     width: '50%'
-                }
+                },
                 vfilename: {
                     type: 'textarea',
                     title: 'vfilename',
+                    defaultValue: 'vf:dialog',
                     width: '5%'
                 }
 

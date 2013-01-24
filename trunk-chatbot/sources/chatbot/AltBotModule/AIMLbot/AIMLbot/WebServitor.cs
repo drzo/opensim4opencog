@@ -383,39 +383,50 @@ namespace AltAIMLbot
                 string topic = "*";
                 string template = "<template>ok</template>";
                 string vfilename = "vf:dialog";
-                if (NVC != null)
-                {
-                    state1 = NVC["state1"];
-                    pattern = NVC["pattern"];
-                    that = NVC["that"];
-                    topic = NVC["topic"];
-                    state2 = NVC["state2"];
-                    template = NVC["template"];
-                    vfilename = NVC["filename"];
-                }
-
-                context.Response.StatusCode = (int)HttpStatusCode.OK;
-                //+using (Stream s = context.Response.OutputStream )
-                using (var writer = HtmlStreamWriter(context))
-                {
-                    WebLinksWriter.tl_AsHTML = false;
-                    AIMLLoader loader = new AIMLLoader(ourServitor.curBot);
-                    string categoryPath = loader.generatePath(pattern, that, topic, state1, state2, false);
-
-                    if (ourServitor.curBot.UseRapstore("*"))
+                Hashtable resultHash = new Hashtable();
+                resultHash["Result"] = "OK";
+                    if (NVC != null)
                     {
-                        var extDB = ourServitor.curBot.GetGraph("*").ensureEdb();
-                        Node.addCategoryDB("", categoryPath, template, vfilename, 1, 1, "", extDB);
-                    }
-                    else
-                    {
-                        ourServitor.curBot.Graphmaster.addCategory(categoryPath, template, vfilename, 1, 1);
+                        state1 = NVC["state1"];
+                        pattern = NVC["pattern"];
+                        that = NVC["that"];
+                        topic = NVC["topic"];
+                        state2 = NVC["state2"];
+                        template = NVC["template"];
+                        vfilename = NVC["vfilename"];
                     }
 
-                    writer.WriteLine("{\"Result\":\"OK\"}");
-                    writer.WriteLine("");
-                }
+                    context.Response.StatusCode = (int)HttpStatusCode.OK;
+                    //+using (Stream s = context.Response.OutputStream )
+                    using (var writer = HtmlStreamWriter(context))
+                    {
+                     try
+                      {
 
+                        WebLinksWriter.tl_AsHTML = false;
+                        AIMLLoader loader = new AIMLLoader(ourServitor.curBot);
+                        string categoryPath = loader.generatePath(pattern, that, topic, state1, state2, false);
+
+                        if (ourServitor.curBot.UseRapstore("*"))
+                        {
+                            var extDB = ourServitor.curBot.GetGraph("*").ensureEdb();
+                            Node.addCategoryDB("", categoryPath, template, vfilename, 1, 1, "", extDB);
+                        }
+                        else
+                        {
+                            ourServitor.curBot.Graphmaster.addCategory(categoryPath, template, vfilename, 1, 1);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        resultHash["Result"] = "ERROR";
+                        resultHash["Message"] = ex.Message;
+                    }
+                     string jsonCode = JSON.JsonEncode(resultHash);
+                      writer.WriteLine(jsonCode);
+                      writer.WriteLine("");
+                   }
+               
                 return;
             }
           
