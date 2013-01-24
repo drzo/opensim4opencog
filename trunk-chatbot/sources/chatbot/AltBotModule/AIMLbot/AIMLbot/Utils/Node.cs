@@ -574,7 +574,7 @@ namespace AltAIMLbot.Utils
                     Hashtable myTemp = pathFields(ourPath.Trim());
                     //myTemp["path"] = encoded;
                     myTemp["template"] =HttpUtility.HtmlEncode( template);
-
+                    myTemp["vfilename"] = FirstFilename();
                     collector.Add(myTemp);
                 }
                 foreach (Node childNode in ChildNodes)

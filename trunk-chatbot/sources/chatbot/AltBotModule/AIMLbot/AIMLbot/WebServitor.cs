@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -24,6 +25,7 @@ using System.Web;
 using LogicalParticleFilter1;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
+using AltAIMLbot.Utils;
 
 namespace AltAIMLbot
 {
@@ -345,7 +347,78 @@ namespace AltAIMLbot
             StreamReader streamReader = new StreamReader(bodyStream, encoding);
             string infoBody = streamReader.ReadToEnd();
             NameValueCollection NVC = HttpUtility.ParseQueryString(infoBody);
-            
+
+            if (justURL.Contains("graphmasterj"))
+            {
+                string query=null;
+                if (NVC != null) query = NVC["q"];
+
+                context.Response.StatusCode = (int)HttpStatusCode.OK;
+                //+using (Stream s = context.Response.OutputStream )
+                using (var writer = HtmlStreamWriter(context))
+                {
+                    WebLinksWriter.tl_AsHTML = false;
+                    if (query != null)
+                    {
+
+                        analyseGraphMasterJSON(writer, query, justURL);
+                    }
+                    else
+                    {
+                        fetchGraphMasterJSON(writer, justURL);
+                    }
+                }
+                return;
+            }
+            if (justURL.Contains("graphmasterc"))
+            {
+                // Create or Update
+                // may need graph
+                // may need vfilename
+
+                string state1 = "*";
+                string pattern = "*";
+                string that = "*";
+                string state2 = "*";
+                string topic = "*";
+                string template = "<template>ok</template>";
+                string vfilename = "vf:dialog";
+                if (NVC != null)
+                {
+                    state1 = NVC["state1"];
+                    pattern = NVC["pattern"];
+                    that = NVC["that"];
+                    topic = NVC["topic"];
+                    state2 = NVC["state2"];
+                    template = NVC["template"];
+                    vfilename = NVC["filename"];
+                }
+
+                context.Response.StatusCode = (int)HttpStatusCode.OK;
+                //+using (Stream s = context.Response.OutputStream )
+                using (var writer = HtmlStreamWriter(context))
+                {
+                    WebLinksWriter.tl_AsHTML = false;
+                    AIMLLoader loader = new AIMLLoader(ourServitor.curBot);
+                    string categoryPath = loader.generatePath(pattern, that, topic, state1, state2, false);
+
+                    if (ourServitor.curBot.UseRapstore("*"))
+                    {
+                        var extDB = ourServitor.curBot.GetGraph("*").ensureEdb();
+                        Node.addCategoryDB("", categoryPath, template, vfilename, 1, 1, "", extDB);
+                    }
+                    else
+                    {
+                        ourServitor.curBot.Graphmaster.addCategory(categoryPath, template, vfilename, 1, 1);
+                    }
+
+                    writer.WriteLine("{\"Result\":\"OK\"}");
+                    writer.WriteLine("");
+                }
+
+                return;
+            }
+          
             // Posting to an MT
             if (NVC != null)
             {
@@ -585,6 +658,42 @@ namespace AltAIMLbot
                 }
                 return;
             }
+            if ((justURL.Contains("aimltable"))||(justURL.Contains("aimlgraph")))
+            {
+                WebLinksWriter.tl_AsHTML = false;
+                context.Response.StatusCode = (int)HttpStatusCode.OK;
+                //+using (Stream s = context.Response.OutputStream )
+                try
+                {
+                        using (var writer = HtmlStreamWriter(context))
+                            ourServitor.curBot.Graphmaster.webWriter(writer, action, query, mt, serverRoot);
+                }
+                catch
+                {
+                }
+                return;
+            }
+            if (justURL.Contains("graphmasterj"))
+            {
+
+                context.Response.StatusCode = (int)HttpStatusCode.OK;
+                //+using (Stream s = context.Response.OutputStream )
+                using (var writer = HtmlStreamWriter(context))
+                {
+                    WebLinksWriter.tl_AsHTML = false;
+                    if (query != null)
+                    {
+
+                        analyseGraphMasterJSON(writer, query, justURL);
+                    }
+                    else
+                    {
+                        fetchGraphMasterJSON(writer, justURL);
+                    }
+                }
+                return;
+            }
+
 
             if (path.Contains("./analysislist/"))
             {
@@ -837,7 +946,28 @@ namespace AltAIMLbot
             writer.WriteLine("");
             
         }
+        public static void fetchGraphMasterJSON(TextWriter writer, string rawURL)
+        {
+            //loadAimlIndex();
+            rawURL = rawURL.Replace("graphmasterj", "graphmaster");
+            string gmPath = URITographMaster(rawURL);
+            ArrayList allPaths = new ArrayList();
+            string jsonCode = "";
+            try
+            {
+                jsonCode = ourServitor.curBot.Graphmaster.searchFullPathsJSON(gmPath, "");
+            }
+            catch (Exception ex)
+            {
+                Hashtable errorCode = new Hashtable();
+                errorCode["Result"] = "ERROR";
+                errorCode["Message"] = ex.Message;
+                jsonCode= JSON.JsonEncode(errorCode);
+            }
+            writer.WriteLine(jsonCode);
+            writer.WriteLine("");
 
+        }
         public static void analyseGraphMaster(TextWriter writer, string query, string rawURL)
         {
             loadAimlIndex();
@@ -898,6 +1028,79 @@ namespace AltAIMLbot
                         }
                     }
                 
+                }
+                // Max 100
+                resultCount++;
+                if (resultCount > 100) { break; }
+            }
+            writer.WriteLine("");
+            writer.Close();
+        }
+
+
+
+
+        public static void analyseGraphMasterJSON(TextWriter writer, string query, string rawURL)
+        {
+            loadAimlIndex();
+            List<string> rawList = query.Split(' ').ToList();
+            List<string> queryList = query.Split(' ').ToList();
+            foreach (string x in rawList)
+            {
+                string y = ourServitor.myIndex.stemmer.Stem(x);
+                if (y != x) { queryList.Add(y); }
+                string z = DoubleMetaphoneStringExtension.GenerateDoubleMetaphone(x);
+                queryList.Add(z);
+            }
+
+            Dictionary<string, double> pathResults = ourServitor.myIndex.performTfIdfSearch(queryList);
+            pathResults = pathResults.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+            int resultCount = 0;
+
+            foreach (string path in pathResults.Keys)
+            {
+                double irScore = pathResults[path];
+                List<string> allPaths = new List<string>();
+                ourServitor.curBot.Graphmaster.searchFullPaths(path, "", allPaths);
+
+                string gmURI = graphMasterToURI(path);
+
+                foreach (string frag in allPaths)
+                {
+                    writer.WriteLine("");
+                    string fragtxt = frag;
+                    fragtxt = fragtxt.Replace("<", "&lt;");
+                    fragtxt = fragtxt.Replace(">", "&gt;");
+
+                    writer.WriteLine("{0}", fragtxt);
+                    List<string> ngrams = tagify(frag);
+                    writer.WriteLine("<{0}> <queryScore> \"{1}\" .", gmURI, irScore);
+                    writer.WriteLine("<{0}> <query> \"{1}\" .", gmURI, query);
+                    if (ngrams.Count > 1)
+                    {
+                        writer.WriteLine("<{0}> <rdf:type> <dctype:Text> .", gmURI);
+
+                    }
+                    foreach (string phrase in ngrams)
+                    {
+                        double score = phraseScore[phrase];
+                        int senseC = 0;
+                        string senseL = "";
+                        if (senseCount.ContainsKey(phrase))
+                        {
+                            senseC = senseCount[phrase];
+                            senseL = senseLink[phrase];
+                        }
+                        if (score < 0.004) break;
+                        writer.WriteLine("<{0}> <rdfs:comment> \"mentions '{1}'\"@en .", gmURI, phrase);
+                        if (senseC > 0)
+                        {
+                            //writer.WriteLine("<{0}> <http://purl.org/dc/terms/subject> <{1}> .", basicURI, senseL);
+                            writer.WriteLine("<{0}> <dcterms:subject> <{1}> .", gmURI, senseL);
+                            //writer.WriteLine("<\"{0}\"><hasScore> {1} .", senseL, score);
+                        }
+                    }
+
                 }
                 // Max 100
                 resultCount++;

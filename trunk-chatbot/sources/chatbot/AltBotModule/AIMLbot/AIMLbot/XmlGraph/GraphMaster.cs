@@ -1845,8 +1845,8 @@ namespace RTParser.Utils
 
             actions: {
                 listAction: '/graphmasterj/',
-                createAction: '/GettingStarted/CreatePerson',
-                updateAction: '/GettingStarted/UpdatePerson',
+                createAction: '/graphmasterc/',
+                updateAction: '/graphmasterc/',
                 deleteAction: '/GettingStarted/DeletePerson'
             },
             fields: {
@@ -1858,28 +1858,39 @@ namespace RTParser.Utils
                     edit: false
                 },
                 state1: {
+                    type: 'textarea',
                     title: 'state1',
                     width: '5%'
                 },
                 pattern: {
+                    type: 'textarea',
                     title: 'pattern',
                     width: '15%'
                 },
                 that: {
+                    type: 'textarea',
                     title: 'that',
                     width: '15%'
                 },
                 state2: {
+                    type: 'textarea',
                     title: 'state2',
                     width: '5%'
                 },
                 topic: {
+                    type: 'textarea',
                     title: 'topic',
                     width: '5%'
                 },
                 template: {
+                    type: 'textarea',
                     title: 'template',
                     width: '50%'
+                }
+                vfilename: {
+                    type: 'textarea',
+                    title: 'vfilename',
+                    width: '5%'
                 }
 
             }
