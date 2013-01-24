@@ -35,9 +35,9 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
-#if (COGBOT_LIBOMV || USE_STHREADS)
+#if (COGBOT_LIBOMV || USE_STHREADS || true)
 using ThreadPoolUtil;
-using Thread = ThreadPoolUtil.Thread;
+using Thread = System.Threading.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;
 using Monitor = ThreadPoolUtil.Monitor;
 #endif

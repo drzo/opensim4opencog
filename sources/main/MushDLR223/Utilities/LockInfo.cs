@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -589,6 +590,17 @@ namespace MushDLR223.Utilities
         public static T WithLock<T>(object lockObj, Func<T> func)
         {
             lock (lockObj) return func();
+        }
+
+        public static string CreationTrace()
+        {
+            var rs = new StringWriter();
+            var fs = new System.Diagnostics.StackTrace(true).GetFrames();
+            if (fs != null) foreach (StackFrame frame in fs)
+                {
+                    rs.WriteLine("" + frame);
+                }
+            return rs.ToString();
         }
     }
 

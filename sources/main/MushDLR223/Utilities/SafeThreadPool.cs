@@ -1,51 +1,121 @@
 using System;
-using SThread = System.Threading.Thread;
+using System.Diagnostics;
+using System.IO;
+using System.Windows.Forms;
+using NativeThread = System.Threading.Thread;
 using SMonitor = System.Threading.Monitor;
 using SThreadPool = System.Threading.ThreadPool;
 using RegisteredWaitHandle = System.Threading.RegisteredWaitHandle;
 using WaitCallback = System.Threading.WaitCallback;
 using WaitHandle = System.Threading.WaitHandle;
 using WaitOrTimerCallback = System.Threading.WaitOrTimerCallback;
+using ThreadExceptionEventArgs = System.Threading.ThreadExceptionEventArgs;
+using MushDLR223.Utilities;
 
 namespace ThreadPoolUtil
 {
     public class SafeThreadPool : IThreadPool
     {
-
-        public static void Issue(SThread thread, Exception e)
+        private IThreadPool dotnet
         {
-            Console.Error.WriteLine("Thread issue " + thread + " had " + e);
+            get { return ThreadPool.DotnetImpl; }
+        }
+        /// <summary>
+        /// Get notices this level or higher
+        /// </summary>
+        public static int noticeLevel = 1;
+        static SafeThreadPool()
+        {
+            Application.ThreadException += ThreadException;
+            Application.ThreadExit += ThreadExit;
+            Application.ApplicationExit += ApplicationExit;
+        }
+
+        private static void ThreadException(object sender, ThreadExceptionEventArgs e)
+        {
+            Notice(2, "ThreadException {0} {1}", sender, e.Exception);
+        }
+
+        private static void ThreadExit(object sender,  EventArgs e)
+        {
+            Notice(1, "ThreadExit {0} {1}", sender, e);
+        }
+
+        private static void ApplicationExit(object sender, EventArgs e)
+        {
+            Notice(0, "ApplicationExit {0} {1}", sender, e);
+        }
+
+        public static void Notice(int level, string fmt, params object[] args)
+        {
+            if (level < noticeLevel) return;
+            Console.Error.WriteLine(fmt, args);
+        }
+
+        public static void Issue(object thread, Exception e)
+        {
+            Notice(2, "Thread issue " + thread + " had " + e);
+        }
+
+        public static string StackTraceString()
+        {
+            var rs = new StringWriter();
+            var fs = new System.Diagnostics.StackTrace(true).GetFrames();
+            if (fs != null) foreach (StackFrame frame in fs)
+                {
+                    rs.WriteLine("" + frame);
+                }
+            return rs.ToString();
         }
 
         public static WaitCallback AddSafety(WaitCallback callback)
         {
-            return ((o) =>
-            {
-                try
-                {
-                    callback(o);
-                }
-                catch (Exception e)
-                {
-                    Issue(SThread.CurrentThread, e);
-                }
-            });
+            var creationTrace = StackTraceString();
+            return ((o) => SafelyInvoke(creationTrace, callback, o));
         }
 
         public static WaitOrTimerCallback AddSafetyTC(WaitOrTimerCallback callback)
         {
-            return ((o, b) =>
-            {
-                try
-                {
-                    callback(o, b);
-                }
-                catch (Exception e)
-                {
-                    Issue(SThread.CurrentThread, e);
-                }
-            });
+            var creationTrace = StackTraceString();
+            return ((o, b) => SafelyInvoke(creationTrace, callback, o, b));
         }
+        public static void SafelyAct(string creationTrace, Action action)
+        {
+            SafelyInvoke(creationTrace, action);
+        }
+        public static T SafelyFunc<T>(string creationTrace, Func<T> action)
+        {
+            T[] res = new T[1];
+            Action act = () =>
+                             {
+                                 res[0] = action();
+                             };
+            SafelyInvoke(creationTrace, act);
+            return res[0];
+        }
+        private static void SafelyInvoke(string creationTrace, Delegate action, params object[] args)       
+        {
+            Thread thread = Thread.CurrentThread;
+            thread.LastException = null;
+            thread.CreationStack = creationTrace;
+            try
+            {
+                thread.StartStack = StackTraceString();
+                action.DynamicInvoke(args);
+            }
+            catch (Exception e)
+            {
+                thread.LastException = e;
+                Issue(thread, e);
+                if (!thread.HandleException(e)) throw thread.LastException;
+            }
+            finally
+            {
+                Notice(0, "Leaving callbackthread " + thread);
+                thread.RunOnExit();
+            }
+        }
+
         public static T Safely<T>(Func<T> func)
         {
             try
@@ -54,7 +124,7 @@ namespace ThreadPoolUtil
             }
             catch (Exception e)
             {
-                Issue(SThread.CurrentThread, e);
+                Issue(NativeThread.CurrentThread, e);
                 return default(T);
 
             }
@@ -67,41 +137,41 @@ namespace ThreadPoolUtil
 
         virtual public RegisteredWaitHandle RegisterWaitForSingleObject(WaitHandle waitObject, WaitOrTimerCallback callback, object state, TimeSpan timeOutInterval, bool executeOnlyOnce)
         {
-            return SThreadPool.RegisterWaitForSingleObject(AddSafetyWH(waitObject), AddSafetyTC(callback), state, timeOutInterval, executeOnlyOnce);
+            return dotnet.RegisterWaitForSingleObject(AddSafetyWH(waitObject), AddSafetyTC(callback), state, timeOutInterval, executeOnlyOnce);
         }
         virtual public RegisteredWaitHandle RegisterWaitForSingleObject(WaitHandle waitObject, WaitOrTimerCallback callback, object state, long timeOutInterval, bool executeOnlyOnce)
         {
-            return SThreadPool.RegisterWaitForSingleObject(AddSafetyWH(waitObject), AddSafetyTC(callback), state, timeOutInterval, executeOnlyOnce);
+            return dotnet.RegisterWaitForSingleObject(AddSafetyWH(waitObject), AddSafetyTC(callback), state, timeOutInterval, executeOnlyOnce);
         }
 
         virtual public RegisteredWaitHandle UnsafeRegisterWaitForSingleObject(WaitHandle waitObject, WaitOrTimerCallback callback, object state, TimeSpan timeOutInterval, bool executeOnlyOnce)
         {
-            return SThreadPool.UnsafeRegisterWaitForSingleObject(AddSafetyWH(waitObject), AddSafetyTC(callback), state, timeOutInterval, executeOnlyOnce);
+            return dotnet.UnsafeRegisterWaitForSingleObject(AddSafetyWH(waitObject), AddSafetyTC(callback), state, timeOutInterval, executeOnlyOnce);
         }
         virtual public RegisteredWaitHandle UnsafeRegisterWaitForSingleObject(WaitHandle waitObject, WaitOrTimerCallback callback, object state, long timeOutInterval, bool executeOnlyOnce)
         {
-            return SThreadPool.UnsafeRegisterWaitForSingleObject(AddSafetyWH(waitObject), AddSafetyTC(callback), state, timeOutInterval, executeOnlyOnce);
+            return dotnet.UnsafeRegisterWaitForSingleObject(AddSafetyWH(waitObject), AddSafetyTC(callback), state, timeOutInterval, executeOnlyOnce);
         }
 
         virtual public bool QueueUserWorkItem(WaitCallback callback)
         {
-            return ThreadPool.DotnetImpl.QueueUserWorkItem(AddSafety(callback));
+            return dotnet.QueueUserWorkItem(AddSafety(callback));
         }
         virtual public bool QueueUserWorkItem(WaitCallback callback, object state)
         {
-            return ThreadPool.DotnetImpl.QueueUserWorkItem(AddSafety(callback), state);
+            return dotnet.QueueUserWorkItem(AddSafety(callback), state);
         }
 
         virtual public void GetMaxThreads(out int workerThreads, out int iocpThreads)
         {
-            SThreadPool.GetMaxThreads(out workerThreads, out iocpThreads);
+            dotnet.GetMaxThreads(out workerThreads, out iocpThreads);
         }
         virtual public void SetMaxThreads(int workerThreads, int iocpThreads)
         {
-            SThreadPool.SetMaxThreads(workerThreads, iocpThreads);
+            dotnet.SetMaxThreads(workerThreads, iocpThreads);
         }
     }
-    public class ThreadPool
+    public static class ThreadPool
     {
         private static IThreadPool _impl;
         private static IThreadPool _dotnet;
@@ -147,15 +217,27 @@ namespace ThreadPoolUtil
             return Impl.UnsafeRegisterWaitForSingleObject(waitObject, callback, state, timeOutInterval, executeOnlyOnce);
         }
 
-        public static void QueueUserWorkItem(WaitCallback callback)
+        public static bool QueueUserWorkItem(WaitCallback callback)
         {
-            Impl.QueueUserWorkItem(callback);
+            return Impl.QueueUserWorkItem(callback);
         }
         public static bool QueueUserWorkItem(WaitCallback callback, object state)
         {
             return Impl.QueueUserWorkItem(callback, state);
         }
-
+        public static System.Threading.ManualResetEvent WaitableQueueUserWorkItem(WaitCallback callback)
+        {
+            var waitObject = new System.Threading.ManualResetEvent(false);
+            if (!QueueUserWorkItem((o) =>
+                                      {
+                                          callback(o);
+                                          waitObject.Set();
+                                      }))
+            {
+                return null;
+            }
+            return waitObject;
+        }
         public static void GetMaxThreads(out int workerThreads, out int iocpThreads)
         {
             DotnetImpl.GetMaxThreads(out workerThreads, out iocpThreads);
@@ -217,13 +299,13 @@ namespace ThreadPoolUtil
 
     /// <summary>
     /// This interface should be implemented by any class whose instances are intended 
-    /// to be executed by a SThread.
+    /// to be executed by a NativeThread.
     /// </summary>
     public interface IThreadRunnable
     {
         /// <summary>
-        /// This method has to be implemented in order that starting of the SThread causes the object's 
-        /// run method to be called in that separately executing SThread.
+        /// This method has to be implemented in order that starting of the NativeThread causes the object's 
+        /// run method to be called in that separately executing NativeThread.
         /// </summary>
         void Run();
     }
@@ -284,7 +366,7 @@ namespace ThreadPoolUtil
             return SafeThreadPool.Safely(func);
         }
 
-        private void SafelyV(Action func)
+        private static void SafelyV(Action func)
         {
             Safely(() =>
                        {

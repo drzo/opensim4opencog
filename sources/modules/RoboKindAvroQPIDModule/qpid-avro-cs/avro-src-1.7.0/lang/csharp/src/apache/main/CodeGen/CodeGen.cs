@@ -896,7 +896,11 @@ namespace Avro
         /// <param name="outputdir">name of directory to write to</param>
         public virtual void WriteTypes(string outputdir)
         {
-            CodeDomProvider cscp = DoJava ? (CodeDomProvider)new Microsoft.VJSharp.VJSharpCodeProvider() : new CSharpCodeProvider();
+            CodeDomProvider cscp = DoJava
+                                       ? (CodeDomProvider)
+                                         Type.GetType("Microsoft.VJSharp.VJSharpCodeProvider").GetConstructor(
+                                             new Type[0]).Invoke(new object[0])
+                                       : new CSharpCodeProvider();
 
             var opts = new CodeGeneratorOptions();
             opts.BracingStyle = "C";
