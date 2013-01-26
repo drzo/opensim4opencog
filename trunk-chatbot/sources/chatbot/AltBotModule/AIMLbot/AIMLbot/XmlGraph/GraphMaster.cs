@@ -1794,14 +1794,30 @@ namespace RTParser.Utils
             root.searchFullPaths(targetPath, inpath, collector);
         }
 
-        public string searchFullPathsJSON(string targetPath, string inpath)
+        public ArrayList selectPageResults(ArrayList collector, int jtStartIndex, int jtPageSize,string jtSorting)
+        {
+            ArrayList result = new ArrayList();
+            int startpoint = jtStartIndex;
+            if (jtStartIndex > collector.Count) startpoint = collector.Count;
+            int endpoint = jtStartIndex + jtPageSize;
+            if (endpoint > collector.Count) endpoint = collector.Count;
+            for (int index = startpoint; index < endpoint; index++)
+            {
+                result.Add(collector[index]);
+            }
+            return result;
+ 
+        }
+        public string searchFullPathsJSON(string targetPath, string inpath,int jtStartIndex,int jtPageSize,string jtSorting)
         {
             ArrayList collector = new ArrayList();
             root.searchFullPathsShortCategory(targetPath, inpath, collector);
             string jsonString = "";
+            ArrayList result = selectPageResults(collector, jtStartIndex, jtPageSize, jtSorting);
             Hashtable report = new Hashtable();
             report.Add("Result", "OK");
-            report.Add("Records", collector);
+            report.Add("Records", result);
+            report.Add("TotalRecordCount", collector.Count);
             jsonString = JSON.JsonEncode(report);
             //jsonString = JSON.JsonEncode(new { Result = "OK", Records = collector });
             return jsonString;
@@ -1822,16 +1838,23 @@ namespace RTParser.Utils
     <meta charset='utf-8' />
 
 
-    <script type='text/javascript' src='/jsbin/jquery-1.9.0.min.js'></script>
+    <script type='text/javascript' src='/jsbin/jquery-1.9.0.js'></script>
 
-    <script type='text/javascript' src='/jsbin/jquery-ui-1.9.2.min.js'></script>
+    <script type='text/javascript' src='/jsbin/jquery-ui.js'></script>
 
     <script type='text/javascript' src='/jsbin/jtable/jquery.jtable.min.js'></script>
     <link href='/jsbin/jtable/themes/metro/blue/jtable.css' rel='stylesheet' type='text/css' />
-
+    <link href='/jsbin/jquery-ui-themes-1.10.0/jquery-ui-themes-1.10.0/themes/trontastic/jquery-ui.css' rel='stylesheet' type='text/css' />
 
 </head>
 <body>
+<div class='filtering'>
+     <form>
+        Query: <input type='text' name='q' id='q' />
+        <button type='submit' id='SearchButton'>Search</button>
+    </form>
+</div>
+
 <div class='content-container'>
     <div class='padded-content-container'>
         <div id='AIMLContainer'></div>
@@ -1841,13 +1864,15 @@ namespace RTParser.Utils
     $(document).ready(function () {
         $('#AIMLContainer').jtable({
             title: 'AIML Results',
+            paging:true,
+            pageSize:50,
             sorting: true,
 
             actions: {
                 listAction: '/graphmasterj/',
                 createAction: '/graphmasterc/',
                 updateAction: '/graphmasterc/',
-                deleteAction: '/GettingStarted/DeletePerson'
+                deleteAction: '/graphmasterd/'
             },
             fields: {
 
@@ -1858,6 +1883,19 @@ namespace RTParser.Utils
                     defaultValue: '0',
                     edit: false
                 },
+
+                path: {
+                    key: true,
+                    create: false,
+                    edit: false,
+                    list: false,
+                    type: 'textarea',
+                    title: 'path',
+                    defaultValue: '*',
+                    width: '5%',
+                    visibility:'hidden'
+                },
+
                 state1: {
                     type: 'textarea',
                     title: 'state1',
@@ -1903,7 +1941,17 @@ namespace RTParser.Utils
 
             }
         });
-        $('#AIMLContainer').jtable('load');
+        //Re-load records when user click 'load records' button.
+        $('#SearchButton').click(function (e) {
+            e.preventDefault();
+            $('#AIMLContainer').jtable('load', {
+                q: $('#q').val()
+            });
+        })
+
+        //$('#AIMLContainer').jtable('load');
+        //Load all records when page is first shown
+        $('#SearchButton').click();
     });
 </script>
     <br/>

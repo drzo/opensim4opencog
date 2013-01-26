@@ -835,6 +835,7 @@ namespace AltAIMLbot.Utils
             }
         }
 
+
         /// <summary>
         /// Given an input, provide a normalized output
         /// </summary>

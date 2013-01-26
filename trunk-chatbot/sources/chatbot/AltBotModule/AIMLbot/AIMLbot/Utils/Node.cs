@@ -336,10 +336,12 @@ namespace AltAIMLbot.Utils
         {
             if (template.Length == 0)
             {
-                string problem = string.Format("The category with a pattern: {0} found in file: {1} has an empty template tag.", path, filename);
-                Console.WriteLine("ERROR, This is a template 'Delete '(which is not implmneted for addCatagoryDB: " + problem);
-                return;
-                throw new XmlException(problem + " ABORTING");
+                //string problem = string.Format("The category with a pattern: {0} found in file: {1} has an empty template tag.", path, filename);
+                //Console.WriteLine("ERROR, This is a template 'Delete '(which is not implmneted for addCatagoryDB: " + problem);
+                //return;
+                //throw new XmlException(problem + " ABORTING");
+
+                // Allowing to pass since a null will clear the template property at the final destination
             }
             lock (ExternDB.mylock) addCategoryDB0(myWord, path, template, filename, score, scale, absPath, pathDB);
         }
@@ -572,7 +574,7 @@ namespace AltAIMLbot.Utils
                     //string serTemplate = String.Format("<ser path=\"{0}\"> {1} </ser>", encoded, template);
                     //Hashtable myTemp = new Hashtable();
                     Hashtable myTemp = pathFields(ourPath.Trim());
-                    //myTemp["path"] = encoded;
+                    myTemp["path"] = ourPath.Trim();
                     myTemp["template"] =HttpUtility.HtmlEncode( template);
                     myTemp["vfilename"] = FirstFilename();
                     collector.Add(myTemp);
@@ -1886,15 +1888,15 @@ namespace AltAIMLbot.Utils
             }
         }
 
-        public void Close()
+        public void ClearCache()
         {
             //flush our cache out
-            List <string> trunklist =new List<string> ();
+            List<string> trunklist = new List<string>();
             if (nodecache != null)
             {
                 foreach (string k in nodecache.Keys)
                 {
-                    if (trunklist != null)  trunklist.Add(k);
+                    if (trunklist != null) trunklist.Add(k);
                 }
             }
             if (trunklist != null)
@@ -1906,6 +1908,12 @@ namespace AltAIMLbot.Utils
             }
             if (nodecache != null) nodecache.Clear();
             if (trunklist != null) trunklist.Clear();
+        }
+        public void Close()
+        {
+            //flush our cache out
+            ClearCache();
+
             /*
             foreach (string childkey in childcache.Keys)
             {
@@ -2227,7 +2235,7 @@ namespace AltAIMLbot.Utils
             {
                 int pslice = pathToSlice(absPath);
                 bool trunk = isTrunk(absPath);
-                if ((flushing == false) && (trunk == true))
+                if (trunk == true)
                 {
                     // SAFE TO JUST LOCAL CACHE
                     if (nodecache.ContainsKey(absPath))
@@ -2238,6 +2246,9 @@ namespace AltAIMLbot.Utils
                     {
                         nodecache.Add(absPath, myNode);
                     }
+                }
+                if ((flushing == false) && (trunk == true))
+                {
                     return;
                 }
                 if (myNode.fullChildSet) return; // we are in eval mode so read-only
@@ -2328,9 +2339,9 @@ namespace AltAIMLbot.Utils
                     trunk = trunk;
                 }
                 var template = myNode.FirstTemplate();
-                if (template.Length > 0) templatedb[pslice].Set(absPath, template);
+                if (template.Length >= 0) templatedb[pslice].Set(absPath, template);
                 var filename = myNode.FirstFilename();
-                if (filename.Length > 0) filenamedb[pslice].Set(absPath, filename);
+                if (filename.Length >= 0) filenamedb[pslice].Set(absPath, filename);
                 //if (myNode.word.Length > 0) worddb.Set(absPath, myNode.word);
                 if (myNode.score != 1.0) scoredb[pslice].Set(absPath, myNode.score.ToString());
                 //if (myNode.childnum > 0) 

@@ -331,6 +331,8 @@ namespace AltAIMLbot
             byte[] msg;
             string[] sections = context.Request.RawUrl.Split('?');
             string justURL = sections[0];
+            string qcodes = "";
+            if (sections.Length >1) qcodes = sections[1];
             string filename = Path.GetFileName(justURL);
             string behaviorName = filenameToBehaviorname(filename);
             string behaviorFile = ourServitor.curBot.myBehaviors.behaviorDiskName(behaviorName);
@@ -347,29 +349,91 @@ namespace AltAIMLbot
             StreamReader streamReader = new StreamReader(bodyStream, encoding);
             string infoBody = streamReader.ReadToEnd();
             NameValueCollection NVC = HttpUtility.ParseQueryString(infoBody);
-
+            if (NVC.Count == 0)
+            {
+                NVC = HttpUtility.ParseQueryString(qcodes );
+            }
             if (justURL.Contains("graphmasterj"))
             {
-                string query=null;
+                WebLinksWriter.tl_AsHTML = false;
+                string query = null;
                 if (NVC != null) query = NVC["q"];
 
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
                 //+using (Stream s = context.Response.OutputStream )
                 using (var writer = HtmlStreamWriter(context))
                 {
-                    WebLinksWriter.tl_AsHTML = false;
-                    if (query != null)
+                    int jtStartIndex = 0;
+                    int jtPageSize = 51;
+                    int parseTest = 0;
+                    if (Int32.TryParse(NVC["jtStartIndex"], out parseTest)) jtStartIndex = parseTest;
+                    if (Int32.TryParse(NVC["jtPageSize"], out parseTest)) jtPageSize = parseTest;
+                    string jtSorting = NVC["jtSorting"];
+
+                    if (!string.IsNullOrEmpty(query))
                     {
 
-                        analyseGraphMasterJSON(writer, query, justURL);
+                        analyseGraphMasterJSON(writer, query, justURL, jtStartIndex, jtPageSize, jtSorting);
                     }
                     else
                     {
-                        fetchGraphMasterJSON(writer, justURL);
+                        fetchGraphMasterJSON(writer, justURL, jtStartIndex, jtPageSize,jtSorting);
                     }
                 }
                 return;
             }
+
+            if (justURL.Contains("graphmasterd"))
+            {
+                // Delete a path
+                WebLinksWriter.tl_AsHTML = false;
+                string categoryPath = "*";
+                Hashtable resultHash = new Hashtable();
+                resultHash["Result"] = "OK";
+                if (NVC != null)
+                {
+                    categoryPath = NVC["path"];
+                }
+                context.Response.StatusCode = (int)HttpStatusCode.OK;
+                //+using (Stream s = context.Response.OutputStream )
+                using (var writer = HtmlStreamWriter(context))
+                {
+                    try
+                    {
+
+                        Console.WriteLine("WEBPOST DELETE:{0}", categoryPath);
+                        string gn = ourServitor.curBot.Graphmaster.ScriptingName;
+
+                        if (ourServitor.curBot.UseRapstore(gn))
+                        {
+                            var extDB = ourServitor.curBot.GetGraph(gn).ensureEdb();
+                            Node myNode = extDB.fetchNode(categoryPath, false);
+                            myNode.templates = null;
+                            extDB.saveNode(categoryPath, myNode, true);
+                            //Node.addCategoryDB("", categoryPath, "", "", 1, 1, "", extDB);
+                            //extDB.Close();
+                            extDB.ClearCache();
+                        }
+                        else
+                        {
+                            ourServitor.curBot.Graphmaster.addCategory(categoryPath, "", "", 1, 1);
+
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        resultHash["Result"] = "ERROR";
+                        resultHash["Message"] = ex.Message;
+                    }
+                     string jsonCode = JSON.JsonEncode(resultHash);
+                      writer.WriteLine(jsonCode);
+                      writer.WriteLine("");
+                   }
+               
+                return;
+
+            }
+
             if (justURL.Contains("graphmasterc"))
             {
                 // Create or Update
@@ -406,11 +470,15 @@ namespace AltAIMLbot
                         WebLinksWriter.tl_AsHTML = false;
                         AIMLLoader loader = new AIMLLoader(ourServitor.curBot);
                         string categoryPath = loader.generatePath(pattern, that, topic, state1, state2, false);
-
-                        if (ourServitor.curBot.UseRapstore("*"))
+                        Console.WriteLine("WEBPOST CREATE:{0} --> {1}:{2}", categoryPath, template, vfilename);
+                        string gn = ourServitor.curBot.Graphmaster.ScriptingName;
+                         
+                        if (ourServitor.curBot.UseRapstore(gn))
                         {
-                            var extDB = ourServitor.curBot.GetGraph("*").ensureEdb();
+                            var extDB = ourServitor.curBot.GetGraph(gn).ensureEdb();
                             Node.addCategoryDB("", categoryPath, template, vfilename, 1, 1, "", extDB);
+                            //extDB.Close();
+                            extDB.ClearCache();
                         }
                         else
                         {
@@ -686,20 +754,23 @@ namespace AltAIMLbot
             }
             if (justURL.Contains("graphmasterj"))
             {
+                WebLinksWriter.tl_AsHTML = false;
 
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
                 //+using (Stream s = context.Response.OutputStream )
+                int jtStartIndex = Int32.Parse (context.Request.QueryString["jtStartIndex"]);
+                int jtPageSize = Int32.Parse (context.Request.QueryString["jtPageSize"]);
+                string jtSorting = context.Request.QueryString["jtSorting"];
+
                 using (var writer = HtmlStreamWriter(context))
                 {
-                    WebLinksWriter.tl_AsHTML = false;
-                    if (query != null)
+                    if (!string.IsNullOrEmpty(query))
                     {
-
-                        analyseGraphMasterJSON(writer, query, justURL);
+                        analyseGraphMasterJSON(writer, query, justURL, jtStartIndex, jtPageSize, jtSorting);
                     }
                     else
                     {
-                        fetchGraphMasterJSON(writer, justURL);
+                        fetchGraphMasterJSON(writer, justURL,jtStartIndex ,jtPageSize,jtSorting );
                     }
                 }
                 return;
@@ -957,16 +1028,16 @@ namespace AltAIMLbot
             writer.WriteLine("");
             
         }
-        public static void fetchGraphMasterJSON(TextWriter writer, string rawURL)
+        public static void fetchGraphMasterJSON(TextWriter writer, string rawURL,int jtStartIndex,int jtPageSize,string jtSorting)
         {
             //loadAimlIndex();
             rawURL = rawURL.Replace("graphmasterj", "graphmaster");
             string gmPath = URITographMaster(rawURL);
-            ArrayList allPaths = new ArrayList();
+            //ArrayList allPaths = new ArrayList();
             string jsonCode = "";
             try
             {
-                jsonCode = ourServitor.curBot.Graphmaster.searchFullPathsJSON(gmPath, "");
+                jsonCode = ourServitor.curBot.Graphmaster.searchFullPathsJSON(gmPath, "",jtStartIndex,jtPageSize,jtSorting);
             }
             catch (Exception ex)
             {
@@ -1051,7 +1122,7 @@ namespace AltAIMLbot
 
 
 
-        public static void analyseGraphMasterJSON(TextWriter writer, string query, string rawURL)
+        public static void analyseGraphMasterJSON(TextWriter writer, string query, string rawURL, int jtStartIndex, int jtPageSize, string jtSorting)
         {
             loadAimlIndex();
             List<string> rawList = query.Split(' ').ToList();
@@ -1067,56 +1138,32 @@ namespace AltAIMLbot
             Dictionary<string, double> pathResults = ourServitor.myIndex.performTfIdfSearch(queryList);
             pathResults = pathResults.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
             int resultCount = 0;
+            ArrayList collector = new ArrayList();
 
             foreach (string path in pathResults.Keys)
             {
                 double irScore = pathResults[path];
-                List<string> allPaths = new List<string>();
-                ourServitor.curBot.Graphmaster.searchFullPaths(path, "", allPaths);
+                ArrayList myCollector = new ArrayList();
 
-                string gmURI = graphMasterToURI(path);
-
-                foreach (string frag in allPaths)
+                ourServitor.curBot.Graphmaster.root.searchFullPathsShortCategory(path, "", myCollector);
+                foreach (Hashtable ht in myCollector )
                 {
-                    writer.WriteLine("");
-                    string fragtxt = frag;
-                    fragtxt = fragtxt.Replace("<", "&lt;");
-                    fragtxt = fragtxt.Replace(">", "&gt;");
-
-                    writer.WriteLine("{0}", fragtxt);
-                    List<string> ngrams = tagify(frag);
-                    writer.WriteLine("<{0}> <queryScore> \"{1}\" .", gmURI, irScore);
-                    writer.WriteLine("<{0}> <query> \"{1}\" .", gmURI, query);
-                    if (ngrams.Count > 1)
-                    {
-                        writer.WriteLine("<{0}> <rdf:type> <dctype:Text> .", gmURI);
-
-                    }
-                    foreach (string phrase in ngrams)
-                    {
-                        double score = phraseScore[phrase];
-                        int senseC = 0;
-                        string senseL = "";
-                        if (senseCount.ContainsKey(phrase))
-                        {
-                            senseC = senseCount[phrase];
-                            senseL = senseLink[phrase];
-                        }
-                        if (score < 0.004) break;
-                        writer.WriteLine("<{0}> <rdfs:comment> \"mentions '{1}'\"@en .", gmURI, phrase);
-                        if (senseC > 0)
-                        {
-                            //writer.WriteLine("<{0}> <http://purl.org/dc/terms/subject> <{1}> .", basicURI, senseL);
-                            writer.WriteLine("<{0}> <dcterms:subject> <{1}> .", gmURI, senseL);
-                            //writer.WriteLine("<\"{0}\"><hasScore> {1} .", senseL, score);
-                        }
-                    }
-
+                    ht["score"]=irScore;
+                    collector.Add(ht);
                 }
                 // Max 100
-                resultCount++;
-                if (resultCount > 100) { break; }
+                if (collector.Count >50) {break;}
             }
+
+            string jsonString = "";
+
+            ArrayList result = ourServitor.curBot.Graphmaster.selectPageResults(collector, jtStartIndex, jtPageSize, jtSorting);
+            Hashtable report = new Hashtable();
+            report.Add("Result", "OK");
+            report.Add("Records", result);
+            report.Add("TotalRecordCount", collector.Count);
+            jsonString = JSON.JsonEncode(report);
+            writer.WriteLine( jsonString);
             writer.WriteLine("");
             writer.Close();
         }
