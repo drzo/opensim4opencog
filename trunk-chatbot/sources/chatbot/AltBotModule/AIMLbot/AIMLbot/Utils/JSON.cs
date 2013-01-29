@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
@@ -380,7 +381,17 @@ namespace AltAIMLbot.Utils
 				success = SerializeObject((Hashtable)value, builder);
 			} else if (value is ArrayList) {
 				success = SerializeArray((ArrayList)value, builder);
-			} else if ((value is Boolean) && ((Boolean)value == true)) {
+            }
+            else if (value is Dictionary<string,string>)
+            {
+                success = SerializeDictionary((Dictionary<string, string>)value, builder);
+            }
+            else if (value is List<Dictionary<string,string>>)
+            {
+                success = SerializeList((List<Dictionary<string, string>>)value, builder);
+            }
+            else if ((value is Boolean) && ((Boolean)value == true))
+            {
 				builder.Append("true");
 			} else if ((value is Boolean) && ((Boolean)value == false)) {
 				builder.Append("false");
@@ -421,6 +432,35 @@ namespace AltAIMLbot.Utils
 			builder.Append("}");
 			return true;
 		}
+        protected static bool SerializeDictionary(Dictionary<string,string> anObject, StringBuilder builder)
+        {
+            builder.Append("{");
+
+            IDictionaryEnumerator e = anObject.GetEnumerator();
+            bool first = true;
+            while (e.MoveNext())
+            {
+                string key = e.Key.ToString();
+                object value = e.Value;
+
+                if (!first)
+                {
+                    builder.Append(", ");
+                }
+
+                SerializeString(key, builder);
+                builder.Append(":");
+                if (!SerializeValue(value, builder))
+                {
+                    return false;
+                }
+
+                first = false;
+            }
+
+            builder.Append("}");
+            return true;
+        }
 
 		protected static bool SerializeArray(ArrayList anArray, StringBuilder builder)
 		{
@@ -444,6 +484,32 @@ namespace AltAIMLbot.Utils
 			builder.Append("]");
 			return true;
 		}
+
+        protected static bool SerializeList(List<Dictionary<string,string>> anArray, StringBuilder builder)
+        {
+            builder.Append("[");
+
+            bool first = true;
+            for (int i = 0; i < anArray.Count; i++)
+            {
+                object value = anArray[i];
+
+                if (!first)
+                {
+                    builder.Append(", ");
+                }
+
+                if (!SerializeValue(value, builder))
+                {
+                    return false;
+                }
+
+                first = false;
+            }
+
+            builder.Append("]");
+            return true;
+        }
 
 		protected static bool SerializeString(string aString, StringBuilder builder)
 		{

@@ -70,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cema.cs" />
+    <Compile Include="JSON.cs" />
     <Compile Include="siprolog_rdf_live_store.cs" />
     <Compile Include="siprolog_rdf_rules.cs" />
     <Compile Include="siprolog_rdf_sync.cs" />

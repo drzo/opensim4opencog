@@ -16,6 +16,7 @@ using VDS.RDF.Query;
 using VDS.RDF.Writing.Formatting;
 using VDS.RDF.Writing;
 using VDS.RDF.Nodes;
+using Sipro.Utils;
 using StringWriter = System.IO.StringWriter;
 //using TermList = LogicalParticleFilter1.TermListImpl;
 //using TermList = System.Collections.Generic.List<LogicalParticleFilter1.SIProlog.Part>;///LogicalParticleFilter1.SIProlog.PartListImpl;
@@ -80,6 +81,11 @@ namespace LogicalParticleFilter1
         {
             writer = WebLinksWriter.AddWarnWriter(writer);
             serverRoot = "/";
+            if ((action == "remotequery")|| (action == "jsonquery"))
+            {
+                jsonQuery(writer, query, mt, serverRoot);
+                return;
+            }
             if ((action == "autorefresh") || (action == "autoquery"))
             {
                 writer.WriteLine("<META HTTP-EQUIV=\"REFRESH\" content=\"10\">");
@@ -310,6 +316,10 @@ function validateBrowserForm()
                             break;
                         case "autoquery":
                             interactQuery(writer, queryv, mt, serverRoot);
+                            return;
+                            break;
+                        case "remotequery":
+                            jsonQuery(writer, queryv, mt, serverRoot);
                             return;
                             break;
                     }
@@ -662,7 +672,33 @@ function validateBrowserForm()
     }
     public partial class SIProlog
     {
- 
+        public void jsonQuery(TextWriter writer, string query, string mt, string serverRoot)
+        {
+            WebLinksWriter.tl_AsHTML = false;
+
+            serverRoot = WithSlash(serverRoot);
+            int testdepth = 64;
+            string jsonCode="[]";
+            List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
+            while ((bingingsList.Count == 0) && (testdepth < 1024))
+            {
+                testdepth = (int)(testdepth * 1.5);
+                //ConsoleWriteLine("Trying depth {0}", testdepth);
+                maxdepth = testdepth;
+                askQuery(query, mt, out bingingsList);
+            }
+            if (bingingsList.Count == 0)
+            {
+                jsonCode = "[]";
+            }
+            else
+            {
+                jsonCode = JSON.JsonEncode(bingingsList);
+            }
+            writer.WriteLine(jsonCode);
+            writer.WriteLine("");
+
+        }
         public void interactQuery(TextWriter writer, string query, string mt, string serverRoot)
         {
             serverRoot = WithSlash(serverRoot);
