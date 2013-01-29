@@ -348,6 +348,7 @@ namespace AltAIMLbot
 
             StreamReader streamReader = new StreamReader(bodyStream, encoding);
             string infoBody = streamReader.ReadToEnd();
+            if (qcodes.Length > 0) infoBody = infoBody + "&"+qcodes;
             NameValueCollection NVC = HttpUtility.ParseQueryString(infoBody);
             if (NVC.Count == 0)
             {
@@ -357,7 +358,14 @@ namespace AltAIMLbot
             {
                 WebLinksWriter.tl_AsHTML = false;
                 string query = null;
-                if (NVC != null) query = NVC["q"];
+                string matchtemplate = null;
+                string matchpattern = null;
+                if (NVC != null)
+                {
+                    query = NVC["q"];
+                    matchtemplate = NVC["matchtemplate"];
+                    matchpattern = NVC["matchpattern"];
+                }
 
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
                 //+using (Stream s = context.Response.OutputStream )
@@ -373,7 +381,7 @@ namespace AltAIMLbot
                     if (!string.IsNullOrEmpty(query))
                     {
 
-                        analyseGraphMasterJSON(writer, query, justURL, jtStartIndex, jtPageSize, jtSorting);
+                        analyseGraphMasterJSON(writer, query, justURL, jtStartIndex, jtPageSize, jtSorting,matchpattern ,matchtemplate );
                     }
                     else
                     {
@@ -761,12 +769,14 @@ namespace AltAIMLbot
                 int jtStartIndex = Int32.Parse (context.Request.QueryString["jtStartIndex"]);
                 int jtPageSize = Int32.Parse (context.Request.QueryString["jtPageSize"]);
                 string jtSorting = context.Request.QueryString["jtSorting"];
+                string matchpattern = context.Request.QueryString["matchpattern"];
+                string matchtemplate = context.Request.QueryString["matchtemplate"];
 
                 using (var writer = HtmlStreamWriter(context))
                 {
                     if (!string.IsNullOrEmpty(query))
                     {
-                        analyseGraphMasterJSON(writer, query, justURL, jtStartIndex, jtPageSize, jtSorting);
+                        analyseGraphMasterJSON(writer, query, justURL, jtStartIndex, jtPageSize, jtSorting,matchpattern,matchtemplate);
                     }
                     else
                     {
@@ -1122,8 +1132,10 @@ namespace AltAIMLbot
 
 
 
-        public static void analyseGraphMasterJSON(TextWriter writer, string query, string rawURL, int jtStartIndex, int jtPageSize, string jtSorting)
+        public static void analyseGraphMasterJSON(TextWriter writer, string query, string rawURL, int jtStartIndex, int jtPageSize, string jtSorting,
+                string matchpattern,string matchtemplate)
         {
+            bool strictfilter = ((matchtemplate == "true") || (matchpattern == "true"));
             loadAimlIndex();
             List<string> rawList = query.Split(' ').ToList();
             List<string> queryList = query.Split(' ').ToList();
@@ -1149,10 +1161,28 @@ namespace AltAIMLbot
                 foreach (Hashtable ht in myCollector )
                 {
                     ht["score"]=irScore;
-                    collector.Add(ht);
+                    if (strictfilter)
+                    {
+                        bool matchingTemplateb = true;
+                        bool matchingPatternb = true;
+                        foreach (string q in rawList)
+                        {
+                            matchingTemplateb = matchingTemplateb && (((string)ht["template"]).ToLower ().Contains(q.ToLower ()));
+                            matchingPatternb = matchingPatternb && (((string)ht["pattern"]).ToLower().Contains(q.ToLower()));
+                        }
+                        // Exclude those that don't match the filter
+                        if (!matchingTemplateb && matchtemplate == "true") continue;
+                        if (!matchingPatternb && matchpattern == "true") continue;
+                        // survived so must be good
+                        collector.Add(ht);
+                    }
+                    else
+                    {
+                        collector.Add(ht);
+                    }
                 }
                 // Max 100
-                if (collector.Count >50) {break;}
+                if (collector.Count >2000) {break;}
             }
 
             string jsonString = "";
