@@ -354,17 +354,19 @@ namespace AltAIMLbot
             {
                 NVC = HttpUtility.ParseQueryString(qcodes );
             }
-            if (justURL.Contains("graphmasterj"))
+            if (justURL.Contains("graphmasterlist"))
             {
                 WebLinksWriter.tl_AsHTML = false;
                 string query = null;
                 string matchtemplate = null;
                 string matchpattern = null;
+                string gensrai = null;
                 if (NVC != null)
                 {
                     query = NVC["q"];
                     matchtemplate = NVC["matchtemplate"];
                     matchpattern = NVC["matchpattern"];
+                    gensrai = NVC["gensrai"];
                 }
 
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
@@ -381,7 +383,7 @@ namespace AltAIMLbot
                     if (!string.IsNullOrEmpty(query))
                     {
 
-                        analyseGraphMasterJSON(writer, query, justURL, jtStartIndex, jtPageSize, jtSorting,matchpattern ,matchtemplate );
+                        analyseGraphMasterJSON(writer, query, justURL, jtStartIndex, jtPageSize, jtSorting,matchpattern ,matchtemplate,gensrai );
                     }
                     else
                     {
@@ -491,6 +493,43 @@ namespace AltAIMLbot
                         else
                         {
                             ourServitor.curBot.Graphmaster.addCategory(categoryPath, template, vfilename, 1, 1);
+                        }
+
+                        long writeTime = DateTime.Now.Ticks;
+                         // Just make a post loaded mod file
+                        //string modFile = ourServitor.curBot.PersonalizePath("ZZZZ_" + Guid.NewGuid().ToString() + ".aiml");
+                        string modFile = ourServitor.curBot.PersonalizePath("ZZZZ_" + writeTime.ToString() + ".aiml");
+                        var encoded = HttpUtility.HtmlEncode(categoryPath.Trim());
+                        string serTemplate = String.Format("<ser path=\"{0}\"> {1} </ser>", encoded, template);
+                        string[] header = { "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "<aiml version=\"1.0\">", " <state name=\"*\">" };
+                        string[] footer = { " </state>", "</aiml>" };
+                        {
+                            StreamWriter sw = null;
+                            try
+                            {
+                                sw = File.CreateText(modFile);
+                                foreach (string line in header)
+                                {
+                                    sw.WriteLine(line);
+                                }
+                                sw.WriteLine(serTemplate);
+
+                                foreach (string line in footer)
+                                {
+                                    sw.WriteLine(line);
+                                }
+                                sw.Flush();
+                                sw.Close();
+                            }
+                            catch (Exception e)
+                            {
+
+                            }
+                            finally
+                            {
+                                if (sw != null)
+                                    sw.Dispose();
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -760,7 +799,7 @@ namespace AltAIMLbot
                 }
                 return;
             }
-            if (justURL.Contains("graphmasterj"))
+            if (justURL.Contains("graphmasterlist"))
             {
                 WebLinksWriter.tl_AsHTML = false;
 
@@ -771,12 +810,12 @@ namespace AltAIMLbot
                 string jtSorting = context.Request.QueryString["jtSorting"];
                 string matchpattern = context.Request.QueryString["matchpattern"];
                 string matchtemplate = context.Request.QueryString["matchtemplate"];
-
+                string gensrai = context.Request.QueryString["gensrai"];
                 using (var writer = HtmlStreamWriter(context))
                 {
                     if (!string.IsNullOrEmpty(query))
                     {
-                        analyseGraphMasterJSON(writer, query, justURL, jtStartIndex, jtPageSize, jtSorting,matchpattern,matchtemplate);
+                        analyseGraphMasterJSON(writer, query, justURL, jtStartIndex, jtPageSize, jtSorting, matchpattern, matchtemplate, gensrai);
                     }
                     else
                     {
@@ -1041,7 +1080,7 @@ namespace AltAIMLbot
         public static void fetchGraphMasterJSON(TextWriter writer, string rawURL,int jtStartIndex,int jtPageSize,string jtSorting)
         {
             //loadAimlIndex();
-            rawURL = rawURL.Replace("graphmasterj", "graphmaster");
+            rawURL = rawURL.Replace("graphmasterlist", "graphmaster");
             string gmPath = URITographMaster(rawURL);
             //ArrayList allPaths = new ArrayList();
             string jsonCode = "";
@@ -1133,7 +1172,7 @@ namespace AltAIMLbot
 
 
         public static void analyseGraphMasterJSON(TextWriter writer, string query, string rawURL, int jtStartIndex, int jtPageSize, string jtSorting,
-                string matchpattern,string matchtemplate)
+                string matchpattern,string matchtemplate,string gensrai)
         {
             bool strictfilter = ((matchtemplate == "true") || (matchpattern == "true"));
             loadAimlIndex();
@@ -1174,11 +1213,45 @@ namespace AltAIMLbot
                         if (!matchingTemplateb && matchtemplate == "true") continue;
                         if (!matchingPatternb && matchpattern == "true") continue;
                         // survived so must be good
-                        collector.Add(ht);
+                        if (gensrai == "true")
+                        {
+                            Hashtable ght = new Hashtable(ht);
+                            string target = (string)ght["pattern"];
+                            string newTarget = target;
+                            string newPattern = LevenshteinDistance.hypotheizeSrai(query, target, out newTarget);
+                            string newTemplate = "<template><srai>" + newTarget + "</srai></template>";
+                            ght["pattern"] = newPattern;
+                            ght["template"] = HttpUtility.HtmlEncode(newTemplate);
+                            ght["vfilename"] = "vf:gensrai";
+                            // NEED TO FIX "PATH"
+                           collector.Add(ght);
+                        }
+                        else
+                        {
+                            collector.Add(ht);
+                        }
                     }
                     else
                     {
-                        collector.Add(ht);
+                        if (gensrai == "true")
+                        {
+                            Hashtable ght = new Hashtable(ht);
+                            string target = (string)ght["pattern"];
+                            string newTarget = target;
+                            string newPattern = LevenshteinDistance.hypotheizeSrai(query, target, out newTarget);
+                            string newTemplate = "<template><srai>" + newTarget + "</srai></template>";
+                            ght["pattern"] = newPattern;
+                            ght["template"] = HttpUtility.HtmlEncode(newTemplate);
+                            ght["vfilename"] = "vf:gensrai";
+                            // NEED TO FIX "PATH"
+                            collector.Add(ght);
+                        }
+                        else
+                        {
+                            collector.Add(ht);
+                        }
+                        
+
                     }
                 }
                 // Max 100

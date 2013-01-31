@@ -538,6 +538,118 @@ namespace AltAIMLbot
             // Return the computed edit distance
             return rows[curRow][m];
         }
+
+        public static string hypotheizeSrai(string source, string target, out string newTarget)
+        {
+
+
+            string[] s = (source.Trim().ToUpper() + " ").Split(' ');
+            string[] t = (target.Trim().ToUpper() + " ").Split(' ');
+            int n = s.Length - 1;
+            int m = t.Length - 1;
+            int[,] d = new int[n + 1, m + 1];
+            string[,] p1 = new string[n + 2, m + 2];
+            string[,] p2 = new string[n + 2, m + 2];
+            string[,] r = new string[n + 2, m + 2];
+            // Step 2
+            for (int i = 0; i <= n; d[i, 0] = i++)
+            {
+                p1[i, 0] = "";// s[i];
+                p2[i, 0] = "";
+            }
+
+            for (int j = 0; j <= m; d[0, j] = j++)
+            {
+                p2[0, j] = "";// t[j];
+                p1[0, j] = "*";
+            }
+            p1[0, 0] = "";
+            p2[0, 0] = "";
+            // Step 3
+            for (int i = 1; i <= n; i++)
+            {
+                //Step 4
+                for (int j = 1; j <= m; j++)
+                {
+                    // Step 5 : identical or an edit
+                    int cost = (t[j - 1] == s[i - 1]) ? 0 : 1;
+
+                    // Step 6
+                    d[i, j] = Math.Min(
+                        Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
+                        d[i - 1, j - 1] + cost);
+                    // Decode
+                    if (d[i, j] == d[i - 1, j - 1] + cost)
+                    {
+                        // edit
+                        p1[i, j] = p1[i - 1, j - 1] + " " + s[i - 1] + " ";
+
+                        // if target is a "*" then fill in with the source
+                        if (t[j - 1] == "*")
+                        {
+                            if (p1[i - 1, j - 1].EndsWith("*") || p1[i - 1, j - 1].EndsWith("* "))
+                            {
+                                p2[i, j] = p2[i - 1, j - 1] + " <star/> " + s[i - 1] + " ";
+                            }
+                            else
+                            {
+                                p2[i, j] = p2[i - 1, j - 1] + " " + s[i - 1] + " ";
+                            }
+                        }
+                        else
+                        {
+                            // else use the orignal target value
+                            p2[i, j] = p2[i - 1, j - 1] + " " + t[j - 1] + " ";
+                        }
+                        // if on an edge then assume we had to delete all the way to get there
+                        if ((j == 1) && (i > 1)) { p1[i, j] = "* " + p1[i, j]; }
+
+                        if (cost == 0)
+                        {
+                            //same
+                            r[i, j] = r[i - 1, j - 1] + string.Format("|same {0} == {1} @ ({2},{3})", s[i - 1], t[j - 1], i, j);
+                        }
+                        else
+                        {
+                            // different
+                            r[i, j] = r[i - 1, j - 1] + string.Format("|edit {0} -> {1} @ ({2},{3})", s[i - 1], t[j - 1], i, j);
+                        }
+
+                    }
+                    else
+                        if (d[i, j] == d[i - 1, j] + 1)
+                        {
+                            // deletion (from s to t)
+                            p1[i, j] = p1[i - 1, j] + "* ";
+                            p2[i, j] = p2[i - 1, j] + "";
+                            r[i, j] = r[i - 1, j] + "|delete " + s[i - 1];
+                        }
+                        else
+                            if (d[i, j] == d[i, j - 1] + 1)
+                            {
+                                // insertion (into t
+                                p1[i, j] = p1[i, j - 1] + "";
+                                p2[i, j] = p2[i, j - 1] + t[j - 1] + " ";
+                                r[i, j] = r[i, j - 1] + "|insert " + t[j - 1];
+
+                            }
+
+
+
+
+                }
+            }
+            // Step 7
+            int editDistance = d[n, m];
+            string pattern = p1[n, m].ToUpper().Trim();
+           // string srai = p2[n, m].Trim();
+            while (pattern.Contains("  ")) { pattern = pattern.Replace("  ", " "); }
+            while (pattern.Contains("* *")) { pattern = pattern.Replace("* *", "*"); }
+            // string category = String.Format("<pattern>{0}<pattern> -> <srai>{1}</srai>", pattern, srai);
+            newTarget = p2[n, m].Trim();
+            return pattern;
+        }
+
     }
 
     /*

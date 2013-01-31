@@ -1851,11 +1851,13 @@ namespace RTParser.Utils
 <div class='filtering'>
      <form>
         Query: <input type='text' name='q' id='q' />
-        <button type='submit' id='SearchButton'>Search</button> <br>
+        <button type='submit' id='SearchButton'>Search</button> 
+        <button type='submit' id='GenSrai'>GenSrai</button> <br>
         Match:
         <input type='checkbox' name='match' id='matchpattern' value='pattern'>Pattern 
         <input type='checkbox' name='match' id='matchtemplate' value='template'>Template<br>
-    </form>
+        
+</form>
 </div>
 
 <div class='content-container'>
@@ -1872,7 +1874,7 @@ namespace RTParser.Utils
             sorting: true,
 
             actions: {
-                listAction: '/graphmasterj/',
+                listAction: '/graphmasterlist/',
                 createAction: '/graphmasterc/',
                 updateAction: '/graphmasterc/',
                 deleteAction: '/graphmasterd/'
@@ -1951,9 +1953,19 @@ namespace RTParser.Utils
                 q: $('#q').val(),
                 matchpattern:  $('#matchpattern').is(':checked'),
                 matchtemplate:  $('#matchtemplate').is(':checked'),
+                gensrai:'false',
 
             });
-        })
+        });
+        $('#GenSrai').click(function (e) {
+            e.preventDefault();
+            $('#AIMLContainer').jtable('load', {
+                q: $('#q').val(),
+                matchpattern:  $('#matchpattern').is(':checked'),
+                matchtemplate:  $('#matchtemplate').is(':checked'),
+                gensrai:'true',
+            });
+        });
 
         //$('#AIMLContainer').jtable('load');
         //Load all records when page is first shown

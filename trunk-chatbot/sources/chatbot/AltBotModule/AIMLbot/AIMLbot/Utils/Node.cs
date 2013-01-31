@@ -566,18 +566,30 @@ namespace AltAIMLbot.Utils
             string ourPath = inpath + " " + curWord;
             if ((targetPath.StartsWith(ourPath.Trim())) || (targetPath==""))
             {
-                var template = FirstTemplate();
-                if ((template != null) && (template.Length > 1))
+                //var template = FirstTemplate();
+                if (templates != null)
                 {
-                    var encoded = HttpUtility.HtmlEncode(ourPath.Trim());
+                    foreach (OutputTemplate list in templates)
+                    {
+                        if (list.disable) continue;
 
-                    //string serTemplate = String.Format("<ser path=\"{0}\"> {1} </ser>", encoded, template);
-                    //Hashtable myTemp = new Hashtable();
-                    Hashtable myTemp = pathFields(ourPath.Trim());
-                    myTemp["path"] = ourPath.Trim();
-                    myTemp["template"] =HttpUtility.HtmlEncode( template);
-                    myTemp["vfilename"] = FirstFilename();
-                    collector.Add(myTemp);
+                        string temp = list.Template;
+                        string vfile = list.filename;
+                        string tempTrim = temp.Trim();
+                        if (!tempTrim.StartsWith("<template")) temp = "<template>" + temp + "</template>";
+                        if ((temp != null) && (temp.Length > 1))
+                        {
+                            var encoded = HttpUtility.HtmlEncode(ourPath.Trim());
+
+                            //string serTemplate = String.Format("<ser path=\"{0}\"> {1} </ser>", encoded, template);
+                            //Hashtable myTemp = new Hashtable();
+                            Hashtable myTemp = pathFields(ourPath.Trim());
+                            myTemp["path"] = ourPath.Trim();
+                            myTemp["template"] = HttpUtility.HtmlEncode(temp);
+                            myTemp["vfilename"] = vfile;
+                            collector.Add(myTemp);
+                        }
+                    }
                 }
                 foreach (Node childNode in ChildNodes)
                 {
