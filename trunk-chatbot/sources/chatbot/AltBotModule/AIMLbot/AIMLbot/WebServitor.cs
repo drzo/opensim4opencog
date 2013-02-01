@@ -361,12 +361,14 @@ namespace AltAIMLbot
                 string matchtemplate = null;
                 string matchpattern = null;
                 string gensrai = null;
+                string src = null;
                 if (NVC != null)
                 {
                     query = NVC["q"];
                     matchtemplate = NVC["matchtemplate"];
                     matchpattern = NVC["matchpattern"];
                     gensrai = NVC["gensrai"];
+                    src = NVC["src"];
                 }
 
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
@@ -383,7 +385,7 @@ namespace AltAIMLbot
                     if (!string.IsNullOrEmpty(query))
                     {
 
-                        analyseGraphMasterJSON(writer, query, justURL, jtStartIndex, jtPageSize, jtSorting,matchpattern ,matchtemplate,gensrai );
+                        analyseGraphMasterJSON(writer, query, justURL, jtStartIndex, jtPageSize, jtSorting,matchpattern ,matchtemplate,gensrai,src );
                     }
                     else
                     {
@@ -500,8 +502,8 @@ namespace AltAIMLbot
                         //string modFile = ourServitor.curBot.PersonalizePath("ZZZZ_" + Guid.NewGuid().ToString() + ".aiml");
                         string modFile = ourServitor.curBot.PersonalizePath("ZZZZ_" + writeTime.ToString() + ".aiml");
                         var encoded = HttpUtility.HtmlEncode(categoryPath.Trim());
-                        string serTemplate = String.Format("<ser path=\"{0}\"> {1} </ser>", encoded, template);
                         string[] header = { "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "<aiml version=\"1.0\">", " <state name=\"*\">" };
+                        string serTemplate = String.Format("   <ser path=\"{0}\"> {1} </ser>", encoded, template);
                         string[] footer = { " </state>", "</aiml>" };
                         {
                             StreamWriter sw = null;
@@ -811,11 +813,12 @@ namespace AltAIMLbot
                 string matchpattern = context.Request.QueryString["matchpattern"];
                 string matchtemplate = context.Request.QueryString["matchtemplate"];
                 string gensrai = context.Request.QueryString["gensrai"];
+                string src = context.Request.QueryString["src"];
                 using (var writer = HtmlStreamWriter(context))
                 {
                     if (!string.IsNullOrEmpty(query))
                     {
-                        analyseGraphMasterJSON(writer, query, justURL, jtStartIndex, jtPageSize, jtSorting, matchpattern, matchtemplate, gensrai);
+                        analyseGraphMasterJSON(writer, query, justURL, jtStartIndex, jtPageSize, jtSorting, matchpattern, matchtemplate, gensrai,src);
                     }
                     else
                     {
@@ -1172,7 +1175,7 @@ namespace AltAIMLbot
 
 
         public static void analyseGraphMasterJSON(TextWriter writer, string query, string rawURL, int jtStartIndex, int jtPageSize, string jtSorting,
-                string matchpattern,string matchtemplate,string gensrai)
+                string matchpattern,string matchtemplate,string gensrai,string src)
         {
             bool strictfilter = ((matchtemplate == "true") || (matchpattern == "true"));
             loadAimlIndex();
@@ -1202,29 +1205,53 @@ namespace AltAIMLbot
                     ht["score"]=irScore;
                     if (strictfilter)
                     {
-                        bool matchingTemplateb = true;
-                        bool matchingPatternb = true;
-                        foreach (string q in rawList)
+                        if (gensrai == "true")
                         {
-                            matchingTemplateb = matchingTemplateb && (((string)ht["template"]).ToLower ().Contains(q.ToLower ()));
-                            matchingPatternb = matchingPatternb && (((string)ht["pattern"]).ToLower().Contains(q.ToLower()));
+                            // For Gensrai we take any mention
+                            int matchingTemplatec = 0;
+                            int matchingPatternc = 0;
+                            foreach (string q in rawList)
+                            {
+                                if ((((string)ht["template"]).ToLower().Contains(q.ToLower()))) matchingTemplatec++;
+                                if ((((string)ht["pattern"]).ToLower().Contains(q.ToLower()))) matchingPatternc++;
+                            }
+                            // Exclude those that don't match the filter
+                            if (matchingTemplatec==0 && matchtemplate == "true") continue;
+                            if (matchingPatternc==0 && matchpattern == "true") continue;
                         }
-                        // Exclude those that don't match the filter
-                        if (!matchingTemplateb && matchtemplate == "true") continue;
-                        if (!matchingPatternb && matchpattern == "true") continue;
+                        else
+                        {
+                            bool matchingTemplateb = true;
+                            bool matchingPatternb = true;
+                            foreach (string q in rawList)
+                            {
+                                matchingTemplateb = matchingTemplateb && (((string)ht["template"]).ToLower().Contains(q.ToLower()));
+                                matchingPatternb = matchingPatternb && (((string)ht["pattern"]).ToLower().Contains(q.ToLower()));
+                            }
+                            // Exclude those that don't match the filter
+                            if (!matchingTemplateb && matchtemplate == "true") continue;
+                            if (!matchingPatternb && matchpattern == "true") continue;
+                        }
                         // survived so must be good
                         if (gensrai == "true")
                         {
                             Hashtable ght = new Hashtable(ht);
                             string target = (string)ght["pattern"];
                             string newTarget = target;
-                            string newPattern = LevenshteinDistance.hypotheizeSrai(query, target, out newTarget);
+                            string newPattern = LevenshteinDistance.hypotheizeSrai(src, target, out newTarget);
                             string newTemplate = "<template><srai>" + newTarget + "</srai></template>";
                             ght["pattern"] = newPattern;
                             ght["template"] = HttpUtility.HtmlEncode(newTemplate);
                             ght["vfilename"] = "vf:gensrai";
                             // NEED TO FIX "PATH"
                            collector.Add(ght);
+                           if (!target.Contains("*") && !target.Contains("_"))
+                           {
+                               Hashtable ght2 = new Hashtable(ght);
+                               string newTemplate2 = "<template><srai>" + target + "</srai></template>";
+                               ght2["template"] = HttpUtility.HtmlEncode(newTemplate2);
+                               collector.Add(ght2);
+                           }
                         }
                         else
                         {
@@ -1238,13 +1265,20 @@ namespace AltAIMLbot
                             Hashtable ght = new Hashtable(ht);
                             string target = (string)ght["pattern"];
                             string newTarget = target;
-                            string newPattern = LevenshteinDistance.hypotheizeSrai(query, target, out newTarget);
+                            string newPattern = LevenshteinDistance.hypotheizeSrai(src, target, out newTarget);
                             string newTemplate = "<template><srai>" + newTarget + "</srai></template>";
                             ght["pattern"] = newPattern;
                             ght["template"] = HttpUtility.HtmlEncode(newTemplate);
                             ght["vfilename"] = "vf:gensrai";
                             // NEED TO FIX "PATH"
                             collector.Add(ght);
+                            if (!target.Contains("*") && !target.Contains("_"))
+                            {
+                                Hashtable ght2 = new Hashtable(ght);
+                                string newTemplate2 = "<template><srai>" + target + "</srai></template>";
+                                ght2["template"] = HttpUtility.HtmlEncode(newTemplate2);
+                                collector.Add(ght2);
+                            }
                         }
                         else
                         {

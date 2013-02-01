@@ -1850,8 +1850,9 @@ namespace RTParser.Utils
 <body>
 <div class='filtering'>
      <form>
-        Query: <input type='text' name='q' id='q' />
-        <button type='submit' id='SearchButton'>Search</button> 
+        Query: <input type='text' name='q' id='q' size='40'/>
+        <button type='submit' id='SearchButton'>Search</button> <br>
+        Source: <input type='text' name='src' id='src' size='40'/>
         <button type='submit' id='GenSrai'>GenSrai</button> <br>
         Match:
         <input type='checkbox' name='match' id='matchpattern' value='pattern'>Pattern 
@@ -1951,6 +1952,7 @@ namespace RTParser.Utils
             e.preventDefault();
             $('#AIMLContainer').jtable('load', {
                 q: $('#q').val(),
+                src: $('#src').val(),
                 matchpattern:  $('#matchpattern').is(':checked'),
                 matchtemplate:  $('#matchtemplate').is(':checked'),
                 gensrai:'false',
@@ -1961,6 +1963,7 @@ namespace RTParser.Utils
             e.preventDefault();
             $('#AIMLContainer').jtable('load', {
                 q: $('#q').val(),
+                src: $('#src').val(),
                 matchpattern:  $('#matchpattern').is(':checked'),
                 matchtemplate:  $('#matchtemplate').is(':checked'),
                 gensrai:'true',

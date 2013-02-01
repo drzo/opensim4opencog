@@ -585,9 +585,9 @@ namespace AltAIMLbot
                         p1[i, j] = p1[i - 1, j - 1] + " " + s[i - 1] + " ";
 
                         // if target is a "*" then fill in with the source
-                        if (t[j - 1] == "*")
+                        if ((t[j - 1] == "*")||(t[j - 1] == "_")||(t[j - 1] == "^")||(t[j - 1] == "#"))
                         {
-                            if (p1[i - 1, j - 1].EndsWith("*") || p1[i - 1, j - 1].EndsWith("* "))
+                            if (p1[i - 1, j - 1].Trim().EndsWith("*"))
                             {
                                 p2[i, j] = p2[i - 1, j - 1] + " <star/> " + s[i - 1] + " ";
                             }
