@@ -2,8 +2,10 @@ using System;
 using System.IO;
 using AltAIMLbot;
 using LAIR.ResourceAPIs.WordNet;
+using LogicalParticleFilter1;
 using RoboKindAvroQPID;
 using RTParser;
+using ThreadPoolUtil;
 
 namespace RoboKindChat
 {
@@ -27,8 +29,21 @@ namespace RoboKindChat
             //_theChatProg.LoadDataset("test_suite/ProgramD/AIML.aiml");
             //_theChatProg.LoadDataset("special/blackjack.aiml");
             // _theChatProg.LoadDataset("special/lesson_template.aiml"); 
-
             // for now lets use the old interactor for texting
+            if (Array.Find(args, (i) => i.Equals("--nobot")) != null)
+            {
+                if (GlobalSharedSettings.IsRdfServer) GlobalSharedSettings.RdfSavedInPDB = true;
+                var p = new ServitorEndpoint(null, null, SIProlog.CurrentProlog);
+                ThreadPool.QueueUserWorkItem((o) =>
+                {
+                    Console.WriteLine("Servitor WebServitor.beginService");
+                    Servitor theServitor = new AltBot().servitor;
+                    WebServitor.beginService(theServitor);
+                });
+                p.StartServer();
+                SIProlog.ReplRunning.WaitOne();
+                return;
+            }
             try
             {
                 AltBot.Main(args);

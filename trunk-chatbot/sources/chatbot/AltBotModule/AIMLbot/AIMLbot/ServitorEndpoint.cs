@@ -11,6 +11,14 @@ using MushDLR223.Utilities;
 using RTParser;
 using VDS.RDF;
 using VDS.RDF.Parsing;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
+using System.Threading;
+
 
 namespace AltAIMLbot
 {
@@ -45,8 +53,7 @@ namespace AltAIMLbot
             prologEngine.connectMT("spindleMT", "rdfMT");
             prologEngine.connectMT("rdfMT", "baseKB");
             prologEngine.appendKB("triple(this,can,work).\n", "rdfMT");
-
-            myServer.beginService(prologEngine);
+            ThreadPool.QueueUserWorkItem((o) => myServer.beginService(prologEngine));
             prologEngine.EndpointCreated(myServer);
         }
 

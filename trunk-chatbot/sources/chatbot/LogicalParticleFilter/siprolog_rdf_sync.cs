@@ -60,6 +60,7 @@ namespace LogicalParticleFilter1
             StringWriter miniMt = new StringWriter();
             var repo = FindOrCreateKB(graphKBName);
             RdfRules ruleDefs = new RdfRules(g);
+            ruleDefs.prologMt = graphKBName;
             //Use the extension method ExecuteQuery() to make the query against the Graph
             try
             {
@@ -108,7 +109,10 @@ namespace LogicalParticleFilter1
                     //Do whatever you want with each Triple
                     foreach (string vname in r.Variables)
                     {
-                        INode value = r[vname];
+                        INode value0 = r[vname];
+                        SIProlog.checkNode(value0);
+                        //Graph into = FindGraph(baseURI.AbsoluteUri);
+                        INode value = value0.CopyWNode(repo.rdfGraph);
                         string strVal = GraphWithDef.PlReadble(value, ruleDefs);
                         assertIt = assertIt.Replace("$?" + vname + "$", strVal);
                         if (show) ConsoleWriteLine("BIND: {0} = {1}", vname, strVal);
@@ -271,11 +275,16 @@ namespace LogicalParticleFilter1
             return graph.RdfStore.rdfGraph;
         }
 
-
+        private static int mtestRan = 0;
         public void mtest()
         {
-
-            var g = NewGraph("mtest");
+            if (mtestRan > 0)
+            {
+                Warn("Running mtest() twice might expose some bugs with creating two instances of the same graph that will not be fixed this week!");
+                return;
+            }
+            mtestRan++;
+            var g = NewGraph("mtest", UriOfMt("mtest"), true, false);
             g.BaseUri = UriFactory.Create(RoboKindURI);
 
             IUriNode dotNetRDF = g.CreateUriNode(UriFactory.Create("http://www.dotnetrdf.org"));

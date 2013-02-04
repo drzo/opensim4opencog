@@ -662,7 +662,7 @@ namespace AltAIMLbot
                     return;
                 }
             }
-            if (!File.Exists(behaviorFile))
+            if (!File.Exists(behaviorFile) && ourServitor.myScheduler != null)
             {
                 // mulitple Behavior files in one read
                 var mbf = ourServitor.myScheduler.GatherTaskNames(behaviorName);

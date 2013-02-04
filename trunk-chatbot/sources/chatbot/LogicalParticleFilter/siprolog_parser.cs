@@ -369,7 +369,7 @@ namespace LogicalParticleFilter1
 
                     var or = ParseRule(new Tokeniser(rule), homeMt);
                     if (or == null) continue;
-                    or.optHomeMt = homeMt;
+                    or.OptionalHomeMt = homeMt;
                     ruleList.Add(or);
                     // print ("Rule "+outi+" is : ");
                     if (show) or.print(Console.Write);
@@ -387,7 +387,7 @@ namespace LogicalParticleFilter1
         public const string SYNTAX_GraphLiteralType = "[]";
         public const string MustGuessQuotes = null;
 
-        static public Part MakeTermPostReader(String f, bool isHeadVar, PartList partlist)
+        static public Part MakeTermPostReader(String f, bool isHeadVar, PartListImpl partlist)
         {
             if (partlist.Arity == 0)
             {
@@ -504,29 +504,6 @@ namespace LogicalParticleFilter1
                     return;
                 }
 
-
-
-                r = Regex.Match(this.remainder, @"^([\(\)\.,\[\]\|\!]|\:\-)(.*)$");
-                //r = this.remainder.match(/^([\(\)\.,\[\]\|\!]|\:\-)(.*)$/);
-                if (r.Success)
-                {
-                    this.remainder = r.Groups[2].Value;
-                    this.current = r.Groups[1].Value;
-                    this.typeSyntax = SYNTAX_NoQuotes;
-                    this.type = "punc";
-                    return;
-                }
-
-                r = Regex.Match(this.remainder, @"^([A-Z_\?][a-zA-Z0-9_\?\-]*)(.*)$");
-                //r = this.remainder.match(/^([A-Z_][a-zA-Z0-9_]*)(.*)$/);
-                if (r.Success)
-                {
-                    this.remainder = r.Groups[2].Value;
-                    this.current = r.Groups[1].Value;
-                    this.typeSyntax = SYNTAX_NoQuotes;
-                    this.type = "var";
-                    return;
-                }
                 ParseType[] parseTypes = {
                                                new ParseType("{}", true, true), 
                                                new ParseType(SYNTAX_UriQuotes, false, true),
@@ -568,14 +545,14 @@ namespace LogicalParticleFilter1
                         }
                         if (parseType.CantHave.Contains(next))
                         {
-                            isError = string.Format("CantHaveChar: '{0}'", next);
+                            isError = String.Format("CantHaveChar: '{0}'", next);
                             break;
                         }
                         soFar += next;
                         remIndex++;
                     } while (remIndex < remLen);
 
-                    if (!string.IsNullOrEmpty(isError))
+                    if (!String.IsNullOrEmpty(isError))
                     {
                         if (tl_spy_prolog_reader)
                         {
@@ -599,6 +576,27 @@ namespace LogicalParticleFilter1
                     return;
                 }
 
+                r = Regex.Match(this.remainder, @"^([\(\)\.,\[\]\|\!]|\:\-)(.*)$");
+                //r = this.remainder.match(/^([\(\)\.,\[\]\|\!]|\:\-)(.*)$/);
+                if (r.Success)
+                {
+                    this.remainder = r.Groups[2].Value;
+                    this.current = r.Groups[1].Value;
+                    this.typeSyntax = SYNTAX_NoQuotes;
+                    this.type = "punc";
+                    return;
+                }
+
+                r = Regex.Match(this.remainder, @"^([A-Z_\?][a-zA-Z0-9_\?\-]*)(.*)$");
+                //r = this.remainder.match(/^([A-Z_][a-zA-Z0-9_]*)(.*)$/);
+                if (r.Success)
+                {
+                    this.remainder = r.Groups[2].Value;
+                    this.current = r.Groups[1].Value;
+                    this.typeSyntax = SYNTAX_NoQuotes;
+                    this.type = "var";
+                    return;
+                }
 
                 // URLs in curly-bracket pairs
                 r = Regex.Match(this.remainder, @"^(\{[^\}]*\})(.*)$");
@@ -695,7 +693,7 @@ namespace LogicalParticleFilter1
                     prolog_reader_debug("didn't parse Rule head as atom or term: " + tk);
                     // return null;
                 }
-                h = AsTerm(p);
+                h = p.AsTerm();
             }
             if (tk.current == ".")
             {
@@ -710,7 +708,7 @@ namespace LogicalParticleFilter1
                 return null;
             }
             tk.consume();
-            PartList b = ParseBody(tk, mt);
+            PartListImpl b = ParseBody(tk, mt);
             if (b == null)
             {
                 prolog_reader_debug("Rule body not present: " + tk);
@@ -727,21 +725,8 @@ namespace LogicalParticleFilter1
 
         static Term AsTerm(Part p)
         {
-            Term h = p as Term;
-            if (h == null)
-            {
-                if (p is Atom)
-                {
-                    return  new Term(p.fname,false, new PartListImpl());
-                }
-                if (p is Variable)
-                {
-                    return new Term(p.vname, true, new PartListImpl());
-                }
-                Warn("Cant make term from: " + p);
-                // return null;
-            }
-            return h;
+            if (p == null) return null;
+            return p.AsTerm();
         }
 
         public Term ParseHead(Tokeniser tk, string mt)
@@ -752,14 +737,14 @@ namespace LogicalParticleFilter1
 
         static public Term ParseTerm(Tokeniser tk, string mt)
         {
-            Part p = ParsePart(tk);
+            Part p = ParsePart(tk, mt);
             return AsTerm(p);
         }
 
         // This was a beautiful piece of code. It got kludged to add [a,b,c|Z] sugar.
-        static public Part ParsePart(Tokeniser tk)
+        static public Part ParsePart(Tokeniser tk, string mt)
         {
-            string mt = threadLocal.curKB;
+//            string mt = threadLocal.curKB;
             // Part -> var | id | id(optParamList)
             // Part -> [ listBit ] ::-> cons(...)     
             if (tk.type == "punc" && tk.current == "[")
@@ -779,7 +764,7 @@ namespace LogicalParticleFilter1
 
                 while (true)
                 {
-                    var t = ParsePart(tk);
+                    var t = ParsePart(tk, mt);
                     if (t == null)
                     {
                         prolog_reader_debug("cant parse List Part " + tk);
@@ -796,7 +781,7 @@ namespace LogicalParticleFilter1
                 if (tk.current == "|")
                 {
                     tk.consume();
-                    append = ParsePart(tk);
+                    append = ParsePart(tk, mt);
                 }
                 else
                 {
@@ -844,7 +829,7 @@ namespace LogicalParticleFilter1
             {
                 tk.consume();
 
-                PartList p = ParseConjuncts(tk, mt, ")", ",", false);
+                PartListImpl p = ParseConjuncts(tk, mt, ")", ",", false);
                 if (p == null)
                 {
                     prolog_reader_debug("cant read termargs " + tk);
@@ -863,11 +848,11 @@ namespace LogicalParticleFilter1
             }
             return Atom.FromSourceReader(name, quotingType);
         }
-        static public PartList ParseConjuncts(Tokeniser tk, string mt, string requiredEnd, string sep, bool eofReturnsPart)
+        static public PartListImpl ParseConjuncts(Tokeniser tk, string mt, string requiredEnd, string sep, bool eofReturnsPart)
         {
             // Body -> Term {, Term...}
 
-            PartList p = new PartList();
+            PartListImpl p = new PartListImpl();
             var i = 0;
             while (true)
             {
@@ -890,7 +875,7 @@ namespace LogicalParticleFilter1
                     tk.consume();
                     continue;
                 }
-                Part t = ParsePart(tk);
+                Part t = ParsePart(tk, mt);
                 if (t == null)
                 {
                     prolog_reader_debug("cant read Conjuct item " + tk);
@@ -922,15 +907,15 @@ namespace LogicalParticleFilter1
         {
             return MakeTerm(FUNCTOR_CONS, li, append);
         }
-        public PartList ParseBody(string query, string mt)
+        public PartListImpl ParseBody(string query, string mt)
         {
             return ParseBody(new Tokeniser(query), mt);
         }
-        public PartList ParseBody(Tokeniser tk, string mt)
+        public PartListImpl ParseBody(Tokeniser tk, string mt)
         {
             // Body -> Term {, Term...}
 
-            PartList p = new PartList();
+            PartListImpl p = new PartListImpl();
             var i = 0;
 
             Term t;

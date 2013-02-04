@@ -18,6 +18,7 @@ using VDS.RDF.Parsing.Handlers;
 using VDS.RDF.Parsing.Tokens;
 using VDS.RDF.Query;
 using VDS.RDF.Query.Expressions;
+using VDS.RDF.Storage.Virtualisation;
 using VDS.RDF.Writing;
 using ListOfBindings = System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, LogicalParticleFilter1.SIProlog.Part>>;
 using StringWriter=System.IO.StringWriter;
@@ -29,7 +30,9 @@ namespace LogicalParticleFilter1
 
     public partial class SIProlog
     {
-
+        /// <summary>
+        /// RdfRules is basically a set of triples that are destined to be used in some graph
+        /// </summary>
         public class RdfRules
         {
             ///<summary>
@@ -59,7 +62,7 @@ namespace LogicalParticleFilter1
                     return ContainingGraph ?? _graph;
                 }
             }
-            private INode _ruleNode;
+            internal INode _ruleNode;
             public List<INode> Subjects = new List<INode>();
             public List<Triple> Requirements = new List<Triple>();
             public List<Triple> Producing = new List<Triple>();
@@ -90,6 +93,7 @@ namespace LogicalParticleFilter1
                 EnsureReaderNamespaces(graph);
                 //Producing = Requirements;
             }
+            public string prologMt;
 
             public void AddRequirement(Triple triple)
             {
@@ -282,6 +286,11 @@ namespace LogicalParticleFilter1
                 }
             }
 
+            public Uri BaseUri
+            {
+                get { return _graph.BaseUri; }
+            }
+
             private static bool ContainsVariable(Triple triple)
             {
                 if (triple.Object.NodeType == NodeType.Variable)
@@ -313,7 +322,7 @@ namespace LogicalParticleFilter1
                 {
                     bad += Check(kb);
                 }
-                bool wasGood = (string.IsNullOrEmpty(bad));
+                bool wasGood = (String.IsNullOrEmpty(bad));
                 if (wasGood && saveToKB)
                 {
                     foreach (Triple triple in ToTriples)
@@ -321,7 +330,7 @@ namespace LogicalParticleFilter1
                         bad += rdfGraphAssert(kb, triple, checkWff, true);
                     }
                 }
-                wasGood = string.IsNullOrEmpty(bad);
+                wasGood = String.IsNullOrEmpty(bad);
                 if (wasGood)
                 {
                     if (saveToKB)
@@ -345,7 +354,7 @@ namespace LogicalParticleFilter1
                 {
                     bad += rdfGraphAssert(kb, triple, true, false);
                 }
-                if (string.IsNullOrEmpty(bad)) return null;
+                if (String.IsNullOrEmpty(bad)) return null;
                 return bad;
             }
 
@@ -383,6 +392,20 @@ namespace LogicalParticleFilter1
                 {
                     if (!target.Contains(t)) target.Add(t);
                 }
+            }
+
+            public IGraphLiteralNode AsGraphLiteral()
+            {
+                if (_ruleNode is IGraphLiteralNode) return (IGraphLiteralNode) _ruleNode;
+                Graph g = new Graph();
+                g.BaseUri = BaseUri;
+                g.Assert(ToTriples);
+                var node = def.CreateGraphLiteralNode(g);
+                if (_ruleNode == null)
+                {
+                    _ruleNode = node;
+                }
+                return node;
             }
         }
 

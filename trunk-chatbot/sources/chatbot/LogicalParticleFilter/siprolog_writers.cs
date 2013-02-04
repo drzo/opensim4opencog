@@ -54,7 +54,7 @@ namespace LogicalParticleFilter1
                 {
                     WarnWriter.WriteLine("<hr/><pre><font color=\"red\">{0}</font></pre><hr/>", write);
                     WarnWriter.Flush();
-                    return;
+                    if (RdfDeveloperSanityChecks < 2) return;
                 }
                 catch (Exception)
                 {
@@ -402,12 +402,16 @@ function validateBrowserForm()
             var qnodeID = qnode == null ? mt : qnode.id;
             foreach (Rule r in kbContents)
             {
-                var rmt = r.optHomeMt;
-                bool localMT = (qnodeID == rmt);
+                var rmt = r.OptionalHomeMt;
+                bool localMT = (qnodeID == rmt || rmt == null);
                 if (!localMT)
                 {
                     if (!showInherited)
+                    {
                         continue;
+                        WriteRule(writer, r, qnode);
+                        continue;
+                    }
                     shown++;
                     if (shown > showInheritedCount) showInherited = false;
                 }
@@ -415,7 +419,7 @@ function validateBrowserForm()
             }
             if (qnode == null) return;
 
-            if (!qnode.IsDataFrom(ContentBackingStore.Prolog))
+            if (!qnode.IsDataFrom(ContentBackingStore.Prolog) || true)
             {
                 WriteMtInfoRDF(writer, qnode, mt, serverRoot, toplevel);
             }
@@ -454,10 +458,10 @@ function validateBrowserForm()
 
         private void WriteRule(TextWriter writer, Rule r, PNode qnode)
         {
-            var mt = r.optHomeMt;
-            bool localMT = qnode.id == mt;
-            string color = localMT ? "blue" : "darkgreen";
-            string ext = localMT ? "" : string.Format("&nbsp;&nbsp;%<a href='{0}xrdf/?mt={1}'>{1}</a>", WithSlash(threadLocal.tl_ServerRoot), mt);
+            var mt = r.OptionalHomeMt;
+            bool localMT = qnode.id == mt || mt == null;
+            string color = mt == null ? "red" : (localMT ? "blue" : "darkgreen");
+            string ext = localMT ? "" : String.Format("&nbsp;&nbsp;%<a href='{0}xrdf/?mt={1}'>{1}</a>", WithSlash(threadLocal.tl_ServerRoot), mt);
 
 
             string toolTip = "";
@@ -473,7 +477,6 @@ function validateBrowserForm()
         {
             get
             {
-                if (null == GlobalSharedSettings.LocalSettings) GlobalSharedSettings.LocalSettings = new LocalIOSettings();
                 return GlobalSharedSettings.LocalSettings;
             }
         }
@@ -510,7 +513,18 @@ function validateBrowserForm()
     public static class GlobalSharedSettings
     {
         [ThreadStatic] public static string tl_serverRoot;
-        [ThreadStatic] public static LocalIOSettings LocalSettings = new LocalIOSettings();
+        [ThreadStatic] private static LocalIOSettings _localSettings = new LocalIOSettings();
+        public static LocalIOSettings LocalSettings
+        {
+            get
+            {
+                if (_localSettings == null)
+                {
+                    _localSettings = new LocalIOSettings();
+                }
+                return _localSettings;
+            }
+        }
         [ThreadStatic]
         private static int tl_StructToStringDepth = 4;
 
@@ -518,7 +532,7 @@ function validateBrowserForm()
         {
             get
             {
-                return string.Format("{0}:{1}", serverHost, serverPort);
+                return String.Format("{0}:{1}", serverHost, serverPort);
             }
             set
             {
@@ -537,7 +551,7 @@ function validateBrowserForm()
                 }
                 string[] sp = value.Split(':');
                 serverHost = sp[0];
-                serverPort = short.Parse(sp[1]);
+                serverPort = Int16.Parse(sp[1]);
             }
         }
         public static string serverHost
@@ -556,6 +570,17 @@ function validateBrowserForm()
                     }
                 }
                 _serverHost = value;
+            }
+        }
+
+        public static bool IsRdfServer
+        {
+            get
+            {
+
+                string machineName = Environment.MachineName;
+                return machineName == "ENKI" || machineName.ToUpper() == "TITAN" ||
+                       machineName.ToUpper().StartsWith("OPTER");
             }
         }
 
@@ -668,7 +693,9 @@ function validateBrowserForm()
 
             return result.ToString().TrimEnd();
         }
- 
+
+        public static bool RdfSavedInPDB = true;
+        public static bool TODO1Completed = false;
     }
     public partial class SIProlog
     {
@@ -809,7 +836,7 @@ function validateBrowserForm()
         }
         private void MtSelector(TextWriter writer, string mt)
         {
-            if (string.IsNullOrEmpty(mt))
+            if (String.IsNullOrEmpty(mt))
             {
                 writer.WriteLine(" MT: <INPUT TYPE='text' name='mt' VALUE='{0}'/>", mt);
             }

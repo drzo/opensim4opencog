@@ -112,7 +112,7 @@ namespace LogicalParticleFilter1
                 dttToString = dttToString.Replace("\r\n", "\n").Replace("\r", "\n");
                 foreach (string line in dttToString.Split('\n'))
                 {
-                    if (string.IsNullOrEmpty(line))
+                    if (String.IsNullOrEmpty(line))
                     {
                         writer.WriteLine();
                         continue;

@@ -136,6 +136,7 @@ namespace LogicalParticleFilter1
         static void testProlog1()
         {            
             // can it do the prolog hello world of logic
+            prologEngine.testKB = "testKB";
             prologEngine.testruleset = "isa(boy,human).\n isa(human,mammal).\n isa(X,Y):-isa(X,A),isa(A,Y).";
             prologEngine.testquery = "isa(boy,WHAT)\n";
             prologEngine.parseRuleset();

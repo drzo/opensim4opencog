@@ -13,6 +13,7 @@ using MushDLR223.Utilities;
 using VDS.RDF;
 using VDS.RDF.Parsing;
 using VDS.RDF.Query;
+using VDS.RDF.Query.Expressions;
 using VDS.RDF.Writing.Formatting;
 using VDS.RDF.Writing;
 using VDS.RDF.Nodes;
@@ -32,8 +33,29 @@ namespace LogicalParticleFilter1
     public partial class SIProlog
     {
         public const string basePrefixDefault = "#";
+        public const bool BnodeUseGraph = true;
+        public const string BnodePrefixGraph = "_:";
         public class Atom : Part, IAtomic
         {
+            public override Term AsTerm()
+            {
+                if (IsLiteral)
+                {
+                    ILiteralNode litnode = objRef as ILiteralNode;
+                    if (litnode != null)
+                    {
+                        var dt = litnode.DataType;
+                        var lt = litnode.Language;
+                        string et = String.Empty; // ivnode.EffectiveType;
+                        if (dt != null) et = dt.AbsoluteUri;
+                        return
+                            MakeTerm("$obj",
+                                     FromName("$literal"), MakeString(litnode.Value), MakeString(lt), MakeString(et));
+                    }
+                }
+                // fname/0
+                return new Term(fname, false, new PartListImpl());
+            }
 
             public static bool NodeEquality(INode x, INode y)
             {
@@ -67,24 +89,26 @@ namespace LogicalParticleFilter1
 
             static string GetNamespaceUri(string ns)
             {
-                if (ns.Contains(":/")) return ns;
+                if (ns.Contains(ProtocolSep)) return ns;
                 if (ns.EndsWith(":"))
                 {
                     ns = ns.Substring(0, ns.Length - 1);
                 }
+                if (ns == basePrefixDefault) return ns;
                 if (rdfDefNS.HasNamespace(ns))
                 {
                     var uri =  rdfDefNS.GetNamespaceUri(ns).AbsoluteUri;
-                    if (ns == basePrefixDefault)
+                    if (ns == basePrefixDefault || uri == basePrefixDefault)
                     {
                         return "";
                     }
+                    return uri;
                 }
                 return ns;
             }
             static string GetNamespacePrefix(string ns)
             {
-                if (ns.Contains(":/"))
+                if (ns.Contains(ProtocolSep))
                 {
                     string prefixC = null;
                     foreach (var prefix in rdfDefNS.Prefixes)
@@ -122,6 +146,10 @@ namespace LogicalParticleFilter1
                 get
                 {
                     string ns = NamespaceX();
+                    if (ns == null)
+                    {
+                        ns = NamespaceX();
+                    }
                     return GetNamespaceUri(ns);
                 }
             }
@@ -148,9 +176,12 @@ namespace LogicalParticleFilter1
                 string s = AsValuedNode().AsString();
                 string oprefix, ouri, path = s;
                 if (!GraphWithDef.DevolveURI(rdfDefNS, path, out ouri, out oprefix,
-                                             out localAname, true, false)) return null;
+                                             out localAname, true, false))
+                {
+                    return null;
+                }
                 var ns = oprefix ?? ouri ?? prefixNs;
-                oprefix = string.Intern(ns);
+                oprefix = String.Intern(ns);
                 return oprefix;
 
             }
@@ -172,7 +203,7 @@ namespace LogicalParticleFilter1
                     {
                         return null;
                     }
-                    localAname = string.Intern(localAname);
+                    localAname = String.Intern(localAname);
                     return localAname;
                 }
             }
@@ -190,13 +221,13 @@ namespace LogicalParticleFilter1
                         return localValue;
                     }
                     var localName = LocalName ?? this.localValue;
-                    if (string.IsNullOrEmpty(localName))
+                    if (String.IsNullOrEmpty(localName))
                     {
                         localName = NamespaceUri;
                     }
-                    if (!string.IsNullOrEmpty(localName)) return localName;
+                    if (!String.IsNullOrEmpty(localName)) return localName;
                     var f = "" + Functor0;
-                    var fi = string.Intern(f);
+                    var fi = String.Intern(f);
                     return fi;
                 }
             }
@@ -321,10 +352,10 @@ namespace LogicalParticleFilter1
                     string prefix, uri;
                     bool devolved = GraphWithDef.DevolveURI(rdfDefNS, path, out uri, out prefix,
                                                             out localAname, true, false);
-                    bool noaname = string.IsNullOrEmpty(localAname);
+                    bool noaname = String.IsNullOrEmpty(localAname);
                     if (devolved && !noaname)
                     {
-                        if (string.IsNullOrEmpty(prefix))
+                        if (String.IsNullOrEmpty(prefix))
                         {
                             return path;
                         }
@@ -339,7 +370,7 @@ namespace LogicalParticleFilter1
             public override string type { get { return "Atom"; } }
             public Atom(string prefix, string localName, string quoteType)
             {
-                if (string.IsNullOrEmpty(localName) && string.IsNullOrEmpty(prefix) && quoteType != SYNTAX_DoubleQuotes)
+                if (String.IsNullOrEmpty(localName) && String.IsNullOrEmpty(prefix) && quoteType != SYNTAX_DoubleQuotes)
                 {
                     localName = prefix;
                     prefix = "";
@@ -374,6 +405,10 @@ namespace LogicalParticleFilter1
 
             private bool SanityCheck()
             {
+                if (_objRef is IBlankNode)
+                {
+                    return true;
+                }
                 if (RdfDeveloperSanityChecks <= 1) return true;
                 var name = this.name;
                 FirstUse<Atom> pes = PrologEmptyString;
@@ -383,22 +418,26 @@ namespace LogicalParticleFilter1
                 {
                     Warn("OLD +ish Atom: " + IsReadable);
                 }
-                if (string.IsNullOrEmpty(prefixNs))
+                if (String.IsNullOrEmpty(prefixNs))
                 {
                     if (!IsLiteral) Warn("OLD +ish Atom: " + IsReadable);
                 }
                 do
                 {
-                    if (string.IsNullOrEmpty(localValue) //|| string.IsNullOrEmpty(quoted)
-                        || string.IsNullOrEmpty(prefixNs)
-                        || string.IsNullOrEmpty(name)
-                        || string.IsNullOrEmpty(StringReadable))
+                    if (String.IsNullOrEmpty(localValue) //|| string.IsNullOrEmpty(quoted)
+                        || String.IsNullOrEmpty(prefixNs)
+                        || String.IsNullOrEmpty(name)
+                        || String.IsNullOrEmpty(StringReadable))
                     {
                         if (IsLiteral)
                         {
-                            if (string.IsNullOrEmpty(prefixNs)) break;
+                            if (String.IsNullOrEmpty(prefixNs)) break;
                         }
                         if (prefixNs == NamespaceUri)
+                        {
+                            break;
+                        }
+                        if (prefixNs == Namespace)
                         {
                             break;
                         }
@@ -409,7 +448,7 @@ namespace LogicalParticleFilter1
                 } while (true);
                 var localAname = "" + INodeToObject(objRef);
                 string s = ToSource(SourceLanguage.Text);
-                if (prefixNs != "+" && !IsString && !string.IsNullOrEmpty(localValue) && s.Contains("http"))
+                if (prefixNs != "+" && !IsString && !String.IsNullOrEmpty(localValue) && s.Contains("http"))
                 {
                     stringReadableCache = null;
                     Warn("Text represention is lossy! " + s);
@@ -446,17 +485,19 @@ namespace LogicalParticleFilter1
                 Functor0Function = INodeToObject;
                 _objRef = head;
                 _objRef = ToValueNode((INode) head);
-                if (ToRoundTripConstructor(head, out prefixNs, out localValue, out quoted))
+                if (!ToRoundTripConstructor(head, out prefixNs, out localValue, out quoted))
                 {
                     return false;
                 }
                 if (RdfDeveloperSanityChecks < 2) return true;
-                _objRef = null;
-                if (head.Equals(objRef))
+                SIProlog.checkNode(head);
+                var mn = MakeNodeInside_0(prefixNs, localValue, quoted);
+                if (head.Equals(mn))
                 {
                     return true;
                 }
-                var mn = MakeNodeInside(prefixNs, localValue, quoted);
+                mn = MakeNodeInside(prefixNs, localValue, quoted);
+                if (head.Equals(mn.CopyWNode(head.Graph))) return true;
                 throw ErrorBadOp("cant intern " + head);
             }
 
@@ -473,7 +514,7 @@ namespace LogicalParticleFilter1
                     quoted = SYNTAX_DoubleQuotes;
                     string language = literalNode.Language;
                     Uri dataType = literalNode.DataType;
-                    if (!string.IsNullOrEmpty(language) && dataType!=null)
+                    if (!String.IsNullOrEmpty(language) && dataType!=null)
                     {
                         Warn("is this a plain or typed literal?! " + head);
                     }
@@ -482,7 +523,7 @@ namespace LogicalParticleFilter1
                     {
                         if (XmlString == dataType.AbsoluteUri)
                         {
-                            if (string.IsNullOrEmpty(language))
+                            if (String.IsNullOrEmpty(language))
                             {
                                 prefixNs = XmlString;
                                 quoted = SYNTAX_DoubleQuotes;
@@ -491,7 +532,7 @@ namespace LogicalParticleFilter1
                         }
                     }
                     prefixNs = "";
-                    if (!string.IsNullOrEmpty(language))
+                    if (!String.IsNullOrEmpty(language))
                     {
                         quoted = SYNTAX_DoubleQuotes;
                         prefixNs = language;
@@ -509,9 +550,27 @@ namespace LogicalParticleFilter1
                 }
                 if (head is IBlankNode)
                 {
-                    prefixNs = "_";
-                    localValue = ((IBlankNode) head).InternalID;
                     quoted = SYNTAX_UriQuotes;
+                    if (BnodeUseGraph)
+                    {
+                        localValue = BnodePrefixGraph + ((IBlankNode)head).InternalID;
+                        Uri uri = head.Origin();
+                        if (uri == null)
+                        {
+                            Warn("nUll URI on " + head);
+                            prefixNs = "#";
+                        }
+                        else
+                        {
+                            prefixNs = uri.AbsoluteUri;
+                        }
+                        return false;
+                    }
+                    else
+                    {
+                        prefixNs = "_";
+                        localValue = ((IBlankNode) head).InternalID;
+                    }
                     return true;
                 }
                 if (head is IVariableNode)
@@ -533,9 +592,11 @@ namespace LogicalParticleFilter1
                     if (!devolved)
                     {
                         Warn("cant convert to CNAME");
+                        GraphWithDef.DevolveURI(rdfDefNS, path, out ouri, out opref,
+                                                            out localValue, true, false);
                     }
                     prefixNs = ouri ?? opref;
-                    if (false && string.IsNullOrEmpty(localValue))
+                    if (false && String.IsNullOrEmpty(localValue))
                     {
                         localValue = prefixNs;
                         prefixNs = "+";
@@ -602,7 +663,7 @@ namespace LogicalParticleFilter1
                 get
                 {
                     var ivnode = AsValuedNode();             
-                    if (ivnode != null) return (ivnode.NumericType != VDS.RDF.Query.Expressions.SparqlNumericType.NaN);
+                    if (ivnode != null) return (ivnode.NumericType != SparqlNumericType.NaN);
                     return false;
                 }
             }
@@ -646,7 +707,14 @@ namespace LogicalParticleFilter1
                 }
                 if (this.stringReadableCache == null)
                 {
-                    this.stringReadableCache = string.Intern(StringReadable);
+                    if (RdfDeveloperSanityChecks < 2)
+                    {
+                        this.stringReadableCache = String.Intern(StringReadable);
+                    }
+                    else
+                    {
+                        return StringReadable;
+                    }
                 }
                 return this.stringReadableCache;
             }
@@ -676,8 +744,12 @@ namespace LogicalParticleFilter1
             public string ToStringReadable(bool fullURI, string localBase)
             {                
                 {
-                    var objRef = this._objRef;
+                    var objRef = this.objRef;
                     ILiteralNode litnode = objRef as ILiteralNode;
+                    if (objRef is IBlankNode)
+                    {
+                        return ToReadbleBNode((IBlankNode)objRef, localBase);
+                    }
                     if (litnode != null) return StringLiteralReadable;
                     string name = this.name;
                     if (objRef is NumericNode) return name;
@@ -689,14 +761,14 @@ namespace LogicalParticleFilter1
                     }
                     if (!IsUri)
                     {
-                        MakeNodeInside(prefixNs, localValue, quoted); 
+                        var nodeInside = MakeNodeInside(prefixNs, localValue, quoted); 
                         Warn("Non URI");
                     }
                     if (name == "nil")
                     {
                         return "[]";
                     }
-                    if (string.IsNullOrEmpty(prefixNs))
+                    if (String.IsNullOrEmpty(prefixNs))
                     {
                         return aq(name);
                     }
@@ -718,7 +790,7 @@ namespace LogicalParticleFilter1
                     {
                         return aq(LocalName);
                     }
-                    if (LocalName == "" && !string.IsNullOrEmpty(prefixNs))
+                    if (LocalName == "" && !String.IsNullOrEmpty(prefixNs))
                     {
                         // to return namespace declarations
                         return urlq(prefixNs);
@@ -758,6 +830,13 @@ namespace LogicalParticleFilter1
                 }
             }
 
+            private string ToReadbleBNode(IBlankNode iBlankNode, string localBase)
+            {
+                string p = iBlankNode.GraphUri.AbsoluteUri + iBlankNode;
+                string s = urlq(NamespaceUri + name);
+                return s;
+            }
+
             public string StringLiteralReadable
             {
                 get
@@ -774,7 +853,7 @@ namespace LogicalParticleFilter1
                         var ivnode = litnode.AsValuedNode();
                         var value = litnode.Value;
                         // numbers
-                        if (ivnode != null && ivnode.NumericType != VDS.RDF.Query.Expressions.SparqlNumericType.NaN)
+                        if (ivnode != null && ivnode.NumericType != SparqlNumericType.NaN)
                         {
                             return value;
                         }
@@ -804,7 +883,7 @@ namespace LogicalParticleFilter1
             }
             public static string aq(string s)
             {
-                if (!Atom.MustBeQuoted(s)) return s;
+                if (!MustBeQuoted(s)) return s;
                 return q(s, "'", "'");
             }
             internal static string urlq(string s)
@@ -822,9 +901,9 @@ namespace LogicalParticleFilter1
 
             public static Atom MakeLiteral(string s, string langspec, string dataType)
             {
-                if (string.IsNullOrEmpty(langspec))
+                if (String.IsNullOrEmpty(langspec))
                 {
-                    if (!string.IsNullOrEmpty(dataType))
+                    if (!String.IsNullOrEmpty(dataType))
                     {
                         return MakeNewAtom(dataType, s, SYNTAX_LiteralDataType);
                     }
@@ -864,7 +943,7 @@ namespace LogicalParticleFilter1
                     return;
                 }
                 char c0 = s[0];
-                if (!char.IsSymbol(c0)) return;
+                if (!Char.IsSymbol(c0)) return;
                 int sl = s.Length;
                 char cL = s[sl - 1];
                 if (sl == 1) cL = '\0';
@@ -928,7 +1007,7 @@ namespace LogicalParticleFilter1
                 {
                     return PrologNIL;
                 }
-                bool uriIsh = slengt1 && (s.Contains(":") || s.Contains(":/") || s.Contains("#"));
+                bool uriIsh = slengt1 && (s.Contains(":") || s.Contains(ProtocolSep) || s.Contains("#"));
                 NodeType nodeType = uriIsh ? NodeType.Uri : NodeType.Blank;
                 if (uriIsh)
                 {
@@ -941,17 +1020,17 @@ namespace LogicalParticleFilter1
                 {
                     //if (s == "." || s == FUNCTOR_CONS) s = "'robokind:cons'";
                     char c0 = s[0];
-                    bool isNumberMaybe = (slengt1 && (c0 == '+' || c0 == '-')) || char.IsDigit(c0);
+                    bool isNumberMaybe = (slengt1 && (c0 == '+' || c0 == '-')) || Char.IsDigit(c0);
                     if (isNumberMaybe)
                     {
                         bool decm = slengt1 && s.Contains(".");
                         long intv;
-                        if (!decm && long.TryParse(s, out intv))
+                        if (!decm && Int64.TryParse(s, out intv))
                         {
                             return MakeNodeAtom(new LongNode(rdfDefinations, intv));
                         }
                         double dbl;
-                        if (decm && double.TryParse(s, out dbl))
+                        if (decm && Double.TryParse(s, out dbl))
                         {
                             return MakeNodeAtom(new DoubleNode(rdfDefinations, dbl));
                         }
@@ -974,14 +1053,14 @@ namespace LogicalParticleFilter1
                 }
                 else if (prefix == null)
                 {
-                    return GraphWithDef.ResolveC<Atom>(rdfDefNS, s,
+                    return GraphWithDef.ResolveC(rdfDefNS, s,
                                                        (a, b, c) => MakeAtom(a, b, quoting, c));
                 }
                 if (nodeType == NodeType.Uri && prefix.Length > 1)
                 {
                     string cc = prefix + s;
 
-                    bool protop = cc.Contains(":/");
+                    bool protop = cc.Contains(ProtocolSep);
                     var lastCharOk = "#/?=";
                     if (!protop) lastCharOk = ":";
                     string prefixHas = null;
@@ -1008,7 +1087,7 @@ namespace LogicalParticleFilter1
                         }
                     case SYNTAX_DoubleQuotes:
                         {
-                            if (string.IsNullOrEmpty(prefix))
+                            if (String.IsNullOrEmpty(prefix))
                             {
                                 return MakeString(s);
                             }
@@ -1049,7 +1128,7 @@ namespace LogicalParticleFilter1
             {
                 if (prefix == null)
                 {
-                    return GraphWithDef.ResolveC<Atom>(rdfDefNS, p,
+                    return GraphWithDef.ResolveC(rdfDefNS, p,
                                                        (a, b, c) => MakeAtom(a, b, quoting, c));
                 }
                 string atomKey = MakeAtomKey(prefix, p, quoting);
@@ -1092,8 +1171,8 @@ namespace LogicalParticleFilter1
             }
             private static string GetBasePrefix(string p0)
             {
-                if (string.IsNullOrEmpty(p0)) return p0;
-                if (p0 == "#" || p0 == basePrefixDefault || p0 == RoboKindPrefix || p0 == "rk" || p0 == "siprolog")
+                if (String.IsNullOrEmpty(p0)) return p0;
+                if (p0 == "#" || p0 == basePrefixDefault || p0 == RoboKindPrefix || p0 == "rk")
                     return basePrefixDefault;
                 if (p0 == RoboKindURI) return basePrefixDefault;
                 if (p0.StartsWith(RoboKindURI) || p0.StartsWith(RoboKindMtURI))
@@ -1123,9 +1202,13 @@ namespace LogicalParticleFilter1
                 }
                 return quoting;
             }
-            public static string MakeAtomKey(string prefix, string s, string quoting0)
+            public static string MakeAtomKey(string prefix0, string s, string quoting0)
             {
-                //string prefix = GetBasePrefix(prefix0);
+                string prefix = GetNamespaceUri(prefix0);
+                if (String.IsNullOrEmpty(prefix))
+                {
+                    prefix = prefix0;
+                }
                 string quoting = GetBaseQuoting(quoting0);
                 if (quoting == MustGuessQuotes)
                 {
@@ -1157,7 +1240,7 @@ namespace LogicalParticleFilter1
                 {
                     case SYNTAX_LiteralDataType:
                         {
-                            if (!string.IsNullOrEmpty(prefix))
+                            if (!String.IsNullOrEmpty(prefix))
                             {
                                 return rdfDefinations.CreateLiteralNode(s, UriFactory.Create(prefix));
                             }
@@ -1166,7 +1249,7 @@ namespace LogicalParticleFilter1
                         }
                     case SYNTAX_DoubleQuotes:
                         {
-                            if (string.IsNullOrEmpty(prefix))
+                            if (String.IsNullOrEmpty(prefix))
                             {
                                 return rdfDefinations.CreateLiteralNode(s);
                             }
@@ -1183,6 +1266,13 @@ namespace LogicalParticleFilter1
                         }
                     case SYNTAX_UriQuotes:
                         {
+                            if (s.StartsWith(BnodePrefixGraph))
+                            {
+                                s = s.Substring(BnodePrefixGraph.Length);
+                                var bn =  CreateBlankNode(FindGraph(prefix), s);
+                                var bnu = bn.GraphUri;
+                                return bn;
+                            }
                             return GraphWithDef.C(rdfDefinations, GraphWithDef.MakeQNameOrUri(s, prefix));
                         }
                     case SYNTAX_AtomQuotes:
@@ -1194,6 +1284,7 @@ namespace LogicalParticleFilter1
                         throw ErrorBadOp(s + " " + quoting);
                 }
             }
+
             public static Atom MakeNodeAtomFixme(INode makeNode)
             {
                 return MakeNodeAtom(makeNode);
@@ -1201,9 +1292,17 @@ namespace LogicalParticleFilter1
             public static Atom MakeNodeAtom(INode makeNode)
             {
                 string prefixNs, localValue, quoted;
-                if(!ToRoundTripConstructor(makeNode, out prefixNs, out localValue, out quoted))
+                bool deferChecks = RdfDeveloperSanityChecks == 0;
+                if (makeNode is IBlankNode)
                 {
-                    Warn("Bad atom??! " + makeNode);
+                    deferChecks = true;
+                }
+                if (!ToRoundTripConstructor(makeNode, out prefixNs, out localValue, out quoted))
+                {
+                    if (!deferChecks)
+                    {
+                        Warn("Bad atom??! " + makeNode);
+                    }
                 }
                 string atomKey = MakeAtomKey(prefixNs, localValue, quoted);
                 Atom atom = null;
@@ -1217,7 +1316,12 @@ namespace LogicalParticleFilter1
                 }
                 if (!makeNode.Equals(atom.objRef))
                 {
-                    Warn("Bad atom key??! " + atomKey);
+                    if (deferChecks) return atom;
+                    if (RdfDeveloperSanityChecks > 2)
+                    {
+                        //Warn("Bad atom key??! " + atomKey);
+                        makeNode.Equals(atom.objRef);
+                    }
                 }
                 return atom;
             }
@@ -1289,10 +1393,11 @@ namespace LogicalParticleFilter1
                 {
                     return false;
                 }
-                if (this.prefixNs != ((Atom)other).prefixNs)
+                if (GetBasePrefix(this.prefixNs) != GetBasePrefix(((Atom)other).prefixNs))
                 {
-                    Warn("Non matching prefixes {0}!={1}", this.prefixNs, ((Atom)other).prefixNs);
-                    
+                    if (this.localValue == "") return false;
+                    Warn("Non matching prefixes {0}!={1}", this.prefixNs, ((Atom) other).prefixNs);
+
                     if (!identityMatch) return true;
                     return false;
                 }

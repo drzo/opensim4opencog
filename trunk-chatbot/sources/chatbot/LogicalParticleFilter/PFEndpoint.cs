@@ -196,8 +196,10 @@ namespace LogicalParticleFilter1
             parser.Load(g, new StringReader(@"<dotnetrdf:store> <dnr:type> ""VDS.RDF.TripleStore""  ."));
             g.Assert(new Triple(endnode, g.CreateUriNode("rdfs:comment"),
                                 g.CreateLiteralNode("expected path = " + expectedPath)));
-            IGraph ocg = ourEngine.NewGraph("ourConfigGraph_" + HttpUtility.UrlEncode(expectedPath));
-            ocg.Merge(g);
+            string expectedPathName = "ourConfigGraph_" + expectedPath;
+            expectedPathName = expectedPathName.TrimEnd('*', '_', '/');
+            var ocg = ourEngine.NewGraph(expectedPathName, g.BaseUri.AbsoluteUri, false, true);
+            ocg.Merge(g, true);
             return ocg;
         }
 

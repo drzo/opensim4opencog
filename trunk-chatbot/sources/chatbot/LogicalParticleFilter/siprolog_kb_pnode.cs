@@ -61,13 +61,13 @@ namespace LogicalParticleFilter1
             newlyCreated = !GraphForMT.TryGetValue(mt, out graph);
             if (newlyCreated)
             {
-                var newGraph = NewGraph(mt);
-                Uri nsURI = UriFactory.Create(UriOfMt(mt));                
+                Uri nsURI = UriFactory.Create(UriOfMt(mt));
+                var newGraph = NewGraph(mt, nsURI.AbsoluteUri, false , true);
                 newGraph.BaseUri = nsURI;
                 lock (rdfDefNS) rdfDefNS.AddNamespace(mt, nsURI);
                 EnsureReaderNamespaces(newGraph);
                 graph = new PNode(mt, this, newGraph);
-                newGraph.pnode = graph;
+                newGraph.PrologKB = graph;
             }
             return graph.PrologKB;
         }
@@ -75,17 +75,34 @@ namespace LogicalParticleFilter1
         public partial class PNode : IComparable
         {
             public string id;
+
             public object CompileLock
             {
                 get
                 {
-                    var lockobj = this;
+                    object lockobj;
+                    if (pdb == null)
+                    {
+                        lockobj = this;
+                    } else
+                    {
+                        var pdb_rules = pdb._rules;
+                        if (pdb_rules == null)
+                        {
+                            lockobj = this;
+                        }
+                        else
+                        {
+                            lockobj = pdb_rules.Sync;
+                        }
+                    }
                     bool needsUnlock = true;
                     try
                     {
                         needsUnlock = Monitor.TryEnter(lockobj, TimeSpan.FromSeconds(4));
                         if (!needsUnlock)
                         {
+                            Warn("Cant unlock w/in 4 seconds: " + lockobj);
                             return new object();
                         }
                         return lockobj;
@@ -100,7 +117,7 @@ namespace LogicalParticleFilter1
                 }
             }
 
-            readonly public PDB pdb;
+            public readonly PDB pdb;
 
             public bool dirty
             {
@@ -120,15 +137,13 @@ namespace LogicalParticleFilter1
             }
 
             public double probability = 1.0;
+
             public ContentBackingStore SourceKind
             {
-                get
-                {
-                    return _SourceKind;
-                }
+                get { return _SourceKind; }
                 set
                 {
-                    if (!SIProlog.RdfSavedInPDB)
+                    if (!GlobalSharedSettings.RdfSavedInPDB)
                     {
                         if (value != _SourceKind)
                         {
@@ -137,9 +152,11 @@ namespace LogicalParticleFilter1
                     }
                 }
             }
-            ContentBackingStore _SourceKind = ContentBackingStore.Prolog;
+
+            private ContentBackingStore _SourceKind = ContentBackingStore.Prolog;
             public FrequencyOfSync SyncFrequency = FrequencyOfSync.AsNeeded;
             private ContentBackingStore _SyncFromNow = ContentBackingStore.None;
+
             public ContentBackingStore SyncFromNow
             {
                 get { lock (CompileLock) return _SyncFromNow; }
@@ -168,15 +185,16 @@ namespace LogicalParticleFilter1
                 }
             }
 
-            List<PEdge> incomingEdgeList = new List<PEdge>();
-            List<PEdge> outgoingEdgeList = new List<PEdge>();
+            private List<PEdge> incomingEdgeList = new List<PEdge>();
+            private List<PEdge> outgoingEdgeList = new List<PEdge>();
 
             public string Id
             {
                 get { return id; }
                 set { id = value; }
             }
-            object _repository;
+
+            private object _repository;
 
             public PNode RdfStore
             {
@@ -207,10 +225,12 @@ namespace LogicalParticleFilter1
                 get { return probability; }
                 set { probability = value; }
             }
+
             public override int GetHashCode()
             {
                 return NormalizeKBName(id).GetHashCode();
             }
+
             public override bool Equals(object obj)
             {
                 PNode otherNode = obj as PNode;
@@ -222,9 +242,9 @@ namespace LogicalParticleFilter1
 
             public static bool operator ==(PNode node1, PNode node2)
             {
-                if (Object.ReferenceEquals(node1, node2))
+                if (ReferenceEquals(node1, node2))
                     return true;
-                if (Object.ReferenceEquals(node1, null) || Object.ReferenceEquals(node2, null))
+                if (ReferenceEquals(node1, null) || ReferenceEquals(node2, null))
                     return false;
 
                 return node1.Equals(node2);
@@ -267,14 +287,17 @@ namespace LogicalParticleFilter1
             {
                 lock (EdgeLists) if (!outgoingEdgeList.Contains(edge)) outgoingEdgeList.Add(edge);
             }
+
             public void ClearIncomingEdges()
             {
                 lock (EdgeLists) incomingEdgeList.Clear();
             }
+
             public void ClearOutgoingEdges()
             {
                 lock (EdgeLists) outgoingEdgeList.Clear();
             }
+
             public PEdge[] IncomingEdges
             {
                 get { lock (EdgeLists) return incomingEdgeList.ToArray(); }
@@ -289,15 +312,15 @@ namespace LogicalParticleFilter1
             {
                 get
                 {
-                    string prefix = string.Format("source={0}", SourceKind);
+                    string prefix = String.Format("source={0}", SourceKind);
                     if (probability != 1.0)
                     {
-                        prefix += string.Format(" prob={0}", probability);
+                        prefix += String.Format(" prob={0}", probability);
                     }
                     string pq = "";
                     var buri = RdfStore.rdfGraph.BaseUri;
                     if (buri != null) pq = "" + buri;
-                    return string.Format("{0} size={1} dirty={2} triples={3} sync={4} repo={5} base={6}",
+                    return String.Format("{0} size={1} dirty={2} triples={3} sync={4} repo={5} base={6}",
                                          prefix, pdb.rules.Count, dirty,
                                          RdfStore.rdfGraph.Triples.Count,
                                          SyncFromNow, Repository, pq);
@@ -348,7 +371,7 @@ namespace LogicalParticleFilter1
             {
                 if (obj is PNode)
                 {
-                    PNode temp = (PNode)obj;
+                    PNode temp = (PNode) obj;
 
                     return probability.CompareTo(temp.probability);
                 }
@@ -359,11 +382,14 @@ namespace LogicalParticleFilter1
 
             internal string ToLink(string serverRoot)
             {
-                return string.Format("<a href='{1}siprolog/?mt={0}'>{0}</a>&nbsp;({2})", id, serverRoot, DebugInfo.Replace(" ", "&nbsp;"));
+                return String.Format("<a href='{1}siprolog/?mt={0}'>{0}</a>&nbsp;({2})", id, serverRoot,
+                                     DebugInfo.Replace(" ", "&nbsp;"));
             }
+
             internal string ToOptionLink(string serverRoot)
             {
-                return string.Format("<option value='{1}siprolog/?mt={0}'>{0}</option>", id, serverRoot, DebugInfo.Replace(" ", "&nbsp;"));
+                return String.Format("<option value='{1}siprolog/?mt={0}'>{0}</option>", id, serverRoot,
+                                     DebugInfo.Replace(" ", "&nbsp;"));
             }
 
             public bool IsDataFrom(ContentBackingStore backingStore)
@@ -378,6 +404,7 @@ namespace LogicalParticleFilter1
                 RdfStore.rdfGraph.Clear();
                 return true;
             }
+
             internal bool ClearPrologCache()
             {
                 if (pdb.rules.Count == 0) return false;
@@ -410,6 +437,7 @@ namespace LogicalParticleFilter1
                 }
                 lock (CompileLock) RdfStore.pushGraphToKB(clearPrologKB);
             }
+
             public void pushPrologKBToRdfGraph(bool clearRDFMemory)
             {
                 if (DLRConsole.IsOnMonoUnix)
@@ -441,6 +469,7 @@ namespace LogicalParticleFilter1
                 RdfStore.LoadFromUri(from);
                 SyncFromNow = ContentBackingStore.RdfMemory;
             }
+
             public string GetKBText
             {
                 get
@@ -464,13 +493,11 @@ namespace LogicalParticleFilter1
                 get { return ToString(); }
             }
 
-            readonly public Graph _rdfGraph;
+            public readonly Graph _rdfGraph;
+
             public Graph rdfGraph
             {
-                get
-                {
-                    return _rdfGraph;
-                }
+                get { return _rdfGraph; }
             }
 
             public string prologMt;
@@ -480,12 +507,14 @@ namespace LogicalParticleFilter1
             {
                 get { return this; }
             }
+
             public PNode(string plMt, SIProlog prolog, Graph data)
             {
                 this.prologEngine = prolog;
                 this.id = plMt;
                 prolog.KBGraph.AddNode(this);
                 prologEngine.GraphForMT[plMt] = this;
+                prologEngine.RegisterHomeGraph(data.BaseUri.AbsoluteUri, data, true);
                 pdb = new PDB(true);
                 pdb.startMt = plMt;
                 pdb.followedGenlMt = false;
@@ -497,9 +526,16 @@ namespace LogicalParticleFilter1
             internal void pushRulesToGraph(bool clearRDFMemory)
             {
                 var focus = PrologKB;
-                WarnAndClear(focus, ContentBackingStore.Prolog, clearRDFMemory, focus.ClearRDFCache, ContentBackingStore.RdfMemory);
+                if (focus.SelfHostedRdfGraph) return;
+                WarnAndClear(focus, ContentBackingStore.Prolog, clearRDFMemory, focus.ClearRDFCache,
+                             ContentBackingStore.RdfMemory);
                 prologEngine.pushRulesToGraph(Id, this, focus.RdfCacheShouldGenlPrologMt);
                 SaveOffRDF();
+            }
+
+            public bool SelfHostedRdfGraph
+            {
+                get { return HostsGraph(rdfGraph); }
             }
 
             private void SaveOffRDF()
@@ -541,6 +577,7 @@ namespace LogicalParticleFilter1
                     }
                 }
             }
+
             public BaseTripleCollection Triples
             {
                 get { return rdfGraph.Triples; }
@@ -594,7 +631,8 @@ namespace LogicalParticleFilter1
                 {
                     //Object results = g.ExecuteQuery(query);
                     //Make a SELECT query against the Endpoint
-                    SparqlResultSet results = endpoint.QueryWithResultSet("SELECT ?s ?p ?o WHERE { ?s ?p ?o } LIMIT 1400");
+                    SparqlResultSet results =
+                        endpoint.QueryWithResultSet("SELECT ?s ?p ?o WHERE { ?s ?p ?o } LIMIT 1400");
                     foreach (SparqlResult set in results)
                     {
                         rdfGraph.Assert(MakeTriple(set["s"], set["p"], set["o"]));
@@ -625,6 +663,10 @@ namespace LogicalParticleFilter1
 
             public void AddRuleToRDF(Rule rule)
             {
+                if (rule.OptionalHomeMt == id)
+                {
+                    if (SelfHostedRdfGraph) return;
+                }
                 if (rule.rdfRuleCache != null) return;
                 if (prologEngine.DontRDFSync)
                 {
@@ -632,12 +674,12 @@ namespace LogicalParticleFilter1
                     return;
                 }
                 string before = rule.ToSource(SourceLanguage.Prolog);
-                var rdfRules = GraphWithDef.FromRule(this, rule, rdfGraph);
+                var rdfRules = GraphWithDef.FromRule(rule, this, rdfGraph);
                 rdfRules.AssertTriples(rdfGraph, true, true);
                 string after = rule.ToSource(SourceLanguage.Prolog);
                 if (before != after)
                 {
-                    SIProlog.Warn("Manipulated rule: " + before + "->" + after);
+                    Warn("Manipulated rule: " + before + "->" + after);
                 }
             }
 
@@ -682,77 +724,129 @@ namespace LogicalParticleFilter1
                     }
                 }
             }
-            public void AssertTriple(Triple triple, IGraph listResolves)
+
+            public bool AssertTripleFromGraph(Triple triple, IGraph listResolves, bool allowDuplicates, bool keepOriginalGraphUri)
             {
-                GraphWithDef.InCompiler<bool>(this, null, id, () => AssertTriple_0(triple, listResolves));
+                lock (CompileLock)
+                {
+                    return GraphWithDef.InCompiler(this, null, id,
+                                                   () =>
+                                                   AssertTriple_ul(triple, listResolves, allowDuplicates,
+                                                                   keepOriginalGraphUri));
+                }
             }
-            public bool AssertTriple_0(Triple triple, IGraph listResolves)
+
+            public bool AssertRule_NoRDFUpdate_ul(Triple triple, IGraph listResolves, bool allowDuplicates, Rule rule, bool keepOriginalGraphUri)
+            {
+                rule.OptionalHomeMt = id;
+                pdb.index.Clear();
+                if (!allowDuplicates)
+                {
+                    if (pdb.rules.Contains(rule)) return false;
+                }
+                pdb.rules.Add(rule);
+                return true;
+            }
+
+            public bool AssertTriple_ul(Triple triple, IGraph listResolves, bool allowDuplicates, bool keepOriginalGraphUri)
+            {
+                var rule = TripleToRule(triple, listResolves, keepOriginalGraphUri);
+                if (rule == null)
+                {
+                    Warn("Cant make rule from " + triple);
+                    return false;
+                }
+                return AssertRule_NoRDFUpdate_ul(triple, listResolves, allowDuplicates, rule, keepOriginalGraphUri);
+            }
+
+            public Rule TripleToRule(Triple triple, IGraph listResolves, bool keepOriginalGraphUri)
             {
                 var s = triple.Subject;
                 var p = triple.Predicate;
                 var o = triple.Object;
                 string sp = triple.Predicate.ToString();
-                int argNum = GraphWithDef.GetInstanceOnArg(sp);
+                if (!GlobalSharedSettings.TODO1Completed)
+                {
+                    //RdfRules rules = new RdfRules(rdfGraph);
+                    Term t = MakeTerm(TripleName,Atom.MakeNodeAtom(s), Atom.MakeNodeAtom(p), Atom.MakeNodeAtom(o));
+                    var rule = new Rule(t);
+                    //rule.rdfRuleCache = rules;
+                    return rule;
+                }
                 var pp = Atom.MakeNodeAtom(p);
+                if (sp == RdfSpecsHelper.RdfListFirst || sp == RdfSpecsHelper.RdfListRest)
+                {
+                    var rule =
+                        new Rule(new Term(pp.fname, false, new PartListImpl(Atom.MakeNodeAtom(s), Atom.MakeNodeAtom(o))));
+                    return rule;
+                }
+                int argNum = GraphWithDef.GetInstanceOnArg(sp);
                 if (argNum == -1)
                 {
                     // assume it's one to one?
-                    argNum = 1;
+                    argNum = 0;
                 }
                 if (argNum != 0)
                 {
                     //1: [a f (b c)]
                     //2: [b f (a c)]
                     //3: [c f (a b)]
-                    PartList parts = new PartListImpl();
+                    PartListImpl parts = new PartListImpl();
                     AddRdfList(parts, o, argNum, s, triple, listResolves);
                     var rule = new Rule(new Term(pp.fname, false, parts));
-                    rule.optHomeMt = id;
-                    pdb.index.Clear();
-                    pdb.rules.Add(rule);
-                    return true;
+                    return rule;
                 }
                 // pred + args are in the list [db1 f (a b c)]
-                return false;
+                if (argNum == 0)
+                {
+                    PartListImpl parts = new PartListImpl();
+                    AddRdfList(parts, o, -1, null, triple, listResolves);
+                    var rule = new Rule(new Term(pp.fname, false, parts));
+                    return rule;
+                }
+                return null;
             }
 
-            public static void AddRdfList(PartListImpl parts, INode node, int argNum, INode obj, Triple triple, IGraph listResolves)
+            public static bool AddRdfList(PartListImpl parts, INode node, int argNum, INode obj, Triple triple,
+                                          IGraph listResolves)
             {
                 if (parts.Count + 1 == argNum)
                 {
-                    AddRdfList(parts, obj, -1, null, triple, listResolves);
-                    AddRdfList(parts, node, -1, null, triple, listResolves);
-                    return;
+                    bool a = AddRdfList(parts, obj, -1, null, triple, listResolves);
+                    bool b = AddRdfList(parts, node, -1, null, triple, listResolves);
+                    return a && b;
                 }
                 switch (node.NodeType)
                 {
+                    case NodeType.Uri:
                     case NodeType.Literal:
                         parts.AddPart(Atom.MakeNodeAtom(node));
-                        return;
+                        return true;
                     case NodeType.Variable:
                         parts.AddPart(new Variable(node.ToString().Substring(1)));
-                        return;
-                    case NodeType.Uri:
+                        return true;
                     case NodeType.Blank:
                         {
                             INode f, r;
-                            if (GetRdfList(node, listResolves, out f, out r))
+                            if (GetRdfList(node, listResolves, out f, out r, triple))
                             {
-                                AddRdfList(parts, f, argNum, obj, triple, listResolves);
-                                AddRdfList(parts, r, argNum, obj, triple, listResolves);
-                                return;
+                                bool a = AddRdfList(parts, f, argNum, obj, triple, listResolves);
+                                bool b = AddRdfList(parts, r, argNum, obj, triple, listResolves);
+                                return a && b;
                             }
                         }
                         parts.AddPart(Atom.MakeNodeAtom(node));
-                        return;
-                    case NodeType.GraphLiteral:
-                        break;
+                        return foundNodeMoreThanTriple(listResolves, node,triple );
+                        // case NodeType.GraphLiteral:
+                        //   break;
                     default:
+                        Warn("cant intern " + node);
+                        return false;
                         throw new ArgumentOutOfRangeException();
                 }
             }
 
-            public static bool GetRdfList(INode n, IGraph g, out INode f, out INode r)
+            public static bool GetRdfList(INode n, IGraph g, out INode f, out INode r, Triple triple)
             {
                 f = r = null;
                 INode rdfRest = g.CreateUriNode(UriFactory.Create(RdfSpecsHelper.RdfListRest));
@@ -762,7 +856,7 @@ namespace LogicalParticleFilter1
                     f = tf.Object;
                     foreach (var tr in g.GetTriplesWithSubjectPredicate(n, rdfRest))
                     {
-                        r = tf.Object;
+                        r = tr.Object;
                         return true;
                     }
                     break;
@@ -770,9 +864,100 @@ namespace LogicalParticleFilter1
                 return false;
             }
 
+            public static bool foundNodeMoreThanTriple(IGraph g, INode n, Triple triple)
+            {
+                var found = g.GetTriples(n);
+                int others = 0;
+                StringWriter sw = new StringWriter();
+                foreach (var t in found)
+                {
+                    if (!triple.Equals(t)) others++;
+                    sw.WriteLine("found " + t);
+                }
+                if (others > 0)
+                {
+                    return true;
+                }
+                string warning = string.Format("cant resolve list node {0} but found {1}", n, sw);
+                Warn(warning);
+                return false;
+            }
+
             public void AddImmediate(Rule rule)
             {
                 pdb.rules.Add(rule);
+            }
+
+            public bool HostsGraph(IGraph iGraph)
+            {
+                if (iGraph is LiveCallGraph)
+                {
+                    LiveCallGraph lcg = (LiveCallGraph) iGraph;
+                    return lcg.HostedFrom(this);
+                }
+                return false;
+            }
+
+            public bool ContainsTriple(Triple triple, IGraph listResolver)
+            {
+                var r = TripleToRule(triple, listResolver, true);
+                lock (CompileLock)
+                {
+                    return pdb.rules.Contains(r);
+                }
+            }
+
+            public bool RetractTriple(Triple triple, IGraph listResolver)
+            {
+                var oldFact = TripleToRule(triple, listResolver, true);
+                lock (CompileLock)
+                {
+                    {
+                        Rule replaceInKb;
+                        int index;
+                        prologEngine.ensureCompiled(this, ContentBackingStore.Prolog);
+                        if (ReplaceInKb(0, oldFact, null, out replaceInKb, out index))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            public bool ReplaceInKb(int startFrom, Rule oldFact, Rule newFact, out Rule replaceInKb, out int index)
+            {
+                var focus = this;
+                lock (focus.CompileLock)
+                {
+                    var rules = focus.pdb.rules;
+                    lock (rules)
+                        for (int i = startFrom; i < rules.Count; i++)
+                        {
+                            index = i;
+                            Rule r = (Rule) rules[i];
+                            if (r.SameClause(oldFact))
+                            {
+                                focus.SyncFromNow = ContentBackingStore.Prolog;
+                                focus.pdb.index.Clear();
+                                if (newFact == null)
+                                {
+                                    rules.RemoveAt(i);
+                                }
+                                else
+                                {
+                                    rules[i] = newFact;
+                                }
+                                {
+                                    replaceInKb = r;
+                                    return true;
+                                }
+                            }
+                        }
+                }
+                replaceInKb = null;
+                index = -1;
+                return false;
             }
         }
 
@@ -919,7 +1104,7 @@ namespace LogicalParticleFilter1
                 PNode srcNode = Contains(idSrc);
                 if (srcNode == null)
                 {
-                    srcNode = SIProlog.CurrentProlog.FindOrCreateKB(idSrc);
+                    srcNode = CurrentProlog.FindOrCreateKB(idSrc);
                 }
                 return srcNode;
             }
@@ -1089,7 +1274,7 @@ namespace LogicalParticleFilter1
                 //writer.Write("<p>");
                 //for (int i = 0; i < indentation; ++i) writer.Write(" ");
                 //ConsoleWriteLine(node.Id);
-                if (node == SIProlog.BaseKB && indentation > 1) return;
+                if (node == BaseKB && indentation > 1) return;
                 writer.WriteLine("<li>{0}</li>", node.ToLink(serverRoot));
                 writer.WriteLine("<ul>");
                 foreach (PEdge e in node.OutgoingEdges)
@@ -1105,7 +1290,7 @@ namespace LogicalParticleFilter1
                 //writer.Write("<p>");
                 //for (int i = 0; i < indentation; ++i) writer.Write(" ");
                 //ConsoleWriteLine(node.Id);
-                if (node == SIProlog.BaseKB && indentation > 1) return;
+                if (node == BaseKB && indentation > 1) return;
                 writer.WriteLine("<li>{0}</li>", node.ToLink(serverRoot));
                 writer.WriteLine("<ul>");
                 foreach (PEdge e in node.OutgoingEdges)
@@ -1133,7 +1318,7 @@ namespace LogicalParticleFilter1
                 //writer.Write("<p>");
                 //for (int i = 0; i < indentation; ++i) writer.Write(" ");
                 //ConsoleWriteLine(node.Id);
-                if (node == SIProlog.EverythingPSC && indentation > 1) return;
+                if (node == EverythingPSC && indentation > 1) return;
                 writer.WriteLine("<li>{0}</li>", node.ToLink(serverRoot));
                 writer.WriteLine("<ul>");
                 foreach (PEdge e in node.IncomingEdges)

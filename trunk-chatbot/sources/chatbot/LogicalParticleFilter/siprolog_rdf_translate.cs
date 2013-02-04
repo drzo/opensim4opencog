@@ -25,11 +25,30 @@ using VDS.RDF.Writing.Formatting;
 using PartList = LogicalParticleFilter1.SIProlog.PartListImpl;
 namespace LogicalParticleFilter1
 {
+    static public partial class GraphWithDefExtensions
+    {
+
+        static public LogicalParticleFilter1.SIProlog.RdfRules ToTriples(this LogicalParticleFilter1.SIProlog.Rule rule,
+            SIProlog.PNode pnode, IGraph kb)
+        {
+            return LogicalParticleFilter1.SIProlog.GraphWithDef.FromRule(rule, pnode, kb);
+        }
+    }
 
     public partial class SIProlog
     {
-
-        public partial class GraphWithDef
+        /// <summary>
+        /// i been serializing my apps semantic state to prolog.. 
+        /// then was going to convert to RDF
+        /// secretly i hoped i could just convert "prolog2RDF" 
+        /// but it has been much harder than anticipated..   
+        /// but seems converting to N3 is much easier!.
+        ///  but i still have to have "semantic state".  
+        /// i'll get a chance to see some crossover when i convert the N3 to RDF  (you guys say it is easy!)
+        ///  then hrrm i suppose I'll get to see how closely prolog->n3->rdf   
+        /// looks the original planned prolog->n3
+        /// </summary>
+        static public partial class GraphWithDef
         {
             [ThreadStatic]
             public static Rule CompilingRule = null;
@@ -44,14 +63,14 @@ namespace LogicalParticleFilter1
                     var cr = CompilingRule;
                     if (cr != null)
                     {
-                        string ret = cr.optHomeMt;
-                        if (!string.IsNullOrEmpty(ret)) return ret;
+                        string ret = cr.OptionalHomeMt;
+                        if (!String.IsNullOrEmpty(ret)) return ret;
                     }
                     var cm = CompilingMt;
                     if (cm != null)
                     {
                         string ret = cm.Id;
-                        if (!string.IsNullOrEmpty(ret)) return ret;
+                        if (!String.IsNullOrEmpty(ret)) return ret;
                     }
                     return threadLocal.curKB;
                 }
@@ -80,7 +99,7 @@ namespace LogicalParticleFilter1
                 }
             }
 
-            public static RdfRules FromRule(PNode pnode, Rule rule, IGraph kb)
+            public static RdfRules FromRule(Rule rule, PNode pnode, IGraph kb)
             {
                 return InCompiler(pnode, rule, pnode.id,
                                   () =>
@@ -88,43 +107,294 @@ namespace LogicalParticleFilter1
                                           RdfRules made = FromRule0(rule, kb);
                                           if (made == null)
                                           {
+                                              Warn("FromRule0 returned null");
                                               made = new RdfRules(kb);
                                               made.AddProducing(
                                                   MakeTriple(
                                                       CompilingMtNode,
                                                       kb.CreateUriNode("siprolog:sourceCode"),
-                                                      kb.CreateLiteralNode(rule.ToSource(SourceLanguage.Prolog),
+                                                      kb.CreateLiteralNode(NoSymbols(rule.ToSource(SourceLanguage.Prolog)),
                                                                            "prolog")));
                                           }
                                           return made;
                                       });
             }
 
+            public static RdfRules FromRule1(Rule rule, IGraph kb)
+            {
+
+                Part p = rule.AsTerm();
+                RdfRules rules = PartToTriples(p, kb);
+                rule.rdfRuleCache = rules;
+                var trips = rules.ToTriples;
+                kb.Assert(trips);
+                return rules;
+            }
+
+
+            private static Term ToSexpr(Term term)
+            {
+                string fname = term.fname;
+                var rest = MakePartList(term.ArgList.ToArray());
+                string fnameP = PredicateToPropertyString(fname);
+                return MakeList(Atom.FromName(fnameP), rest).AsTerm();
+            }
+
+            private static Part MakePartList(params Part[] anslist)
+            {
+                Part answers = Atom.FromSource(FUNCTOR_NIL);
+                for (int i = anslist.Length; i > 0; i--)
+                {
+                    answers = MakeList(anslist[i - 1], answers);
+                }
+                return answers;
+            }
+            private static Part MakePartIList(IList<Part> anslist)
+            {
+                Part answers = Atom.FromSource(FUNCTOR_NIL);
+                for (int i = anslist.Count; i > 0; i--)
+                {
+                    answers = MakeList(anslist[i - 1], answers);
+                }
+                return answers;
+            }
+            private static RdfRules PartToTriples(Part p, IGraph kb)
+            {
+                RdfRules rules = new RdfRules(kb);
+                if (!(p is Term))
+                {
+                    Warn("Called part to triples on " + p);
+                    rules.RuleNode = PartToRdf(p, rules);
+                    return rules;
+                }
+                var term = ToTranslated(p.AsTerm(), rules);
+                if (!GlobalSharedSettings.TODO1Completed)
+                {
+                    return PartToTriplesVerySimple(p, kb);
+                }
+                var ruleNode = checkIsTerm(PartToRuleNode(term, p, rules, kb));
+                if (ruleNode != null)
+                {
+                    rules.RuleNode = ruleNode;
+                    rules.AddProducing(MakeTriple(ruleNode,
+                                                  kb.CreateUriNode("siprolog:sourceCode"),
+                                                  kb.CreateLiteralNode(NoSymbols(p.ToSource(SourceLanguage.Prolog))
+                                                                       , "prolog")));
+                }
+                return rules;
+            }
+
+            private static RdfRules PartToTriplesVerySimple(Part p, IGraph kb)
+            {
+                throw new NotImplementedException();
+            }
+
+            private static INode PartToRuleNode(Part p, Part orig, RdfRules rules, IGraph kb)
+            {
+                string fname = p.fname;
+                bool forceOneToOne = false;
+                if (fname == "," || fname == ";")
+                {
+                    string fnameP = PredicateToPropertyString(fname);
+                    IList<Part> makeList = null;
+                    Term body = ConvertEachTerm(p, rules, kb, (list)=>
+                                                                  {
+                                                                      makeList = list;
+                                                                      return p;
+                                                                  });
+                    if (makeList == null)
+                    {
+                        return checkIsTerm(PartToRuleNode(body, orig, rules, kb));
+                    }
+                    return checkIsTerm(PartToRuleNode(new Term(fnameP, false, new PartListImpl(makeList)), orig, rules, kb));
+                }
+                else if (fname == ":-" && p.Arity == 2)
+                {
+                    string fnameP = PredicateToPropertyString(fname);
+                    var al = p.ArgList;
+                    Term head = ConvertEachTerm(al[0], rules, kb, MakePartIList);
+                    Term body = ConvertEachTerm(al[1], rules, kb, MakePartIList);
+                    var p1 = new Term(fnameP, false, new PartListImpl(head, body));
+                    var ret = PartToRuleNode(p1, orig, rules, kb);
+                    return checkIsTerm(ret);
+                }
+                else if (p.Arity == 2 && (fname == "first" && fname == "rest"))
+                {
+                    forceOneToOne = true;
+                }
+                int ioa;
+                if (p.Arity < 2)
+                {
+                    ioa = 0;
+                }
+                else
+                {
+                    ioa = GetInstanceOnArg(fname);
+                }
+                INode subjNode = null;
+                if (ioa == -1)
+                {
+                    ioa = p.Arity == 2 ? 1 : 0;
+                }
+                bool mustMakeAsList;
+                bool canb = false;
+                if (ioa == 0)
+                {
+                    mustMakeAsList = true;
+                }
+                else
+                {
+                    subjNode = PartToRdf(p.ArgList[ioa - 1], rules);
+                    canb = CanBeSubjectNode(subjNode);
+                    if (canb)
+                    {
+                        mustMakeAsList = false;
+                    }
+                    else
+                    {
+                        mustMakeAsList = true;
+                        ioa = 0;
+                    }
+                }
+                int argNum = 0;
+                int nodesCount = 0;
+
+                List<INode> nodes = new List<INode>();
+                foreach (Part part in p.ArgList)
+                {
+                    argNum++;
+                    if (argNum == ioa) continue;
+                    nodesCount++;
+                    nodes.Add(PartToRdf(part, rules));
+                }
+                if (ioa == 0)
+                {
+                    if (nodesCount == 0)
+                    {
+                        Warn("No N3 possible " + p);
+                    }
+                }
+
+                INode listRoot = MakeRdfList(kb, nodes, true);
+                var toGraph = listRoot.Graph;
+                bool listRootIsList = nodesCount > 1;
+                if (!canb && !forceOneToOne)
+                {
+                    INode ruleNode = CreateBlankNode(kb, fname + CONSP);
+                    Triple t = MakeTriple(ruleNode, PredicateToProperty(fname), listRoot);
+                    rules.AddProducing(t);
+                    rules.RuleNode = ruleNode;
+                    return rules.RuleNode.CopyWNode(toGraph);
+                }
+                else
+                {
+                    if (listRootIsList)
+                    {
+                        Triple t = MakeTriple(subjNode, PredicateToProperty(fname), listRoot);
+                        rules.AddProducing(t);
+                        return rules.AsGraphLiteral();
+                    }
+                    else
+                    {
+                        Triple t = MakeTriple(subjNode, PredicateToProperty(fname), listRoot);
+                        rules.AddProducing(t);
+                        return rules.AsGraphLiteral();
+                    }
+                }
+
+            }
+
+            private static string NoSymbols( string prolog)
+            {
+                prolog = prolog.Replace("\"", " ");
+                prolog = prolog.Replace("<", " ");
+                prolog = prolog.Replace(">", " ");
+                prolog = prolog.Replace(":", " ");
+                prolog = prolog.Replace("  ", " ");
+                return prolog;
+            }
+
+            public static INode checkIsTerm(INode rules)
+            {
+                checkNode(rules);
+                /*if (rules.RuleNode == null)
+                {
+                    Warn("No rule node");
+                }*/
+                return rules; 
+            }
+
+            private static Term ConvertEachTerm(Part p0, RdfRules rules, IGraph kb, Func<IList<Part>, Part> makePartList)
+            {
+                List<Part> partList = new List<Part>();
+                if (p0.fname == "," || p0.fname == ";")
+                {
+                    p0.ArgList.ToList().ForEach((p) => partList.Add(ConvertEachTerm(p, rules, kb, makePartList)));
+                    if (partList.Count == 1)
+                    {
+                        return ConvertEachTerm(partList[0], rules, kb, makePartList);
+                    }
+                    if (partList.Count > 0)
+                    {
+                        return makePartList(partList).AsTerm();
+                    }
+                    if (partList.Count == 0)
+                    {
+                        Warn("No args to this");
+                    }
+                }
+                return ToTranslated(p0.AsTerm(), rules);
+            }
+
+            private static INode MakeRdfList(IGraph kb, IList<INode> nodes, bool returnOneAsNode)
+            {
+                if (nodes.Count == 0) return Atom.PrologNIL.Value.AsRDFNode().CopyWNode(kb);
+                if (returnOneAsNode && nodes.Count == 1)
+                {
+                    return nodes[0].CopyWNode(kb);
+                }
+                return kb.AssertList(nodes, (node) => node.CopyWNode(kb));
+
+            }
+
             public static RdfRules FromRule0(Rule rule, IGraph kb)
             {
                 if (rule.rdfRuleCache != null) return rule.rdfRuleCache;
+
+                if (GlobalSharedSettings.RdfSavedInPDB)
+                {
+                    RdfRules made = FromRule1(rule, kb);
+                    rule.rdfRuleCache = made;
+                    return made;
+                }
+                return FromRule2(rule, kb);
+            }
+
+            public static RdfRules FromRule2(Rule rule, IGraph kb)
+            {
+
                 if (IsRdfPrecoded(rule.head))
                 {
                     return null;
                 }
 
                 var rdfRules = rule.rdfRuleCache = new RdfRules(kb);
-                PartList pl = null;
+                PartListImpl pl = null;
                 if (rule.body != null)
                 {
                     if (!IsBodyAlwaysTrue(rule.body.plist))
                     {
-                        pl = (PartList)rule.body.plist.CopyTerm;
+                        pl = (PartListImpl)rule.body.plist.CopyTerm;
                     }
                 }
                 Term rulehead = (Term)rule.head.CopyTerm;
                 AddData(rulehead, pl, rdfRules);
                 if (rdfRules.RuleNode != null)
                 {
-                    //  EnsureGraphPrefixes(kb, () => UriOfMt(rule.optHomeMt));
+                    //  EnsureGraphPrefixes(kb, () => UriOfMt(rule.OptionalHomeMt));
                     rdfRules.AddProducing(MakeTriple(rdfRules.RuleNode,
                                                      kb.CreateUriNode("siprolog:sourceCode"),
-                                                     kb.CreateLiteralNode(rule.ToSource(SourceLanguage.Prolog), "prolog")));
+                                                     kb.CreateLiteralNode(NoSymbols(rule.ToSource(SourceLanguage.Prolog)), "prolog")));
                 }
                 return rdfRules;
             }
@@ -183,6 +453,10 @@ namespace LogicalParticleFilter1
                 lock (PDB.builtin)
                 {
                     if (PDB.builtin.ContainsKey(name + "/" + arity))
+                    {
+                        return true;
+                    }
+                    if (PDB.builtin.ContainsKey(name + "/N"))
                     {
                         return true;
                     }
@@ -273,7 +547,7 @@ namespace LogicalParticleFilter1
                 return partToRdf is ILiteralNode;
             }
 
-            static private void AddData(Term head, PartList rulebody, RdfRules triples)
+            static private void AddData(Term head, PartListImpl rulebody, RdfRules triples)
             {
                 var varNames = new List<string>();
                 var newVarNames = new List<string>();
@@ -286,10 +560,10 @@ namespace LogicalParticleFilter1
                 }
             }
 
-            public static PartList AnalyzeHead(Part head, bool replaceVars, ICollection<string> varNames, ICollection<string> newVarNames, out int newVarsNeeded, PartList rulebody)
+            public static PartListImpl AnalyzeHead(Part head, bool replaceVars, ICollection<string> varNames, ICollection<string> newVarNames, out int newVarsNeeded, PartListImpl rulebody)
             {
                 int newVarCount = 0;
-                PartList[] pl = { null };
+                PartListImpl[] pl = { null };
                 head.Visit((a, pr) =>
                 {
                     if (!(a is Variable))
@@ -319,7 +593,7 @@ namespace LogicalParticleFilter1
                     if (newVarNames != null) newVarNames.Add(newVarName);
                     var r = new Variable(newVarName);
                     // add the unification to the partlist
-                    var lpl = pl[0] = pl[0] ?? new PartList();
+                    var lpl = pl[0] = pl[0] ?? new PartListImpl();
                     newVarCount++;
                     lpl.AddPart(unifyvar(a, r));
                     return r;
@@ -343,7 +617,7 @@ namespace LogicalParticleFilter1
                 return bpl;
             }
 
-            static private void AddData(RdfRules rdfRules, Term head, PartList rulebody, List<string> varNames, int newVarCount, List<string> newVarNamesMaybe)
+            static private void AddData(RdfRules rdfRules, Term head, PartListImpl rulebody, List<string> varNames, int newVarCount, List<string> newVarNamesMaybe)
             {
                 if (IsRdfPrecoded(head))
                 {
@@ -354,7 +628,7 @@ namespace LogicalParticleFilter1
                     int newVarCount2;
                     var newVarNames = varNames;
                     varNames = new List<string>();
-                    PartList bpl = AnalyzeHead(head, true, varNames, newVarNames, out newVarCount2, rulebody);
+                    PartListImpl bpl = AnalyzeHead(head, true, varNames, newVarNames, out newVarCount2, rulebody);
                     if (newVarCount2 > 0)
                     {
                         if (rulebody != null)
@@ -379,7 +653,7 @@ namespace LogicalParticleFilter1
 
             private static void AddData2(Term head, PartListImpl rulebodyIn, RdfRules rdfRules)
             {
-                PartList rulebody = null;
+                PartListImpl rulebody = null;
                 if (!IsBodyAlwaysTrue(rulebodyIn))
                 {
                     rulebody = new PartListImpl();
@@ -411,12 +685,12 @@ namespace LogicalParticleFilter1
                 }
                 var definations = rdfRules.def;
                 string bad = rdfRules.Check(definations);
-                if (!string.IsNullOrEmpty(bad))
+                if (!String.IsNullOrEmpty(bad))
                 {
                     bad += " in DB " + rdfRules.ToString();
                     Warn(bad);
                 }
-                rdfRules.RequirementsMet = string.IsNullOrEmpty(rdfRules.Check(definations));
+                rdfRules.RequirementsMet = String.IsNullOrEmpty(rdfRules.Check(definations));
             }
 
             static private void GatherTermAntecedants(Part part, RdfRules anteceeds)
@@ -629,25 +903,57 @@ namespace LogicalParticleFilter1
 
             static public INode PredicateToProperty(string binaryPred)
             {
-                if (binaryPred == "unify")
+                string rdfName;
+                if (TryPredicateToPropertyString(binaryPred, out rdfName))
                 {
-                    return C(rdfDefinations, "owl:sameAs");
+                    return C(rdfDefinations, rdfName);                    
                 }
                 return C(rdfDefinations, AsURIString(binaryPred));
             }
+
+            private static readonly Dictionary<string, string> PredicateToPropertyStringTable =
+                new Dictionary<string, string>()
+                    {
+                        {"unify", "owl:sameAs"},
+                        {":-", "siprolog:impliedFrom"},
+                        {",", "siprolog:andP"},
+                        {";", "siprolog:orP"}
+                    };
+            private static bool TryPredicateToPropertyString(string binaryPred, out string rdfName)
+            {
+                lock (PredicateToPropertyStringTable) return PredicateToPropertyStringTable.TryGetValue(binaryPred, out rdfName);
+            }
+            private static string PredicateToPropertyString(string binaryPred)
+            {
+                string rdfName;
+                if (TryPredicateToPropertyString(binaryPred, out rdfName))
+                {
+                    return rdfName;
+                }
+                return AsURIString(binaryPred);
+            }
+
             public static int GetInstanceOnArg(string name)
             {
                 int instanceOnArg = GetInstanceOnArg(name, false);
-                if (instanceOnArg > 0) return instanceOnArg;
-                return GetInstanceOnArg(name, true);
+                if (instanceOnArg > -1) return instanceOnArg;
+                instanceOnArg = GetInstanceOnArg(name, true);
+                if (instanceOnArg > -1) return instanceOnArg;
+                if (name.Contains(":")) return 1;
+                return instanceOnArg;
             }
+            readonly static char[] lcaseLetters = "abcdefghijklmnopqrstuvwxyz".ToCharArray();
+            readonly static char[] ucaseLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
             private static int GetInstanceOnArg(string name, bool useFallbacks)
             {
+                if (name == ":-") return 0;
+                if (name == ",") return 0;
+                if (name.IndexOfAny(lcaseLetters) == -1) return 0;
                 string iarg = QueryPredicateInfo(name, "prologInstanceArg", useFallbacks);
                 if (iarg != null)
                 {
                     int arg;
-                    if (int.TryParse(iarg, out arg))
+                    if (Int32.TryParse(iarg, out arg))
                     {
                         return arg;
                     }
@@ -697,7 +1003,7 @@ namespace LogicalParticleFilter1
                 switch (nodeType)
                 {
                     case NodeType.Blank:
-                        iln = definations.CreateBlankNode(iname);
+                        iln = CreateBlankNode(definations, iname);
                         break;
                     case NodeType.Variable:
                         iname = iname.Replace("_", "").Replace("_", "").ToUpper();
@@ -721,6 +1027,10 @@ namespace LogicalParticleFilter1
                 return iln;
             }
 
+            public static string GetPredFunctor(INode node)
+            {
+                return Atom.MakeNodeAtom(node).fname;
+            }
         }
         public void UpdateSharedGlobalPredDefs()
         {
@@ -741,6 +1051,12 @@ namespace LogicalParticleFilter1
         {
             public RdfRules rdfRuleCache;
 
+
+            public Term AsTerm()
+            {
+                if (body == null) return head;
+                return RuleToTerm(head, body.plist);
+            }
         }
 
         public class PredicateProperty
@@ -900,10 +1216,10 @@ namespace LogicalParticleFilter1
 
             public static bool IsOkName(string func)
             {
-                if (string.IsNullOrEmpty(func)) return false;
+                if (String.IsNullOrEmpty(func)) return false;
                 foreach (var c in func)
                 {
-                    if (c == '_' || char.IsLetter(c)) continue;
+                    if (c == '_' || Char.IsLetter(c)) continue;
                     return false;
                 }
                 return true;

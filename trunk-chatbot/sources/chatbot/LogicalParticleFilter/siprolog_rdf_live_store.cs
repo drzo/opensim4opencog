@@ -6,7 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-#if (COGBOT_LIBOMV || USE_STHREADS)
+#if (COGBOT_LIBOMV || USE_STHREADS || true)
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;
@@ -29,6 +29,7 @@ using ListOfBindings = System.Collections.Generic.List<System.Collections.Generi
 using StringWriter = System.IO.StringWriter;
 using VDS.RDF.Writing.Formatting;
 using PartList = LogicalParticleFilter1.SIProlog.PartListImpl;
+using Part = LogicalParticleFilter1.SIProlog.Part;
 using System.Text;
 using VDS.Common;
 using VDS.Common.Trees;
@@ -37,7 +38,7 @@ namespace LogicalParticleFilter1
 {
     public partial class SIProlog
     {
-        public static bool RdfSavedInPDB = false;
+        public static ManualResetEvent ReplRunning;
 
         public void EndpointCreated(PFEndpoint endpoint)
         {
@@ -52,17 +53,19 @@ namespace LogicalParticleFilter1
             {
                 DLRConsole.PrintOnlyThisThread = null;
             }
-            RunREPL();
+            ReplRunning = ThreadPool.WaitableQueueUserWorkItem((o) => RunREPL());
         }
 
         public void RunREPL()
         {
-            bool queryMode = false;
+            bool queryMode = true;
             LocalIOSettings threadLocal = GlobalSharedSettings.LocalSettings;
             while (true)
             {
                 ConsoleWriteLine("-----------------------------------------------------------------");
-                string input = TextFilter.ReadLineFromInput(ConsoleWriteLine, "<" + threadLocal.curKB + "> ?- ");
+                var modeStr = queryMode ? "?-" : "<-";
+                string input = TextFilter.ReadLineFromInput(ConsoleWriteLine,
+                                                            String.Format("<{0}> {1} ", threadLocal.curKB, modeStr));
                 if (input == null)
                 {
                     Environment.Exit(0);
@@ -104,12 +107,146 @@ namespace LogicalParticleFilter1
                 } while (true);
             }
         }
-
-        public LiveCallGraph NewGraph(string kbName)
+        public LiveCallGraph NewGraph(string kbName, string baseURI, bool createFresh, bool replaceNamespace)
         {
+            bool newlyCreated;
+            var lcg = NewGraphNoReplace(kbName, baseURI, createFresh, out newlyCreated);
+            RegisterHomeGraph(baseURI, lcg, replaceNamespace);
+            return lcg;
+        }
+
+        public LiveCallGraph NewGraphNoReplace(string kbName, string baseURI, bool createFresh, out bool newlyCreated)
+        {
+            PNode pnode;
+            bool found = GraphForMT.TryGetValue(kbName, out pnode);
+            if (found && pnode != null)
+            {
+                if (pnode.SelfHostedRdfGraph)
+                {
+                    if (!createFresh)
+                    {
+                        newlyCreated = false;
+                        return (LiveCallGraph)pnode.rdfGraph;
+                    }
+                }
+                Warn("Shouldnt Remake " + baseURI);
+            }
+            Graph oldG;
+            if (RdfGraphForURI.TryGetValue(baseURI, out oldG))
+            {                
+                if (oldG is LiveCallGraph)
+                {
+                    var oldLcg = (LiveCallGraph)oldG;
+                    string pname = oldLcg.ToPrologKBName();
+                    if (pname == null || pname == kbName)
+                    {
+                        if (!createFresh)
+                        {
+                            newlyCreated = false;
+                            return oldLcg;
+                        }
+                        Warn("Shouldnt Remake " + baseURI);
+                    }
+                }
+            }
+            newlyCreated = true;
             LiveCallTripleCollection lcTC = new LiveCallTripleCollection(this);
-            lcTC.defaultKB = kbName;
-            return new LiveCallGraph(lcTC, rdfDefNS);
+            lcTC.DefaultKBName = kbName;
+            var lcg = new LiveCallGraph(lcTC, rdfDefNS);
+            lcg.BaseUri = UriFactory.Create(baseURI);
+            if (found)
+            {
+                Warn("Disjointed graph!");
+            }
+            return lcg;
+        }
+
+        public static void checkNode(INode head)
+        {
+            if (head is IBlankNode)
+            {
+                IBlankNode value0 = (IBlankNode)head;
+                var baseURI = value0.GraphUri;
+                if (baseURI == null)
+                {
+                    IGraph origin = value0.Graph;
+                    if (origin != null)
+                    {
+                        var uri2 = origin.BaseUri;
+                        if (uri2 != null)
+                        {
+                            baseURI = uri2;
+                        }
+                    }
+                    if (baseURI != null)
+                    {
+                        head.GraphUri = baseURI;
+                      //  return;
+                    }
+                    Warn("BNode musting a home");
+                }
+            }
+        }
+    }
+    static public class GraphToKBMethods
+    {
+        public static Uri Origin(this INode head)
+        {
+            Uri origin = head.GraphUri;
+            var g = head.Graph;
+            if (g != null)
+            {
+                var uri = g.BaseUri;
+                if (uri != null)
+                {
+                    origin = uri;
+                }
+            }
+            return origin;
+        }
+
+        public static INode CopyWNode(this INode prev, IGraph g)
+        {
+            if (g == null)
+            {
+            }
+            SIProlog.checkNode(prev);
+            return prev.CopyNode(g, true);
+        }
+        public static INode CopyWNode(this INode prev, IGraph g, bool keepOriginalGraphUri)
+        {
+            SIProlog.checkNode(prev);
+            return prev.CopyNode(g, keepOriginalGraphUri);
+        }
+
+        public static string ToPrologKBName(this IGraph g)
+        {
+            if (g is LiveCallGraph)
+            {
+                LiveCallGraph liveCallGraph = (LiveCallGraph) g;
+                return liveCallGraph.DefaultKbName;
+            }
+            var uri = g.BaseUri;
+            if (uri!=null)
+            {
+                string basURI = uri.AbsolutePath;
+                var RdfGraphForURI = SIProlog.CurrentProlog.RdfGraphForURI;
+                lock (RdfGraphForURI)
+                {
+                    Graph g2;
+                    if (RdfGraphForURI.TryGetValue(basURI, out g2))
+                    {
+                        if (!ReferenceEquals(g, g2))
+                        {
+                            return g2.ToPrologKBName();
+                        } else
+                        {
+                            SIProlog.Warn("Proxy Graph " + g2);
+                        }
+                    }
+                }
+            }
+            return null;
         }
     }
     /// <summary>
@@ -121,20 +258,23 @@ namespace LogicalParticleFilter1
     /// </para>
     /// </remarks>
     public class LiveCallTripleCollection
-        :
-        ThreadSafeTripleCollection
+        : ThreadSafeTripleCollection
     //BaseTripleCollection
     {
+        public override string ToString()
+        {
+            return string.Format("DefaultKBName={1} {0}", base.ToString(), DefaultKBName);
+        }
         public bool Monitoring;
 
         //Main Storage
-        private MultiDictionary<Triple, Object> _triples = new MultiDictionary<Triple, object>(new FullTripleComparer(new FastNodeComparer()));
+        readonly private MultiDictionary<Triple, Object> _triplesIndex = new MultiDictionary<Triple, object>(new FullTripleComparer(new FastNodeComparer()));
         //Simple Indexes
-        private MultiDictionary<INode, List<Triple>> _s = new MultiDictionary<INode, List<Triple>>(new FastNodeComparer(), MultiDictionaryMode.AVL),
+        readonly private MultiDictionary<INode, List<Triple>> _s = new MultiDictionary<INode, List<Triple>>(new FastNodeComparer(), MultiDictionaryMode.AVL),
                                                      _p = new MultiDictionary<INode, List<Triple>>(new FastNodeComparer(), MultiDictionaryMode.AVL),
                                                      _o = new MultiDictionary<INode, List<Triple>>(new FastNodeComparer(), MultiDictionaryMode.AVL);
         //Compound Indexes
-        private MultiDictionary<Triple, List<Triple>> _sp, _so, _po;
+        readonly private MultiDictionary<Triple, List<Triple>> _sp, _so, _po;
 
 
         private class PlVariableNode : VariableNode
@@ -144,9 +284,9 @@ namespace LogicalParticleFilter1
         }
 
         //Placeholder Variables for compound lookups
-        private VariableNode _subjVar = new PlVariableNode(null, "s");
-        private VariableNode _predVar = new PlVariableNode(null, "p"),
-                             _objVar = new PlVariableNode(null, "o");
+        private readonly VariableNode _subjVar = new PlVariableNode(null, "s"),
+                                      _predVar = new PlVariableNode(null, "p"),
+                                      _objVar = new PlVariableNode(null, "o");
 
         private bool _fullIndexing = false;
         private int _count = 0;
@@ -158,7 +298,83 @@ namespace LogicalParticleFilter1
             set { _prologEngine = value; }
         }
 
-        public string defaultKB;
+        public string DefaultKBName;
+        public LiveCallGraph Graph
+        {
+            get { return _graph; }
+            set
+            {
+                if (value != null && rdfRules == null)
+                {
+                    rdfRules = new SIProlog.RdfRules(value);
+                }
+                _graph = value;
+            }
+        }
+        private SIProlog.RdfRules rdfRules = null;
+        private LiveCallGraph _graph;
+        //Placeholder Variables for compound lookups
+        private SIProlog.Variable subjVar = new SIProlog.Variable("S"),
+                                  predVar = new SIProlog.Variable("P"),
+                                  objVar = new SIProlog.Variable("O");
+
+        protected string QueryKB
+        {
+            get { return AssertKbName; }
+            set { throw new NotImplementedException(); }
+        }
+
+
+        protected string AssertKbName
+        {
+            get { return DefaultKBName; }
+            set { throw new NotImplementedException(); }
+        }
+
+
+        protected bool FollowGenlMt
+        {
+            get { return false; }
+            set { throw new NotImplementedException(); }
+        }
+
+
+        public ListOfBindings AskQuery(SIProlog.Term query)
+        {
+            var bs = new ListOfBindings();
+            prologEngine.askQuery(new PartList(query), QueryKB, FollowGenlMt, bs, null);
+            if (bs.Count > 0)
+            {
+            }
+            return bs;
+        }
+
+        public bool UsePrologKB
+        {
+            get
+            {
+                if (!GlobalSharedSettings.RdfSavedInPDB) return false;
+                var v = PrologKB;
+                if (v != null) return true;
+                return false;
+            }
+        }
+        public SIProlog.PNode PrologKB
+        {
+            get
+            {
+                if (DefaultKBName != null)
+                {
+                    return prologEngine.FindOrCreateKB(DefaultKBName);
+                }
+                if (Graph != null)
+                {
+                    var gt = Graph.prologKB;
+                    return gt;
+                }
+                return null;
+            }
+        }
 
         /// <summary>
         /// Creates a new Live Call triple collection
@@ -173,6 +389,7 @@ namespace LogicalParticleFilter1
         /// Creates a new Live Call triple collection
         /// </summary>
         /// <param name="compoundIndexMode">Mode to use for compound indexes</param>
+        /// <param name="prolog">SIProlog instance</param>
         public LiveCallTripleCollection(MultiDictionaryMode compoundIndexMode, SIProlog prolog)
         {
             prologEngine = prolog;
@@ -308,12 +525,18 @@ namespace LogicalParticleFilter1
         /// <returns></returns>
         protected override bool Add(Triple t)
         {
-            OnExternal();
+            if (!UsePrologKB) OnExternal();
+            if (UsePrologKB)
+            {
+                // false so we dont have to call Contains anymore
+                bool a = PrologKB.AssertTripleFromGraph(t, Graph, false, true);
+                if (a) this._count++;
+                return a;
+            }
             if (!this.Contains(t))
             {
-                this._triples.Add(t, null);
+                this._triplesIndex.Add(t, null);
                 this.Index(t);
-                this._count++;
                 return true;
             }
             return false;
@@ -326,8 +549,23 @@ namespace LogicalParticleFilter1
         /// <returns></returns>
         public override bool Contains(Triple t)
         {
+            if (UsePrologKB)
+            {
+                if (UsePrologKB)
+                {
+                    return PrologKB.ContainsTriple(t, Graph);
+                }
+                foreach (var t2 in WithSubjectPredicate(t.Subject, t.Predicate))
+                {
+                    if (t2.Object.Equals(t.Object))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
             OnExternal();
-            return this._triples.ContainsKey(t);
+            return this._triplesIndex.ContainsKey(t);
         }
 
         /// <summary>
@@ -349,8 +587,12 @@ namespace LogicalParticleFilter1
         /// <returns></returns>
         protected override bool Delete(Triple t)
         {
+            if (UsePrologKB)
+            {
+                return PrologKB.RetractTriple(t, Graph);
+            }
             OnExternal();
-            if (this._triples.Remove(t))
+            if (this._triplesIndex.Remove(t))
             {
                 //If removed then unindex
                 this.Unindex(t);
@@ -370,9 +612,17 @@ namespace LogicalParticleFilter1
         {
             get
             {
+                if (UsePrologKB)
+                {
+                    foreach (var t2 in WithSubjectPredicate(t.Subject, t.Predicate))
+                    {
+                        if (t2.Object.Equals(t.Object)) return t2;
+                    }
+                    return t;
+                }
                 OnExternal();
                 Triple actual;
-                if (this._triples.TryGetKey(t, out actual))
+                if (this._triplesIndex.TryGetKey(t, out actual))
                 {
                     return actual;
                 }
@@ -390,6 +640,18 @@ namespace LogicalParticleFilter1
         /// <returns></returns>
         public override IEnumerable<Triple> WithObject(INode obj)
         {
+            if (UsePrologKB)
+            {
+                var t = MakeTerm(_subjVar, _predVar, obj);
+                ListOfBindings result = AskQuery(t);
+                List<Triple> trips = new List<Triple>();
+                foreach (var rs in result)
+                {
+                    trips.Add(NewTriple(PartToRdf(rs["S"]), PartToRdf(rs["PRED"]), obj));
+                }
+                return trips;
+            }
+
             OnExternal();
             List<Triple> ts;
             if (this._o.TryGetValue(obj, out ts))
@@ -409,6 +671,20 @@ namespace LogicalParticleFilter1
         /// <returns></returns>
         public override IEnumerable<Triple> WithPredicate(INode pred)
         {
+            if (UsePrologKB)
+            {
+                string f = SIProlog.GraphWithDef.GetPredFunctor(pred);
+                SIProlog.Term t = MakeTerm(_subjVar, pred, _objVar);
+                ListOfBindings result = AskQuery(t);
+                List<Triple> trips = new List<Triple>();
+                foreach (var rs in result)
+                {
+                    trips.Add(NewTriple(PartToRdf(rs[subjVar.vname]), pred, PartToRdf(rs[objVar.vname])));
+                }
+                return trips;
+            }
+
+
             OnExternal();
             List<Triple> ts;
             if (this._p.TryGetValue(pred, out ts))
@@ -421,6 +697,12 @@ namespace LogicalParticleFilter1
             }
         }
 
+        private Triple NewTriple(INode s, INode p, INode o)
+        {
+            IGraph g = Graph;
+            return new Triple(s.CopyWNode(g), p.CopyWNode(g), o.CopyWNode(g));
+        }
+
         /// <summary>
         /// Gets all the triples with a given subject
         /// </summary>
@@ -428,6 +710,17 @@ namespace LogicalParticleFilter1
         /// <returns></returns>
         public override IEnumerable<Triple> WithSubject(INode subj)
         {
+            if (UsePrologKB)
+            {
+                var t = MakeTerm(subj, _predVar, _objVar);
+                ListOfBindings result = AskQuery(t);
+                List<Triple> trips = new List<Triple>();
+                foreach (var rs in result)
+                {
+                    trips.Add(NewTriple(subj, PartToRdf(rs["PRED"]), PartToRdf(rs["O"])));
+                }
+                return trips;
+            }
             OnExternal();
             List<Triple> ts;
             if (this._s.TryGetValue(subj, out ts))
@@ -440,6 +733,18 @@ namespace LogicalParticleFilter1
             }
         }
 
+        private SIProlog.Term MakeTerm(INode subj, INode pred, INode obj)
+        {
+            if (!GlobalSharedSettings.TODO1Completed)
+            {
+                return new SIProlog.Term(SIProlog.TripleName, false,
+                                         new PartList(RdfToPart(subj), RdfToPart(pred), RdfToPart(obj)));
+            }
+            string f = SIProlog.GraphWithDef.GetPredFunctor(pred);
+            bool isVar = pred is IVariableNode || pred is IBlankNode;
+            return new SIProlog.Term(f, isVar, new PartList(RdfToPart(subj), RdfToPart(obj)));
+        }
+
         /// <summary>
         /// Gets all the triples with a given predicate and object
         /// </summary>
@@ -448,11 +753,22 @@ namespace LogicalParticleFilter1
         /// <returns></returns>
         public override IEnumerable<Triple> WithPredicateObject(INode pred, INode obj)
         {
+            if (UsePrologKB)
+            {
+                var t = MakeTerm(_subjVar, _predVar, obj);
+                ListOfBindings result = AskQuery(t);
+                List<Triple> trips = new List<Triple>();
+                foreach (var rs in result)
+                {
+                    trips.Add(NewTriple(PartToRdf(rs["S"]), pred, obj));
+                }
+                return trips;
+            }
             OnExternal();
             if (this._fullIndexing)
             {
                 List<Triple> ts;
-                if (this._po.TryGetValue(new Triple(this._subjVar.CopyNode(pred.Graph), pred, obj.CopyNode(pred.Graph)), out ts))
+                if (this._po.TryGetValue(NewTriple(this._subjVar.CopyWNode(pred.Graph), pred, obj.CopyWNode(pred.Graph)), out ts))
                 {
                     return (ts != null ? ts : Enumerable.Empty<Triple>());
                 }
@@ -475,11 +791,24 @@ namespace LogicalParticleFilter1
         /// <returns></returns>
         public override IEnumerable<Triple> WithSubjectObject(INode subj, INode obj)
         {
+            if (UsePrologKB)
+            {
+                var t = MakeTerm(subj, _predVar, obj);
+                ListOfBindings result = AskQuery(t);
+                string vname = predVar.vname;
+                List<Triple> trips = new List<Triple>();
+                foreach (var rs in result)
+                {
+                    trips.Add(NewTriple(subj, PartToRdf(rs[vname]), obj));
+                }
+                return trips;
+            }
             OnExternal();
             if (this._fullIndexing)
             {
                 List<Triple> ts;
-                if (this._so.TryGetValue(new Triple(subj, this._predVar.CopyNode(subj.Graph), obj.CopyNode(subj.Graph)), out ts))
+                if (this._so.TryGetValue(
+                    NewTriple(subj, this._predVar.CopyWNode(subj.Graph), obj.CopyWNode(subj.Graph)), out ts))
                 {
                     return (ts != null ? ts : Enumerable.Empty<Triple>());
                 }
@@ -502,11 +831,23 @@ namespace LogicalParticleFilter1
         /// <returns></returns>
         public override IEnumerable<Triple> WithSubjectPredicate(INode subj, INode pred)
         {
+            if (UsePrologKB)
+            {
+                bool[] vars = { false, false, true };
+                var t = MakeTerm(subj,pred,_objVar);
+                ListOfBindings result = AskQuery(t);
+                List<Triple> trips = new List<Triple>();
+                foreach (var rs in result)
+                {
+                    trips.Add(NewTriple(subj, pred, PartToRdf(rs["O"])));
+                }
+                return trips;
+            }
             OnExternal();
             if (this._fullIndexing)
             {
                 List<Triple> ts;
-                if (this._sp.TryGetValue(new Triple(subj, pred.CopyNode(subj.Graph), this._objVar.CopyNode(subj.Graph)), out ts))
+                if (this._sp.TryGetValue(NewTriple(subj, pred.CopyWNode(subj.Graph), this._objVar.CopyWNode(subj.Graph)), out ts))
                 {
                     return (ts != null ? ts : Enumerable.Empty<Triple>());
                 }
@@ -521,6 +862,22 @@ namespace LogicalParticleFilter1
             }
         }
 
+        private SIProlog.Part RdfToPart(INode subj)
+        {
+            if (subj == _subjVar) return subjVar;
+            if (subj == _objVar) return objVar;
+            if (subj == _predVar) return predVar;
+            SIProlog.checkNode(subj);
+            return SIProlog.GraphWithDef.RdfToPart(subj.CopyWNode(subj.Graph ?? Graph), rdfRules);
+        }
+
+        private INode PartToRdf(SIProlog.Part p)
+        {
+            INode node = SIProlog.GraphWithDef.PartToRdf(p, rdfRules);
+            SIProlog.checkNode(node);
+            return node;
+        }
+
         /// <summary>
         /// Gets the Object Nodes
         /// </summary>
@@ -528,6 +885,15 @@ namespace LogicalParticleFilter1
         {
             get
             {
+                if (UsePrologKB)
+                {
+                    HashSet<INode> nodes = new HashSet<INode>();
+                    foreach (var t in GetTriples())
+                    {
+                        nodes.Add(t.Object);
+                    }
+                    return nodes;
+                }
                 OnExternal();
                 return this._o.Keys;
             }
@@ -540,6 +906,15 @@ namespace LogicalParticleFilter1
         {
             get
             {
+                if (UsePrologKB)
+                {
+                    HashSet<INode> nodes = new HashSet<INode>();
+                    foreach (var t in GetTriples())
+                    {
+                        nodes.Add(t.Predicate);
+                    }
+                    return nodes;
+                }
                 OnExternal();
                 return this._p.Keys;
             }
@@ -552,6 +927,15 @@ namespace LogicalParticleFilter1
         {
             get
             {
+                if (UsePrologKB)
+                {
+                    HashSet<INode> nodes = new HashSet<INode>();
+                    foreach (var t in GetTriples())
+                    {
+                        nodes.Add(t.Subject);
+                    }
+                    return nodes;
+                }
                 OnExternal();
                 return this._s.Keys;
             }
@@ -562,7 +946,7 @@ namespace LogicalParticleFilter1
         /// </summary>
         public override void Dispose()
         {
-            this._triples.Clear();
+            this._triplesIndex.Clear();
             this._s.Clear();
             this._p.Clear();
             this._o.Clear();
@@ -575,14 +959,42 @@ namespace LogicalParticleFilter1
             }
         }
 
-        /// <summary>
+                /// <summary>
         /// Gets the enumerator for the collection
         /// </summary>
         /// <returns></returns>
         public override IEnumerator<Triple> GetEnumerator()
         {
+            return GetTriples().GetEnumerator();
+        }
+
+        public IEnumerable<Triple> GetTriples()
+        {
+            if (UsePrologKB)
+            {
+                List<Triple> trips = new List<Triple>();
+                if (GlobalSharedSettings.TODO1Completed)
+                {
+                    lock (PrologKB.CompileLock)
+                    {
+                        foreach (var p in PrologKB.pdb.rules.ToArray())
+                        {
+                            trips.AddRange(p.ToTriples(PrologKB, Graph).ToTriples);
+                        }
+                    }
+                } else
+                {
+                    var result = AskQuery(MakeTerm(_subjVar, _predVar, _objVar));
+                    foreach (var rs in result)
+                    {
+                        trips.Add(NewTriple(PartToRdf(rs[subjVar.vname]), PartToRdf(rs[predVar.vname]),
+                                            PartToRdf(rs[objVar.vname])));
+                    }
+                }
+                return trips;
+            }
             OnExternal();
-            return this._triples.Keys.GetEnumerator();
+            return this._triplesIndex.Keys;
         }
 
         private void OnExternal()
@@ -611,18 +1023,67 @@ namespace LogicalParticleFilter1
         /// </summary>
         protected ReaderWriterLockSlim _lockManager = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
         protected bool monitorObjCreation = false;
-        protected INodeFactory _factory;
-        internal SIProlog.PNode _pnode;
-        internal SIProlog.PNode pnode
+        protected INodeFactory _factory = null;
+        internal SIProlog.PNode prologKB;
+        internal BaseTripleCollection orig;
+        public LiveCallTripleCollection LiveTriples
         {
             get
             {
-                if (SIProlog.RdfSavedInPDB) return _pnode;
-                return null;
+                LiveCallTripleCollection v = orig as LiveCallTripleCollection;
+                if (v == null) throw new InvalidCastException("" + orig.GetType());
+                return v;
+            }
+        }
+
+        public bool UsePNode
+        {
+            get
+            {
+                if (!GlobalSharedSettings.RdfSavedInPDB) return false;
+
+                if (orig is LiveCallTripleCollection)
+                {
+                    LiveCallTripleCollection v = (LiveCallTripleCollection)orig;
+                    if (!v.UsePrologKB)
+                    {
+                        return false;
+                    }
+                }
+                return PrologKB != null;
+            }
+        }
+        internal SIProlog.PNode PrologKB
+        {
+            get
+            {
+                if (!GlobalSharedSettings.RdfSavedInPDB) return null;
+                if (prologKB == null)
+                {
+                    prologKB = LiveTriples.PrologKB;
+                }
+                return prologKB;
             }
             set
             {
-                _pnode = value;
+                prologKB = value;
+            }
+        }
+
+        public string DefaultKbName
+        {
+            get
+            {
+                if (!GlobalSharedSettings.RdfSavedInPDB) return null;
+                if (prologKB != null)
+                {
+                    return prologKB.Id;
+                }
+                return LiveTriples.DefaultKBName;
+            }
+            set
+            {
+                LiveTriples.DefaultKBName = value;
             }
         }
 
@@ -721,6 +1182,17 @@ namespace LogicalParticleFilter1
             {
                 this._nsmapper = SIProlog.rdfDefNS;
             }
+            if (orig is WrapperTripleCollection)
+            {
+                WrapperTripleCollection tstc = (WrapperTripleCollection)orig;
+                //    var ts = tstc._triples;
+            }
+            if (orig is LiveCallTripleCollection)
+            {
+                LiveCallTripleCollection tstc = (LiveCallTripleCollection)orig;
+                tstc.Graph = this;
+                //    var ts = tstc._triples;
+            }
         }
 
         /// <summary>
@@ -758,6 +1230,7 @@ namespace LogicalParticleFilter1
         public LiveCallGraph(BaseTripleCollection tripleCollection, bool emptyNamespaceMap, bool isolatedNS)
             : base(WrapOnceInTSTCollection(tripleCollection))
         {
+            orig = tripleCollection;
             _isolatedNs = isolatedNS;
             SharedConstructor();
             if (emptyNamespaceMap)
@@ -766,6 +1239,10 @@ namespace LogicalParticleFilter1
             }
         }
 
+        public override string ToString()
+        {
+            return string.Format("IsolatedNs={1} Orig={2} prologKB={3} {0}", base.ToString(), IsolatedNs, orig, prologKB);
+        }
         /// <summary>
         /// Creates a new instance of a Graph using the given Triple Collection and an optionally empty Namespace Map
         /// </summary>
@@ -774,6 +1251,7 @@ namespace LogicalParticleFilter1
         public LiveCallGraph(BaseTripleCollection tripleCollection, NamespaceMapper ns)
             : base(WrapOnceInTSTCollection(tripleCollection))
         {
+            orig = tripleCollection;
             this._nsmapper = ns ?? this._nsmapper;
             _isolatedNs = true;
             SharedConstructor();
@@ -782,7 +1260,7 @@ namespace LogicalParticleFilter1
 
         private static ThreadSafeTripleCollection WrapOnceInTSTCollection(BaseTripleCollection tripleCollection)
         {
-            if (tripleCollection is ThreadSafeTripleCollection) return (ThreadSafeTripleCollection) tripleCollection;
+            if (tripleCollection is ThreadSafeTripleCollection) return (ThreadSafeTripleCollection)tripleCollection;
             return new ThreadSafeTripleCollection(tripleCollection);
         }
 
@@ -814,7 +1292,7 @@ namespace LogicalParticleFilter1
                 try
                 {
                     EnterReadLock();
-                    b =  base.Triples;
+                    b = base.Triples;
                 }
                 finally
                 {
@@ -850,7 +1328,7 @@ namespace LogicalParticleFilter1
                 try
                 {
                     EnterReadLock();
-                    b =  base.NamespaceMap;
+                    b = base.NamespaceMap;
                 }
                 finally
                 {
@@ -860,6 +1338,29 @@ namespace LogicalParticleFilter1
             }
         }
 
+        /// <summary>
+        /// Merges another Graph into the current Graph
+        /// </summary>
+        /// <param name="g">Graph to Merge into this Graph</param>
+        /// <remarks>The Graph on which you invoke this method will preserve its Blank Node IDs while the Blank Nodes from the Graph being merged in will be given new IDs as required in the scope of this Graph.</remarks>
+        public override void Merge(IGraph g)
+        {
+            this.Merge(g, false);
+        }
+
+        /// <summary>
+        /// Merges another Graph into the current Graph
+        /// </summary>
+        /// <param name="g">Graph to Merge into this Graph</param>
+        /// <param name="keepOriginalGraphUri">Indicates that the Merge should preserve the Graph URIs of Nodes so they refer to the Graph they originated in</param>
+        /// <remarks>
+        /// <para>
+        /// The Graph on which you invoke this method will preserve its Blank Node IDs while the Blank Nodes from the Graph being merged in will be given new IDs as required in the scope of this Graph.
+        /// </para>
+        /// <para>
+        /// The Graph will raise the <see cref="BaseGraph.MergeRequested">MergeRequested</see> event before the Merge operation which gives any event handlers the oppurtunity to cancel this event.  When the Merge operation is completed the <see cref="Merged">Merged</see> event is raised
+        /// </para>
+        /// </remarks>
         public override void Merge(IGraph g, bool keepOriginalGraphUri)
         {
             WriteOp(() => MergeB(g, keepOriginalGraphUri));
@@ -872,18 +1373,24 @@ namespace LogicalParticleFilter1
             //Check that the merge can go ahead
             if (!this.RaiseMergeRequested()) return;
 
+            if (!keepOriginalGraphUri)
+            {
+                SIProlog.Warn("Not keep Original GraphUri? ");
+            }
+
             //First copy and Prefixes across which aren't defined in this Graph
             this._nsmapper.Import(g.NamespaceMap);
 
             if (this.IsEmpty)
             {
+                var from = g;
                 //Empty Graph so do a quick copy
                 foreach (Triple t in g.Triples)
                 {
-                    this.AssertFromGraph(new Triple(Tools.CopyNode(t.Subject, this, keepOriginalGraphUri),
-                                                    Tools.CopyNode(t.Predicate, this, keepOriginalGraphUri),
-                                                    Tools.CopyNode(t.Object, this, keepOriginalGraphUri),
-                                                    t.Context), g);
+                    this.AssertFromGraph(new Triple(t.Subject.CopyWNode(from, keepOriginalGraphUri),
+                                                    t.Predicate.CopyWNode(from, keepOriginalGraphUri),
+                                                    t.Object.CopyWNode(from, keepOriginalGraphUri),
+                                                    t.Context), g, keepOriginalGraphUri);
                 }
             }
             else
@@ -894,63 +1401,68 @@ namespace LogicalParticleFilter1
                 foreach (Triple t in g.Triples)
                 {
                     INode s, p, o;
-                    if (t.Subject.NodeType == NodeType.Blank)
-                    {
-                        if (!mapping.ContainsKey(t.Subject))
-                        {
-                            IBlankNode temp = this.CreateBlankNode();
-                            if (keepOriginalGraphUri) temp.GraphUri = t.Subject.GraphUri;
-                            mapping.Add(t.Subject, temp);
-                        }
-                        s = mapping[t.Subject];
-                    }
-                    else
-                    {
-                        s = Tools.CopyNode(t.Subject, this, keepOriginalGraphUri);
-                    }
+                    s = MapNode(keepOriginalGraphUri, mapping, t.Subject);
+                    p = MapNode(keepOriginalGraphUri, mapping, t.Predicate);
+                    o = MapNode(keepOriginalGraphUri, mapping, t.Object);
 
-                    if (t.Predicate.NodeType == NodeType.Blank)
-                    {
-                        if (!mapping.ContainsKey(t.Predicate))
-                        {
-                            IBlankNode temp = this.CreateBlankNode();
-                            if (keepOriginalGraphUri) temp.GraphUri = t.Predicate.GraphUri;
-                            mapping.Add(t.Predicate, temp);
-                        }
-                        p = mapping[t.Predicate];
-                    }
-                    else
-                    {
-                        p = Tools.CopyNode(t.Predicate, this, keepOriginalGraphUri);
-                    }
-
-                    if (t.Object.NodeType == NodeType.Blank)
-                    {
-                        if (!mapping.ContainsKey(t.Object))
-                        {
-                            IBlankNode temp = this.CreateBlankNode();
-                            if (keepOriginalGraphUri) temp.GraphUri = t.Object.GraphUri;
-                            mapping.Add(t.Object, temp);
-                        }
-                        o = mapping[t.Object];
-                    }
-                    else
-                    {
-                        o = Tools.CopyNode(t.Object, this, keepOriginalGraphUri);
-                    }
-
-                    this.AssertFromGraph(new Triple(s, p, o, t.Context), g);
+                    this.AssertFromGraph(new Triple(s, p, o, t.Context), g, keepOriginalGraphUri);
                 }
             }
 
             this.RaiseMerged();
         }
 
+        private void AssertFromGraph(Triple t, IGraph g, bool keepOriginalGraphUri)
+        {
+            if (!UsePNode)
+            {
+                this.Assert(t);
+                return;
+            }
+            PrologKB.AssertTripleFromGraph(t, g, false, keepOriginalGraphUri);
+        }
+
+        private INode MapNode(bool keepOriginalGraphUri, Dictionary<INode, IBlankNode> mapping, INode tObject)
+        {
+            if (tObject.NodeType == NodeType.Blank)
+            {
+                INode o;
+                if (!mapping.ContainsKey(tObject))
+                {
+                    IBlankNode temp = this.CreateBlankNode();
+                    if (keepOriginalGraphUri)
+                    {
+                        temp.GraphUri = tObject.GraphUri;
+                    } else
+                    {
+                        
+                    }
+                    mapping.Add(tObject, temp);
+                }
+                o = mapping[tObject];
+                return o;
+            }
+            return tObject.CopyWNode(this, keepOriginalGraphUri);
+        }
+
+        /// <summary>
+        /// Gets whether a given Triple exists in this Graph
+        /// </summary>
+        /// <param name="t">Triple to test</param>
+        /// <returns></returns>
         public override bool ContainsTriple(Triple t)
         {
             return ReadOp(() => base.ContainsTriple(t));
         }
 
+        /// <summary>
+        /// Clears all Triples from the Graph
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The Graph will raise the <see cref="BaseGraph.ClearRequested">ClearRequested</see> event at the start of the Clear operation which allows for aborting the operation if the operation is cancelled by an event handler.  On completing the Clear the <see cref="BaseGraph.Cleared">Cleared</see> event will be raised.
+        /// </para>
+        /// </remarks>
         public override void Clear()
         {
             WriteOp(base.Clear);
@@ -965,18 +1477,9 @@ namespace LogicalParticleFilter1
         /// <param name="t">The Triple to add to the Graph</param>
         public override bool Assert(Triple t)
         {
-            return AssertFromGraph(t, null);
-        }
-
-        public bool AssertFromGraph(Triple t, IGraph graph)
-        {
             try
             {
                 EnterWriteLock();
-                if (pnode != null)
-                {
-                    pnode.AssertTriple(t, graph);
-                }
                 return base.Assert(t);
             }
             finally
@@ -993,6 +1496,7 @@ namespace LogicalParticleFilter1
         {
             try
             {
+                // calls back our code
                 EnterWriteLock();
                 return base.Assert(ts);
             }
@@ -1028,8 +1532,9 @@ namespace LogicalParticleFilter1
         {
             try
             {
+                // calls back our code
                 EnterWriteLock();
-                return this.Retract(ts);
+                return base.Retract(ts);
             }
             finally
             {
@@ -1244,7 +1749,7 @@ namespace LogicalParticleFilter1
         public override IBlankNode CreateBlankNode(string nodeId)
         {
             var f = this._factory; if (f != null) return f.CreateBlankNode(nodeId);
-            return WriteFunction(() => base.CreateBlankNode());
+            return WriteFunction(() => base.CreateBlankNode(nodeId));
         }
 
         /// <summary>
@@ -1347,17 +1852,16 @@ namespace LogicalParticleFilter1
         /// <returns>Zero/More Triples</returns>
         public override IEnumerable<Triple> GetTriples(INode n)
         {
-            List<Triple> triples = new List<Triple>();
             try
             {
                 EnterReadLock();
-                triples = base.GetTriples(n).ToList();
+                // we might have smoother impl
+                return base.GetTriples(n);
             }
             finally
             {
                 ExitReadLock();
             }
-            return triples;
         }
 
         /// <summary>
@@ -1430,7 +1934,7 @@ namespace LogicalParticleFilter1
             List<Triple> triples = new List<Triple>();
             try
             {
-                EnterReadLock();
+                EnterReadLock();                
                 triples = base.GetTriplesWithPredicate(n).ToList();
             }
             finally
@@ -1563,5 +2067,10 @@ namespace LogicalParticleFilter1
             return triples;
         }
         #endregion
+
+        public bool HostedFrom(SIProlog.PNode pNode)
+        {
+            return UsePNode && PrologKB == pNode;
+        }
     }
 }

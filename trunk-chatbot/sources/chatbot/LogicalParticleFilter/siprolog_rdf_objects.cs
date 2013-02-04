@@ -65,7 +65,7 @@ namespace LogicalParticleFilter1
     public partial class SIProlog
     {
 
-        static string UriOfMt(string plMt)
+        public static string UriOfMt(string plMt)
         {
             return RoboKindMtURI.TrimEnd('#', '/') + "/" + plMt + "#";
         }
@@ -76,19 +76,10 @@ namespace LogicalParticleFilter1
         }
         public static Triple MakeTriple(INode s, INode p, INode o, bool toplevel)
         {
-            IGraph sGraph = o.Graph;
-            if (!ReferenceEquals(sGraph, p.Graph))
-            {
-                p = p.CopyNode(sGraph, true);
-            }
-            if (!ReferenceEquals(sGraph, o.Graph))
-            {
-                o = o.CopyNode(sGraph, true);
-            }
-            if (!ReferenceEquals(sGraph, s.Graph))
-            {
-                s = s.CopyNode(sGraph, true);
-            }
+            IGraph sGraph = s.Graph ?? o.Graph ?? p.Graph;
+            p = p.CopyWNode(sGraph);
+            o = o.CopyWNode(sGraph);
+            s = s.CopyWNode(sGraph);
             Triple newTriple = new Triple(s, p, o);
             string warn0 = "";
             Action<string> warn = s0 =>
@@ -135,8 +126,8 @@ namespace LogicalParticleFilter1
         static public bool rdfGraphAssert(IGraph rdfGraph, Triple triple)
         {
             string bad = rdfGraphAssert(rdfGraph, triple, true, true);
-            if (!string.IsNullOrEmpty(bad)) Warn(bad);
-            return string.IsNullOrEmpty(bad);
+            if (!String.IsNullOrEmpty(bad)) Warn(bad);
+            return String.IsNullOrEmpty(bad);
         }
 
         static public string rdfGraphAssert(IGraph rdfGraph, Triple triple, bool checkWff, bool saveToKB)
@@ -144,7 +135,7 @@ namespace LogicalParticleFilter1
             if (checkWff)
             {
                 string bad = CheckTriple(triple);
-                if (!string.IsNullOrEmpty(bad))
+                if (!String.IsNullOrEmpty(bad))
                 {
                     return bad;
                 }
@@ -164,7 +155,7 @@ namespace LogicalParticleFilter1
             {
                 if (node.NodeType == NodeType.Variable)
                 {
-                    string bad = string.Format("Bad {0} found in triple {1}", node.NodeType, triple);
+                    string bad = String.Format("Bad {0} found in triple {1}", node.NodeType, triple);
                     return bad;
                 }
             }
@@ -223,7 +214,7 @@ namespace LogicalParticleFilter1
             //var obj = TryParseObject(s, (INodeFactory) rdfDefinations);
             //if (obj != null) return obj;
 
-            var forReaderTripleStore = SIProlog.forReaderTripleStoreGraph;
+            var forReaderTripleStore = forReaderTripleStoreGraph;
             lock (forReaderTripleStore)
             {
                 forReaderTripleStore.Clear();
@@ -246,7 +237,7 @@ namespace LogicalParticleFilter1
         }
 
 
-        public partial class GraphWithDef
+        public static partial class GraphWithDef
         {
             static private PredicateProperty AddDefs(Rule rule)
             {
@@ -359,17 +350,17 @@ namespace LogicalParticleFilter1
                 if (!colm && p.Length > 0)
                 {
                     char c0 = p[0];
-                    bool isNumberMaybe = (slengt1 && (c0 == '+' || c0 == '-')) || char.IsDigit(c0);
+                    bool isNumberMaybe = (slengt1 && (c0 == '+' || c0 == '-')) || Char.IsDigit(c0);
                     if (isNumberMaybe)
                     {
                         bool decm = slengt1 && p.Contains(".");
                         long intv;
-                        if (!decm && long.TryParse(p, out intv))
+                        if (!decm && Int64.TryParse(p, out intv))
                         {
                             return new LongNode(rdfDefinations, intv);
                         }
                         double dbl;
-                        if (decm && double.TryParse(p, out dbl))
+                        if (decm && Double.TryParse(p, out dbl))
                         {
                             return new DoubleNode(rdfDefinations, dbl);
                         }
@@ -379,13 +370,13 @@ namespace LogicalParticleFilter1
             }
             static public INode C(IGraph def, string p0)
             {
-                return ResolveC<INode>(def.NamespaceMap, p0, (a, b, c) => C2(def, a, b, c));
+                return ResolveC(def.NamespaceMap, p0, (a, b, c) => C2(def, a, b, c));
             }
             static public INode C2(IGraph def, string prefix, string p, NodeType nt)
             {
                 if (prefix == "_")
                 {
-                    return def.CreateBlankNode(p);
+                    return CreateBlankNode(def, p);
                 }
                 if (prefix == "?")
                 {
@@ -393,7 +384,7 @@ namespace LogicalParticleFilter1
                 }
                 if (nt == NodeType.Literal)
                 {
-                    if (!string.IsNullOrEmpty(prefix)) return def.CreateLiteralNode(p, UriFactory.Create(prefix));
+                    if (!String.IsNullOrEmpty(prefix)) return def.CreateLiteralNode(p, UriFactory.Create(prefix));
                     return def.CreateLiteralNode(p);
                 }
                 if (prefix == basePrefixDefault)
@@ -408,7 +399,7 @@ namespace LogicalParticleFilter1
 
             public static string CombinePrefix(string baseUri, string uriref, out bool protop)
             {
-                protop = (baseUri + uriref).Contains(":/");
+                protop = (baseUri + uriref).Contains(ProtocolSep);
                 return MakeQNameOrUri(uriref, baseUri);
             }
 
@@ -428,7 +419,7 @@ namespace LogicalParticleFilter1
                     return CC(basePrefixDefault, p.Substring(1), NodeType.Uri);
                 }
                 int colm = p.LastIndexOf(":");
-                int colmp = p.LastIndexOf(":/");
+                int colmp = p.LastIndexOf(ProtocolSep);
                 int uir = p.LastIndexOf("#");
                 if (colm == -1 && uir == -1 && false)
                 {
@@ -458,7 +449,7 @@ namespace LogicalParticleFilter1
                         if (prefix != localAname)
                         {
                             GuessedNameSpace[localAname] = pg;
-                            if (!string.IsNullOrEmpty(prefix))
+                            if (!String.IsNullOrEmpty(prefix))
                             {
                                 return CC(prefix, localAname, NodeType.Uri);
                             }
@@ -476,7 +467,7 @@ namespace LogicalParticleFilter1
             public static bool IsAbsoluteURI(string s)
             {
                 int idx = s.IndexOf(":");
-                return idx > 1 && s.Substring(idx).Contains("/") && Uri.IsWellFormedUriString(s, UriKind.Absolute);
+                return idx > 1 && s.Substring(idx).Contains("//") && Uri.IsWellFormedUriString(s, UriKind.Absolute);
             }
 
             /// <summary>
@@ -498,7 +489,7 @@ namespace LogicalParticleFilter1
                 UE = s => s;
 
                 //uriref = HttpUtility.UrlDecode(uriref);
-                if (string.IsNullOrEmpty(baseUri) || baseUri == basePrefixDefault)
+                if (String.IsNullOrEmpty(baseUri) || baseUri == basePrefixDefault)
                 {
                     baseUri = "";
                     if (uriref.StartsWith("#") && baseUri.EndsWith("#"))
@@ -506,7 +497,7 @@ namespace LogicalParticleFilter1
                         uriref = uriref.Substring(1);
                     }
                     if (uriref.StartsWith(":")) uriref = uriref.Substring(1);
-                    return string.Format(":{0}", UE(uriref));
+                    return String.Format(":{0}", UE(uriref));
                 }
                 else
                 {
@@ -516,12 +507,12 @@ namespace LogicalParticleFilter1
                     }
                     if (uriref.StartsWith(":")) uriref = uriref.Substring(1);
                     char lc = baseUri[baseUri.Length - 1];
-                    bool isAbso = baseUri.Contains(":/") || char.IsSymbol(lc);
+                    bool isAbso = baseUri.Contains(ProtocolSep) || Char.IsSymbol(lc);
                     if (isAbso)
                     {
-                        return string.Format("{0}{1}", baseUri, UE(uriref));
+                        return String.Format("{0}{1}", baseUri, UE(uriref));
                     }
-                    return string.Format("{0}:{1}", baseUri, UE(uriref));
+                    return String.Format("{0}:{1}", baseUri, UE(uriref));
                 }
             }
             public static INode InstanceOf
@@ -560,7 +551,7 @@ namespace LogicalParticleFilter1
             {
                 if (part is Atom)
                 {
-                    Atom atom = ((Atom)part);
+                    Atom atom = ((Atom) part);
                     var rdf = atom.AsRDFNode();
                     if (rdf != null)
                     {
@@ -571,22 +562,54 @@ namespace LogicalParticleFilter1
                 if (part is Variable)
                 {
                     var definations = triples.def;
-                    return definations.CreateVariableNode(((Variable)part).vname);
+                    return definations.CreateVariableNode(((Variable) part).vname);
                 }
+                if (part is Term)
+                {
+                    return TermToRdf(part, triples);
+                }
+                throw ErrorBadOp("ToRDF on " + part);
+            }
+
+            static public INode TermToRdf(Part part, RdfRules triples)
+            {
+
                 Part car, cdr;
                 if (GetCons(part, out car, out cdr))
                 {
                     var definations = triples.def;
-                    var rdf = definations.CreateVariableNode("CONS" + CONSP);
+                    var rdf = CreateBlankNode(definations, "CONS" + CONSP);
                     triples.AddRequirement(rdf, "rdf:first", car);
                     triples.AddRequirement(rdf, "rdf:rest", cdr);
                     return rdf;
                 }
                 if (part is Term)
                 {
+                    RdfRules rules = PartToTriples(part, triples.def);
+                    rules.Requirements.ToList().ForEach(triples.AddRequirement);
+                    rules.Consequences.ToList().ForEach(triples.AddConsequent);
+                    rules.Producing.ToList().ForEach(triples.AddProducing);
+                    var ret = rules.RuleNode;
+                    if (ret == null)
+                    {
+                        Warn("No rule node for " + part);
+                        return null;
+                    }
+                    else
+                    {
+                        return ret;
+                    }
+                }
+                throw ErrorBadOp("ToRDF on " + part);
+            }
+
+            static private INode TermToRdf2OLD(Part part, RdfRules triples)
+            {
+                if (part is Term)
+                {
                     var def = triples.def;
                     RdfRules antRules = new RdfRules(def);
-                    var subj = CreateAntecedantNode((Term)part, antRules);
+                    var subj = CreateAntecedantNode((Term) part, antRules);
                     if (subj == null)
                     {
                         foreach (var ms in antRules.Subjects)
@@ -621,6 +644,7 @@ namespace LogicalParticleFilter1
             public static readonly Dictionary<string, KeyValuePair<string, string>> GuessedNameSpace = new Dictionary<string, KeyValuePair<string, string>>();
             static public Part RdfToPart(INode node, RdfRules triples)
             {
+                SIProlog.checkNode(node);
                 if (node is IVariableNode)
                 {
                     var vnode = (IVariableNode)node;
@@ -667,7 +691,7 @@ namespace LogicalParticleFilter1
             static public bool DevolveURI(INamespaceMapper mapper, string s, out string uri, out string prefix, out string atom, bool discoverNamepaces, bool useSpecialPrefix)
             {
                 bool ret = DevolveURI(mapper, s, out uri, out prefix, out atom, discoverNamepaces);
-                if (useSpecialPrefix && prefix == null && atom == "" && !string.IsNullOrEmpty(uri))
+                if (useSpecialPrefix && prefix == null && atom == "" && !String.IsNullOrEmpty(uri))
                 {
                     atom = uri;
                     prefix = "+";
@@ -706,7 +730,7 @@ namespace LogicalParticleFilter1
                     int len = uri.Length;
                     if (len > 0 && s.StartsWith(uri))
                     {
-                        if (string.IsNullOrEmpty(prefix))
+                        if (String.IsNullOrEmpty(prefix))
                         {
                             prefix = LockInfo.WithLock(mapper, () => mapper.GetPrefix(uril));
                         }
@@ -740,7 +764,7 @@ namespace LogicalParticleFilter1
                     atom = s.Substring(hash + 1);
                     return true;
                 }
-                int col2 = s.IndexOf(":/");
+                int col2 = s.IndexOf(ProtocolSep);
                 int slash = s.LastIndexOf("/");
                 if (col2 > 0)
                 {
@@ -772,9 +796,9 @@ namespace LogicalParticleFilter1
                 var subject1 = ToValueNode(subject0);
                 Part part1 = RdfToPart(subject1, rules);
                 string readable = part1.ToSource(SourceLanguage.Prolog);
-                if (SIProlog.RdfDeveloperSanityChecks < 2) return readable;
+                if (RdfDeveloperSanityChecks < 2) return readable;
                 INode subject2 = PartToRdf(part1, rules);
-                if (subject2 != subject1)
+                if (!ReferenceEquals(subject2, subject1))
                 {
                     if (!subject1.Equals(subject2))
                     {
@@ -782,7 +806,8 @@ namespace LogicalParticleFilter1
                     }
                 }
                 Tokeniser oldTokenizer = new Tokeniser(readable);
-                Part part2 = ParsePart(oldTokenizer);
+                string mt = rules.prologMt;
+                Part part2 = ParsePart(oldTokenizer, mt);
                 if (part2 == null || !part2.Equals(part1))
                 {
                     if (part2 != null)
@@ -794,7 +819,7 @@ namespace LogicalParticleFilter1
                     if (part2 != null) readable2 = part2.ToSource(SourceLanguage.Prolog);
                     tl_spy_prolog_reader = true;
                     Tokeniser newTokeniser = new Tokeniser(readable);
-                    part2 = ParsePart(newTokeniser);
+                    part2 = ParsePart(newTokeniser, mt);
                     tl_spy_prolog_reader = false;
                     Warn("PlReadble not round tripping! re-readablity Node=" + NodeDesc(subject1) + " part1=" +
                          PartDesc(part1) + ".ToPLReadable()->" + readable);
@@ -830,7 +855,29 @@ namespace LogicalParticleFilter1
                 argDef.AddRangeTypeName(part.Text);
             }
         }
-
+        public static IBlankNode CreateBlankNode(IGraph kb, string s)
+        {
+            if (RdfDeveloperSanityChecks < 2) return kb.CreateBlankNode(s);
+            if (kb.BaseUri == null)
+            {
+                Warn("Making Bnode outside of document "
+                     + s);
+            }
+            if (kb.BaseUri.AbsoluteUri == RoboKindURI || rdfDefinations.BaseUri == kb.BaseUri)
+            {
+                if (!s.StartsWith("autos"))
+                {
+                    Warn("Making Bnode inside of 'default' " + s);
+                }
+            }
+            var bn = kb.CreateBlankNode(s);
+            var bnu = bn.GraphUri;
+            if (s.StartsWith("says"))
+            {
+                
+            }
+            return bn;
+        }
     }
 }
     

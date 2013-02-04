@@ -82,7 +82,7 @@ namespace LogicalParticleFilter1
             }
         }
 
-        public class RuleList : IEnumerable
+        public class RuleList : IEnumerable,IEnumerable<Rule>
         {
             internal List<Rule> arrayList = new List<Rule>();
             public static Func<Rule, Rule, bool> DefaultRuleEquality = SameClauses;
@@ -123,6 +123,20 @@ namespace LogicalParticleFilter1
                 lock (Sync)
                 {
                     arrayList.Add(r);
+                    if (r.OptionalHomeMt == null)
+                    {
+                        if (syncPDB != null)
+                        {
+                            string name = syncPDB.startMt;
+                            if (name != null)
+                            {
+                                r.OptionalHomeMt = name;
+                            } else
+                            {
+                                Warn("cant give a home to " + r);
+                            }
+                        }
+                    }
                     ClearPdbIndexes();
                 }
             }
@@ -141,7 +155,7 @@ namespace LogicalParticleFilter1
                 }
             }
 
-            private static void Release(Rule r)
+            private void Release(Rule r)
             {
                 var ruleCache = r.rdfRuleCache;
                 if (ruleCache == null) return;
@@ -153,13 +167,15 @@ namespace LogicalParticleFilter1
                     return;
                 }
                 //ConsoleWriteLine("Remove Rule: " + r);
-                IGraph graph = ruleCache.ContainingGraph ?? tripleInst.Graph;
                 IEnumerable<Triple> found = ruleCache.ToTriples;
                 int fnd = 0;
                 foreach (Triple triple in found)
                 {
                     //   ConsoleWriteLine("Remove triple: " + triple);
-                    triple.Graph.Retract(triple);
+                    if (syncPDB == null || syncPDB.PrologKB.HostsGraph(triple.Graph))
+                    {
+                        triple.Graph.Retract(triple);
+                    }
                     fnd++;
                 }
             }
@@ -246,6 +262,14 @@ namespace LogicalParticleFilter1
             {
                 lock (Sync) return arrayList.GetEnumerator();
             }
+            #region IEnumerable<Rule> Members
+
+            IEnumerator<Rule> IEnumerable<Rule>.GetEnumerator()
+            {
+                lock (Sync) return arrayList.GetEnumerator();
+            }
+
+            #endregion
 
             public RuleList Copy()
             {
@@ -294,6 +318,7 @@ namespace LogicalParticleFilter1
                 return IndexOf(startAfter, r => compare(rule, r));
             }
         }
+
         public class PDB
         {
             /// <summary>
@@ -307,15 +332,17 @@ namespace LogicalParticleFilter1
             {
                 return GlobalSharedSettings.StructToString(this);
             }
+
             public string AToString
             {
                 get { return ToString(); }
             }
+
             public string startMt;
             public bool followedGenlMt;
             public bool isStorage;
-            static public Hashtable builtin = new Hashtable();
-            private RuleList _rules;
+            public static Dictionary<string,builtinDelegate> builtin = new Dictionary<string, builtinDelegate>();
+            internal RuleList _rules;
 
             // A fast index for the database
             public Dictionary<string, RuleList> index = new Dictionary<string, RuleList>();
@@ -334,11 +361,15 @@ namespace LogicalParticleFilter1
             {
                 var inx = index["_varpred_"] = new RuleList();
                 var rules = this.rules;
-                lock (rules) for (int i = 0; i < rules.Count; i++)
+                lock (rules)
+                    for (int i = 0; i < rules.Count; i++)
                     {
-                        Rule rule = (Rule)rules[i];
+                        Rule rule = (Rule) rules[i];
                         string name = rule.head.fname;
-                        if (!index.ContainsKey(name)) { index[name] = new RuleList(); }
+                        if (!index.ContainsKey(name))
+                        {
+                            index[name] = new RuleList();
+                        }
                         index[name].Add(rule);
                         if (rule.head.headIsVar)
                         {
@@ -349,41 +380,85 @@ namespace LogicalParticleFilter1
             }
             public RuleList rules
             {
-                get
-                {
-                    return _rules;
-                }
+                get { lock (LockOf(_rules)) return _rules; }
                 set
                 {
-                        if ((value==null) && (_rules==null)) return;
-                        if (_rules !=null)
-                        {
-                            lock (_rules)
+                    if ((value == null) && (_rules == null)) return;
+                    if (_rules != null)
+                    {
+                        lock (_rules.Sync)
+                            lock (LockOf(_rules))
                             {
-                                if (Object.ReferenceEquals(_rules, value)) return;
-                                if  (_rules.Count > 0)
+                                if (ReferenceEquals(_rules, value)) return;
+                                if (_rules.Count > 0)
                                 {
                                     _rules.Clear();
                                 }
                             }
-                        }
-                        _rules = value;
-                        _rules.syncPDB = this;
+                    }
+                    if (value != null)
+                    {
+                        value.syncPDB = this;
+                    }
+                    _rules = value;
 
 
                 }
+            }
+
+            public static object lockIfNull = new object();
+
+            private object LockOf(RuleList ruleList)
+            {
+                if (ruleList == null) return lockIfNull;
+                var l2 = ruleList.syncPDB;
+                if (l2 == null) return lockIfNull;
+                if (l2.followedGenlMt)
+                {
+                    return l2;
+                }
+                var l3 = l2.PrologKB;
+                if (l3 == null) return lockIfNull;
+                return l3.CompileLock;
             }
 
             public PDB db
             {
                 get { return this; }
             }
+
+            public PNode PrologKB
+            {
+                get
+                {
+                    if (startMt == null) return null;
+                    if (followedGenlMt)
+                    {
+                        Warn("Referencing PrologKB that has followed GemlMt");
+                        return null;
+                    }
+                    return CurrentProlog.FindKB(startMt);
+                }
+            }
         }
 
         public partial class Rule : IHasParent
         {
             public bool isGround = false;
-            public string optHomeMt;
+
+            public string OptionalHomeMt
+            {
+                get { return _optHomeMt; }
+                set
+                {
+                    if (value == null)
+                    {
+
+                    }
+                    _optHomeMt = value;
+                }
+            }
+
             // Rule = (Head, Body)
             readonly public Term head = null;
             public Body body = null;
@@ -393,7 +468,7 @@ namespace LogicalParticleFilter1
                 isGround = head.IsGround;
                 head.parent = this;
             }
-            public Rule(Term head, PartList bodylist)
+            public Rule(Term head, PartListImpl bodylist)
                 : this(head)
             {
                 if (bodylist != null)
@@ -454,6 +529,7 @@ namespace LogicalParticleFilter1
                 }
             }
             internal IHasParent parent;
+            private string _optHomeMt;
 
 
             public bool SameClause(Rule rule)

@@ -28,6 +28,7 @@ namespace LogicalParticleFilter1
 
     public partial class SIProlog
     {
+        public static string ProtocolSep = "://";
         const string rdfDefMT = "rdfGlobalDefsMt";
         internal static NamespaceMapper _sharedNS = new NamespaceMapper();
         public static NamespaceMapper rdfDefNS
@@ -47,7 +48,7 @@ namespace LogicalParticleFilter1
             }
         }
 
-        internal static readonly FirstUse<LiveCallGraph> _rdfDefinations = new Func<LiveCallGraph>(() => CurrentProlog.NewGraph(rdfDefMT));
+        internal static readonly FirstUse<LiveCallGraph> _rdfDefinations = new Func<LiveCallGraph>(() => CurrentProlog.NewGraph(rdfDefMT, RoboKindURI, true, true));
         internal static LiveCallGraph rdfDefinations
         {
             get
@@ -58,6 +59,7 @@ namespace LogicalParticleFilter1
         public const string TripleName = "triple";
         internal static PNode rdfDefSync;
         public CIDictionary<string, PNode> GraphForMT = new CIDictionary<string, PNode>(new KeyCase(NormalizeKBName));
+        public CIDictionary<string, Graph> RdfGraphForURI = new CIDictionary<string, Graph>(new KeyCase(NormalizeURIKBName));
 
         public static string NormalizeKBName(object arg)
         {
@@ -66,6 +68,18 @@ namespace LogicalParticleFilter1
             if (retValLength > 3)
             {
                 if (retVal.EndsWith("mt") || retVal.EndsWith("kb")) retVal = retVal.Substring(0, retValLength - 2);
+            }
+            return retVal;
+        }
+        public static string NormalizeURIKBName(object arg)
+        {
+            string retVal = NormalizeKBName(arg);
+            retVal = retVal.TrimEnd('/', '#');
+            retVal = NormalizeKBName(retVal);
+            retVal = retVal.TrimEnd('/', '#');
+            foreach (char c in KeyCase.RegexMarkers)
+            {
+                retVal = retVal.Replace("" + c, "_");
             }
             return retVal;
         }
@@ -93,11 +107,11 @@ namespace LogicalParticleFilter1
                 RdfDeveloperSanityChecks = 0;
                 DontRDFSync = true;
             }
-            string machineName = Environment.MachineName;
-            if (machineName == "ENKI" || machineName.ToUpper() == "TITAN")
+            if (GlobalSharedSettings.IsRdfServer)
             {
-                RdfDeveloperSanityChecks = 2;
+                RdfDeveloperSanityChecks = 3;
                 DontRDFSync = false;
+               
             }
             var uriAgainIs = UriFactory.Create(RoboKindURI);
             var rdfDefinations = SIProlog.rdfDefinations;
@@ -108,12 +122,12 @@ namespace LogicalParticleFilter1
                 rdfDefSync ??
                 //FindKB(rdfDefMT) ??
                 new PNode(rdfDefMT, this, rdfDefinations);
-            rdfDefinations.pnode = rdfDefSync;
+            rdfDefinations.PrologKB = rdfDefSync;
             forReaderTripleStoreGraph.BaseUri = uriAgainIs;
             bool newlyCreated;
             var rdfKB = FindOrCreateKB_unlocked_Actual(rdfDefMT, out newlyCreated);
            // rdfKB.SourceKind = ContentBackingStore.RdfMemory;
-            rdfDefinations.pnode = rdfDefSync;
+            rdfDefinations.PrologKB = rdfDefSync;
             rdfDefSync.IncludeRDFUri(new FileInfo("aiml/shared_ke/PrologToRDFConversion.owl").FullName);
             loadKEText(rdfDefMT, FromStream("aiml/shared_ke/argdefs.txt"), false);
         }
@@ -155,7 +169,7 @@ namespace LogicalParticleFilter1
             var previousBlank = previosuBlankURI.AbsoluteUri;
             if (BaseUri != null)
             {
-                if (previousBlank != BaseUri.AbsoluteUri) ;//nm.AddNamespace("", BaseUri);
+                if (previousBlank != BaseUri.AbsoluteUri) {} ;//nm.AddNamespace("", BaseUri);
                 return;
             }
             var newIdea2 = UriFactory.Create(RoboKindURI);
@@ -205,6 +219,13 @@ namespace LogicalParticleFilter1
 @prefix grddl: <http://www.w3.org/2003/g/data-view#> .
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dnr: <http://www.dotnetrdf.org/configuration#> .
+@prefix dotnetrdf: <http://www.dotnetrdf.org/configuration#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/>.
+@prefix dcterms: <http://www.purl.org/dc/terms/>.
+@prefix vann: <http://purl.org/vocab/vann/>.
+@prefix vs: <http://www.w3.org/2003/06/sw-vocab-status/ns#>.
+@prefix fmt: <http://www.w3.org/ns/formats/>.
 @prefix siprolog: <http://" + CogbotServerWithPort + @"/siprolog#> .
 @prefix robokind: <" +
                 RoboKindURI + @"> .
@@ -309,7 +330,7 @@ yago	http://dbpedia.org/class/yago/
             ss = s + ss;
             foreach (string s00 in ss.Split('\n', '\r'))
             {
-                if (string.IsNullOrEmpty(s00)) continue;
+                if (String.IsNullOrEmpty(s00)) continue;
                 var s0 = s00.Replace('\t', ' ').Trim();
                 if (s0.StartsWith("#")) continue;
                 if (s0.StartsWith("@prefix "))
@@ -318,7 +339,7 @@ yago	http://dbpedia.org/class/yago/
                     s0 = s0.TrimEnd('.', ' ');
                 }
                 while (s0.Contains("  ")) s0 = s0.Replace("  ", " ");
-                if (string.IsNullOrEmpty(s0)) continue;
+                if (String.IsNullOrEmpty(s0)) continue;
                 int spc = s0.IndexOf(' ');
                 string prefix = s0.Substring(0, spc).Trim().TrimEnd(' ', ':');
                 string uri = s0.Substring(spc).Trim();
@@ -331,7 +352,7 @@ yago	http://dbpedia.org/class/yago/
                     continue;
                   //  uri = graph.BaseUri.AbsoluteUri;
                 }
-                if (string.IsNullOrEmpty(prefix))
+                if (String.IsNullOrEmpty(prefix))
                 {
                     continue;
                     prefix = ":";//"Warn("adding null prefix " + uri);
@@ -349,6 +370,37 @@ yago	http://dbpedia.org/class/yago/
                 }
                 nm.AddNamespace(prefix, new Uri(uri));
             }
+        }
+
+        public void RegisterHomeGraph(String nsURI, Graph newGraph, bool forced)
+        {
+            lock (RdfGraphForURI)
+            {
+                Graph oldG;
+                if (RdfGraphForURI.TryGetValue(nsURI, out oldG))
+                {
+                    if (ReferenceEquals(oldG, newGraph)) return;
+                    if (forced)
+                    {
+                        Warn("Rereging " + nsURI);
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+                RdfGraphForURI[nsURI] = newGraph;
+            }
+        }
+        public static Graph FindGraph(string prefix)
+        {
+            var RdfGraphForURI = CurrentProlog.RdfGraphForURI;
+            Graph graph;
+            lock (RdfGraphForURI)
+            {
+                if (RdfGraphForURI.TryGetValue(prefix, out graph)) return graph;
+            }
+            return null;
         }
     }
 }

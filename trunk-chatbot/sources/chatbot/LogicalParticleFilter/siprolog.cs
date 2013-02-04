@@ -33,6 +33,9 @@ using System.Threading;
 //using ProveResult = LogicalParticleFilter1.SIProlog.PEnv;
 namespace LogicalParticleFilter1
 {
+    /// <summary>
+    ///  A plain old super simple prolog interpreter
+    /// </summary>
     public partial class SIProlog
     {
         // SIProlog : Simple Interpreted Prolog
@@ -53,9 +56,8 @@ namespace LogicalParticleFilter1
         public static int RdfDeveloperSanityChecks = 0;
         public bool DontRDFSync = false;
         //public QueryContext test; 
-        /// <summary>
-        ///  A plain old super simple prolog interpreter
-        /// </summary>
+       
+        public string testKB = "testKB";
         public string testruleset;
         public string testquery;
         public bool show = false; //true;
@@ -121,13 +123,8 @@ namespace LogicalParticleFilter1
         public readonly string CreationTrace;
         private SIProlog()
         {
-            var rs = new StringWriter();
-            var fs = new System.Diagnostics.StackTrace(true).GetFrames();
-            foreach (StackFrame frame in fs)
-            {
-                rs.WriteLine("" + frame);
-            }
-            this.CreationTrace = rs.ToString();
+            if (Environment.MachineName == "ENKI") GlobalSharedSettings.RdfSavedInPDB = true;
+            this.CreationTrace = LockInfo.CreationTrace();
             lock (GlobalKBGraph)
             {
                 SIPrologInit();
@@ -172,13 +169,13 @@ namespace LogicalParticleFilter1
         }
         public List<string> GatherMts(string mt)
         {
-            if (string.IsNullOrEmpty(mt)) return null;
+            if (String.IsNullOrEmpty(mt)) return null;
             var gatherNames = new List<string>();
             if (mt.Contains(","))
             {
                 foreach (var name in mt.Split(',', ' '))
                 {
-                    if (string.IsNullOrEmpty(name)) continue;
+                    if (String.IsNullOrEmpty(name)) continue;
                     gatherNames.Add(name);
                 }
                 return gatherNames;
@@ -202,7 +199,7 @@ namespace LogicalParticleFilter1
 
         static internal Exception ErrorBadOp(string f, params object[] args)
         {
-            string m = string.Format(f, args);
+            string m = DLRConsole.SafeFormat(f, args);
             Warn("ERRORBADOP " + m);
             return new NotImplementedException(m);
         }
@@ -268,16 +265,17 @@ namespace LogicalParticleFilter1
             }
             foreach (PNode focus in vlist)
             {
-                lock (focus.pdb.rules)
-                {
-                    if (focus.probability > 0)
+                lock (focus.CompileLock)
+                    lock (focus.pdb.rules)
                     {
-                        foreach (Rule r in focus.pdb.rules)
+                        if (focus.probability > 0)
                         {
-                            VKB.Add(r);
+                            foreach (Rule r in focus.pdb.rules)
+                            {
+                                VKB.Add(r);
+                            }
                         }
                     }
-                }
 
             }
             return VKB;
@@ -329,10 +327,10 @@ namespace LogicalParticleFilter1
 
             RuleList VKB = new RuleList();
             // Prefix
-            lock (focus.CompileLock) lock (focus.pdb.rules) foreach (Rule r in focus.pdb.rules)
+            lock (focus.CompileLock) lock (focus.pdb.rules) foreach (Rule r in LockInfo.CopyOf(focus.pdb.rules))
                     {
                         VKB.Add(r);
-                        r.optHomeMt = startMT;
+                        r.OptionalHomeMt = startMT;
                     }
             if (!followGenlMt) return VKB;
             foreach (PEdge E in focus.OutgoingEdges)
@@ -521,7 +519,7 @@ namespace LogicalParticleFilter1
                             return val;
                         }
                         var or = ParseRule(new Tokeniser(newFact), focusMT);
-                        or.optHomeMt = focusMT;
+                        or.OptionalHomeMt = focusMT;
                         rules[i] = or;
                         focus.SyncFromNow = ContentBackingStore.Prolog;
                         return val;
@@ -535,32 +533,17 @@ namespace LogicalParticleFilter1
 
             lock (focus.CompileLock)
             {
+                Rule replaceInKb;
+                int index;
                 ensureCompiled(focus, ContentBackingStore.Prolog);
-                var rules = focus.pdb.rules;
-                lock (rules)
-                    for (int i = 0; i < rules.Count; i++)
-                    {
-                        Rule r = (Rule)rules[i];
-                        string val = r.ToString();
-                        if (r.SameClause(oldFact))
-                        {
-                            focus.SyncFromNow = ContentBackingStore.Prolog;
-                            focus.pdb.index.Clear();
-                            if (newFact == null)
-                            {
-                                rules.RemoveAt(i);
-                            }
-                            else
-                            {
-                                rules[i] = newFact;
-                            }
-                            return r;
-                        }
-                    }
+                if (focus.ReplaceInKb(0, oldFact, newFact, out replaceInKb, out index))
+                {
+                    return replaceInKb;
+                }
             }
             return null;
         }
-
+     
         /// <summary>
         /// Replaces KB with a fresh rule set
         /// </summary>
@@ -698,7 +681,7 @@ namespace LogicalParticleFilter1
             {
                 atomName = atomName.Trim('.', ' ');
                 char c0 = atomName[0];
-                if (char.IsLetter(c0) && char.IsUpper(c0)) return "'" + atomName + "'";
+                if (Char.IsLetter(c0) && Char.IsUpper(c0)) return "'" + atomName + "'";
             }
             return atomName;
         }
@@ -799,7 +782,6 @@ namespace LogicalParticleFilter1
         public void parseRuleset()
         {
             inGlobalTest();
-            var testKB = "testKB";
             clearKB(testKB);
             var outr = parseRuleset(testruleset, testKB);
             testdb.rules = outr;
@@ -808,7 +790,7 @@ namespace LogicalParticleFilter1
         public void parseQuery()
         {
             inGlobalTest();
-            PartList qlist = ParseBody(testquery, null);
+            PartListImpl qlist = ParseBody(testquery, testKB);
             if (qlist == null)
             {
                 Warn("An error occurred parsing the query '{0}.\n", testquery);
@@ -849,12 +831,17 @@ namespace LogicalParticleFilter1
             PDB.builtin["compare/3"] = new builtinDelegate(Comparitor);
             PDB.builtin["dcompare/3"] = new builtinDelegate(DoubleComparitor);
             PDB.builtin["cut/0"] = new builtinDelegate(Cut);
-            PDB.builtin["call/1"] = new builtinDelegate(Call);
+            PDB.builtin["call/N"] = new builtinDelegate(Call);
             PDB.builtin["fail/0"] = new builtinDelegate(Fail);
             PDB.builtin["bagof/3"] = new builtinDelegate(BagOf);
             PDB.builtin["external/3"] = new builtinDelegate(External);
             PDB.builtin["external2/3"] = new builtinDelegate(ExternalAndParse);
             PDB.builtin["unify/2"] = new builtinDelegate(UnifyExt);
+
+            PDB.builtin["tripleQuery/2"] = new builtinDelegate(TripleQuery);
+            PDB.builtin["tripleQuery/2"] = new builtinDelegate(TripleQuery);
+
+            
         }
 
         public string standardLib()
@@ -908,7 +895,7 @@ namespace LogicalParticleFilter1
 
             Dictionary<string, string> bindingsDict = new Dictionary<string, string>();
             string query = inQuery;
-            PartList qlist = ParseBody(query, queryMT);
+            PartListImpl qlist = ParseBody(query, queryMT);
             if (qlist == null)
             {
                 Warn("An error occurred parsing the query '{0}.\n", query);
@@ -993,7 +980,7 @@ namespace LogicalParticleFilter1
         public void askQuery(string query, string queryMT, out List<Dictionary<string, string>> outBindings)
         {
             outBindings = new List<Dictionary<string, string>>();
-            PartList qlist = ParseBody(query, queryMT);
+            PartListImpl qlist = ParseBody(query, queryMT);
             if (qlist == null)
             {
                 Warn("An error occurred parsing the query '{0}.\n", query);
@@ -1005,8 +992,10 @@ namespace LogicalParticleFilter1
 
 
 
-        public void askQuery(PartList qlist, string queryMT, bool followGenlMt, List<Dictionary<string, Part>> outBindingParts, List<Dictionary<string, string>> outBindingStrings)
+        public void askQuery(PartListImpl qlist, string queryMT, bool followGenlMt, List<Dictionary<string, Part>> outBindingParts, List<Dictionary<string, string>> outBindingStrings)
         {
+            threadLocal.curKB = queryMT;
+            runPreProverHooks();
             //var bindingList = new List<Dictionary<string, Part>>();
             //var bindingsDict = new Dictionary<string, Part>();
             //try
@@ -1090,7 +1079,7 @@ namespace LogicalParticleFilter1
             //outBindings = bindingList;
         }
 
-        public void printContext(PartList which, PEnv env)
+        public void printContext(PartListImpl which, PEnv env)
         {
             inGlobalTest();
             printVars(which, env);
@@ -1098,15 +1087,16 @@ namespace LogicalParticleFilter1
 
         private void inGlobalTest()
         {
+            if (string.IsNullOrEmpty(testKB)) testKB = "testKB";
             //tl_spy_prolog_reader = true;
             /// throw ErrorBadOp("inGlobalTest");
         }
         #endregion
         #region interfaceUtils
 
-        public static PartList termVarNames(Term t)
+        public static PartListImpl termVarNames(Term t)
         {
-            PartList outv = varNames(t.ArgList);
+            PartListImpl outv = varNames(t.ArgList);
             if (t.headIsVar)
             {
                 outv.AddPart(new Variable(t.fvname));
@@ -1114,12 +1104,12 @@ namespace LogicalParticleFilter1
             return outv;
         }
         // Return a list of all variables mentioned in a list of Terms.
-        public static PartList varNames(PartList plist)
+        public static PartListImpl varNames(PartListImpl plist)
         {
-            PartList outv = new PartList();
+            PartListImpl outv = new PartListImpl();
 
 
-            TermList termList = plist.ArgList;
+            PartListImpl termList = plist.ArgList;
             for (var i = 0; i < plist.Arity; i++)
             {
                 Part part = termList[i];
@@ -1134,7 +1124,7 @@ namespace LogicalParticleFilter1
                 }
                 else if (((Part)part) is Term)
                 {
-                    PartList o2 = varNames(((Term)part).ArgList);
+                    PartListImpl o2 = varNames(((Term)part).ArgList);
 
                     for (var j = 0; j < o2.Arity; j++)
                     {
@@ -1149,9 +1139,9 @@ namespace LogicalParticleFilter1
                         outv.AddPart(new Variable(((Term)part).fvname));
                     }
                 }
-                else if (((Part)part) is PartList)
+                else if (((Part)part) is PartListImpl)
                 {
-                    PartList o2 = varNames(((PartList)part));
+                    PartListImpl o2 = varNames(((PartListImpl)part));
 
                     for (var j = 0; j < o2.Arity; j++)
                     {
@@ -1204,13 +1194,13 @@ namespace LogicalParticleFilter1
                         return (T)(object)outv0;
                     }
                 }
-                Term outv = new Term(nextName, termheadIsVar, (PartList)renameVariables<PartList>(tpl, level, parent)) { excludeThis = term.excludeThis };
+                Term outv = new Term(nextName, termheadIsVar, (PartListImpl)renameVariables<PartListImpl>(tpl, level, parent)) { excludeThis = term.excludeThis };
                 outv.parent = parent;
                 return (T)(object)outv;
             }
 
-            PartList outl = new PartList();
-            PartList inL = (PartList)list;
+            PartListImpl outl = new PartListImpl();
+            PartListImpl inL = (PartListImpl)list;
             for (var i = 0; i < inL.Arity; i++)
             {
                 outl.AddPart(renameVariables((Part)inL.ArgList[i], level, parent));
@@ -1234,7 +1224,7 @@ namespace LogicalParticleFilter1
         //	unification of term heads, cut, fail, call, bagof
         //	(in that order, probably).
         public delegate void reportDelegate(PEnv env);
-        public delegate ProveResult builtinDelegate(Term t, PartList goals, PEnv env, PDB db, int level, reportDelegate rp);
+        public delegate ProveResult builtinDelegate(Term t, PartListImpl goals, PEnv env, PDB db, int level, reportDelegate rp);
         public class ProveResult
         {
             public bool TooDeep;
@@ -1249,8 +1239,9 @@ namespace LogicalParticleFilter1
             }
         }
         // The main proving engine. Returns: null (keep going), other (drop out)
-        public ProveResult prove(PartList goalList, PEnv environment, PDB dbIn, int level, reportDelegate reportFunction)
+        public ProveResult prove(PartListImpl goalList, PEnv environment, PDB dbIn, int level, reportDelegate reportFunction)
         {
+            runPreProverHooks();
             //DEBUG: print ("in main prove...\n");
             if (goalList.Arity == 0)
             {
@@ -1279,6 +1270,10 @@ namespace LogicalParticleFilter1
             Term thisTerm = (Term)goalList.First();
             if (trace) { Console.Write("Debug:LEVEL {0} thisterm = ", level); thisTerm.print(Console.Write); Console.Write(" Environment:"); environment.print(Console.Write); Console.Write("\n"); }
 
+            if (thisTerm == null)
+            {
+                throw ErrorBadOp("Goal list has null first term" + goalList);
+            }
 
             PDB db;
             //PDB db;
@@ -1288,7 +1283,7 @@ namespace LogicalParticleFilter1
                 string queryMT = ((IAtomic)thisTerm.ArgList[0]).AsString();
                 db = MakeQueryContext(queryMT, true, null);
                 threadLocal.tl_mt = queryMT;
-                thisTerm = thisTerm.ArgList[1] as Term;
+                thisTerm = thisTerm.ArgList[1].AsTerm();
             }
             else
             {
@@ -1296,15 +1291,24 @@ namespace LogicalParticleFilter1
             }
 
             // Do we have a builtin?
+            builtinDelegate builtin = null;
+            string fname = thisTerm.fname;
+            lock (PDB.builtin)
+            {
+                if (!PDB.builtin.TryGetValue(fname + "/" + thisTerm.Arity, out builtin))
+                {
+                    if (PDB.builtin.TryGetValue(fname + "/N", out builtin))
+                    {
+                    }
+                }
 
-            builtinDelegate builtin = (builtinDelegate)PDB.builtin[thisTerm.fname + "/" + thisTerm.Arity];
-
+            }
             //if (trace) { Console.Write("Debug: searching for builtin " + thisTerm.name + "/" + ((PartList)((PartList)thisTerm.partlist).list).length + "\n"); }
             if (builtin != null)
             {
                 if (trace) { Console.Write("builtin with name " + thisTerm.fname + " found; calling prove() on it...\n"); }
                 // Stick the new body list
-                PartList newGoals = new PartList();
+                PartListImpl newGoals = new PartListImpl();
                 int j;
                 for (j = 1; j < goalList.Arity; j++)
                 {
@@ -1348,7 +1352,7 @@ namespace LogicalParticleFilter1
                 int i = -1;
                 foreach (Rule rule in localRules)
                 {
-                    threadLocal.tl_rule_mt = rule.optHomeMt ?? threadLocal.tl_rule_mt;
+                    threadLocal.tl_rule_mt = rule.OptionalHomeMt ?? threadLocal.tl_rule_mt;
                     i++;
                     if (thisTerm.excludeRule == i)
                     {
@@ -1430,7 +1434,7 @@ namespace LogicalParticleFilter1
                     }
 
                     var body = rule.body;
-                    PartList newGoals;
+                    PartListImpl newGoals;
                     if (body != null)
                     {
                         newGoals = renameVariables(rule.body.plist, level, renamedHead);
@@ -1443,7 +1447,7 @@ namespace LogicalParticleFilter1
                     else
                     {
                         // Just prove the rest of the goallist, recursively.
-                        newGoals = new PartList();
+                        newGoals = new PartListImpl();
                     }
                     bool skipNext = true;
                     {
@@ -1501,7 +1505,7 @@ namespace LogicalParticleFilter1
         // compare(First, Second, CmpValue)
         // First, Second must be bound to strings here.
         // CmpValue is bound to -1, 0, 1
-        public ProveResult Comparitor(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        public ProveResult Comparitor(Term thisTerm, PartListImpl goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
         {
             //DEBUG print ("in Comparitor.prove()...\n");
             // Prove the builtin bit, then break out and prove
@@ -1545,7 +1549,7 @@ namespace LogicalParticleFilter1
             // Just prove the rest of the goallist, recursively.
             return prove(goalList, env2, db, level + 1, reportFunction);
         }
-        public ProveResult DoubleComparitor(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        public ProveResult DoubleComparitor(Term thisTerm, PartListImpl goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
         {
             //DEBUG print ("in Comparitor.prove()...\n");
             // Prove the builtin bit, then break out and prove
@@ -1591,7 +1595,7 @@ namespace LogicalParticleFilter1
             // Just prove the rest of the goallist, recursively.
             return prove(goalList, env2, db, level + 1, reportFunction);
         }
-        public ProveResult Cut(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        public ProveResult Cut(Term thisTerm, PartListImpl goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
         {
             //DEBUG print ("in Comparitor.prove()...\n");
             // Prove the builtin bit, then break out and prove
@@ -1615,7 +1619,7 @@ namespace LogicalParticleFilter1
             return ret;
         }
 
-        public ProveResult UnifyExt(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        public ProveResult UnifyExt(Term thisTerm, PartListImpl goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
         {
             Part x = value((Part)thisTerm.ArgList[0], environment);
             Part y = value((Part)thisTerm.ArgList[1], environment);
@@ -1631,7 +1635,7 @@ namespace LogicalParticleFilter1
         }
 
         // Given a single argument, it sticks it on the goal list.
-        public ProveResult Call(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        public ProveResult Call(Term thisTerm, PartListImpl goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
         {
             // Prove the builtin bit, then break out and prove
             // the remaining goalList.
@@ -1654,7 +1658,7 @@ namespace LogicalParticleFilter1
             //var newGoals = [];
             //newGoals[0] = first;
 
-            PartList newGoals = new PartList();
+            PartListImpl newGoals = new PartListImpl();
             newGoals.InsertPart(0, first);
             first.parent = thisTerm;
 
@@ -1668,12 +1672,12 @@ namespace LogicalParticleFilter1
             return prove(newGoals, environment, db, level + 1, reportFunction);
         }
 
-        public ProveResult Fail(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        public ProveResult Fail(Term thisTerm, PartListImpl goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
         {
             return null;
         }
 
-        public ProveResult BagOf(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        public ProveResult BagOf(Term thisTerm, PartListImpl goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
         {
             // bagof(Term, ConditionTerm, ReturnList)
             //  PartList goalList = (PartList)goalIn;
@@ -1685,16 +1689,16 @@ namespace LogicalParticleFilter1
             Part collect = renameVariables(collect0, level, thisTerm);
             //var newGoal = new Term(subgoal.name, renameVariables(subgoal.ArgList, level, thisTerm));
             Term newGoal = new Term(subgoal.fname, false,
-                                    (PartList)renameVariables(((PartList)subgoal), level, thisTerm));
+                                    (PartListImpl)renameVariables(((PartListImpl)subgoal), level, thisTerm));
             newGoal.parent = thisTerm;
 
             //var newGoals = [];
             //newGoals[0] = newGoal;
-            PartList newGoals = new PartList();
+            PartListImpl newGoals = new PartListImpl();
             newGoals.AddPart(newGoal);
 
             // Prove this subgoal, collecting up the environments...
-            PartList anslist = new PartList();
+            PartListImpl anslist = new PartListImpl();
             anslist.renumber = -1;
             var ret = prove(newGoals, environment, db, level + 1, BagOfCollectFunction(collect, anslist));
 
@@ -1731,7 +1735,7 @@ namespace LogicalParticleFilter1
         }
 
         // Aux function: return the reportFunction to use with a bagof subgoal
-        public reportDelegate BagOfCollectFunction(Part collect, PartList anslist)
+        public reportDelegate BagOfCollectFunction(Part collect, PartListImpl anslist)
         {
             return delegate(PEnv env)
             {
@@ -1802,7 +1806,7 @@ namespace LogicalParticleFilter1
                     if (compset == null) compset = new CompilerSettings();
                     if (rp == null)
                     {
-                        rp = new StreamReportPrinter(System.Console.Out);
+                        rp = new StreamReportPrinter(Console.Out);
                     }
                     ctx = new CompilerContext(compset, rp);
                 }
@@ -1811,10 +1815,10 @@ namespace LogicalParticleFilter1
             return _Evaluator;
         }
 
-        public ProveResult External(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        public ProveResult External(Term thisTerm, PartListImpl goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
         {
             //print ("DEBUG: in External...\n");
-            PartList ourParList = GetTermPartList(thisTerm);
+            PartListImpl ourParList = GetTermPartList(thisTerm);
 
             // Get the first term, the template.
             var first = value((Part)ourParList.ArgList[0], environment) as IAtomic;
@@ -1912,24 +1916,24 @@ namespace LogicalParticleFilter1
             return true;
         }
 
-        static public PartList GetTermPartList(Term thisTerm)
+        static public PartListImpl GetTermPartList(Term thisTerm)
         {
-            TermList tl = thisTerm.ArgList;
-            if (tl.Count == 1 && tl[0] is PartList)
+            PartListImpl tl = thisTerm.ArgList;
+            if (tl.Count == 1 && tl[0] is PartListImpl)
             {
-                return (PartList)tl[0];
+                return (PartListImpl)tl[0];
             }
-            if (tl[0] is PartList)
+            if (tl[0] is PartListImpl)
             {
                 Warn("SStangly constructed term: " + thisTerm);
             }
             return thisTerm.ArgList;
         }
 
-        public ProveResult ExternalAndParse(Term thisTerm, PartList goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
+        public ProveResult ExternalAndParse(Term thisTerm, PartListImpl goalList, PEnv environment, PDB db, int level, reportDelegate reportFunction)
         {
             //print ("DEBUG: in External...\n");
-            PartList ourParList = GetTermPartList(thisTerm);
+            PartListImpl ourParList = GetTermPartList(thisTerm);
 
             // Get the first term, the template.
             var first = value((Part)ourParList.ArgList[0], environment) as IAtomic;
@@ -1950,16 +1954,16 @@ namespace LogicalParticleFilter1
             int i = 1;
             while (second is Term && IsListName(((Term)second).fname))
             {
-                next = (PartList)((Term)second).ArgList[0];
-                next = (Part)((PartList)next).ArgList[0];
-                next = (Part)((PartList)next).ArgList[0];
+                next = (PartListImpl)((Term)second).ArgList[0];
+                next = (Part)((PartListImpl)next).ArgList[0];
+                next = (Part)((PartListImpl)next).ArgList[0];
 
                 Part argV = null;
                 Part nextTerm = null;
-                if (next is PartList)
+                if (next is PartListImpl)
                 {
-                    argV = (Part)((PartList)next).ArgList[0];
-                    nextTerm = (Part)((PartList)next).ArgList[1];
+                    argV = (Part)((PartListImpl)next).ArgList[0];
+                    nextTerm = (Part)((PartListImpl)next).ArgList[1];
                 }
                 if (next is Variable)
                 {
@@ -2002,7 +2006,7 @@ namespace LogicalParticleFilter1
 
 
             // Convert back into a Prolog term by calling the appropriate Parse routine...
-            Part retPart = ParsePart(new Tokeniser(ret));
+            Part retPart = ParsePart(new Tokeniser(ret), threadLocal.curKB);
             //print("DEBUG: external2, ret = "); ret.print(); print(".\n");
 
             var env2 = unify((Part)ourParList.ArgList[2], retPart, environment);
@@ -2085,7 +2089,7 @@ namespace LogicalParticleFilter1
             if (!k) w("true\n");
         }
 
-        public void printVars(PartList which, PEnv environment)
+        public void printVars(PartListImpl which, PEnv environment)
         {
             Action<string> w = Console.Write;
             // Print bindings.
@@ -2112,12 +2116,12 @@ namespace LogicalParticleFilter1
         {
             if (x is Term)
             {
-                PartList p = new PartList(x.ArgList, env);
+                PartListImpl p = new PartListImpl(x.ArgList, env);
                 return new Term(x.fname, ((Term)x).headIsVar, p);
             }
-            if (x is PartList)
+            if (x is PartListImpl)
             {
-                PartList p = new PartList(x.ArgList, env);
+                PartListImpl p = new PartListImpl(x.ArgList, env);
                 return p;
             }
             if (!(x is Variable))
@@ -2278,7 +2282,7 @@ namespace LogicalParticleFilter1
 
             }
             // both lists, both empty
-            if (x is PartList && y is PartList)
+            if (x is PartListImpl && y is PartListImpl)
             {
                 if (x.Arity == 0 && y.Arity == 0)
                 {
@@ -2340,17 +2344,17 @@ namespace LogicalParticleFilter1
                     return unify(x.ArgList, y.ArgList, subEnv);
                 }
             }
-            if (x is PartList)
+            if (x is PartListImpl)
             {
-                while (((x.Arity == 1) && x.ArgList[0] is PartList) && (x.Arity != y.Arity))
+                while (((x.Arity == 1) && x.ArgList[0] is PartListImpl) && (x.Arity != y.Arity))
                 {
                     throw ErrorBadOp("inner partlist");
-                    x = ((PartList)x.ArgList[0]);
+                    x = ((PartListImpl)x.ArgList[0]);
                 }
-                while (((y.Arity == 1) && y.ArgList[0] is PartList) && (x.Arity != y.Arity))
+                while (((y.Arity == 1) && y.ArgList[0] is PartListImpl) && (x.Arity != y.Arity))
                 {
                     throw ErrorBadOp("inner partlist");
-                    y = ((PartList)y.ArgList[0]);
+                    y = ((PartListImpl)y.ArgList[0]);
                 }
 
                 if (x.Arity != y.Arity)
@@ -2360,7 +2364,7 @@ namespace LogicalParticleFilter1
                     {
                         if (y.Arity < x.Arity)
                         {
-                            PartList temp = (PartList)x;
+                            PartListImpl temp = (PartListImpl)x;
                             x = y;
                             y = temp;
 

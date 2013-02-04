@@ -49,7 +49,7 @@ namespace LogicalParticleFilter1
 
         public static Term MakeTerm(string name, params Part[] parts)
         {
-            return new Term(name, false, new PartList(parts));
+            return new Term(name, false, new PartListImpl(parts));
         }
         public static Term TERM_TRUE
         {
@@ -63,24 +63,25 @@ namespace LogicalParticleFilter1
             }
         }
 
-        public static Part RuleBodyToTerm(PartListImpl rulebody)
+        public static Term RuleBodyToTerm(PartListImpl rulebody)
         {
             if (IsBodyAlwaysTrue(rulebody))
                 return TERM_TRUE;
-            return MakeTerm(",", rulebody);
+            if (rulebody.Count == 1) return rulebody[0].AsTerm();
+            return new Term(",", false, rulebody);
         }
         public static bool IsBodyAlwaysTrue(PartListImpl rulebody)
         {
             return rulebody == null || rulebody.Count == 0 ||
                 (rulebody.Count == 1 && TERM_TRUE.Equals(rulebody[0]));
         }
-        public static Part RuleToTerm(Part head, PartListImpl rulebody)
+        public static Term RuleToTerm(Part head, PartListImpl rulebody)
         {
             if (IsBodyAlwaysTrue(rulebody))
             {
-                return head;
+                return head.AsTerm();
             }
-            return MakeTerm(":-", head, SIProlog.RuleBodyToTerm(rulebody));
+            return MakeTerm(":-", head, RuleBodyToTerm(rulebody));
         }
 
         static internal SourceLanguage tl_console_language
@@ -148,7 +149,7 @@ namespace LogicalParticleFilter1
             {
                 get { throw Missing("Arity"); }
             }
-            public virtual PartList ArgList
+            public virtual PartListImpl ArgList
             {
                 get { throw Missing("ArgList"); }
             }
@@ -233,6 +234,7 @@ namespace LogicalParticleFilter1
                 throw Missing("AsString");
             }
 
+            public abstract Term AsTerm();
 
             #region IComparable<string> Members
 
@@ -246,6 +248,10 @@ namespace LogicalParticleFilter1
 
         public class PartListImpl : Part, IEnumerable<Part>, IHasParent
         {
+            public override Term AsTerm()
+            {
+                return RuleBodyToTerm(this);
+            }
             //private string fuctor;
             public override IHasParent TParent
             {
@@ -404,7 +410,7 @@ namespace LogicalParticleFilter1
                     return tlist.Count;
                 }
             }
-            public override TermList ArgList
+            public override PartListImpl ArgList
             {
                 get
                 {
@@ -442,7 +448,7 @@ namespace LogicalParticleFilter1
                 this.tlist = new List<Part>();
             }
 
-            public PartListImpl(TermList head, PEnv env)
+            public PartListImpl(PartListImpl head, PEnv env)
             {
                 this.tlist = new List<Part>();
                 for (var i = 0; i < head.Count; i++)
@@ -583,6 +589,11 @@ namespace LogicalParticleFilter1
 
         public class Variable : Part
         {
+            public override Term AsTerm()
+            {
+                return new Term(vname, true, new PartListImpl());
+            }
+
             public string _name;
             public override string vname { get { return _name; } }
             public bool Anonymous = false;
@@ -592,7 +603,7 @@ namespace LogicalParticleFilter1
                 if (head == null || head == "_")
                 {
                     Anonymous = true;
-                    head = "ANON_" + SIProlog.CONSP;
+                    head = "ANON_" + CONSP;
                 }
                 _name = head;
             }
@@ -610,7 +621,7 @@ namespace LogicalParticleFilter1
             }
             public override bool Equals(Part term)
             {
-                if (Object.ReferenceEquals(this, term)) return true;
+                if (ReferenceEquals(this, term)) return true;
                 var term2 = term as Variable;
                 if (term2 == null) return false;
                 string thisname = this.vname;
@@ -627,7 +638,7 @@ namespace LogicalParticleFilter1
             }
             public override bool SameClause(Part term, IDictionary<string, string> varlist)
             {
-                if (Object.ReferenceEquals(this, term)) return true;
+                if (ReferenceEquals(this, term)) return true;
                 var term2 = term as Variable;
                 if (term2 == null) return false;
                 if (varlist == null)
@@ -665,6 +676,10 @@ namespace LogicalParticleFilter1
         }
         public class Term : Part, IHasParent
         {
+            public override Term AsTerm()
+            {
+                return this;
+            }
             public override bool SameClause(Part term, IDictionary<string, string> varlist)
             {
                 var term2 = term as Term;
@@ -698,7 +713,7 @@ namespace LogicalParticleFilter1
             //public override string name { get { return _name; } }
             public override string type { get { return "Term"; } }
 
-            public override TermList ArgList
+            public override PartListImpl ArgList
             {
                 get { return partlist0.ArgList; }
             }
@@ -723,12 +738,12 @@ namespace LogicalParticleFilter1
             {
                 get
                 {
-                    return new Term(headIsVar ? fvname : fname, headIsVar, (PartList) partlist0.CopyTerm)
+                    return new Term(headIsVar ? fvname : fname, headIsVar, (PartListImpl) partlist0.CopyTerm)
                                {parent = null, excludeThis = excludeThis};
                 }
             }
             private Part _pred = null;
-            public readonly PartList partlist0;
+            public readonly PartListImpl partlist0;
             public bool excludeThis = false;
             public int excludeRule = -1;
             public bool cut = false;
@@ -761,12 +776,12 @@ namespace LogicalParticleFilter1
             }
             private string _name;
             public bool headIsVar;
-            public Term(string head, bool isVar, PartList a0N)
+            public Term(string head, bool isVar, PartListImpl a0N)
             {
                 _name = head;
                 headIsVar = isVar;
                 partlist0 = a0N;
-                var isVarName = SIProlog.IsVarName(head);
+                var isVarName = IsVarName(head);
                 if (a0N == null)
                 {
                     throw ErrorBadOp("Term Arglist NULL: {0}", head);
@@ -782,7 +797,7 @@ namespace LogicalParticleFilter1
                 if (a0N.Arity > 0)
                 {
                     Part a0 = a0N.ArgList[0];
-                    if (a0 is PartList)
+                    if (a0 is PartListImpl)
                     {
                         Warn("Poorly constructed term: {0}", this);
                     }
@@ -900,7 +915,7 @@ namespace LogicalParticleFilter1
             {
                 return true;
             }
-            return char.IsLetter(firstChar) && char.IsUpper(firstChar);
+            return Char.IsLetter(firstChar) && Char.IsUpper(firstChar);
         }
 
         #endregion
@@ -914,7 +929,7 @@ namespace LogicalParticleFilter1
         #region Implementation of IEqualityComparer<string>
 
         public Func<object, string> NormalizeKey;
-        static private readonly char[] RegexMarkers = "$^.*[|]".ToCharArray();
+        static public readonly char[] RegexMarkers = "$^*[|]".ToCharArray();
 
         public KeyCase(Func<object, string> normalizer)
         {
