@@ -1557,6 +1557,33 @@ namespace AltAIMLbot
             var res = System.Text.Encoding.ASCII.GetString(data);
             return res;
         }
+        public ArrayList askQuery(string query, string mt)
+        {
+            string rawResult = postToMt("remotequery", query, mt);
+            ArrayList result = (ArrayList)JSON.JsonDecode(rawResult);
+            return result;
+        }
+        public void exampleQuery()
+        {
+            Console.WriteLine("ExampleQuery Test");
+            ArrayList bindingList = askQuery("heard(X)", "speechRecognitionMt");
+            if (bindingList != null)
+            {
+                foreach (Hashtable ht in bindingList)
+                {
+                    foreach (string k in ht.Keys)
+                    {
+                        string Val = (string)ht[k];
+                        if (k == "X") Console.WriteLine("X = {0}", Val);
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("No bindings returned");
+            }
+            Console.WriteLine("-----------");
+        }
     }
 
 }
