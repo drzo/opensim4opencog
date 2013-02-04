@@ -814,7 +814,7 @@ namespace RoboKindAvroQPID
         private void EnsureSchemasLoaded()
         {
             if (Loaded.Count > 0) return;
-            string startAt = @"C:\development\opensim4opencog\HR\apollomind\avro\interpreter";
+            string startAt = @".\HR\apollomind\avro\interpreter";
 
             LoadAvroFiles(startAt, false);
             LoadAvroFiles("./avro/", true);
