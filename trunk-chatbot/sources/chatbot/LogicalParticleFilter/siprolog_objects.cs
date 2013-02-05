@@ -203,6 +203,11 @@ namespace LogicalParticleFilter1
                 get { throw Missing("FunctorVarName"); }
             }
 
+            public virtual bool IsObject
+            {
+                get { return false; }
+            }
+
             /// <summary>
             /// Returns a string representation probably not readable with PartPart(..);
             /// but makes sense to humans:

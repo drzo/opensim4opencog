@@ -133,6 +133,7 @@ namespace LogicalParticleFilter1
         public void SIPrologInit()
         {
             CurrentProlog = this;
+            RegisterObject("siprolog", this);
             DLRConsole.TransparentCallers.Add(GetType());
             DLRConsole.SetIgnoreSender("KEYVALUELISTSIPROLOG", true);
             defineBuiltIns();
@@ -839,7 +840,7 @@ namespace LogicalParticleFilter1
             PDB.builtin["unify/2"] = new builtinDelegate(UnifyExt);
 
             PDB.builtin["tripleQuery/2"] = new builtinDelegate(TripleQuery);
-            PDB.builtin["tripleQuery/2"] = new builtinDelegate(TripleQuery);
+            PDB.builtin["executeSharp/3"] = new builtinDelegate(ExecuteSharp);
 
             
         }

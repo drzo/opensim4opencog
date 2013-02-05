@@ -644,6 +644,12 @@ namespace LogicalParticleFilter1
             {
                 get { return objRef is IValuedNode; }
             }
+
+            public override bool IsObject
+            {
+                get { return !IsString && !IsUri; }
+            }
+
             public bool IsString
             {
                 get
@@ -933,8 +939,13 @@ namespace LogicalParticleFilter1
 
             public static FirstUse<Atom> PrologEmptyString = (Func<Atom>)(() => MakeNewAtom("", "", SYNTAX_DoubleQuotes));
 
-            public static FirstUse<Atom> PrologNIL =
-                (Func<Atom>) (() => MakeNewAtom(NamespaceMapper.RDF, "nil", SYNTAX_UriQuotes));
+            public static FirstUse<Atom> PrologNIL0 =
+                (Func<Atom>)(() => MakeNewAtom(NamespaceMapper.RDF, "nil", SYNTAX_UriQuotes));
+
+            public static Atom PrologNIL
+            {
+                get { return PrologNIL0.Value; }
+            }
 
             private static void Requote(ref string s, ref string quoting)
             {

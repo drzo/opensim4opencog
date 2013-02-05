@@ -348,7 +348,7 @@ namespace LogicalParticleFilter1
 
             private static INode MakeRdfList(IGraph kb, IList<INode> nodes, bool returnOneAsNode)
             {
-                if (nodes.Count == 0) return Atom.PrologNIL.Value.AsRDFNode().CopyWNode(kb);
+                if (nodes.Count == 0) return Atom.PrologNIL.AsRDFNode().CopyWNode(kb);
                 if (returnOneAsNode && nodes.Count == 1)
                 {
                     return nodes[0].CopyWNode(kb);

@@ -285,11 +285,18 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                if ((context != null) && (context.Response != null))
+                Console.WriteLine("EXCEPTION WebServitor: {0}", e);
+                if (context != null)
                 {
+                    var cr = context.Response;
+                    cr.StatusCode = (int)HttpStatusCode.InternalServerError;
                     //context.Response.Close();
                     //context.Response.Abort();
-                    Console.WriteLine("EXCEPTION WebServitor:{0}", e.Message);
+                    var os = cr.OutputStream;
+                    if (os != null && os.CanWrite)
+                    {
+                        new StreamWriter(os).WriteLine("<pre>" + e + "</pre>");
+                    }
                     return;
                 }
 

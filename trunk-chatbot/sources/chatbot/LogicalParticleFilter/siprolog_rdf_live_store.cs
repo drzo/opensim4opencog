@@ -42,9 +42,8 @@ namespace LogicalParticleFilter1
 
         public void EndpointCreated(PFEndpoint endpoint)
         {
-            if (RdfDeveloperSanityChecks < 2) return;
-            DLRConsole.PrintOnlyThisThread = Thread.CurrentThread;
             ConsoleWriteLine("Endpoint and bot are created by now");
+            DLRConsole.PrintOnlyThisThread = Thread.CurrentThread;
             try
             {
                 if (RdfDeveloperSanityChecks > 0) Program.RunAllTests(this);
@@ -53,6 +52,7 @@ namespace LogicalParticleFilter1
             {
                 DLRConsole.PrintOnlyThisThread = null;
             }
+            if (RdfDeveloperSanityChecks < 2) return;
             ReplRunning = ThreadPool.WaitableQueueUserWorkItem((o) => RunREPL());
         }
 

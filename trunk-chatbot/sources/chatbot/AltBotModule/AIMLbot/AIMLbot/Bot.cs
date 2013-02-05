@@ -149,7 +149,11 @@ namespace RTParser
                 if (_myServitor != null) return _myServitor;
                 return _myServitor;
             }
-            set { _myServitor = value; }
+            set
+            {
+                _myServitor = value;
+                if (value != null) RegisterObject("robot", value);
+            }
         }
 
         /// <summary>
@@ -768,7 +772,7 @@ namespace RTParser
             if (prologEngine != prologEngine)
             {
                 Console.WriteLine("Cannot maintain a stable wormhole while loading SIPro)");
-            } 
+            }
             if (TheCycS == null)
             {
                 TheCycS = new CycDatabase(this);
@@ -797,9 +801,10 @@ namespace RTParser
             this.GlobalSettings.bbPrefix = "bot";
             RegisterDictionary("bot", GlobalSettings);
             string botName = NameAsSet ?? BotUserID ?? NamePath ?? BotID;
+            var namePath = NamePath;
             _botAsUser = _botAsUser ??
                          FindUser(botName) ??
-                         new MasterUser(NamePath, botName, this, GlobalSettings);
+                         new MasterUser(namePath, botName, this, GlobalSettings);
             this.HeardPredicates = MakeSettingsDictionary("HeardPredicatesMt");
             RegisterDictionary("chat.heardpredicates", HeardPredicates);
             RegisterDictionary("bot.alluserpred", this.AllUserPreds);
@@ -2586,6 +2591,11 @@ The AltAIMLbot program.
         public object ToValue(object v)
         {
             return v;
+        }
+
+        public void RegisterObject(string named, object obj)
+        {
+            prologEngine.RegisterObject(named, obj);
         }
     }
 }

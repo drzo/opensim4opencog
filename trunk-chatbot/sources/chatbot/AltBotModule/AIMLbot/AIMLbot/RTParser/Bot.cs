@@ -621,7 +621,9 @@ namespace RTParser
         {
             myBehaviors = new BehaviorSet(this);
             servitor = new Servitor(this, null);
-            
+            RegisterObject("robot", this);
+            RegisterObject("robot", servitor);
+            RegisterObject("robot", myBehaviors);
             qsbase = QuerySettings.CogbotDefaults;
             AltBotcommands = new AltBotCommands(this);
             _RuntimeDirectories = new List<string>();
@@ -1546,6 +1548,7 @@ The AIMLbot program.
 
         public static string ToScriptableName(string path)
         {
+            if (path == null) return null;
             string sk = "";
             if (path.StartsWith("is_")) path = path.Substring(3);
             if (path.StartsWith("was_")) path = path.Substring(4);
@@ -1971,8 +1974,8 @@ The AIMLbot program.
                 SettingsDictionary dict = GlobalSettings;
                 if (dict != null)
                 {
-                    Unifiable botid = dict.grabSetting("id") ?? ToScriptableName(NameAsSet);
-                    return botid;
+                    Unifiable botid = dict.grabSetting("id");
+                    if (botid != null) return botid;
                 }
                 if (NameAsSet != null) return ToScriptableName(NameAsSet);
                 return null;

@@ -33,14 +33,25 @@ namespace RoboKindChat
             if (Array.Find(args, (i) => i.Equals("--nobot")) != null)
             {
                 if (GlobalSharedSettings.IsRdfServer) GlobalSharedSettings.RdfSavedInPDB = true;
-                var p = new ServitorEndpoint(null, null, SIProlog.CurrentProlog);
-                ThreadPool.QueueUserWorkItem((o) =>
-                {
-                    Console.WriteLine("Servitor WebServitor.beginService");
-                    Servitor theServitor = new AltBot().servitor;
-                    WebServitor.beginService(theServitor);
-                });
+                var prologEngine =  SIProlog.CurrentProlog;
+                var altBot = new AltBot();
+                Servitor theServitor = altBot.servitor;
+                var p = new ServitorEndpoint(altBot, theServitor, prologEngine);
+                var wait = ThreadPool.WaitableQueueUserWorkItem(
+                    (o) =>
+                        {
+                            Console.WriteLine("Servitor WebServitor.beginService");
+                            //altBot.loadGlobalBotSettings();
+                            //theServitor.loadComplete();
+                            WebServitor.beginService(theServitor);
+                        });
                 p.StartServer();
+                wait.WaitOne();
+                if (SIProlog.ReplRunning == null)
+                {
+                    SIProlog.ReplRunning = ThreadPool.WaitableQueueUserWorkItem((o) => prologEngine.RunREPL());
+                }
+                prologEngine.askQuery("executeSharp(robot,writeToFileLog(sharp),X)", null);
                 SIProlog.ReplRunning.WaitOne();
                 return;
             }

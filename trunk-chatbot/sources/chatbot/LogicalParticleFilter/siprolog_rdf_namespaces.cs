@@ -109,7 +109,7 @@ namespace LogicalParticleFilter1
             }
             if (GlobalSharedSettings.IsRdfServer)
             {
-                RdfDeveloperSanityChecks = 3;
+                RdfDeveloperSanityChecks = 0;
                 DontRDFSync = false;
                
             }

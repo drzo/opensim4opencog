@@ -269,6 +269,7 @@ namespace RTParser
             {
                 ScriptExecutorGetter geter = new WebScriptExecutor(this);
                 HttpTextServer = MushDLR223.Utilities.HttpServerUtil.CreateHttpServer(geter, UseHttpd, BotUserID);
+                RegisterObject("robot", HttpTextServer);
             }
         }
 
