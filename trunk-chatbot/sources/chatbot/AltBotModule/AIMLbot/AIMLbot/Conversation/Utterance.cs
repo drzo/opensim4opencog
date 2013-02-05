@@ -387,6 +387,7 @@ namespace RTParser
 
         private static string EngishToNormalizedInput(Request request, string startout)
         {
+            return startout;
             var Normalized = new List<Unifiable>();
             Func<string, string> ToInputSubsts = request.TargetBot.ToInputSubsts;
 
@@ -404,13 +405,13 @@ namespace RTParser
             return arg;
         }
 
-        internal void ClearOutput()
+        internal void ClearSentences()
         {
             EnglishSentences.Clear();
-            if (NormalizedPaths.Count > 0)
+            /*if (NormalizedPaths.Count > 0)
             {
                 NormalizedPaths.Clear();
-            }
+            }*/
             if (SemanticSentences.Count > 0)
             {
                 SemanticSentences.Clear();

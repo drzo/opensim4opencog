@@ -1235,7 +1235,7 @@ namespace RTParser
                     }
                     if (user.Qstate.Count == 0)
                     {
-                        result.NormalizedPaths.Clear();
+                        result.ClearInput();
                         Console.WriteLine("DEBUG:Using Normal Search");
                         // Standard operation
                         foreach (string sentence in rawSentences)

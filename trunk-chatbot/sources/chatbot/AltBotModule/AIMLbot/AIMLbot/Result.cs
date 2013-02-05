@@ -121,6 +121,12 @@ namespace AltAIMLbot
             get { return ChatInput.NormalizedPaths; }
         }
 
+
+        internal void ClearInput()
+        {
+            ChatInput.ClearSentences();
+        }
+
         /// <summary>
         /// The normalized sentence(s) (paths) fed into the graphmaster
         /// </summary>
@@ -722,7 +728,7 @@ namespace AltAIMLbot
             {
                 //   return;
             }
-            //ChatOutput.ClearOutput();
+            //ChatOutput.ClearSentences();
             AddOutputSentences11(unifiable, addToFront);
         }
         private void AddOutputSentences11(string unifiable, bool addToFront)
