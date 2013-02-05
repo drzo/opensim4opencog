@@ -971,8 +971,17 @@ namespace LogicalParticleFilter1
                 }
                 db.startMt = queryMT;
                 db.followedGenlMt = followGenlMt;
-                db.rules = findVisibleKBRules(queryMT, new List<string>(), followGenlMt);
-                db.index.Clear();
+                var rules = findVisibleKBRules(queryMT, new List<string>(), followGenlMt);
+                // null the KB hasnt been created yet
+                if (rules != null)
+                {
+                    if (db.rules.Count > 0)
+                    {
+                        Warn("clear rules!?");
+                    }
+                    db.index.Clear();
+                    db.rules = rules;
+                }
             }
             return db;
         }
