@@ -75,6 +75,10 @@
       <Project>{C3E5E5FD-77E2-4F2C-8BAF-C6C2542BB82D}</Project>
       <Name>LAIR.ResourceAPIs.WordNet</Name>
     </ProjectReference>
+    <ProjectReference Include="..\LogicalParticleFilter\LogicalParticleFilter1.csproj">
+      <Project>{C85DA7F8-A9C2-4A31-8604-4FA2126946B6}</Project>
+      <Name>LogicalParticleFilter1</Name>
+    </ProjectReference>
     <ProjectReference Include="..\RaptorDB\RaptorDB.csproj">
       <Project>{B4527C7B-8CCD-491D-A313-D56EC6395B32}</Project>
       <Name>RaptorDB</Name>

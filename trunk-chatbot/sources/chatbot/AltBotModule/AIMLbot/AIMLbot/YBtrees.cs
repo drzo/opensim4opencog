@@ -53,6 +53,91 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 namespace AltAIMLbot
 {
+    public class BTXmlDocument : XmlDocument
+    {
+        public override XmlElement CreateElement(string prefix, string localname, string nsURI)
+        {
+            BTXmlNode elem = new BTXmlNode(prefix, localname, nsURI, this);
+            return elem;
+        }
+    }
+
+    public class BTXmlNode : XmlElement
+    {
+
+        public BTXmlNode(string prefix, string localName, string namespaceURI, XmlDocument doc)
+            : base(prefix, localName, namespaceURI, doc)
+        { }
+
+
+        public string AttributesV(string attrib)
+        {
+            if (base.Attributes != null)
+            {
+                if (base.Attributes[attrib] != null)
+                    return base.Attributes[attrib].Value;
+            }
+            foreach (XmlNode childNode in base.ChildNodes)
+            {
+                if (childNode.NodeType == XmlNodeType.Element)
+                {
+                    if (childNode.Name == attrib)
+                        return childNode.InnerText;
+                }
+
+            }
+            return string.Empty;
+        }
+
+        public override void WriteContentTo(XmlWriter w)
+        {
+            base.WriteContentTo(w);
+        }
+
+        public override void WriteTo(XmlWriter w)
+        {
+            base.WriteTo(w);
+        }
+        public XmlNode CloneOf { get; set; }
+        public override XmlNode CloneNode(bool deep)
+        {
+            return base.Clone();
+        }
+        public override XmlNodeType NodeType 
+        { 
+            get
+            {
+                return base.NodeType;
+            }
+        }
+        public override string LocalName
+        {
+            get
+            {
+                return base.LocalName;
+            }
+        }
+        public override string Name
+        {
+            get
+            {
+                return base.Name;
+            }
+        }
+        public  BTXmlNode  OwnerElement
+        {
+            // KHC: probably wrong but closest
+            get
+            {
+                if (this.NodeType== XmlNodeType.Attribute)
+                    return (BTXmlNode) base.ParentNode;
+                else
+                    return null;
+            }
+        }
+        
+    }
+
     #region BTXML
     [Serializable]
     public class BehaviorTree
@@ -87,14 +172,14 @@ namespace AltAIMLbot
         [NonSerialized]
         private AltBot _bot;
         [NonSerialized]
-        public XmlDocument treeDoc;
+        public BTXmlDocument treeDoc;
 
         // Kinda based on the idea at ...
         // http://www.garagegames.com/community/blogs/view/21143
         public BehaviorTree(AltBot bot)
         {
             _bot = bot;
-            treeDoc = new XmlDocument();
+            treeDoc = new BTXmlDocument();
             restorePoint = new Dictionary<string, int>();
 
         }
@@ -107,12 +192,12 @@ namespace AltAIMLbot
         public void postSerial(AltBot bot)
         {
             _bot = bot;
-            if (treeDoc == null) treeDoc = new XmlDocument();
+            if (treeDoc == null) treeDoc = new BTXmlDocument();
             treeDoc.LoadXml(serialDoc);
         }
         public IEnumerable<RunStatus> evalBehaviorXml(string behaviorDef)
         {
-            XmlDocument evalDoc = new XmlDocument ();
+            BTXmlDocument evalDoc = new BTXmlDocument();
             try
             {
 
@@ -157,7 +242,7 @@ namespace AltAIMLbot
                 behaviorDef = FixXmlEnitites(behaviorDef);
 
                 treeDoc.LoadXml(behaviorDef);
-                //initialState = rulesDoc.FirstChild.Attributes["initialstate"].Value;
+                //initialState = rulesDoc.FirstChild.AttributesV("initialstate");
                 //transitionTime = Environment.TickCount;
                 //curState = initialState;
                 //XmlNodeList rules = rulesDoc.SelectNodes(String.Format(ruleMatch, initialState));
@@ -178,7 +263,7 @@ namespace AltAIMLbot
             foreach (XmlNode childNode in treeDoc.ChildNodes)
             {
                 RunStatus childResult = RunStatus.Failure;
-                foreach (RunStatus myChildResult in processNode(childNode))
+                foreach (RunStatus myChildResult in processNode((BTXmlNode)((XmlElement)childNode)))
                 {
                     childResult = myChildResult;
                     if (childResult != RunStatus.Running) break;
@@ -211,10 +296,10 @@ namespace AltAIMLbot
         /// </summary>
         /// <param name="subDoc"></param>
         /// <returns></returns>
-        public IEnumerable<RunStatus> runSubTree(XmlDocument subDoc)
+        public IEnumerable<RunStatus> runSubTree(BTXmlDocument subDoc)
         {
             // Execute All Children
-            foreach (XmlNode childNode in subDoc.ChildNodes)
+            foreach (BTXmlNode childNode in subDoc.ChildNodes)
             {
                 RunStatus childResult = RunStatus.Failure;
                 foreach (RunStatus myChildResult in processNode(childNode))
@@ -279,23 +364,40 @@ namespace AltAIMLbot
         // see http://stackoverflow.com/questions/241238/how-to-get-xpath-from-an-xmlnode-instance-c-sharp
         //     http://stackoverflow.com/questions/451950/get-the-xpath-to-an-xelement
         // includes names for readibility. maybe useful for behavior stack
-        public string getIndent(XmlNode node)
+        public string getIndent(BTXmlNode node)
         {
             if (node.ParentNode == null)
             {
                 // the only node with no parent is the root node, which has no path 
                 return "";
             }
-            return "  " + getIndent(node.ParentNode);
+            if (node.ParentNode .NodeType == XmlNodeType .Document )
+
+                return "  " + getIndent((BTXmlDocument)(node.ParentNode));
+            else
+                return "  " + getIndent((BTXmlNode)(node.ParentNode));
+        }
+        public string getIndent(BTXmlDocument node)
+        {
+            if (node.ParentNode == null)
+            {
+                // the only node with no parent is the root node, which has no path 
+                return "";
+            }
+            if (node.ParentNode.NodeType == XmlNodeType.Document)
+
+                return "  " + getIndent((BTXmlDocument)(node.ParentNode));
+            else
+                return "  " + getIndent((BTXmlNode)(node.ParentNode));
         }
 
-        public string GetXPathToNode(XmlNode node)
+        public string GetXPathToNode(BTXmlNode node)
         {
             if (node.NodeType == XmlNodeType.Attribute)
             {
                 // attributes have an OwnerElement, not a ParentNode; also they have              
                 // to be matched by name, not found by position              
-                return String.Format("{0}/@{1}", GetXPathToNode(((XmlAttribute)node).OwnerElement), node.Name);
+                return String.Format("{0}/@{1}", GetXPathToNode(node.OwnerElement), node.Name);
             }
             if (node.ParentNode == null)
             {
@@ -305,16 +407,16 @@ namespace AltAIMLbot
 
             //get the index 
             int iIndex = 1;
-            XmlNode xnIndex = node;
+            BTXmlNode xnIndex = node;
             while (xnIndex.PreviousSibling != null && xnIndex.PreviousSibling.Name == xnIndex.Name)
             {
                 iIndex++;
-                xnIndex = xnIndex.PreviousSibling;
+                xnIndex = (BTXmlNode)xnIndex.PreviousSibling;
             }
 
             // the path to a node is the path to its parent, plus "/node()[n]", where 
             // n is its position among its siblings.          
-            return String.Format("{0}/{1}[{2}]", GetXPathToNode(node.ParentNode), node.Name, iIndex);
+            return String.Format("{0}/{1}[{2}]", GetXPathToNode((BTXmlNode)node.ParentNode), node.Name, iIndex);
         }
 
         public RunStatus tickMonitor()
@@ -342,7 +444,7 @@ namespace AltAIMLbot
             yield return RunStatus.Running ;
         }
 
-        public void logNode(string msg, XmlNode myNode)
+        public void logNode(string msg, BTXmlNode myNode)
         {
             lock (bot.loglock)
             {
@@ -381,7 +483,9 @@ namespace AltAIMLbot
                 { }
             }
         }
-        public IEnumerable<RunStatus> processNode(XmlNode myNode)
+
+
+        public IEnumerable<RunStatus> processNode(BTXmlNode myNode)
         {
             if (myNode == null)
             {
@@ -398,12 +502,9 @@ namespace AltAIMLbot
             string nodeID = "null";
             try
             {
-                if ((myNode.Attributes != null) && (myNode.Attributes.Count > 0))
+                if (!string.IsNullOrEmpty (myNode.AttributesV("id")))
                 {
-                    if (myNode.Attributes["id"] != null)
-                    {
-                        nodeID = myNode.Attributes["id"].Value;
-                    }
+                        nodeID = myNode.AttributesV("id");
                 }
             }
             catch (Exception e)
@@ -1216,7 +1317,7 @@ namespace AltAIMLbot
         /// ProcessNodeAddEvents: saves previous "onX" hanlders and adds defines owns
         /// </summary>
         /// <param name="myNode"></param>
-        public void ProcessNodeAddEvents(XmlNode myNode)
+        public void ProcessNodeAddEvents(BTXmlNode myNode)
         {
             this.bot.myBehaviors.pushHandlers();
             foreach (XmlAttribute anode in myNode.Attributes)
@@ -1244,7 +1345,7 @@ namespace AltAIMLbot
         /// </summary>
         /// <param name="myNode"></param>
 
-        public void ProcessNodeDeleteEvents(XmlNode myNode)
+        public void ProcessNodeDeleteEvents(BTXmlNode myNode)
         {
             foreach (XmlAttribute anode in myNode.Attributes)
             {
@@ -1268,24 +1369,24 @@ namespace AltAIMLbot
 
         #region BTXMLTags
 
-        public IEnumerable<RunStatus> ProcessPushBehavior(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessPushBehavior(BTXmlNode myNode)
         {
             string behavior = myNode.InnerText;
             bot.myBehaviors.pushUniqueToStack(behavior);
             yield return RunStatus.Success;
         }
-        public IEnumerable<RunStatus> ProcessPopBehavior(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessPopBehavior(BTXmlNode myNode)
         {
             bot.myBehaviors.processOneEventStack();
             yield return RunStatus.Success;
         }
-        public IEnumerable<RunStatus> ProcessPopRandomBehavior(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessPopRandomBehavior(BTXmlNode myNode)
         {
             bot.myBehaviors.processRandomEventStack();
             yield return RunStatus.Success;
         }
 
-        public IEnumerable<RunStatus> ProcessBehavior(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessBehavior(BTXmlNode myNode)
         {
             // A behavior is implicitly a <parallel> node
             //    RunStatus result = RunStatus.Failure;
@@ -1308,22 +1409,22 @@ namespace AltAIMLbot
             string processAs = "parallel";
             try
             {
-                if (myNode.Attributes["restore"] != null)
+                if (!string.IsNullOrEmpty(myNode.AttributesV("restore")))
                 {
-                    restorable |= (myNode.Attributes["restore"].Value.ToLower() == "true");
+                    restorable |= (myNode.AttributesV("restore").ToLower() == "true");
                 }
-                if (myNode.Attributes["resumes"] != null)
+                if (!string.IsNullOrEmpty(myNode.AttributesV("resumes")))
                 {
-                    restorable |= (myNode.Attributes["resumes"].Value.ToLower() == "true");
+                    restorable |= (myNode.AttributesV("resumes").ToLower() == "true");
                 }
-                if (myNode.Attributes["processas"] != null)
+                if (!string.IsNullOrEmpty(myNode.AttributesV("processas")))
                 {
-                    processAs = myNode.Attributes["processas"].Value.ToLower();
+                    processAs = myNode.AttributesV("processas").ToLower();
                 }
-                if (myNode.Attributes["pace"] != null)
+                if (!string.IsNullOrEmpty(myNode.AttributesV("pace")))
                 {
                     pace = 5000;
-                    pace = Int32.Parse(myNode.Attributes["pace"].Value);
+                    pace = Int32.Parse(myNode.AttributesV("pace"));
                 }
                 foreach (XmlAttribute att in myNode.Attributes)
                 {
@@ -1385,12 +1486,9 @@ namespace AltAIMLbot
             string nodeID = "null";
             try
             {
-                if ((myNode.Attributes != null) && (myNode.Attributes.Count > 0))
+                if (!string.IsNullOrEmpty(myNode.AttributesV("id")))
                 {
-                    if (myNode.Attributes["id"] != null)
-                    {
-                        nodeID = myNode.Attributes["id"].Value;
-                    }
+                    nodeID = myNode.AttributesV("id");
                 }
             }
             catch (Exception e)
@@ -1413,7 +1511,7 @@ namespace AltAIMLbot
             int childIndex = 0;
             for (childIndex = 0; childIndex < restP; childIndex++)
             {
-                XmlNode childNode = myNode.ChildNodes[childIndex];
+                BTXmlNode childNode = (BTXmlNode)myNode.ChildNodes[childIndex];
                 if (isAnAssert(childNode.Name))
                 {
                     //RunStatus childResult = processNode(childNode);
@@ -1438,10 +1536,10 @@ namespace AltAIMLbot
                 bot.myBehaviors.queueEvent("onrestore");
                 continueflag = tickEventQueues(continueflag);
             }
-            //foreach (XmlNode childNode in myNode.ChildNodes)
+            //foreach (BTXmlNode childNode in myNode.ChildNodes)
             for (childIndex = restP; childIndex < myNode.ChildNodes.Count; childIndex++)
             {
-                XmlNode childNode = myNode.ChildNodes[childIndex];
+                BTXmlNode childNode = (BTXmlNode)myNode.ChildNodes[childIndex];
                 //RunStatus childResult = processNode(childNode);
                 //RunStatus childResult = processNode(childNode);
                 RunStatus childResult = RunStatus.Failure;
@@ -1511,7 +1609,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessBreaker(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessBreaker(BTXmlNode myNode)
         {
 
             RunStatus result = RunStatus.Success;
@@ -1529,7 +1627,7 @@ namespace AltAIMLbot
             yield return result;
         }
 
-        public IEnumerable<RunStatus> ProcessRBehavior(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessRBehavior(BTXmlNode myNode)
         {
             // A RBehavior is implicitly a <random> node
             //    RunStatus result = RunStatus.Failure;
@@ -1559,18 +1657,18 @@ namespace AltAIMLbot
             bool continueflag = true;
             try
             {
-                if (myNode.Attributes["restore"] != null)
+                if (!string.IsNullOrEmpty(myNode.AttributesV("restore")))
                 {
-                    restorable |= (myNode.Attributes["restore"].Value.ToLower() == "true");
+                    restorable |= (myNode.AttributesV("restore").ToLower() == "true");
                 }
-                if (myNode.Attributes["resumes"] != null)
+                if (!string.IsNullOrEmpty(myNode.AttributesV("resumes")))
                 {
-                    restorable |= (myNode.Attributes["resumes"].Value.ToLower() == "true");
+                    restorable |= (myNode.AttributesV("resumes").ToLower() == "true");
                 }
-                if (myNode.Attributes["pace"] != null)
+                if (!string.IsNullOrEmpty(myNode.AttributesV("pace")))
                 {
                     pace = 5000;
-                    pace = Int32.Parse(myNode.Attributes["pace"].Value);
+                    pace = Int32.Parse(myNode.AttributesV("pace"));
                 }
             }
             catch (Exception e)
@@ -1598,12 +1696,9 @@ namespace AltAIMLbot
             string nodeID = "null";
             try
             {
-                if ((myNode.Attributes != null) && (myNode.Attributes.Count > 0))
+                if (!string.IsNullOrEmpty(myNode.AttributesV("id")))
                 {
-                    if (myNode.Attributes["id"] != null)
-                    {
-                        nodeID = myNode.Attributes["id"].Value;
-                    }
+                    nodeID = myNode.AttributesV("id");
                 }
             }
             catch (Exception e)
@@ -1626,7 +1721,7 @@ namespace AltAIMLbot
             int childIndex = 0;
             for (childIndex = 0; childIndex < restP; childIndex++)
             {
-                XmlNode childNode = myNode.ChildNodes[childIndex];
+                BTXmlNode childNode = (BTXmlNode)myNode.ChildNodes[childIndex];
                 if (isAnAssert(childNode.Name))
                 {
                     //RunStatus childResult = processNode(childNode);
@@ -1659,11 +1754,11 @@ namespace AltAIMLbot
                 restP = randomChild;
             }
 
-            //foreach (XmlNode childNode in myNode.ChildNodes)
+            //foreach (BTXmlNode childNode in myNode.ChildNodes)
             //for (childIndex = restP; childIndex < myNode.ChildNodes.Count; childIndex++)
             childIndex = restP;
             {
-                XmlNode childNode = myNode.ChildNodes[childIndex];
+                BTXmlNode childNode = (BTXmlNode)myNode.ChildNodes[childIndex];
                 //RunStatus childResult = processNode(childNode);
                 //RunStatus childResult = processNode(childNode);
 
@@ -1776,14 +1871,14 @@ namespace AltAIMLbot
             }
         }
 
-        public RunStatus ProcessSubBehavior0(XmlNode myNode)
+        public RunStatus ProcessSubBehavior0(BTXmlNode myNode)
         {
 
             RunStatus result = RunStatus.Failure;
             string behaviorName = "root";
             try
             {
-                behaviorName = myNode.Attributes["id"].Value;
+                behaviorName = myNode.AttributesV("id");
                 result = bot.myBehaviors.runBotBehavior(behaviorName, bot);
             }
             catch (Exception e)
@@ -1795,12 +1890,12 @@ namespace AltAIMLbot
             }
             return result;
         }
-        public IEnumerable<RunStatus> ProcessSubBehavior(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessSubBehavior(BTXmlNode myNode)
         {
 
             RunStatus result = RunStatus.Failure;
             string behaviorName = "root";
-                behaviorName = myNode.Attributes["id"].Value;
+                behaviorName = myNode.AttributesV("id");
                 //result = bot.myBehaviors.runBotBehavior(behaviorName, bot);
                 if (bot.myBehaviors.definedBehavior(behaviorName))
                 {
@@ -1835,7 +1930,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessScheduler(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessScheduler(BTXmlNode myNode)
         {
             // talk to the scheduler directly
             RunStatus result = RunStatus.Success;
@@ -1844,12 +1939,12 @@ namespace AltAIMLbot
             string query = "";
             try
             {
-                //behaviorName = myNode.Attributes["id"].Value;
-                if (myNode.Attributes["action"] != null) action = myNode.Attributes["action"].Value;
-                if (myNode.Attributes["query"] != null) query = myNode.Attributes["query"].Value;
-                if (myNode.Attributes["a"] != null) action = myNode.Attributes["a"].Value;
-                if (myNode.Attributes["q"] != null) query = myNode.Attributes["q"].Value;
-                if (myNode.Attributes["id"] != null) behaviorName = myNode.Attributes["id"].Value;
+                //behaviorName = myNode.AttributesV("id");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("action"))) action = myNode.AttributesV("action");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("query"))) query = myNode.AttributesV("query");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("a"))) action = myNode.AttributesV("a");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("q"))) query = myNode.AttributesV("q");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("id"))) behaviorName = myNode.AttributesV("id");
                 StreamWriter sw = new StreamWriter("procschedtag.txt");
                 bot.myServitor.myScheduler.performAction(sw, action, query, behaviorName);
 
@@ -1865,7 +1960,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessEnqueue(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessEnqueue(BTXmlNode myNode)
         {
 
             RunStatus result = RunStatus.Success;
@@ -1890,7 +1985,7 @@ namespace AltAIMLbot
             yield return result;
             yield break;
         }
-        public IEnumerable<RunStatus> ProcessFlushQueue(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessFlushQueue(BTXmlNode myNode)
         {
 
             RunStatus result = RunStatus.Success;
@@ -1912,7 +2007,7 @@ namespace AltAIMLbot
             yield return result;
             yield break;
         }
-        public IEnumerable<RunStatus> ProcessDrive(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessDrive(BTXmlNode myNode)
         {
             // <drive name="needFood" halflife="3600" threshold="0.2">
             // <motive name="motiveFear" halflife="3600" threshold="0.2">
@@ -1930,9 +2025,9 @@ namespace AltAIMLbot
             double curV = 0;
             try
             {
-                driveName = myNode.Attributes["id"].Value;
-                halflife = 1000 * double.Parse(myNode.Attributes["halflife"].Value);
-                threshold = double.Parse(myNode.Attributes["threshold"].Value);
+                driveName = myNode.AttributesV("id");
+                halflife = 1000 * double.Parse(myNode.AttributesV("halflife"));
+                threshold = double.Parse(myNode.AttributesV("threshold"));
 
                 bot.myBehaviors.VSoup.setHalflife(driveName, halflife);
                 curV = bot.myBehaviors.VSoup.CurVal(driveName);
@@ -1989,7 +2084,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessMotive(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessMotive(BTXmlNode myNode)
         {
             // <drive name="needFood" halflife="3600" threshold="0.2">
             // <motive name="motiveFear" halflife="3600" threshold="0.2">
@@ -2007,9 +2102,9 @@ namespace AltAIMLbot
             double curV = 0;
             try
             {
-                driveName = myNode.Attributes["id"].Value;
-                halflife = 1000 * double.Parse(myNode.Attributes["halflife"].Value);
-                threshold = double.Parse(myNode.Attributes["threshold"].Value);
+                driveName = myNode.AttributesV("id");
+                halflife = 1000 * double.Parse(myNode.AttributesV("halflife"));
+                threshold = double.Parse(myNode.AttributesV("threshold"));
 
                 bot.myBehaviors.VSoup.setHalflife(driveName, halflife);
                 curV = bot.myBehaviors.VSoup.CurVal(driveName);
@@ -2100,7 +2195,7 @@ namespace AltAIMLbot
             }
             return code;
         }
-        public IEnumerable<RunStatus> ProcessGenChemsysFromMt(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessGenChemsysFromMt(BTXmlNode myNode)
         {
             //Queries MT for chemsym related info to create a BTXML fragment
             // that is then interperted
@@ -2114,9 +2209,9 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
-                if (myNode.Attributes["tag"] != null) tag = myNode.Attributes["tag"].Value;
-                if (myNode.Attributes["query"] != null) query = myNode.Attributes["query"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("mt"))) mtName = myNode.AttributesV("mt");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("tag"))) tag = myNode.AttributesV("tag");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("query"))) query = myNode.AttributesV("query");
                 string xcode = "";
                 xcode += kbToTagged(query, mtName, tag, innerStr);
                 string btxmlCode = "";
@@ -2129,7 +2224,7 @@ namespace AltAIMLbot
                 btxmlCode += "  </btxml>\n";
                 btxmlCode += " </state>\n";
                 btxmlCode += "</aiml>\n";
-                XmlDocument chemsymDoc = new XmlDocument();
+                BTXmlDocument chemsymDoc = new BTXmlDocument();
                 chemsymDoc.LoadXml(btxmlCode);
                 Console.WriteLine("-------------------------------------");
                 Console.WriteLine("------ GenChemsysFromMt:{0} --------", mtName);
@@ -2148,9 +2243,9 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessAssert(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessAssert(BTXmlNode myNode)
         {
-            string condData = myNode.Attributes["cond"] == null ? null : myNode.Attributes["cond"].Value;
+            string condData = myNode.AttributesV("cond") == null ? null : myNode.AttributesV("cond");
             string[] parms = condData.Trim().Split(' ');
             string varName = parms[0];
             string rel = "";
@@ -2202,7 +2297,7 @@ namespace AltAIMLbot
             if (varName.Contains(".drive"))
             {
                 string dName = varName.Replace(".drive", "");
-                double halflife = 1000 * double.Parse(myNode.Attributes["halflife"].Value);
+                double halflife = 1000 * double.Parse(myNode.AttributesV("halflife"));
                 int lastRun = bot.myBehaviors.lastRunning(dName);
                 bbVal = Math.Pow(0.5, (lastRun / halflife));
             }
@@ -2292,10 +2387,10 @@ namespace AltAIMLbot
             }
         }
 
-        public IEnumerable<RunStatus> ProcessAssertTimer(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessAssertTimer(BTXmlNode myNode)
         {
             //if it doesn't exist then create an entry and return Success
-            string nodeID = myNode.Attributes["id"].Value;
+            string nodeID = myNode.AttributesV("id");
             if (!bot.myBehaviors.entryTime.ContainsKey(nodeID))
             {
                 bot.myBehaviors.keepTime(nodeID, RunStatus.Success);
@@ -2341,9 +2436,9 @@ namespace AltAIMLbot
         //  a guest specific behavior subtree
         // One can also use the check for <selector>'s that depend on a particular
         //  guest object type
-        public IEnumerable<RunStatus> ProcessAssertGuest(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessAssertGuest(BTXmlNode myNode)
         {
-            string condition = myNode.Attributes["cond"].Value;
+            string condition = myNode.AttributesV("cond");
             string parameters = myNode.InnerText;
             //if it doesn't exist then return failure
             if (bot.guestEvalObject == null)
@@ -2371,9 +2466,9 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessTaskGuest(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessTaskGuest(BTXmlNode myNode)
         {
-            string condition = myNode.Attributes["call"].Value;
+            string condition = myNode.AttributesV("call");
             string parameters = myNode.InnerText;
             //if it doesn't exist then return  failure(success would also make sense)
             if (bot.guestEvalObject == null)
@@ -2401,16 +2496,16 @@ namespace AltAIMLbot
             yield break;
         }
         //WaitForChatInput
-        public IEnumerable<RunStatus> ProcessWaitForChatInput(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessWaitForChatInput(BTXmlNode myNode)
         {
             string sentStr = myNode.InnerXml;
              RunStatus rs = RunStatus.Failure;
              string wait = "10000";
              try
              {
-                 if (myNode.Attributes["wait"] != null)
+                 if (!string.IsNullOrEmpty(myNode.AttributesV("wait")))
                  {
-                     wait = myNode.Attributes["wait"].Value;
+                     wait = myNode.AttributesV("wait");
                  }
              }
              catch (Exception e)
@@ -2441,15 +2536,15 @@ namespace AltAIMLbot
        }
 
         //CHAT: chat controlled by the behavior system
-        public IEnumerable<RunStatus> ProcessChat(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessChat(BTXmlNode myNode)
         {
             string sentStr = myNode.InnerXml;
             string graphName = "*";
             try
             {
-                if (myNode.Attributes["graph"] != null)
+                if (!string.IsNullOrEmpty(myNode.AttributesV("graph")))
                 {
-                    graphName = myNode.Attributes["graph"].Value;
+                    graphName = myNode.AttributesV("graph");
                 }
             }
             catch (Exception e)
@@ -2498,7 +2593,7 @@ namespace AltAIMLbot
 
         // Propositional Reasoner interface
         // Assert to KB
-        public IEnumerable<RunStatus> ProcessTellKB(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessTellKB(BTXmlNode myNode)
         {
             RunStatus rs = RunStatus.Failure;
             string sentStr = myNode.InnerXml;
@@ -2527,7 +2622,7 @@ namespace AltAIMLbot
         }
 
 
-        public IEnumerable<RunStatus> ProcessTellBaseKB(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessTellBaseKB(BTXmlNode myNode)
         {
             RunStatus rs = RunStatus.Failure;
             string sentStr = myNode.InnerXml;
@@ -2548,7 +2643,7 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
-        public IEnumerable<RunStatus> ProcessTellKBOCC(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessTellKBOCC(BTXmlNode myNode)
         {
             RunStatus rs = RunStatus.Failure;
             try
@@ -2565,7 +2660,7 @@ namespace AltAIMLbot
             yield break;
         }
         // 
-        public IEnumerable<RunStatus> ProcessClearKB(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessClearKB(BTXmlNode myNode)
         {
             RunStatus rs = RunStatus.Failure;
             try
@@ -2581,7 +2676,7 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
-        public IEnumerable<RunStatus> ProcessClearBaseKB(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessClearBaseKB(BTXmlNode myNode)
         {
             RunStatus rs = RunStatus.Failure;
             try
@@ -2602,7 +2697,7 @@ namespace AltAIMLbot
         public double trialsMemory = 2048;
         public static object FileLock = new object();
 
-        public IEnumerable<RunStatus> ProcessKBModel(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessKBModel(BTXmlNode myNode)
         {
             RunStatus rs = RunStatus.Failure;
             Console.WriteLine("*** PROCESSING KB ***");
@@ -2752,10 +2847,10 @@ namespace AltAIMLbot
 
         }
 
-        public IEnumerable<RunStatus> ProcessSequence(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessSequence(BTXmlNode myNode)
         {
             // Execute children in order until one returns false
-            foreach (XmlNode childNode in myNode.ChildNodes)
+            foreach (BTXmlNode childNode in myNode.ChildNodes)
             {
                 RunStatus childResult = RunStatus.Failure;
                 foreach (RunStatus myChildResult in processNode(childNode))
@@ -2788,10 +2883,10 @@ namespace AltAIMLbot
            yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessSelector(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessSelector(BTXmlNode myNode)
         {
             // Execute children until one returns true
-            foreach (XmlNode childNode in myNode.ChildNodes)
+            foreach (BTXmlNode childNode in myNode.ChildNodes)
             {
                 RunStatus childResult = RunStatus.Failure;
                 foreach (RunStatus myChildResult in processNode(childNode))
@@ -2824,19 +2919,19 @@ namespace AltAIMLbot
 
         }
 
-        public IEnumerable<RunStatus> ProcessRandomSelector(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessRandomSelector(BTXmlNode myNode)
         {
             // Pick a random child with equal weighting
             //int selected = rgen.Next(myNode.ChildNodes.Count);
-            //XmlNode childNode = myNode.ChildNodes[selected];
-            XmlNode childNode = this.bot.myRandMem.selectOneXML(myNode);
+            //BTXmlNode childNode = myNode.ChildNodes[selected];
+            BTXmlNode childNode = (BTXmlNode)this.bot.myRandMem.selectOneXML(myNode);
             foreach (RunStatus childResult in processNode(childNode))
             {
             yield return childResult;
             }
         }
 
-        public IEnumerable<RunStatus> ProcessWeightedSelector(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessWeightedSelector(BTXmlNode myNode)
         {
             double totalWeight = 0;
             // Does a basic roulette wheel selection of the child nodes
@@ -2845,11 +2940,11 @@ namespace AltAIMLbot
 
             // Another variant would could use the node ID to look up the weight
             // so the results could be dynamic
-            foreach (XmlNode childNode in myNode.ChildNodes)
+            foreach (BTXmlNode childNode in myNode.ChildNodes)
             {
                 try
                 {
-                    totalWeight += double.Parse(childNode.Attributes["weight"].Value);
+                    totalWeight += double.Parse(childNode.AttributesV("weight"));
                 }
                 catch
                 {
@@ -2861,11 +2956,11 @@ namespace AltAIMLbot
             double selectedV = rgen.NextDouble() * totalWeight;
             double accum = 0;
             // Execute children in order until one returns false
-            foreach (XmlNode childNode in myNode.ChildNodes)
+            foreach (BTXmlNode childNode in myNode.ChildNodes)
             {
                 try
                 {
-                    accum += double.Parse(childNode.Attributes["weight"].Value);
+                    accum += double.Parse(childNode.AttributesV("weight"));
                 }
                 catch
                 {
@@ -2889,10 +2984,10 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessParallel(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessParallel(BTXmlNode myNode)
         {
             // Execute All Children
-            foreach (XmlNode childNode in myNode.ChildNodes)
+            foreach (BTXmlNode childNode in myNode.ChildNodes)
             {
                 RunStatus childResult = RunStatus.Failure;
                 foreach (RunStatus myChildResult in processNode(childNode))
@@ -2923,7 +3018,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessLoop(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessLoop(BTXmlNode myNode)
         {
             // you can specify the maximum number of times to loop
             // after which it will return SUCCESS
@@ -2936,7 +3031,7 @@ namespace AltAIMLbot
             Int32 loopCount = 0;
             try
             {
-                maxloop = Int32.Parse(myNode.Attributes["maxloop"].Value);
+                maxloop = Int32.Parse(myNode.AttributesV("maxloop"));
             }
             catch
             {
@@ -2951,7 +3046,7 @@ namespace AltAIMLbot
                         yield break;
                     }
                     // Execute All Children
-                    foreach (XmlNode childNode in myNode.ChildNodes)
+                    foreach (BTXmlNode childNode in myNode.ChildNodes)
                     {
                         RunStatus childResult = RunStatus.Failure;
                         foreach (RunStatus myChildResult in processNode(childNode))
@@ -2998,7 +3093,7 @@ namespace AltAIMLbot
             //return RunStatus.Failure;
         }
 
-        public IEnumerable<RunStatus> ProcessLoopUntil(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessLoopUntil(BTXmlNode myNode)
         {
             // you can specify the maximum number of times to loop
             // after which it will return FAILURE
@@ -3012,7 +3107,7 @@ namespace AltAIMLbot
 
             try
             {
-                maxloop = Int32.Parse(myNode.Attributes["maxloop"].Value);
+                maxloop = Int32.Parse(myNode.AttributesV("maxloop"));
             }
             catch
             {
@@ -3026,7 +3121,7 @@ namespace AltAIMLbot
                     yield break;
                 }
                     // Execute All Children
-                    foreach (XmlNode childNode in myNode.ChildNodes)
+                    foreach (BTXmlNode childNode in myNode.ChildNodes)
                     {
                         RunStatus childResult = RunStatus.Failure;
                         foreach (RunStatus myChildResult in processNode(childNode))
@@ -3075,7 +3170,7 @@ namespace AltAIMLbot
             }
             //return RunStatus.Failure;
         }
-        public IEnumerable<RunStatus> ProcessTask(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessTask(BTXmlNode myNode)
         {
             RunStatus result = RunStatus.Success;
             if (myNode == null)
@@ -3088,7 +3183,7 @@ namespace AltAIMLbot
             {
                 if ((myNode.Attributes != null) && (myNode.Attributes.Count > 0))
                 {
-                    string returnV = myNode.Attributes["return"].Value;
+                    string returnV = myNode.AttributesV("return");
                     if (returnV.ToLower() == "failure") { result = RunStatus.Failure; }
                     if (returnV.ToLower() == "success") { result = RunStatus.Success; }
                 }
@@ -3116,7 +3211,7 @@ namespace AltAIMLbot
             yield break;
 
             // Works like OnEntry/OnExit in SCXML
-            foreach (XmlNode templateNode in myNode.ChildNodes)
+            foreach (BTXmlNode templateNode in myNode.ChildNodes)
             {
                 try
                 {
@@ -3138,7 +3233,7 @@ namespace AltAIMLbot
         }
 
 
-        public IEnumerable<RunStatus> ProcessStateAiml(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessStateAiml(BTXmlNode myNode)
         {
             // Takes the inner text as AIML category definitions, to create new responses
             // So the system can change its verbal response behavior based on
@@ -3147,10 +3242,10 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["return"] != null)
+                if (!string.IsNullOrEmpty(myNode.AttributesV("return")))
                 {
 
-                    string returnV = myNode.Attributes["return"].Value;
+                    string returnV = myNode.AttributesV("return");
                     if (returnV.ToLower() == "failure") { result = RunStatus.Failure; }
                     if (returnV.ToLower() == "success") { result = RunStatus.Success; }
                 }
@@ -3163,9 +3258,9 @@ namespace AltAIMLbot
             string graphName = "*";
             try
             {
-                if (myNode.Attributes["graph"] != null)
+                if (!string.IsNullOrEmpty(myNode.AttributesV("graph")))
                 {
-                    graphName = myNode.Attributes["graph"].Value;
+                    graphName = myNode.AttributesV("graph");
                 }
             }
             catch (Exception e)
@@ -3175,8 +3270,8 @@ namespace AltAIMLbot
             try
             {
 
-                //XmlNode resultTemplateNode = AIMLTagHandler.getNode("<template>" + myNode.InnerXml + "</template>");
-                XmlDocument resultAIMLDoc = new XmlDocument();
+                //BTXmlNode resultTemplateNode = AIMLTagHandler.getNode("<template>" + myNode.InnerXml + "</template>");
+                BTXmlDocument resultAIMLDoc = new BTXmlDocument();
                 resultAIMLDoc.LoadXml("<aiml graph='" + graphName + "'>" + myNode.InnerXml + "</aiml>");
                 bot.loadAIMLFromXML(resultAIMLDoc, "dynamic_code");
                 //bot.evalTemplateNode(templateNode);
@@ -3193,7 +3288,7 @@ namespace AltAIMLbot
             yield break;
 
             // Works like OnEntry/OnExit in SCXML
-            foreach (XmlNode templateNode in myNode.ChildNodes)
+            foreach (BTXmlNode templateNode in myNode.ChildNodes)
             {
                 try
                 {
@@ -3227,7 +3322,7 @@ namespace AltAIMLbot
         // =<loadKEKB file="path">
         // =<appendKB mt="name">si_text
         // =<insertKB mt="name">si_text
-        public IEnumerable<RunStatus> ProcessClearPrologMt(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessClearPrologMt(BTXmlNode myNode)
         {
             // Clear a specified KB
             RunStatus rs = RunStatus.Failure;
@@ -3236,7 +3331,7 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("mt"))) mtName = myNode.AttributesV("mt");
 
                 lock (bot.myServitor.prologEngine)
                 {
@@ -3253,7 +3348,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessConnectMt(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessConnectMt(BTXmlNode myNode)
         {
             //Connect two MT's
             RunStatus rs = RunStatus.Failure;
@@ -3263,8 +3358,8 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["child"] != null) childMtName = myNode.Attributes["child"].Value;
-                if (myNode.Attributes["parent"] != null) parentMtName = myNode.Attributes["parent"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("child"))) childMtName = myNode.AttributesV("child");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("parent"))) parentMtName = myNode.AttributesV("parent");
 
                 lock (bot.myServitor.prologEngine)
                 {
@@ -3281,7 +3376,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessTellPrologMt(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessTellPrologMt(BTXmlNode myNode)
         {
             // Assert with overwrite some si_text
             RunStatus rs = RunStatus.Failure;
@@ -3290,7 +3385,7 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("mt"))) mtName = myNode.AttributesV("mt");
 
                 lock (bot.myServitor.prologEngine)
                 {
@@ -3306,7 +3401,7 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
-        public IEnumerable<RunStatus> ProcessLoadKEKB(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessLoadKEKB(BTXmlNode myNode)
         {
             // load some KE (which will have MT definitions)
             RunStatus rs = RunStatus.Failure;
@@ -3315,7 +3410,7 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["path"] != null) path = myNode.Attributes["path"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("path"))) path = myNode.AttributesV("path");
 
                 lock (bot.myServitor.prologEngine)
                 {
@@ -3332,7 +3427,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessInduceFromMt(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessInduceFromMt(BTXmlNode myNode)
         {
             // load some KE (which will have MT definitions)
             RunStatus rs = RunStatus.Failure;
@@ -3342,8 +3437,8 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["source"] != null) sourceMt = myNode.Attributes["source"].Value;
-                if (myNode.Attributes["result"] != null) resultMt = myNode.Attributes["result"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("source"))) sourceMt = myNode.AttributesV("source");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("result"))) resultMt = myNode.AttributesV("result");
                 DecisionTreeImplementation DTI = new DecisionTreeImplementation();
                 lock (bot.myServitor.prologEngine)
                 {
@@ -3360,7 +3455,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessInventFromMt(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessInventFromMt(BTXmlNode myNode)
         {
             // load some KE (which will have MT definitions)
             RunStatus rs = RunStatus.Failure;
@@ -3373,25 +3468,25 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["problem"] != null) problemMt = myNode.Attributes["problem"].Value;
-                if (myNode.Attributes["modules"] != null) moduleMt = myNode.Attributes["modules"].Value;
-                if (myNode.Attributes["solution"] != null) solutionMt = myNode.Attributes["solution"].Value;
-                if (myNode.Attributes["behavior"] != null) behaviorID = myNode.Attributes["behavior"].Value;
-                if (myNode.Attributes["behaviortag"] != null) behaviorTag = myNode.Attributes["behaviortag"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("problem"))) problemMt = myNode.AttributesV("problem");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("modules"))) moduleMt = myNode.AttributesV("modules");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("solution"))) solutionMt = myNode.AttributesV("solution");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("behavior"))) behaviorID = myNode.AttributesV("behavior");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("behaviortag"))) behaviorTag = myNode.AttributesV("behaviortag");
                 lock (bot.myServitor.prologEngine)
                 {
                     CemaSolver Inventor = new CemaSolver(bot.myServitor.prologEngine);
 
-                    if (myNode.Attributes["admissible"] != null)
+                    if (!string.IsNullOrEmpty(myNode.AttributesV("admissible")))
                     {
-                        if (myNode.Attributes["admissible"].Value.ToLower().Contains("t"))
+                        if (myNode.AttributesV("admissible").ToLower().Contains("t"))
                         {
                             Inventor.worstWeighting = true;
                         }
                     }
-                    if (myNode.Attributes["nondeterministic"] != null)
+                    if (!string.IsNullOrEmpty(myNode.AttributesV("nondeterministic")))
                     {
-                        if (myNode.Attributes["nondeterministic"].Value.ToLower().Contains("t"))
+                        if (myNode.AttributesV("nondeterministic").ToLower().Contains("t"))
                         {
                             Inventor.nondeterministic = true;
                         }
@@ -3401,13 +3496,13 @@ namespace AltAIMLbot
                         }
                     }
 
-                    if (myNode.Attributes["trials"] != null)
+                    if (!string.IsNullOrEmpty(myNode.AttributesV("trials")))
                     {
-                        Inventor.limitTrials = int.Parse(myNode.Attributes["trials"].Value);
+                        Inventor.limitTrials = int.Parse(myNode.AttributesV("trials"));
                     }
-                    if (myNode.Attributes["budget"] != null)
+                    if (!string.IsNullOrEmpty(myNode.AttributesV("budget")))
                     {
-                        Inventor.limitCost = double.Parse(myNode.Attributes["budget"].Value);
+                        Inventor.limitCost = double.Parse(myNode.AttributesV("budget"));
                     }
 
                     bool outcome = Inventor.constructSolution(problemMt, moduleMt, solutionMt);
@@ -3431,7 +3526,7 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
-        public IEnumerable<RunStatus> ProcessPlanFromMt(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessPlanFromMt(BTXmlNode myNode)
         {
             // load some KE (which will have MT definitions)
             RunStatus rs = RunStatus.Failure;
@@ -3447,27 +3542,27 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["goal"] != null) goalMt = myNode.Attributes["goal"].Value;
-                if (myNode.Attributes["now"] != null) nowMt = myNode.Attributes["now"].Value;
-                if (myNode.Attributes["background"] != null) backgroundMt = myNode.Attributes["background"].Value;
-                if (myNode.Attributes["modules"] != null) moduleMt = myNode.Attributes["modules"].Value;
-                if (myNode.Attributes["solution"] != null) solutionMt = myNode.Attributes["solution"].Value;
-                if (myNode.Attributes["behavior"] != null) behaviorID = myNode.Attributes["behavior"].Value;
-                if (myNode.Attributes["behaviortag"] != null) behaviorTag = myNode.Attributes["behaviortag"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("goal"))) goalMt = myNode.AttributesV("goal");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("now"))) nowMt = myNode.AttributesV("now");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("background"))) backgroundMt = myNode.AttributesV("background");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("modules"))) moduleMt = myNode.AttributesV("modules");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("solution"))) solutionMt = myNode.AttributesV("solution");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("behavior"))) behaviorID = myNode.AttributesV("behavior");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("behaviortag"))) behaviorTag = myNode.AttributesV("behaviortag");
                 lock (bot.myServitor.prologEngine)
                 {
                     GOAPSolver Planner = new GOAPSolver(bot.myServitor.prologEngine);
 
-                    if (myNode.Attributes["admissible"] != null)
+                    if (!string.IsNullOrEmpty(myNode.AttributesV("admissible")))
                     {
-                        if (myNode.Attributes["admissible"].Value.ToLower().Contains("t"))
+                        if (myNode.AttributesV("admissible").ToLower().Contains("t"))
                         {
                             Planner.worstWeighting = true;
                         }
 
-                        if (myNode.Attributes["nondeterministic"] != null)
+                        if (!string.IsNullOrEmpty(myNode.AttributesV("nondeterministic")))
                         {
-                            if (myNode.Attributes["nondeterministic"].Value.ToLower().Contains("t"))
+                            if (myNode.AttributesV("nondeterministic").ToLower().Contains("t"))
                             {
                                 Planner.nondeterministic = true;
                             }
@@ -3477,13 +3572,13 @@ namespace AltAIMLbot
                             }
                         }
 
-                        if (myNode.Attributes["trials"] != null)
+                        if (!string.IsNullOrEmpty(myNode.AttributesV("trials")))
                         {
-                            Planner.limitTrials = int.Parse(myNode.Attributes["trials"].Value);
+                            Planner.limitTrials = int.Parse(myNode.AttributesV("trials"));
                         }
-                        if (myNode.Attributes["budget"] != null)
+                        if (!string.IsNullOrEmpty(myNode.AttributesV("budget")))
                         {
-                            Planner.limitCost = double.Parse(myNode.Attributes["budget"].Value);
+                            Planner.limitCost = double.Parse(myNode.AttributesV("budget"));
                         }
 
                         bool outcome = Planner.constructPlan(goalMt, nowMt, moduleMt, backgroundMt, solutionMt);
@@ -3508,7 +3603,7 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
-        public IEnumerable<RunStatus> ProcessInsertMt(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessInsertMt(BTXmlNode myNode)
         {
             // insert some si_text (overwrite)
             RunStatus rs = RunStatus.Failure;
@@ -3517,7 +3612,7 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("mt"))) mtName = myNode.AttributesV("mt");
 
                 lock (bot.myServitor.prologEngine)
                 {
@@ -3534,7 +3629,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessAppendMt(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessAppendMt(BTXmlNode myNode)
         {
             // Append some si_text 
             RunStatus rs = RunStatus.Failure;
@@ -3543,7 +3638,7 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("mt"))) mtName = myNode.AttributesV("mt");
 
                 lock (bot.myServitor.prologEngine)
                 {
@@ -3561,10 +3656,10 @@ namespace AltAIMLbot
         }
 
 
-        public IEnumerable<RunStatus> ProcessAssertProlog(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessAssertProlog(BTXmlNode myNode)
         {
             // Conduct a test if the si_query is true
-            string condition = myNode.Attributes["cond"].Value;
+            string condition = myNode.AttributesV("cond");
             string mtName = "root";
             string innerStr = myNode.InnerXml.Trim();
             //if it doesn't exist then return failure
@@ -3592,7 +3687,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessEvalPrologMacro(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessEvalPrologMacro(BTXmlNode myNode)
         {
             // given a prolog query, will take the bindings of var as a list of subbehavior id's (or other)
             // then place them inside a <cmd> tag and execute
@@ -3610,11 +3705,11 @@ namespace AltAIMLbot
             string innerCode = "";
             try
             {
-                if (myNode.Attributes["filler"] != null) filler = myNode.Attributes["filler"].Value;
-                if (myNode.Attributes["var"] != null) var = myNode.Attributes["var"].Value;
-                if (myNode.Attributes["outercmd"] != null) outerCmd = myNode.Attributes["outercmd"].Value;
-                if (myNode.Attributes["innercmd"] != null) innerCmd = myNode.Attributes["innercmd"].Value;
-                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("filler"))) filler = myNode.AttributesV("filler");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("var"))) var = myNode.AttributesV("var");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("outercmd"))) outerCmd = myNode.AttributesV("outercmd");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("innercmd"))) innerCmd = myNode.AttributesV("innercmd");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("mt"))) mtName = myNode.AttributesV("mt");
             }
             catch(Exception e)
             {
@@ -3721,7 +3816,7 @@ namespace AltAIMLbot
 
         // <definestate prob=""> state_list|...</>
         //bot.myServitor.partFilter.prototype.variables.Add("in(r0)", 0.8);
-        public IEnumerable<RunStatus> ProcessDefineState(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessDefineState(BTXmlNode myNode)
         {
             // Append some si_text 
             RunStatus rs = RunStatus.Failure;
@@ -3731,8 +3826,8 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["prob"] != null) probStr = myNode.Attributes["prob"].Value;
-                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("prob"))) probStr = myNode.AttributesV("prob");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("filter"))) filter = myNode.AttributesV("filter");
                 SymbolicParticleFilter myFilter = findOrCreatePF(filter);
                 double prob = Double.Parse(probStr);
                 string[] state_list = innerStr.Split('|');
@@ -3757,7 +3852,7 @@ namespace AltAIMLbot
             
         // <stateConstraintSet> state_list|...</>
         //    bot.myServitor.partFilter.constraintSet.Add("in(r0)|in(r1)|in(r2)|in(r3)|in(r4)");
-        public IEnumerable<RunStatus> ProcessConstraintSet(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessConstraintSet(BTXmlNode myNode)
         {
             // Append some si_text 
             RunStatus rs = RunStatus.Failure;
@@ -3766,7 +3861,7 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("filter"))) filter = myNode.AttributesV("filter");
                 SymbolicParticleFilter myFilter = findOrCreatePF(filter);
                 if (!myFilter.constraintSet.Contains(innerStr))
                 {
@@ -3785,7 +3880,7 @@ namespace AltAIMLbot
 
         // <stateSense state="" prob=""> senseList|...</>
         //    bot.myServitor.partFilter.addStateSenseProb("in(r0)|sense(even)=0.95");
-        public IEnumerable<RunStatus> ProcessStateSense(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessStateSense(BTXmlNode myNode)
         {
             // Append some si_text 
             RunStatus rs = RunStatus.Failure;
@@ -3795,9 +3890,9 @@ namespace AltAIMLbot
             string filter = "basic";
             try
             {
-                if (myNode.Attributes["prob"] != null) probStr = myNode.Attributes["prob"].Value;
-                if (myNode.Attributes["state"] != null) state = myNode.Attributes["state"].Value;
-                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("prob"))) probStr = myNode.AttributesV("prob");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("state"))) state = myNode.AttributesV("state");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("filter"))) filter = myNode.AttributesV("filter");
                 SymbolicParticleFilter myFilter = findOrCreatePF(filter);
                 double prob = Double.Parse(probStr);
                 string[] sense_list = innerStr.Split('|');
@@ -3819,7 +3914,7 @@ namespace AltAIMLbot
 
          //   <stateActTransition state="" act="" prob="">nextstatelist|...</>
          //   bot.myServitor.partFilter.addStateActTransition("in(r0)|act(forward)=0.5:in(r0)");
-        public IEnumerable<RunStatus> ProcessStateActTransition(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessStateActTransition(BTXmlNode myNode)
         {
             // Append some si_text 
             RunStatus rs = RunStatus.Failure;
@@ -3831,10 +3926,10 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["prob"] != null) probStr = myNode.Attributes["prob"].Value;
-                if (myNode.Attributes["state"] != null) state = myNode.Attributes["state"].Value;
-                if (myNode.Attributes["action"] != null) act = myNode.Attributes["action"].Value;
-                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("prob"))) probStr = myNode.AttributesV("prob");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("state"))) state = myNode.AttributesV("state");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("action"))) act = myNode.AttributesV("action");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("filter"))) filter = myNode.AttributesV("filter");
                 SymbolicParticleFilter myFilter = findOrCreatePF(filter);
                 double prob = Double.Parse(probStr);
                 string[] state_list = innerStr.Split('|');
@@ -3855,7 +3950,7 @@ namespace AltAIMLbot
 
         // use particleActMt, particleSenseMt, particleStateMt
         //    bot.myServitor.partFilter.quickFilter("act(forward)", "sense(odd)");
-        public IEnumerable<RunStatus> ProcessQuickFilter(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessQuickFilter(BTXmlNode myNode)
         {
             // collects true acts in senses in pointed to mt's
             // then updates filter
@@ -3869,9 +3964,9 @@ namespace AltAIMLbot
             string senseset = "";
             try
             {
-                if (myNode.Attributes["sensemt"] != null) senseMt = myNode.Attributes["sensemt"].Value;
-                if (myNode.Attributes["actmt"] != null) actMt = myNode.Attributes["actmt"].Value;
-                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("sensemt"))) senseMt = myNode.AttributesV("sensemt");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("actmt"))) actMt = myNode.AttributesV("actmt");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("filter"))) filter = myNode.AttributesV("filter");
                 SymbolicParticleFilter myFilter = findOrCreatePF(filter);
                 lock (bot.servitor.prologEngine)
                 {
@@ -3911,7 +4006,7 @@ namespace AltAIMLbot
       //      bot.myServitor.partFilter.meanParticle.normalize(bot.myServitor.partFilter.constraintSet);
       //      Console.WriteLine("meanP norm:{0}", bot.myServitor.partFilter.meanParticle.ToString());
        // <meanparticle threshold="0.5" mt="meanParticleMt"/>
-        public IEnumerable<RunStatus> ProcessMeanParticle(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessMeanParticle(BTXmlNode myNode)
         {
             // Append some si_text 
             RunStatus rs = RunStatus.Failure;
@@ -3924,11 +4019,11 @@ namespace AltAIMLbot
             string common = "";
             try
             {
-                if (myNode.Attributes["threshold"] != null) probStr = myNode.Attributes["threshold"].Value;
-                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
-                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
-                if (myNode.Attributes["spindle"] != null) spindle = myNode.Attributes["spindle"].Value;
-                if (myNode.Attributes["common"] != null) common = myNode.Attributes["common"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("threshold"))) probStr = myNode.AttributesV("threshold");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("mt"))) mtName = myNode.AttributesV("mt");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("filter"))) filter = myNode.AttributesV("filter");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("spindle"))) spindle = myNode.AttributesV("spindle");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("common"))) common = myNode.AttributesV("common");
                 
                 SymbolicParticleFilter myFilter = findOrCreatePF(filter);
                 threshold = Double.Parse(probStr);
@@ -3969,7 +4064,7 @@ namespace AltAIMLbot
         // will stateProb(STATE,PROB) , stateSenseProb(STATE,SENSE,PROB) and
         // stateTransitionProb(STATE,ACT,PROB,NEXT)
 
-        public IEnumerable<RunStatus> ProcessGenFilterFromMt(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessGenFilterFromMt(BTXmlNode myNode)
         {
             // <genFilterFromMt mt="defParticleMt" threhold="0.001" filter="basic"/>
 
@@ -3982,9 +4077,9 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["threshold"] != null) probStr = myNode.Attributes["threshold"].Value;
-                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
-                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("threshold"))) probStr = myNode.AttributesV("threshold");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("mt"))) mtName = myNode.AttributesV("mt");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("filter"))) filter = myNode.AttributesV("filter");
                 SymbolicParticleFilter myFilter = findOrCreatePF(filter);
                 threshold = Double.Parse(probStr);
 
@@ -4053,7 +4148,7 @@ namespace AltAIMLbot
         // <UpdateCoppeliaFromMt mt="defCoppeliaMt" threshold="0.0001" filter="basic"/>
         // will update Coppelia states by querying state(cState) in Mt
 
-        public IEnumerable<RunStatus> ProcessUpdateCoppeliaFromMt(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessUpdateCoppeliaFromMt(BTXmlNode myNode)
         {
             // Updates the Coppelia Current state model from a given Mt
 
@@ -4066,9 +4161,9 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["threshold"] != null) probStr = myNode.Attributes["threshold"].Value;
-                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
-                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("threshold"))) probStr = myNode.AttributesV("threshold");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("mt"))) mtName = myNode.AttributesV("mt");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("filter"))) filter = myNode.AttributesV("filter");
                 SymbolicParticleFilter myFilter = findOrCreatePF(filter);
                 threshold = Double.Parse(probStr);
 
@@ -4103,7 +4198,7 @@ namespace AltAIMLbot
         // moralAmbition(Actor,Moral,value)
         // actionMoralBelief(Actor,Action,Moral,value)
 
-        public IEnumerable<RunStatus> ProcessGenCoppeliaFromMt0(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessGenCoppeliaFromMt0(BTXmlNode myNode)
         {
             // Append some si_text 
             RunStatus rs = RunStatus.Failure;
@@ -4115,9 +4210,9 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["threshold"] != null) probStr = myNode.Attributes["threshold"].Value;
-                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
-                if (myNode.Attributes["filter"] != null) filter = myNode.Attributes["filter"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("threshold"))) probStr = myNode.AttributesV("threshold");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("mt"))) mtName = myNode.AttributesV("mt");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("filter"))) filter = myNode.AttributesV("filter");
                 SymbolicParticleFilter myFilter = findOrCreatePF(filter);
                 threshold = Double.Parse(probStr);
 
@@ -4290,7 +4385,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessGenCoppeliaFromMt(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessGenCoppeliaFromMt(BTXmlNode myNode)
         {
             //Queries MT for Coppelia related info to create a BTXML fragment
             // that is then interperted
@@ -4301,7 +4396,7 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["mt"] != null) mtName = myNode.Attributes["mt"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("mt"))) mtName = myNode.AttributesV("mt");
                 string xcode = "";
                 xcode += kbToBTXML("coppeliaState(STATE,INITIAL)", mtName);
                 xcode += kbToBTXML("coppeliaAction(ACTION,POSITIVITY,NEGATIVITY)", mtName);
@@ -4337,7 +4432,7 @@ namespace AltAIMLbot
                 btxmlCode += "  </btxml>\n";
                 btxmlCode += " </state>\n";
                 btxmlCode += "</aiml>\n";
-                XmlDocument coppeliaDoc = new XmlDocument ();
+                BTXmlDocument coppeliaDoc = new BTXmlDocument();
                 coppeliaDoc.LoadXml (btxmlCode);
                 Console.WriteLine("-------------------------------------");
                 Console.WriteLine("------ GenCoppeliaFromMt:{0} --------", mtName);
@@ -4388,7 +4483,7 @@ namespace AltAIMLbot
  
 
 
-        public IEnumerable<RunStatus> ProcessCoppeliaAgentFeature(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaAgentFeature(BTXmlNode myNode)
         {
             // <coppeliaFeature agent="self" feature="good" value="1" />
             // Agent has feature to the degree of value
@@ -4401,9 +4496,9 @@ namespace AltAIMLbot
             float fValue = 0;
             try
             {
-                if (myNode.Attributes["feature"] != null) cFeature = myNode.Attributes["feature"].Value;
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("feature"))) cFeature = myNode.AttributesV("feature");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
                 fValue = float.Parse(cValue);
                 int featureID = AgentFeatures.Parse(cFeature);
                 if (featureID >=0 )
@@ -4425,7 +4520,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessCoppeliaFeatureBelief(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaFeatureBelief(BTXmlNode myNode)
         {
             // <coppeliaFeatuerBelief agent="self" feature="good" target="other" value="1" />
             // agent believes that targets feature will facilitate state
@@ -4440,11 +4535,11 @@ namespace AltAIMLbot
             float fValue = 0;
             try
             {
-                if (myNode.Attributes["feature"] != null) cFeature = myNode.Attributes["feature"].Value;
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-                if (myNode.Attributes["target"] != null) cTarget = myNode.Attributes["target"].Value;
-                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
-                if (myNode.Attributes["state"] != null) cState = myNode.Attributes["state"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("feature"))) cFeature = myNode.AttributesV("feature");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("target"))) cTarget = myNode.AttributesV("target");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("state"))) cState = myNode.AttributesV("state");
                 fValue = float.Parse(cValue);
                 int featureID = AgentFeatures.Parse(cFeature);
 
@@ -4474,7 +4569,7 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
-        public IEnumerable<RunStatus> ProcessCoppeliaAgentResponsibleBelief(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaAgentResponsibleBelief(BTXmlNode myNode)
         {
             // <coppeliaAgentResponsibleBelief agent="self" state="state" target="other" value="1" />
             // agent believes that targets is responsible for state
@@ -4489,10 +4584,10 @@ namespace AltAIMLbot
             float fValue = 0;
             try
             {
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-                if (myNode.Attributes["target"] != null) cTarget = myNode.Attributes["target"].Value;
-                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
-                if (myNode.Attributes["state"] != null) cState = myNode.Attributes["state"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("target"))) cTarget = myNode.AttributesV("target");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("state"))) cState = myNode.AttributesV("state");
                 fValue = float.Parse(cValue);
                     if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                     {
@@ -4517,7 +4612,7 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
-        public IEnumerable<RunStatus> ProcessCoppeliaExpectedSatisfaction(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaExpectedSatisfaction(BTXmlNode myNode)
         {
             // <coppeliaExpectedSatisfaction agent="self" action="act" target="other" value="1" />
             // Agent believes that performing Action to Target will have an expected satisfaction
@@ -4532,10 +4627,10 @@ namespace AltAIMLbot
             float fValue = 0;
             try
             {
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
-                if (myNode.Attributes["action"] != null) cAction = myNode.Attributes["state"].Value;
-                if (myNode.Attributes["target"] != null) cTarget = myNode.Attributes["target"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("action"))) cAction = myNode.AttributesV("state");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("target"))) cTarget = myNode.AttributesV("target");
                 fValue = float.Parse(cValue);
                 if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                 {
@@ -4558,7 +4653,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessCoppeliaAnger(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaAnger(BTXmlNode myNode)
         {
             // <coppeliaAnger agent="self" target="other" value="1" />
             // agent believes that targets is  Anger worthy
@@ -4571,9 +4666,9 @@ namespace AltAIMLbot
             float fValue = 0;
             try
             {
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
-                if (myNode.Attributes["target"] != null) cTarget = myNode.Attributes["target"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("target"))) cTarget = myNode.AttributesV("target");
                 fValue = float.Parse(cValue);
                 if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                 {
@@ -4594,7 +4689,7 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
-        public IEnumerable<RunStatus> ProcessCoppeliaPraiseworthy(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaPraiseworthy(BTXmlNode myNode)
         {
             // <coppeliaPraiseworthy agent="self" target="other" value="1" />
             // agent believes that targets is Praiseworthy
@@ -4607,9 +4702,9 @@ namespace AltAIMLbot
             float fValue = 0;
             try
             {
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
-                if (myNode.Attributes["target"] != null) cTarget = myNode.Attributes["target"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("target"))) cTarget = myNode.AttributesV("target");
                 fValue = float.Parse(cValue);
                 if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                 {
@@ -4630,7 +4725,7 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
-        public IEnumerable<RunStatus> ProcessCoppeliaEmotion(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaEmotion(BTXmlNode myNode)
         {
             // <coppeliaEmotion agent="self" emotion="joy" value="1" />
             // agent feels Emotion to degree value
@@ -4643,9 +4738,9 @@ namespace AltAIMLbot
             float fValue = 0;
             try
             {
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
-                if (myNode.Attributes["emotion"] != null) cEmotion = myNode.Attributes["emotion"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("emotion"))) cEmotion = myNode.AttributesV("emotion");
                 fValue = float.Parse(cValue);
                 int iEmotion = AgentEmotions.Parse(cEmotion);
                 if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
@@ -4667,7 +4762,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessCoppeliaDesired(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaDesired(BTXmlNode myNode)
         {
             // <coppeliaDesired agent="self" emotion="joy" value="1" />
             // agent WANTS to feel Emotion to degree value
@@ -4680,9 +4775,9 @@ namespace AltAIMLbot
             float fValue = 0;
             try
             {
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
-                if (myNode.Attributes["emotion"] != null) cEmotion = myNode.Attributes["emotion"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("emotion"))) cEmotion = myNode.AttributesV("emotion");
                 fValue = float.Parse(cValue);
                 int iEmotion = AgentEmotions.Parse(cEmotion);
                 if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
@@ -4703,7 +4798,7 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
-        public IEnumerable<RunStatus> ProcessCoppeliaActionTendancy(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaActionTendancy(BTXmlNode myNode)
         {
             // <coppeliaActionTendancy agent="self" action="act" target="other" value="1" />
             // Agent has a tendency to degree value to perform Action to Target
@@ -4717,10 +4812,10 @@ namespace AltAIMLbot
             float fValue = 0;
             try
             {
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-                if (myNode.Attributes["target"] != null) cTarget = myNode.Attributes["target"].Value;
-                if (myNode.Attributes["action"] != null) cAction = myNode.Attributes["action"].Value;
-                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("target"))) cTarget = myNode.AttributesV("target");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("action"))) cAction = myNode.AttributesV("action");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
                 fValue = float.Parse(cValue);
                 
                 if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
@@ -4747,7 +4842,7 @@ namespace AltAIMLbot
             yield break;
         }
   
-        public IEnumerable<RunStatus> ProcessCoppeliaFeatureEmotionBelief(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaFeatureEmotionBelief(BTXmlNode myNode)
         {
             // <coppeliaFeatureEmotionBelief agent="self" feature="good" emotion="joy" value="1" />
             // agent believes that having feature will facilitate Emotion
@@ -4761,9 +4856,9 @@ namespace AltAIMLbot
             float fValue = 0;
             try
             {
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-                if (myNode.Attributes["feature"] != null) cFeature = myNode.Attributes["feature"].Value;
-                if (myNode.Attributes["emotion"] != null) cEmotion = myNode.Attributes["emotion"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("feature"))) cFeature = myNode.AttributesV("feature");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("emotion"))) cEmotion = myNode.AttributesV("emotion");
 
                 fValue = float.Parse(cValue);
                 int iEmotion = AgentEmotions.Parse(cEmotion);
@@ -4791,7 +4886,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessCoppeliaAction(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaAction(BTXmlNode myNode)
         {
             // <coppeliaAction state="act" positivity="0" negativity="0" />
             // defines an Action along with its positive and negative valance
@@ -4806,9 +4901,9 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["action"] != null) cAction = myNode.Attributes["action"].Value;
-                if (myNode.Attributes["positivity"] != null) cPositivity = myNode.Attributes["positivity"].Value;
-                if (myNode.Attributes["negativity"] != null) cNegativity = myNode.Attributes["negativity"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("action"))) cAction = myNode.AttributesV("action");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("positivity"))) cPositivity = myNode.AttributesV("positivity");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("negativity"))) cNegativity = myNode.AttributesV("negativity");
                 fPositivity = float.Parse(cPositivity);
                 fNegativity = float.Parse(cNegativity);
                 if (!bot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
@@ -4829,7 +4924,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessCoppeliaState(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaState(BTXmlNode myNode)
         {
             // <coppeliaState state="act" initial="true/false" />
             // defines a state and its initial truth value
@@ -4842,8 +4937,8 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["state"] != null) cState = myNode.Attributes["state"].Value;
-                if (myNode.Attributes["initial"] != null) cInitState = myNode.Attributes["initial"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("state"))) cState = myNode.AttributesV("state");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("initial"))) cInitState = myNode.AttributesV("initial");
                 bState = bool.Parse(cInitState);
                 if (!bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
                 {
@@ -4861,7 +4956,7 @@ namespace AltAIMLbot
 
 
 
-        public IEnumerable<RunStatus> ProcessCoppeliaStateLikelihood(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaStateLikelihood(BTXmlNode myNode)
         {
             // <coppeliaStateLikelihood agent="self" state="state1" likelihood="0.5" />
             // sets a states likelihood
@@ -4875,10 +4970,10 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
 
-                if (myNode.Attributes["state"] != null) cState = myNode.Attributes["state"].Value;
-                if (myNode.Attributes["likelihood"] != null) cStateProb = myNode.Attributes["likelihood"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("state"))) cState = myNode.AttributesV("state");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("likelihood"))) cStateProb = myNode.AttributesV("likelihood");
                 pStateProb = float.Parse(cStateProb);
                 if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
                 {
@@ -4898,7 +4993,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessCoppeliaResponse(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaResponse(BTXmlNode myNode)
         {
             // <coppeliaResponse action="act" response="reaction" />
             // reaction can follow an agent receiving act
@@ -4910,8 +5005,8 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["action"] != null) cAct = myNode.Attributes["action"].Value;
-                if (myNode.Attributes["response"] != null) cResponse = myNode.Attributes["response"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("action"))) cAct = myNode.AttributesV("action");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("response"))) cResponse = myNode.AttributesV("response");
 
                 if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAct))
                 {
@@ -4933,7 +5028,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessCoppeliaAmbition(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaAmbition(BTXmlNode myNode)
         {
             // <coppeliaAmbition agent="self" state="targetstate" value="1" />
             // Agent wants state to occur or not occur
@@ -4946,9 +5041,9 @@ namespace AltAIMLbot
             float fValue = 0;
             try
             {
-                if (myNode.Attributes["state"] != null) cState = myNode.Attributes["state"].Value;
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("state"))) cState = myNode.AttributesV("state");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
                 fValue = float.Parse(cValue);
 
                 if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
@@ -4971,7 +5066,7 @@ namespace AltAIMLbot
             yield break;
         }
 // Coppelia Morals
-        public IEnumerable<RunStatus> ProcessCoppeliaMoral(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaMoral(BTXmlNode myNode)
         {
             // <coppeliaMoral moral="act" initial="true/false" />
             // defines a moral value and its initial state value
@@ -4984,8 +5079,8 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["moral"] != null) cMoral = myNode.Attributes["moral"].Value;
-                if (myNode.Attributes["initial"] != null) cInitState = myNode.Attributes["initial"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("moral"))) cMoral = myNode.AttributesV("moral");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("initial"))) cInitState = myNode.AttributesV("initial");
                 bState = bool.Parse(cInitState);
                 if (!bot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
                 {
@@ -5001,7 +5096,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessCoppeliaMoralAmbition(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaMoralAmbition(BTXmlNode myNode)
         {
             // <coppeliaMoralAmbition agent="self" moral="moral" value="1" />
             // Agent wants Moral to have Value
@@ -5014,9 +5109,9 @@ namespace AltAIMLbot
             float fValue = 0;
             try
             {
-                if (myNode.Attributes["moral"] != null) cMoral = myNode.Attributes["moral"].Value;
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("moral"))) cMoral = myNode.AttributesV("moral");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
                 fValue = float.Parse(cValue);
 
                 if (bot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
@@ -5038,7 +5133,7 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
-        public IEnumerable<RunStatus> ProcessCoppeliaActionMoralBelief(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaActionMoralBelief(BTXmlNode myNode)
         {
             // <coppeliaActionMoralBelief agent="self" act="act1" moral="s2"  value="1" />
             // Agent believes Act will cause Moral to have Value
@@ -5052,10 +5147,10 @@ namespace AltAIMLbot
             float fValue = 0;
             try
             {
-                if (myNode.Attributes["action"] != null) cAct = myNode.Attributes["action"].Value;
-                if (myNode.Attributes["moral"] != null) cMoral = myNode.Attributes["moral"].Value;
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("action"))) cAct = myNode.AttributesV("action");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("moral"))) cMoral = myNode.AttributesV("moral");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
                 fValue = float.Parse(cValue);
 
                 if (bot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
@@ -5081,7 +5176,7 @@ namespace AltAIMLbot
             yield return rs;
             yield break;
         }
-        public IEnumerable<RunStatus> ProcessCoppeliaActionState(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaActionState(BTXmlNode myNode)
         {
             // <coppeliaActionState agent="self" action="act1" state="s2"  value="1" />
             // Agent believes Act will cause state with prob v
@@ -5095,10 +5190,10 @@ namespace AltAIMLbot
             float fValue = 0;
             try
             {
-                if (myNode.Attributes["action"] != null) cAct = myNode.Attributes["action"].Value;
-                if (myNode.Attributes["state"] != null) cState = myNode.Attributes["state"].Value;
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("action"))) cAct = myNode.AttributesV("action");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("state"))) cState = myNode.AttributesV("state");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
                 fValue = float.Parse(cValue);
 
                 if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
@@ -5125,7 +5220,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessCoppeliaStateState(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaStateState(BTXmlNode myNode)
         {
             // <coppeliaStateState agent="self" statesrc="s1" statedest="s2"  value="1" />
             // Agent believes StateSRC will facilitate StateDEST with probability Value
@@ -5139,10 +5234,10 @@ namespace AltAIMLbot
             float fValue = 0;
             try
             {
-                if (myNode.Attributes["statesrc"] != null) cStateSrc = myNode.Attributes["state"].Value;
-                if (myNode.Attributes["statedest"] != null) cStateDest = myNode.Attributes["state"].Value;
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("statesrc"))) cStateSrc = myNode.AttributesV("state");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("statedest"))) cStateDest = myNode.AttributesV("state");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
                 fValue = float.Parse(cValue);
 
                 if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cStateSrc))
@@ -5169,7 +5264,7 @@ namespace AltAIMLbot
             yield break;
         }
 
-        public IEnumerable<RunStatus> ProcessCoppeliaPerform(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaPerform(BTXmlNode myNode)
         {
             // <coppeliaPerform agent="self" action="a1" recipient="other" />
             // Agent just performed act to recipient
@@ -5182,9 +5277,9 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["action"] != null) cAct = myNode.Attributes["action"].Value;
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-                if (myNode.Attributes["reciptient"] != null) cRecipient = myNode.Attributes["reciptient"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("action"))) cAct = myNode.AttributesV("action");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("reciptient"))) cRecipient = myNode.AttributesV("reciptient");
 
                 if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAct))
                 {
@@ -5224,7 +5319,7 @@ namespace AltAIMLbot
         }
 
 
-        public IEnumerable<RunStatus> ProcessCoppeliaRelation(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessCoppeliaRelation(BTXmlNode myNode)
         {
             // <coppeliaRelation agent="self" relation="r1" recipient="other" />
             // Agent has Relation with Recipient
@@ -5239,10 +5334,10 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["relation"] != null) cRelation = myNode.Attributes["relation"].Value;
-                if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-                if (myNode.Attributes["reciptient"] != null) cRecipient = myNode.Attributes["reciptient"].Value;
-                if (myNode.Attributes["value"] != null) cValue = myNode.Attributes["value"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("relation"))) cRelation = myNode.AttributesV("relation");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("reciptient"))) cRecipient = myNode.AttributesV("reciptient");
+                if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
                 fValue = float.Parse(cValue);
                 int relationID = AgentRelations.Parse(cRelation);
 
@@ -5282,11 +5377,11 @@ namespace AltAIMLbot
         //  a guest specific behavior subtree
         // One can also use the check for <selector>'s that depend on a particular
         //  guest object type
-        public IEnumerable<RunStatus> ProcessAssertCoppelia(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessAssertCoppelia(BTXmlNode myNode)
         {
-            string condition = myNode.Attributes["cond"].Value;
+            string condition = myNode.AttributesV("cond");
             string parameters = myNode.InnerText;
-            string condData = myNode.Attributes["cond"] == null ? null : myNode.Attributes["cond"].Value;
+            string condData = myNode.AttributesV("cond")== null ? null : myNode.AttributesV("cond");
             string[] parms = condData.Trim().Split(' ');
             string varName = parms[0];
             string rel = "";
@@ -5301,14 +5396,14 @@ namespace AltAIMLbot
             string cState = "state";
             string cFeature = "good";
             string cEmotion = "joy";
-
-            if (myNode.Attributes["agent"] != null) cAgent = myNode.Attributes["agent"].Value;
-            if (myNode.Attributes["relation"] != null) cRelation = myNode.Attributes["relation"].Value;
-            if (myNode.Attributes["reciptient"] != null) cRecipient = myNode.Attributes["reciptient"].Value;
-            if (myNode.Attributes["action"] != null) cAct = myNode.Attributes["action"].Value;
-            if (myNode.Attributes["state"] != null) cState = myNode.Attributes["state"].Value;
-            if (myNode.Attributes["feature"] != null) cFeature = myNode.Attributes["feature"].Value;
-            if (myNode.Attributes["emotion"] != null) cEmotion = myNode.Attributes["emotion"].Value;
+            
+            if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
+            if (!string.IsNullOrEmpty(myNode.AttributesV("relation"))) cRelation = myNode.AttributesV("relation");
+            if (!string.IsNullOrEmpty(myNode.AttributesV("reciptient"))) cRecipient = myNode.AttributesV("reciptient");
+            if (!string.IsNullOrEmpty(myNode.AttributesV("action"))) cAct = myNode.AttributesV("action");
+            if (!string.IsNullOrEmpty(myNode.AttributesV("state"))) cState = myNode.AttributesV("state");
+            if (!string.IsNullOrEmpty(myNode.AttributesV("feature"))) cFeature = myNode.AttributesV("feature");
+            if (!string.IsNullOrEmpty(myNode.AttributesV("emotion"))) cEmotion = myNode.AttributesV("emotion");
             Agent a1 = null;
             Agent a2 = null;
             int iRelation = AgentRelations.Parse(cRelation);
@@ -5372,7 +5467,7 @@ namespace AltAIMLbot
             if (varName.Contains(".drive"))
             {
                 string dName = varName.Replace(".drive", "");
-                double halflife = 1000 * double.Parse(myNode.Attributes["halflife"].Value);
+                double halflife = 1000 * double.Parse(myNode.AttributesV("halflife"));
                 int lastRun = bot.myBehaviors.lastRunning(dName);
                 bbVal = Math.Pow(0.5, (lastRun / halflife));
             }
@@ -5470,7 +5565,7 @@ namespace AltAIMLbot
 
         #endregion
        // <loadchatmaper path="chatmapper\example.xml"/>
-        public IEnumerable<RunStatus> ProcessUpdatePersona(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessUpdatePersona(BTXmlNode myNode)
         {
             // Append some si_text 
             RunStatus rs = RunStatus.Success;
@@ -5529,7 +5624,7 @@ namespace AltAIMLbot
 
         #region ChatMapperImport
         // <loadchatmaper path="chatmapper\example.xml"/>
-        public IEnumerable<RunStatus> ProcessLoadChatMapper(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessLoadChatMapper(BTXmlNode myNode)
         {
             // Append some si_text 
             RunStatus rs = RunStatus.Failure;
@@ -5538,11 +5633,11 @@ namespace AltAIMLbot
 
             try
             {
-                if (myNode.Attributes["path"] != null) srcFile = myNode.Attributes["path"].Value;
+                if (!string.IsNullOrEmpty(myNode.AttributesV("path"))) srcFile = myNode.AttributesV("path");
                 ChatToBTXML myTranslator = new ChatToBTXML();
                 myTranslator.defineChatTreeFile(srcFile);
                 string myCodes = myTranslator.btxmlCode;
-                XmlDocument chatDoc = new XmlDocument ();
+                BTXmlDocument chatDoc = new BTXmlDocument();
                 string destFile = srcFile.Replace(".xml", ".btxml");
                 destFile = HostSystem.FileSystemPath(destFile);
                 System.IO.File.WriteAllText(destFile, myCodes);
@@ -5561,9 +5656,9 @@ namespace AltAIMLbot
         }
 
 
-        public IEnumerable<RunStatus> ProcessAssertMenu(XmlNode myNode)
+        public IEnumerable<RunStatus> ProcessAssertMenu(BTXmlNode myNode)
         {
-            string condition = myNode.Attributes["cond"].Value;
+            string condition = myNode.AttributesV("cond");
             string parameters = myNode.InnerText;
             //if no input exists doesn't exist then return failure
             if (bot.chatInputQueue.Count==0)
@@ -5877,7 +5972,7 @@ namespace AltAIMLbot
 
     class ChatToBTXML
     {
-        public XmlDocument treeDoc;
+        public BTXmlDocument treeDoc;
         public string btxmlCode = "";
 
         public string chatXML = "";
@@ -5891,7 +5986,7 @@ namespace AltAIMLbot
 
         public ChatToBTXML()
         {
-            treeDoc = new XmlDocument();
+            treeDoc = new BTXmlDocument();
 
         }
 
@@ -5905,16 +6000,20 @@ namespace AltAIMLbot
             btxmlCode += " <state name=\"*\">\n";
 
             treeDoc.LoadXml(chatXML);
+
             foreach (XmlNode childNode in treeDoc.ChildNodes)
             {
-                processNode(childNode);
+                if (childNode.NodeType == XmlNodeType.Element)
+                {
+                    processNode((BTXmlNode)childNode);
+                }
             }
             btxmlCode += " </state>\n";
             btxmlCode += "</aiml>\n";
 
         }
 
-        public void processNode(XmlNode myNode)
+        public void processNode(BTXmlNode myNode)
         {
             switch (myNode.Name.ToLower())
             {
@@ -5945,8 +6044,11 @@ namespace AltAIMLbot
                         postcode += "   <" + choicetag + ">\n";
                         for (int childIndex = 0; childIndex < myNode.ChildNodes.Count; childIndex++)
                         {
-                            XmlNode childNode = myNode.ChildNodes[childIndex];
-                            processNode(childNode);
+                            XmlNode childNode = (XmlNode)myNode.ChildNodes[childIndex];
+                            if (childNode.NodeType == XmlNodeType.Element)
+                            {
+                                processNode((BTXmlNode)childNode);
+                            }
                         }
                         postcode += "   </" + choicetag + ">\n";
                     }
@@ -5982,14 +6084,17 @@ namespace AltAIMLbot
                 default:
                     for (int childIndex = 0; childIndex < myNode.ChildNodes.Count; childIndex++)
                     {
-                        XmlNode childNode = myNode.ChildNodes[childIndex];
-                        processNode(childNode);
+                        XmlNode childNode = (XmlNode)myNode.ChildNodes[childIndex];
+                        if (childNode.NodeType == XmlNodeType.Element)
+                        {
+                            processNode((BTXmlNode)childNode);
+                        }
                     }
                     break;
             }
         }
 
-        public void processField(XmlNode myNode)
+        public void processField(BTXmlNode myNode)
         {
             if (!inDialog) return;
 
@@ -5999,8 +6104,8 @@ namespace AltAIMLbot
             string value = "";
             try
             {
-               if (myNode.Attributes["type"]!=null) type = myNode.Attributes["type"].Value;
-               if (myNode.Attributes["hint"]!=null)  hint = myNode.Attributes["hint"].Value;
+               if (!string.IsNullOrEmpty(myNode.AttributesV("type"))) type = myNode.AttributesV("type");
+               if (!string.IsNullOrEmpty(myNode.AttributesV("hint")))  hint = myNode.AttributesV("hint");
             }
             catch (Exception e)
             {
@@ -6009,7 +6114,7 @@ namespace AltAIMLbot
 
             for (int childIndex = 0; childIndex < myNode.ChildNodes.Count; childIndex++)
             {
-                XmlNode childNode = myNode.ChildNodes[childIndex];
+                BTXmlNode childNode = (BTXmlNode)myNode.ChildNodes[childIndex];
                 switch (childNode.Name.ToLower())
                 {
                     case "title":
@@ -6075,7 +6180,7 @@ namespace AltAIMLbot
 
         }
 
-        public void processLink(XmlNode myNode)
+        public void processLink(BTXmlNode myNode)
         {
             string OriginConvoID = "";
             string OriginDialogID = "";
@@ -6085,11 +6190,11 @@ namespace AltAIMLbot
 
             try
             {
-                OriginConvoID = myNode.Attributes["OriginConvoID"].Value;
-                OriginDialogID = myNode.Attributes["OriginDialogID"].Value;
-                DestinationConvoID = myNode.Attributes["DestinationConvoID"].Value;
-                DestinationDialogID = myNode.Attributes["DestinationDialogID"].Value;
-                IsConnector = myNode.Attributes["IsConnector"].Value;
+                OriginConvoID = myNode.AttributesV("OriginConvoID");
+                OriginDialogID = myNode.AttributesV("OriginDialogID");
+                DestinationConvoID = myNode.AttributesV("DestinationConvoID");
+                DestinationDialogID = myNode.AttributesV("DestinationDialogID");
+                IsConnector = myNode.AttributesV("IsConnector");
             }
             catch (Exception e)
             {
@@ -6102,7 +6207,7 @@ namespace AltAIMLbot
 
         }
 
-        public void processDialogEntry(XmlNode myNode)
+        public void processDialogEntry(BTXmlNode myNode)
         {
             string ID = "";
             string ConversationID = "";
@@ -6117,13 +6222,13 @@ namespace AltAIMLbot
 
             try
             {
-                ID = myNode.Attributes["ID"].Value;
-                ConversationID = myNode.Attributes["ConversationID"].Value;
-                IsRoot = myNode.Attributes["IsRoot"].Value;
-                IsGroup = myNode.Attributes["IsGroup"].Value;
-                DelaySimStatus = myNode.Attributes["DelaySimStatus"].Value;
-                FalseCondtionAction = myNode.Attributes["FalseCondtionAction"].Value;
-                ConditionPriority = myNode.Attributes["ConditionPriority"].Value;
+                ID = myNode.AttributesV("ID");
+                ConversationID = myNode.AttributesV("ConversationID");
+                IsRoot = myNode.AttributesV("IsRoot");
+                IsGroup = myNode.AttributesV("IsGroup");
+                DelaySimStatus = myNode.AttributesV("DelaySimStatus");
+                FalseCondtionAction = myNode.AttributesV("FalseCondtionAction");
+                ConditionPriority = myNode.AttributesV("ConditionPriority");
 
             }
             catch (Exception e)
@@ -6134,7 +6239,7 @@ namespace AltAIMLbot
 
             for (int childIndex = 0; childIndex < myNode.ChildNodes.Count; childIndex++)
             {
-                XmlNode childNode = myNode.ChildNodes[childIndex];
+                BTXmlNode childNode = (BTXmlNode)myNode.ChildNodes[childIndex];
                 processNode(childNode);
             }
             btxmlCode += "\n\n  <behavior processas='"+processas+"' id='" + bkey + "'  >\n";

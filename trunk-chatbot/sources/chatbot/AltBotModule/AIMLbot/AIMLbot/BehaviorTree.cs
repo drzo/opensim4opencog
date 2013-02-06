@@ -565,7 +565,7 @@ namespace AltAIMLbot
             {
                 //RunStatus childResult = newTree.processNode(childNode);
                 RunStatus childResult = RunStatus .Failure ;
-                foreach (RunStatus myChildResult in newTree.processNode(childNode))
+                foreach (RunStatus myChildResult in newTree.processNode((BTXmlNode)childNode))
                 {
                     childResult = myChildResult;
                     if (childResult != RunStatus.Running) break;
@@ -644,7 +644,7 @@ namespace AltAIMLbot
         {
             BehaviorTree newTree = new BehaviorTree(bot);
             newTree.bot = bot;
-            newTree.ProcessStateAiml(xnode);
+            newTree.ProcessStateAiml((BTXmlNode)xnode);
         }
 
         #region EventHandlers
