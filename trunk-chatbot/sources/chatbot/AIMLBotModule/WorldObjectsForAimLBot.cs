@@ -915,10 +915,11 @@ namespace AIMLBotModule
             }
             if (!logAimlToClient)
             {
-                string something = DLRConsole.SafeFormat(s, args).ToLower();
+                string somethingPC = DLRConsole.SafeFormat(s, args);
+                string something = somethingPC.ToLower();
                 if (something.Contains("error") || something.Contains("warn"))
                 {
-                    client.WriteLine(s, args);
+                    client.DisplayNotificationInChatReal(somethingPC);
                 }                
             }
             if (Monitor.TryEnter(writeLock, 2000))

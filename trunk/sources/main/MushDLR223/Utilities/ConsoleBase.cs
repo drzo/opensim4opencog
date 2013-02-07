@@ -2299,18 +2299,19 @@ namespace MushDLR223.Utilities
 
         public static string SafeFormat(string fmt, params object[] args)
         {
+            if (args != null && args.Length == 1 && args[0] is object[])
+            {
+                args = (object[]) args[0];
+            }
+
             if (fmt == null)
             {
-                return ExplainFormatError(fmt, args, SYSTEM_ERR_WRITELINE, new Exception());
+                return ExplainFormatError(null, args, SYSTEM_ERR_WRITELINE, new Exception());
             }
 
             string str = fmt;
             if (args != null && args.Length > 0)
             {
-                if (args[0] is object[])
-                {
-                    args = (object[]) args[0];
-                }
                 try
                 {
                     str = string.Format(fmt, args);
@@ -2322,7 +2323,7 @@ namespace MushDLR223.Utilities
             }
             return str ?? "<!--NULL-->";
         }
-        private static string ExplainFormatError(string fmt, object[] args, OutputDelegate del, Exception exception)
+        private static string ExplainFormatError(string fmt, IEnumerable<object> args, OutputDelegate del, Exception exception)
         {
             del = del ?? TextFilter.DEVNULL;
             var str = new StringBuilder();
