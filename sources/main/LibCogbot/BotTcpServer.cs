@@ -350,7 +350,7 @@ namespace Cogbot.Utilities
             {
                 p = "TCPDEBUG: " + p;
             }
-            botclient.WriteLineDebug(p);
+            botclient.DebugWriteLine(p);
         }
 
 

@@ -429,7 +429,7 @@ namespace Cogbot
             TheSimAvatar = (SimAvatarClient)simAvatar;
         }
 
-        private static void Debug(string p)
+        private static void Debug0(string p)
         {
             if (p.Contains("ERROR"))
             {
@@ -604,9 +604,9 @@ namespace Cogbot
         }
 
 
-        public virtual void Debug(string p, params object[] args)
+        public static void Debug(string p, params object[] args)
         {
-            Debug(DLRConsole.SafeFormat(p, args));
+            Debug0(DLRConsole.SafeFormat(p, args));
         }
 
         public void WriteLine(string p, params object[] args)

@@ -730,14 +730,9 @@ namespace Cogbot
         {
             try
             {
-                if (str == null) return;
-                if (str == "") return;
-                if (str.StartsWith("$bot")) str = str.Substring(4);
-                str = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n").Trim();
-                string SelfName = String.Format("{0}", GetName());
-                str = str.Replace("$bot", SelfName);
-                if (str.StartsWith(SelfName)) str = str.Substring(SelfName.Length).Trim();
+                if (!DepersonalizeMessage(ref str)) return;
                 CogbotGUI.SetDebugConsole(__TheRadegastInstance);
+                str = AddMyName(str);
                 ClientManager.WriteLine(str);
             }
             catch (Exception ex)
@@ -751,44 +746,58 @@ namespace Cogbot
         {
             try
             {
-                if (str == null) return;
-                if (args != null && args.Length > 0) str = String.Format(str, args);
-                if (str == "") return;
-                if (str.StartsWith("$bot")) str = str.Substring(4);
-                str = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n").Trim();
-                string SelfName = String.Format("{0}", GetName());
-                str = str.Replace("$bot", SelfName);
-                if (str.StartsWith(SelfName)) str = str.Substring(SelfName.Length).Trim();
+                if (!DepersonalizeMessage(ref str, args)) return;
                 if (false) CogbotGUI.SetDebugConsole(__TheRadegastInstance);
+                str = AddMyName(str);
                 ClientManager.DebugWriteLine(str);
+                Logger.Log(str, Helpers.LogLevel.Debug);
             }
             catch (Exception ex)
             {
                 Logger.Log(GetName() + " DebugWriteLine Exception " + ex, Helpers.LogLevel.Error, ex);
             }            
         }
+
+        private string AddMyName(String str)
+        {
+            if (ClientManager.BotClients.Count == 1) return str;
+            return str + " (" + GetName() + ")";
+        }
+
+        private bool DepersonalizeMessage(ref string str, params object[] args)
+        {
+            if (str == null) return false;
+            if (args != null && args.Length > 0) str = DLRConsole.SafeFormat(str, args);
+            if (str == "") return false;
+            if (str.StartsWith("$bot")) str = str.Substring(4);
+            str = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", Environment.NewLine).Trim();
+            string SelfName = String.Format("{0}", GetName());
+            if (str.StartsWith(SelfName)) str = str.Substring(SelfName.Length).Trim();
+            str = str.TrimStart(':', ' ');
+            return str.Length > 0;
+        }
+
+        public void SimEventWriteLine(string str, params object[] args)
+        {
+            WriteLine(str, args);
+        }
+
         public void WriteLine(string str)
         {
             try
             {
-                if (str == null) return;
                 WriteLineReal(str);
             }
             catch (Exception ex)
             {
                 Logger.Log(GetName() + " WriteLine Exception " + ex, Helpers.LogLevel.Error, ex);
             }
-        }
-        public void SimEventWriteLine(string str, params object[] args)
-        {
-            WriteLine(str, args);
         }
         public void WriteLine(string str, params object[] args)
         {
             try
             {
-                if (str == null) return;
-                if (args != null && args.Length > 0) str = String.Format(str, args);
+                if (!DepersonalizeMessage(ref str, args)) return;
                 WriteLineReal(str);
             }
             catch (Exception ex)
@@ -796,19 +805,7 @@ namespace Cogbot
                 Logger.Log(GetName() + " WriteLine Exception " + ex, Helpers.LogLevel.Error, ex);
             }
         }
-        public void WriteLineDebug(string str, params object[] args)
-        {
-            try
-            {
-                if (str == null) return;
-                if (args != null && args.Length > 0) str = String.Format(str, args);
-               // Logger.Log(str + " " + GetName(), Helpers.LogLevel.Debug);
-            }
-            catch (Exception ex)
-            {
-                Logger.Log(GetName() + " WriteLine Exception " + ex, Helpers.LogLevel.Error, ex);
-            }
-        }
+
         // for lisp to call
         public void output(string txt)
         {
