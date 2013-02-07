@@ -113,15 +113,6 @@ namespace AltAIMLbot
             get { return ChatInput.EnglishSentences; }
         }
 
-        /// <summary>
-        /// The normalized sentence(s) (paths) fed into the graphmaster
-        /// </summary>
-        public List<Unifiable> InputPaths
-        {
-            get { return ChatInput.NormalizedPaths; }
-        }
-
-
         internal void ClearInput()
         {
             ChatInput.ClearSentences();
@@ -130,10 +121,7 @@ namespace AltAIMLbot
         /// <summary>
         /// The normalized sentence(s) (paths) fed into the graphmaster
         /// </summary>
-        public List<Unifiable> NormalizedPaths
-        {
-            get { return ChatInput.NormalizedPaths; }
-        }
+        public List<Unifiable> GraphMasterPaths = new List<Unifiable>();
 
         /// <summary>
         /// The individual sentences produced by the bot that form the complete response
@@ -301,7 +289,7 @@ namespace AltAIMLbot
                         else
                         {
                             var paths = Unifiable.CreateAppendable();
-                            foreach (Unifiable pattern in InputPaths)
+                            foreach (Unifiable pattern in GraphMasterPaths)
                             {
                                 //return pattern;
                                 paths.Append(pattern.LegacyPath + Environment.NewLine);

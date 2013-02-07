@@ -23,7 +23,7 @@ namespace RoboKindChat
             //_theRoboKindEventModule.Spy();
             //_theRoboKindEventModule.Block();
 
-            _theChatProg.SetForegrounded(true);
+            //_theChatProg.SetForegrounded(true);
             //_theChatProg.LoadDataset("justine_degurl");
             //_theChatProg.LoadDataset("kotoko_irata");
             //_theChatProg.LoadDataset("test_suite/ProgramD/AIML.aiml");

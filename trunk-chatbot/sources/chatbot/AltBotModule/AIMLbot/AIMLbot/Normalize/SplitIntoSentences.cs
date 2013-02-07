@@ -175,9 +175,13 @@ namespace RTParser.Normalize
             return (Unifiable[])tidyResult.ToArray();
         }
 
-        public static IEnumerable<Unifiable> Split(string input)
+        public static IEnumerable<Unifiable> SplitU(string input)
         {
             return (new SplitIntoSentences(null)).TransformU(input);
+        }
+        public static IEnumerable<string> Split(string input)
+        {
+            return (new SplitIntoSentences(null)).Transform(input);
         }
         private static string TrimEndTokens(string s)
         {

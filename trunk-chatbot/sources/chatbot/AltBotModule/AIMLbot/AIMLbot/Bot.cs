@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections;
 using System.Globalization;
@@ -338,8 +338,25 @@ namespace RTParser
         /// <summary>
         /// Flag to show if the bot is producing output
         /// </summary>
-        public bool isPerformingOutput = true;
+        public bool isPerformingOutput
+        {
+            get { return _isPerformingOutput; }
+            set
+            {
+                if (value == false  && outputQueue.Count > 0)
+                {
+                    if (_isPerformingOutput == true)
+                    {
+                        writeToLog("ERROR Was preformingOUTUT! ");
+                    }
+                    processOutputQueue();
+                }
+                _isPerformingOutput = value;
+            }
+        }
 
+        public bool _isPerformingOutput = false;
+    
         public object loglock = new object();
 
         /// <summary>
@@ -1072,7 +1089,14 @@ namespace RTParser
 
         public void processOutputQueue()
         {
-            if (!isPerformingOutput) return;
+            if (!isPerformingOutput)
+            {
+                if(outputQueue.Count > 0)
+                {
+                    myBehaviors.logText("BOT OUTPUT GOING TO NOT COME OUT:" + outputQueue.Count);
+                }
+                return;
+            }
             while (outputQueue.Count > 0)
             {
                 string msg = outputQueue.Dequeue();
@@ -1082,7 +1106,7 @@ namespace RTParser
                 }
                 else
                 {
-                    Console.WriteLine("BOT OUTPUT:{0}", msg);
+                    Console.WriteLine("Missing sayProcessor! BOT OUTPUT:{0}", msg);
                 }
                 myBehaviors.logText("BOT OUTPUT:" + msg);
 
@@ -1256,7 +1280,7 @@ namespace RTParser
                             SortPaths(paths, ourGraphMaster.getPathScore);
                             foreach (var path in paths)
                             {
-                                result.NormalizedPaths.Add(path);                                
+                                result.GraphMasterPaths.Add(path);                                
                             }
                         }
                     }
@@ -1304,9 +1328,9 @@ namespace RTParser
                                     bestv = statev;
                                 }
                             }
-                            if (!result.NormalizedPaths.Contains(bestpath))
+                            if (!result.GraphMasterPaths.Contains(bestpath))
                             {
-                                result.NormalizedPaths.Add(bestpath);
+                                result.GraphMasterPaths.Add(bestpath);
                             }
                             Console.WriteLine("DEBUG: path = " + bestpath);
                         }
@@ -1315,17 +1339,28 @@ namespace RTParser
                     }
 
                     // grab the templates for the various sentences from the graphmaster
-                    foreach (string path in result.NormalizedPaths)
+                    foreach (string path in result.GraphMasterPaths)
                     {
                         AltAIMLbot.Utils.SubQuery query = new SubQuery(path, result, request);
 
-                        query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.Pattern, new StringBuilder());
-
+                        var queryTemplate = ourGraphMaster.evaluate(path, query, request, MatchState.Pattern, new StringBuilder());
+                        if (string.IsNullOrEmpty(queryTemplate))
+                        {
+                            myBehaviors.SkipLog = false;
+                            ourGraphMaster.evaluate(path, query, request, MatchState.Pattern, new StringBuilder());
+                            //myBehaviors.SkipLog = true;
+                            myBehaviors.logText("failed to find response to " + path);
+                            continue;
+                        } else
+                        {
+                            myBehaviors.SkipLog = true;
+                        }
+                        query.Template = queryTemplate;
                         //query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                         //query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                         Console.WriteLine("DEBUG: TemplatePath = " + query.TemplatePath);
                         Console.WriteLine("DEBUG: Template = " + query.Template);
-                        myBehaviors.SkipLog = true;
+                        
                         myBehaviors.logText("CHAT QueryPath:" + path);
                         myBehaviors.logText("CHAT TemplatePath:" + query.TemplatePath);
                         myBehaviors.logText("CHAT Template:\n" + query.Template);
@@ -2163,9 +2198,9 @@ The AltAIMLbot program.
             message = message.Replace("*RAWINPUT*", request.rawInput);
             message = message.Replace("*USER*", request.user.UserID);
             StringBuilder paths = new StringBuilder();
-            foreach(string path in request.result.NormalizedPaths)
+            foreach(string path in request.result.GraphMasterPaths)
             {
-                paths.Append(path+Environment.NewLine);
+                paths.Append(path + Environment.NewLine);
             }
             message = message.Replace("*PATHS*", paths.ToString());
             msg.Body = message;

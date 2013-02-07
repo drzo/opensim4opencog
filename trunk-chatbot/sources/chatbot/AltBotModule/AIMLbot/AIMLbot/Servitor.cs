@@ -96,7 +96,7 @@ namespace AltAIMLbot
             {
                 //return false; //KHC DEBUG MONOBOT
 
-                //return true;
+                if (GlobalSharedSettings.IsDougsMachine) return true;
                 if (curBot != null && curBot.GlobalSettings != null)
                 {
                     string NBGC = curBot.GlobalSettings.grabSetting("noBackgroundChat");
@@ -118,7 +118,6 @@ namespace AltAIMLbot
         {
             get
             {
-                if (IsBackgroundDisabled) return false;
                 return _tmBehaveEnabled;
             }
             set 
@@ -760,7 +759,7 @@ namespace AltAIMLbot
                     return chatOutput;
                 }
             }
-            // else try the named behavior
+            // else try the named behavio}
             if (doHaviours && curBot.myBehaviors.definedBehavior("chatRoot"))
             {
                 curUser.JustSaid = input;

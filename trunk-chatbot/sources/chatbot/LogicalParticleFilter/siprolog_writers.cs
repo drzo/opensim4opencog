@@ -577,12 +577,23 @@ function validateBrowserForm()
         {
             get
             {
+                if (IsDougsMachine) return true;
+                return false;
+            }
+        }
+
+        public static bool IsDougsMachine
+        {
+            get
+            {
 
                 string machineName = Environment.MachineName;
                 return machineName == "ENKI" || machineName.ToUpper() == "TITAN" ||
                        machineName.ToUpper().StartsWith("OPTER");
             }
         }
+
+        public static bool DebuggingThereforeBackgroundDisabled = true;
 
         public static String _serverHost = null;
         public static int serverPort = 8123;

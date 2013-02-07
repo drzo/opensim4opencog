@@ -1332,7 +1332,7 @@ The AIMLbot program.
             message = message.Replace("*RAWINPUT*", request.rawInput);
             message = message.Replace("*USER*", request.Requester.UserID);
             StringAppendableUnifiableImpl paths = Unifiable.CreateAppendable();
-            foreach (Unifiable path in request.CurrentResult.InputPaths)
+            foreach (Unifiable path in request.CurrentResult.GraphMasterPaths)
             {
                 paths.Append(path.LegacyPath + Environment.NewLine);
             }

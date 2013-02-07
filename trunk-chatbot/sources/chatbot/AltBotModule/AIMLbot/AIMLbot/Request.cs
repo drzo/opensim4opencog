@@ -437,7 +437,7 @@ namespace AltAIMLParser
             ExitQueue = new CommitQueue();
             SideEffects = new CommitQueue();
             TargetBot = bot;
-            ChatInput = RTParser.Utterance.GetParsedUserInputSentences(thisRequest, rawInput);
+            ChatInput = new Utterance(null, user, targetUser, rawInput,-1);// RTParser.Utterance.GetParsedUserInputSentences(thisRequest, rawInput);
             this.Requester = user;
             this.bot = bot;
             this.StartedOn = DateTime.Now;
@@ -453,15 +453,10 @@ namespace AltAIMLParser
             if (parent != null)
             {
                 //ChatInput = parent.ChatInput;
-                ChatInput = RTParser.Utterance.GetParsedUserInputSentences(thisRequest, rawInput);
                 Requester = parent.Requester;
                 depth = parent.depth + 1;
                 OriginalSalientRequest = parent.OriginalSalientRequest;
                 RequestDepth = parent.RequestDepth + 1;
-            }
-            else
-            {
-                ChatInput = RTParser.Utterance.GetParsedUserInputSentences(thisRequest, rawInput);
             }
             DebugLevel = -1;
             if (parent != null) targetUser = parent.Responder;

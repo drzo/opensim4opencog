@@ -687,12 +687,12 @@ namespace RTParser
             }
             return null;
         }
-
+      
         private Result ChatUsingGraphMaster(Request request, Result result, GraphMaster G, bool isTraced, OutputDelegate writeToLog)
         {
             //writeToLog = writeToLog ?? DEVNULL;
             {
-                Utterance utterance = Utterance.GetParsedSentences(request, isTraced, writeToLog);
+                Utterance utterance = request.ChatInput;// Utterance.GetParsedSentences(request, isTraced, writeToLog);
 
                 bool printedSQs = false;
                 G = G ?? DefaultStartGraph;
@@ -713,7 +713,8 @@ namespace RTParser
 
                 // Gathers the Pattern SubQueries!
                 int sentNum = -1;
-                foreach (Unifiable userSentence in utterance.NormalizedPaths)
+                var user = request.Requester;
+                foreach (Unifiable sentence in utterance.EnglishSentences)
                 {
                     sentNum++;
                     if (request.IsToplevelRequest)
@@ -724,7 +725,13 @@ namespace RTParser
                             request.Requester.Predicates.updateSetting("question", english);
                         }
                     }
-                    AllQueries.Add(G.gatherQueriesFromGraph(userSentence, request, MatchState.Pattern));
+                    List<string> paths = gatherPaths(user, sentence, user.getPreStates(), user.getPostStates(),
+                                 request.LoaderA);
+                    SortPaths(paths, G.getPathScore);
+                    foreach (var path in paths)
+                    {
+                        AllQueries.Add(G.gatherQueriesFromGraph(path, request, MatchState.State));
+                    }
                 }
                 try
                 {
@@ -875,7 +882,7 @@ namespace RTParser
             }
         }
 
-        public string EnsureEnglish(string arg)
+        public Unifiable EnsureEnglish(Unifiable arg)
         {
             // ReSharper disable ConvertToConstant.Local
             bool DoOutputSubst = false;
