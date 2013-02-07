@@ -30,6 +30,16 @@ using UNode = AltAIMLbot.Utils.Node;
 
 namespace RTParser.Utils
 {
+
+    public interface ParentChild
+    {
+        ParentChild ParentObject { get; }
+    }
+
+    public class NodeAdder
+    {
+    }
+
     [Serializable]
     public class GraphMaster : ParentChild
     {

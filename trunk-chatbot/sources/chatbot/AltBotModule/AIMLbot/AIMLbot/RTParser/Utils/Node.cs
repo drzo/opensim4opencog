@@ -1,3 +1,5 @@
+#if INCLUDE_UUNODE
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -1531,14 +1533,6 @@ namespace RTParser.Utils
         #endregion
     }
 
-    public interface ParentChild
-    {
-        ParentChild ParentObject { get; }
-    }
-
-    public class NodeAdder
-    {
-    }
 
     internal class OneKV : IEnumerable<KeyValuePair<string, Node>>, IEnumerator<KeyValuePair<string, Node>>
     {
@@ -1592,3 +1586,4 @@ namespace RTParser.Utils
         }
     }
 }
+#endif

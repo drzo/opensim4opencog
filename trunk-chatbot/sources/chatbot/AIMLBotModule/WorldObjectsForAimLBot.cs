@@ -713,7 +713,7 @@ namespace AIMLBotModule
                             {
                                 WriteLine("AIML_OnChat Reply is too fast {0}: {1}->{2}", myUser, message, resp);
 
-                return;
+                                return;
                             }
                             if (!myUser.RespondToChat)
                             {
@@ -899,7 +899,8 @@ namespace AIMLBotModule
             }
         }
 
-        static readonly TaskQueueHandler writeLock = new TaskQueueHandler(null, "AIMLBot Console Writer");
+        private static readonly TaskQueueHandler writeLock = new TaskQueueHandler(null, "AIMLBot Console Writer",
+                                                                                  TimeSpan.MinValue, true);
         public void WriteLine(string s, params object[] args)
         {
             if (args == null || args.Length == 0)

@@ -44,11 +44,13 @@ namespace AltAIMLbot.Utils
     [Serializable]
     public class Node
     {
+#if INCLUDE_UUNODE
         internal RTParser.Utils.UUNode ToUUNode()
         {
             throw new NotImplementedException();
         }
 
+#endif
         public RTParser.Utils.GraphMaster Graph
         {
             get { throw new NotImplementedException(); }
@@ -70,9 +72,21 @@ namespace AltAIMLbot.Utils
             get { throw new NotImplementedException(); }
         }
 
+
         public Node[] AllDecendants
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                List<Node> TIs = new List<Node>();
+                var lts = this.TemplateInfos;
+                if (lts != null && lts.Count > 0) TIs.Add(this);
+                if (_c0 != null)
+                    foreach (Node cn in children.Values)
+                    {
+                        TIs.AddRange(cn.AllDecendants);
+                    }
+                return TIs.ToArray();
+            }
         }
 
         public void SetDisabled(TemplateInfo impl, bool value)
