@@ -43,7 +43,7 @@ namespace Cogbot.Actions.System
                 {
                     assemblyName = args.GetString("assembly");
                 }
-                if (SkippedAssemblies.Contains(assemblyName.ToLower())) Success("Assembly " + assemblyName + " loaded.");
+                if (SkippedAssemblies.Contains(assemblyName.ToLower())) return Success("Assembly " + assemblyName + " loaded.");
                 Assembly assembly = FindAssembly(assemblyName);
                 if (assembly == null) return Failure("failed: load " + assemblyName + " cant find it");                
                 Client.InvokeAssembly(assembly, cmd, WriteLine);
