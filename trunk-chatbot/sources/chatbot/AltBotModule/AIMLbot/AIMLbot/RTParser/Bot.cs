@@ -1105,10 +1105,9 @@ namespace RTParser
         public readonly Dictionary<string, User> BotUsers = new Dictionary<string, User>();
 
         public void SetChatOnOff(string username, bool value)
-        {
-            lock (microBotUsersLock)
+        {            
             {
-                foreach (User u in BotUsers.Values)
+                foreach (User u in SetOfUsers)
                 {
                     if (u.UserID.Contains(username) || username.Contains(u.UserID))
                         u.RespondToChat = value;
@@ -1120,13 +1119,7 @@ namespace RTParser
         {
             get
             {
-                List<User> list = new List<User>();
-                lock (BotUsers) foreach (var user in BotUsers.Values)
-                    {
-                        if (list.Contains(user)) continue;
-                        list.Add(user);
-                    }
-                return list;
+                lock (BotUsers) return new List<User>(BotUsers.Values);
             }
         }
 

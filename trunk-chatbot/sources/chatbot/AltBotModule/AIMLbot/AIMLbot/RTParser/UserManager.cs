@@ -273,7 +273,11 @@ namespace RTParser
             return UserOper("FindUser " + fromname, () => FindUser0(fromname), QuietLogger);
         }
 
-        readonly object microBotUsersLock = new object();
+        private object microBotUsersLock
+        {
+            get { return BotUsers; }
+        }
+
         internal User FindUser0(string fromname)
         {
             if (fromname != null && !IsLegalUserName(fromname))

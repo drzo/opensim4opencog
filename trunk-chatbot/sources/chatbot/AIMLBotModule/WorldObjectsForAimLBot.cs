@@ -246,6 +246,7 @@ namespace AIMLBotModule
             AimlBotReadSimData.Enqueue(StartupListener0);
             AimlBotReadSimData.Enqueue(() => AimlBotRespond.Start());
             AimlBotReadSimData.Start();
+            writeLock.Start();
         }
 
         readonly object SILStartupListener00 = new object();
@@ -307,7 +308,7 @@ namespace AIMLBotModule
             }
             catch (Exception e)
             {
-                WriteLine("ERROR {0}", e);
+                LogVital("ERROR {0}", e);
             }
         }
 
@@ -471,7 +472,7 @@ namespace AIMLBotModule
         public void AIML_OnInstantMessage(object sender, InstantMessageEventArgs e)
         {
             var im = e.IM;
-            DLRConsole.DebugWriteLine("InstantMessage=" + im.Dialog);
+            ///DLRConsole.DebugWriteLine("InstantMessage=" + im.Dialog);
             //DLRConsole.DebugWriteLine("FromAgentID=" + WorldSystem.GetObject(im.FromAgentID));
             object toObject = WorldSystem.GetObject(im.ToAgentID);
             //if (toObject!=null) DLRConsole.DebugWriteLine("ToAgentID=" + toObject.GetType());
@@ -556,7 +557,7 @@ namespace AIMLBotModule
                             {
                                 if ((!myUser.CanGiveResponseNow()))
                                 {
-                                    WriteLine("AIML_OnInstantMessage Reply is too fast: {0}: {1}->{2}", myUser, message, resp);
+                                    LogVital("AIML_OnInstantMessage Reply is too fast: {0}: {1}->{2}", myUser, message, resp);
                                     return; //too early to respond.. but still listened
                                 }
                             }
@@ -576,12 +577,12 @@ namespace AIMLBotModule
                                               ting.Trim());
                                     if (!myUser.RespondToChat)
                                     {
-                                        WriteLine("AIML_OnInstantMessage Reply is quietly {0}: {1}->{2}", myUser, message, resp);
+                                        LogVital("AIML_OnInstantMessage Reply is quietly {0}: {1}->{2}", myUser, message, resp);
                                         return;
                                     }
                                     if (!RespondToGroup)
                                     {
-                                        WriteLine("!RespondToGroup {0}: {1}->{2}", myUser, message, resp);
+                                        LogVital("!RespondToGroup {0}: {1}->{2}", myUser, message, resp);
                                         return;
                                     }
                                     client.Self.InstantMessageGroup(GetName(), im.IMSessionID, tsing);
@@ -593,7 +594,7 @@ namespace AIMLBotModule
 
                                     if (!RespondToUserIM)
                                     {
-                                        WriteLine("!RespondToUserIM {0}: {1}->{2}", myUser, message, resp);
+                                        LogVital("!RespondToUserIM {0}: {1}->{2}", myUser, message, resp);
                                         return;
                                     }
                                     // todo maybe send a typing message for the UseRealism
@@ -711,22 +712,26 @@ namespace AIMLBotModule
                             if (String.IsNullOrEmpty(resp)) return;
                             if (!MyUser.CanGiveResponseNow())
                             {
-                                WriteLine("AIML_OnChat Reply is too fast {0}: {1}->{2}", myUser, message, resp);
-
+                                LogVital("AIML_OnChat Warning Reply is too fast {0}: {1}->{2}", myUser, message, resp);           
                                 return;
                             }
                             if (!myUser.RespondToChat)
                             {
-                                WriteLine("AIML_OnChat Reply is quietly {0}: {1}->{2}", myUser, message, resp);
+                                LogVital("AIML_OnChat Warning Reply is quietly {0}: {1}->{2}", myUser, message, resp);
                                 return;
                             }
                             if (!RespondToChatEver)
                             {
-                                WriteLine("!RespondToChatEver {0}: {1}->{2}", myUser, message, resp);
+                                LogVital("!RespondToChatEver Warning {0}: {1}->{2}", myUser, message, resp);
                                 return;
                             }
                             StringChat(resp, type);
                             myUser.StampResponseGiven();
+        }
+
+        private void LogVital(string f, params object[] ps)
+        {
+            WriteLine(f + " WARN ", ps);            
         }
 
         public void HeardMyselfSay(UUID uuid, string message)
@@ -749,7 +754,7 @@ namespace AIMLBotModule
                                            }
                                            catch (Exception e)
                                            {
-                                               WriteLine("ERROR " + name + " " + e);
+                                               LogVital("ERROR " + name + " " + e);
                                            }
                                        });
         }
@@ -908,6 +913,14 @@ namespace AIMLBotModule
                 args = new object[] { s };
                 s = "{0}";
             }
+            if (!logAimlToClient)
+            {
+                string something = DLRConsole.SafeFormat(s, args).ToLower();
+                if (something.Contains("error") || something.Contains("warn"))
+                {
+                    client.WriteLine(s, args);
+                }                
+            }
             if (Monitor.TryEnter(writeLock, 2000))
             {
                 writeLock.Enqueue(() =>
@@ -919,7 +932,7 @@ namespace AIMLBotModule
             }
             else
             {
-                DLRConsole.DebugWriteLine("cant even get a Enqueue! " + MethodInfo.GetCurrentMethod());
+                DLRConsole.DebugWriteLine("ERROR cant even get a Enqueue! " + MethodBase.GetCurrentMethod());
             }
         }
 
@@ -1133,7 +1146,7 @@ namespace AIMLBotModule
                 SUnifiable result = answer;
                 if (result == null)
                 {
-                    DLRConsole.DebugWriteLine("-no-response- for -" + input + "-");
+                    LogVital("-no-response- for -" + input + "-");
                     return null;
                 }
                 String append = AddedToNextResponse.ToString().Trim();
@@ -1154,7 +1167,7 @@ namespace AIMLBotModule
                 SUnifiable result = AIMLInterp0(input, myUser);
                 if (result == null)
                 {
-                    DLRConsole.DebugWriteLine("-no-response- for -" + input + "-");
+                    LogVital("-no-response- for -" + input + "-");
                     return null;
                 }
                 String append = AddedToNextResponse.ToString().Trim();
