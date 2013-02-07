@@ -168,7 +168,27 @@ namespace DotLisp
             // found method
             try
             {
-                if (mi != null) return mi.Invoke(target, argarray);
+                if (mi != null)
+                {
+                    var staticM = mi.IsStatic;
+                    if (isStatic)
+                    {
+                        if (target != null)
+                        {
+                            return mi.Invoke(null, argarray);
+                        }
+                        return mi.Invoke(null, argarray);
+                    }
+                    var dt = mi.DeclaringType;
+                    if (dt == null || dt.IsInstanceOfType(target))
+                    {
+                        return mi.Invoke(target, argarray);
+                    }
+                    else
+                    {
+                        return mi.Invoke(target, argarray);
+                    }
+                }
             }
             catch (SystemException e)
             {

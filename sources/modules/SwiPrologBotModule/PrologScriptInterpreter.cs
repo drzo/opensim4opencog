@@ -370,7 +370,7 @@ namespace PrologScriptEngine
         {
             if (codeTree == null) return true;
             String str = codeTree.ToString().Trim();
-            return String.IsNullOrEmpty((String)codeTree);
+            return String.IsNullOrEmpty(str);
         } // method: Eof
 
 

@@ -7,7 +7,7 @@ namespace MushDLR223.Utilities
 {
     public class OutputDelegateWriter : TextWriter
     {
-        private OutputDelegate output;
+        private readonly OutputDelegate output;
         private StringWriter sw = new StringWriter();
         private object locker;
 
@@ -15,6 +15,18 @@ namespace MushDLR223.Utilities
         {
             output = od;
             locker = od;
+        }
+
+        public override int GetHashCode()
+        {
+            return output.GetHashCode();
+        }
+        public override bool Equals(object obj)
+        {
+            if (base.Equals(obj)) return true;
+            OutputDelegateWriter odw = obj as OutputDelegateWriter;
+            if (odw == null) return false;
+            return odw.output.Equals(output);
         }
 
         public override void Write(string format, params object[] arg)

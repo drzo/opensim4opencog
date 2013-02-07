@@ -555,7 +555,31 @@ namespace Cogbot
 
         public CmdResult ExecuteCommand(string text)
         {
-            return ExecuteCommand(text, this, WriteLine, CMDFLAGS.NoResult);
+            try
+            {
+                return ExecuteCommand(text, this, WriteLine, CMDFLAGS.NoResult);
+            }
+            catch (Exception e)
+            {
+                LogException("ExecuteCommand", e);
+                throw e;
+            }
+
+        }
+
+        public void LogException(string p, Exception ex)
+        {
+            Logger.Log("Exception " + p + "\n" + ex, Helpers.LogLevel.Error, ex);
+            StringWriter sw = new StringWriter();
+            sw.WriteLine("ERROR !Exception: " + ex.GetBaseException().Message);
+            sw.WriteLine("error occured: " + ex.Message);
+            sw.WriteLine("        Stack: " + ex.StackTrace.ToString());
+            Exception inner = ex.InnerException;
+            if (inner != null && inner != ex)
+            {
+                LogException("Inner of " + p, inner);
+            }
+            WriteLine("{0}", sw.ToString());
         }
 
 
