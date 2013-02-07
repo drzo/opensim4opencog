@@ -27,6 +27,7 @@ namespace Cogbot.Actions.System
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
         }
 
+        public static List<String> SkippedAssemblies = new List<string>() { "aimlbot.dll" };
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
@@ -42,6 +43,7 @@ namespace Cogbot.Actions.System
                 {
                     assemblyName = args.GetString("assembly");
                 }
+                if (SkippedAssemblies.Contains(assemblyName.ToLower())) Success("Assembly " + assemblyName + " loaded.");
                 Assembly assembly = FindAssembly(assemblyName);
                 if (assembly == null) return Failure("failed: load " + assemblyName + " cant find it");                
                 Client.InvokeAssembly(assembly, cmd, WriteLine);
@@ -68,6 +70,7 @@ namespace Cogbot.Actions.System
         public static Assembly FindAssembly(string assemblyName)
         {
             Assembly assembly = null;
+            Exception ex = null;
             try
             {
                 assembly = Assembly.Load(assemblyName);
@@ -76,14 +79,34 @@ namespace Cogbot.Actions.System
             {
                 if (fnf.FileName != assemblyName) throw fnf;
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                throw;
+                ex = exception;
             }
             if (assembly != null) return assembly;
-            assembly = LoadAssemblyByFile(assemblyName);
+            try
+            {
+                assembly = LoadAssemblyByFile(assemblyName);
+            }
+            catch (Exception exception)
+            {
+                ex = exception;
+            }
             if (assembly != null) return assembly;
-            return Assembly.LoadFrom(assemblyName);
+            try
+            {
+                assembly = Assembly.LoadFrom(assemblyName);
+            }
+            catch (Exception exception)
+            {
+                ex = exception;
+            }
+            if (assembly != null) return assembly;
+            if (ex == null)
+            {
+                throw new FileNotFoundException("FindAssembly", assemblyName);
+            }
+            throw ex;
         }
 
         private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
