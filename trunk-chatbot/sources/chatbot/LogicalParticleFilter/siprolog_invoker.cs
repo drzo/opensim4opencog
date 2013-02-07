@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.IO;
 using System.Reflection;
 using Mono.CSharp;
+using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using VDS.RDF;
 using VDS.RDF.Parsing;
@@ -33,6 +34,168 @@ using System.Threading;
 
 namespace LogicalParticleFilter1
 {
+    public class SIPrologScriptInterpreter : ScriptInterpreter
+    {
+        public SIPrologScriptInterpreter()
+        {
+          //  prologEngine.ToString();
+        }
+        private SIProlog prologEngine
+        {
+            get { return SIProlog.CurrentProlog; }
+        }
+
+        public static string[] extensions = new [] {"n3", "owl", "rdf", "nt"};
+        private string MT;
+
+        public ScriptInterpreter GetLoaderOfFiletype(string type)
+        {
+            if (LoadsFileType(type)) return this;
+            return null;
+        }
+
+        public void Dispose()
+        {
+          //  throw new NotImplementedException();
+        }
+
+        public bool LoadFile(string filename, OutputDelegate WriteLine)
+        {
+            if (!LoadsFileType(filename)) throw new NotImplementedException();
+            DLRConsole.EnterThreadWriteLine(WriteLine);
+            try
+            {
+                prologEngine.loadKEFile(filename);
+                return true;
+            }
+            catch (Exception exception)
+            {
+                WriteLine("Exception: " + exception);
+                return false;
+            }
+            finally
+            {
+                DLRConsole.ExitThreadWriteLine(WriteLine);
+            }
+        }
+
+        public bool LoadsFileType(string filenameorext)
+        {
+            if (filenameorext.Contains("siprolog")) return true;
+            if (filenameorext.EndsWith(".ke") || filenameorext.EndsWith(".pro")) return true;
+            foreach (var ext in extensions)
+            {
+                if (filenameorext.EndsWith("." + ext))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public object Read(string context_name, TextReader stringCodeReader, OutputDelegate WriteLine)
+        {
+            var body = prologEngine.ParseQuery(stringCodeReader.ReadToEnd(), MT);
+            return body;
+        }
+
+        /// <param name="codeTree"></param>
+        /// <returns></returns>
+        public bool Eof(object codeTree)
+        {
+            if (codeTree == null) return true;
+            String str = codeTree.ToString().Trim();
+            return String.IsNullOrEmpty((String)str);
+        } // method: Eof
+
+
+        public void Intern(string varname, object value)
+        {
+            prologEngine.RegisterObject(varname, value);
+        }
+
+        public object Eval(object code)
+        {
+            TermList partList = code as TermList;
+            if (partList == null)
+            {
+                if (code is SIProlog.Part)
+                {
+                    partList = new TermList((SIProlog.Part) code);
+                }
+            }                   
+            if (code is string)
+            {
+                partList = prologEngine.ParseQuery(code.ToString(), MT);
+            }
+            List<Dictionary<string, SIProlog.Part>> results = new List<Dictionary<string, SIProlog.Part>>();
+            prologEngine.askQuery(partList, MT, true, results, null);
+            return results;
+        }
+
+        public object ConvertArgToLisp(object code)
+        {
+            throw new NotImplementedException();
+        }
+
+        public object ConvertArgFromLisp(object code)
+        {
+            return Str(code);
+        }
+
+        public string Str(object code)
+        {
+            return "" + code;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public ScriptInterpreter newInterpreter(object thiz)
+        {
+            SIPrologScriptInterpreter si;
+            if (prologEngine == null || prologEngine == thiz || Self == thiz || Self == null)
+            {
+                si = this;
+            }
+            else
+            {
+                si = new SIPrologScriptInterpreter();
+            }
+            si.Self = thiz;
+            return si;
+        } // method: newInterpreter
+
+        public bool IsSubscriberOf(string eventName)
+        {
+            return false;
+        }
+
+        public object GetSymbol(string eventName)
+        {
+            //throw new NotImplementedException();
+            return null;
+        }
+
+        public void InternType(Type t)
+        {
+          //  throw new NotImplementedException();
+        }
+
+        public object Self { get; set; }
+        public object Impl { get; private set; }
+        public bool IsSelf(object self)
+        {
+            return self == Self || self == prologEngine;
+        }
+
+        public void Init(object self)
+        {
+            Self = self;
+        }
+    }
+
     public partial class SIProlog
     {
         private readonly CIDictionary<string, List<object>> NameToObjects = new CIDictionary<string, List<object>>();
@@ -77,7 +240,12 @@ namespace LogicalParticleFilter1
             {
                 if (!NameToObjects.TryGetValue(name, out objs) || objs.Count == 0)
                 {
-                    throw new NotSupportedException("no object named " + name);
+                    if (helpfulWarningsOrNull != null)
+                    {
+                        helpfulWarningsOrNull.WriteLine("no such object named '" + name + "'");
+                    }
+                    result = null;
+                    return false;
                 }
             }
             object[] os;
@@ -165,7 +333,6 @@ namespace LogicalParticleFilter1
                     bool mismatch = false;
                     if (ps.Length == methodArgs.Count)
                     {
-                        extraInfo = " except as " + s;
                         for (int i = 0; i < ps.Length; i++)
                         {
                             ParameterInfo parameterInfo = ps[i];
@@ -182,9 +349,11 @@ namespace LogicalParticleFilter1
                             }
                             invokeargs[i] = op;
                         }
-                    } else
+                    }
+                    else
                     {
-                        extraInfo = " except with " + s;
+                        if (extraInfo == "") extraInfo = " except with " + s;
+                        continue;
                     }
                     if (!mismatch)
                     {
@@ -193,8 +362,12 @@ namespace LogicalParticleFilter1
                         if (result == null && s.ReturnType == typeof(void))
                         {
                             result = Atom.PrologNIL;
-                        }     
+                        }
                         return true;
+                    }
+                    if (helpfulWarnings != null)
+                    {
+                        helpfulWarnings.WriteLine("mismatched " + s);
                     }
                 }
 
@@ -209,6 +382,11 @@ namespace LogicalParticleFilter1
 
         private bool ConvertPart(Part arg, Type pt, out object op)
         {
+            if (pt.IsInstanceOfType(arg))
+            {
+                op = arg;
+                return true;
+            }
             if (pt == typeof (string))
             {
                 op = arg.ToSource(SourceLanguage.Text);

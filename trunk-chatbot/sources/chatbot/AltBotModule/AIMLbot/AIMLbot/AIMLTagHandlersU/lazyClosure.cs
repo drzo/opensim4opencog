@@ -82,7 +82,9 @@ namespace RTParser.AIMLTagHandlers
                     deleteLink = true;
                     name = removeTo;
                 }
-                GraphMaster FROM = request.GetGraph(from);
+
+                GraphMaster FROM = request.Graph;
+                if (from != null) FROM = request.GetGraph(from);
                 GraphMaster TO = request.GetGraph(name);
                 if (FROM != null && TO != null)
                 {

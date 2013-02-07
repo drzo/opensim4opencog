@@ -134,6 +134,7 @@ namespace LogicalParticleFilter1
         {
             CurrentProlog = this;
             RegisterObject("siprolog", this);
+            MushDLR223.ScriptEngines.ScriptManager.AddInterpreter(new SIPrologScriptInterpreter());
             DLRConsole.TransparentCallers.Add(GetType());
             DLRConsole.SetIgnoreSender("KEYVALUELISTSIPROLOG", true);
             defineBuiltIns();

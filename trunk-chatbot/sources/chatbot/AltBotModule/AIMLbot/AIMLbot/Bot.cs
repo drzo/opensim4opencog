@@ -260,7 +260,12 @@ namespace RTParser
         /// </summary>
         private List<string> LogBuffer = new List<string>();
 
-
+        public string PersonalizePathLogged(string path)
+        {
+            var pp =  PersonalizePath(path);
+            writeDebugLine("Personalized path: " + path + "->" + pp);
+            return pp;
+        }
         public string PersonalizePath(string path)
         {
             if (String.IsNullOrEmpty(path)) return path;
@@ -274,8 +279,8 @@ namespace RTParser
             string orig = path;
             path = path.Replace("\\", "/");
             path = path.Replace("//", "/");
-            if (path.StartsWith("./")) path = path.Substring(2);
-            if (path.StartsWith("aiml/")) path = path.Substring(5);
+            while (path.StartsWith("./")) path = path.Substring(2);
+            while (path.StartsWith("aiml/")) path = path.Substring(5);
             return HostSystem.FileSystemPath(HostSystem.Combine(PersonalAiml, path));
         }
         private string _rapStoreDirectory;

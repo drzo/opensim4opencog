@@ -1112,7 +1112,7 @@ namespace Cogbot
             return asset;
         }
 
-        bool TalkingAllowed = true;
+        public bool TalkingAllowed = true;
         public bool EnsuredRadegastRunning;
         public bool RanEnsuredMakeRunning;
         public bool RanMakeRunning;

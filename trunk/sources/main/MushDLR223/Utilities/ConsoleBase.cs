@@ -1711,6 +1711,19 @@ namespace MushDLR223.Utilities
         public static bool tl_justWrotePrompt = false;
         private static void SystemWriteLine0(string format, params object[] args)
         {
+            if (ThreadDelegateWriter != null)
+            {
+                foreach (var outputDelegate in ThreadDelegateWriter)
+                {
+                    try
+                    {
+                        outputDelegate(format, args);
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+            }
             var Outputs = DLRConsole.Outputs;
             bool writeNewLine = true;
             bool useSWL00 = false;
@@ -2434,6 +2447,26 @@ namespace MushDLR223.Utilities
         {
             return prefix.Replace("{", "(").Replace("}", ")");
 
+        }
+
+        [ThreadStatic]
+        static List<OutputDelegate> ThreadDelegateWriter;
+        public static void EnterThreadWriteLine(OutputDelegate writeLine)
+        {
+            if (ThreadDelegateWriter == null) ThreadDelegateWriter = new List<OutputDelegate>();
+            ThreadDelegateWriter.Insert(0, writeLine);
+        }
+
+        public static void ExitThreadWriteLine(OutputDelegate writeLine)
+        {
+            if (ThreadDelegateWriter != null)
+            {
+                int count = ThreadDelegateWriter.Count;
+                
+                if (ThreadDelegateWriter[0]!=writeLine) return;
+                ThreadDelegateWriter.RemoveAt(0);
+                if (count == 1) ThreadDelegateWriter = null;
+            }            
         }
     }
 

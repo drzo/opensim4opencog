@@ -83,7 +83,7 @@ namespace LogicalParticleFilter1
                 sw.WriteLine("TOTRIPLES: ");
                 DumpTriplesPlain(ToTriples, sw, " {0}", ig);
                 sw.WriteLine("EOT.");
-                //WriteGraph(sw, ig, "rdfs triples", true, false);
+                //WriteGraph(helpfulWarningsOrNull, ig, "rdfs triples", true, false);
                 return sw.ToString();
             }
 

@@ -549,7 +549,15 @@ namespace Cogbot
 
         public CmdResult ExecuteCommand(CmdRequest request)
         {
-            return ClientManager.ExecuteCommand(request, this);
+            try
+            {
+                return ClientManager.ExecuteCommand(request, this);
+            }
+            catch (Exception e)
+            {
+                LogException("ExecuteCommand " + request, e);
+                throw e;
+            }
         }
 
         static public CmdResult DoCmdAct(Command command, string verb, string args, 
@@ -933,7 +941,19 @@ namespace Cogbot
         }
         public void ExecuteCommand(string text)
         {
-            ExecuteCommand(text, CMDFLAGS.NoResult);
+            try
+            {
+                ExecuteCommand(text, CMDFLAGS.NoResult);
+            }
+            catch (Exception e)
+            {
+                LogException("ExecuteCommand " + text, e);
+                if (e is NoSuchCommand)
+                {
+                    return;
+                }
+                throw e;
+            }
         }
         public CmdResult ExecuteCommand(string text, CMDFLAGS needResult)
         {

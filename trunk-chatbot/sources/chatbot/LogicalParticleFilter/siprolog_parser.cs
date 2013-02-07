@@ -911,6 +911,10 @@ namespace LogicalParticleFilter1
         {
             return ParseBody(new Tokeniser(query), mt);
         }
+        public PartListImpl ParseQuery(string query, string mt)
+        {
+            return ParseBody(new Tokeniser(query), mt);
+        }
         public PartListImpl ParseBody(Tokeniser tk, string mt)
         {
             // Body -> Term {, Term...}
