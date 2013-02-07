@@ -429,11 +429,11 @@ namespace RTParser.Utils
 
         private static void EnterContext(Request request, SubQuery query)
         {
-            request.EnterContext();
+            request.Enter(query);
         }
         private static void ExitContext(Request request, SubQuery query)
         {
-            request.ExitContext();
+            request.Exit(query);
         }
 
 

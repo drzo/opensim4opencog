@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using AIMLbot;
+using AltAIMLbot;
 using AltAIMLbot.Utils;
 using AltAIMLParser;
 using RTParser.Utils;
@@ -26,7 +28,7 @@ namespace RTParser
         public AIMLTagHandlerU TagHandlerU;
         public SubQuery SubQuery;
         public TemplateInfo TemplateInfo;
-        public AIMLbot.MasterResult result;
+        public Result result;
         public Request request;
 
         public virtual bool NeedsAdding { get { return true; } }

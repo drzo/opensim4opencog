@@ -561,7 +561,7 @@ namespace RTParser
             AltBot Proc = query.TargetBot;
 
             //query.LastTagHandler = handler;
-            bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput ||
+            bool isTraced = request.IsTraced || request.IsTraced || !request.GraphsAcceptingUserInput ||
                             (templateInfo != null && templateInfo.IsTraced);
             //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
             bool usedGuard = sGuard != null && sGuard.PatternNode != null;
@@ -839,7 +839,7 @@ namespace RTParser
                 childSuccess = false;
                 writeToLog(whyError);
             }
-            bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput ||
+            bool isTraced = request.IsTraced || !request.GraphsAcceptingUserInput ||
                  (query != null && query.IsTraced);
 
             // check for timeout (to avoid infinite loops)

@@ -322,9 +322,6 @@
     <Compile Include="AIMLTagHandlersU\xml.cs" />
     <Compile Include="AIMLTagHandlersU\xmlattribute.cs" />
     <Compile Include="Conversation\ConversationLog.cs" />
-    <Compile Include="Conversation\InteractionResult.cs" />
-    <Compile Include="Conversation\SituationInConversation.cs" />
-    <Compile Include="Conversation\UserConversationScope.cs" />
     <Compile Include="Conversation\Utterance.cs" />
     <Compile Include="Database\AskDotComFactiodEngine.cs" />
     <Compile Include="Database\BrillTagger.cs" />
@@ -365,7 +362,6 @@
     <Compile Include="RTParser\SelfLearning.cs" />
     <Compile Include="RTParser\SideEffectStage.cs" />
     <Compile Include="RTParser\TemplateResult.cs" />
-    <Compile Include="RTParser\UserDuringProcessing.cs" />
     <Compile Include="RTParser\UserManager.cs" />
     <Compile Include="RTParser\WebScriptExecutor.cs" />
     <Compile Include="RTParser\CycNLTagHandlers\NumberTemplate.cs" />
@@ -389,16 +385,6 @@
     <Compile Include="Unify\StringAppendableUnifiableImpl.cs" />
     <Compile Include="Unify\StringUnifiable.cs" />
     <Compile Include="Unify\Unifiable.cs" />
-    <Compile Include="Unused\AIMLTagHandlerUtils_legacy.cs" />
-    <Compile Include="Unused\AIMLTagHandler_legacy.cs" />
-    <Compile Include="Unused\MatchInfo.cs" />
-    <Compile Include="Unused\MatchState.cs" />
-    <Compile Include="Unused\Node_legacy.cs" />
-    <Compile Include="Unused\OutputInfo.cs" />
-    <Compile Include="Unused\PatternInfo.cs" />
-    <Compile Include="Unused\ResponseInfo.cs" />
-    <Compile Include="Unused\ThatInfo.cs" />
-    <Compile Include="Unused\TopicInfo.cs" />
     <Compile Include="Utils\AIMLLoader.cs" />
     <Compile Include="Utils\AIMLTagHandler.cs" />
     <Compile Include="Utils\CustomTag.cs" />

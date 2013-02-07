@@ -961,7 +961,7 @@ namespace RTParser
             return defaultVal;
         }
 
-        public string OutputResult(InteractionResult res, OutputDelegate console, bool includeWeigth)
+        public string OutputResult(Result res, OutputDelegate console, bool includeWeigth)
         {
             User CurrentUser = res.Requester.Value;
             string user = CurrentUser.UserName;
@@ -1043,7 +1043,7 @@ namespace RTParser
             return said;
         }
 
-        public bool IsInteractiveUser(IUser value)
+        public bool IsInteractiveUser(User value)
         {
             return value != null && value != _botAsUser && value != ExemplarUser;
         }

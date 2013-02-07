@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using AltAIMLParser;
+using AltAIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser.Database;
@@ -34,7 +35,7 @@ namespace RTParser
         public Action OnGetParsed;
         public Unifiable OrignalRawText;
 
-        public Utterance(Func<Unifiable, Unifiable> generatePhrase, UserConversationScope speaker, UserConversationScope toWhom, Unifiable rawText, int maxSentences)
+        public Utterance(Func<Unifiable, Unifiable> generatePhrase, User speaker, User toWhom, Unifiable rawText, int maxSentences)
         {
             Speaker = speaker;
             ToWhom = toWhom;
@@ -47,11 +48,11 @@ namespace RTParser
         /// <summary>
         /// The user that made this Utterance
         /// </summary>
-        public UserConversationScope Speaker { get; set; }
+        public User Speaker { get; set; }
         /// <summary>
         /// The user responding to the request
         /// </summary>
-        public UserConversationScope ToWhom { get; set; }
+        public User ToWhom { get; set; }
 
         /// <summary>
         /// The last meaning unit extracted from what the ToWhom said previous

@@ -26,90 +26,10 @@ using DataUnifiableYYY = RTParser.Unifiable;
 
 namespace AltAIMLbot
 {
-    public interface User : IUser, UserStaticModel, RTParser.UserConversationScope, RTParser.UserDuringProcessing
-    {
-        void DisposeObject();
-        bool IsValid { get; set; }
-        GraphMaster StartGraph { get; set; }
-        object TemplatesLock { get; }
-        GraphMaster HeardYouSayGraph { get; set; }
-        Request LastRequest { get; set; }
-        AltBot rbot { get; }
-        string blackBoardThat { get; set; }
-        Dictionary<string, double> Qstate { get; }
-
-        void RaiseEvent(string p, AltBot robot);
-
-        MasterRequest CreateRequest(Unifiable message, User targetUser);
-        IEnumerable<string> getThats();
-        IEnumerable<string> getTopics();
-        IEnumerable<string> getPreStates();
-        IEnumerable<string> getPostStates();
-        void setUserID(string id);
-        bool SetMeMyselfAndI(string fullname);
-    }
-}
-
-namespace RTParser
-{
-    public interface IUser
-    {
-        UserStaticModel StaticModel { get; }
-        UserConversationScope ConversationScope { get; }
-        UserConversationScope DuringProcessing { get; }
-        User Value { get; }
-    }
-
-    public interface UserStaticModel : IUser
-    {
-        AltBot bot { get; }
-        string UserID { get; set; }
-        string UserName { get; set; }
-
-        GraphMaster GetResponseGraph(User target);
-        void StampResponseGiven();
-        bool CanGiveResponseNow();
-        int MaxInputs { get; set; }
-        bool IsRoleAcct { get; set; }
-        OutputDelegate userTrace { set; }
-        DateTime NameUsedOrGivenTime { get; set; }
-        PrintOptions WriterOptions { get; }
-        bool RespondToChat { get; set; }
-        int MaxRespondToChatPerMinute { get; set; }
-
-        /// <summary>
-        /// If user says something to robot we.. do a user.CreateRequest("Hi robot",BotAsUser);
-        /// </summary>
-        /// <param name="input"></param>
-        /// <param name="targetUser"></param>
-        /// <returns></returns>
-        MasterRequest CreateRequest(Unifiable input, Unifiable said, User targetUser);
-        MasterRequest CreateRequest(Unifiable message, User target, Unifiable targetsaid, GraphMaster G, Request parentRequest);
-
-        TaskQueueHandler GetTaskQueueHandler(string find);
-        void AddTodoItem(CrossAppDomainDelegate todo);
-
-        string UserDirectory { get; }
-        void LoadDirectory(string userdir);
-        void SaveDirectory(string userDirectory);
-        void SyncDirectory(string userdir);
-        void SaveOften();
-        bool DoUserCommand(string args, OutputDelegate console);
-
-        void WriteToUserTrace(string s, params object[] args);
-
-        QuerySettings GetQuerySettings();
-        QuerySettings GetQuerySettingsSRAI();
-        ConversationLog GetConversationLog(string userName, bool createIfMissing);
-        bool IsNamed(string lname);
-    }
-
     /// <summary>
     /// Encapsulates information and history of a user who has interacted with the bot
     /// </summary>
-    public class MasterUser : AltAIMLbot.Utils.CommonStaticUtils, IUser, IDisposable, ISettingsDictionary, UserConversationScope,
-                                     UserDuringProcessing,
-                                     User
+    public class User : AltAIMLbot.Utils.CommonStaticUtils,  IDisposable, ISettingsDictionary                                     
     {
         /// <summary>
         /// List of possible non-determinstic "states". When present will select the one with 
@@ -515,13 +435,6 @@ namespace RTParser
         /// </summary>
         private readonly List<Result> Results = new List<Result>();
 
-        /// <summary>
-        /// A collection of all the Interaction objects returned to the user in this session
-        /// (in reverse order of time)
-        /// </summary>
-        private readonly List<InteractionResult> Interactions = new List<InteractionResult>();
-
-
         private readonly List<Unifiable> _topics = new List<Unifiable>();
 
         public IList<Unifiable> Topics
@@ -636,7 +549,7 @@ namespace RTParser
         /// </summary>
         /// <param name="UserID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-        internal MasterUser(string userID,string fullname, AltBot bot, SettingsDictionary dict)
+        internal User(string userID, string fullname, AltBot bot, SettingsDictionary dict)
         {
             this.bot = bot;
             IsValid = true;
@@ -771,7 +684,7 @@ namespace RTParser
         /// Returns the Unifiable to use for the next that part of a subsequent path
         /// </summary>
         /// <returns>the Unifiable to use for that</returns>
-        public Unifiable LastSaidByReponder(UserConversationScope responder)
+        public Unifiable LastSaidByReponder(User responder)
         {
             if (this.SailentResultCount > 0)
             {
@@ -1181,7 +1094,7 @@ namespace RTParser
             return UserName.ToLower() == lname || UserID.ToLower() == lname;
         }
 
-        private UserConversationScope LastReponderFromDictionary()
+        private User LastReponderFromDictionary()
         {
             foreach (var name in StaticXMLUtils.NamesStrings("you,lastusername,lastuserid"))
             {
@@ -1198,7 +1111,7 @@ namespace RTParser
                 {
                     if (LastResult != null)
                     {
-                        UserConversationScope user0 = LastResultOtherParticipant();
+                        User user0 = LastResultOtherParticipant();
                         if (user0.IsNamed(lname))
                         {
                             return user0;
@@ -1213,8 +1126,8 @@ namespace RTParser
             }
             return null;
         }
-        private UserConversationScope _LastResponderCahced = null;
-        public UserConversationScope LastResponder
+        private User _LastResponderCahced = null;
+        public User LastResponder
         {
             get
             {
@@ -1232,7 +1145,7 @@ namespace RTParser
             {
                 if (value == null || value == this) return;
                 _LastResponderCahced = value;
-                UserStaticModel sm = value.StaticModel;
+                User sm = value.StaticModel;
                 Predicates["lastuserid"] = sm.UserID;
                 string userName = sm.UserName;
                 Predicates["lastusername"] = userName;
@@ -1242,11 +1155,11 @@ namespace RTParser
             }
         }
 
-        private UserConversationScope LastResultOtherParticipant()
+        private User LastResultOtherParticipant()
         {
             if (LastResult != null)
             {
-                UserConversationScope lastResultResponder = LastResult.Responder;
+                User lastResultResponder = LastResult.Responder;
                 if (lastResultResponder != this && lastResultResponder != null) return lastResultResponder;
                 lastResultResponder = LastResult.Requester;
                 if (lastResultResponder != this && lastResultResponder != null) return lastResultResponder;
@@ -1369,7 +1282,7 @@ namespace RTParser
             return GetResult(i, mustBeSalient, null);
         }
 
-        public Result GetResult(int i, bool mustBeSalient, UserConversationScope responder)
+        public Result GetResult(int i, bool mustBeSalient, User responder)
         {
             bool mustBeResponder = responder != null;
             if (i == -1) return CurrentRequest.CurrentResult;
@@ -1870,25 +1783,6 @@ namespace RTParser
             // ReSharper restore PossibleLossOfFraction
         }
 
-        public void Enter(ConversationScopeHolder srai)
-        {
-            //depth++;
-        }
-
-        public void Exit(ConversationScopeHolder srai)
-        {
-            //depth--;
-            if (false)
-            {
-                SituationInConversation sraiContextScope = srai.ContextScope;
-                if (sraiContextScope != null)
-                {
-                    var query = sraiContextScope.CurrentQuery;
-                    if (query != null) query.PurgeTagHandlers();
-                }
-            }
-        }
-
         public string grabSettingNoDebug(string settingName)
         {
             return Predicates.grabSetting(settingName);
@@ -1899,17 +1793,17 @@ namespace RTParser
             get { return this; }
         }
 
-        public UserStaticModel StaticModel
+        public User StaticModel
         {
             get { return this; }
         }
 
-        public UserConversationScope ConversationScope
+        public User ConversationScope
         {
             get { return this; }
         }
 
-        public UserConversationScope DuringProcessing
+        public User DuringProcessing
         {
             get { return this; }
         }
@@ -2008,12 +1902,15 @@ namespace RTParser
             this.id = id;
             this.UserName = id;
         }
+
+        public void Enter(object srai)
+        {
+        }
+        public void Exit(object srai)
+        {
+        }
     }
 
-    public interface ConversationScopeHolder
-    {
-        SituationInConversation ContextScope { get; }
-    }
 }
 /*
 namespace AltAIMLbotFOO
@@ -2266,7 +2163,7 @@ namespace AltAIMLbotFOO
         {
             return GetResult(i, mustBeSalient, null);
         }
-        public Result GetResult(int i, bool mustBeSalient, UserConversationScope responder)
+        public Result GetResult(int i, bool mustBeSalient, User responder)
         {
             bool mustBeResponder = responder != null;
             //if (i == -1) return CurrentRequest.CurrentResult;

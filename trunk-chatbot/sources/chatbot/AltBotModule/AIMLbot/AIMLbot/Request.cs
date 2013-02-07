@@ -21,7 +21,7 @@ namespace AltAIMLParser
     /// <summary>
     /// Encapsulates all sorts of information about a request to the Proccessor for processing
     /// </summary>
-    sealed public class Request : QuerySettings, QuerySettingsSettable, QuerySettingsReadOnly, RequestOrQuery, UndoStackHolder, ConversationScopeHolder
+    sealed public class Request : QuerySettings, QuerySettingsSettable, QuerySettingsReadOnly, UndoStackHolder
     {
         #region Attributes
         public int depth = 0;
@@ -402,7 +402,7 @@ namespace AltAIMLParser
                 unifiableToVMString, Topic);
         }
 
-        private static string UserNameOf(UserStaticModel requester, string defaultName)
+        private static string UserNameOf(User requester, string defaultName)
         {
             if (requester == null) return defaultName;
             return requester.UserID ?? defaultName;
@@ -1212,7 +1212,7 @@ namespace AltAIMLParser
             get
             {
                 Unifiable something;
-                if (MasterUser.ThatIsStoredBetweenUsers)
+                if (User.ThatIsStoredBetweenUsers)
                 {
                     if (Requester != null && IsSomething(Requester.That, out something)) return something;
                     if (Responder != null && IsSomething(Responder.JustSaid, out something)) return something;
@@ -1279,7 +1279,7 @@ namespace AltAIMLParser
                 {
                     ithat = value;
                 }
-                if (MasterUser.ThatIsStoredBetweenUsers)
+                if (User.ThatIsStoredBetweenUsers)
                 {
                     var responder = Responder;
                     if (responder != null) responder.JustSaid = ithat;
@@ -1290,7 +1290,7 @@ namespace AltAIMLParser
 
         public Unifiable RequestThat()
         {
-            if (MasterUser.ThatIsStoredBetweenUsers) throw new InvalidOperationException("must User.get_That()");
+            if (User.ThatIsStoredBetweenUsers) throw new InvalidOperationException("must User.get_That()");
             var req = this;
             while (req != null)
             {
@@ -1777,51 +1777,11 @@ namespace AltAIMLParser
             ExitQueue.Commit(true);
         }
         #endregion
-
-        public void EnterContext()
+        public void Enter(object srai)
         {
-            Requester.Enter(this);
         }
-        public void ExitContext()
+        public void Exit(object srai)
         {
-            Requester.Exit(this);
-        }
-
-        public SituationInConversation ContextScope
-        {
-            get
-            {
-                ConversationScopeHolder currentScopeHolder;
-                SituationInConversation scope = null;
-
-                currentScopeHolder = CurrentQuery as ConversationScopeHolder;
-                if (currentScopeHolder != null)
-                {
-                    scope = currentScopeHolder.ContextScope;
-                    if (scope != null) return scope;
-                }
-
-                currentScopeHolder = CurrentResult as ConversationScopeHolder;
-                if (currentScopeHolder != null)
-                {
-                    Request currentResultrequest = CurrentResult.request;
-                    if (currentResultrequest != this)
-                    {
-                        writeToLog("switching request contexts (looking for ContextScope): " + currentResultrequest);
-                        scope = currentScopeHolder.ContextScope;
-                        if (scope != null) return scope;
-                    }
-                }
-
-                currentScopeHolder = ParentRequest as ConversationScopeHolder;
-                if (currentScopeHolder != null)
-                {
-                    scope = currentScopeHolder.ContextScope;
-                    if (scope != null) return scope;
-                }
-
-                return scope;
-            }
         }
 
         #region UndoStackHolder Members

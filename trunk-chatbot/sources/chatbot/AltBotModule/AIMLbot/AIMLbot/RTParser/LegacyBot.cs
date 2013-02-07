@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -1747,7 +1747,7 @@ namespace RTParser
             foreach (SubQuery query in result.SubQueries)
             {
                 result._CurrentQuery = query;
-                UList queryTemplates = query.Templates;
+                UTemplateList queryTemplates = query.Templates;
                 if (queryTemplates != null && queryTemplates.Count > 0)
                 {
                     foreach (TemplateInfo s in queryTemplates)

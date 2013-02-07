@@ -943,7 +943,7 @@ namespace RTParser
                     said = args;
                 }
                 User factSpeaker = robot.FindOrCreateUser(who);
-                UserConversationScope factSpeakerLastResponder = factSpeaker.LastResponder;
+                User factSpeakerLastResponder = factSpeaker.LastResponder;
                 User factSpeakerLastResponderValue = null;
                 if (factSpeakerLastResponder != null)
                 {
@@ -964,7 +964,7 @@ namespace RTParser
                     said = args;
                 }
                 User factSpeaker = robot.FindOrCreateUser(who);
-                UserConversationScope factSpeakerLastResponder = factSpeaker.LastResponder;
+                User factSpeakerLastResponder = factSpeaker.LastResponder;
                 User factSpeakerLastResponderValue = null;
                 if (factSpeakerLastResponder != null)
                 {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using AIMLbot;
 using AltAIMLbot.Utils;
 using AltAIMLParser;
@@ -11,14 +12,14 @@ using RTParser.Variables;
 using UPath = RTParser.Unifiable;
 using MasterRequest = AltAIMLParser.Request;
 
-
 namespace AltAIMLbot
 {
     /// <summary>
     /// Encapsulates information about the result of a request to the bot
     /// </summary>
-    public abstract class Result : QuerySettings, InteractionResult, RequestOrQuery
+    public abstract class Result
     {
+#if true
         /// <summary>
         /// The subQueries processed by the bot's graphmaster that contain the templates that 
         /// are to be converted into the collection of Sentences
@@ -38,7 +39,7 @@ namespace AltAIMLbot
         }
 
 
-        public override string StartGraphName
+        public string StartGraphName
         {
             get { return ParentRequest.StartGraphName; }
             set { throw new NotImplementedException(); }
@@ -59,9 +60,10 @@ namespace AltAIMLbot
             //request = null;
         }
 
-        public abstract void FreeResult();
+        //public abstract void FreeResult();
 
         private string userSetResultComplete;
+
         public string WhyResultComplete
         {
             get
@@ -88,13 +90,18 @@ namespace AltAIMLbot
         public DateTime EndedOn = DateTime.MaxValue;
 
         //  private readonly ParsedSentences ChatInput;
-        public abstract Result result { get; }
+        public Result result
+        {
+            get { return (Result) this; }
+        }
+
         private RTParser.Utterance _chatOutput;
+
         public RTParser.Utterance ChatOutput
         {
             get
             {
-                if (_chatOutput==null)
+                if (_chatOutput == null)
                 {
                     return null;
                 }
@@ -126,7 +133,10 @@ namespace AltAIMLbot
         /// <summary>
         /// The individual sentences produced by the bot that form the complete response
         /// </summary>
-        public List<Unifiable> OutputSentences { get { return ChatOutput.EnglishSentences; }/* ; private set;*/ }
+        public List<Unifiable> OutputSentences
+        {
+            get { return ChatOutput.EnglishSentences; } /* ; private set;*/
+        }
 
         //public Result ParentResult;
 
@@ -161,7 +171,7 @@ namespace AltAIMLbot
             : this(request.rawInput, user, bot, request, request.Responder)
         {
             this.request = request;
-            this.request.result = this;
+            this.request.result = ((Result) this);
         }
 
         /// <summary>
@@ -170,16 +180,8 @@ namespace AltAIMLbot
         /// <param name="user">The user for whom this is a result</param>
         /// <param name="bot">The bot providing the result</param>
         /// <param name="request">The request that originated this result</param>
-        public
-
-#if interface
-            ResultImpl
-#else
-            Result
-#endif // interface
-
-            (string rawInput, UserDuringProcessing user, AltBot bot, Request parent, UserConversationScope targetUser)
-            : base(parent)
+        public Result(string rawInput, User user, AltBot bot, Request parent, User targetUser)
+            : base()
         {
             this.request = parent;
             ExitQueue = new CommitQueue();
@@ -279,7 +281,7 @@ namespace AltAIMLbot
                     }
                     else
                     {
-                        if (request.IsComplete(this))
+                        if (request.IsComplete(((Result) this)))
                         {
                             writeToLog("ERROR: " + request.WhyComplete + " on " + RawInput +
                                        " from the user with an id: " + Requester.UserID);
@@ -296,7 +298,8 @@ namespace AltAIMLbot
                             }
                             writeToLog("The bot could not find any response for the input: " + RawInput +
                                        " with the path(s): " +
-                                       Environment.NewLine + Unifiable.DescribeUnifiable(paths) + " from the user with an id: " +
+                                       Environment.NewLine + Unifiable.DescribeUnifiable(paths) +
+                                       " from the user with an id: " +
                                        Requester.UserID);
                             return Unifiable.NULL;
                         }
@@ -322,9 +325,6 @@ namespace AltAIMLbot
             get { return OutputSentenceCount == 0; }
         }
 
-        public abstract ISettingsDictionary RequesterChanges { get; }
-        public abstract ISettingsDictionary ResponderChanges { get; }
-
         public int OutputSentenceCount
         {
             get { lock (OutputSentences) return OutputSentences.Count; }
@@ -346,8 +346,9 @@ namespace AltAIMLbot
             set { CurrentQuery.TargetSettings = value; }
         }
 
-        public UserConversationScope altResponder = null;
-        public UserConversationScope Responder
+        public User altResponder = null;
+
+        public User Responder
         {
             get
             {
@@ -409,13 +410,11 @@ namespace AltAIMLbot
             get
             {
                 if (OutputSentenceCount == 0) return false;
-                if (IsNullOrEmpty(RawOutput)) return false;
+                if (Unifiable.IsNullOrEmpty(RawOutput)) return false;
                 return true;
             }
         }
 
-        public abstract InteractionResult PreviousInteraction { get; }
-        public abstract InteractionResult NextInteraction { get; }
         public int MaxCanEvalResult { get; set; }
 
         public IList<TemplateInfo> ResultTemplates
@@ -425,6 +424,7 @@ namespace AltAIMLbot
 
         internal bool useParentSF = false;
         private int _hasFailed = -1;
+
         public int HasFailed
         {
             get { return _hasFailed + (useParentSF ? ParentRequest.HasFailed : 0); }
@@ -449,6 +449,7 @@ namespace AltAIMLbot
         }
 
         private int _hasSuceeded = -1;
+
         public int HasSuceeded
         {
             get
@@ -481,7 +482,8 @@ namespace AltAIMLbot
         }
 
         public CommitQueue ExitQueue { get; set; }
-        bool HasExited;
+        private bool HasExited;
+
         public void Exit()
         {
             lock (ExitQueue)
@@ -499,7 +501,7 @@ namespace AltAIMLbot
             get { return request.TargetBot; }
         }
 
-        public UserConversationScope Requester
+        public User Requester
         {
             get { return request.Requester; }
             // set { request.Requester = value; }
@@ -511,6 +513,7 @@ namespace AltAIMLbot
         private string matchable;
         private int OutputPings;
         public char resultCount;
+
         public bool isValidOutput
         {
             get
@@ -536,7 +539,7 @@ namespace AltAIMLbot
 
         protected MasterRequest ParentRequest
         {
-            get { return (MasterRequest)request; }
+            get { return (MasterRequest) request; }
         }
 
         /// <summary>
@@ -547,7 +550,7 @@ namespace AltAIMLbot
             get
             {
                 Unifiable something;
-                if (IsSomething(ChatOutput.TheMainSentence, out something)) return something;
+                if (Unifiable.IsSomething(ChatOutput.TheMainSentence, out something)) return something;
                 return Unifiable.MISSING;
             }
         }
@@ -566,7 +569,7 @@ namespace AltAIMLbot
             var queriesGetBindings = queries.GetBindings();
             foreach (SubQuery query in queriesGetBindings)
             {
-                if (IsTraced)
+                if (request.IsTraced)
                 {
                     // writeToLog("AIMLTRACE SQ: " + this + " \n" + query.ToString().TrimStart());
                 }
@@ -575,6 +578,7 @@ namespace AltAIMLbot
             DLRConsole.SystemFlush();
             Started = true;
         }
+
         public void AddOutputSentences(string sentence)
         {
             this.resultCount++;
@@ -594,7 +598,7 @@ namespace AltAIMLbot
 
                 }
                 OutputSentencesAdd(s);
-            }            
+            }
         }
 
         public string BestSentence
@@ -610,6 +614,7 @@ namespace AltAIMLbot
                 return last;
             }
         }
+
         public string LastSentence
         {
             get
@@ -622,10 +627,12 @@ namespace AltAIMLbot
                 return last;
             }
         }
+
         public void AddOutputSentences(TemplateInfo ti, string unifiable, double score)
         {
             AddOutputSentences0(ti, unifiable, score);
         }
+
         /*
                 public bool IsTemplateNew(TemplateInfo ti, Unifiable tempOut)
                 {
@@ -664,6 +671,7 @@ namespace AltAIMLbot
                     return true;
                 }
         */
+
         private void AddOutputSentences0(TemplateInfo ti, string unifiable, double score)
         {
             if (null == unifiable)
@@ -685,7 +693,7 @@ namespace AltAIMLbot
                 }
                 else if (ti.TextSaved != null)
                 {
-                    if (IsTraced) writeToLog("switching '" + ti.TextSaved + "' to '" + unifiable + "'");
+                    if (request.IsTraced) writeToLog("switching '" + ti.TextSaved + "' to '" + unifiable + "'");
                     ti.TextSaved = unifiable;
                 }
                 else
@@ -709,6 +717,7 @@ namespace AltAIMLbot
             AddOutputResultSentences(unifiable, addToFront);
             //AddOutputSentences2(ti,unifiable);
         }
+
         private void AddOutputResultSentences(string unifiable, bool addToFront)
         {
             OutputPings++;
@@ -719,10 +728,11 @@ namespace AltAIMLbot
             //ChatOutput.ClearSentences();
             AddOutputSentences11(unifiable, addToFront);
         }
+
         private void AddOutputSentences11(string unifiable, bool addToFront)
         {
             unifiable = StaticAIMLUtils.Trim(unifiable).Replace("\n", " ").Replace("\r", " ");
-            string[] sentNow = unifiable.Split(new[] { "<br/>", "&p;", "<p/>" }, StringSplitOptions.RemoveEmptyEntries);
+            string[] sentNow = unifiable.Split(new[] {"<br/>", "&p;", "<p/>"}, StringSplitOptions.RemoveEmptyEntries);
             if (AlreadyUsed.Contains(unifiable))
             {
                 return;
@@ -736,7 +746,7 @@ namespace AltAIMLbot
                 AddOutputs(sentNow, addToFront);
                 return;
             }
-            sentNow = GetSents(new[] { ". ", "? " }, unifiable).ToArray();
+            sentNow = GetSents(new[] {". ", "? "}, unifiable).ToArray();
             if (sentNow.Length == 1)
             {
                 unifiable = sentNow[0];
@@ -747,31 +757,13 @@ namespace AltAIMLbot
                 return;
             }
 
-            if (IsNullOrEmpty(unifiable))
+            if (Unifiable.IsNullOrEmpty(unifiable))
             {
                 return;
             }
             AlreadyUsed += unifiable;
             lock (OutputSentences)
             {
-#if false
-                if (unifiable == null || unifiable == "*" || unifiable == Unifiable.Empty)
-                {
-                    return;
-                }
-                int found = OutputSentences.IndexOf(unifiable);
-                int c = OutputSentences.Count - 1;
-                if (found == c)
-                {
-                    return;
-                }
-                if (found < 1)
-                {
-                    OutputSentencesAdd(unifiable);
-                    return;
-                }
-                OutputSentences.RemoveAt(found);
-#endif
                 if (unifiable.Contains("&"))
                 {
                     OutputSentences.Remove(unifiable);
@@ -797,19 +789,6 @@ namespace AltAIMLbot
         public void SetOutputSentence(int sent, string data)
         {
             OutputSentencesInsert(sent, data);
-        }
-        private static string oneLastSentence = null;
-        private void OutputSentencesAdd(string unifiable)
-        {
-            lock (OutputSentences)
-            {
-                if (OutputSentences.Contains(unifiable) /*|| oneLastSentence == unifiable*/)
-                {
-                    return;
-                }
-                oneLastSentence = unifiable;
-                OutputSentences.Add(unifiable);
-            }
         }
 
         private void OutputSentencesInsert(int i, string unifiable)
@@ -855,36 +834,6 @@ namespace AltAIMLbot
             OutputSentences.AddRange(l);
         }
 
-        private void AddOutputSentences2(TemplateInfo ti, string unifiable)
-        {
-            {
-                bool isComplete = OutputSentences.Count >=
-                                  ((QuerySettingsReadOnly)request.GetQuerySettings()).MinOutputs ||
-                                  request.IsComplete(this);
-
-                if (!isComplete) return;
-
-                lock (ChatLabel.Labels)
-                {
-                    ChatLabel rd = this.CatchLabel;
-                    if (rd == null) return;
-                    if (!ChatLabel.IsFirst(rd)) return;
-                    if (ti != null)
-                    {
-                        rd.TemplateInfo = ti;
-                        rd.CreatedOutput = true;
-                        rd.SubQuery = ti.Query;
-                        rd.request = request;
-                        // rd.KeepThrowing = true;
-                        rd.TagHandlerU = ti.Query.LastTagHandlerU;
-                        rd.result = (MasterResult)this;
-                    }
-                    throw rd;
-                }
-
-            }
-        }
-
         private List<string> GetSents(string[] splitters, string unifiable)
         {
             List<string> strings = new List<string>();
@@ -918,7 +867,7 @@ namespace AltAIMLbot
 
         public void AddResultFormat(string format, params object[] args)
         {
-            lock (OutputSentences) OutputSentencesAdd(SafeFormat(format, args));
+            lock (OutputSentences) OutputSentencesAdd(DLRConsole.SafeFormat(format, args));
         }
 
         /// <summary>
@@ -931,8 +880,6 @@ namespace AltAIMLbot
             return request.ToRequestString() + " -> " + ToResultString() + " " +
                    (whyComplete != null ? " WhyComplete=" + whyComplete : "");
         }
-
-        public abstract Unifiable GetInputSentence(int sentence);
 
         public string WhyComplete
         {
@@ -1037,6 +984,12 @@ namespace AltAIMLbot
             set { request.CatchLabel = value; }
         }
 
+        public bool IsTraced
+        {
+            get { return request.IsTraced; }
+            set { request.IsTraced = true; }
+        }
+
         private bool FoundInParents(TemplateInfo info, Result requestOrResult)
         {
             return false;
@@ -1058,62 +1011,11 @@ namespace AltAIMLbot
             return false;
         }
 
-        public SituationInConversation ContextScope
-        {
-            get
-            {
-                ConversationScopeHolder currentScopeHolder;
-                SituationInConversation scope = null;
 
-                currentScopeHolder = CurrentQuery as ConversationScopeHolder;
-                if (currentScopeHolder != null)
-                {
-                    scope = currentScopeHolder.ContextScope;
-                    if (scope != null) return scope;
-                }
-
-                currentScopeHolder = ParentResult as ConversationScopeHolder;
-                if (currentScopeHolder != null)
-                {
-                    scope = currentScopeHolder.ContextScope;
-                    if (scope != null) return scope;
-                }
-
-
-                currentScopeHolder = ParentRequest as ConversationScopeHolder;
-                if (currentScopeHolder != null)
-                {
-                    scope = currentScopeHolder.ContextScope;
-                    if (scope != null) return scope;
-                }
-
-                return scope;
-            }
-        }
-    }
-}
-#if false
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml;
-using AltAIMLParser;
-using MushDLR223.ScriptEngines;
-using MushDLR223.Utilities;
-using AltAIMLbot.Utils;
-using RTParser;
-using RTParser.Utils;
-
-namespace AltAIMLbot
-{
+#else
     /// <summary>
-    /// Encapsulates information about the result of a request to the bot
+    /// The bot that is providing the answer
     /// </summary>
-    public  class Result
-    {
-        /// <summary>
-        /// The bot that is providing the answer
-        /// </summary>
         public AltBot bot;
 
         /// <summary>
@@ -1383,7 +1285,7 @@ namespace AltAIMLbot
             set { userSetResultComplete = value; }
         }
 
-#region StaticXMLUTils
+        #region StaticXMLUTils
         public static bool ContainsXml(string s)
         {
             if (s.Contains(">") && s.Contains("<")) return true;
@@ -1617,7 +1519,7 @@ namespace AltAIMLbot
             string xml22 = CleanWhitepaces(xml2);
             return OlderReference(xml2, xml22.ToUpper());
         }
-        #endregion
+#endregion
 
         //public RTParser.Variables.ISettingsDictionary RequesterChanges { get { throw new NotImplementedException(); } }
         //public RTParser.Variables.ISettingsDictionary ResponderChanges { get { throw new NotImplementedException(); } }
@@ -1640,6 +1542,20 @@ namespace AltAIMLbot
                 OutputSentencesAdd(s);
             }
         }
+   
+#endif
+        public static string oneLastSentence = null;
+        private void OutputSentencesAdd(string unifiable)
+        {
+            lock (OutputSentences)
+            {
+                if (OutputSentences.Contains(unifiable) /*|| oneLastSentence == unifiable*/)
+                {
+                    return;
+                }
+                oneLastSentence = unifiable;
+                OutputSentences.Add(unifiable);
+            }
+        }
     }
 }
-#endif

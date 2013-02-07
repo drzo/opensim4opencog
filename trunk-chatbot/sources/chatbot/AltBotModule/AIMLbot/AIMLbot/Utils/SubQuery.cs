@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Xml;
@@ -21,10 +22,10 @@ namespace AltAIMLbot.Utils
     /// interrogation of the graphmaster.
     /// </summary>
     [Serializable]
-    public class SubQuery : CommonStaticUtils, ISettingsDictionary, IComparable<SubQuery>, RequestOrQuery, UndoStackHolder,
-                            ConversationScopeHolder, SituationInConversation
+    public class SubQuery : CommonStaticUtils, ISettingsDictionary, IComparable<SubQuery>, UndoStackHolder
     {
         #region Attributes
+
         /// <summary>
         /// The path that this query relates to
         /// </summary>
@@ -68,10 +69,12 @@ namespace AltAIMLbot.Utils
         {
             get { return Stars["topic"]; }
         }
+
         public List<string> StateStar
         {
             get { return Stars["state"]; }
         }
+
         //public List<string> StateStar2 = new List<string>();
 
         #endregion
@@ -99,12 +102,14 @@ namespace AltAIMLbot.Utils
 
         public Request Request;
         */
+
         public List<string> GetStars(string s)
         {
             s = s.ToLower();
             if (s == "input") s = "pattern";
             return Stars[s.ToLower()];
         }
+
         /*
         public string ReduceStarAttribute<T>(IConvertible arg)
         {
@@ -116,12 +121,15 @@ namespace AltAIMLbot.Utils
             throw new NotImplementedException();
         }
         */
+
         public
             //static 
             object TagHandlerLock = new object();
+
         public
             //static 
             Dictionary<string, RTParser.Utils.AIMLTagHandlerU> TagHandlers;
+
         private AltBot ov_TargetBot;
         public TemplateInfo CurrentTemplate;
         public RTParser.Utils.AIMLTagHandlerU LastTagHandlerU;
@@ -137,9 +145,10 @@ namespace AltAIMLbot.Utils
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof(SubQuery)) return false;
-            return Equals((SubQuery)obj);
+            if (obj.GetType() != typeof (SubQuery)) return false;
+            return Equals((SubQuery) obj);
         }
+
         /// <summary>
         /// Ctor
         /// </summary>
@@ -207,8 +216,10 @@ namespace AltAIMLbot.Utils
         {
             get { return Result; }
         }
+
         internal bool useParentSF = false;
         private int _hasFailed = 0;
+
         public int HasFailed
         {
             get { return _hasFailed + (useParentSF ? ParentResult.HasFailed : 0); }
@@ -234,6 +245,7 @@ namespace AltAIMLbot.Utils
         }
 
         private int _hasSuceeded = 0;
+
         public int HasSuceeded
         {
             get
@@ -265,7 +277,7 @@ namespace AltAIMLbot.Utils
         public int GetDictValue;
         public int SetDictValue;
 
-        public bool IsSourceRequest(RTParser.Utils.AIMLTagHandlerU node, out  string src)
+        public bool IsSourceRequest(RTParser.Utils.AIMLTagHandlerU node, out string src)
         {
             src = null;
             return false;
@@ -282,6 +294,7 @@ namespace AltAIMLbot.Utils
                         Request.depth < Request.UseLuceneForSetMaxDepth);
             }
         }
+
         /// <summary>
         /// All conditions must be right
         /// </summary>
@@ -339,7 +352,8 @@ namespace AltAIMLbot.Utils
         /// <param name="value">the new value</param>
         public bool updateSetting(string name, object value)
         {
-            return SettingsDictionaryReal.addSettingWithUndoCommit(this, TargetSettings, TargetSettings.updateSetting, name, value);
+            return SettingsDictionaryReal.addSettingWithUndoCommit(this, TargetSettings, TargetSettings.updateSetting,
+                                                                   name, value);
         }
 
         /// <summary>
@@ -363,7 +377,7 @@ namespace AltAIMLbot.Utils
             get { return TargetSettings.NameSpace; }
         }
 
-        public RTParser.UserConversationScope Requester
+        public User Requester
         {
             get { return CurrentUser; }
         }
@@ -387,12 +401,11 @@ namespace AltAIMLbot.Utils
         {
             get { return Request.RequesterPredicates; }
         }
+
         public ISettingsDictionary ResponderPredicates
         {
             get { return Request.ResponderPredicates; }
         }
-
-        public SituationInConversation ContextScope { get; set; }
 
         public DataUnifiable grabSetting(string name)
         {
@@ -448,7 +461,7 @@ namespace AltAIMLbot.Utils
 
         public override string ToString()
         {
-            string nodePattern = ((object)Pattern ?? "-no-pattern-").ToString().Trim();
+            string nodePattern = ((object) Pattern ?? "-no-pattern-").ToString().Trim();
             string s = SafeFormat("\nINPUT='{6}'\nPATTERN='{0}' InThToGu={1}:{2}:{3}:{4} Tc={5} Graph={7}\n",
                                   nodePattern,
                                   InputStar.Count, ThatStar.Count, TopicStar.Count,
@@ -642,7 +655,7 @@ namespace AltAIMLbot.Utils
             if (named == null) return query;
             string lnamed = named.ToLower();
             if (lnamed == "query") return query;
-            return Request.GetDictionary(named, (ISettingsDictionary)this);
+            return Request.GetDictionary(named, (ISettingsDictionary) this);
         }
 
         public T ReduceStarAttribute<T>(IConvertible value) where T : IConvertible
@@ -782,10 +795,10 @@ namespace AltAIMLbot.Utils
         {
             unchecked
             {
-                int result = 0;// (ov_TargetBot != null ? ov_TargetBot.GetHashCode() : 0);
+                int result = 0; // (ov_TargetBot != null ? ov_TargetBot.GetHashCode() : 0);
                 ////result = (result * 397) ^ (CurrentTemplate != null ? CurrentTemplate.GetHashCode() : 0);
                 ////result = (result * 397) ^ (LastTagHandler != null ? LastTagHandler.GetHashCode() : 0);
-                result = (result * 397) ^ (Pattern != null ? Pattern.GetHashCode() : 0);
+                result = (result*397) ^ (Pattern != null ? Pattern.GetHashCode() : 0);
                 ////result = (result * 397) ^ (prefix != null ? prefix.GetHashCode() : 0);
                 ////result = (result * 397) ^ (Request != null ? Request.GetHashCode() : 0);
                 ////result = (result * 397) ^ (Result != null ? Result.GetHashCode() : 0);
@@ -809,132 +822,11 @@ namespace AltAIMLbot.Utils
 
         public UndoStack UndoStackValue { get; set; }
 
-        public void EnterContent()
-        {
-            Request.EnterContext();
-        }
-
         public bool UseDictionaryForSet(ISettingsDictionary dictionary)
         {
             if (dictionary == null) return false;
             if (!CanSetDict) return false;
             return true;
         }
-
-        public void ExitContext()
-        {
-            Request.ExitContext();
-        }
-
-        #region SituationInConversation Members
-
-        public RTParser.Utterance TheUtterence
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public IEnumerable<RTParser.UserConversationScope> Receivers
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public SubQuery CurrentQuery
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        #endregion
     }
-}
-
-namespace RTParser.Utils
-{
-    public interface RequestOrQuery : ConversationScopeHolder
-    {
-
-        /// <summary>
-        /// The get/set user dictionary
-        /// </summary>
-        ISettingsDictionary RequesterPredicates { get; }
-        /// <summary>
-        /// The get/set bot dictionary (or user)
-        /// </summary>
-        ISettingsDictionary ResponderPredicates { get; }
-        /// <summary>
-        /// If loading/saing settings from this request this may be eitehr the requestor/responders Dictipoanry
-        /// </summary>
-        ISettingsDictionary TargetSettings { get; set; }
-    }
-
-#if _FALSE_
-    public class UList : IEnumerable<TemplateInfo>
-    {
-        public List<TemplateInfo> root = new List<TemplateInfo>();
-        public int Count
-        {
-            get { lock (root) return root.Count; }
-        }
-
-        public void Insert(int i, TemplateInfo info)
-        {
-            lock (root) root.Insert(i, info);
-
-        }
-
-        public void ForEach(Action<TemplateInfo> action)
-        {
-            lock (root) root.ForEach(action);
-        }
-
-        public void Remove(TemplateInfo info)
-        {
-            lock (root) root.Remove(info);
-        }
-
-        /// <summary>
-        /// Returns an enumerator that iterates through the collection.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
-        /// </returns>
-        /// <filterpriority>1</filterpriority>
-        IEnumerator<TemplateInfo> IEnumerable<TemplateInfo>.GetEnumerator()
-        {
-            return GetRootEnumerator();
-        }
-
-        public IEnumerator GetEnumerator()
-        {
-            return GetRootEnumerator();
-        }
-
-        private IEnumerator<TemplateInfo> GetRootEnumerator()
-        {
-            var next = new List<TemplateInfo>();
-            lock (root)
-            {
-                next.AddRange(root);
-            }
-            return next.GetEnumerator();
-        }
-
-        public void AddRange(UList infos)
-        {
-            lock (root)
-            {
-                lock (infos.root)
-                {
-                    root.AddRange(infos.root);                    
-                }
-            }
-        }
-    }
-#endif
 }

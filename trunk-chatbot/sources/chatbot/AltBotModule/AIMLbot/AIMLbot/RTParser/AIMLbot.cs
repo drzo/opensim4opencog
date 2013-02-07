@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using AltAIMLParser;
+using AltAIMLbot;
 using RTParser;
-using RTParser.Utils;
 using RTParser.Variables;
-using Result=AltAIMLbot.Result;
-using User=AltAIMLbot.User;
 
 namespace AIMLbot
 {/*
@@ -55,13 +53,24 @@ namespace AIMLbot
         }
     }
 #endif
-    sealed public class MasterResult :
-#if interface
- ResultImpl, 
-#endif
-        Result , InteractionResult 
+
+    public class MasterUser : User
     {
-        public MasterResult(User user, AltBot bot, Request request)
+
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        /// <param name="UserID">The GUID of the user</param>
+        /// <param name="bot">the bot the user is connected to</param>
+        public MasterUser(string userID, string fullname, AltBot bot, SettingsDictionary dict)
+            : base(userID, fullname, bot, dict)
+        {
+        }
+    }
+
+    public sealed class MasterResult : Result
+    {
+        public MasterResult(User user, RTParser.AltBot bot, Request request)
             : base(user, bot, request)
         {
         }
@@ -70,48 +79,8 @@ namespace AIMLbot
             : base(rawInput, user, bot, parent, targetUser)
         {
         }
-
-        #region InteractionResult Members
-
-
-        public override Result result
-        {
-            get { return this;  }
-        }
-
-        public override RTParser.Variables.ISettingsDictionary RequesterChanges
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public override RTParser.Variables.ISettingsDictionary ResponderChanges
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public override InteractionResult PreviousInteraction
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public override InteractionResult NextInteraction
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public override Unifiable GetInputSentence(int sentence)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void FreeResult()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
     }
-    
+
     namespace Utils
     {
         public class AIMLLoader : RTParser.Utils.AIMLLoaderU

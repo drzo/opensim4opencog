@@ -2663,9 +2663,9 @@ namespace AltAIMLbot
         {
         }
     }
-    public class UserConversationScope : MasterUser
+    public class User : MasterUser
     {
-        public UserConversationScope(string UserID, AltBot bot)
+        public User(string UserID, AltBot bot)
             : base(UserID,bot)
         {
         }
