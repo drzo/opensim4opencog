@@ -2572,7 +2572,7 @@ namespace AltAIMLbot
                 Result res = bot.Chat(r, graphName);
                 //bot.lastBehaviorChatOutput=res.Output;
                 bot.lastBehaviorChatOutput = "";
-                bot.postOutput(res.Output);
+                bot.postOutput(res.Output.AsString());
                 if (res.isValidOutput)
                 {
                     rs = RunStatus.Success;

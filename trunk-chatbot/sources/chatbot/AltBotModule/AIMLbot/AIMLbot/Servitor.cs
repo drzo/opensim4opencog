@@ -735,37 +735,46 @@ namespace AltAIMLbot
             string fnd;
             if (doHaviours && curBot.myBehaviors.hasEventHandler("onchat", out fnd))
             {
-                Console.WriteLine(" ************ FOUND ONCHAT ************");
-                curUser.Predicates.updateSetting("lastinput", input);
-                prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
-                //curBot.lastBehaviorChatInput = input;
-                curBot.isPerformingOutput = false;
-                curBot.myBehaviors.logText("ONCHAT USER INPUT:" + input);
-                curBot.chatInputQueue.Clear ();
-                curBot.chatInputQueue.Enqueue(input);
-                curBot.lastBehaviorUser = curUser;
-                //curBot.myBehaviors.runEventHandler("onchat");
-                curBot.flushOutputQueue();
+                try
+                {
+                    Console.WriteLine(" ************ FOUND ONCHAT ************");
+                    curUser.Predicates.updateSetting("lastinput", input);
+                    prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
+                    //curBot.lastBehaviorChatInput = input;
+                    curBot.isPerformingOutput = false;
+                    curBot.myBehaviors.logText("ONCHAT USER INPUT:" + input);
+                    curBot.chatInputQueue.Clear();
+                    curBot.chatInputQueue.Enqueue(input);
+                    curBot.lastBehaviorUser = curUser;
+                    //curBot.myBehaviors.runEventHandler("onchat");
+                    curBot.flushOutputQueue();
 
-                //curBot.myBehaviors.queueEvent("onchat");
-                //curBot.processOutputQueue();
+                    //curBot.myBehaviors.queueEvent("onchat");
+                    //curBot.processOutputQueue();
 
-                curBot.lastBehaviorChatOutput = "";
-                myScheduler.SleepAllTasks(30000);
-                myScheduler.EnqueueEvent("onchat");
+                    curBot.lastBehaviorChatOutput = "";
+                    myScheduler.SleepAllTasks(30000);
+                    myScheduler.EnqueueEvent("onchat");
 
-                string chatOutput = curBot.lastBehaviorChatOutput;
-                if (!string.IsNullOrEmpty(chatOutput))
+                    string chatOutput = curBot.lastBehaviorChatOutput;
+                    if (!string.IsNullOrEmpty(chatOutput))
+                    {
+                        curBot.isPerformingOutput = true;
+                        curBot.myBehaviors.logText("ONCHAT IMMED RETURN:" + chatOutput);
+                        prologEngine.postListPredToMt("lastoutput", chatOutput, "lastoutputMt");
+                        return chatOutput;
+                    }
+                }
+                catch
                 {
                     curBot.isPerformingOutput = true;
-                    curBot.myBehaviors.logText("ONCHAT IMMED RETURN:" + chatOutput);
-                    prologEngine.postListPredToMt("lastoutput", chatOutput, "lastoutputMt");
-                    return chatOutput;
                 }
             }
             // else try the named behavio}
             if (doHaviours && curBot.myBehaviors.definedBehavior("chatRoot"))
             {
+              try
+              {
                 curUser.JustSaid = input;
                 curUser.Predicates.updateSetting("lastinput", input);
                 prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
@@ -790,6 +799,11 @@ namespace AltAIMLbot
                     prologEngine.postListPredToMt("lastoutput", chatOutput, "lastoutputMt");
                     return chatOutput;
                 }
+              }
+              catch
+              {
+                  curBot.isPerformingOutput = true;
+              }
             }
             // else just do it (no other behavior is defined)
             try
@@ -829,6 +843,7 @@ namespace AltAIMLbot
                 return "...";
             }
 
+            curBot.isPerformingOutput = true;
         }
         /*
         public string respondToChat(string input,string UserID)
@@ -1170,96 +1185,104 @@ namespace AltAIMLbot
 
             while (true)
             {
-                Thread.Sleep(interval);
-               // updateTime(); // KHC:DEBUG OFF FOR MONO
-                // Tick the microThreader
-
-                if (!mLoadCompleteAndPersonalityShouldBeDefined) continue;
-                if (myScheduler != null && tmTalkEnabled)
+                try
                 {
-                    myScheduler.Run();
-                }
+                    Thread.Sleep(interval);
+                    //updateTime(); // KHC:DEBUG OFF FOR MONO
+                    // Tick the microThreader
 
-                if ((curBot != null) && (curBot.outputQueue.Count > 0))
-                {
-                    curBot.processOutputQueue();
-                }
-
-                if (safeBB())
-                {
-                   bool newPerson= checkNewPersonality();
-                    
-
-                    string sv = null;
-                    try
+                    if (!mLoadCompleteAndPersonalityShouldBeDefined) continue;
+                    if (myScheduler != null && tmTalkEnabled)
                     {
-                        //sv = myChemistry.m_cBus.getHash("mdollhearduuid");
-                        sv = getBBHash("uttid");
-                        if (!string.IsNullOrEmpty(sv)) uutid = int.Parse(sv);
+                        myScheduler.Run();
                     }
-                    catch (Exception e) { }
-                    if (uutid == lastuutid) { continue; }
-                    if (!curBot.isAcceptingUserInput) { continue; }
-                    try
-                    {
-                        lastuutid = uutid;
-                        //string myInput = (myChemistry.m_cBus.getHash("mdollheard"));
-                        string myInput = (getBBHash("speechhyp"));
 
-                        //Get lastTTS output as <that>
+                    if ((curBot != null) && (curBot.outputQueue.Count > 0))
+                    {
+                        curBot.processOutputQueue();
+                        if (curBot.isAcceptingUserInput) { curBot.isPerformingOutput = true; }
+
+                    }
+
+                    if (safeBB())
+                    {
+                        bool newPerson = checkNewPersonality();
+
+
+                        string sv = null;
+                        try
+                        {
+                            //sv = myChemistry.m_cBus.getHash("mdollhearduuid");
+                            sv = getBBHash("uttid");
+                            if (!string.IsNullOrEmpty(sv)) uutid = int.Parse(sv);
+                        }
+                        catch (Exception e) { }
+                        if (uutid == lastuutid) { continue; }
+                        if (!curBot.isAcceptingUserInput) { continue; }
+                        try
+                        {
+                            lastuutid = uutid;
+                            //string myInput = (myChemistry.m_cBus.getHash("mdollheard"));
+                            string myInput = (getBBHash("speechhyp"));
+
+                            //Get lastTTS output as <that>
                             // Other output sources may post a short acknowledgement
                             // We want only real sentences or direct yes/no/ok
-                        string myThat = (getBBHash("TTSText"));
-                        if ((myThat.Length > 4)
-                            || (myThat.ToLower().Contains("yes"))
-                            || (myThat.ToLower().Contains("no"))
-                            || (myThat.ToLower().Contains("ok"))
-                            )
-                        {
-                            curUser.blackBoardThat = myThat;
-                        }
-                        else
-                        {
-                            curUser.blackBoardThat = "";
-                        }
-                        //Get fsmstate output as <state>
-                        string myState = (getBBHash("fsmstate"));
-                        curUser.Predicates.updateSetting("state",myState);
-
-                        // get values off the blackboard
-                        curBot.importBBBot();
-                        curBot.importBBUser(curUser);
-
-                        if ((myInput.Length > 0) && (!myInput.Equals(lastUtterance)))
-                        {
-                            Console.WriteLine("Heard: " + myInput);
-                            Request r = new Request(myInput, curUser, curBot);
-                            Result res = curBot.Chat(r);
-                            string myResp = res.Output;
-                            Console.WriteLine("Response: " + myResp);
-                            if (myResp == null)
+                            string myThat = (getBBHash("TTSText"));
+                            if ((myThat.Length > 4)
+                                || (myThat.ToLower().Contains("yes"))
+                                || (myThat.ToLower().Contains("no"))
+                                || (myThat.ToLower().Contains("ok"))
+                                )
                             {
-                                myResp = "I don't know how to respond.";
+                                curUser.blackBoardThat = myThat;
                             }
-                            myResp = myResp.Replace("_", " ");
-                            Console.WriteLine("*** AIMLOUT = '{0}'", myResp);
-                            if (!myResp.ToUpper().Contains("IGNORENOP"))
+                            else
                             {
-                                sayResponse(myResp);
-                                setBBHash("lsaprior", myInput);
+                                curUser.blackBoardThat = "";
                             }
+                            //Get fsmstate output as <state>
+                            string myState = (getBBHash("fsmstate"));
+                            curUser.Predicates.updateSetting("state", myState);
 
-                            lastUtterance = myInput;
+                            // get values off the blackboard
+                            curBot.importBBBot();
+                            curBot.importBBUser(curUser);
+
+                            if ((myInput.Length > 0) && (!myInput.Equals(lastUtterance)))
+                            {
+                                Console.WriteLine("Heard: " + myInput);
+                                Request r = new Request(myInput, curUser, curBot);
+                                Result res = curBot.Chat(r);
+                                string myResp = res.Output;
+                                Console.WriteLine("Response: " + myResp);
+                                if (myResp == null)
+                                {
+                                    myResp = "I don't know how to respond.";
+                                }
+                                myResp = myResp.Replace("_", " ");
+                                Console.WriteLine("*** AIMLOUT = '{0}'", myResp);
+                                if (!myResp.ToUpper().Contains("IGNORENOP"))
+                                {
+                                    sayResponse(myResp);
+                                    setBBHash("lsaprior", myInput);
+                                }
+
+                                lastUtterance = myInput;
+                            }
                         }
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine("{0}\n{1}", e.Message, e.StackTrace);
-                    }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("{0}\n{1}", e.Message, e.StackTrace);
+                        }
 
 
+                    }
                 }
-
+                catch (Exception e)
+                {
+                    Console.WriteLine("{0}\n{1}", e.Message, e.StackTrace);
+                }
             }
         }
 

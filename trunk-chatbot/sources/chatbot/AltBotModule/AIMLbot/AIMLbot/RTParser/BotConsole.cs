@@ -705,6 +705,8 @@ namespace RTParser
                 queryMT = rps.grabSetting("querymt,kb,mt,behavourmt,behavour") ?? queryMT;
             }
             object retval = null;
+            
+            
             prologEngine.askQuery(prologEngine.ParseQuery(cmd, queryMT), queryMT, true,
                                   (env) =>
                                       {
@@ -729,6 +731,7 @@ namespace RTParser
                                           retval = "True";
                                           return false;
                                       });
+             
             if (retval != null) return retval;
             return "False";
         }

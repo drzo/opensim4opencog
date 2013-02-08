@@ -68,8 +68,10 @@ namespace AltAIMLbot.AIMLTagHandlers
                                     subRequest0.depth = this.request.depth + 1;
                                     Result subResult0 = this.bot.Chat(subRequest0, graphName);
                                     this.request.hasTimedOut = subRequest0.hasTimedOut;
-                                    Console.WriteLine(" --- SRAI: RETURNA [{0}]", subResult0.Output);
-                                    return subResult0.Output;
+                                    string outstring0 = subResult0.Output.AsString();
+                                    if (outstring0 == null) outstring0 = string.Empty;
+                                    Console.WriteLine(" --- SRAI: RETURNA [{0}]", outstring0);
+                                    return outstring0;
                                 }
                                 finally
                                 {
@@ -84,13 +86,17 @@ namespace AltAIMLbot.AIMLTagHandlers
                         //else
                         //{
                         // Plain old SRAI
-                        Request subRequest = new Request(this.TemplateNodeInnerText, this.user, this.bot);
+                        string ourInput =this.TemplateNodeInnerText;
+                        Request subRequest = new Request(ourInput, this.user, this.bot);
                         subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
                         subRequest.depth = this.request.depth + 1;
                         Result subResult = this.bot.Chat(subRequest, graphName);
                         this.request.hasTimedOut = subRequest.hasTimedOut;
-                        Console.WriteLine(" --- SRAI: RETURNB [{0}]", subResult.Output);
-                        return subResult.Output;
+                        string outstring = subResult.Output.AsString();
+                        if (outstring == null) outstring = string.Empty;
+                        //Console.WriteLine(" --- SRAI: RETURNB [{0}]", subResult.Output);
+                        Console.WriteLine(" --- SRAI: RETURNB [{0}]", outstring);
+                        return outstring;
                         //}
                     }
                 }

@@ -71,6 +71,12 @@ namespace AIMLBotModule
         ///  See next function to change the keywords
         /// </summary>
         public bool RespondToChatByDefaultAllUsers = false;
+
+        /// <summary>
+        ///  false = wont respond to user until they say something like "turn chat on" 
+        ///  See next function to change the keywords
+        /// </summary>
+        public bool RespondToChatByDefaultMaster = true;
         /// <summary>
         /// Respond to group chat
         /// </summary>
@@ -463,7 +469,16 @@ namespace AIMLBotModule
             if (newlyCreated)
             { 
                 //user.InsertProvider(() => this.provideWorldUserVars);
+                if (client.MasterName.ToLower().Trim() == fromname.ToLower().Trim())
+                {
+                    // Listen to master
+                    user.RespondToChat = RespondToChatByDefaultMaster;
+                }
+                else
+                {
+                    // Listen to strangers
                 user.RespondToChat = RespondToChatByDefaultAllUsers;
+                }
             }
             user.MaxRespondToChatPerMinute = DefaultMaxRespondToChatPerMinute;
             user.Predicates.addSetting("me", fromname);
