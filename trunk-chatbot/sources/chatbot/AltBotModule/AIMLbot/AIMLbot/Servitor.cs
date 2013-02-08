@@ -71,9 +71,18 @@ namespace AltAIMLbot
         public  AltBot curBot;
 
         public bool NeedsLoad = true;
-        public User curUserLast
+        public User curUser
         {
-            get { return curBot.LastUser; }
+            get
+            {
+                if (_curUser != null) return _curUser;
+                return curBot.LastUser;
+            }
+            set
+            {
+                _curUser = value;
+                curBot.LastUser = value;
+            }
         }
         public  Thread tmTalkThread = null;
         private bool _tmTalkEnabled = true;
@@ -548,7 +557,7 @@ namespace AltAIMLbot
             Console.WriteLine("       ProcessorCount:" + Environment.ProcessorCount);
             Console.WriteLine("             UserName:" + Environment.UserName);
             Console.WriteLine("            TickCount:" + Environment.TickCount);
-            User curUser = this.curUserLast;
+            User curUser = this.curUser;
             if ((curUser != null) && (curUser.UserID != null))
             {
                 Console.WriteLine("            UserID:" + curUser.UserID);
@@ -607,6 +616,7 @@ namespace AltAIMLbot
         private bool LoadCompleteOnce = false;
         private object LoadCompleteLock = new object();
         public bool NeedsStarted = true;
+        private User _curUser;
 
 
         public void loadComplete()
@@ -919,7 +929,7 @@ namespace AltAIMLbot
 
             while (true)
             {
-                User curUser = curUserLast;
+                User curUser = this.curUser;
                 try
                 {
                     Console.Write("You (" + curUser.UserNameAndID + "): ");
@@ -1225,7 +1235,7 @@ namespace AltAIMLbot
                         if (!curBot.isAcceptingUserInput) { continue; }
                         try
                         {
-                            var curUser = curUserLast;
+                            User curUser = this.curUser;
                             LastCurUser = curUser;
 
                             lastuutid = uutid;

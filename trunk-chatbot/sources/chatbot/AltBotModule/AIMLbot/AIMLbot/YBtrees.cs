@@ -211,6 +211,7 @@ namespace AltAIMLbot
     }
 
     #region BTXML
+
     [Serializable]
     public class BehaviorTree
     {
@@ -231,20 +232,14 @@ namespace AltAIMLbot
         public AltBot bot
         {
             get { return _bot; }
-            set
-            {
-                _bot = value;
-
-            }
+            set { _bot = value; }
         }
-        [NonSerialized]
-        public SymbolicParticleFilter ourFilter = new SymbolicParticleFilter();
+
+        [NonSerialized] public SymbolicParticleFilter ourFilter = new SymbolicParticleFilter();
 
 
-        [NonSerialized]
-        private AltBot _bot;
-        [NonSerialized]
-        public BTXmlDocument treeDoc;
+        [NonSerialized] private AltBot _bot;
+        [NonSerialized] public BTXmlDocument treeDoc;
 
         // Kinda based on the idea at ...
         // http://www.garagegames.com/community/blogs/view/21143
@@ -261,12 +256,14 @@ namespace AltAIMLbot
         {
             serialDoc = treeDoc.OuterXml;
         }
+
         public void postSerial(AltBot bot)
         {
             _bot = bot;
             if (treeDoc == null) treeDoc = new BTXmlDocument();
             treeDoc.LoadXml(serialDoc);
         }
+
         public IEnumerable<RunStatus> evalBehaviorXml(string behaviorDef)
         {
             BTXmlDocument evalDoc = new BTXmlDocument();
@@ -297,13 +294,14 @@ namespace AltAIMLbot
         public static string FixXmlEnitites(string stateDef)
         {
             stateDef =
-                stateDef.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&quot;", "\"").Replace("&amp;", "(Zamp)").Replace
-                    ("&apos", "'").Replace("&0a","\n");
+                stateDef.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&quot;", "\"").Replace("&amp;", "(Zamp)").
+                    Replace
+                    ("&apos", "'").Replace("&0a", "\n");
             if (stateDef.Contains("&"))
             {
                 throw new NotImplementedException("Fogot to clean some entity? " + stateDef);
             }
-            return stateDef.Replace("(Zamp)","&");
+            return stateDef.Replace("(Zamp)", "&");
         }
 
         public void defineBehavior(string mname, string behaviorDef)
@@ -335,7 +333,7 @@ namespace AltAIMLbot
             foreach (XmlNode childNode in treeDoc.ChildNodes)
             {
                 RunStatus childResult = RunStatus.Failure;
-                foreach (RunStatus myChildResult in processNode((BTXmlNode)((XmlElement)childNode)))
+                foreach (RunStatus myChildResult in processNode((BTXmlNode) ((XmlElement) childNode)))
                 {
                     childResult = myChildResult;
                     if (childResult != RunStatus.Running) break;
@@ -412,21 +410,22 @@ namespace AltAIMLbot
 
         public double Ema(double newVal, double oldVal, int N)
         {
-            double K = (double)2 / (double)(1 + N);
-            return (double)(K * (newVal - oldVal)) + oldVal;
+            double K = (double) 2/(double) (1 + N);
+            return (double) (K*(newVal - oldVal)) + oldVal;
         }
 
         public bool isAnAssert(string nodeName)
         {
             return (
                        (nodeName.ToLower() == "assert")
-                    || (nodeName.ToLower() == "asserttimer")
-                    || (nodeName.ToLower() == "assertguest")
-                    || (nodeName.ToLower() == "assertmenu")
-                    || (nodeName.ToLower() == "assertprolog")
-                    || (nodeName.ToLower().StartsWith ("assert"))
-                    );
+                       || (nodeName.ToLower() == "asserttimer")
+                       || (nodeName.ToLower() == "assertguest")
+                       || (nodeName.ToLower() == "assertmenu")
+                       || (nodeName.ToLower() == "assertprolog")
+                       || (nodeName.ToLower().StartsWith("assert"))
+                   );
         }
+
         public bool isBreaker(string nodeName)
         {
             return ((nodeName.ToLower() == "breaker"));
@@ -438,29 +437,29 @@ namespace AltAIMLbot
         // includes names for readibility. maybe useful for behavior stack
         public string getIndent(BTXmlNode node)
         {
-            if (node.ParentNode == null)
+            if (node == null || node.ParentNode == null)
             {
                 // the only node with no parent is the root node, which has no path 
                 return "";
             }
             if (node.ParentNode .NodeType == XmlNodeType .Document )
 
-                return "  " + getIndent((BTXmlDocument)(node.ParentNode));
+                return "  " + getIndent(node.ParentNode as BTXmlDocument);
             else
                 return "  " + getIndent((BTXmlNode)(node.ParentNode));
         }
         public string getIndent(BTXmlDocument node)
         {
-            if (node.ParentNode == null)
+            if (node == null || node.ParentNode == null)
             {
                 // the only node with no parent is the root node, which has no path 
                 return "";
             }
             if (node.ParentNode.NodeType == XmlNodeType.Document)
 
-                return "  " + getIndent((BTXmlDocument)(node.ParentNode));
+                return "  " + getIndent(node.ParentNode as BTXmlDocument);
             else
-                return "  " + getIndent((BTXmlNode)(node.ParentNode));
+                return "  " + getIndent((BTXmlNode) (node.ParentNode));
         }
 
         public string GetXPathToNode(BTXmlNode node)

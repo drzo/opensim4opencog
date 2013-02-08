@@ -433,10 +433,11 @@ namespace RTParser
         public void updateServitor2RTP(User activeUser)
         {
             if (useServitor == false) return;
-            updateServitor2RTP();
+            updateServitor2RTP();            
             //User specific code (ALTBOT USER->RTPUSER  )
-            var curUser = servitor.curUserLast;
-            CopyUserDataToFrom(activeUser, curUser);
+            //var curUser = servitor.curUserLast;
+            //CopyUserDataToFrom(activeUser, curUser);
+            servitor.curUser = activeUser; 
         }
 
         static public void CopyUserDataToFrom(User activeUser, User curUser)
@@ -508,11 +509,12 @@ namespace RTParser
         {
             if (useServitor == false) return;
             updateRTP2Sevitor();
-            var curUser = servitor.curUserLast;
-            CopyUserDataFromTo(activeUser, curUser);
+            //var curUser = servitor.curUser;
+            //CopyUserDataFromTo(activeUser, curUser);
+            servitor.curUser = activeUser;
         }
 
-        public void CopyUserDataFromTo(User activeUser, User curUser) {
+        static public void CopyUserDataFromTo(User activeUser, User curUser) {
             if (activeUser == curUser) return;
             try
             {

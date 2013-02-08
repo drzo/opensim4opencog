@@ -588,7 +588,7 @@ namespace AltAIMLParser
             {
                 if (parent == null)
                 {
-                    writeToLog("ERROR: non toplevel request missing parent" + this);
+                   // writeToLog("ERROR: non toplevel request missing parent" + this);
                 }
             }
         }
