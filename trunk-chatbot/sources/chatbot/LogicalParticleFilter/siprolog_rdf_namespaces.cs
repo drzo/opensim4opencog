@@ -113,6 +113,7 @@ namespace LogicalParticleFilter1
                 DontRDFSync = false;
                
             }
+            RdfDeveloperSanityChecks = 0; //KHC test
             var uriAgainIs = UriFactory.Create(RoboKindURI);
             var rdfDefinations = SIProlog.rdfDefinations;
             rdfDefinations.BaseUri = uriAgainIs;
