@@ -414,6 +414,7 @@ namespace MushDLR223.ScriptEngines
                 if (ScanAppDomainInProgress) return;
                 ScanAppDomainInProgress = true;
                 ScanAppDomainThread = new Thread(DoScanningAppDomain);
+                ScanAppDomainThread.Name = "DoScanningAppDomain";
                 ScanAppDomainThread.Start();
             }
 
@@ -423,10 +424,14 @@ namespace MushDLR223.ScriptEngines
             int ScannedAssembliesCount = ScannedAssemblies.Count;
             if (ScanAppDomain())
             {
-                WriteLine("Found new Assemblies: {0}", ScannedAssemblies.Count - ScannedAssembliesCount);
-                foreach (var s in CopyOf(ScannedTypes))
+                int found = ScannedAssemblies.Count - ScannedAssembliesCount;
+                if (found > 0)
                 {
-                    AddType(s);
+                    WriteLine("Found new Assemblies: {0}", found);
+                    foreach (var s in CopyOf(ScannedTypes))
+                    {
+                        AddType(s);
+                    }
                 }
             }
             lock (ScanAppDomainLock)
@@ -581,7 +586,7 @@ namespace MushDLR223.ScriptEngines
 
         private static bool ScanAppDomain()
         {
-            bool changed = true;
+            bool changed = false;
             foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
             {
                 Assembly assembly = a;
