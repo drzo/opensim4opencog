@@ -86,7 +86,6 @@ namespace RTParser
         public Cron myCron = null;
         public bool inCritical = false;
         private bool _blockCron = false;
-         
 
         public bool blockCron
         {
@@ -1393,7 +1392,8 @@ namespace RTParser
                                 if (outputSentence.Length > 0)
                                 {
                                     bool useOutput = true;
-                                    Result userLastResult = user.LastResult;
+                                    //Result userLastResult = user.LastResult;
+                                    Result userLastResult = result;
                                     if (servitor.ChatOptions.SqueltchRepeatedLastOutput && userLastResult != null)
                                     {
                                         var oses = userLastResult.OutputSentences;
@@ -1446,10 +1446,14 @@ namespace RTParser
                 result.Duration = DateTime.Now - request.StartedOn;
                 if (!saveResult)
                 {
+ //                   Console.WriteLine("*** CHATOUTPUT1(" + result.Output+")");
+
                     return result;
                 }
                 user.addResult(result);
             }
+//            Console.WriteLine("*** CHATOUTPUT2(" + result.Output + ")");
+
             return result;
         }
 
@@ -1733,11 +1737,14 @@ namespace RTParser
                 }
                 var resultString = recursiveResult.ToString();
                 if (resultString.Length > 4) resultString = resultString.Replace(" , ", " ");
+                if (resultString.Length > 0) resultString = resultString.Replace("\n", " ");
+                if (resultString.Length > 0) resultString = resultString.Replace("\r", " ");
+               // Console.WriteLine(" -- GetOutputSentence R1 ({0}) :---> '{1}'", template, resultString);
                 return resultString;
             }
             else
             {
-                //Console.WriteLine(" -- Result3 {0} : {1}", tagName, resultNode.InnerXml);
+              //  Console.WriteLine(" -- GetOutputSentence R2 ({0}) :---> '{1}'", template, resultNode.InnerXml);
                 return resultNode.InnerXml;
             }
         }
@@ -2635,7 +2642,7 @@ The AltAIMLbot program.
 
         public void RegisterObject(string named, object obj)
         {
-            prologEngine.RegisterObject(named, obj);
+               prologEngine.RegisterObject(named, obj);
         }
     }
 }

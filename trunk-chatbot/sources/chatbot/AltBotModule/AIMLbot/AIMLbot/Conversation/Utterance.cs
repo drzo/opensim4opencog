@@ -41,6 +41,7 @@ namespace RTParser
             ToWhom = toWhom;
             OrignalRawText = rawText;
             OutputSentencesToEnglish = generatePhrase;
+            if (maxSentences < 10) maxSentences = 10;
             maxResults = maxSentences + 10;
         }
 

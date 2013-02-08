@@ -26,7 +26,7 @@ namespace AltAIMLbot
         /// </summary>
         public List<SubQuery> SubQueries { get; set; }
 
-        public static int MaxPrintResults = 10;
+        public static int MaxPrintResults = 20;
         private string AlreadyUsed = "xtxtxtxtxtxtxtxtxxt";
         private int RotatedTemplate;
 
