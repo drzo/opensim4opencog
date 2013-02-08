@@ -222,7 +222,7 @@ namespace AIMLBotModule
         {
             if (MyBotNullWarning()) return;
             string objName = obj.GetName();
-            MyUser = GetMyUser(objName);
+            MyUser = GetMyUser(objName, obj.ID);
             MyUser.RespondToChat = true;
             String str = String.Format("{0}, {1}", objName, AIMLInterp("RANDOM PICKUP LINE", MyUser)).Trim();
             while (str.EndsWith("?")) str = str.Substring(0, str.Length - 1).Trim();
@@ -355,7 +355,7 @@ namespace AIMLBotModule
             if (target == null) return;
             string name = source.GetName();
             if (string.IsNullOrEmpty(name)) return;
-            User user = GetMyUser(name);
+            User user = GetMyUser(name, targetid);
             SettingsDictionary myUserPredicates = user.Predicates;
             myUserPredicates.addSetting("it", targetid.ToString());
             myUserPredicates.addSetting("what", targetid.ToString());
@@ -514,7 +514,7 @@ namespace AIMLBotModule
             {
                 return;
             }
-            User myUser = GetMyUser(im.FromAgentName);
+            User myUser = GetMyUser(im.FromAgentName, im.FromAgentID);
             SettingsDictionary myUserPredicates = myUser.Predicates;
             myUserPredicates.addSetting("host", im.FromAgentID.ToString());
             // myUser.Predicates.addObjectFields(im);
@@ -703,7 +703,7 @@ namespace AIMLBotModule
             {
                 fromname = "" + id;
             }
-            User myUser = GetMyUser(fromname);
+            User myUser = GetMyUser(fromname, id);
             // todo hard coded to be changed
             if (!myUser.RespondToChat && MessageTurnsOnChat(message))
             {
