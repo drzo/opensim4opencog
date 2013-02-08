@@ -5,6 +5,7 @@ using System.Collections;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
+using AltAIMLParser;
 using AltAIMLbot.Utils;
 using RTParser;
 
@@ -239,7 +240,7 @@ namespace AltAIMLbot
 
             foreach (XmlNode templateNode in transitionNode.ChildNodes)
             {
-                bot.evalTemplateNode(templateNode);
+                bot.evalTemplateNode(templateNode, RequestKind.StateMachineProcess);
             }
         }
 
@@ -254,7 +255,7 @@ namespace AltAIMLbot
                 {
                     try
                     {
-                        bot.evalTemplateNodeInnerXml(templateNode);
+                        bot.evalTemplateNodeInnerXml(templateNode, RequestKind.StateMachineProcess);
                         //bot.evalTemplateNode(templateNode);
                     }
                     catch (Exception e)
@@ -280,7 +281,7 @@ namespace AltAIMLbot
                 {
                     try
                     {
-                        bot.evalTemplateNodeInnerXml(templateNode);
+                        bot.evalTemplateNodeInnerXml(templateNode, RequestKind.StateMachineProcess);
                         //bot.evalTemplateNode(templateNode);
                     }
                     catch (Exception e)

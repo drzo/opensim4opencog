@@ -863,7 +863,9 @@ namespace RTParser.Utils
                 }
                 else if (currentNodeName == "template")
                 {
-                    loadOpts.RProcessor.ImmediateAiml(currentNode, request, this);
+                    loadOpts.RProcessor.ImmediateAiml(currentNode, request, this,
+                                                               request.RequestType | RequestKind.TemplateExpander |
+                                                               RequestKind.AIMLLoader);
                     total += 1;
                 }
                 ISettingsDictionary dict = IsSettingsTag(currentNodeName, request);
@@ -876,15 +878,21 @@ namespace RTParser.Utils
                 {
                     if (false && !request.IsToplevelRequest && !request.SraiDepth.IsOverMax)
                     {
-                        Request res = request.CreateSubRequest(StaticAIMLUtils.ToTemplateXML(currentNode), null);
+                        Request res = request.CreateSubRequest(StaticAIMLUtils.ToTemplateXML(currentNode), null,
+                                                               request.RequestType | RequestKind.TemplateExpander |
+                                                               RequestKind.AIMLLoader);
                         res.IsToplevelRequest = true;
-                        loadOpts.RProcessor.ImmediateAiml(currentNode, res, this);
+                        loadOpts.RProcessor.ImmediateAiml(currentNode, res, this,
+                                                               request.RequestType | RequestKind.TemplateExpander |
+                                                               RequestKind.AIMLLoader);
                         total += 1;
                     }
                     else
                     {
                         if (request.NoImmediate) return 0;
-                        loadOpts.RProcessor.ImmediateAiml(currentNode, request, this);
+                        loadOpts.RProcessor.ImmediateAiml(currentNode, request, this,
+                                                               request.RequestType | RequestKind.TemplateExpander |
+                                                               RequestKind.AIMLLoader);
                         total += 1;
                     }
                 }

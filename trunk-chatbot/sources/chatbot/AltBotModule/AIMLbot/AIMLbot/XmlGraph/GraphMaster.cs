@@ -660,12 +660,12 @@ namespace RTParser.Utils
             return ql;
         }
 
-        public void RunGraphQuery(GraphQuery ql)
+        public void RunGraphQuery(GraphQuery ql, RequestKind kind)
         {
             MatchState state = ql.matchState;
             Unifiable path = ql.InputPath;
             Request request = ql.TheRequest;
-            if (DoParallels) DoParallelEval(Parallels, request, request.rawInput);
+            if (DoParallels) DoParallelEval(Parallels, request, request.rawInput, kind);
             evaluateQL(path, request, state, ql, true);
             if (ql.TemplateCount == 0)
             {
@@ -1033,7 +1033,7 @@ namespace RTParser.Utils
             return copy;
         }
 
-        private List<Result> DoParallelEval(List<GraphMaster> totry, Request request, Unifiable unifiable)
+        private List<Result> DoParallelEval(List<GraphMaster> totry, Request request, Unifiable unifiable, RequestKind kind)
         {
             var pl = new List<Result>();
             AltBot proc = request.TargetBot;
@@ -1054,7 +1054,7 @@ namespace RTParser.Utils
                         if (wasTopLevel) request.IsToplevelRequest = false;
 
                         p.UnTraced = Size > 0;
-                        var req = request.CreateSubRequest(request.rawInput, p);
+                        var req = request.CreateSubRequest(request.rawInput, p, kind);
                         req.OriginalSalientRequest = request.OriginalSalientRequest;
                         req.Graph = p;
                         req.IsToplevelRequest = false;

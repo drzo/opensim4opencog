@@ -71,7 +71,7 @@ namespace AltAIMLbot
         public  AltBot curBot;
 
         public bool NeedsLoad = true;
-        public User curUser
+        public User curUserLast
         {
             get { return curBot.LastUser; }
         }
@@ -548,6 +548,7 @@ namespace AltAIMLbot
             Console.WriteLine("       ProcessorCount:" + Environment.ProcessorCount);
             Console.WriteLine("             UserName:" + Environment.UserName);
             Console.WriteLine("            TickCount:" + Environment.TickCount);
+            User curUser = this.curUserLast;
             if ((curUser != null) && (curUser.UserID != null))
             {
                 Console.WriteLine("            UserID:" + curUser.UserID);
@@ -688,12 +689,13 @@ namespace AltAIMLbot
             return true;
         }
 
-        public string respondToChat(string input)
+        internal string respondToChat(string input, User user)
         {
-            return respondToChat(input, tmBehaveEnabled);
+            return respondToChat(input, user, true, RequestKind.ChatRealTime);
         }
-        public string respondToChat(string input, bool doHaviours)
+        public string respondToChat(string input, User curUser, bool isToplevel, RequestKind requestType)
         {
+            bool doHaviours = tmBehaveEnabled;            
             if (string.IsNullOrEmpty(input)) return input;
             input = input.TrimStart();
             if (input.StartsWith("@"))
@@ -813,7 +815,7 @@ namespace AltAIMLbot
                 prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
                 //curBot.lastBehaviorChatInput = input;
                 curBot.isPerformingOutput = false;
-                Request r = new Request(input, curUser, curBot);
+                Request r = new Request(input, curUser, curBot, isToplevel, requestType);               
                 Result res = curBot.Chat(r);
                 Unifiable output = res.Output;
                 string outputS = (string)output;
@@ -917,9 +919,10 @@ namespace AltAIMLbot
 
             while (true)
             {
+                User curUser = curUserLast;
                 try
                 {
-                    Console.Write("You: ");
+                    Console.Write("You (" + curUser.UserNameAndID + "): ");
                     string input = Console.ReadLine();
                     if (input.ToLower() == "quit")
                     {
@@ -928,7 +931,7 @@ namespace AltAIMLbot
                     else
                     {
                         prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
-                        string answer = respondToChat(input);
+                        string answer = respondToChat(input, curUser);
                         Console.WriteLine("Bot: " + answer);
                         sayResponse(answer);
                         prologEngine.postListPredToMt("lastoutput", answer, "lastoutputMt");
@@ -1185,6 +1188,7 @@ namespace AltAIMLbot
 
             while (true)
             {
+                User LastCurUser = null;
                 try
                 {
                     Thread.Sleep(interval);
@@ -1221,6 +1225,9 @@ namespace AltAIMLbot
                         if (!curBot.isAcceptingUserInput) { continue; }
                         try
                         {
+                            var curUser = curUserLast;
+                            LastCurUser = curUser;
+
                             lastuutid = uutid;
                             //string myInput = (myChemistry.m_cBus.getHash("mdollheard"));
                             string myInput = (getBBHash("speechhyp"));
@@ -1252,7 +1259,7 @@ namespace AltAIMLbot
                             if ((myInput.Length > 0) && (!myInput.Equals(lastUtterance)))
                             {
                                 Console.WriteLine("Heard: " + myInput);
-                                Request r = new Request(myInput, curUser, curBot);
+                                Request r = new Request(myInput, curUser, curBot, true, RequestKind.MTalkThread);
                                 Result res = curBot.Chat(r);
                                 string myResp = res.Output;
                                 Console.WriteLine("Response: " + myResp);

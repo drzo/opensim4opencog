@@ -4,6 +4,7 @@ using System.Xml;
 using System.IO;
 using System.Text;
 using System.Threading;
+using AltAIMLParser;
 using MushDLR223.Utilities;
 using RTParser;
 using RTParser.Normalize;
@@ -430,7 +431,7 @@ namespace AltAIMLbot.Utils
 
             try
             {
-                object result = this.bot.evalTemplateNode(node);
+                object result = this.bot.evalTemplateNode(node, RequestKind.AIMLLoader | RequestKind.BotPropertyEval);
                 if (AltBot.tl_aimlResult != null)
                 {
                     AltBot.tl_aimlResult.AddResult(node, filename, result);

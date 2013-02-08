@@ -1160,11 +1160,15 @@ namespace AIMLBotModule
         {
             return AIMLInterp(input, MyUser);
         }
-        public SUnifiable AIMLInterp(string input, string myUser)
+        public SUnifiable AIMLInterp(string input, string myUser, bool realTime)
         {
-            return AIMLInterp(input, GetMyUser(myUser));
+            return AIMLInterp(input, GetMyUser(myUser), realTime);
         }
         public SUnifiable AIMLInterp(string input, User myUser)
+        {
+            return AIMLInterp(input, myUser, true);
+        }
+        public SUnifiable AIMLInterp(string input, User myUser, bool realTime)
         {
             if (MyBot.useServitor)
             {
@@ -1173,7 +1177,7 @@ namespace AIMLBotModule
                 MyBot.updateRTP2Sevitor(myUser);
                 MyBot.servitor.curBot.sayProcessor = new sayProcessorDelegate(TalkActive);
                 MyBot.servitor.curBot.personaProcessor = new systemPersonaDelegate(PersonaActive);
-                string answer = MyBot.servitor.respondToChat(input);
+                string answer = MyBot.servitor.respondToChat(input, myUser, true, RequestKind.ChatRealTime);
                 SUnifiable result = answer;
                 if (result == null)
                 {
@@ -1195,7 +1199,7 @@ namespace AIMLBotModule
             AddedToNextResponse = "";
             try
             {
-                SUnifiable result = AIMLInterp0(input, myUser);
+                SUnifiable result = AIMLInterp0(input, myUser, realTime ? RequestKind.ChatRealTime : RequestKind.ChatForString);
                 if (result == null)
                 {
                     LogVital("-no-response- for -" + input + "-");
@@ -1260,7 +1264,7 @@ namespace AIMLBotModule
             return AddToResult(unifiable, splts);
         }
 
-        public SUnifiable AIMLInterp0(string input, User myUser)
+        public SUnifiable AIMLInterp0(string input, User myUser, RequestKind requestType)
         {
             // set a global
             MyUser = myUser;
@@ -1296,7 +1300,7 @@ namespace AIMLBotModule
                 DLRConsole.DebugWriteLine(GetModuleName() + ": not Bot is instenaced yet!!");
                 return "";
             }
-            var r = MyBot.MakeRequestToBot(input, MyUser);
+            var r = MyBot.MakeRequestToBot(input, MyUser, true, requestType);
             r.IsTraced = true;
             Result res = MyBot.ChatWithRequest(r);
             string useOut = AltBot.CleanupCyc(res.Output);
@@ -1309,7 +1313,7 @@ namespace AIMLBotModule
             return (useOut != null && useOut.Contains("RANDOM TOPIC."));
         }
 
-        public SUnifiable AIMLInterpScored(string input, User myUser, out double scored)
+        public SUnifiable AIMLInterpScored(string input, User myUser, out double scored, RequestKind requestType)
         {
             scored = 0.0;
             // set a global
@@ -1346,7 +1350,7 @@ namespace AIMLBotModule
                 DLRConsole.DebugWriteLine(GetModuleName() + ": not Bot is instenaced yet!!");
                 return "";
             }
-            var r = MyBot.MakeRequestToBot(input, MyUser);
+            var r = MyBot.MakeRequestToBot(input, MyUser, true, requestType);
             if (!r.GraphsAcceptingUserInput)
             {
                 return "";

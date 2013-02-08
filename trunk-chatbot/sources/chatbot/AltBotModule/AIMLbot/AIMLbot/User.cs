@@ -49,7 +49,8 @@ namespace AltAIMLbot
         {
             try
             {
-                var R = CreateRequest("ONUSER" + name + " " + UserID, ResponderJustSaid, rbot.BotAsUser);
+                var R = CreateRequest("ONUSER" + name + " " + UserID, ResponderJustSaid, rbot.BotAsUser, true,
+                                      RequestKind.EventProcessor);
                 R.Graph = robot.DefaultEventGraph;
                 R.AddGraph(robot.DefaultEventGraph);
                 R.AddGraph(StartGraph);
@@ -68,7 +69,7 @@ namespace AltAIMLbot
                 if (_lastRequest == null)
                 {
                     return null;
-                    return CreateRequest(/*"PING"*/ null, ResponderJustSaid, rbot.BotAsUser);
+                    //return CreateRequest(/*"PING"*/ null, ResponderJustSaid, rbot.BotAsUser);
                 }
                 return _lastRequest;
             }
@@ -133,7 +134,7 @@ namespace AltAIMLbot
 
         private object ChatWithThisUser(string cmd, Request request)
         {
-            Request req = request.CreateSubRequest(cmd, null);
+            Request req = request.CreateSubRequest(cmd, null, RequestKind.ChatForString);
             req.Responder = this;
             req.IsToplevelRequest = request.IsToplevelRequest;
             return rbot.LightWeigthBotDirective(cmd, req);
@@ -642,7 +643,7 @@ namespace AltAIMLbot
 
         public override string ToString()
         {
-            return UserID;
+            return UserNameAndID;
         }
 
         /// <summary>
@@ -1521,7 +1522,7 @@ namespace AltAIMLbot
             string[] hostSystemGetFiles = HostSystem.GetFiles(userdir, "*.aiml");
             if (hostSystemGetFiles == null || hostSystemGetFiles.Length <= 0) return;
             var request = new Request("@echo load user aiml ", this, Unifiable.EnglishNothing, rbot.BotAsUser, bot,
-                                            null, StartGraph);
+                                      null, StartGraph, true, RequestKind.AIMLLoader);
             request.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
             request.Graph = StartGraph;
             request.LoadingFrom = userdir;
@@ -1678,22 +1679,23 @@ namespace AltAIMLbot
             return this.HeardSelfSayGraph;// GetResponseGraph(this);
         }
 
-        public MasterRequest CreateRequest(Unifiable message, User target)
+        public MasterRequest CreateRequest(Unifiable message, User target, bool isToplevel, RequestKind requestType)
         {
             target = target ?? LastResponder.Value;
             Unifiable targetJustSaid = ResponderJustSaid;
             if (target != null && !Unifiable.IsNull(targetJustSaid)) targetJustSaid = target.JustSaid;
-            var mr = CreateRequest(message, target, targetJustSaid, GetResponseGraph(target), null);
+            var mr = CreateRequest(message, target, targetJustSaid, GetResponseGraph(target), null, isToplevel,
+                                   requestType);
             return mr;
         }
 
-        public MasterRequest CreateRequest(Unifiable message, Unifiable said, User target)
+        public MasterRequest CreateRequest(Unifiable message, Unifiable said, User target, bool isToplevel, RequestKind requestType)
         {
-            var mr = CreateRequest(message, target, said, GetResponseGraph(target), null);
+            var mr = CreateRequest(message, target, said, GetResponseGraph(target), null, isToplevel, requestType);
             return mr;
         }
 
-        public MasterRequest CreateRequest(Unifiable message, User target, Unifiable said, GraphMaster G, Request parentRequest)
+        public MasterRequest CreateRequest(Unifiable message, User target, Unifiable said, GraphMaster G, Request parentRequest, bool isToplevel, RequestKind requestType)
         {
             if (G == null) G = GetResponseGraph(target);
             bool asIsToplevelRequest = true;
@@ -1716,11 +1718,11 @@ namespace AltAIMLbot
             if (target != null && !Unifiable.IsNull(said)) targetJustSaid = target.JustSaid;
             if (parentRequest == null)
             {
-                request = new MasterRequest(message, this, targetJustSaid, target, bot, parentRequest, G);
+                request = new MasterRequest(message, this, targetJustSaid, target, bot, parentRequest, G, isToplevel, requestType);
             }
             else
             {
-                request = parentRequest.CreateSubRequest(message, this, targetJustSaid, target, bot, parentRequest, G);
+                request = parentRequest.CreateSubRequest(message, this, targetJustSaid, target, bot, parentRequest, G, requestType);
             }
             if (parentRequest != null)
             {
@@ -1842,6 +1844,10 @@ namespace AltAIMLbot
             }
         }
 
+        public string UserNameAndID
+        {
+            get { return UserName + "/" + UserID; }
+        }
 
         /// <summary>
         /// Returns the string to use for the next that part of a subsequent path

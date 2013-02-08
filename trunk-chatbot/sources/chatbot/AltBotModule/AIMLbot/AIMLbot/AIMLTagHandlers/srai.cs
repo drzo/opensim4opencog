@@ -63,7 +63,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                             {        
                                 try
                                 {
-                                    Request subRequest0 = new Request(this.TemplateNodeInnerText, this.user, this.bot);
+                                    Request subRequest0 = new Request(this.TemplateNodeInnerText, this.user, this.bot, false, request.RequestType | RequestKind.SraiTag);
                                     subRequest0.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
                                     subRequest0.depth = this.request.depth + 1;
                                     Result subResult0 = this.bot.Chat(subRequest0, graphName);
@@ -87,7 +87,8 @@ namespace AltAIMLbot.AIMLTagHandlers
                         //{
                         // Plain old SRAI
                         string ourInput =this.TemplateNodeInnerText;
-                        Request subRequest = new Request(ourInput, this.user, this.bot);
+                        Request subRequest = new Request(ourInput, this.user, this.bot, false,
+                                                         request.RequestType | RequestKind.SraiTag);
                         subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
                         subRequest.depth = this.request.depth + 1;
                         Result subResult = this.bot.Chat(subRequest, graphName);

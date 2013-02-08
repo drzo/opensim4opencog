@@ -58,7 +58,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                         // preforms a <srai> if there is nothing to pop
                         if (this.TemplateNodeHasText)
                         {
-                            Request subRequest = new Request(this.TemplateNodeInnerText, this.user, this.bot);
+                            Request subRequest = new Request(this.TemplateNodeInnerText, this.user, this.bot, false, request.RequestType | RequestKind.PushPopTag);
                             subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
                             Result subQuery = this.bot.Chat(subRequest);
                             this.request.hasTimedOut = subRequest.hasTimedOut;

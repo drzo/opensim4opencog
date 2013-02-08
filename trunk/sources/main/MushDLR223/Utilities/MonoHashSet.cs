@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MushDLR223.Utilities
 {
@@ -696,4 +697,224 @@ namespace MushDLR223.Utilities
                 col.Add(val);
         }
     }
+
+
+    /// <summary>
+    /// THIS DICTIONARY WILL NOT "HANG ON" TO THE KEYS IT USES
+    /// IF THE KEY IS GARBAGE COLLECTED, THE VALUE WILL BE RELEASED TOO
+    /// </summary>
+    public class Dictionary_usingWeakKey<K, V> {
+        //MAP FROM HASH CODE TO LIST OF KEY/VALUE PAIRS
+        private Dictionary<int, List<Pair>> dic = new Dictionary<int, List<Pair>>();
+
+
+        public void Add(K key, V value) {
+            if (value==null){
+                this.Remove(key);
+                return;
+            }//endif
+
+            List<Pair> list = null;
+            dic.TryGetValue(key.GetHashCode(), out list);
+            if (list == null) {
+                list = new List<Pair>();
+                dic.Add(key.GetHashCode(), list);
+            }//endif
+
+            Boolean isDirty = false;            
+            foreach(Pair p in list){
+                if (p.Key.Target == null) {
+                    isDirty = true;
+                    continue;
+                }//endif
+                if (p.Key.Target == (Object)key) {
+                    p.Value = (Object)value;
+                    if (isDirty) cleanList(list);
+                    return;
+                }//endif
+            }//for
+            if (isDirty) cleanList(list);
+
+            Pair newP=new Pair();
+            newP.Key = new WeakReference(key);
+            newP.Value = value;
+            list.Add(newP);
+        }//method
+
+
+        public bool ContainsKey(K key) {
+            List<Pair> list = null;
+            dic.TryGetValue(key.GetHashCode(), out list);
+            if (list == null) return false;
+
+            Boolean isDirty = false;
+            foreach (Pair p in list) {
+                if (p.Key.Target == null) {
+                    isDirty = true;
+                    continue;
+                }//endif
+                if (p.Key.Target == (Object)key) {
+                    if (isDirty) cleanList(list);
+                    return true;
+                }//endif
+            }//for
+            if (isDirty) cleanList(list);
+
+            return false;
+        }//method
+
+        public void prune()
+        {
+            foreach (KeyValuePair<int, List<Pair>> keyValuePair in dic.ToArray())
+            {
+                var list = keyValuePair.Value;
+                cleanList(list);
+            }
+        }
+
+        private void cleanList(List<Pair> list) {
+            var temp = (from Pair p in list where p.Key.Target != null select p);
+            list.Clear();
+            list.AddRange(temp);
+        }//method
+
+
+
+        public bool Remove(K key) {
+            List<Pair> list = null;
+            dic.TryGetValue(key.GetHashCode(), out list);
+            if (list == null) return true;
+
+            foreach (Pair p in list) {
+                if (p.Key.Target == (Object)key) {
+                    p.Value = null;
+                    break;
+                }//endif
+            }//for
+            cleanList(list);
+
+            return true;
+        }//method
+
+
+        public bool TryGetValue(K key, out V value)
+        {
+            value = default(V);
+            List<Pair> list = null;
+            if (!dic.TryGetValue(key.GetHashCode(), out list))
+            {
+                return false;
+            }
+            if (list == null)
+            {
+                return false;
+            }
+
+            Boolean isDirty = false;
+            foreach (Pair p in list)
+            {
+                if (p.Key.Target == null)
+                {
+                    isDirty = true;
+                    continue;
+                } //endif
+
+                if (p.Key.Target == (Object) key)
+                {
+                    if (isDirty) cleanList(list);
+                    value = (V) p.Value;
+                    return true;
+                } //endif
+            } //for
+            if (isDirty) cleanList(list);
+            return false;
+        }
+
+        public V this[K key] {
+            get {
+                List<Pair> list = null;
+                dic.TryGetValue(key.GetHashCode(), out list);
+                if (list == null) return default(V);
+
+                Boolean isDirty = false;
+                foreach (Pair p in list) {
+                    if (p.Key.Target == null) {
+                        isDirty = true;
+                        continue;
+                    }//endif
+
+                    if (p.Key.Target == (Object)key) {
+                        if (isDirty) cleanList(list);
+                        return (V)p.Value;
+                    }//endif
+                }//for
+                if (isDirty) cleanList(list);
+
+                return default(V);
+            }
+            set {
+                this.Add(key, value);
+            }
+        }
+
+
+        public void Add(KeyValuePair<K, V> item) {
+            throw new NotImplementedException();
+        }
+
+        public void Clear() {
+            dic.Clear();
+        }
+
+        public bool Contains(KeyValuePair<K, V> item)
+        {
+            V ic;
+            return TryGetValue(item.Key, out ic) && Equals(item.Value, ic);
+        }
+
+        public void CopyTo(KeyValuePair<K, V>[] array, int arrayIndex) {
+            throw new NotImplementedException();
+        }
+
+        public int Count {
+            get {
+                throw new NotImplementedException();            
+                return dic.Count();           
+            }
+        }
+
+        public bool IsReadOnly {
+            get { return false; }
+        }
+
+        public bool Remove(KeyValuePair<K, V> item) {
+            throw new NotImplementedException();
+        }
+
+
+
+        public IEnumerator<KeyValuePair<K, V>> GetEnumerator() {
+            throw new NotImplementedException();    
+            //return dic.GetEnumerator();
+        }
+
+
+        //System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
+        //    return ((System.Collections.IEnumerable)dic).GetEnumerator();
+        //}
+
+
+
+
+
+    }//class
+
+
+
+    public class Pair{
+        public WeakReference Key;
+        public Object Value;
+    }//method
+
+
 }

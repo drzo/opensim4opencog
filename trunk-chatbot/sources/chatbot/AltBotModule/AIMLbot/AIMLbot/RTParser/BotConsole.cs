@@ -375,7 +375,8 @@ namespace RTParser
             // myBot.AddAiml(evidenceCode);
             User myUser = myBot.LastUser;
             var myUsersname = myUser.UserName;
-            Request request = myUser.CreateRequest("current user toplevel", "current bot toplevel", myBot.BotAsUser);
+            Request request = myUser.CreateRequest("current user toplevel", "current bot toplevel", myBot.BotAsUser,
+                                                   true, RequestKind.EventProcessor);
             myUser.LastRequest = request;
             myBot.BotDirective(myUser, request, "@help", writeLine);
             writeLine("-----------------------------------------------------------------");
@@ -449,7 +450,7 @@ namespace RTParser
                     {
                         // See what the servitor says
                         updateRTP2Sevitor(myUser);
-                        writeLine(myName + "> " + servitor.respondToChat(input));
+                        writeLine(myName + "> " + servitor.respondToChat(input, myUser));
                         updateServitor2RTP(myUser);
                     }
                     else
@@ -587,7 +588,7 @@ namespace RTParser
                 {
                     // See what the servitor says
                     updateRTP2Sevitor(myUser);
-                    servitor.respondToChat(input);
+                    servitor.respondToChat(input, myUser);
                     updateServitor2RTP(myUser);
                 }
             }
@@ -775,7 +776,7 @@ namespace RTParser
                 User targetUser = robot.GetTargetUser(null, said, robot.BotAsUser);
                 robot.HeardSomeoneSay1Sentence(myUser, targetUser, said, myUser.LastResult, control);
                 User CurrentUser = robot.GetCurrentUser(user);
-                MasterRequest request = CurrentUser.CreateRequest(said, targetUser);
+                MasterRequest request = CurrentUser.CreateRequest(said, targetUser, true, RequestKind.ChatRealTime);
                 request.IsTraced = true;
                 request.OriginalSalientRequest = request;
                 if (cmd == "locally")
@@ -784,7 +785,9 @@ namespace RTParser
                 }
                 request.SaveResultsOnJustHeard = !waitUntilVerbalOutput;
                 request.ResponderSelfListens = !waitUntilVerbalOutput;
-                Result res = robot.GlobalChatWithUser(request, said, user, null, AltBot.writeDebugLine, !waitUntilVerbalOutput, request.SaveResultsOnJustHeard);
+                Result res = robot.GlobalChatWithUser(request, said, user, null, AltBot.writeDebugLine,
+                                                      !waitUntilVerbalOutput, request.SaveResultsOnJustHeard, true,
+                                                      RequestKind.ChatRealTime);
                 request.ResponderSelfListens = false;
                 // detect a user "rename"
                 bool userChanged = robot.DetectUserChange(myUser, wasUser, user);
@@ -1051,7 +1054,7 @@ namespace RTParser
                 if (request != null) printOptions = request.WriterOptions;
                 printOptions.ClearHistory();
                 console("-----------------------------------------------------------------");
-                Request ur = robot.MakeRequestToBot(args, myUser);
+                Request ur = robot.MakeRequestToBot(args, myUser, true, RequestKind.BotPropertyEval);
                 int i;
                 Result r = myUser.LastResult;
                 if (args.StartsWith("save"))
@@ -1158,14 +1161,14 @@ namespace RTParser
                     return true;
                 }
 
-                Request ur = robot.MakeRequestToBot(args, myUser);
+                Request ur = robot.MakeRequestToBot(args, myUser, true, RequestKind.ChatForString);
 
                 // Adds findall to request
                 QuerySettings.ApplySettings(QuerySettings.FindAll, ur);
 
                 ur.IsTraced = myUser.IsTraced;
                 console("-----------------------------------------------------------------");
-                var result = robot.ChatWithToplevelResults(ur, request.CurrentResult);//, myUser, targetBotUser, myUser.ListeningGraph);
+                var result = robot.ChatWithToplevelResults(ur, request.CurrentResult, true, RequestKind.ChatForString);//, myUser, targetBotUser, myUser.ListeningGraph);
                 console("-----------------------------------------------------------------");
                 StaticAIMLUtils.PrintResult(result, console, printOptions);
                 console("-----------------------------------------------------------------");
@@ -1292,7 +1295,7 @@ namespace RTParser
                     source = args;
                     slang = null;
                 }
-                Request ur = robot.MakeRequestToBot(args, myUser);
+                Request ur = robot.MakeRequestToBot(args, myUser, true, RequestKind.BotPropertyEval);
                 if (source != null)
                 {
                     try

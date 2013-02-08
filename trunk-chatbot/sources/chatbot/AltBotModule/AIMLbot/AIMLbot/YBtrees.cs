@@ -24,7 +24,7 @@ using LAIR.ResourceAPIs.WordNet;
 using LAIR.Collections.Generic;
 using CAMeRAVUEmotion;
 using MushDLR223.Utilities;
-
+using BTXmlNode = System.Xml.XmlNode;
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
@@ -57,21 +57,96 @@ namespace AltAIMLbot
     {
         public override XmlElement CreateElement(string prefix, string localname, string nsURI)
         {
-            BTXmlNode elem = new BTXmlNode(prefix, localname, nsURI, this);
+            var elem = new BTXmlNodeImpl(prefix, localname, nsURI, this);
             return elem;
         }
     }
 
-    public class BTXmlNode : XmlElement
+    /// <summary>
+    /// Allows any BTXML node operation to work on any XML node
+    /// </summary>
+    public static class BTXmlNodeExtensions
     {
+        static public XmlNode CloneNode(this XmlNode baze, bool deep)
+        {
+            return baze.Clone();
+        }
+        static public XmlNode CloneNodeV(this XmlNode baze, bool deep)
+        {
+            return baze.Clone();
+        }
 
-        public BTXmlNode(string prefix, string localName, string namespaceURI, XmlDocument doc)
+        static public string InnerTextV(this XmlNode baze)
+        {
+            var it = baze.InnerText;
+            if (baze.InnerXml != it)
+            {
+                return baze.InnerXml;
+            }
+            return it;
+        }
+
+
+        static public string AttributesV(this XmlNode baze, string attrib)
+        {
+            if (baze.Attributes != null)
+            {
+                if (baze.Attributes[attrib] != null)
+                    return baze.Attributes[attrib].Value;
+            }
+            foreach (XmlNode childNode in baze.ChildNodes)
+            {
+                if (childNode.NodeType == XmlNodeType.Element)
+                {
+                    if (childNode.Name == attrib)
+                        return childNode.InnerTextV();
+                }
+
+            }
+            return string.Empty;
+        }
+        static public XmlNode OwnerElement(this XmlNode baze)
+        {
+            // KHC: probably wrong but closest
+            {
+                if (baze.NodeType== XmlNodeType.Attribute)
+                    return baze.ParentNode;
+                else
+                    return null;
+            }
+        }
+
+        static internal Dictionary_usingWeakKey<object, XmlNode> CloneOfDict = new Dictionary_usingWeakKey<object, XmlNode>();
+        static public XmlNode get_CloneOf(this XmlNode baze)
+        {
+            lock (CloneOfDict)
+            {
+                XmlNode clone;
+                if (CloneOfDict.TryGetValue(baze, out clone))
+                {
+                    return clone;
+                }
+                return null;
+            }
+        }
+        static public void set_CloneOf(this XmlNode baze, XmlNode cloned)
+        {
+            lock (CloneOfDict)
+            {
+                CloneOfDict[baze] = cloned;
+            }
+        }
+    }
+
+    public class BTXmlNodeImpl : XmlElement
+    {
+        public BTXmlNodeImpl(string prefix, string localName, string namespaceURI, XmlDocument doc)
             : base(prefix, localName, namespaceURI, doc)
-        { }
-
+        {
+        }
 
         public string AttributesV(string attrib)
-        {
+        {           
             if (base.Attributes != null)
             {
                 if (base.Attributes[attrib] != null)
@@ -98,44 +173,41 @@ namespace AltAIMLbot
         {
             base.WriteTo(w);
         }
+
         public XmlNode CloneOf { get; set; }
+
         public override XmlNode CloneNode(bool deep)
         {
             return base.Clone();
         }
-        public override XmlNodeType NodeType 
-        { 
-            get
-            {
-                return base.NodeType;
-            }
+
+        public override XmlNodeType NodeType
+        {
+            get { return base.NodeType; }
         }
+
         public override string LocalName
         {
-            get
-            {
-                return base.LocalName;
-            }
+            get { return base.LocalName; }
         }
+
         public override string Name
         {
-            get
-            {
-                return base.Name;
-            }
+            get { return base.Name; }
         }
-        public  BTXmlNode  OwnerElement
+
+        public BTXmlNode OwnerElement
         {
             // KHC: probably wrong but closest
             get
             {
-                if (this.NodeType== XmlNodeType.Attribute)
+                if (this.NodeType == XmlNodeType.Attribute)
                     return (BTXmlNode) base.ParentNode;
                 else
                     return null;
             }
         }
-        
+
     }
 
     #region BTXML
@@ -397,7 +469,7 @@ namespace AltAIMLbot
             {
                 // attributes have an OwnerElement, not a ParentNode; also they have              
                 // to be matched by name, not found by position              
-                return String.Format("{0}/@{1}", GetXPathToNode(node.OwnerElement), node.Name);
+                return String.Format("{0}/@{1}", GetXPathToNode(node.OwnerElement()), node.Name);
             }
             if (node.ParentNode == null)
             {
@@ -2568,7 +2640,7 @@ namespace AltAIMLbot
                     bot.lastBehaviorChatInput = bot.chatInputQueue.Dequeue();
                     sentStr += bot.lastBehaviorChatInput;
                 }
-                Request r = new Request(sentStr, bot.lastBehaviorUser, bot);
+                Request r = new Request(sentStr, bot.lastBehaviorUser, bot, true, RequestKind.BehaviourChat);
                 Result res = bot.Chat(r, graphName);
                 //bot.lastBehaviorChatOutput=res.Output;
                 bot.lastBehaviorChatOutput = "";
@@ -3196,7 +3268,7 @@ namespace AltAIMLbot
             yield return RunStatus.Running;
             try
             {
-                bot.evalTemplateNodeInnerXml(myNode);
+                bot.evalTemplateNodeInnerXml(myNode, RequestKind.BehaviourProcess);
                 //bot.evalTemplateNode(templateNode);
             }
             catch (Exception e)
@@ -3215,7 +3287,7 @@ namespace AltAIMLbot
             {
                 try
                 {
-                    bot.evalTemplateNodeInnerXml(templateNode);
+                    bot.evalTemplateNodeInnerXml(templateNode, RequestKind.BehaviourProcess);
                     //bot.evalTemplateNode(templateNode);
                 }
                 catch (Exception e)
@@ -3292,7 +3364,7 @@ namespace AltAIMLbot
             {
                 try
                 {
-                    bot.evalTemplateNodeInnerXml(templateNode);
+                    bot.evalTemplateNodeInnerXml(templateNode, RequestKind.BehaviourProcess);
                     //bot.evalTemplateNode(templateNode);
                 }
                 catch (Exception e)

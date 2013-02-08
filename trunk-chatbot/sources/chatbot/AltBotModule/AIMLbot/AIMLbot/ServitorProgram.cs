@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using AIMLbot;
+using AltAIMLParser;
 using AltAIMLbot;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
@@ -50,6 +51,7 @@ namespace AltAIMLbot
         //public string userID = "consoleUser";
         public string PathToWordNet = null;
         private RTParser.AltBot MyBot;
+        User curUser;
 
         public void sayConsole(string message)
         {
@@ -89,6 +91,7 @@ namespace AltAIMLbot
 
                 //servitorbin = @"C:\RD4541\Acore\RealBot\RealBot2\RealBot2\RealBot2\bin\Debug\aiml\kotoko_irata\bin\ki.kvt";
                 servitorbin = @".\aiml\kotoko_irata\bin\ki.kvt";
+                curUser = MyBot.LastUser;
                 //MyBot.myBehaviors.persistantDirectory = @"./BHTrees/";
                 //servitor.setBBHash("aimlinstancedir", @"C:\RD4541\Acore\RealBot\RealBot2\RealBot2\RealBot2\bin\Debug\aiml\kotoko_irata");
                 // if (File.Exists(servitorbin))
@@ -172,7 +175,7 @@ namespace AltAIMLbot
 
         public string respondToChat(string input)
         {
-            return servitor.respondToChat(input);
+            return servitor.respondToChat(input, curUser, true, RequestKind.ChatRealTime);
         }
 
         public void Terminate()

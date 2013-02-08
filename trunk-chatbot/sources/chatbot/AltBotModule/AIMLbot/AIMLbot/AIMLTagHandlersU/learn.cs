@@ -61,7 +61,7 @@ namespace RTParser.AIMLTagHandlers
 
         private XmlNode EvalChild(XmlNode templateNode)
         {
-            XmlNode attach = templateNode.CloneNode(false);// //AIMLLoader.CopyNode(templateNode, false);
+            XmlNode attach = templateNode.CloneNodeV(false);// //AIMLLoader.CopyNode(templateNode, false);
             LineInfoElementImpl.unsetReadonly(attach);
             if (templateNode.HasChildNodes)
             {
@@ -104,7 +104,7 @@ namespace RTParser.AIMLTagHandlers
                         foreach (XmlNode child in readNode.ChildNodes)
                         {
                             LineInfoElementImpl.unsetReadonly(child);
-                            attach.AppendChild(child.CloneNode(true));
+                            attach.AppendChild(child.CloneNodeV(true));
                         }
                     }
                 }

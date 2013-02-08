@@ -254,20 +254,20 @@ namespace RTParser
 
         #region Conversation methods
 
-        public Result SaidUser(string input, string user, string[] otherName, OutputDelegate traceConsole, bool saveResults, bool saveResultsOnJustHeard)
+        public Result SaidUser(string input, string user, string[] otherNameWhomInputAdresses, OutputDelegate traceConsole, bool saveResults, bool saveResultsOnJustHeard, bool isToplevel, RequestKind requestType)
         {
             User CurrentUser = GetCurrentUser(user);
-            string otherUserName = otherName == null ? null : otherName[0];
+            string otherUserName = otherNameWhomInputAdresses == null ? null : otherNameWhomInputAdresses[0];
             User targetUser = GetTargetUser(otherUserName, input, BotAsUser);
-            var request = CurrentUser.CreateRequest(input, targetUser);
+            var request = CurrentUser.CreateRequest(input, targetUser, isToplevel, requestType);
             request.IsTraced = true;
             request.OriginalSalientRequest = request;
             request.SaveResultsOnJustHeard = saveResultsOnJustHeard;
             return GlobalChatWithUser(request, input, user, otherUserName, traceConsole, saveResults,
-                                      saveResultsOnJustHeard);
+                                      saveResultsOnJustHeard, isToplevel, requestType);
         }
 
-        internal User GetTargetUser(string otherName, string input, User fallback)
+        internal User GetTargetUser(string otherNameWhomInputAdresses, string input, User fallback)
         {
             User targetUser = fallback ?? BotAsUser;
             string youser = input;
@@ -283,10 +283,10 @@ namespace RTParser
                     if (targ != null) targetUser = targ;
                 }
             }
-            if (otherName != null)
+            if (otherNameWhomInputAdresses != null)
                 if (targ == null)
                 {
-                    targ = FindUser(otherName);
+                    targ = FindUser(otherNameWhomInputAdresses);
                     if (targ != null) targetUser = targ;
                 }
             return targetUser;
@@ -315,7 +315,8 @@ namespace RTParser
             }
             return CurrentUser;
         }
-        internal Result GlobalChatWithUser(Request request, string input, string user, string otherName, OutputDelegate traceConsole, bool saveResults, bool saveResultsOnJustHeard)
+        internal Result GlobalChatWithUser(Request request, string input, string user, string otherNameWhomInputAdresses, 
+            OutputDelegate traceConsole, bool saveLastUserAndResult, bool saveResultsOnConverstion, bool isToplevel, RequestKind requestType)
         {
             traceConsole = traceConsole ?? writeDebugLine;
             User CurrentUser = GetCurrentUser(user);
@@ -324,15 +325,15 @@ namespace RTParser
             varMSM.clearNextStateValues();
             // myUser.TopicSetting = "collectevidencepatterns";
             Result res = null;
-            request = request ?? CurrentUser.CreateRequest(input, GetTargetUser(otherName, input, BotAsUser));
+            request = request ?? CurrentUser.CreateRequest(input, GetTargetUser(otherNameWhomInputAdresses, input, BotAsUser), isToplevel, requestType);
             request.IsTraced = true;
             request.OriginalSalientRequest = request;
-            request.SaveResultsOnJustHeard = saveResultsOnJustHeard;
+            request.SaveResultsOnJustHeard = saveResultsOnConverstion;
             Result requestCurrentResult = request.FindOrCreateCurrentResult();
             ChatLabel label = request.PushScope;
             try
             {
-                res = ChatWithRequest(request, requestCurrentResult);
+                res = ChatWithRequest(request, requestCurrentResult, isToplevel, requestType);
             }
             catch (ChatSignal e)
             {
@@ -364,9 +365,9 @@ namespace RTParser
             {
                 useOut = "Interesting.";
                 res.TemplateRating = Math.Max(res.Score, 0.5d);
-                saveResults = false;
+                saveLastUserAndResult = false;
             }
-            if (saveResults)
+            if (saveLastUserAndResult)
             {
                 this.LastUser = CurrentUser;
                 LastResult = res;
@@ -376,16 +377,16 @@ namespace RTParser
             return res;
         }
 
-        public MasterRequest MakeRequestToBot(Unifiable rawInput, string username)
+        public MasterRequest MakeRequestToBot(Unifiable rawInput, string username, bool isToplevel, RequestKind requestType)
         {
-            return MakeRequestToBot(rawInput, FindOrCreateUser(username));
+            return MakeRequestToBot(rawInput, FindOrCreateUser(username), isToplevel, requestType);
         }
 
-        public MasterRequest MakeRequestToBot(Unifiable rawInput, User findOrCreateUser)
+        public MasterRequest MakeRequestToBot(Unifiable rawInput, User findOrCreateUser, bool isToplevel, RequestKind requestType)
         {
             var rtarget = BotAsUser;
             Unifiable botLastSaid = findOrCreateUser.ResponderJustSaid;
-            MasterRequest r = findOrCreateUser.CreateRequest(rawInput, botLastSaid, rtarget);
+            MasterRequest r = findOrCreateUser.CreateRequest(rawInput, botLastSaid, rtarget, isToplevel, requestType);
             if (rtarget == null)
             {
                 OnBotCreated(() => r.SetSpeakerAndResponder(findOrCreateUser, BotAsUser));
@@ -406,10 +407,10 @@ namespace RTParser
         {
             if (useServitor)
             {
-                return servitor.respondToChat(rawInput);
+                return servitor.respondToChat(rawInput, FindOrCreateUser(UserGUID));
 
             }
-            return ChatWR(rawInput, UserGUID).Output;
+            return ChatWR(rawInput, UserGUID, true, RequestKind.ChatForString).Output;
         }
 
         
@@ -419,9 +420,9 @@ namespace RTParser
         /// <param name="rawInput">the raw input</param>
         /// <param name="UserGUID">an ID for the new user (referenced in the result object)</param>
         /// <returns>the result to be output to the user</returns>
-        public Result ChatWR(string rawInput, string UserGUID)
+        public Result ChatWR(string rawInput, string UserGUID, bool isToplevel, RequestKind requestType)
         {
-            Request request = MakeRequestToBot(rawInput, UserGUID);
+            Request request = MakeRequestToBot(rawInput, UserGUID, isToplevel, requestType);
             request.IsTraced = this.IsTraced;
             return ChatWithRequest(request);
         }
@@ -435,20 +436,23 @@ namespace RTParser
         public Result ChatWithRequest(Request request)
         {
             Result requestCurrentResult = request.FindOrCreateCurrentResult();
-            Result result = ChatWithRequest(request, requestCurrentResult);
+            Result result = ChatWithRequest(request, requestCurrentResult, request.IsToplevelRequest,
+                                            request.RequestType);
             if (!result.Started)
             {
+                writeDebugLine("result unstarted " + result);
                 return result;
             }
             return result;
         }
 
-        public Result ChatWithRequest(Request request, Result parentResultIn)
+        public Result ChatWithRequest(Request request, Result parentResultIn, bool isToplevel, RequestKind requestType)
         {
             if ((useServitor)&&(servitor !=null))
             {
+                User curUser = parentResultIn.Requester;
                 string input = request.ChatInput.OrignalRawText.ToString();
-                string answer = servitor.respondToChat(input);
+                string answer = servitor.respondToChat(input, curUser, isToplevel, requestType);
                 Result result = request.CreateResult(request);
                 result.SetOutput = answer;
                 return result;
@@ -485,7 +489,7 @@ namespace RTParser
                 Result allResults = null;
                 try
                 {
-                    allResults = ChatWithToplevelResults(request, parentResultIn);
+                    allResults = ChatWithToplevelResults(request, parentResultIn, isToplevel, requestType);
                     /*
                     // ReSharper disable ConditionIsAlwaysTrueOrFalse
                     if (res.OutputSentenceCount == 0 && false)
@@ -546,7 +550,7 @@ namespace RTParser
                                   });
         }
 
-        public Result ChatWithToplevelResults(Request request, Result parentResult)
+        public Result ChatWithToplevelResults(Request request, Result parentResult, bool isToplevel, RequestKind requestType)
         {
             var originalRequestor = request.Requester;
             var originalTargetUser = request.Responder;
@@ -566,7 +570,7 @@ namespace RTParser
                     return (Result) request.CurrentResult;
                 }
 
-                Result result = ChatFor1Result(request, parentResult);
+                Result result = ChatFor1Result(request, parentResult, requestType);
                 if (result.OutputSentences.Count != 0)
                 {
                     result.RotateUsedTemplates();
@@ -590,7 +594,7 @@ namespace RTParser
             }
         }
 
-        public Result ChatFor1Result(Request request, Result parentResult)
+        public Result ChatFor1Result(Request request, Result parentResult, RequestKind kind)
         {
             //result = request.CreateResult(request);
             User originalRequestor = request.Requester;
@@ -602,11 +606,11 @@ namespace RTParser
             string rr = request.rawInput;
             if (rr.StartsWith("@") || (rr.IndexOf("<") + 1 < rr.IndexOf(">")))
             {
-                childResult = ChatWithNonGraphmaster(request, parentResult, G, isTraced, writeToLog);
+                childResult = ChatWithNonGraphmaster(request, parentResult, G, isTraced, writeToLog, kind);
             }
             else if (request.GraphsAcceptingUserInput)
             {
-                childResult = ChatUsingGraphMaster(request, parentResult, G, isTraced, writeToLog);
+                childResult = ChatUsingGraphMaster(request, parentResult, G, isTraced, writeToLog, kind);
             }
             else
             {
@@ -624,7 +628,7 @@ namespace RTParser
             return (Result) childResult;
         }
 
-        private Result ChatWithNonGraphmaster(Request request, Result result, GraphMaster G, bool isTraced, OutputDelegate writeToLog)
+        private Result ChatWithNonGraphmaster(Request request, Result result, GraphMaster G, bool isTraced, OutputDelegate writeToLog, RequestKind requestType)
         {
             writeToLog = writeToLog ?? DEVNULL;
             isTraced = request.IsTraced;
@@ -667,7 +671,7 @@ namespace RTParser
                 {
                     var tn = StaticAIMLUtils.getTemplateNode(rawInputString);
                     //tn = getDocNode( rawInputString , false, false, StringOnlyDoc);
-                    result = ImmediateAiml(tn, request, Loader);
+                    result = ImmediateAiml(tn, request, Loader, requestType);
                     //request.rawInput = result.Output;
                     return result;
                 }
@@ -688,7 +692,7 @@ namespace RTParser
             return null;
         }
       
-        private Result ChatUsingGraphMaster(Request request, Result result, GraphMaster G, bool isTraced, OutputDelegate writeToLog)
+        private Result ChatUsingGraphMaster(Request request, Result result, GraphMaster G, bool isTraced, OutputDelegate writeToLog, RequestKind kind)
         {
             //writeToLog = writeToLog ?? DEVNULL;
             {
@@ -746,7 +750,7 @@ namespace RTParser
                             ql.MaxPatterns = UNLIMITED;
                             ql.MaxOutputs = UNLIMITED;
                         }
-                        G.RunGraphQuery(ql);
+                        G.RunGraphQuery(ql, kind);
                         //if (request.IsComplete(result)) return result;
                     }
                     foreach (var ql in AllQueries)
@@ -1199,14 +1203,14 @@ namespace RTParser
         }
 
         public Result ImmediateAiml(XmlNode templateNode, Request request0,
-                                            AIMLLoaderU loader)
+                                            AIMLLoaderU loader, RequestKind requestKind)
         {
             Result masterResult = request0.CreateResult(request0);
             bool prev = request0.GraphsAcceptingUserInput;
             try
             {
                 request0.GraphsAcceptingUserInput = true;
-                var mr = ImmediateAIMLNode(request0, templateNode);
+                var mr = ImmediateAIMLNode(request0, templateNode, requestKind);
                 return mr;
             }
             catch (ChatSignal ex)
@@ -1225,7 +1229,7 @@ namespace RTParser
             }
         }
 
-        private Result ImmediateAIMLNode(Request parentRequest, XmlNode templateNode)
+        private Result ImmediateAIMLNode(Request parentRequest, XmlNode templateNode, RequestKind requestKind)
         {
             string requestName = StaticAIMLUtils.ToTemplateXML(templateNode);
             AltBot request0Proccessor = this;
@@ -1241,8 +1245,8 @@ namespace RTParser
 
             //  if (request == null)
 
-            request = parentRequest;
-            // new AIMLbot.Request(requestName, user, request0Proccessor, (AIMLbot.Request)parentRequest);
+            request = new Request(requestName, user, (Unifiable) null, parentRequest.Responder, request0Proccessor,
+                                  parentRequest, parentRequest.Graph, false, requestKind);
 
             if (parentRequest != null)
             {
@@ -1585,7 +1589,8 @@ namespace RTParser
 
         private object ChatWithThisBot(string cmd, Request request)
         {
-            Request req = request.CreateSubRequest(cmd, request.Graph);
+            Request req = request.CreateSubRequest(cmd, request.Graph,
+                                                   RequestKind.ChatForString | RequestKind.BotPropertyEval);
             req.SetSpeakerAndResponder(req.Requester, BotAsUser);
             req.IsToplevelRequest = request.IsToplevelRequest;
             return LightWeigthBotDirective(cmd, req);

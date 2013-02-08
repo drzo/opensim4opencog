@@ -67,7 +67,7 @@ namespace RTParser.Web
                 TheBot.servitor.curBot.sayProcessor = new sayProcessorDelegate(webSayResponse);
                 if (input.Length > 1)
                 {
-                    res = TheBot.servitor.respondToChat(input);
+                    res = TheBot.servitor.respondToChat(input, TheBot.LastUser);
                     if ((res != null) && (res.Length > 0)) responseQueue.Enqueue(res);
                     res = "";
                     // Give the servitor a chance to do something;

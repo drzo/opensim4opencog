@@ -18,6 +18,41 @@ using MasterRequest = AltAIMLParser.Request;
 
 namespace AltAIMLParser
 {
+
+    [Flags]
+    public enum RequestKind
+    {
+        NaturalLang = 1,
+        EventLang = 2,
+        CommentLang = 4,
+        Realtime = 8,
+        ForString = 16,
+        Process = 32,
+        TagHandler = 64,
+        InnerDialog = 128,
+        TemplateExpander = 256,
+        ForLoader = 512,
+        SubProcess = 1024,
+        BackgroundThread = 2048,
+        MTalk = 4096,
+        FSM = 8192,
+        BTX = 16384,
+
+        AIMLLoader = Process | ForLoader,
+        ChatRealTime = NaturalLang | Realtime,
+        ChatForString = NaturalLang | ForString,
+        InnerSelfTalk = ChatForString | InnerDialog,
+        EventProcessor = Process | EventLang,
+        BotPropertyEval = CommentLang | Process,
+        PushPopTag = NaturalLang | TagHandler,
+        SraiTag = NaturalLang | TagHandler | SubProcess,
+        BehaviourChat = ChatRealTime | BackgroundThread | BTX,
+        MTalkThread = ChatRealTime | BackgroundThread | MTalk,
+        StateMachineProcess = TemplateExpander | FSM | Process,
+        BehaviourProcess = TemplateExpander | BTX | Realtime | Process,
+        EvalAIMLHandler = ForString | EventLang | Process | SubProcess,
+    }
+
     /// <summary>
     /// Encapsulates all sorts of information about a request to the Proccessor for processing
     /// </summary>
@@ -176,8 +211,10 @@ namespace AltAIMLParser
 
         public Proof Proof { get; set; }
 
+        public RequestKind RequestType;
         public bool ResponderSelfListens { get; set; }
         public bool SaveResultsOnJustHeard { get; set; }
+
         public bool IsSynchronis { get; set; }
 
         // How many subqueries are going to be submitted with combos ot "that"/"topic" tags 
@@ -395,11 +432,16 @@ namespace AltAIMLParser
                 }
             }
             return DLRConsole.SafeFormat(
-                "{0}[{1},{4}]: {2}, \"{3}\"",
-                RequestDepth + " " + UserNameOf(Requester, "Requester"),
+                "{0} {1}={2} {3}[{4},{5}]: {6}, \"{7}\"",
+                RequestType,
+                IsToplevelRequest ? "toplevel" : "subrequest",
+                RequestDepth,
+                UserNameOf(Requester, "Requester"),
                 StartGraphName,
+                Topic,
                 UserNameOf(Responder, "Anyone"),
-                unifiableToVMString, Topic);
+                unifiableToVMString
+                );
         }
 
         private static string UserNameOf(User requester, string defaultName)
@@ -415,8 +457,8 @@ namespace AltAIMLParser
         /// <param name="rawInput">The raw input from the user</param>
         /// <param name="user">The user who made the request</param>
         /// <param name="bot">The bot to which this is a request</param>
-        public Request(string rawInput, User user, AltBot bot)
-            : this(rawInput, user, user.That, bot.BotAsUser, bot, null, null)
+        public Request(string rawInput, User user, AltBot bot, bool isToplevel, RequestKind requestType)
+            : this(rawInput, user, user.That, bot.BotAsUser, bot, null, null, isToplevel, requestType)
         {
 
         }
@@ -431,7 +473,7 @@ namespace AltAIMLParser
         /// <param name="rawInput">The raw input from the user</param>
         /// <param name="user">The user who made the request</param>
         /// <param name="bot">The bot to which this is a request</param>
-        public Request(Unifiable rawInput, User user, Unifiable thatSaid, User targetUser, AltBot bot, Request parent, GraphMaster graphMaster)
+        public Request(Unifiable rawInput, User user, Unifiable thatSaid, User targetUser, AltBot bot, Request parent, GraphMaster graphMaster, bool isToplevel, RequestKind requestType)
             : this(bot.GetQuerySettings(), false) // Get query settings intially from user
         {
             ExitQueue = new CommitQueue();
@@ -444,7 +486,8 @@ namespace AltAIMLParser
             this.depth = 0;
             this.depthMax = 128;
             TargetSettings = user.Predicates;
-            IsToplevelRequest = parent == null;
+            IsToplevelRequest = isToplevel;
+            RequestType = requestType;
             this.Stage = SideEffectStage.UNSTARTED;
             matchable = matchable ?? StaticAIMLUtils.MakeMatchable(rawInput);
             qsbase = this;
@@ -540,6 +583,13 @@ namespace AltAIMLParser
             if (That.AsString().Contains("TAG-"))
             {
                 throw new NullReferenceException("invalid That " + this);
+            }
+            if (!isToplevel)
+            {
+                if (parent == null)
+                {
+                    writeToLog("ERROR: non toplevel request missing parent" + this);
+                }
             }
         }
 
@@ -1063,20 +1113,20 @@ namespace AltAIMLParser
             get { return (Request)this; }
         }
 
-        public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, GraphMaster graphMaster)
+        public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, GraphMaster graphMaster, RequestKind kind)
         {
             Request subRequest = CreateSubRequest(templateNodeInnerValue, Requester,
-                                                  That, Responder, TargetBot, this, graphMaster);
+                                                  That, Responder, TargetBot, this, graphMaster, kind);
             return (MasterRequest)subRequest;
         }
 
         public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User requester, Unifiable thatSaid, User requestee,
-                                              AltBot rTPBot, Request parent, GraphMaster graphMaster)
+                                              AltBot rTPBot, Request parent, GraphMaster graphMaster, RequestKind kind)
         {
             Unifiable thatToUse = thatSaid ?? That;
             var subRequest = new MasterRequest(templateNodeInnerValue, requester ?? Requester, thatToUse,
                                                requestee ?? Responder,
-                                               rTPBot ?? TargetBot, parent, graphMaster ?? Graph);
+                                               rTPBot ?? TargetBot, parent, graphMaster ?? Graph, false, kind);
             CopyToRequest(this, subRequest);
             return subRequest;
         }

@@ -140,7 +140,7 @@ namespace RTParser.AIMLTagHandlers
             //----------------------
             // snarf from "srai"
             Unifiable tempTopic = topic;
-            MasterRequest subRequest = request.CreateSubRequest(line, null);
+            MasterRequest subRequest = request.CreateSubRequest(line, null, RequestKind.FSM | RequestKind.TagHandler | RequestKind.SubProcess);
             //String gn = GetAttribValue("graph", null);
             string gn = "msm";
             if (gn != null) subRequest.Graph = request.GetGraph(gn);

@@ -165,7 +165,7 @@ namespace RTParser
             s = Unifiable.Trim(s);
             if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
             var r = new MasterRequest(s, botAsUser1, Unifiable.EnglishNothing, botAsUser1, this, null,
-                                              DefaultStartGraph);
+                                      DefaultStartGraph, true, RequestKind.BotPropertyEval);
             //r.ChatOutput.RawText = s;
             r.writeToLog = writeToLog;
             //Result res = new AIMLbot.MasterRequest(s, botAsUser1, this, r, null, null);            
@@ -435,22 +435,29 @@ namespace RTParser
             if (useServitor == false) return;
             updateServitor2RTP();
             //User specific code (ALTBOT USER->RTPUSER  )
+            var curUser = servitor.curUserLast;
+            CopyUserDataToFrom(activeUser, curUser);
+        }
+
+        static public void CopyUserDataToFrom(User activeUser, User curUser)
+        {
+            if (activeUser == curUser) return;
             try
             {
                 if (activeUser.Predicates != null)
-                    foreach (string key in servitor.curUser.Predicates.Keys)
+                    foreach (string key in curUser.Predicates.Keys)
                     {
-                        string v = servitor.curUser.Predicates.grabSetting(key);
+                        string v = curUser.Predicates.grabSetting(key);
                         if (v == null) v = "";
                         activeUser.Predicates.updateSetting(key, v);
                         /// Console.WriteLine("ALT->RTP Predicates[{0}] = {1}", key, v);
                     }
 
-                int rcount = servitor.curUser.SailentResultCount;
+                int rcount = curUser.SailentResultCount;
                 for (int n = 0; n < rcount; n++)
                 {
 
-                    AltAIMLbot.Result historicResult = servitor.curUser.GetResult(n);
+                    AltAIMLbot.Result historicResult = curUser.GetResult(n);
                     if (historicResult == null) continue;
                     lock (historicResult.OutputSentences)
                     {
@@ -486,7 +493,10 @@ namespace RTParser
 
                 myServitor = new Servitor(this, null);
                 servitor.curBot = this;
-                servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
+                if (servitor.curBot.sayProcessor == null)
+                {
+                    servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
+                }
             }
             if (myServitor.NeedsStarted)
             {
@@ -498,16 +508,22 @@ namespace RTParser
         {
             if (useServitor == false) return;
             updateRTP2Sevitor();
+            var curUser = servitor.curUserLast;
+            CopyUserDataFromTo(activeUser, curUser);
+        }
+
+        public void CopyUserDataFromTo(User activeUser, User curUser) {
+            if (activeUser == curUser) return;
             try
             {
                 //User specific code (RTPUSER -> ALTBOT USER)
-                string that = activeUser.getThat(activeUser);
-                servitor.curUser.setUserID(activeUser.UserID);
+                string that0Unused = activeUser.getThat(activeUser);
+                curUser.setUserID(activeUser.UserID);
                 if (activeUser.Predicates != null)
                     foreach (string key in activeUser.Predicates.Keys)
                     {
                         string v = activeUser.Predicates[key];
-                        servitor.curUser.Predicates.updateSetting(key, v);
+                        curUser.Predicates.updateSetting(key, v);
                         ///Console.WriteLine("RTP->ALT Predicates[{0}] = {1}", key, v);
                     }
 
@@ -520,7 +536,7 @@ namespace RTParser
                     for (int sent = 0; sent < historicResult.OutputSentenceCount; sent++)
                     {
                         string data = historicResult.GetOutputSentence(sent);
-                        servitor.curUser.setOutputSentence(n, sent, data);
+                        curUser.setOutputSentence(n, sent, data);
                         Console.WriteLine("RTP->ALT setOutputSentence[{0},{1}] = {2}", n, sent, data);
                     }
                 }
@@ -1999,7 +2015,7 @@ The AIMLbot program.
                 //user.CurrentRequest ??
                         user.CreateRequest(
                             "@echo <!-- loadDictionary '" + dictionary + "' from '" + type + "' -->", Unifiable.EnglishNothing,
-                            BotAsUser);
+                            BotAsUser, true, RequestKind.AIMLLoader);
             int loaded = 0;
             foreach (string p in GetSearchRoots(r))
             {

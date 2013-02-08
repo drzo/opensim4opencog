@@ -18,8 +18,8 @@ using MiniSatCS;
 using System.Reflection;
 using MushDLR223.Utilities;
 using RTParser;
-using NotImplementedException=sun.reflect.generics.reflectiveObjects.NotImplementedException;
 using LogicalParticleFilter1;
+using BTXmlNode = System.Xml.XmlNode;
 
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using ThreadPoolUtil;
@@ -565,7 +565,7 @@ namespace AltAIMLbot
             {
                 //RunStatus childResult = newTree.processNode(childNode);
                 RunStatus childResult = RunStatus .Failure ;
-                foreach (RunStatus myChildResult in newTree.processNode((BTXmlNode)childNode))
+                foreach (RunStatus myChildResult in newTree.processNode(childNode))
                 {
                     childResult = myChildResult;
                     if (childResult != RunStatus.Running) break;
@@ -2472,7 +2472,7 @@ namespace AltAIMLbot
                     bot.lastBehaviorChatInput = bot.chatInputQueue.Dequeue();
                     sentStr += bot.lastBehaviorChatInput;
                 }
-                Request r = new Request(sentStr, bot.lastBehaviorUser, bot);
+                Request r = new Request(sentStr, bot.lastBehaviorUser, bot, true, RequestKind.BehaviourChat);
                 Result res= bot.Chat(r, graphName);
                 //bot.lastBehaviorChatOutput=res.Output;
                 bot.lastBehaviorChatOutput = "";
@@ -2978,10 +2978,10 @@ namespace AltAIMLbot
 
             }
             try
-                {
-                    bot.evalTemplateNodeInnerXml(myNode);
-                    //bot.evalTemplateNode(templateNode);
-                }
+            {
+                bot.evalTemplateNodeInnerXml(myNode, RequestKind.BehaviourProcess);
+                //bot.evalTemplateNode(templateNode);
+            }
                 catch (Exception e)
                 {
                     Console.WriteLine("ERR: ProcessTask");
@@ -2997,7 +2997,7 @@ namespace AltAIMLbot
             {
                 try
                 {
-                    bot.evalTemplateNodeInnerXml(templateNode);
+                    bot.evalTemplateNodeInnerXml(templateNode, RequestKind.BehaviourProcess);
                     //bot.evalTemplateNode(templateNode);
                 }
                 catch (Exception e)
@@ -3072,7 +3072,7 @@ namespace AltAIMLbot
             {
                 try
                 {
-                    bot.evalTemplateNodeInnerXml(templateNode);
+                    bot.evalTemplateNodeInnerXml(templateNode, RequestKind.BehaviourProcess);
                     //bot.evalTemplateNode(templateNode);
                 }
                 catch (Exception e)

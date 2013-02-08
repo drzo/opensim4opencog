@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Reflection;
 #if (COGBOT_LIBOMV || USE_STHREADS)
+using AltAIMLParser;
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;
@@ -158,7 +159,7 @@ namespace AIMLBotModule
             //lock (myUser.QueryLock)
             {
                 myUser.CurrentRequest = null;
-                String useOut = WorldSystemModule.AIMLInterpScored(joined, myUser, out ratng);
+                String useOut = WorldSystemModule.AIMLInterpScored(joined, myUser, out ratng, RequestKind.ChatForString);
                 double scored = ratng;
                 WorldSystemModule.MyBot.writeToLog("REALWORLD AIMLTRACE! '" + joined + "' " + scored + " '" + useOut +
                                                    "'");

@@ -47,7 +47,7 @@ namespace RTParser
             {
                 Loader = new AIMLLoaderU(this, GetBotRequest("EvalAIMLHandler " + cmd));
             }
-            var res = ImmediateAiml(node, user, Loader);
+            var res = ImmediateAiml(node, user, Loader, RequestKind.EvalAIMLHandler);
             return res;
         }
 

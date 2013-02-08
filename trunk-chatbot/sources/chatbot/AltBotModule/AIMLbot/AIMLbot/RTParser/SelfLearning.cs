@@ -263,7 +263,7 @@ namespace RTParser
                 var HG = DefaultHeardSelfSayGraph;
                
                 if (message == null || message.Length < 4) return null;
-                Request r = theFactSpeaker.CreateRequest(message, toWhom, null, HG, null);
+                Request r = theFactSpeaker.CreateRequest(message, toWhom, null, HG, null, true, RequestKind.InnerSelfTalk);
                 // irregardless we only mentally played what the responder responded with
                 r.ResponderSelfListens = false;
                 // because the  listener cant hear this inner dialog

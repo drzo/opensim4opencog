@@ -159,7 +159,7 @@ namespace RTParser.Utils
             string resp = "ERROR";
             try
             {
-                var requestToBot = robot.MakeRequestToBot(input, userID);
+                var requestToBot = robot.MakeRequestToBot(input, userID, true, RequestKind.ChatRealTime);
                 requestToBot.IsTraced = traceIt;
                 if (traceIt)
                 {

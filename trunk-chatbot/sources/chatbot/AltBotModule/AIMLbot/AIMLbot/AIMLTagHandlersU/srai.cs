@@ -353,7 +353,8 @@ namespace RTParser.AIMLTagHandlers
                     //Unifiable templateNodeInnerValue = Recurse();
                     try
                     {
-                        Request subRequest = request.CreateSubRequest(templateNodeInnerValue, null);
+                        Request subRequest = request.CreateSubRequest(templateNodeInnerValue, null,
+                                                                      request.RequestType | RequestKind.SraiTag);
 
 
                         string requestGraphSrai = request.SraiGraph;
@@ -413,7 +414,7 @@ namespace RTParser.AIMLTagHandlers
                             {
                                 writeToLog(prefix + "MISSING RETURN " + whyComplete);
                             }
-                            subResult = (MasterResult)mybot.ChatFor1Result(subRequest, subResult);
+                            subResult = (MasterResult)mybot.ChatFor1Result(subRequest, subResult, request.RequestType | RequestKind.SraiTag);
                             subResultOutput = subResult.Output;
                             subResultOutputTrace = Unifiable.DescribeUnifiable(subResultOutput);
                             //subQueryRawOutput = subResult.RawOutput.Trim();
@@ -526,7 +527,10 @@ namespace RTParser.AIMLTagHandlers
                 user.SuspendAddResultToUser = true;
                 if (prevRequest.IsTraced) subRequest.IsTraced = !showDebug;
                 subRequest.IsTraced = true;
-                subResult = (MasterResult) mybot.ChatWithToplevelResults(subRequest,subResult);
+                subResult =
+                    (MasterResult)
+                    mybot.ChatWithToplevelResults(subRequest, subResult, false,
+                                                  subRequest.RequestType | RequestKind.SraiTag);
                 subResultOutput = subResult.RawOutput;
                 int resultCount = subResult.OutputSentences.Count;
                 if (AltBot.BE_COMPLETE_NOT_FAST && resultCount == 0)
@@ -535,7 +539,9 @@ namespace RTParser.AIMLTagHandlers
                     if (UseSraiLimiters) originalSalientRequest.ResetSRAIResults(sraiMark);
                     if (Unifiable.IsNullOrEmpty(subResultOutput))
                     {
-                        subResult = (MasterResult)mybot.ChatFor1Result(subRequest, subResult); 
+                        subResult =
+                            (MasterResult)
+                            mybot.ChatFor1Result(subRequest, subResult, subRequest.RequestType | RequestKind.SraiTag);
                         subResultOutput = subResult.Output;
                         if (!IsNullOrEmpty(subResultOutput))
                         {

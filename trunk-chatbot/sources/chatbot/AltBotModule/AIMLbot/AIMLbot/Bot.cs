@@ -1224,7 +1224,7 @@ namespace RTParser
         /// <returns>the result to be output to the user</returns>
         public AltAIMLbot.Result Chat(string rawInput, string UserGUID)
         {
-            Request request = new Request(rawInput, FindOrCreateUser(UserGUID), this);
+            Request request = new Request(rawInput, FindOrCreateUser(UserGUID), this, true, RequestKind.ChatRealTime);
             return this.Chat(request);
         }
 
@@ -1497,29 +1497,30 @@ namespace RTParser
             return normalizedPaths;
         }
 
-        public object evalTemplateNodeInnerXml(XmlNode templateNodeInnerXML)
+        public object evalTemplateNodeInnerXml(XmlNode templateNodeInnerXML, RequestKind requestType)
         {
-            return evalTemplateXml(templateNodeInnerXML.InnerXml);
+            return evalTemplateXml(templateNodeInnerXML.InnerXml, requestType);
         }
 
-        public object evalTemplateXml(string templateNodeString)
+        public object evalTemplateXml(string templateNodeString, RequestKind requestType)
         {
             if (!templateNodeString.StartsWith("<template"))
             {
                 templateNodeString = string.Format("<template>{0}</template>", templateNodeString);
             }
             XmlNode resultTemplateNode = AIMLTagHandler.getNode(templateNodeString);
-            return evalTemplateNode(resultTemplateNode);
+            return evalTemplateNode(resultTemplateNode, requestType);
         }
 
         /// <summary>
         /// given an template side XML, try evaluating it
         /// </summary>       
-        public object evalTemplateNode(XmlNode templateNode)
+        public object evalTemplateNode(XmlNode templateNode, RequestKind requestType)
         {
             if (StaticXMLUtils.IsBlank(templateNode)) return "";
             var imaginaryUser = LastUser;
-            Request request = new Request("evalTemplateNode Request", imaginaryUser, this);
+            Request request = new Request("evalTemplateNode Request", imaginaryUser, this, false,
+                                          requestType | RequestKind.TemplateExpander);
             AltAIMLbot.Result result = new MasterResult(request.user, this, request);
             AltAIMLbot.Utils.SubQuery query = new SubQuery("evalTemplateNode SubQuery", result, request);
             
@@ -2617,8 +2618,9 @@ The AltAIMLbot program.
                                                            : MakeSettingsDictionary(named));
                         User user = ExemplarUser ?? BotAsUser;
                         Request r = //user.CurrentRequest ??
-                                    user.CreateRequest(
-                                        "@echo <!-- loadDictionary '" + named + "' from '" + type + "' -->", Unifiable.EnglishNothing, BotAsUser);
+                            user.CreateRequest(
+                                "@echo <!-- loadDictionary '" + named + "' from '" + type + "' -->",
+                                Unifiable.EnglishNothing, BotAsUser, false, RequestKind.BotPropertyEval);
                         loadDictionary(dict, named, type, r);
                     }
                 }
