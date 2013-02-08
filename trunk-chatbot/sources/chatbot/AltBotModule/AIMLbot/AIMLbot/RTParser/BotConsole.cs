@@ -704,32 +704,32 @@ namespace RTParser
                 queryMT = rps.NameSpace;
                 queryMT = rps.grabSetting("querymt,kb,mt,behavourmt,behavour") ?? queryMT;
             }
-            var outBindingPart = new List<Dictionary<string, SIProlog.Part>>();
-            const List<Dictionary<string, string>> outBindingStrings = null;
-            prologEngine.askQuery(prologEngine.ParseBody(cmd, queryMT), queryMT, true, outBindingPart, outBindingStrings);
-            if (outBindingPart.Count > 0)
-            {
-                Dictionary<string, SIProlog.Part> firstResult = outBindingPart[0];
-                if (firstResult.Count > 0)
-                {
-                    if (firstResult.Count > 1)
-                    {
-                        foreach (var varname in new[] {"VALUE", "X", "OUT", "RETURN", "RETVAL"})
-                        {
-                            SIProlog.Part returnThis;
-                            if (firstResult.TryGetValue(varname, out returnThis))
-                            {
-                                return returnThis;
-                            }
-                        }
-                    }
-                    foreach (KeyValuePair<string, SIProlog.Part> keyValuePair in firstResult)
-                    {
-                        return keyValuePair.Value;
-                    }
-                }            
-                return "True";
-            }
+            object retval = null;
+            prologEngine.askQuery(prologEngine.ParseQuery(cmd, queryMT), queryMT, true,
+                                  (env) =>
+                                      {
+                                          foreach (var varname in new[] {"VALUE", "X", "OUT", "RETURN", "RETVAL"})
+                                          {
+                                              SIProlog.Part returnThis;
+                                              if (env.TryGetValue(varname, out returnThis))
+                                              {
+                                                  retval = returnThis;
+                                                  return false;
+                                              }
+                                          }
+                                          var htv = env.ht.Values;
+                                          if (htv.Count > 0)
+                                          {
+                                              foreach (var v in htv)
+                                              {
+                                                  retval = v;
+                                                  return false;
+                                              }
+                                          }
+                                          retval = "True";
+                                          return false;
+                                      });
+            if (retval != null) return retval;
             return "False";
         }
     }

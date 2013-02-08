@@ -439,14 +439,21 @@ namespace AIMLBotModule
             if (MyBotNullWarning()) return;
             MyBot.SetChatOnOff(username, value);
         }
-
         private User GetMyUser(string fromname)
+        {
+            return GetMyUser(fromname, UUID.Zero);
+        }
+        private User GetMyUser(string fromname, UUID uuid)
         {
             bool newlyCreated = false;
             if (MyBotNullWarning()) return MyUser;
             if (String.IsNullOrEmpty(fromname))
             {
                 fromname = "UNKNOWN_PARTNER";
+                if (uuid == UUID.Zero)
+                {
+                    /// what do we do here?
+                }
             }
             if (!MyBot.IsLegalUserName(fromname))
             {
@@ -454,13 +461,21 @@ namespace AIMLBotModule
             }
             User user = MyBot.FindOrCreateUser(fromname, out newlyCreated);
             if (newlyCreated)
-            {
+            { 
                 //user.InsertProvider(() => this.provideWorldUserVars);
                 user.RespondToChat = RespondToChatByDefaultAllUsers;
             }
             user.MaxRespondToChatPerMinute = DefaultMaxRespondToChatPerMinute;
             user.Predicates.addSetting("me", fromname);
-
+            BotPermissions them = client.GetSecurityLevel(uuid, fromname);
+            if (BotClient.HasPermission(them, BotPermissions.ChatWith))
+            {
+                user.RespondToChat = true;
+            }
+            if (BotClient.HasPermission(them, BotPermissions.Ignore))
+            {
+                user.RespondToChat = false;
+            }
             return user;
         }
 
