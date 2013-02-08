@@ -143,6 +143,7 @@ namespace LogicalParticleFilter1
                 */
                 // Rename this appropriately and throw it into anslist
                 anslist.AddPart(renameVariables(value(collect, env), anslist.renumber--, null));
+                return true;
             };
         }
 
@@ -220,6 +221,7 @@ namespace LogicalParticleFilter1
                 */
                 // Rename this appropriately and throw it into anslist
                 anslist.AddPart(renameVariables(value(collect, env), anslist.renumber--, null));
+                return true;
             };
         }
 

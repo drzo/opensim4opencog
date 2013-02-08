@@ -140,7 +140,7 @@ namespace LogicalParticleFilter1
             prologEngine.testruleset = "isa(boy,human).\n isa(human,mammal).\n isa(X,Y):-isa(X,A),isa(A,Y).";
             prologEngine.testquery = "isa(boy,WHAT)\n";
             prologEngine.parseRuleset();
-            prologEngine.parseQuery();
+            prologEngine.parseQueryAndCall();
         }
         static void testProlog2()
         {
@@ -148,7 +148,7 @@ namespace LogicalParticleFilter1
             prologEngine.testruleset = "senseProb(0.5):-state(sitting),act(forward).\n senseProb(0.001).\nstate(sitting).\nact(forward).\n";
             prologEngine.testquery = "senseProb(SP)";
             prologEngine.parseRuleset();
-            prologEngine.parseQuery();
+            prologEngine.parseQueryAndCall();
         }
         static void testKBload()
         {

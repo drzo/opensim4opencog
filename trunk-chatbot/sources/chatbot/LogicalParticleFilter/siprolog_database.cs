@@ -60,7 +60,8 @@ namespace LogicalParticleFilter1
         }
         public class PlHashtable
         {
-            private Hashtable ht = new Hashtable();
+            
+            public readonly Hashtable ht = new Hashtable();
             public bool ContainsKey(string name)
             {
                 return ht.ContainsKey(name);

@@ -189,7 +189,7 @@ namespace LogicalParticleFilter1
             // Is there anything we want to update rdfGraph with ?
             PNode focus = FindOrCreateKB(mt);
             var bingingsList = new ListOfBindings();
-            askQuery(ParseBody("triple(S,P,O)", mt), mt, includeInherited, bingingsList, null);
+            askQuery(ParseQuery("triple(S,P,O)", mt), mt, includeInherited, bingingsList, null);
             bool useTripeQuery = true;
             if (bingingsList == null || bingingsList.Count <= 0)
             {
@@ -251,7 +251,7 @@ namespace LogicalParticleFilter1
             // Is there anything we want to update rdfGraph with ?
             var bingingsList = new ListOfBindings();
             string mt = "spindleMT";
-            askQuery(ParseBody("triple(S,P,O)", mt), mt, true, bingingsList, null);
+            askQuery(ParseQuery("triple(S,P,O)", mt), mt, true, bingingsList, null);
             RdfRules newTriples = new RdfRules(rdfGraph);
             foreach (var bindings in bingingsList)
             {

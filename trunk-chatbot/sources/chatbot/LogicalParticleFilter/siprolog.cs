@@ -789,39 +789,28 @@ namespace LogicalParticleFilter1
             testdb.rules = outr;
         }
 
-        public void parseQuery()
+        public void parseQueryAndCall()
         {
             inGlobalTest();
-            PartListImpl qlist = ParseBody(testquery, testKB);
-            if (qlist == null)
-            {
-                Warn("An error occurred parsing the query '{0}.\n", testquery);
-                return;
-            }
-            Body q = new Body(qlist);
+            PartListImpl qlist = ParseQuery(testquery, testKB);
+            MaybeShowQuery(qlist);
+            var vs = varNames(qlist);
+            // Prove the query.
+            prove(renameVariables(qlist, 0, null), new PEnv(), testdb, 1, (env) => printContext(vs, env));
+
+        }
+
+        private void MaybeShowQuery(PartListImpl qlist)
+        {
             if (show)
             {
                 Action<string> w = Console.Write;
                 w("Query is: ");
-                q.print(w);
+                qlist.print(w);
                 w("\n\n");
             }
-
-            var vs = varNames(q.plist);
-            var test = MakeQueryContext(null, true, testdb);
-
-            testdb.index.Clear();
-
-            // Prove the query.
-            prove(
-                renameVariables(q.plist, 0, null),
-                new PEnv(),
-                test,
-                1,
-                (env) => printContext(vs, env)
-                );
-
         }
+
         public void defineBuiltIns()
         {
             lock (PDB.builtin) defineBuiltIns0();
@@ -893,71 +882,19 @@ namespace LogicalParticleFilter1
 
         public bool isTrueIn(string inQuery, string queryMT)
         {
-            List<Dictionary<string, string>> bindingList = new List<Dictionary<string, string>>();
-
-            Dictionary<string, string> bindingsDict = new Dictionary<string, string>();
-            string query = inQuery;
-            PartListImpl qlist = ParseBody(query, queryMT);
-            if (qlist == null)
-            {
-                Warn("An error occurred parsing the query '{0}.\n", query);
-                return false;
-            }
-            Body q = new Body(qlist);
-            if (show)
-            {
-                Action<string> w = Console.Write;
-                w("Query is: ");
-                q.print(w);
-                w("\n\n");
-            }
-
-            var ctx = MakeQueryContext(queryMT, true, null);
             bool isTrue = false;
-            // Prove the query.
-            prove(
-                renameVariables(q.plist, 0, null),
-                    new PEnv(),
-                ctx,
-                1,
-                delegate(PEnv env)
-                {
-                    isTrue = true;
-                }
-                );
+            askQuery(ParseQuery(inQuery, queryMT), queryMT, true, env =>
+                                               {
+                                                   isTrue = true;
+                                                   return false;
+                                               });
             return isTrue;
         }
         public void askQuery(string inQuery, string queryMT)
         {
-            var query = inQuery;
-            var qlist = ParseBody(query, queryMT);
-            if (qlist == null)
-            {
-                Warn("An error occurred parsing the query '{0}.\n", query);
-                return;
-            }
-            Body q = new Body(qlist);
-            if (show)
-            {
-                Action<string> w = Console.Write;
-                w("Query is: ");
-                q.print(w);
-                w("\n\n");
-            }
-
-            var vs = varNames(q.plist);
-            var ctx = MakeQueryContext(queryMT, true, null);
-            var db = ctx.db;
-
-            // Prove the query.
-            prove(
-                renameVariables(q.plist, 0, null),
-                new PEnv(),
-                db,
-                1,
-                (env) => printContext(vs, env)
-                );
-
+            var qlist = ParseQuery(inQuery, queryMT);
+            var vs = varNames(qlist);
+            askQuery(qlist, queryMT, true, (env) => printContext(vs, env));
         }
 
         private PDB MakeQueryContext(string queryMT, bool followGenlMt, PDB start)
@@ -991,109 +928,107 @@ namespace LogicalParticleFilter1
         public void askQuery(string query, string queryMT, out List<Dictionary<string, string>> outBindings)
         {
             outBindings = new List<Dictionary<string, string>>();
-            PartListImpl qlist = ParseBody(query, queryMT);
-            if (qlist == null)
-            {
-                Warn("An error occurred parsing the query '{0}.\n", query);
-                //outBindings = bindingList;
-                return;
-            }
-            askQuery(qlist, queryMT, true, null, outBindings);
+            askQuery(ParseQuery(query, queryMT), queryMT, true, null, outBindings);
         }
 
 
-
-        public void askQuery(PartListImpl qlist, string queryMT, bool followGenlMt, List<Dictionary<string, Part>> outBindingParts, List<Dictionary<string, string>> outBindingStrings)
+        /// <summary>
+        /// If the reportFunction retrns false no more solutions will called
+        ///    if returns true.. will call the RETRY part
+        /// </summary>
+        /// <param name="qlist"></param>
+        /// <param name="queryMT"></param>
+        /// <param name="followGenlMt"></param>
+        /// <param name="reportFunction"></param>
+        public void askQuery(PartListImpl qlist, string queryMT, bool followGenlMt, reportDelegate reportFunction)
         {
+            if (qlist == null) return; // hopefully a warning was generated before we got here
+
             threadLocal.curKB = queryMT;
             runPreProverHooks();
             //var bindingList = new List<Dictionary<string, Part>>();
             //var bindingsDict = new Dictionary<string, Part>();
             //try
+
+
+            MaybeShowQuery(qlist);
+
+            var ctx = MakeQueryContext(queryMT, followGenlMt, null);
+            var db = ctx.db;
+            if (db.rules == null)
             {
-                //var query = inQuery;
-                Body q = new Body(qlist);
-                if (show)
-                {
-                    Action<string> w = Console.Write;
-                    w("Query is: ");
-                    q.print(w);
-                    w("\n\n");
-                }
-
-                var context = varNames(q.plist);
-                var ctx = MakeQueryContext(queryMT, followGenlMt, null);
-                var db = ctx.db;
-                if (db.rules == null)
-                {
-                    //outBindings = bindingList;
-                    return;
-                }
-                db.index.Clear();
-
-                bool doParts = outBindingParts != null;
-                bool doStrings = outBindingStrings != null;
-                // Prove the query.
-                prove(
-                    renameVariables(q.plist, 0, null),
-                        new PEnv(),
-                    ctx,
-                    1,
-                    delegate(PEnv env)
-                    {
-                        if (context.Arity == 0)
-                        {
-                            //TRUE
-                        }
-                        else
-                        {
-                            Dictionary<string, Part> bindDictParts = null;
-                            Dictionary<string, string> bindDictStrings = null;
-                            if (doParts)
-                            {
-                                bindDictParts = new Dictionary<string, Part>();
-                                outBindingParts.Add(bindDictParts);
-                            }
-                            if (doStrings)
-                            {
-                                bindDictStrings = new Dictionary<string, string>();
-                                outBindingStrings.Add(bindDictStrings);
-                            }
-
-                            for (var i = 0; i < context.Arity; i++)
-                            {
-                                string k = (((Variable)context.ArgList[i]).vname);
-                                //string v = ((Atom)value(new Variable(((Variable)context.alist[i]).name + ".0"), env)).ToString();
-                                var part = value(new Variable(((Variable)context.ArgList[i]).vname + ".0"), env);
-                                if (doParts)
-                                {
-                                    bindDictParts[k] = part;
-                                }
-                                if (doStrings)
-                                {
-                                    string v = part.ToSource(SourceLanguage.Text);
-                                    if (v.Contains("http"))
-                                    {
-                                        Warn("Returning RDF to external code");
-                                    }
-                                    bindDictStrings[k] = v;
-                                }
-
-                            }
-                        }
-                    }
-                    );
+                //outBindings = bindingList;
+                return;
             }
+            db.index.Clear();
+
+            // Prove the query.
+            prove(renameVariables(qlist, 0, null), new PEnv(), ctx, 1, reportFunction);
+        }
+
+        public void askQuery(PartListImpl qlist, string queryMT, bool followGenlMt, List<Dictionary<string, Part>> outBindingParts, List<Dictionary<string, string>> outBindingStrings)
+        {
+            bool doParts = outBindingParts != null;
+            bool doStrings = outBindingStrings != null;
+            var context = varNames(qlist);
+            askQuery(qlist, queryMT, followGenlMt,
+                     delegate(PEnv env)
+                         {
+                             if (context.Arity == 0)
+                             {
+                                 //TRUE
+                             }
+                             else
+                             {
+                                 Dictionary<string, Part> bindDictParts = null;
+                                 Dictionary<string, string> bindDictStrings = null;
+                                 if (doParts)
+                                 {
+                                     bindDictParts = new Dictionary<string, Part>();
+                                     outBindingParts.Add(bindDictParts);
+                                 }
+                                 if (doStrings)
+                                 {
+                                     bindDictStrings = new Dictionary<string, string>();
+                                     outBindingStrings.Add(bindDictStrings);
+                                 }
+
+                                 for (var i = 0; i < context.Arity; i++)
+                                 {
+                                     string k = (((Variable) context.ArgList[i]).vname);
+                                     //string v = ((Atom)value(new Variable(((Variable)context.alist[i]).name + ".0"), env)).ToString();
+                                     var part = value(new Variable(((Variable) context.ArgList[i]).vname + ".0"),
+                                                      env);
+                                     if (doParts)
+                                     {
+                                         bindDictParts[k] = part;
+                                     }
+                                     if (doStrings)
+                                     {
+                                         string v = part.ToSource(SourceLanguage.Text);
+                                         if (v.Contains("http"))
+                                         {
+                                             Warn("Returning RDF to external code");
+                                         }
+                                         bindDictStrings[k] = v;
+                                     }
+
+                                 }
+                             }
+                             return true;
+                         }
+                );
+
             //catch (Exception e)
             //{
             //}
             //outBindings = bindingList;
         }
 
-        public void printContext(PartListImpl which, PEnv env)
+        public bool printContext(PartListImpl which, PEnv env)
         {
-            inGlobalTest();
             printVars(which, env);
+            return true;
         }
 
         private void inGlobalTest()
@@ -1117,6 +1052,7 @@ namespace LogicalParticleFilter1
         // Return a list of all variables mentioned in a list of Terms.
         public static PartListImpl varNames(PartListImpl plist)
         {
+            if (plist == null) return null;
             PartListImpl outv = new PartListImpl();
 
 
@@ -1175,6 +1111,8 @@ namespace LogicalParticleFilter1
         // "parent" points to the subgoal, the expansion of which lead to these terms.
         public T renameVariables<T>(T list0, int level, Term parent) where T : Part
         {
+            if (list0 == null) return default(T);
+
             object list = list0;
 
             if (list is IAtomic)
@@ -1234,7 +1172,13 @@ namespace LogicalParticleFilter1
         // Don't expect built-ins at present. To come:
         //	unification of term heads, cut, fail, call, bagof
         //	(in that order, probably).
-        public delegate void reportDelegate(PEnv env);
+
+        /// <summary>
+        /// return true to call Retry (default) or false to return immediately
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+        public delegate bool reportDelegate(PEnv env);
         public delegate ProveResult builtinDelegate(Term t, PartListImpl goals, PEnv env, PDB db, int level, reportDelegate rp);
         public class ProveResult
         {
@@ -1256,9 +1200,9 @@ namespace LogicalParticleFilter1
             //DEBUG: print ("in main prove...\n");
             if (goalList.Arity == 0)
             {
-                reportFunction(environment);
+                bool more = reportFunction(environment);
 
-                //if (!more) return "done";
+                if (!more) return new ProveResult() { Done = true };
                 return null;
             }
             if (level > deepest)
