@@ -202,7 +202,7 @@ namespace Cogbot
 
         public BotPermissions GetSecurityLevel(UUID uuid, string name)
         {
-            BotPermissions bp;
+            BotPermissions bp = BotPermissions.None;
             if (uuid != UUID.Zero)
             {
                 lock (SecurityLevels)
@@ -244,7 +244,8 @@ namespace Cogbot
         }
 
         public BotPermissions RecognizedFriendSecurityLevel = BotPermissions.Friend;
-        public BotPermissions RecognizedGroupSecurityLevel = BotPermissions.Group;
+        public BotPermissions RecognizedGroupSecurityLevel = BotPermissions.SameGroup;
+        public BotPermissions UnrecognizedGroupSecurityLevel = BotPermissions.UnknownGroup;
         public BotPermissions StrangerSecurityLevel = BotPermissions.Stranger;
         
         private BotPermissions GetSecurityLevel(InstantMessage im)
@@ -574,7 +575,7 @@ namespace Cogbot
 
         public static bool HasPermission(BotPermissions them, BotPermissions testFor)
         {
-            if ((them & BotPermissions.Ignore) != 0) return false;
+            if (((them & BotPermissions.Ignore) != 0) && (testFor & BotPermissions.Ignore) == 0) return false;
             return (them & testFor) != 0;
         }
 
@@ -600,19 +601,20 @@ namespace Cogbot
     [Flags]
     public enum BotPermissions : uint
     {
-        None,
-        Ignore,
-        ChatWith,
-        AcceptInventory,
-        ExecuteCommands,
-        ExecuteCode,
-        AcceptGroupAndFriendRequests,
-        AcceptTeleport,
-        SendDebugTo,
-        IsMaster,
+        None = 0,
+        ChatWith = 1,
+        AcceptInventory = 2,
+        ExecuteCommands = 4,
+        ExecuteCode = 8,
+        AcceptGroupAndFriendRequests = 16,
+        AcceptTeleport = 32,
+        SendDebugTo = 64,
+        IsMaster = 128,
+        Ignore = 256,
 
         Stranger = ChatWith,
-        Group = Friend,
+        SameGroup = Friend,
+        UnknownGroup = Stranger,
         Friend = AcceptInventory | ChatWith | AcceptGroupAndFriendRequests | AcceptTeleport,
         Trusted = Friend | ExecuteCommands,
         Owner = Trusted | ExecuteCode | IsMaster,
