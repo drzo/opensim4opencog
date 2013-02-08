@@ -467,7 +467,7 @@ namespace AIMLBotModule
             }
             User user = MyBot.FindOrCreateUser(fromname, out newlyCreated);
             if (newlyCreated)
-            { 
+            {
                 //user.InsertProvider(() => this.provideWorldUserVars);
                 if (client.MasterName.ToLower().Trim() == fromname.ToLower().Trim())
                 {
@@ -477,7 +477,7 @@ namespace AIMLBotModule
                 else
                 {
                     // Listen to strangers
-                user.RespondToChat = RespondToChatByDefaultAllUsers;
+                    user.RespondToChat = RespondToChatByDefaultAllUsers;
                 }
             }
             user.MaxRespondToChatPerMinute = DefaultMaxRespondToChatPerMinute;
