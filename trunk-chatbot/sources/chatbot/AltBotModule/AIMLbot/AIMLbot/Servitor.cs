@@ -208,6 +208,10 @@ namespace AltAIMLbot
             set { _rapStoreTrunkLevel = value; }
         }
 
+        public ChatOptions ChatOptions = new ChatOptions();
+
+        public int PruneSize = 1024;
+
         public Servitor(AltBot aimlBot, sayProcessorDelegate outputDelegate)
         {
             curBot = aimlBot;
@@ -1460,5 +1464,8 @@ namespace AltAIMLbot
         }
     }
 
-    
+    public class ChatOptions
+    {
+        public bool SqueltchRepeatedLastOutput = false;
+    }
 }

@@ -1372,7 +1372,7 @@ namespace RTParser
                         var chatDB = ourGraphMaster.chatDB;
                         if (chatDB != null)
                         {
-                            chatDB.prune(1024);
+                            if (servitor.PruneSize > 0) chatDB.prune(servitor.PruneSize);
                             //chatDB.Close();
                             //chatDB = null;
                         }
@@ -1394,7 +1394,7 @@ namespace RTParser
                                 {
                                     bool useOutput = true;
                                     Result userLastResult = user.LastResult;
-                                    if (userLastResult != null)
+                                    if (servitor.ChatOptions.SqueltchRepeatedLastOutput && userLastResult != null)
                                     {
                                         var oses = userLastResult.OutputSentences;
                                         foreach (var os in oses)
