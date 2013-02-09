@@ -604,6 +604,11 @@ namespace AltAIMLParser
                 TargetSettings = parent.TargetSettings;
             }
             UndoStackValue = new UndoStack(this);
+            if (parent != null)
+            {
+                this.ParentRequest = parent;
+                CopyToRequest(parent, this);
+            }
             bool englishChat = requestType.ContainsAny(RequestKind.NaturalLang);
             if (englishChat)
             {
@@ -614,7 +619,10 @@ namespace AltAIMLParser
             {
                 if (parent == null)
                 {
-                   // writeToLog("ERROR: non toplevel request missing parent" + this);
+                    if (englishChat)
+                    {
+                        RaiseError("ERROR: non toplevel request missing parent" + this);
+                    }
                 }
             }
         }

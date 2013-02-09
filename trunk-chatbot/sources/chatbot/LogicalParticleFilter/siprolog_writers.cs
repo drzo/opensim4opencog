@@ -598,12 +598,25 @@ function validateBrowserForm()
         public static String _serverHost = null;
         public static int serverPort = 8123;
 
-        public static string StructToString(object t)
+        public static string StructToString(this object t)
         {
             int before = tl_StructToStringDepth;
             try
             {
-                return StructToString1(t, 2);
+                return StructToString1(t, 3);
+            }
+            finally
+            {
+                tl_StructToStringDepth = before;
+            }
+        }
+
+        public static string ToString(this IEnumerable t)
+        {
+            int before = tl_StructToStringDepth;
+            try
+            {
+                return StructToString1(t, 3);
             }
             finally
             {
@@ -619,6 +632,8 @@ function validateBrowserForm()
         {
             if (t == null) return "NULL";
             Type structType = t.GetType();
+            if (t is String || t is IComparable<string>)
+                return "\"" + t.ToString().Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
             if (t is IConvertible || t is String || t is Uri || t is Stream || t is IComparable<string>) return "" + t;
             if (tl_StructToStringDepth > depth)
             {
@@ -634,10 +649,9 @@ function validateBrowserForm()
             if (t is IEnumerable)
             {
                 IEnumerable ic = t as IEnumerable;
-                int max = 10;
+                int max = 100;
                 int fnd = 0;
-                bool printSomething = true;
-                result.Append("Items: [");
+                bool printSomething = true;               
                 foreach (var i in ic)
                 {
                     if (printSomething)
@@ -653,11 +667,31 @@ function validateBrowserForm()
                         printSomething = false;
                     }
                 }
-                result.Append("]");
-                return "CollectionType: " + structType + " Count: " + fnd + " " + result.ToString().TrimEnd();
+                if (fnd == 0)
+                {
+                    return "{COL=" + structType + " Count=0]";
+                }
+                return "{COL=" + structType + " Count=" + fnd + " [" + result.ToString().TrimEnd() + "]}";
             }
             const BindingFlags fpub = BindingFlags.Public | BindingFlags.Instance;
             const BindingFlags fpriv = BindingFlags.NonPublic | BindingFlags.Instance;
+            MethodInfo toString = structType.GetMethod("ToString",
+                                                       BindingFlags.DeclaredOnly | BindingFlags.Instance |
+                                                       BindingFlags.Public, null, new Type[0], new ParameterModifier[0]);
+            if (toString == null)
+            {
+                var bt = structType.BaseType;
+                if (bt != null && bt != typeof (object))
+                {
+                    toString = bt.GetMethod("ToString",
+                                           BindingFlags.DeclaredOnly | BindingFlags.Instance |
+                                           BindingFlags.Public, null, new Type[0], new ParameterModifier[0]);
+                }
+            }
+            if (toString != null)
+            {
+                return t.ToString();
+            }
             FieldInfo[] fields = structType.GetFields(fpub);
             PropertyInfo[] props = structType.GetProperties(fpub);
             bool hasProps = HasElements(props);

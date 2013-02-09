@@ -319,6 +319,7 @@ namespace RTParser
         internal Result GlobalChatWithUser(Request request, string input, string speakerName, string listenerNameWhomInputAdresses, 
             OutputDelegate traceConsole, bool saveLastUserAndResult, bool saveResultsOnConverstion, bool isToplevel, RequestKind requestType)
         {
+            Logger.Warn("In TODO code");
             traceConsole = traceConsole ?? writeDebugLine;
             User CurrentUser = GetCurrentUser(speakerName);
             var varMSM = this.pMSM;
@@ -387,6 +388,7 @@ namespace RTParser
 
         public MasterRequest MakeRequestToBot(Unifiable rawInput, User findOrCreateUser, bool isToplevel, RequestKind requestType)
         {
+            Logger.Warn("In TODO code");
             var rtarget = BotAsUser;
             Unifiable botLastSaid = findOrCreateUser.That;
             MasterRequest r = findOrCreateUser.CreateRequest(rawInput, botLastSaid, rtarget, isToplevel, requestType);
@@ -394,7 +396,7 @@ namespace RTParser
             {
                 OnBotCreated(() => r.SetSpeakerAndResponder(findOrCreateUser, BotAsUser));
             }
-            findOrCreateUser.CurrentRequest = r;
+            if (isToplevel) findOrCreateUser.CurrentRequest = r;
             r.depth = 0;
             r.IsTraced = findOrCreateUser.IsTraced;
             return r;
@@ -564,6 +566,7 @@ namespace RTParser
 
         public Result ChatWithToplevelResults(Request request, Result parentResult, bool isToplevel, RequestKind requestType)
         {
+            Logger.Warn("In TODO code");
             var originalRequestor = request.Requester;
             var originalTargetUser = request.Responder;
             ChatLabel label = request.PushScope;
@@ -608,6 +611,7 @@ namespace RTParser
 
         public Result ChatFor1Result(Request request, Result parentResult, RequestKind kind)
         {
+            Logger.Warn("In TODO code");
             //result = request.CreateResult(request);
             User originalRequestor = request.Requester;
             //LastUser = user; 
@@ -642,6 +646,7 @@ namespace RTParser
 
         private Result ChatWithNonGraphmaster(Request request, Result result, GraphMaster G, bool isTraced, OutputDelegate writeToLog, RequestKind requestType)
         {
+            Logger.Warn("In TODO code");
             writeToLog = writeToLog ?? DEVNULL;
             isTraced = request.IsTraced;
             //chatTrace = null;
@@ -706,6 +711,7 @@ namespace RTParser
       
         private Result ChatUsingGraphMaster(Request request, Result result, GraphMaster G, bool isTraced, OutputDelegate writeToLog, RequestKind kind)
         {
+            Logger.Warn("In TODO code");
             //writeToLog = writeToLog ?? DEVNULL;
             {
                 Utterance utterance = request.ChatInput;// Utterance.GetParsedSentences(request, isTraced, writeToLog);
@@ -834,6 +840,7 @@ namespace RTParser
         }
         private void PostProcessSubqueries(Request request, Result result, bool isTraced, OutputDelegate writeToLog)
         {
+            Logger.Warn("In TODO code");
             writeToLog = writeToLog ?? StaticAIMLUtils.DEVNULL;
             {
                 if (isTraced)
@@ -873,6 +880,7 @@ namespace RTParser
         }
         internal void PopulateUserWithResult(User user, Request request, Result result)
         {
+            Logger.Warn("In TODO code");
             User popu = (user ?? request.Requester ?? result.Requester).Value;
             // toplevel result
             var info = result.ProofTemplate();
@@ -1025,6 +1033,7 @@ namespace RTParser
 
         private List<SubQuery> SortCandidateSolutions( List<SubQuery> AllQueries, bool isTraced)
         {
+            Logger.Warn("In TODO code");
             if (!BE_COMPLETE_NOT_FAST)
             {
                 if (isTraced)
@@ -1080,6 +1089,7 @@ namespace RTParser
 
         private int GetSolutions(Request request, Result result, List<SubQuery> sortMe, int solutions, out bool hasMoreSolutions)
         {
+            Logger.Warn("In TODO code");
             request.Requester.addSetting("inputreq", request.rawInput);
             foreach (SubQuery query in sortMe)
             {

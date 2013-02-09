@@ -188,7 +188,7 @@ namespace RTParser.Utils
 
         public static bool IsMissing(Object name)
         {
-            if (ReferenceEquals(name, Unifiable.MISSING) || name == null)
+            if (ReferenceEquals(name, Unifiable.MISSING) || ReferenceEquals(name, null))
             {
                 return true;
             }
@@ -198,14 +198,14 @@ namespace RTParser.Utils
             }
             if ((name is string))
             {
-                string sname = ToUpper(((string)name));
+                string sname = ToUpper(((string) name));
                 return sname == "OM" || sname == "$MISSING";
             }
             if (!(name is Unifiable))
             {
                 return false;
             }
-            var name2 = ((Unifiable)name).SpecialName;
+            var name2 = ((Unifiable) name).SpecialName;
             if (IsNull(name2)) return false;
             return IsIncomplete(name2);
         }

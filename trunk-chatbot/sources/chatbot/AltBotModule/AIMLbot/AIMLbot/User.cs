@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 #if (COGBOT_LIBOMV || USE_STHREADS)
+using System.Linq;
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;
@@ -124,8 +125,10 @@ namespace AltAIMLbot
         public ListAsSet<GraphQuery> AllQueries { get; set; }
 
         public DateTime LastResponseGivenTime { get; set; }
+        public DateTime LastResponseByMinuteTime { get; set; }
         public bool RespondToChat { get; set; }
         public int MaxRespondToChatPerMinute { get; set; }
+        public int LastResponsesThisMinute { get; set; }
         public DateTime NameUsedOrGivenTime { get; set; }
 
         public static int DefaultMaxResultsSaved = 15;
@@ -435,7 +438,12 @@ namespace AltAIMLbot
         /// A collection of all the result objects returned to the user in this session
         /// (in reverse order of time)
         /// </summary>
-        private readonly List<Result> Results = new List<Result>();
+        private Result[] ResultsCopy
+        {
+            get { lock (_results) return _results.ToArray(); }
+        }
+
+        private readonly List<Result> _results = new List<Result>();
 
         private readonly List<Unifiable> _topics = new List<Unifiable>();
 
@@ -500,6 +508,7 @@ namespace AltAIMLbot
                 string lastOutput = "";
                 if (this.SailentResultCount > 0)
                 {
+                    var Results = this.ResultsCopy;
                     lock (Results)
                         foreach (var result in Results)
                         {
@@ -530,7 +539,8 @@ namespace AltAIMLbot
         }
         public void ShowConversationLogResult(int stepsBack, OutputDelegate console)
         {
-            int count = Results.Count - stepsBack - 1;
+            var Results = this.ResultsCopy.ToArray();
+            int count = Results.Length - stepsBack - 1;
             if (count < 0) return;
             Result result = Results[count];
             console("Requester:  " + result.Requester.UserName + ", \"" + result.ChatInput.RawText + "\"");
@@ -559,6 +569,7 @@ namespace AltAIMLbot
             MaxRespondToChatPerMinute = 10;
             RespondToChat = true;
             LastResponseGivenTime = DateTime.Now;
+            LastResponseByMinuteTime = DateTime.Now.Subtract(TimeSpan.FromMinutes(1));
             NameUsedOrGivenTime = DateTime.Now;
             VisitedTemplates = new ListAsSet<TemplateInfo>();
             UsedChildTemplates = new ListAsSet<TemplateInfo>();
@@ -851,9 +862,9 @@ namespace AltAIMLbot
         {
             get
             {
-                lock (Results)
+                lock (_results)
                 {
-                    return Results.Count;
+                    return _results.Count;
                 }
             }
         }
@@ -874,19 +885,20 @@ namespace AltAIMLbot
                 }
                 return;
             }
-            lock (Results)
+            lock (_results)
             {
+                var Results = this.ResultsCopy;
                 if (Results.Contains(latestResult))
                 {
                     //writeDebugLine("DEBUG9 Trying to resave results ! " + latestResult);
                     return;
                 }
-                this.Results.Insert(0, latestResult);
+                _results.Insert(0, latestResult);
                 latestResult.FreeRequest();
                 int rc = this.SailentResultCount;
                 if (rc > MaxResultsSaved)
                 {
-                    this.Results.RemoveRange(MaxResultsSaved, rc - MaxResultsSaved);
+                    _results.RemoveRange(MaxResultsSaved, rc - MaxResultsSaved);
                 }
             }
             addResultTemplates(latestResult);
@@ -1325,9 +1337,10 @@ namespace AltAIMLbot
         {
             bool mustBeResponder = responder != null;
             if (i == -1) return CurrentRequest.CurrentResult;
+            var Results = this.ResultsCopy;
             lock (Results)
             {
-                if (i >= Results.Count)
+                if (i >= Results.Length)
                 {
                     return null;
                 }
@@ -1354,12 +1367,13 @@ namespace AltAIMLbot
 
         public void setOutputSentence(int n, int sent, string data)
         {
-            if (n >= this.Results.Count)
+            var Results = this.ResultsCopy;
+            if (n >= Results.Length)
             {
                 return;
                 //this.Results[n] = new   Result(this, this.bot, new Request("", this, this.bot),this);
             }
-            Result historicResult = (Result)this.Results[n];
+            Result historicResult = GetResult(n);
             historicResult.SetOutputSentence(sent, data);
 
         }
@@ -1814,6 +1828,7 @@ namespace AltAIMLbot
         public void StampResponseGiven()
         {
             LastResponseGivenTime = DateTime.Now;
+            LastResponsesThisMinute++;
         }
 
         public bool CanGiveResponseNow()
@@ -1823,12 +1838,26 @@ namespace AltAIMLbot
             DateTime thisResponseTime = DateTime.Now;
             TimeSpan TSP = thisResponseTime.Subtract(LastResponseGivenTime);
             double timedelay = Math.Abs(TSP.TotalSeconds);
-            double secPerChat = (60 / (double)MaxRespondToChatPerMinute);
-            return (timedelay >
-                // ReSharper disable PossibleLossOfFraction
-                    secPerChat
-                   );
-            // ReSharper restore PossibleLossOfFraction
+            double secPerChat = (60/(double) MaxRespondToChatPerMinute);
+            if (timedelay > secPerChat)
+            {               
+                return true;
+            }
+            int minutes = thisResponseTime.Subtract(LastResponseByMinuteTime).Minutes;
+            if (minutes > 1)
+            {
+                LastResponsesThisMinute = 0;
+                LastResponseByMinuteTime = DateTime.Now;
+                return true;
+            }
+            if (LastResponsesThisMinute < MaxRespondToChatPerMinute)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public string grabSettingNoDebug(string settingName)
@@ -1907,9 +1936,9 @@ namespace AltAIMLbot
                 outputs.Add(blackBoardThat);
             }
             int cnt = 0;
+            var Results = this.ResultsCopy;
             foreach (Result result in Results)
             {
-
                 string s = result.LastSentence;
                 s = s.TrimStart(" .,".ToCharArray());
                 if (!string.IsNullOrEmpty(s))

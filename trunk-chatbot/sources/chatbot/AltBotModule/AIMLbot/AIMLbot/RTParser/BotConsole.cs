@@ -14,6 +14,7 @@ using System.Xml;
 using AIMLbot;
 using AltAIMLbot;
 using AltAIMLParser;
+using AltAIMLbot.Utils;
 using LAIR.ResourceAPIs.WordNet;
 using LogicalParticleFilter1;
 using MushDLR223.ScriptEngines;
@@ -906,12 +907,81 @@ namespace RTParser
             }
             if (cmd == "topic" || cmd == "that")
             {
-                console("*JustSaid = " + myUser.JustSaid);
-                console("*that = " + myUser.That);
-                console("*topic = " + myUser.Topic);
-                foreach (string c in new[] { "that", "topic", "question", "he", "it", "yours_question", "they", "them", "who", "what", "when", "where", "why", "how", "name", })
+                foreach (User u in new User[] { myUser, targetBotUser })
                 {
-                    console(c + " = " + myUser.grabSetting(c));
+                    string flushIt = "";
+                    string idn = u.NameSpace;
+                    List<string> missingList = new List<string>();
+                    Action<string> writeUnflushed = (w) => { flushIt += w; };
+                    Action popMissing = () =>
+                                            {
+                                                if (missingList.Count > 0)
+                                                {
+                                                    string ms = "";
+                                                    foreach (var s in missingList)
+                                                    {
+                                                        ms += " " + s;
+                                                    }
+                                                    writeUnflushed(" missing:" + ms);
+                                                    missingList.Clear();
+                                                }
+                                            };
+                    Action<string, object>
+                        addToResult3 =
+                            (n, v) =>
+                                {
+                                    if (n == null)
+                                    {
+                                        popMissing();
+                                        v = v ?? "";
+                                        if (!string.IsNullOrEmpty(flushIt)) console(v + flushIt);
+                                        flushIt = "";
+                                        return;
+                                    }
+                                    if (TextPatternUtils.IsMissing(v))
+                                    {
+                                        missingList.Add(n);
+                                        return;
+                                    }
+                                    writeUnflushed(" [" + (n + " = " + (v.StructToString())) + "]");
+                                };
+                    Action<string, object>
+                        addToResult =
+                            (n, v) => addToResult3("*" + n, v);
+
+                    addToResult("JustSaid", u.JustSaid);
+                    addToResult("That", u.That);
+                    addToResult("Topic" , u.Topic);
+                    addToResult("blackBoardThat", u.blackBoardThat);
+                    addToResult3(null, idn + ".csharp = ");
+                    addToResult("UserID", u.UserID);
+                    addToResult("UserName", u.UserName);
+                    addToResult("LastRequest",u.LastRequest);
+                    addToResult3(null, idn + ".csharp = ");
+                    addToResult("getPreStates", u.getPreStates());
+                    addToResult("getPostStates",u.getPostStates());
+                    addToResult("getThats",u.getThats());
+                    addToResult3(null, idn + ".csharp = ");
+                    foreach (string c in new[]
+                                             {
+                                                 "name", "id", "userid", "you","yours","your",null,
+                                                 "that", "topic", "lastoutput", "lastinput", "lastsaid", "lastheard","rawinput", "input", "inputreq",null,
+                                                 "question", "yours_question",null,
+                                                 "who", "what", "when", "where", "why", "how", null,
+                                                 "he", "it", "they", "them",null,
+                                             })
+                    {
+                        if (string.IsNullOrEmpty(c))
+                        {
+                            addToResult3(null, idn + ".preds = ");
+                            continue;
+                        }
+                        var val = u.grabSetting(c);
+                        addToResult3(c, val);
+                    }
+                    addToResult3(null, idn + ".preds = ");
+                    popMissing();
+
                 }
                 return true;
             }

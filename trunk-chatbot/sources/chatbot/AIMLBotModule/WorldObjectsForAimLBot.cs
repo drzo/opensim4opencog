@@ -577,80 +577,80 @@ namespace AIMLBotModule
             RunTask(()=>HandleIM0(im,myUser,groupName,message,UseThrottle), "AIML_OnInstantMessage: " + myUser + ": " + message);
         }
         private void HandleIM0(InstantMessage im, User myUser, string groupName, string message, bool UseThrottle)
-                        {
+        {
 
-                            UUID toSession = im.ToAgentID ^ im.IMSessionID;
-                            string resp = AIMLInterp(message, myUser);
-                            // if (im.Offline == InstantMessageOnline.Offline) return;
-                            if (String.IsNullOrEmpty(resp)) return;
-                            if (UseThrottle)
-                            {
-                                if ((!myUser.CanGiveResponseNow()))
-                                {
-                                    LogVital("AIML_OnInstantMessage Reply is too fast: {0}: {1}->{2}", myUser, message, resp);
-                                    return; //too early to respond.. but still listened
-                                }
-                            }
-                            UseRealism = true;
-                            foreach (string ting in SplitChatSmart(resp))
-                            {
-                                string tsing = ting.Trim();
-                                if (tsing.Length > 1000)
-                                {
-                                    tsing = tsing.Substring(0, 1000);
-                                }
-                                Thread.Sleep(100);
-                                if (im.GroupIM)
-                                {
-                                    WriteLine("InstantMessageGroup={0} {1} {2} {3}",
-                                              RespondToGroup, im.FromAgentName + "/" + groupName, im.FromAgentID,
-                                              ting.Trim());
-                                    if (!myUser.RespondToChat)
-                                    {
-                                        LogVital("AIML_OnInstantMessage Reply is quietly {0}: {1}->{2}", myUser, message, resp);
-                                        return;
-                                    }
-                                    if (!RespondToGroup)
-                                    {
-                                        LogVital("!RespondToGroup {0}: {1}->{2}", myUser, message, resp);
-                                        return;
-                                    }
-                                    client.Self.InstantMessageGroup(GetName(), im.IMSessionID, tsing);
-                                }
-                                else
-                                {
-                                    WriteLine("InstantMessage={0} {1} {2} {3}", RespondToUserIM,
-                                              im.FromAgentName, im.FromAgentID, ting.Trim());
+            UUID toSession = im.ToAgentID ^ im.IMSessionID;
+            string resp = AIMLInterp(message, myUser);
+            // if (im.Offline == InstantMessageOnline.Offline) return;
+            if (String.IsNullOrEmpty(resp)) return;
+            if (UseThrottle)
+            {
+                if ((!myUser.CanGiveResponseNow()))
+                {
+                    LogVital("AIML_OnInstantMessage Reply is too fast: {0}: {1}->{2}", myUser, message, resp);
+                    return; //too early to respond.. but still listened
+                }
+            }
+            UseRealism = true;
+            foreach (string ting in SplitChatSmart(resp))
+            {
+                string tsing = ting.Trim();
+                if (tsing.Length > 1000)
+                {
+                    tsing = tsing.Substring(0, 1000);
+                }
+                Thread.Sleep(100);
+                if (im.GroupIM)
+                {
+                    WriteLine("InstantMessageGroup={0} {1} {2} {3}",
+                              RespondToGroup, im.FromAgentName + "/" + groupName, im.FromAgentID,
+                              ting.Trim());
+                    if (!myUser.RespondToChat)
+                    {
+                        LogVital("AIML_OnInstantMessage Reply is quietly {0}: {1}->{2}", myUser, message, resp);
+                        return;
+                    }
+                    if (!RespondToGroup)
+                    {
+                        LogVital("!RespondToGroup {0}: {1}->{2}", myUser, message, resp);
+                        return;
+                    }
+                    client.Self.InstantMessageGroup(GetName(), im.IMSessionID, tsing);
+                }
+                else
+                {
+                    WriteLine("InstantMessage={0} {1} {2} {3}", RespondToUserIM,
+                              im.FromAgentName, im.FromAgentID, ting.Trim());
 
-                                    if (!RespondToUserIM)
-                                    {
-                                        LogVital("!RespondToUserIM {0}: {1}->{2}", myUser, message, resp);
-                                        return;
-                                    }
-                                    // todo maybe send a typing message for the UseRealism
-                                    if (UseRealism)
-                                    {
-                                        client.Self.InstantMessage(GetName(), im.FromAgentID, "typing",
-                                                                   im.IMSessionID,
-                                                                   InstantMessageDialog.StartTyping,
-                                                                   InstantMessageOnline.Offline,
-                                                                   client.Self.SimPosition,
-                                                                   UUID.Zero, Utils.EmptyBytes);
-                                        Thread.Sleep(1900);
-                                        client.Self.InstantMessage(GetName(), im.FromAgentID, "typing",
-                                                                   im.IMSessionID,
-                                                                   InstantMessageDialog.StopTyping,
-                                                                   InstantMessageOnline.Online,
-                                                                   client.Self.SimPosition,
-                                                                   UUID.Zero, Utils.EmptyBytes);
+                    if (!RespondToUserIM)
+                    {
+                        LogVital("!RespondToUserIM {0}: {1}->{2}", myUser, message, resp);
+                        return;
+                    }
+                    // todo maybe send a typing message for the UseRealism
+                    if (UseRealism)
+                    {
+                        client.Self.InstantMessage(GetName(), im.FromAgentID, "typing",
+                                                   im.IMSessionID,
+                                                   InstantMessageDialog.StartTyping,
+                                                   InstantMessageOnline.Offline,
+                                                   client.Self.SimPosition,
+                                                   UUID.Zero, Utils.EmptyBytes);
+                        Thread.Sleep(1900);
+                        client.Self.InstantMessage(GetName(), im.FromAgentID, "typing",
+                                                   im.IMSessionID,
+                                                   InstantMessageDialog.StopTyping,
+                                                   InstantMessageOnline.Online,
+                                                   client.Self.SimPosition,
+                                                   UUID.Zero, Utils.EmptyBytes);
 
-                                    }
-                                    client.InstantMessage(im.FromAgentID, tsing, im.IMSessionID);
-                                }
-                                UseRealism = false;
+                    }
+                    client.InstantMessage(im.FromAgentID, tsing, im.IMSessionID);
+                }
+                UseRealism = false;
 
-                            }
-                            myUser.StampResponseGiven();
+            }
+            myUser.StampResponseGiven();
         }
 
         public static bool RunInThreadPool = false;
@@ -737,26 +737,27 @@ namespace AIMLBotModule
         }
 
         private void OnChatTaskItem(string message, User myUser, ChatType type)
-                        {
-                            string resp = AIMLInterp(message, myUser);
-                            if (String.IsNullOrEmpty(resp)) return;
-                            if (!MyUser.CanGiveResponseNow())
-                            {
-                                LogVital("AIML_OnChat Warning Reply is too fast {0}: {1}->{2}", myUser, message, resp);           
-                                return;
-                            }
-                            if (!myUser.RespondToChat)
-                            {
-                                LogVital("AIML_OnChat Warning Reply is quietly {0}: {1}->{2}", myUser, message, resp);
-                                return;
-                            }
-                            if (!RespondToChatEver)
-                            {
-                                LogVital("!RespondToChatEver Warning {0}: {1}->{2}", myUser, message, resp);
-                                return;
-                            }
-                            StringChat(resp, type);
-                            myUser.StampResponseGiven();
+        {
+            string resp = AIMLInterp(message, myUser);
+            if (String.IsNullOrEmpty(resp)) return;
+            if (!myUser.CanGiveResponseNow())
+            {
+                LogVital("AIML_OnChat Warning Reply is too fast {0}: {1}->{2}", myUser, message, resp);
+                return;
+            }
+            if (!myUser.RespondToChat)
+            {
+                LogVital("AIML_OnChat Warning Reply is quietly {0}: {1}->{2}", myUser, message, resp);
+                return;
+            }
+            if (!RespondToChatEver)
+            {
+                LogVital("!RespondToChatEver Warning {0}: {1}->{2}", myUser, message, resp);
+                return;
+            }
+
+            StringChat(resp, type);
+            myUser.StampResponseGiven();
         }
 
         private void LogVital(string f, params object[] ps)
