@@ -3,136 +3,48 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using MushDLR223.ScriptEngines;
-
+using System.Runtime.InteropServices;
+using MemberInfo = System.Runtime.InteropServices._MemberInfo;
+using MethodInfo = System.Runtime.InteropServices._MethodInfo;
 namespace MushDLR223.Utilities
 {
-    public class ConfigSettingAttribute : Attribute, IKeyValuePair<string,object>
+    public class ConfigSettingAttribute : Attribute, IKeyValuePair<string, object>
     {
-        private bool HasSingleton
+
+
+        public static bool CantBeSingletonValueMember(MemberInfo fnd0)
         {
-            get
-            {
-                EnsureSingleton();
-                return _singleton != null;
-            }
+            if (fnd0 == null) return true;
+            if (fnd0 is _EventInfo) return true;
+            if (fnd0 is Type) return true;
+            if (!MemberInfoExtensions.MemberIsStatic(fnd0)) return true;
+            if (fnd0.MemberReturnType() == null) return true;
+            return false;
         }
 
-        private void EnsureSingleton()
+        public static bool LikelySingletonValueMember(MemberInfo fnd0)
         {
-            if (!UseSingleton) return;
-            if (_singleton == null)
-            {
-                var fnd = Member.DeclaringType.GetMember("SingleInstance");
-                if (fnd != null && fnd.Length > 0)
-                {
-                    var fnd0 = fnd[0];
-                    _singleton = FindValue(fnd0, null);
-                }
-            }
-            if (_singleton == null)
-            {
-                if (sysvarCtx != null)
-                {
-                    _singleton = FindValueOfType(sysvarCtx, Member.DeclaringType, 2);
-                }
-            }
-            if (_singleton == null)
-            {
-                return;
-            }
-        }
-
-        public static object FindValueOfType(object ctx, Type type, int depth)
-        {
-            if (type.IsInstanceOfType(ctx)) return ctx;
-            if (depth < 0) return null;
-            object obj;
-            bool mustBeTagged = ctx is ExactMemberTree;
-            if (ctx is HasInstancesOfType)
-            {
-                HasInstancesOfType hit = (HasInstancesOfType) ctx;
-                if (hit.TryGetInstance(type, depth - 1, out obj))
-                {
-                    if (!type.IsInstanceOfType(obj))
-                    {
-                        // trace this
-                        return null;
-                    }
-                    return obj;
-                }
-                if (mustBeTagged)
-                {
-                    // trace this
-                    return null;
-                }
-                return null;
-            }
-            foreach (var s in ctx.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-            {
-                if (mustBeTagged && !HasAttribute(s, typeof(MemberTree))) continue;
-                if (HasAttribute(s, typeof(SkipMemberTree))) continue;
-                if (type.IsAssignableFrom(s.PropertyType))
-                {
-                    obj = s.GetValue(ctx, null);
-                    if (type.IsInstanceOfType(obj)) return obj;
-                }
-                else
-                {
-                    if (depth > 0)
-                    {
-                        obj = s.GetValue(ctx, null);
-                        if (type.IsInstanceOfType(obj))
-                        {
-                            // trace this
-                            return obj;
-                        }
-                        obj = FindValueOfType(obj, type, depth - 1);
-                        if (type.IsInstanceOfType(obj)) return obj;
-                    }
-                }
-            }
-            foreach (var s in ctx.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-            {
-                if (mustBeTagged && !HasAttribute(s, typeof(MemberTree))) continue;
-                if (HasAttribute(s, typeof(SkipMemberTree))) continue;
-                obj = s.GetValue(ctx);
-                if (type.IsInstanceOfType(obj)) return obj;
-                if (depth > 0)
-                {
-                    obj =  FindValueOfType(obj, type, depth - 1);
-                    if (type.IsInstanceOfType(obj)) return obj;
-                }
-            }
-            if (ctx is IEnumerable)
-            {
-                IEnumerable hit = (IEnumerable)ctx;
-                foreach (var e in hit)
-                {
-                    obj = e;
-                    if (type.IsInstanceOfType(obj)) return obj;
-                    if (depth > 0)
-                    {
-                        obj = FindValueOfType(obj, type, depth - 1);
-                        if (type.IsInstanceOfType(obj)) return obj;
-                    }
-                }
-            }
-            return null;
+            if (CantBeSingletonValueMember(fnd0)) return false;
+            string lower = fnd0.Name.ToLower();
+            if (
+                !(lower.Contains("global") || lower.Contains("shared") || lower.Contains("single") ||
+                  lower.Contains("static")))
+                return false;
+            return false;
         }
 
         public static bool AtLeastOne(object[] attributes)
         {
             return attributes != null && attributes.Length > 0;
         }
-        public static bool HasAttribute(MemberInfo info, Type type)
-        {
-            return info.IsDefined(type, true);
-        }
+
+
         public static bool IsSingletonClass(Type type)
         {
             lock (SingletonClasses) if (SingletonClasses.Contains(type)) return true;
-            if (typeof(NotContextualSingleton).IsAssignableFrom(type) && !typeof(ContextualSingleton).IsAssignableFrom(type)) return false;
-            bool singleton = typeof(ContextualSingleton).IsAssignableFrom(type);
+            if (typeof (NotContextualSingleton).IsAssignableFrom(type) &&
+                !typeof (ContextualSingleton).IsAssignableFrom(type)) return false;
+            bool singleton = typeof (ContextualSingleton).IsAssignableFrom(type);
             if (!singleton)
             {
                 singleton = AtLeastOne(type.GetMember("SingleInstance"));
@@ -144,11 +56,25 @@ namespace MushDLR223.Utilities
                     if (set is MethodBase) continue;
                     if (set is EventInfo) continue;
                     if (set is Type) continue;
-                    if (MemberValueType(set) == set.DeclaringType)
+                    if (!set.MemberIsStatic()) continue;
+                    if (CantBeSingletonValueMember(set)) continue;
+                    var rt = set.MemberReturnType();
+                    if (rt == null) continue;
+                    if (rt == set.DeclaringType)
                     {
-                        //singleton = true;
+                        singleton = true;
                         break;
-                    }    
+                    }
+                    if (type.IsAssignableFrom(rt))
+                    {
+                        singleton = true;
+                        break;
+                    }
+                    if (LikelySingletonValueMember(set))
+                    {
+                        singleton = true;
+                        break;
+                    }
                 }
             }
             if (singleton)
@@ -160,6 +86,7 @@ namespace MushDLR223.Utilities
         }
 
         public static HashSet<Type> SingletonClasses = new HashSet<Type>();
+
         public static void AddSingletonClass(Type type)
         {
             lock (SingletonClasses)
@@ -173,34 +100,28 @@ namespace MushDLR223.Utilities
         private MemberInfo member;
         private object initialValue;
         private object saveValue;
-        [NonSerialized]
-        [ThreadStatic]
-        private object _singleton;
-        [NonSerialized]
-        [ThreadStatic]
-        public static object sysvarCtx;
+        [NonSerialized] [ThreadStatic] private object _singleton;
+        [NonSerialized] [ThreadStatic] public static object sysvarCtx;
         public bool UseSingleton;
+
         public MemberInfo Member
         {
-            get
-            {
-                return member;
-            }
+            get { return member; }
         }
-            
+
         public object Singleton
         {
             get
             {
-                EnsureSingleton();
+                if (!UseSingleton) return null;
+                if (_singleton == null) _singleton = MemberInfoExtensions.GuessSingletonForType(Member.DeclaringType);
                 return _singleton;
             }
-            set
-            {
-                _singleton = value;
-            }
+            set { _singleton = value; }
         }
+
         public bool IsReadOnly { get; set; }
+
         public bool SkipSaveOnExit
         {
             set { VSkipSaveOnExit = value; }
@@ -214,7 +135,15 @@ namespace MushDLR223.Utilities
             }
         }
 
-        static bool SkipOnExit(MemberInfo s)
+        private bool HasSingleton
+        {
+            get
+            {
+                return Singleton != null;
+            }
+        }
+
+        private static bool SkipOnExit(MemberInfo s)
         {
             ConfigSettingAttribute cs0 = FindConfigSetting(s, false);
             if (cs0.VSkipSaveOnExit.HasValue)
@@ -229,7 +158,8 @@ namespace MushDLR223.Utilities
             return false;
         }
 
-        public static Dictionary<MemberInfo, ConfigSettingAttribute> M2C = new Dictionary<MemberInfo, ConfigSettingAttribute>();
+        public static Dictionary<MemberInfo, ConfigSettingAttribute> M2C =
+            new Dictionary<MemberInfo, ConfigSettingAttribute>();
 
         public static ConfigSettingAttribute FindConfigSetting(MemberInfo s, bool forceCreate)
         {
@@ -277,6 +207,7 @@ namespace MushDLR223.Utilities
         }
 
         private string _name;
+
         public string Key
         {
             get
@@ -311,11 +242,13 @@ namespace MushDLR223.Utilities
             }
             set { _description = value; }
         }
+
         public override bool Equals(object obj)
         {
             var other = obj as ConfigSettingAttribute;
             return other != null && other.Member == Member;
         }
+
         public override int GetHashCode()
         {
             if (Member == null) return -1;
@@ -335,7 +268,7 @@ namespace MushDLR223.Utilities
 
         public void SetMember(MemberInfo member0)
         {
-            lock(M2C)
+            lock (M2C)
             {
                 M2C[member0] = this;
             }
@@ -345,16 +278,16 @@ namespace MushDLR223.Utilities
                 return;
             }
             member = member0;
-            if (IsReadOnlyMember(member0))
+            if (MemberInfoExtensions.MemberIsReadOnly(member0))
             {
                 // cant restore?
                 // SkipSaveOnExit = true;
                 IsReadOnly = true;
             }
-            IsStatic = TestIsStatic(member0);
+            IsStatic = MemberInfoExtensions.MemberIsStatic(member0);
             UseSingleton = !IsStatic;
-            ReturnType = MemberValueType(member0);
-            if (ReturnType.IsGenericType && ReturnType.GetGenericTypeDefinition() == (typeof(ListAsSet<>)))
+            ReturnType = MemberInfoExtensions.MemberReturnType(member0);
+            if (ReturnType.IsGenericType && ReturnType.GetGenericTypeDefinition() == (typeof (ListAsSet<>)))
             {
                 return;
             }
@@ -391,6 +324,7 @@ namespace MushDLR223.Utilities
         {
             return DebugInfo;
         }
+
         public object Value
         {
             get
@@ -405,7 +339,7 @@ namespace MushDLR223.Utilities
                 }
                 try
                 {
-                    var v = FindValue(m, target);
+                    var v = MemberInfoExtensions.MemberValue(m, target);
                     if (v != null) return v;
                 }
                 catch (Exception e)
@@ -416,7 +350,8 @@ namespace MushDLR223.Utilities
                 }
                 return "(unknown)";
             }
-            set {
+            set
+            {
                 if (IsReadOnly)
                 {
                     if (Value == value) return;
@@ -426,8 +361,8 @@ namespace MushDLR223.Utilities
                 saveValue = value;
                 try
                 {
-                   if(SetValue(value)) return;
-                   if (Value == value) return;
+                    if (SetValue(value)) return;
+                    if (Value == value) return;
                 }
                 catch (Exception e)
                 {
@@ -477,43 +412,23 @@ namespace MushDLR223.Utilities
             return false;            
         }
 
-        public static object ChangeType(object value, Type type)
+        private object ChangeType(object value, Type parameterType)
         {
-            return ScriptManager.ChangeType(value,type);
-        }
-
-        static object FindValue(MemberInfo m, object target)
-        {
-            if (m is FieldInfo)
-            {
-                var inf = m as FieldInfo;
-                return inf.GetValue(target);
-            }
-            if (m is PropertyInfo)
-            {
-                var inf = m as PropertyInfo;
-                m = inf.GetGetMethod();
-            }
-            if (m is MethodInfo)
-            {
-                var inf = m as MethodInfo;
-                return inf.Invoke(target, null);
-            }
-            return null;
+            return MemberInfoExtensions.ChangeType(value, parameterType);
         }
 
         public static bool IsPossibleConfig(MemberInfo info)
         {
-            if (HasAttribute(info, typeof(ConfigSettingAttribute))) return true;
-            if (HasAttribute(info, typeof(NotConfigurable))) return false;
+            if (MemberInfoExtensions.HasAttribute(info, typeof(ConfigSettingAttribute))) return true;
+            if (MemberInfoExtensions.HasAttribute(info, typeof(NotConfigurable))) return false;
 
             if (info.DeclaringType.IsEnum) return false;
             {
                 var inf = info as FieldInfo;
-                if (inf != null && (inf.IsStatic || IsSingletonClass(inf.DeclaringType)) && 
+                if (inf != null && (inf.IsStatic || ConfigSettingAttribute.IsSingletonClass(inf.DeclaringType)) &&
                     !inf.IsInitOnly && !inf.IsLiteral)
                 {
-                    if (IsSettableType(inf.FieldType))
+                    if (MemberInfoExtensions.IsSettableType(inf.FieldType))
                     {
                         if (inf.DeclaringType.IsValueType)
                         {
@@ -530,10 +445,10 @@ namespace MushDLR223.Utilities
                     if (inf.GetSetMethod() == null) return false;
                     info = inf.GetGetMethod();
                     var inf0 = info as MethodInfo;
-                    if (inf0 != null && (inf0.IsStatic || IsSingletonClass(inf0.DeclaringType))
+                    if (inf0 != null && (inf0.IsStatic || ConfigSettingAttribute.IsSingletonClass(inf0.DeclaringType))
                          && inf.CanRead && inf.CanWrite)
                     {
-                        if (IsSettableType(inf.PropertyType))
+                        if (MemberInfoExtensions.IsSettableType(inf.PropertyType))
                         {
                             if (inf0.DeclaringType.IsValueType)
                             {
@@ -545,12 +460,12 @@ namespace MushDLR223.Utilities
                     }
                 }
             }
-            return false;       
+            return false;
         }
         public static bool IsGoodForConfig(MemberInfo info, bool notDeclaredOK, bool notPublicOK, bool notWriteableOK, bool notFromStringOK)
         {
-            if (HasAttribute(info, typeof(ConfigSettingAttribute))) return true;
-            if (HasAttribute(info, typeof(NotConfigurable))) return false;
+            if (MemberInfoExtensions.HasAttribute(info, typeof(ConfigSettingAttribute))) return true;
+            if (MemberInfoExtensions.HasAttribute(info, typeof(NotConfigurable))) return false;
             if (!notDeclaredOK) return false;
 
             if (info.DeclaringType.IsEnum) return false;
@@ -570,7 +485,7 @@ namespace MushDLR223.Utilities
                             }
                         }
                         //if (readOnly) notFromStringOK = true;
-                        if (notFromStringOK || IsSettableType(inf.FieldType))
+                        if (notFromStringOK || MemberInfoExtensions.IsSettableType(inf.FieldType))
                         {
                             if (inf.DeclaringType.IsValueType)
                             {
@@ -592,7 +507,7 @@ namespace MushDLR223.Utilities
                     {
                         bool readOnly = !inf.CanWrite;
                         //if (readOnly) notFromStringOK = true;
-                        if (notFromStringOK || IsSettableType(inf.PropertyType))
+                        if (notFromStringOK || MemberInfoExtensions.IsSettableType(inf.PropertyType))
                         {
                             if (inf.DeclaringType.IsValueType)
                             {
@@ -607,50 +522,245 @@ namespace MushDLR223.Utilities
             }
             return false;
         }
-        public static Type MemberValueType(MemberInfo info)
+
+        public static object FindValueOfType(object o, Type type, int depthMax)
         {
-            if (info.DeclaringType.IsEnum) return info.DeclaringType;
-            {
-                var inf = info as FieldInfo;
-                if (inf != null) return inf.FieldType;
-            }
-            {
-                var inf = info as PropertyInfo;
-                if (inf != null) return inf.PropertyType;
-            }
-            {
-                var inf = info as MethodInfo;
-                if (inf != null) return inf.ReturnType;
-            }
-            return info.DeclaringType;
+            return o.FindSubValueOfType(type, depthMax);
         }
-        public static bool TestIsStatic(MemberInfo info)
+
+        public static bool HasAttribute(MemberInfo s, Type type)
         {
-            if (info.DeclaringType.IsEnum) return true;
+            return s.HasAttribute(type);
+        }
+    }
+    public static class MemberInfoExtensions {
+
+        public static object GuessSingletonForType(this Type m)
+        {
+            if (ConfigSettingAttribute.CantBeSingletonValueMember(m)) return null;
+            object _singleton;
             {
-                var inf = info as FieldInfo;
-                if (inf != null && inf.IsStatic)
+                foreach (var fnd0 in
+                    m.ReflectedType.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static| BindingFlags.FlattenHierarchy))
                 {
-                    return true;
+                    var mrt = fnd0.MemberReturnType();
+                    if (mrt == null) continue;
+                    if (!m.IsAssignableFrom(mrt)) continue;
+                    if (ConfigSettingAttribute.CantBeSingletonValueMember(fnd0))
+                    {
+                        continue;
+                    }
+                    _singleton = MemberInfoExtensions.MemberValue(fnd0, null);
+                    if (_singleton != null) return _singleton;
                 }
             }
             {
-                var inf = info as PropertyInfo;
-                if (inf != null)
+                if (ConfigSettingAttribute.sysvarCtx != null)
                 {
-                    info = inf.GetSetMethod() ?? inf.GetSetMethod();
-                    var inf0 = info as MethodInfo;
-                    if (inf0 != null && inf0.IsStatic)
+                    _singleton = MemberInfoExtensions.FindSubValueOfType(ConfigSettingAttribute.sysvarCtx,
+                                                                         m, 2);
+                    if (_singleton != null) return _singleton;
+                }
+            }
+            return null;
+        }
+
+
+        public static object FindSubValueOfType(this object ctx, Type type, int depth)
+        {
+            if (NullCheck(ctx)) return null;
+            if (type.IsInstanceOfType(ctx)) return ctx;
+            if (depth < 0) return null;
+            object obj;
+            bool mustBeTagged = ctx is ExactMemberTree;
+            if (ctx is HasInstancesOfType)
+            {
+                HasInstancesOfType hit = (HasInstancesOfType)ctx;
+                if (hit.TryGetInstance(type, depth - 1, out obj))
+                {
+                    if (!type.IsInstanceOfType(obj))
                     {
-                        return true;
+                        // trace this
+                        return null;
+                    }
+                    return obj;
+                }
+                if (mustBeTagged)
+                {
+                    // trace this
+                    return null;
+                }
+                return null;
+            }
+            foreach (
+                var s in
+                    ctx.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (mustBeTagged && !HasAttribute(s, typeof(MemberTree))) continue;
+                if (HasAttribute(s, typeof(SkipMemberTree))) continue;
+                if (type.IsAssignableFrom(s.PropertyType))
+                {
+                    obj = s.GetValue(ctx, null);
+                    if (type.IsInstanceOfType(obj)) return obj;
+                }
+                else
+                {
+                    if (depth > 0)
+                    {
+                        obj = s.GetValue(ctx, null);
+                        if (type.IsInstanceOfType(obj))
+                        {
+                            // trace this
+                            return obj;
+                        }
+                        obj = FindSubValueOfType(obj, type, depth - 1);
+                        if (type.IsInstanceOfType(obj)) return obj;
                     }
                 }
             }
+            foreach (
+                var s in ctx.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (mustBeTagged && !HasAttribute(s, typeof(MemberTree))) continue;
+                if (HasAttribute(s, typeof(SkipMemberTree))) continue;
+                obj = s.GetValue(ctx);
+                if (type.IsInstanceOfType(obj)) return obj;
+                if (depth > 0)
+                {
+                    obj = FindSubValueOfType(obj, type, depth - 1);
+                    if (type.IsInstanceOfType(obj)) return obj;
+                }
+            }
+            if (ctx is IEnumerable)
+            {
+                IEnumerable hit = (IEnumerable)ctx;
+                foreach (var e in hit)
+                {
+                    obj = e;
+                    if (type.IsInstanceOfType(obj)) return obj;
+                    if (depth > 0)
+                    {
+                        obj = FindSubValueOfType(obj, type, depth - 1);
+                        if (type.IsInstanceOfType(obj)) return obj;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public static bool HasAttribute(this MemberInfo info, Type type)
+        {
+            if (NullCheck(type)) return false;
+            return info.IsDefined(type, true);
+        }
+
+        public static object ChangeType(this object value, Type type)
+        {
+            return ScriptManager.ChangeType(value,type);
+        }
+
+        public static object MemberValue(this MemberInfo m, object target)
+        {
+            if (NullCheck(m)) return target;
+            if (m is FieldInfo)
+            {
+                var inf = m as FieldInfo;
+                return inf.GetValue(target);
+            }
+            if (m is PropertyInfo)
+            {
+                var inf = m as PropertyInfo;
+                m = inf.GetGetMethod();
+            }
+            if (m is MethodInfo)
+            {
+                var inf = m as MethodInfo;
+                return inf.Invoke(target, null);
+            }
+            return null;
+        }
+
+        public static Type MemberReturnType(this MemberInfo info)
+        {
+            if (NullCheck(info)) return null;
+            if (info.DeclaringType.IsEnum) return info.DeclaringType;
+            {
+                var inf = info as _FieldInfo;
+                if (inf != null) return inf.FieldType;
+            }
+            {
+                var inf = info as _PropertyInfo;
+                if (inf != null) return inf.PropertyType;
+            }
+            {
+                var inf = info as _MethodInfo;
+                if (inf != null) return inf.ReturnType;
+            }
+            {
+                var inf = info as ConstructorInfo;
+                if (inf != null) return inf.ReflectedType;
+            }
+            return info.DeclaringType;
+        }
+
+        public static bool NoNullReferenceException = true;
+        private static bool NullCheck(object info)
+        {
+            if (info != null) return false;
+            if (NoNullReferenceException)
+            {
+                return true;
+            }
+            throw new NullReferenceException("Null ref in argument");
+        }
+
+        public static bool MemberIsStatic(this MemberInfo info)
+        {
+            if (NullCheck(info)) return false;
+
+            if (info.DeclaringType.IsEnum) return true;
+            {
+                var inf = info as _Type;
+                if (inf != null)
+                {
+                    if (inf.IsValueType) return true;
+                }
+            }
+            {
+                var inf = info as _EventInfo;
+                if (inf != null)
+                {
+                    info = inf.GetRaiseMethod(true);
+                }
+            }
+            {
+                var inf = info as _FieldInfo;
+                if (inf != null)
+                {
+                    return inf.IsStatic;
+                }
+            }
+            {
+                var inf = info as _PropertyInfo;
+                if (inf != null)
+                {
+                    info = inf.GetGetMethod(true) ?? inf.GetSetMethod(true);
+                }
+            }
+            {
+                var inf = info as _MethodInfo;
+                if (inf != null)
+                {
+                    return inf.IsStatic;
+                }
+            }
+            DLRConsole.DebugWriteLine("cant detect isStatic on " + info);
             return false;
         }
 
-        private static bool IsSettableType(Type type)
+        public static bool IsSettableType(Type type)
         {
+            if (NullCheck(type)) return false;
             if (type == null) return false;
             if (type == typeof(string)) return true;
             if (type.IsArray) return false;
@@ -662,8 +772,9 @@ namespace MushDLR223.Utilities
             return false;
         }
 
-        static public bool IsReadOnlyMember(MemberInfo member)
+        static public bool MemberIsReadOnly(this MemberInfo member)
         {
+            if (NullCheck(member)) return false;
             if (member != null)
             {
                 var fi = member as FieldInfo;
