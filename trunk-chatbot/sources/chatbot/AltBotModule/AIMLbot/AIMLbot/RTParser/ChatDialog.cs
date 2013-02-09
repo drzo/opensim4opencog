@@ -256,10 +256,11 @@ namespace RTParser
 
         public Result SaidUser(string input, string user, string[] otherNameWhomInputAdresses, OutputDelegate traceConsole, bool saveResults, bool saveResultsOnJustHeard, bool isToplevel, RequestKind requestType)
         {
+            Logger.Warn("In TODO code");
             User CurrentUser = GetCurrentUser(user);
             string otherUserName = otherNameWhomInputAdresses == null ? null : otherNameWhomInputAdresses[0];
             User targetUser = GetTargetUser(otherUserName, input, BotAsUser);
-            var request = CurrentUser.CreateRequest(input, targetUser, isToplevel, requestType);
+            var request = CurrentUser.CreateRequest(input, targetUser.JustSaid, targetUser, isToplevel, requestType);
             request.IsTraced = true;
             request.OriginalSalientRequest = request;
             request.SaveResultsOnJustHeard = saveResultsOnJustHeard;
@@ -315,17 +316,19 @@ namespace RTParser
             }
             return CurrentUser;
         }
-        internal Result GlobalChatWithUser(Request request, string input, string user, string otherNameWhomInputAdresses, 
+        internal Result GlobalChatWithUser(Request request, string input, string speakerName, string listenerNameWhomInputAdresses, 
             OutputDelegate traceConsole, bool saveLastUserAndResult, bool saveResultsOnConverstion, bool isToplevel, RequestKind requestType)
         {
             traceConsole = traceConsole ?? writeDebugLine;
-            User CurrentUser = GetCurrentUser(user);
+            User CurrentUser = GetCurrentUser(speakerName);
             var varMSM = this.pMSM;
             varMSM.clearEvidence();
             varMSM.clearNextStateValues();
             // myUser.TopicSetting = "collectevidencepatterns";
             Result res = null;
-            request = request ?? CurrentUser.CreateRequest(input, GetTargetUser(otherNameWhomInputAdresses, input, BotAsUser), isToplevel, requestType);
+            User targetUser = GetTargetUser(listenerNameWhomInputAdresses, input, BotAsUser);
+            request = request ??
+                      CurrentUser.CreateRequest(input, targetUser.JustSaid, targetUser, isToplevel, requestType);
             request.IsTraced = true;
             request.OriginalSalientRequest = request;
             request.SaveResultsOnJustHeard = saveResultsOnConverstion;
@@ -333,7 +336,7 @@ namespace RTParser
             ChatLabel label = request.PushScope;
             try
             {
-                res = ChatWithRequest(request, requestCurrentResult, isToplevel, requestType);
+                res = ChatWithRequest(request, requestCurrentResult, isToplevel, requestType, saveResultsOnConverstion);
             }
             catch (ChatSignal e)
             {
@@ -385,7 +388,7 @@ namespace RTParser
         public MasterRequest MakeRequestToBot(Unifiable rawInput, User findOrCreateUser, bool isToplevel, RequestKind requestType)
         {
             var rtarget = BotAsUser;
-            Unifiable botLastSaid = findOrCreateUser.ResponderJustSaid;
+            Unifiable botLastSaid = findOrCreateUser.That;
             MasterRequest r = findOrCreateUser.CreateRequest(rawInput, botLastSaid, rtarget, isToplevel, requestType);
             if (rtarget == null)
             {
@@ -437,7 +440,7 @@ namespace RTParser
         {
             Result requestCurrentResult = request.FindOrCreateCurrentResult();
             Result result = ChatWithRequest(request, requestCurrentResult, request.IsToplevelRequest,
-                                            request.RequestType);
+                                            request.RequestType, request.SaveResultsOnJustHeard);
             if (!result.Started)
             {
                 writeDebugLine("result unstarted " + result);
@@ -446,13 +449,15 @@ namespace RTParser
             return result;
         }
 
-        public Result ChatWithRequest(Request request, Result parentResultIn, bool isToplevel, RequestKind requestType)
+        public Result ChatWithRequest(Request request, Result parentResultIn, bool isToplevel, RequestKind requestType, bool saveResultsOnConverstion)
         {
-            if ((useServitor)&&(servitor !=null))
+            if ((useServitor) && (servitor != null))
             {
+                Logger.Warn("Servitor code should not be calling this!");
                 User curUser = parentResultIn.Requester;
                 string input = request.ChatInput.OrignalRawText.ToString();
-                string answer = servitor.respondToChat(input, curUser, isToplevel, requestType);
+                RequestResult requestResult;
+                string answer = servitor.respondToChat(input, curUser, isToplevel, requestType, out requestResult);
                 Result result = request.CreateResult(request);
                 result.SetOutput = answer;
                 return result;
@@ -473,8 +478,12 @@ namespace RTParser
             Unifiable requestrawInput = request.rawInput.Trim();
 
             undoStackSession.pushValues(userPredicates, "i", user.UserName);
-            undoStackSession.pushValues(userPredicates, "rawinput", requestrawInput);
-            undoStackSession.pushValues(userPredicates, "input", requestrawInput);
+            if (saveResultsOnConverstion)
+            {
+                undoStackSession.pushValues(userPredicates, "rawinput", requestrawInput);
+                undoStackSession.pushValues(userPredicates, "input", requestrawInput);
+            }
+           
             if (target != null && target.UserName != null)
             {
                 undoStackSession.pushValues(userPredicates, "you", target.UserName);
@@ -500,14 +509,15 @@ namespace RTParser
                          res = ChatWithRequest4(request, user, target, G);
                     }
                      */
+                    servitor.MaybeUpdateBotJustSaidLastOutput(isToplevel, requestType, user,allResults.Output, false,false,false);
                     if (request.IsToplevelRequest)
                     {
                         AddSideEffectHook(request, user, parentResultIn);
-                        if (request.SaveResultsOnJustHeard)
+                        if (request.SaveResultsOnJustHeard && saveResultsOnConverstion)
                         {
                             user.JustSaid = requestrawInput;
                             if (target != null)
-                                target.JustSaid = user.ResponderJustSaid; //.Output;
+                                target.JustSaid = user.That; //.Output;
                         }
                     }
                     queryFailed = false;
@@ -526,15 +536,17 @@ namespace RTParser
                 }
                 finally
                 {
-                    AddHeardPreds(parentResultIn.RawOutput, HeardPredicates);
+                    if (saveResultsOnConverstion) AddHeardPreds(parentResultIn.RawOutput, HeardPredicates);
                     request.CommitSideEffects(false);
                     label.PopScope();
                     undoStackSession.UndoAll();
                     if (queryFailed)
                     {
-                    request.UndoAll();
+                        request.UndoAll();
+                    } else
+                    {
+                        request.CommitSideEffects(true);
                     }
-                    request.CommitSideEffects(true);
                     request.Exit();
                     request.SetSpeakerAndResponder(user, parentResultIn.Responder.Value);
                 }

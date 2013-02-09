@@ -161,20 +161,27 @@ namespace RTParser
         //public Request BotAsRequestUsed = null;
         public Request GetBotRequest(string s)
         {
+            return GetBotRequest(s, RequestKind.AIMLLoader);
+        }
+        public Request GetBotRequest(string s, RequestKind kind)
+        {
             var botAsUser1 = BotAsUser ?? LastUser;
             s = Unifiable.Trim(s);
             if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
             var r = new MasterRequest(s, botAsUser1, Unifiable.EnglishNothing, botAsUser1, this, null,
-                                      DefaultStartGraph, true, RequestKind.BotPropertyEval);
+                                      DefaultStartGraph, true, RequestKind.BotPropertyEval);           
             //r.ChatOutput.RawText = s;
             r.writeToLog = writeToLog;
             //Result res = new AIMLbot.MasterRequest(s, botAsUser1, this, r, null, null);            
             //r.CurrentQuery = new SubQuery(s, res, r);
-            OnBotCreated(() =>
+            if (botAsUser1 == null)
+            {
+                OnBotCreated(() =>
             {
                 User BotAsUser1 = this.BotAsUser;
                 ((Request)r).SetSpeakerAndResponder(BotAsUser1, BotAsUser1);
             });
+            }
             r.IsTraced = this.IsTraced;
             r.depth = 0;
             // times out in 15 minutes
@@ -637,6 +644,10 @@ namespace RTParser
         public AltBot()
             : base()
         {
+            lock (OneAtATime)
+            {
+                _lastAltBot = this;
+            }
             myBehaviors = new BehaviorSet(this);
             servitor = new Servitor(this, null);
             RegisterObject("robot", this);

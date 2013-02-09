@@ -45,7 +45,7 @@ namespace RTParser
             LineInfoElementImpl.unsetReadonly(node);
             if (Loader == null)
             {
-                Loader = new AIMLLoaderU(this, GetBotRequest("EvalAIMLHandler " + cmd));
+                Loader = new AIMLLoaderU(this, GetBotRequest("EvalAIMLHandler " + cmd, RequestKind.EvalAIMLHandler));
             }
             var res = ImmediateAiml(node, user, Loader, RequestKind.EvalAIMLHandler);
             return res;

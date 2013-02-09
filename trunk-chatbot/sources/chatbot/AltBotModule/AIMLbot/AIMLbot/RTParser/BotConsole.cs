@@ -375,8 +375,7 @@ namespace RTParser
             // myBot.AddAiml(evidenceCode);
             User myUser = myBot.LastUser;
             var myUsersname = myUser.UserName;
-            Request request = myUser.CreateRequest("current user toplevel", "current bot toplevel", myBot.BotAsUser,
-                                                   true, RequestKind.EventProcessor);
+            Request request = myUser.CreateRequest("current user toplevel", Unifiable.EnglishNothing, true, RequestKind.EventProcessor);
             myUser.LastRequest = request;
             myBot.BotDirective(myUser, request, "@help", writeLine);
             writeLine("-----------------------------------------------------------------");
@@ -405,11 +404,13 @@ namespace RTParser
                 {
                     Environment.Exit(Environment.ExitCode);
                 }
-                myBot.AcceptInput(writeLine, input, myUser);
+                RequestResult requestAcceptInput;
+                myBot.AcceptInput(writeLine, input, myUser, true, RequestKind.ChatRealTime, out requestAcceptInput);
+
             }
         }
 
-        public void AcceptInput(OutputDelegate writeLine, string input, User myUser)
+        public void AcceptInput(OutputDelegate writeLine, string input, User myUser, bool isToplevel, RequestKind kind, out RequestResult acceptInputResult)
         {
             AltBot myBot = this;
             if (_botAsUser == null)
@@ -430,6 +431,8 @@ namespace RTParser
                         writeLine("{0}: {1}", myName, BotAsAUser.JustSaid);
                     }
                     writeLine("-----------------------------------------------------------------");
+                    acceptInputResult = new RequestResult(myUser, input, BotAsUser, myUser.That);
+                    acceptInputResult.chatOutputillBeInBackground = true;
                     return;
                 }
                 try
@@ -450,11 +453,12 @@ namespace RTParser
                     {
                         // See what the servitor says
                         updateRTP2Sevitor(myUser);
-                        writeLine(myName + "> " + servitor.respondToChat(input, myUser));
+                        writeLine(myName + "> " + servitor.respondToChat(input, myUser, isToplevel, kind, out acceptInputResult));
                         updateServitor2RTP(myUser);
                     }
                     else
                     {
+                        throw servitor.curBot.RaiseError("Should not be here?!");
                         if (!input.StartsWith("@"))
                         {
                             //      string userJustSaid = input;
@@ -480,6 +484,7 @@ namespace RTParser
                 }
                 catch (Exception e)
                 {
+                    throw servitor.curBot.RaiseError("Should not be here?!");
                     writeLine("Error: {0}", e);
                 }
             }
@@ -738,6 +743,36 @@ namespace RTParser
         }
     }
 
+    public class RequestResult:IDisposable
+    {
+        public Result result;
+        public Request request;
+        public User Speaker, Hearer;
+        public string Input, That;
+        public bool chatOutputillBeInBackground;
+
+        public RequestResult(User curUser, string input, User targetUser, string that)
+        {
+            Speaker = curUser;
+            this.Input = input;
+            Hearer = targetUser;
+            That = that;
+        }
+
+        public string Error;
+
+        public string OutputText;
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+    }
+
     public partial class AltBotCommands //: AltBot
     {
         private static bool SplitOff(string args, string s, out string user, out string said)
@@ -774,19 +809,21 @@ namespace RTParser
                 bool waitUntilVerbalOutput = ((cmd == "@" || cmd == "withuser") || robot.WaitUntilVerbalOutput);               
                 User wasUser = robot.FindUser(user);
                 User targetUser = robot.GetTargetUser(null, said, robot.BotAsUser);
-                robot.HeardSomeoneSay1Sentence(myUser, targetUser, said, myUser.LastResult, control);
+                string that = targetUser.JustSaid;
+                robot.HeardSomeoneSay1Sentence(false, true, myUser, targetUser, said, myUser.LastResult, control);
                 User CurrentUser = robot.GetCurrentUser(user);
-                MasterRequest request = CurrentUser.CreateRequest(said, targetUser, true, RequestKind.ChatRealTime);
+                MasterRequest request = CurrentUser.CreateRequest(said, that, targetUser, true, RequestKind.ChatRealTime);
                 request.IsTraced = true;
                 request.OriginalSalientRequest = request;
                 if (cmd == "locally")
                 {
                     waitUntilVerbalOutput = false;
                 }
-                request.SaveResultsOnJustHeard = !waitUntilVerbalOutput;
-                request.ResponderSelfListens = !waitUntilVerbalOutput;
+                bool saveResultsOnJustHeard = !waitUntilVerbalOutput;
+                request.SaveResultsOnJustHeard = saveResultsOnJustHeard;                
+                request.ResponderSelfListens = saveResultsOnJustHeard;
                 Result res = robot.GlobalChatWithUser(request, said, user, null, AltBot.writeDebugLine,
-                                                      !waitUntilVerbalOutput, request.SaveResultsOnJustHeard, true,
+                                                      saveResultsOnJustHeard, saveResultsOnJustHeard, true,
                                                       RequestKind.ChatRealTime);
                 request.ResponderSelfListens = false;
                 // detect a user "rename"
@@ -812,13 +849,13 @@ namespace RTParser
                     return true;
                 }
                 myUser.LastResponder = theResponder;
-                if (!waitUntilVerbalOutput)
+                if (saveResultsOnJustHeard)
                 {
                     theResponder.JustSaid = justsaid;
                     // ReSharper disable ConditionIsAlwaysTrueOrFalse
                     if (robot.ProcessHeardPreds && request.ResponderSelfListens)
                         // ReSharper restore ConditionIsAlwaysTrueOrFalse
-                        robot.HeardSelfSayResponse(theResponder, myUser, justsaid, res, control);
+                        robot.HeardSelfSayResponse(false, true, theResponder, myUser, justsaid, res, control);
                 }
                 return true;
             }
@@ -938,10 +975,10 @@ namespace RTParser
                 }
                 return true;
             }
-            if (showHelp) console("@say [who -] <text> -- fakes that the 'who' (default bot) just said it");
-            if (cmd == "say")
+            if (showHelp) console("@say[1] [who -] <text> -- fakes that the 'who' (default bot) just said it");
+            if (cmd == "say" || cmd == "say1")
             {
-                console("say> " + args);
+                console(cmd + "> " + args);
                 string who, said;
                 if (!SplitOff(args, "-", out who, out said))
                 {
@@ -955,28 +992,16 @@ namespace RTParser
                 {
                     factSpeakerLastResponderValue = factSpeakerLastResponder.Value;
                 }
-                robot.HeardSelfSayVerbal(factSpeaker, factSpeakerLastResponderValue, said, factSpeaker.LastResult, control);
-                return true;
-            }
-
-            if (showHelp) console("@say1 [who -] <sentence> -- fakes that 'who' (default bot) just said it");
-            if (cmd == "say1")
-            {
-                console("say1> " + args);
-                string who, said;
-                if (!SplitOff(args, "-", out who, out said))
+                if (cmd == "say1")
                 {
-                    who = targetBotUser.UserID;
-                    said = args;
+                    robot.HeardSomeoneSay1Sentence(true, true, factSpeaker, factSpeakerLastResponderValue, said,
+                                                   factSpeaker.LastResult, control);
                 }
-                User factSpeaker = robot.FindOrCreateUser(who);
-                User factSpeakerLastResponder = factSpeaker.LastResponder;
-                User factSpeakerLastResponderValue = null;
-                if (factSpeakerLastResponder != null)
+                else
                 {
-                    factSpeakerLastResponderValue = factSpeakerLastResponder.Value;
+                    robot.HeardSelfSayVerbal(true, true, factSpeaker, factSpeakerLastResponderValue, said,
+                                             factSpeaker.LastResult, control);
                 }
-                robot.HeardSomeoneSay1Sentence(factSpeaker, factSpeakerLastResponderValue, said, factSpeaker.LastResult, control);
                 return true;
             }
 
@@ -1493,6 +1518,8 @@ namespace RTParser
     {
         private static string cmdPrefix;
 
+        public EasyLogger Logger = new EasyLogger(writeDebugLine);
+
         private void AddBotCommand(string s, Action action)
         {
             if (action != null)
@@ -1530,8 +1557,32 @@ namespace RTParser
 
         public Exception RaiseError(Exception invalidOperationException)
         {
-            writeDebugLine(writeException(invalidOperationException));
+            Logger.Warn(writeException(invalidOperationException));
+            if (invalidOperationException is InvalidOperationException)
+            {
+                invalidOperationException = new NullReferenceException(invalidOperationException.Message,
+                                                                       invalidOperationException);
+            } 
             return invalidOperationException;
+        }
+
+        public Exception RaiseError(string f, params object[] args)
+        {
+            return RaiseError(new InvalidOperationException(DLRConsole.SafeFormat(f, args)));
+        }
+    }
+
+    public class EasyLogger
+    {
+        public OutputDelegate writeAsWell;
+        public EasyLogger(OutputDelegate od)
+        {
+            writeAsWell = od;
+        }
+
+        public void Warn(string f, params object[] a)
+        {
+            writeAsWell(f, a);
         }
     }
 }

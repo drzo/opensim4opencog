@@ -770,7 +770,7 @@ namespace AIMLBotModule
             if (MyBot.useServitor) return;
 
             Enqueue("HeardMyselfSay: " + message,
-                    () => MyBot.HeardSomeoneSay1Sentence(MyBot.BotAsUser, MyUser, message, null, null));
+                    () => MyBot.HeardSomeoneSay1Sentence(true, true, MyBot.BotAsUser, MyUser, message, null, null));
         }
 
         private void Enqueue(String name, ThreadStart action)
@@ -1177,7 +1177,8 @@ namespace AIMLBotModule
                 MyBot.updateRTP2Sevitor(myUser);
                 MyBot.servitor.curBot.sayProcessor = new sayProcessorDelegate(TalkActive);
                 MyBot.servitor.curBot.personaProcessor = new systemPersonaDelegate(PersonaActive);
-                string answer = MyBot.servitor.respondToChat(input, myUser, true, RequestKind.ChatRealTime);
+                RequestResult requestResult;
+                string answer = MyBot.servitor.respondToChat(input, myUser, true, RequestKind.ChatRealTime, out requestResult);
                 SUnifiable result = answer;
                 if (result == null)
                 {

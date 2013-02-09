@@ -177,11 +177,19 @@ namespace AltAIMLbot
             sleeping = new TaskList(this);
         }
 
+        internal void ActivateBehaviorTask(string name, bool waitUntilComplete)
+        {
+            TaskItem task = FindTask(name);
+            string status = taskStatus(name);
+           
+
+        }
         public void ActivateBehaviorTask(string name)
         {
             // if its already running or sleeping 
-            string status =taskStatus(name) ;
+            string status = taskStatus(name);
             if (status == "running") return;
+            if (status == "active") return;
             if (status == "sleeping")
             {
                 AwakenTask(name);
@@ -196,7 +204,7 @@ namespace AltAIMLbot
             
             if ((singular ==false) || (active.Count ==0))
             {
-                active.Append(new TaskItem(iterator, this,name));
+                active.Append(new TaskItem(iterator, this, name));
             }
             else
             {
@@ -343,6 +351,18 @@ namespace AltAIMLbot
             while (en.MoveNext())
                 if (en.Current.IsNamed(taskName))
                     en.MoveCurrentToList(active);
+        }
+
+        public TaskItem FindTask(string taskName)
+        {
+            TaskList.TaskEnumerator en;
+            en = active.GetEnumerator();
+            while (en.MoveNext())
+                if (en.Current.IsNamed(taskName)) return en.Current;
+            en = sleeping.GetEnumerator();
+            while (en.MoveNext())
+                if (en.Current.IsNamed(taskName)) return en.Current;
+            return null;
         }
 
         public void Run()

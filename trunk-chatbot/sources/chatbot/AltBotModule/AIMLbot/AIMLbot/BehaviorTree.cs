@@ -2461,6 +2461,7 @@ namespace AltAIMLbot
             {
 
                 bot.lastBehaviorChatInput = "";
+                string that = bot.lastBehaviorChatOutput;
                 bot.lastBehaviorChatOutput = "";
                 if (bot.chatInputQueue.Count == 0)
                 {
@@ -2472,7 +2473,12 @@ namespace AltAIMLbot
                     bot.lastBehaviorChatInput = bot.chatInputQueue.Dequeue();
                     sentStr += bot.lastBehaviorChatInput;
                 }
-                Request r = new Request(sentStr, bot.lastBehaviorUser, bot, true, RequestKind.BehaviourChat);
+                User user = bot.lastBehaviorUser;
+                if (string.IsNullOrEmpty(that))
+                {
+                    that = user.That;
+                }
+                Request r = new Request(sentStr, user , that, bot, true, RequestKind.BehaviourChat);
                 Result res= bot.Chat(r, graphName);
                 //bot.lastBehaviorChatOutput=res.Output;
                 bot.lastBehaviorChatOutput = "";

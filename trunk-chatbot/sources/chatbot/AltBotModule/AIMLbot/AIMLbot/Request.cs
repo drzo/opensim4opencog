@@ -51,6 +51,7 @@ namespace AltAIMLParser
         StateMachineProcess = TemplateExpander | FSM | Process,
         BehaviourProcess = TemplateExpander | BTX | Realtime | Process,
         EvalAIMLHandler = ForString | EventLang | Process | SubProcess,
+        CommandAndChatProcessor = EvalAIMLHandler | ChatRealTime | BackgroundThread | Process | ForString | EventLang | Process | SubProcess,
     }
 
     /// <summary>
@@ -213,7 +214,19 @@ namespace AltAIMLParser
 
         public RequestKind RequestType;
         public bool ResponderSelfListens { get; set; }
-        public bool SaveResultsOnJustHeard { get; set; }
+        public bool? _SaveResultsOnJustHeard = false;
+
+        public bool SaveResultsOnJustHeard
+        {
+            get
+            {
+                if (!IsToplevelRequest) return false;
+                if (_SaveResultsOnJustHeard.HasValue) return _SaveResultsOnJustHeard.Value;
+                //default
+                return IsToplevelRealtimeChat(IsToplevelRequest, RequestKind.NaturalLang);
+            }
+            set { _SaveResultsOnJustHeard = value; }
+        }
 
         public bool IsSynchronis { get; set; }
 
@@ -457,8 +470,8 @@ namespace AltAIMLParser
         /// <param name="rawInput">The raw input from the user</param>
         /// <param name="user">The user who made the request</param>
         /// <param name="bot">The bot to which this is a request</param>
-        public Request(string rawInput, User user, AltBot bot, bool isToplevel, RequestKind requestType)
-            : this(rawInput, user, user.That, bot.BotAsUser, bot, null, null, isToplevel, requestType)
+        public Request(Unifiable rawInput, User user, Unifiable thatSaid, AltBot bot, bool isToplevel, RequestKind requestType)
+            : this(rawInput, user, thatSaid, bot.BotAsUser, bot, null, null, isToplevel, requestType)
         {
 
         }
@@ -476,10 +489,25 @@ namespace AltAIMLParser
         public Request(Unifiable rawInput, User user, Unifiable thatSaid, User targetUser, AltBot bot, Request parent, GraphMaster graphMaster, bool isToplevel, RequestKind requestType)
             : this(bot.GetQuerySettings(), false) // Get query settings intially from user
         {
+            this.RaiseError = new ExceptionFactoryMethod(
+                (f, a) =>
+                    {
+                        var ex = bot.RaiseError(f + " in " + this.ToRequestString(), a);
+                        if (LogicalParticleFilter1.GlobalSharedSettings.IsDougsMachine)
+                        {
+                            throw ex;
+                        }
+                        return ex;
+                    });
+            if (parent != null)
+            {
+                this.ParentRequest = parent;
+                CopyToRequest(parent, this);
+            }
             ExitQueue = new CommitQueue();
             SideEffects = new CommitQueue();
             TargetBot = bot;
-            ChatInput = new Utterance(null, user, targetUser, rawInput,-1);// RTParser.Utterance.GetParsedUserInputSentences(thisRequest, rawInput);
+            ChatInput = new Utterance(null, user, targetUser, rawInput, -1);// RTParser.Utterance.GetParsedUserInputSentences(thisRequest, rawInput);
             this.Requester = user;
             this.bot = bot;
             this.StartedOn = DateTime.Now;
@@ -576,14 +604,12 @@ namespace AltAIMLParser
                 TargetSettings = parent.TargetSettings;
             }
             UndoStackValue = new UndoStack(this);
-            if (thatSaid.AsString().Contains("TAG-"))
+            bool englishChat = requestType.ContainsAny(RequestKind.NaturalLang);
+            if (englishChat)
             {
-                throw new NullReferenceException("invalid ThatSaid " + this);
-            }
-            if (That.AsString().Contains("TAG-"))
-            {
-                throw new NullReferenceException("invalid That " + this);
-            }
+                CheckEnglish(thatSaid);
+            }                        
+
             if (!isToplevel)
             {
                 if (parent == null)
@@ -592,6 +618,33 @@ namespace AltAIMLParser
                 }
             }
         }
+
+        private void CheckEnglish(Unifiable thatSaid)
+        {
+            string requestThat = That.AsString();
+            var requestorThat = Requester.That;
+
+            if (user.CheckIsBadEnglish(thatSaid))
+            {
+                RaiseError("invalid thatSaid=" + thatSaid);
+            }
+            if (user.CheckIsBadEnglish(requestThat))
+            {
+                throw RaiseError("invalid That=" + requestThat);
+            }
+            if (requestThat != thatSaid)
+            {
+                var traceThat = this.That;
+                RaiseError("invalid That " + this);
+            }
+            if (requestorThat != thatSaid)
+            {
+                var traceThat = this.That;
+                RaiseError("invalid from requestorThat " + this);
+            }
+        }
+
+        protected ExceptionFactoryMethod RaiseError;
 
 
         public void SetSpeakerAndResponder(User speaker, User targetUser)
@@ -1123,19 +1176,16 @@ namespace AltAIMLParser
         public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User requester, Unifiable thatSaid, User requestee,
                                               AltBot rTPBot, Request parent, GraphMaster graphMaster, RequestKind kind)
         {
-            Unifiable thatToUse = thatSaid ?? That;
-            var subRequest = new MasterRequest(templateNodeInnerValue, requester ?? Requester, thatToUse,
-                                               requestee ?? Responder,
-                                               rTPBot ?? TargetBot, parent, graphMaster ?? Graph, false, kind);
+            var subRequest = new MasterRequest(templateNodeInnerValue, requester, thatSaid,
+                                               requestee, rTPBot ?? TargetBot, parent, graphMaster, false, kind);
             CopyToRequest(this, subRequest);
             return subRequest;
         }
 
         public static void CopyToRequest(Request request, Request subRequest)
         {
-            subRequest.Graph = request.Graph;
+            subRequest.sGraph = subRequest.sGraph ?? request.sGraph;
             subRequest.depth = request.depth + 1;
-            subRequest.ParentRequest = request;
             subRequest.StartedOn = request.StartedOn;
             subRequest.TimesOutAt = request.TimesOutAt;
             subRequest.TargetSettings = request.TargetSettings;
@@ -1261,14 +1311,35 @@ namespace AltAIMLParser
         {
             get
             {
+                var t = That0;
+                if (user.CheckIsBadEnglish(t))
+                {
+                    bot.Logger.Warn("Just said is bad english: " + t);
+                    t = That0;
+                }
+                return t;
+            }
+            set
+            {
+                user.CheckIsBadEnglish(value);
+                That0 = value;
+            }
+        }
+        public Unifiable That0
+        {
+            get
+            {
                 Unifiable something;
+                if (IsSomething(ithat, out something)) return something;
                 if (User.ThatIsStoredBetweenUsers)
                 {
                     if (Requester != null && IsSomething(Requester.That, out something)) return something;
                     if (Responder != null && IsSomething(Responder.JustSaid, out something)) return something;
-                    return Unifiable.EnglishNothing;
+                    if (User.ThatIsONLYStoredBetweenUsers)
+                    {
+                        return Unifiable.EnglishNothing;
+                    }
                 }
-                if (IsSomething(ithat, out something)) return something;
                 string u1 = null;
                 string u2 = null;
                 Unifiable r1 = RequestThat();
@@ -1340,7 +1411,7 @@ namespace AltAIMLParser
 
         public Unifiable RequestThat()
         {
-            if (User.ThatIsStoredBetweenUsers) throw new InvalidOperationException("must User.get_That()");
+            if (User.ThatIsONLYStoredBetweenUsers) throw RaiseError("must User.get_That()");
             var req = this;
             while (req != null)
             {
@@ -1415,7 +1486,7 @@ namespace AltAIMLParser
 
         public SettingsDictionary GetSubstitutions(string named, bool createIfMissing)
         {
-            var subst = TargetBot.GetDictionary(named, "substitutions", createIfMissing, true);
+            var subst = TargetBot.GetDictionary(named, "substitutions", createIfMissing, true, this);
             if (subst == null || subst is User)
             {
 
@@ -1843,6 +1914,45 @@ namespace AltAIMLParser
         }
 
         #endregion
+
+        public static bool IsToplevelRealtimeChat(bool isToplevel, RequestKind requestType)
+        {
+            return isToplevel && requestType.ContainsAll(RequestKind.NaturalLang | RequestKind.Realtime) &&
+                   !requestType.ContainsAny(RequestKind.TagHandler | RequestKind.BackgroundThread);
+        }
+    }
+
+    public delegate Exception ExceptionFactoryMethod(string f,params object[] arg);
+
+    public static class EnumExtensions
+    {
+        public static ulong ulongValue(this Enum flags)
+        {
+            return (ulong) flags.GetHashCode();
+        }
+        private static ulong ulongValue(this ValueType flags)
+        {
+            return ulongValue((Enum)flags);
+        }
+        public static bool ContainsAll<T>(this T flags, T mask) where T : struct
+        {
+            ulong umask = ulongValue(mask);
+            if (umask == 0)
+            {
+                throw new ArgumentException("umask should not be 0", "mask");
+            }
+            return (ulongValue(flags) & umask) != umask;
+        }
+
+        public static bool ContainsAny<T>(this T flags, T mask) where T: struct
+        {
+            ulong umask = ulongValue(mask);
+            if (umask == 0)
+            {
+                throw new ArgumentException("umask should not be 0", "mask");
+            }
+            return (ulongValue(flags) & umask) != 0;
+        }
     }
 }
 

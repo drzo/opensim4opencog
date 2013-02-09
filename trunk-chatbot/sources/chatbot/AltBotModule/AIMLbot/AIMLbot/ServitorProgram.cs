@@ -175,7 +175,8 @@ namespace AltAIMLbot
 
         public string respondToChat(string input)
         {
-            return servitor.respondToChat(input, curUser, true, RequestKind.ChatRealTime);
+            RequestResult requestAcceptInput;
+            return servitor.respondToChat(input, curUser, true, RequestKind.ChatRealTime, out requestAcceptInput);
         }
 
         public void Terminate()

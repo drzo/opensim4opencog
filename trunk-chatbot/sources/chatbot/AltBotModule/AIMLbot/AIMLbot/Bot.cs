@@ -1224,7 +1224,8 @@ namespace RTParser
         /// <returns>the result to be output to the user</returns>
         public AltAIMLbot.Result Chat(string rawInput, string UserGUID)
         {
-            Request request = new Request(rawInput, FindOrCreateUser(UserGUID), this, true, RequestKind.ChatRealTime);
+            User user = FindOrCreateUser(UserGUID);
+            Request request = new Request(rawInput, user, user.That, this, true, RequestKind.ChatRealTime);
             return this.Chat(request);
         }
 
@@ -1519,7 +1520,7 @@ namespace RTParser
         {
             if (StaticXMLUtils.IsBlank(templateNode)) return "";
             var imaginaryUser = LastUser;
-            Request request = new Request("evalTemplateNode Request", imaginaryUser, this, false,
+            Request request = new Request("evalTemplateNode Request", imaginaryUser, imaginaryUser.That, this, false,
                                           requestType | RequestKind.TemplateExpander);
             AltAIMLbot.Result result = new MasterResult(request.user, this, request);
             AltAIMLbot.Utils.SubQuery query = new SubQuery("evalTemplateNode SubQuery", result, request);
@@ -2579,7 +2580,7 @@ The AltAIMLbot program.
                 if (path[0] == "substitutions")
                 {
                     ISettingsDictionary f = GetDictionary(string.Join(".", path, 1, path.Length - 1), "substitutions",
-                                                          true, true);
+                                                          true, true, null);
                     if (f != null) return SDCAST(f);
                 }
                 else
@@ -2600,7 +2601,7 @@ The AltAIMLbot program.
             return null;
         }
 
-        public ISettingsDictionary GetDictionary(string named, string type, bool createIfMissing, bool isSubsts)
+        public ISettingsDictionary GetDictionary(string named, string type, bool createIfMissing, bool isSubsts, Request request)
         {
             lock (AllDictionaries)
             {
@@ -2618,9 +2619,9 @@ The AltAIMLbot program.
                                                            : MakeSettingsDictionary(named));
                         User user = ExemplarUser ?? BotAsUser;
                         Request r = //user.CurrentRequest ??
-                            user.CreateRequest(
-                                "@echo <!-- loadDictionary '" + named + "' from '" + type + "' -->",
-                                Unifiable.EnglishNothing, BotAsUser, false, RequestKind.BotPropertyEval);
+                            user.CreateRequest("@echo <!-- loadDictionary '" + named + "' from '" + type + "' -->",
+                                               BotAsUser, Unifiable.EnglishNothing, null, request, false,
+                                               RequestKind.AIMLLoader);
                         loadDictionary(dict, named, type, r);
                     }
                 }

@@ -3691,5 +3691,11 @@ The AIMLbot program.
             throw new NotImplementedException();
         }
 #endif
+
+        private static AltBot _lastAltBot;
+        public static AltBot SingleInstance
+        {
+            get { return _lastAltBot; }
+        }
     }
 }

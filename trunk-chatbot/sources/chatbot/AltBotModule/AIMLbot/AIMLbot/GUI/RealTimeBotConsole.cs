@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using AltAIMLParser;
 using AltAIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -163,7 +164,9 @@ namespace RTParser.GUI
                 submitButton.Enabled = false;
                 TodoThread = new Thread(() =>
                                             {
-                                                robot.AcceptInput(WriteLine, text, user);
+                                                RequestResult requestAcceptInput;
+                                                robot.AcceptInput(WriteLine, text, user, true,
+                                                                  RequestKind.CommandAndChatProcessor, out requestAcceptInput);
                                                 if (InvokeRequired)
                                                 {
                                                     Invoke(new ThreadStart(() =>

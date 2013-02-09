@@ -2639,7 +2639,8 @@ namespace AltAIMLbot
                     bot.lastBehaviorChatInput = bot.chatInputQueue.Dequeue();
                     sentStr += bot.lastBehaviorChatInput;
                 }
-                Request r = new Request(sentStr, bot.lastBehaviorUser, bot, true, RequestKind.BehaviourChat);
+                User user = bot.lastBehaviorUser;
+                Request r = new Request(sentStr, user, user.That, bot, true, RequestKind.BehaviourChat);
                 Result res = bot.Chat(r, graphName);
                 //bot.lastBehaviorChatOutput=res.Output;
                 bot.lastBehaviorChatOutput = "";
@@ -3344,7 +3345,7 @@ namespace AltAIMLbot
                 //BTXmlNode resultTemplateNode = AIMLTagHandler.getNode("<template>" + myNode.InnerXml + "</template>");
                 BTXmlDocument resultAIMLDoc = new BTXmlDocument();
                 resultAIMLDoc.LoadXml("<aiml graph='" + graphName + "'>" + myNode.InnerXml + "</aiml>");
-                bot.loadAIMLFromXML(resultAIMLDoc, "dynamic_code");
+                bot.loadAIMLFromXML(resultAIMLDoc, "dynamic_code_from_btx");
                 //bot.evalTemplateNode(templateNode);
             }
             catch (Exception e)

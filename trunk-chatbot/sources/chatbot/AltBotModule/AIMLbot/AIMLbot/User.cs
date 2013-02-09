@@ -49,8 +49,8 @@ namespace AltAIMLbot
         {
             try
             {
-                var R = CreateRequest("ONUSER" + name + " " + UserID, ResponderJustSaid, rbot.BotAsUser, true,
-                                      RequestKind.EventProcessor);
+                var R = new Request("ONUSER" + name + " " + UserID, this, Unifiable.EnglishNothing, rbot,
+                                    true, RequestKind.EventProcessor);
                 R.Graph = robot.DefaultEventGraph;
                 R.AddGraph(robot.DefaultEventGraph);
                 R.AddGraph(StartGraph);
@@ -79,6 +79,7 @@ namespace AltAIMLbot
             }
         }
         public static bool ThatIsStoredBetweenUsers = true;
+        public static bool ThatIsONLYStoredBetweenUsers = false;
         public readonly object QueryLock = new object();
         public bool IsValid { get; set; }
         #region Attributes
@@ -151,7 +152,7 @@ namespace AltAIMLbot
         public AltBot bot { get; set; }
         public AltBot rbot
         {
-            get { return bot; }
+            get { return bot ?? AltBot.SingleInstance; }
         }
         public TaskQueueHandler OnTaskAtATimeHandler
         {
@@ -897,51 +898,94 @@ namespace AltAIMLbot
         {
             get
             {
-                Unifiable something;
-                var lastResponder = this.LastResponder;
-                if (lastResponder != null)
+                var t = That0;
+                if (CheckIsBadEnglish(t))
                 {
-                    var tt = lastResponder.JustSaid;
-                    if (IsSomething(tt, out something)) return something;
+                    rbot.Logger.Warn("That is bad english: " + t);
+                    t = That0;
                 }
+                return t;
+            }
+            set
+            {
+                if (CheckIsBadEnglish(value)) return;
+                That0 = value;
+            }
+        }
+        public Unifiable That0
+        {       
+            get
+            {
+                Unifiable something;
                 if (Predicates != null)
                 {
                     var tt = Predicates.grabSetting("that");
                     if (IsSomething(tt, out something)) return something;
                 }
+                var lastResponder = this.LastResponder;
+                if (lastResponder != null)
+                {
+                    var tt = lastResponder.JustSaid;
+                    if (IsSomething(tt, out something))
+                    {
+                        rbot.Logger.Warn("using last responder to guess that=" + something);
+                        return something;
+                    }
+                }
                 Result r = GetResult(0, true) ?? GetResult(0, false, lastResponder);
                 if (r != null && IsSomething(r.NormalizedOutput, out something))
                 {
-
+                    rbot.Logger.Warn("using last Result to guess that=" + something);
                     return something;
                 }
                 if (lastResponder != null && IsSomething(lastResponder.JustSaid, out something)) return something;
                 if (ThatIsStoredBetweenUsers)
                 {
-                    return Unifiable.EnglishNothing;
+                    if (ThatIsONLYStoredBetweenUsers) return Unifiable.EnglishNothing;
                 }
                 var fr = CurrentRequest;
                 while
                     (fr != null)
                 {
                     var frithat = fr.ithat;
-                    if (IsSomething(frithat, out something)) return something;
+                    if (IsSomething(frithat, out something))
+                    {
+                        rbot.Logger.Warn("using last Request to guess that=" + something);
+                        return something;
+                    }
                     fr = fr.ParentRequest;
                 }
-                if (IsSomething(getLastBotOutputForThat(), out something)) return something;
+                if (IsSomething(getLastBotOutputForThat(), out something))
+                {
+                    rbot.Logger.Warn("using getLastBotOutputForThat to guess that=" + something);
+                    return something;
+                }
                 return Unifiable.EnglishNothing;
             }
             set
             {
-                if (IsNullOrEmpty(value)) throw new NullReferenceException("set_That: " + this);
+                if (IsNullOrEmpty(value))
+                {
+                    rbot.RaiseError("set_That: " + this);
+                    return;
+                }
+                if (!IsValue(value))
+                {
+                    rbot.RaiseError("set_That: !IsValue: " + value + " for " + this);
+                    return;
+                }
                 if (!IsEnglish(value))
                 {
+                    rbot.RaiseError("set_That: !IsEnglish: " + value + " for " + this);
                     return;
                 }
                 Result r = GetResult(0, true);
                 if (r != null)
                 {
-                    r.SetOutput = (value);
+                    if (r.RawOutput == null)
+                    {
+                        r.SetOutput = (value);
+                    }
                 }
                 Predicates["that"] = value;
                 if (CurrentRequest != null)
@@ -949,7 +993,7 @@ namespace AltAIMLbot
                     CurrentRequest.ithat = value;
                 }
                 var LastResponder = this.LastResponder;
-                if (LastResponder != null)
+                if (LastResponder != null && ThatIsStoredBetweenUsers)
                 {
                     LastResponder.JustSaid = value;
                 }
@@ -965,24 +1009,43 @@ namespace AltAIMLbot
             return Unifiable.EnglishNothing;
         }
 
-        public Unifiable _JustSaid;
+        //public Unifiable _JustSaid;
 
         public Unifiable JustSaid
         {
             get
             {
+                var t = JustSaid0;
+                if (CheckIsBadEnglish(t))
+                {
+                    rbot.Logger.Warn("Just said is bad english: " + t);
+                    t = JustSaid0;
+                }
+                return t;
+            }
+            set
+            {
+                if (CheckIsBadEnglish(value)) return;
+                JustSaid0 = value;
+            }
+        }
+        public Unifiable JustSaid0
+        {
+            get
+            {
                 //if (true) return That;
                 Unifiable something;
-                if (IsSomething(_JustSaid, out something)) return something;
+                //if (IsSomething(_JustSaid, out something)) return something;
+                var vv = Predicates.grabSetting("lastinput,lastsaid");
+                if (IsSomething(vv, out something)) return something;
                 if (LastResponder != null)
                 {
-                    var vv = Predicates.grabSetting("lastinput,lastsaid");
+                    vv = LastResponder.Predicates.grabSetting("lastheard,that");
                     if (IsSomething(vv, out something)) return something;
                     var llr = LastResponder.LastResponder;
                     if (llr != null && llr != this)
                     {
-                        vv = LastResponder.Value.Predicates.grabSetting("lastheard,that");
-                        if (IsSomething(vv, out something)) return something;
+                        return llr.That;
                     }
                     // infinate loop here -> return LastReponder.ResponderJustSaid;
                 }
@@ -990,21 +1053,8 @@ namespace AltAIMLbot
             }
             set
             {
-                if (IsNullOrEmpty(value))
-                {
-                    rbot.RaiseError(new InvalidOperationException("set_JustSaid: " + this));
-                    return;
-                }
-                if (!IsValue(value))
-                {
-                    rbot.RaiseError(new InvalidOperationException("set_JustSaid: TAG: " + value + " for " + this));
-                    return;
-                }
-                if (!IsEnglish(value))
-                {
-                    return;
-                }
-
+                if (CheckIsBadEnglish(value)) return;
+                var _JustSaid = this.JustSaid;
                 // the (_JustSaid != value) holds back the infinate looping                
                 if (_JustSaid == null || TextPatternUtils.SymTrim(_JustSaid).ToUpper() != StaticAIMLUtils.SymTrim(value).ToUpper())
                 {
@@ -1015,13 +1065,46 @@ namespace AltAIMLbot
                         _JustSaid = value;
                         Predicates.addSetting("lastsaid", value);
                         Predicates.addSetting("lastinput", value);                        
-                        if (LastResponder != null)
+                        if (LastResponder != null && ThatIsStoredBetweenUsers)
                         {
-                            LastResponder.ResponderJustSaid = value;
+                            LastResponder.That = value;
                         }
                     }
                 }
             }
+        }
+
+        public bool CheckIsBadEnglish(Unifiable value)
+        {
+            Action<string> RaiseError = (e) => rbot.RaiseError(e);
+            if (IsNullOrEmpty(value))
+            {
+                RaiseError("IsNullOrEmpty: " + value + " for " + this);
+                return true;
+            }
+            if (!IsValue(value))
+            {
+                RaiseError("!IsValue: " + value + " for " + this);
+                return true;
+            }
+            string s = value.AsString().ToUpper();
+            if (s.Contains("TAG-"))
+            {
+                RaiseError("TAG-*: " + value + " for " + this);
+                return true;
+            }
+            var fn = Unifiable.IsFalseOrNo(value);
+            if (fn)
+            {
+                return false;
+            }
+            if (s == "NOTHING") return false;
+            if (!IsEnglish(value))
+            {
+                RaiseError("!IsEnglish: " + value + " for " + this);
+                return true;
+            }
+            return false;
         }
 
         private bool IsEnglish(Unifiable value)
@@ -1042,51 +1125,6 @@ namespace AltAIMLbot
             if (svalue.Contains("*"))
                 return false;
             return true;
-        }
-
-        public Unifiable ResponderJustSaid
-        {
-            get
-            {
-                return That;
-                {
-                    var vv = Predicates.grabSetting("that");
-                    if (Unifiable.IsMulti(vv))
-                    {
-                        AltBot.writeDebugLine("WARNING ONLY USING ONE Result: " + Unifiable.DescribeUnifiable(vv));
-                        vv = ((Unifiable)vv).Possibles[0];
-                    }
-                    Unifiable output;
-                    if (IsSomething(vv, out output))
-                    {
-                        return output;
-                    }
-                    if (LastResponder != null) return LastResponder.JustSaid;
-                    return That;
-                }
-            }
-            set
-            {
-                if (IsNullOrEmpty(value))
-                {
-                    rbot.RaiseError(new InvalidOperationException("set_ResponderJustSaid: " + this));
-                    return;
-                }
-                if (!IsValue(value))
-                {
-                    rbot.RaiseError(
-                        new InvalidOperationException("set_ResponderJustSaid: !IsValue: " + value + " for " + this));
-                    return;
-                }
-                That = value;
-                return;
-                if (LastResponder != null)
-                {
-                    LastResponder.JustSaid = value;
-                }
-                Predicates["that"] = value;
-                //ithat = value;
-            }
         }
 
         public bool IsNamed(string lname)
@@ -1521,8 +1559,7 @@ namespace AltAIMLbot
         {
             string[] hostSystemGetFiles = HostSystem.GetFiles(userdir, "*.aiml");
             if (hostSystemGetFiles == null || hostSystemGetFiles.Length <= 0) return;
-            var request = new Request("@echo load user aiml ", this, Unifiable.EnglishNothing, rbot.BotAsUser, bot,
-                                      null, StartGraph, true, RequestKind.AIMLLoader);
+            var request = bot.GetBotRequest("@echo load user aiml " + userdir);
             request.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
             request.Graph = StartGraph;
             request.LoadingFrom = userdir;
@@ -1679,24 +1716,29 @@ namespace AltAIMLbot
             return this.HeardSelfSayGraph;// GetResponseGraph(this);
         }
 
-        public MasterRequest CreateRequest(Unifiable message, User target, bool isToplevel, RequestKind requestType)
+        public MasterRequest CreateRequest(Unifiable message, Unifiable thatsaid, bool isToplevel, RequestKind requestType)
         {
-            target = target ?? LastResponder.Value;
-            Unifiable targetJustSaid = ResponderJustSaid;
-            if (target != null && !Unifiable.IsNull(targetJustSaid)) targetJustSaid = target.JustSaid;
-            var mr = CreateRequest(message, target, targetJustSaid, GetResponseGraph(target), null, isToplevel,
+            User botAsUser = rbot.BotAsUser;
+            botAsUser = botAsUser ?? LastResponder.Value;
+            Unifiable targetJustSaid = thatsaid ?? That;
+            if (botAsUser != null && !Unifiable.IsNull(targetJustSaid)) targetJustSaid = botAsUser.JustSaid;
+            var mr = CreateRequest(message, botAsUser, targetJustSaid, GetResponseGraph(botAsUser), null, isToplevel,
                                    requestType);
             return mr;
         }
 
-        public MasterRequest CreateRequest(Unifiable message, Unifiable said, User target, bool isToplevel, RequestKind requestType)
+        public MasterRequest CreateRequest(Unifiable message, Unifiable thatsaid, User target, bool isToplevel, RequestKind requestType)
         {
-            var mr = CreateRequest(message, target, said, GetResponseGraph(target), null, isToplevel, requestType);
+            var mr = CreateRequest(message, target, thatsaid, GetResponseGraph(target), null, isToplevel, requestType);
             return mr;
         }
 
-        public MasterRequest CreateRequest(Unifiable message, User target, Unifiable said, GraphMaster G, Request parentRequest, bool isToplevel, RequestKind requestType)
+        public MasterRequest CreateRequest(Unifiable message, User target, Unifiable thatsaid, GraphMaster G, Request parentRequest, bool isToplevel, RequestKind requestType)
         {
+            if (target == this)
+            {
+                rbot.RaiseError(new InvalidOperationException("cant target self!"));
+            }
             if (G == null) G = GetResponseGraph(target);
             bool asIsToplevelRequest = true;
             //depth = 0;
@@ -1714,8 +1756,12 @@ namespace AltAIMLbot
                     target = this;
                 }
             }
-            Unifiable targetJustSaid = said ?? ResponderJustSaid;
-            if (target != null && !Unifiable.IsNull(said)) targetJustSaid = target.JustSaid;
+            Unifiable targetJustSaid = thatsaid ?? That;
+            if (target != null && Unifiable.IsNull(targetJustSaid))
+            {
+                targetJustSaid = target.JustSaid;
+                rbot.Logger.Warn("using target.JustSaid = " + targetJustSaid);
+            }
             if (parentRequest == null)
             {
                 request = new MasterRequest(message, this, targetJustSaid, target, bot, parentRequest, G, isToplevel, requestType);
@@ -1763,7 +1809,7 @@ namespace AltAIMLbot
             }
             return request;
         }
-
+        
 
         public void StampResponseGiven()
         {

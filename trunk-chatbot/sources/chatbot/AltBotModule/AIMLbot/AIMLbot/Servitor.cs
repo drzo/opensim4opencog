@@ -701,20 +701,31 @@ namespace AltAIMLbot
 
         internal string respondToChat(string input, User user)
         {
-            return respondToChat(input, user, true, RequestKind.ChatRealTime);
+            RequestResult requestResult;
+            return respondToChat(input, user, true, RequestKind.ChatRealTime, out requestResult);
         }
-        public string respondToChat(string input, User curUser, bool isToplevel, RequestKind requestType)
+
+        public string respondToChat(string input, User curUser, bool isToplevel, RequestKind requestType, out RequestResult requestResult)
         {
-            bool doHaviours = tmBehaveEnabled;            
-            if (string.IsNullOrEmpty(input)) return input;
+            bool doHaviours = tmBehaveEnabled;
+            if (string.IsNullOrEmpty(input))
+            {
+                requestResult = new RequestResult(curUser, input, curBot.BotAsUser, curUser.That);
+                requestResult.chatOutputillBeInBackground = false;
+                requestResult.Error = "input was blank";
+                return input;
+            }
             input = input.TrimStart();
             if (input.StartsWith("@"))
             {
-                curBot.AcceptInput(Console.WriteLine, input, curUser);
+                curBot.AcceptInput(Console.WriteLine, input, curUser, isToplevel, requestType, out requestResult);
                 return "@rem " + input;
             }
             if (input.StartsWith("<"))
             {
+                requestResult = new RequestResult(curUser, input, curBot.BotAsUser, curUser.That);
+                requestResult.chatOutputillBeInBackground = false;
+                requestResult.OutputText = "loaded some aiml";
                 AltBot.tl_aimlResult = new AltBot.AimlResult();
                 RunStatus rs = curBot.myBehaviors.runBTXML(input);
                 AltBot.AimlResult altBottl_aimlResult = AltBot.tl_aimlResult;
@@ -722,11 +733,10 @@ namespace AltAIMLbot
                 return string.Format("@rem <{0}>=<{1}>", rs, altBottl_aimlResult);
             }
             curBot.isPerformingOutput = true;
-            if (curBot.myBehaviors.waitingForChat)
+            if (curBot.myBehaviors.waitingForChat && isToplevel)
             {
                 Console.WriteLine(" ************ FOUND waitingForChat ************");
-                curUser.Predicates.updateSetting("lastinput", input);
-                prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
+                MaybeUpdateUserJustSaidLastInput(isToplevel, requestType, curUser, input, true);
                 //curBot.lastBehaviorChatInput = input;
                 curBot.myBehaviors.logText("waitingForChat USER INPUT:" + input);
                 curBot.chatInputQueue.Clear();
@@ -741,17 +751,19 @@ namespace AltAIMLbot
                 curBot.lastBehaviorChatOutput = "";
                 myScheduler.SleepAllTasks(30000);
                 curBot.isPerformingOutput = true;
+
+                requestResult = new RequestResult(curUser, input, curBot.BotAsUser, curUser.That);
+                requestResult.chatOutputillBeInBackground = true;
                 return "";
             }
             // Try the event first
             string fnd;
-            if (doHaviours && curBot.myBehaviors.hasEventHandler("onchat", out fnd))
+            if (doHaviours && isToplevel && curBot.myBehaviors.hasEventHandler("onchat", out fnd))
             {
                 try
                 {
                     Console.WriteLine(" ************ FOUND ONCHAT ************");
-                    curUser.Predicates.updateSetting("lastinput", input);
-                    prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
+                    MaybeUpdateUserJustSaidLastInput(isToplevel, requestType, curUser, input, true);
                     //curBot.lastBehaviorChatInput = input;
                     curBot.isPerformingOutput = false;
                     curBot.myBehaviors.logText("ONCHAT USER INPUT:" + input);
@@ -773,7 +785,11 @@ namespace AltAIMLbot
                     {
                         curBot.isPerformingOutput = true;
                         curBot.myBehaviors.logText("ONCHAT IMMED RETURN:" + chatOutput);
-                        prologEngine.postListPredToMt("lastoutput", chatOutput, "lastoutputMt");
+                        MaybeUpdateBotJustSaidLastOutput(isToplevel, requestType, curUser, chatOutput, true, false,
+                                                         false);
+                        requestResult = new RequestResult(curUser, input, curBot.BotAsUser, curUser.That);
+                        requestResult.OutputText = chatOutput;
+                        requestResult.chatOutputillBeInBackground = false;
                         return chatOutput;
                     }
                 }
@@ -783,50 +799,60 @@ namespace AltAIMLbot
                 }
             }
             // else try the named behavio}
-            if (doHaviours && curBot.myBehaviors.definedBehavior("chatRoot"))
+            if (doHaviours && isToplevel && curBot.myBehaviors.definedBehavior("chatRoot"))
             {
-              try
-              {
-                curUser.JustSaid = input;
-                curUser.Predicates.updateSetting("lastinput", input);
-                prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
-                //curBot.lastBehaviorChatInput = input;
-                curBot.isPerformingOutput = false;
-                curBot.myBehaviors.logText("CHATROOT USER INPUT:" + curBot.lastBehaviorChatOutput);
-                curBot.chatInputQueue.Clear();
-                curBot.chatInputQueue.Enqueue(input);
-                curBot.lastBehaviorUser = curUser;
-                //curBot.myBehaviors.runBotBehavior("chatRoot", curBot);
-                curBot.flushOutputQueue();
-                //curBot.myBehaviors.queueEvent("chatRoot");
-                //curBot.processOutputQueue();
-                curBot.lastBehaviorChatOutput = "";
-                myScheduler.SleepAllTasks(30000);
-                myScheduler.ActivateBehaviorTask("chatRoot");
-                string chatOutput = curBot.lastBehaviorChatOutput;
-                if (!string.IsNullOrEmpty(chatOutput))
+                try
+                {
+                    MaybeUpdateUserJustSaidLastInput(isToplevel, requestType, curUser, input, true);
+                    //curBot.lastBehaviorChatInput = input;
+                    curBot.isPerformingOutput = false;
+                    curBot.myBehaviors.logText("CHATROOT USER INPUT:" + curBot.lastBehaviorChatOutput);
+                    curBot.chatInputQueue.Clear();
+                    curBot.chatInputQueue.Enqueue(input);
+                    curBot.lastBehaviorUser = curUser;
+                    //curBot.myBehaviors.runBotBehavior("chatRoot", curBot);
+                    curBot.flushOutputQueue();
+                    //curBot.myBehaviors.queueEvent("chatRoot");
+                    //curBot.processOutputQueue();
+                    curBot.lastBehaviorChatOutput = "";
+                    myScheduler.SleepAllTasks(30000);
+                    myScheduler.ActivateBehaviorTask("chatRoot", true);
+                    string chatOutput = curBot.lastBehaviorChatOutput;
+                    if (!string.IsNullOrEmpty(chatOutput))
+                    {
+                        curBot.isPerformingOutput = true;
+                        curBot.myBehaviors.logText("CHATROOT IMMED RETURN:" + chatOutput);
+                        MaybeUpdateBotJustSaidLastOutput(isToplevel, requestType, curUser, chatOutput, true, false,
+                                                         false);
+                        requestResult = new RequestResult(curUser, input, curBot.BotAsUser, curUser.That);
+                        requestResult.OutputText = chatOutput;
+                        requestResult.chatOutputillBeInBackground = false;
+                        return chatOutput;
+                    }
+                }
+                catch
                 {
                     curBot.isPerformingOutput = true;
-                    curBot.myBehaviors.logText("CHATROOT IMMED RETURN:" + chatOutput);
-                    prologEngine.postListPredToMt("lastoutput", chatOutput, "lastoutputMt");
-                    return chatOutput;
                 }
-              }
-              catch
-              {
-                  curBot.isPerformingOutput = true;
-              }
             }
             // else just do it (no other behavior is defined)
+            return respondToChatThruString(input, curUser, isToplevel, requestType, out requestResult);
+        }
+        public string respondToChatThruString(string input, User curUser, bool isToplevel, RequestKind requestType, out RequestResult requestResult)
+        {
+
+            MaybeUpdateUserJustSaidLastInput(isToplevel, requestType, curUser, input, false);
+            Request r = new Request(input, curUser, curUser.That, curBot, isToplevel, requestType);
+            requestResult = new RequestResult(curUser, input, curBot.BotAsUser, curUser.That);
+            requestResult.request = r;
+
+            curBot.isPerformingOutput = false;
             try
             {
-                curUser.JustSaid = input;
-                curUser.Predicates.updateSetting("lastinput", input);
-                prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
                 //curBot.lastBehaviorChatInput = input;
-                curBot.isPerformingOutput = false;
-                Request r = new Request(input, curUser, curBot, isToplevel, requestType);               
                 Result res = curBot.Chat(r);
+                r.result = res;
+                // get output from result or else use lastBehavouirChatOutput
                 Unifiable output = res.Output;
                 string outputS = (string)output;
                 if (string.IsNullOrEmpty(outputS))
@@ -834,11 +860,13 @@ namespace AltAIMLbot
                     outputS = (string)curBot.lastBehaviorChatOutput;
                     if (string.IsNullOrEmpty(outputS))
                     {
-                        return "";
-                    }
+                        curBot.Logger.Warn("cant get an output for " + r);
+                        requestResult.Error = "No output to regular aiml search";
+                        return "....";
+                    } 
                     output = (Unifiable)outputS;
                 }
-                curBot.BotAsUser.JustSaid = output;
+                requestResult.OutputText = outputS;
                 if (traceServitor)
                 {
                     Console.WriteLine("SERVITOR: respondToChat({0})={1}", input, output);
@@ -846,16 +874,54 @@ namespace AltAIMLbot
                 curBot.lastBehaviorChatOutput = outputS;
                 curBot.isPerformingOutput = true;
                 curBot.myBehaviors.logText("CHAT IMMED RETURN:" + curBot.lastBehaviorChatOutput);
-                prologEngine.postListPredToMt("lastoutput", curBot.lastBehaviorChatOutput, "lastoutputMt");
-                return curBot.lastBehaviorChatOutput;
+                MaybeUpdateBotJustSaidLastOutput(isToplevel, requestType, curUser, outputS, true, false,
+                                 false);
+                return outputS;
             }
-            catch
+            catch(Exception e)
             {
                 curBot.isPerformingOutput = true;
+                requestResult.Error = "" + e;
                 return "...";
             }
 
             curBot.isPerformingOutput = true;
+        }
+
+        public void MaybeUpdateUserJustSaidLastInput(bool isToplevel, RequestKind requestType, User curUser, string input, bool respondingDoneFromQueue)
+        {
+            if (Request.IsToplevelRealtimeChat(isToplevel, requestType))
+            {
+                if (!respondingDoneFromQueue)
+                {
+                    curUser.JustSaid = input;
+                }
+                curUser.Predicates.updateSetting("lastinput", input);
+                prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
+            }            
+        }
+
+        public void MaybeUpdateBotJustSaidLastOutput(bool isToplevel, RequestKind requestType, User curUser, string answer,
+            bool respondingDoneFromQueue, bool asumeUserHeard, bool sayItPhysically)
+        {
+            if (Request.IsToplevelRealtimeChat(isToplevel, requestType))
+            {
+                if (!respondingDoneFromQueue)
+                {
+                    curBot.BotAsUser.JustSaid = answer;
+                }
+                if (asumeUserHeard)
+                {
+                    curUser.That = answer;
+                    curUser.Predicates.updateSetting("that", answer);
+                }
+                if (sayItPhysically)
+                {
+                    sayResponse(answer);
+                }
+                curBot.lastBehaviorChatOutput = answer;
+                prologEngine.postListPredToMt("lastoutput", answer, "lastoutputMt");
+            }
         }
         /*
         public string respondToChat(string input,string UserID)
@@ -940,11 +1006,11 @@ namespace AltAIMLbot
                     }
                     else
                     {
-                        prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
+                        MaybeUpdateUserJustSaidLastInput(true, RequestKind.ChatRealTime, curUser, input, false);
                         string answer = respondToChat(input, curUser);
                         Console.WriteLine("Bot: " + answer);
                         sayResponse(answer);
-                        prologEngine.postListPredToMt("lastoutput", answer, "lastoutputMt");
+                        MaybeUpdateBotJustSaidLastOutput(true, RequestKind.ChatRealTime, curUser, answer, false, true, false);
                     }
                 }
                 catch
@@ -1269,7 +1335,7 @@ namespace AltAIMLbot
                             if ((myInput.Length > 0) && (!myInput.Equals(lastUtterance)))
                             {
                                 Console.WriteLine("Heard: " + myInput);
-                                Request r = new Request(myInput, curUser, curBot, true, RequestKind.MTalkThread);
+                                Request r = new Request(myInput, curUser, curUser.That, curBot, true, RequestKind.MTalkThread);
                                 Result res = curBot.Chat(r);
                                 string myResp = res.Output;
                                 Console.WriteLine("Response: " + myResp);
