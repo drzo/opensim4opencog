@@ -20,7 +20,6 @@ using org.opencyc.api;
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using RTParser.GUI;
-using RTParser.Prolog;
 using RTParser.Utils;
 using RTParser.Variables;
 using RTParser.Web;
@@ -666,7 +665,8 @@ namespace RTParser
             if (showHelp) console("@prolog <load.pl>");
             if (cmd == "prolog")
             {
-                CSPrologMain.Main(args.Split(" \r\n\t".ToCharArray(), StringSplitOptions.RemoveEmptyEntries));
+                throw new NotImplementedException(cmd);
+                //CSPrologMain.Main(args.Split(" \r\n\t".ToCharArray(), StringSplitOptions.RemoveEmptyEntries));
                 return true;
             }
 
@@ -677,7 +677,8 @@ namespace RTParser
                                                                         .Split(" \r\n\t".ToCharArray(),
                                                                                StringSplitOptions.RemoveEmptyEntries)) +
                                 "'],Out),writeq('----------------------------------------------'),writeq(Out),nl,halt.";
-                CSPrologMain.Main(new[] {callme});
+                throw new NotImplementedException(cmd);
+                //CSPrologMain.Main(new[] { callme });
                 return true;
             }
 

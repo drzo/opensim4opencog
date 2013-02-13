@@ -67,7 +67,7 @@ namespace RTParser.Database
             }
         }
 
-        private bool UseCyc = true;
+        private bool UseCyc = false;
         static object UseCycLock = new object();
 
         public CycAccess GetCycAccess

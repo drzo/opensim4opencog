@@ -688,6 +688,10 @@ namespace MushDLR223.Virtualization
                 var fnp = Path.GetFileName(path);
                 var fi = new FileInfo(path);
                 var pdn = new DirectoryInfo(dn);
+                if (!pdn.Exists)
+                {
+                    if (mustExist) return null;
+                }
                 var files = pdn.GetFileSystemInfos();
                 string ffn = Path.GetFileName(fi.FullName).ToLower();
                 foreach (var newFileInfo in files)
@@ -704,6 +708,7 @@ namespace MushDLR223.Virtualization
                         }
                     }
                 }
+                   
                 if (mustExist) return null;
                 string nfn = Path.Combine(dnCased, fnp);
                 return nfn;

@@ -11,6 +11,11 @@ namespace DotLisp
 {
 public class Interpreter
 	{
+    public Interpreter()
+        : this(null)
+    {
+
+    }
     public Interpreter(Interpreter parent)
 		{
         this.Parent = parent;

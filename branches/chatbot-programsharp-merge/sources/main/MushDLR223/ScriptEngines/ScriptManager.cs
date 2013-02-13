@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using java.lang;
+//using java.lang;
 using MushDLR223.Utilities;
 using Exception=System.Exception;
 using Thread = System.Threading.Thread;
@@ -469,7 +469,7 @@ namespace MushDLR223.ScriptEngines
                 if (type.StartsWith("dotlisp"))
                 {
                     return new DotLispInterpreter(self);
-                }
+                }/*
                 if (type.StartsWith("cyc"))
                 {
                     return (ScriptInterpreter)new CycInterpreter(self);
@@ -477,7 +477,7 @@ namespace MushDLR223.ScriptEngines
                 if (type.StartsWith("abcl"))
                 {
                     return (ScriptInterpreter)new ABCLInterpreter(self);
-                }
+                }*/
             }
             return null;
         }
