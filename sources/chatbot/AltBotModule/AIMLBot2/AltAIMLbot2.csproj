@@ -145,215 +145,215 @@
     </Compile>
     <Compile Include="Bot.cs">
     </Compile>
-    <Compile Include="BotConsole.cs">
+    <Compile Include="RTParser\BotConsole.cs">
     </Compile>
-    <Compile Include="ChatDialog.cs">
+    <Compile Include="RTParser\ChatDialog.cs">
     </Compile>
-    <Compile Include="ConversationCondition.cs">
+    <Compile Include="RTParser\ConversationCondition.cs">
     </Compile>
-    <Compile Include="JoinedTextBuffer.cs">
+    <Compile Include="RTParser\JoinedTextBuffer.cs">
     </Compile>
-    <Compile Include="LegacyBot.cs">
+    <Compile Include="RTParser\LegacyBot.cs">
     </Compile>
-    <Compile Include="Proof.cs">
+    <Compile Include="RTParser\Proof.cs">
     </Compile>
     <Compile Include="Request.cs">
     </Compile>
-    <Compile Include="RequestSettings.cs">
+    <Compile Include="RTParser\RequestSettings.cs">
     </Compile>
     <Compile Include="Result.cs">
     </Compile>
-    <Compile Include="SelfLearning.cs">
+    <Compile Include="RTParser\SelfLearning.cs">
     </Compile>
-    <Compile Include="SideEffectStage.cs">
+    <Compile Include="RTParser\SideEffectStage.cs">
     </Compile>
-    <Compile Include="TemplateResult.cs">
+    <Compile Include="RTParser\TemplateResult.cs">
     </Compile>
     <Compile Include="User.cs">
     </Compile>
     <Compile Include="UserDuringProcessing.cs">
     </Compile>
-    <Compile Include="UserManager.cs">
+    <Compile Include="RTParser\UserManager.cs">
     </Compile>
-    <Compile Include="WebScriptExecutor.cs">
+    <Compile Include="RTParser\WebScriptExecutor.cs">
     </Compile>
     <Compile Include="AIMLProcessing\CustomTagLoading.cs">
     </Compile>
     <Compile Include="AIMLProcessing\TagHandlerProcessor.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\aiml.cs">
+    <Compile Include="AIMLTagHandlersU\aiml.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\aimlexec.cs">
+    <Compile Include="AIMLTagHandlersU\aimlexec.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\and.cs">
+    <Compile Include="AIMLTagHandlersU\and.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\bind.cs">
+    <Compile Include="AIMLTagHandlersU\bind.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\bot.cs">
+    <Compile Include="AIMLTagHandlersU\bot.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\category.cs">
+    <Compile Include="AIMLTagHandlersU\category.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\condition.cs">
+    <Compile Include="AIMLTagHandlersU\condition.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\cycassert.cs">
+    <Compile Include="AIMLTagHandlersU\cycassert.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\cyccondition.cs">
+    <Compile Include="AIMLTagHandlersU\cyccondition.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\cycphrase.cs">
+    <Compile Include="AIMLTagHandlersU\cycphrase.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\cycquery.cs">
+    <Compile Include="AIMLTagHandlersU\cycquery.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\cycrandom.cs">
+    <Compile Include="AIMLTagHandlersU\cycrandom.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\cycretract.cs">
+    <Compile Include="AIMLTagHandlersU\cycretract.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\cycsystem.cs">
+    <Compile Include="AIMLTagHandlersU\cycsystem.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\cycterm.cs">
+    <Compile Include="AIMLTagHandlersU\cycterm.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\date.cs">
+    <Compile Include="AIMLTagHandlersU\date.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\dbdelete.cs">
+    <Compile Include="AIMLTagHandlersU\dbdelete.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\dbload.cs">
+    <Compile Include="AIMLTagHandlersU\dbload.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\dbpush.cs">
+    <Compile Include="AIMLTagHandlersU\dbpush.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\dbquery.cs">
+    <Compile Include="AIMLTagHandlersU\dbquery.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\dbupdate.cs">
+    <Compile Include="AIMLTagHandlersU\dbupdate.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\dependentmachine.cs">
+    <Compile Include="AIMLTagHandlersU\dependentmachine.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\evidencestate.cs">
+    <Compile Include="AIMLTagHandlersU\evidencestate.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\evidence_assoc.cs">
+    <Compile Include="AIMLTagHandlersU\evidence_assoc.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\evidence_pattern.cs">
+    <Compile Include="AIMLTagHandlersU\evidence_pattern.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\formal.cs">
+    <Compile Include="AIMLTagHandlersU\formal.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\format.cs">
+    <Compile Include="AIMLTagHandlersU\format.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\gender.cs">
+    <Compile Include="AIMLTagHandlersU\gender.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\get.cs">
+    <Compile Include="AIMLTagHandlersU\get.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\gossip.cs">
+    <Compile Include="AIMLTagHandlersU\gossip.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\guard.cs">
+    <Compile Include="AIMLTagHandlersU\guard.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\guardstar.cs">
+    <Compile Include="AIMLTagHandlersU\guardstar.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\id.cs">
+    <Compile Include="AIMLTagHandlersU\id.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\input.cs">
+    <Compile Include="AIMLTagHandlersU\input.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\inputreq.cs">
+    <Compile Include="AIMLTagHandlersU\inputreq.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\isa.cs">
+    <Compile Include="AIMLTagHandlersU\isa.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\javascript.cs">
+    <Compile Include="AIMLTagHandlersU\javascript.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\lazyClosure.cs">
+    <Compile Include="AIMLTagHandlersU\lazyClosure.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\learn.cs">
+    <Compile Include="AIMLTagHandlersU\learn.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\lex.cs">
+    <Compile Include="AIMLTagHandlersU\lex.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\lexis.cs">
+    <Compile Include="AIMLTagHandlersU\lexis.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\lexset.cs">
+    <Compile Include="AIMLTagHandlersU\lexset.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\liif.cs">
+    <Compile Include="AIMLTagHandlersU\liif.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\lowercase.cs">
+    <Compile Include="AIMLTagHandlersU\lowercase.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\markov.cs">
+    <Compile Include="AIMLTagHandlersU\markov.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\msm.cs">
+    <Compile Include="AIMLTagHandlersU\msm.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\optional.cs">
+    <Compile Include="AIMLTagHandlersU\optional.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\or.cs">
+    <Compile Include="AIMLTagHandlersU\or.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\peekstack.cs">
+    <Compile Include="AIMLTagHandlersU\peekstack.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\person.cs">
+    <Compile Include="AIMLTagHandlersU\person.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\person2.cs">
+    <Compile Include="AIMLTagHandlersU\person2.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\pop.cs">
+    <Compile Include="AIMLTagHandlersU\pop.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\process_msm.cs">
+    <Compile Include="AIMLTagHandlersU\process_msm.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\push.cs">
+    <Compile Include="AIMLTagHandlersU\push.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\random.cs">
+    <Compile Include="AIMLTagHandlersU\random.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\recursiveVerbatum.cs">
+    <Compile Include="AIMLTagHandlersU\recursiveVerbatum.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\regex.cs">
+    <Compile Include="AIMLTagHandlersU\regex.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\response_topic.cs">
+    <Compile Include="AIMLTagHandlersU\response_topic.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\root.cs">
+    <Compile Include="AIMLTagHandlersU\root.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\sentence.cs">
+    <Compile Include="AIMLTagHandlersU\sentence.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\set.cs">
+    <Compile Include="AIMLTagHandlersU\set.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\setevidence.cs">
+    <Compile Include="AIMLTagHandlersU\setevidence.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\setstate.cs">
+    <Compile Include="AIMLTagHandlersU\setstate.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\size.cs">
+    <Compile Include="AIMLTagHandlersU\size.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\soundcode.cs">
+    <Compile Include="AIMLTagHandlersU\soundcode.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\space.cs">
+    <Compile Include="AIMLTagHandlersU\space.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\sr.cs">
+    <Compile Include="AIMLTagHandlersU\sr.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\srai.cs">
+    <Compile Include="AIMLTagHandlersU\srai.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\srai_legacy.cs">
+    <Compile Include="AIMLTagHandlersU\srai_legacy.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\star.cs">
+    <Compile Include="AIMLTagHandlersU\star.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\state.cs">
+    <Compile Include="AIMLTagHandlersU\state.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\substitute.cs">
+    <Compile Include="AIMLTagHandlersU\substitute.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\system.cs">
+    <Compile Include="AIMLTagHandlersU\system.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\template.cs">
+    <Compile Include="AIMLTagHandlersU\template.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\that.cs">
+    <Compile Include="AIMLTagHandlersU\that.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\thatstar.cs">
+    <Compile Include="AIMLTagHandlersU\thatstar.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\think.cs">
+    <Compile Include="AIMLTagHandlersU\think.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\topic.cs">
+    <Compile Include="AIMLTagHandlersU\topic.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\topicstar.cs">
+    <Compile Include="AIMLTagHandlersU\topicstar.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\transition.cs">
+    <Compile Include="AIMLTagHandlersU\transition.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\tscore.cs">
+    <Compile Include="AIMLTagHandlersU\tscore.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\uppercase.cs">
+    <Compile Include="AIMLTagHandlersU\uppercase.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\verbatum.cs">
+    <Compile Include="AIMLTagHandlersU\verbatum.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\version.cs">
+    <Compile Include="AIMLTagHandlersU\version.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\when.cs">
+    <Compile Include="AIMLTagHandlersU\when.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\xml.cs">
+    <Compile Include="AIMLTagHandlersU\xml.cs">
     </Compile>
-    <Compile Include="AIMLTagHandlers\xmlattribute.cs">
+    <Compile Include="AIMLTagHandlersU\xmlattribute.cs">
     </Compile>
     <Compile Include="Conversation\ConversationLog.cs">
     </Compile>
@@ -365,9 +365,9 @@
     </Compile>
     <Compile Include="Conversation\Utterance.cs">
     </Compile>
-    <Compile Include="CycNLTagHandlers\NumberTemplate.cs">
+    <Compile Include="RTParser\CycNLTagHandlers\NumberTemplate.cs">
     </Compile>
-    <Compile Include="CycNLTagHandlers\OptionalOne.cs">
+    <Compile Include="RTParser\CycNLTagHandlers\OptionalOne.cs">
     </Compile>
     <Compile Include="Database\AskDotComFactiodEngine.cs">
     </Compile>
@@ -415,74 +415,65 @@
     </Compile>
     <Compile Include="Unify\BestUnifiable.cs">
     </Compile>
-    <Compile Include="Unify\EmptyUnifiable.cs">
-    </Compile>
     <Compile Include="Unify\StringAppendableUnifiableImpl.cs">
     </Compile>
     <Compile Include="Unify\StringUnifiable.cs">
     </Compile>
-    <Compile Include="Unify\TextPatternUtils.cs">
+    <Compile Include="RTParser\Utils\TextPatternUtils.cs">
     </Compile>
     <Compile Include="Unify\Unifiable.cs">
     </Compile>
-    <Compile Include="Utils\AIMLFormatingTagHandler.cs">
+    <Compile Include="AIMLProcessing\AIMLFormatingTagHandler.cs">
     </Compile>
     <Compile Include="Utils\AIMLLoader.cs">
     </Compile>
     <Compile Include="Utils\AIMLTagHandler.cs">
     </Compile>
-    <Compile Include="Utils\AIMLTagHandlerUtils.cs">
+    <Compile Include="AIMLProcessing\AIMLTagHandlerUtils.cs">
     </Compile>
-    <Compile Include="Utils\AIMLTagHandlerUtils_legacy.cs">
+    <Compile Include="GraphInfo\CategoryInfo.cs">
     </Compile>
-    <Compile Include="Utils\AIMLTagHandler_legacy.cs">
+    <Compile Include="AIMLProcessing\CustomTag.cs">
     </Compile>
-    <Compile Include="Utils\CategoryInfo.cs">
+    <Compile Include="RTParser\Utils\Gender.cs">
     </Compile>
-    <Compile Include="Utils\CustomTag.cs">
+    <Compile Include="RTParser\Utils\GraphLinkInfo.cs">
     </Compile>
-    <Compile Include="Utils\Gender.cs">
+    <Compile Include="XmlGraph\GraphMaster.cs">
     </Compile>
-    <Compile Include="Utils\GraphLinkInfo.cs">
+    <Compile Include="RTParser\Utils\GraphQuery.cs">
     </Compile>
-    <Compile Include="Utils\GraphMaster.cs">
-      <DependentUpon>GraphMaster</DependentUpon>
+    <Compile Include="RTParser\Utils\GuardInfo.cs">
     </Compile>
-    <Compile Include="Utils\GraphQuery.cs">
+    <Compile Include="RTParser\Utils\LoaderOptions.cs">
     </Compile>
-    <Compile Include="Utils\GuardInfo.cs">
-    </Compile>
-    <Compile Include="Utils\LoaderOptions.cs">
-    </Compile>
-    <Compile Include="Utils\LoadingTagHandler.cs">
+    <Compile Include="AIMLProcessing\LoadingTagHandler.cs">
     </Compile>
     <Compile Include="Utils\MatchInfo.cs">
     </Compile>
     <Compile Include="Utils\MatchState.cs">
     </Compile>
-    <Compile Include="Utils\Node.cs">
+    <Compile Include="RTParser\Utils\Node.cs">
     </Compile>
-    <Compile Include="Utils\Node_legacy.cs">
+    <Compile Include="GraphInfo\OutputInfo.cs">
     </Compile>
-    <Compile Include="Utils\OutputInfo.cs">
+    <Compile Include="GraphInfo\PatternInfo.cs">
     </Compile>
-    <Compile Include="Utils\PatternInfo.cs">
+    <Compile Include="RTParser\Utils\QueryList.cs">
     </Compile>
-    <Compile Include="Utils\QueryList.cs">
+    <Compile Include="GraphInfo\ResponseInfo.cs">
     </Compile>
-    <Compile Include="Utils\ResponseInfo.cs">
+    <Compile Include="RTParser\Utils\ResultCache.cs">
     </Compile>
-    <Compile Include="Utils\ResultCache.cs">
-    </Compile>
-    <Compile Include="Utils\StaticAIMLUtils.cs">
+    <Compile Include="AIMLProcessing\StaticAIMLUtils.cs">
     </Compile>
     <Compile Include="Utils\SubQuery.cs">
     </Compile>
-    <Compile Include="Utils\TagHandler.cs">
+    <Compile Include="RTParser\Utils\TagHandler.cs">
     </Compile>
-    <Compile Include="Utils\TemplateInfo.cs">
+    <Compile Include="GraphInfo\TemplateInfo.cs">
     </Compile>
-    <Compile Include="Utils\TestCaseRunner.cs">
+    <Compile Include="RTParser\Utils\TestCaseRunner.cs">
     </Compile>
     <Compile Include="Utils\TextTransformer.cs">
     </Compile>
@@ -490,9 +481,9 @@
     </Compile>
     <Compile Include="Utils\TopicInfo.cs">
     </Compile>
-    <Compile Include="Utils\UndoStack.cs">
+    <Compile Include="RTParser\Utils\UndoStack.cs">
     </Compile>
-    <Compile Include="Utils\UnifibleTagHandler.cs">
+    <Compile Include="RTParser\Utils\UnifibleTagHandler.cs">
     </Compile>
     <Compile Include="Variables\CollectionProperty.cs">
     </Compile>
