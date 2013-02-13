@@ -1,7 +1,0 @@
-create user TestBot1 UnitTester unittest
-create user TestBot2 UnitTester unittest
-create user TestBot3 UnitTester unittest
-create user TestBot4 UnitTester unittest
-create user TestBot5 UnitTester unittest
-create user TestBot6 UnitTester unittest
-
