@@ -20,7 +20,6 @@ using PrologScriptEngine;
 #endif
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
-using RTParser.Prolog;
 using RTParser.Utils;
 using RTParser.Variables;
 using RTParser.Web;

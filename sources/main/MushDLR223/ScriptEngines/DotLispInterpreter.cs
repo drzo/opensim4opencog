@@ -84,7 +84,7 @@ namespace MushDLR223.ScriptEngines
                 if (_dotLispInterpreter == null)
                 {
                     _dotLispInterpreterCount++;
-                    _dotLispInterpreter = new DotLisp.Interpreter();
+                    _dotLispInterpreter = new DotLisp.Interpreter(null);
                     _dotLispInterpreter.LoadFile("boot.lisp");
                     _dotLispInterpreter.LoadFile("extra.lisp");
                 }
