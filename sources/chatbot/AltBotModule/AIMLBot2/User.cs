@@ -1,17 +1,31 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using System.Linq;
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
 using System.Threading;
 using AIMLbot;
-using AltAIMLParser;
 using AltAIMLbot;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
+using RTParser;
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using RTParser.Utils;
 using RTParser.Variables;
 
+//using MasterRequest = AltAIMLParser.Request;
+using DataUnifiable = System.String;
+using DataUnifiableYYY = RTParser.Unifiable;
+//using GraphMaster = RTParser.Unifiable;
+using UserStaticModel = RTParser.Unifiable;
 namespace RTParser
 {
     public interface IUser
@@ -87,7 +101,20 @@ namespace RTParser
                                      UserDuringProcessing, 
                                      User
     {
+        /// <summary>
+        /// List of possible non-determinstic "states". When present will select the one with 
+        /// the highest score
+        /// </summary>
+        public Dictionary<string, double> Qstate
+        {
+            get { return _Qstate; }
+        }
+        public Dictionary<string, double> _Qstate = new Dictionary<string, double>();
 
+        /// <summary>
+        /// the value of the "that" on the blackboard predicate
+        /// </summary>
+        public string blackBoardThat { get; set; }
         public void RaiseEvent(string name, AltBot robot)
         {
             try
@@ -117,6 +144,7 @@ namespace RTParser
             }
         }
         public static bool ThatIsStoredBetweenUsers = true;
+        public static bool ThatIsONLYStoredBetweenUsers = false;
         public readonly object QueryLock = new object();
         public bool IsValid { get; set; }
         #region Attributes
@@ -135,7 +163,7 @@ namespace RTParser
                 TaskQueueHandler tqh;
                 if (!TaskQueueHandlers.TryGetValue(find, out tqh))
                 {
-                    tqh = new TaskQueueHandler(UserName + " tq " + find);
+                    tqh = new TaskQueueHandler(rbot.ObjectRequester, UserName + " tq " + find);
                     TaskQueueHandlers[find] = tqh;
                     tqh.Start();
                     return tqh;
@@ -161,8 +189,10 @@ namespace RTParser
         public ListAsSet<GraphQuery> AllQueries { get; set; }
 
         public DateTime LastResponseGivenTime { get; set; }
+        public DateTime LastResponseByMinuteTime { get; set; }
         public bool RespondToChat { get; set; }
         public int MaxRespondToChatPerMinute { get; set; }
+        public int LastResponsesThisMinute { get; set; }
         public DateTime NameUsedOrGivenTime { get; set; }
 
         public static int DefaultMaxResultsSaved = 15;
@@ -327,7 +357,7 @@ namespace RTParser
                 {
                     var mi = Predicates.grabSetting("maxinputs");
                     int miv;
-                    if (int.TryParse(mi.AsString(), out miv))
+                    if (int.TryParse(mi.ToString(), out miv))
                     {
                         return miv;
                     }
@@ -410,21 +440,21 @@ namespace RTParser
             }
         }
 
-        public void SetMeMyselfAndI(string value)
+        public bool SetMeMyselfAndI(string value)
         {
             string saved = value.Replace("_", " ").Trim(" ,".ToCharArray());
-            if (saved.Length == 0) return;
-            if (Predicates == null) return;
+            if (saved.Length == 0) return false;
+            if (Predicates == null) return false;
             var prev = Predicates.IsIdentityReadOnly;
             try
             {
-                string[] split = value.Split(new[] {" ", "-", "_"}, StringSplitOptions.RemoveEmptyEntries);
+                string[] split = value.Split(new[] { " ", "-", "_" }, StringSplitOptions.RemoveEmptyEntries);
                 Predicates.IsIdentityReadOnly = false;
                 Predicates["id"] = UserID;
                 if (IsIncomplete(value))
                 {
                     throw new NullReferenceException("SetMeMyselfAndI: " + value);
-                    return;
+                    return false;
                 }
                 Predicates["name"] = value;
                 Predicates["me"] = value;
@@ -434,7 +464,7 @@ namespace RTParser
                 if (IsIncomplete(split[0]))
                 {
                     throw new NullReferenceException("SetMeMyselfAndI: " + split[0]);
-                    return;
+                    return false;
                 }
                 Predicates["firstname"] = split[0];
                 if (split.Length > 1)
@@ -447,6 +477,7 @@ namespace RTParser
                         Predicates["lastname"] = split[2];
                     }
                 }
+                return true;
             }
             finally
             {
@@ -468,7 +499,17 @@ namespace RTParser
         /// A collection of all the result objects returned to the user in this session
         /// (in reverse order of time)
         /// </summary>
-        private readonly List<Result> Results = new List<Result>();
+        private Result[] ResultsCopy
+        {
+            get { lock (_results) return _results.ToArray(); }
+        }
+
+        private readonly List<Result> _results = new List<Result>();
+
+
+        public List<Result> Results {
+            get { lock (_results) return _results; }
+        }
 
         /// <summary>
         /// A collection of all the Interaction objects returned to the user in this session
@@ -483,7 +524,7 @@ namespace RTParser
         {
             get
             {
-                if (_topics.Count == 0) return new List<Unifiable> {Topic};
+                if (_topics.Count == 0) return new List<Unifiable> { Topic };
                 return _topics;
             }
         }
@@ -591,8 +632,8 @@ namespace RTParser
         /// </summary>
         /// <param name="UserID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-        internal UserImpl(string userID, AltBot bot)
-            : this(userID, bot, null)
+        internal UserImpl(string fullname, string userID, AltBot bot)
+            : this(fullname, userID, bot, null)
         {
         }
 
@@ -601,42 +642,55 @@ namespace RTParser
         /// </summary>
         /// <param name="userID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-        protected internal UserImpl(string userID, AltBot bot, ParentProvider provider)
+        protected internal UserImpl(string fullname, string userID, AltBot bot, SettingsDictionary dict)
             // : base(bot)
         {
+            this.rbot = bot;
+            bot.RegisterDictionary(userID, dict);
             IsValid = true;
             userTrace = WriteToUserTrace;
             MaxRespondToChatPerMinute = 10;
             RespondToChat = true;
             LastResponseGivenTime = DateTime.Now;
+            LastResponseByMinuteTime = DateTime.Now.Subtract(TimeSpan.FromMinutes(1));
             NameUsedOrGivenTime = DateTime.Now;
             VisitedTemplates = new ListAsSet<TemplateInfo>();
             UsedChildTemplates = new ListAsSet<TemplateInfo>();
             ProofTemplates = new ListAsSet<TemplateInfo>();
             DisabledTemplates = new ListAsSet<TemplateInfo>();
             DisallowedGraphs = new HashSet<GraphMaster>();
-            qsbase = new QuerySettingsImpl(bot.GetQuerySettings());
+            qsbase = new QuerySettingsImpl(rbot.GetQuerySettings());
             PrintOptions = new PrintOptions("PO_" + userID);
             if (userID.Length > 0)
             {
+                bool isUser = dict == null;
                 WriterOptions = new PrintOptions("PW_" + userID);
                 this.id = userID;
                 this.rbot = bot;
                 qsbase.IsTraced = IsTraced = bot.IsTraced;
                 // we dont inherit the BotAsUser we inherit the bot's setings
                 // ApplySettings(bot.BotAsUser, this);
-                this.Predicates = new SettingsDictionary(userID + ".predicates", this.rbot, provider);
+                string parserToCamelCase = AltBot.ToMtCase(fullname);
+                string predMtName = parserToCamelCase + "Predicates";
+                dict = this.Predicates = (SettingsDictionary)dict ?? bot.MakeSettingsDictionary(predMtName);
+                bot.RegisterDictionary(userID, dict);
                 this.Predicates.IsTraced = qsbase.IsTraced;
-                this.Predicates.AddPrefix("user.", () => this);
-                this.rbot.DefaultPredicates.Clone(this.Predicates);                
-                //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
-                this.Predicates.addSetting("topic", bot.NOTOPIC);
-                this.Predicates.InsertFallback(() => bot.AllUserPreds);
-                UserID = userID;
-                UserName = userID;
-                SetMeMyselfAndI(UserName);
+                //this.Predicates.AddPrefix("user.", () => this);      
+                if (isUser)
+                {
+                    this.rbot.DefaultPredicates.Clone(this.Predicates);
+
+                    //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
+                    this.Predicates.addSetting("topic", rbot.NOTOPIC);
+                    this.Predicates.InsertFallback(() => bot.AllUserPreds);
+                }
+                UserID = userID;                
+                //UserName = fullname;
+                SetMeMyselfAndI(fullname);
+                blackBoardThat = "";
+                StaticAIMLUtils.WithoutTrace(Predicates, () => SetMeMyselfAndI(fullname));
                 //this.Predicates.addSetting("topic", "NOTOPIC");
-                if (SaveTimer == null)
+                if (false && SaveTimer == null)
                 {
                     SaveTimer = new Thread(() =>
                                                {
@@ -686,7 +740,7 @@ namespace RTParser
 
         public override string ToString()
         {
-            return UserID;
+            return UserNameAndID;
         }
 
         /// <summary>
@@ -893,9 +947,9 @@ namespace RTParser
         {
             get
             {
-                lock (Results)
+                lock (_results)
                 {
-                    return Results.Count;
+                    return _results.Count;
                 }
             }
         }
@@ -916,19 +970,20 @@ namespace RTParser
                 }
                 return;
             }
-            lock (Results)
+            lock (_results)
             {
+               // var Results = this.ResultsCopy;
                 if (Results.Contains(latestResult))
                 {
                     //writeDebugLine("DEBUG9 Trying to resave results ! " + latestResult);
                     return;
                 }
-                this.Results.Insert(0, latestResult);
+                _results.Insert(0, latestResult);
                 latestResult.FreeRequest();
                 int rc = this.SailentResultCount;
                 if (rc > MaxResultsSaved)
                 {
-                    this.Results.RemoveRange(MaxResultsSaved, rc - MaxResultsSaved);
+                    _results.RemoveRange(MaxResultsSaved, rc - MaxResultsSaved);
                 }
             }
             addResultTemplates(latestResult);
@@ -1067,6 +1122,39 @@ namespace RTParser
             }
         }
 
+        public bool CheckIsBadEnglish(Unifiable value)
+        {
+            Action<string> RaiseError = (e) => rbot.RaiseError(e);
+            if (IsNullOrEmpty(value))
+            {
+                RaiseError("IsNullOrEmpty: " + value + " for " + this);
+                return true;
+            }
+            if (!IsValue(value))
+            {
+                RaiseError("!IsValue: " + value + " for " + this);
+                return true;
+            }
+            string s = value.AsString().ToUpper();
+            if (s.Contains("TAG-"))
+            {
+                RaiseError("TAG-*: " + value + " for " + this);
+                return true;
+            }
+            var fn = Unifiable.IsFalseOrNo(value);
+            if (fn)
+            {
+                return false;
+            }
+            if (s == "NOTHING") return false;
+            if (!IsEnglish(value))
+            {
+                RaiseError("!IsEnglish: " + value + " for " + this);
+                return true;
+            }
+            return false;
+        }
+
         private bool IsEnglish(Unifiable value)
         {
             if (IsNullOrEmpty(value))
@@ -1093,7 +1181,7 @@ namespace RTParser
             {
                 return That;
                 {
-                    var vv = Predicates.grabSetting("that");
+                    Unifiable vv = Predicates.grabSetting("that");
                     if (Unifiable.IsMulti(vv))
                     {
                         AltBot.writeDebugLine("WARNING ONLY USING ONE Result: " + Unifiable.DescribeUnifiable(vv));
@@ -1147,7 +1235,7 @@ namespace RTParser
                                  () =>
                                  {
                                      string realName;
-                                     return SettingsDictionary.grabSettingDefaultDict(Predicates, name1,
+                                     return SettingsDictionaryReal.grabSettingDefaultDict(Predicates, name1,
                                                                                       out realName);
                                  });
                 if (!string.IsNullOrEmpty(lname))
@@ -1259,7 +1347,7 @@ namespace RTParser
                 AltBot.WriteUserInfo(console, "", this);
                 return true;
             }
-            return Predicates.DoSettingsCommand(input, console);
+            return ((SettingsDictionaryReal)Predicates).DoSettingsCommand(input, console);
         }
 
         public OutputDelegate userTrace { get; set; }
@@ -1294,7 +1382,7 @@ namespace RTParser
                     VisitedTemplates.AddRange(result.ResultTemplates);
 
                 var proof = result.ProofTemplate();
-                if (proof==null) return;
+                if (proof == null) return;
                 if (result.request.ParentRequest != null)
                 {
                     UsedChildTemplates.Add(proof);
@@ -1470,7 +1558,7 @@ namespace RTParser
             // or WriteLine but this is spammy 
             OutputDelegate logger = DEVNULL;
             logger("DEBUG9 Saving User Directory {0}", userdir);
-            Predicates.SaveTo(userdir, "user.predicates", "UserPredicates.xml");
+            ((SettingsDictionaryReal)Predicates).SaveTo(userdir, "user.predicates", "UserPredicates.xml");
             GraphMaster gm = rbot.GetGraph(UserID, StartGraph);
             gm.WriteToFile(UserID, HostSystem.Combine(userdir, UserID) + ".saved", PrintOptions.SAVE_TO_FILE, logger);
         }
@@ -1529,7 +1617,7 @@ namespace RTParser
                 }
                 if (userdir.EndsWith("Predicates.xml"))
                 {
-                    SettingsDictionary.loadSettings(Predicates, userdir, true, true, null);
+                    SettingsDictionaryReal.loadSettingsNow(Predicates, null, userdir, new SettingsPolicy(true, true), null);
                 }
                 return;
             }
@@ -1562,7 +1650,7 @@ namespace RTParser
             {
                 if (rbot.BotAsUser == this)
                 {
-                    rbot.GlobalSettings = Predicates;
+                    rbot.GlobalSettings = (SettingsDictionaryReal)Predicates;
                 }
                 request.Loader.loadAIMLURI(userdir, options.Value);
             }
@@ -1628,7 +1716,7 @@ namespace RTParser
         /// </summary>
         /// <param name="name">The name of the new setting</param>
         /// <param name="value">The value associated with this setting</param>
-        public bool addSetting(string name, Unifiable value)
+        public bool addSetting(string name, object value)
         {
             return Predicates.addSetting(name, value);
         }
@@ -1648,7 +1736,7 @@ namespace RTParser
         /// </summary>
         /// <param name="name">the name of the setting</param>
         /// <param name="value">the new value</param>
-        public bool updateSetting(string name, Unifiable value)
+        public bool updateSetting(string name, object value)
         {
             return Predicates.updateSetting(name, value);
         }
@@ -1658,7 +1746,7 @@ namespace RTParser
         /// </summary>
         /// <param name="name">the name of the setting whose value we're interested in</param>
         /// <returns>the value of the setting</returns>
-        public Unifiable grabSetting(string name)
+        public DataUnifiable grabSetting(string name)
         {
             return Predicates.grabSetting(name);
         }
@@ -1690,11 +1778,11 @@ namespace RTParser
             get { return rbot.pMSM; }
         }
 
-        public IEnumerable<string> SettingNames(int depth)
+        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
             //get 
             {
-                return Predicates.SettingNames(depth);
+                return Predicates.SettingNames(requester, depth);
             }
         }
 
@@ -1773,19 +1861,20 @@ namespace RTParser
                 var roles = this.Predicates.grabSetting("roles");
                 if (!IsMissing(roles) && !IsNullOrEmpty(roles))
                 {
-                    foreach (var role in roles.ToArray())
+                    foreach (var role in SingleNameValue.AsCollection(roles))
                     {
-                        request.AddGraph(rbot.GetUserGraph(role));
+                        request.AddGraph(rbot.GetUserGraph( rbot.ToValueString(role)));
                     }
                 }
             }
             return request;
         }
-
+        
 
         public void StampResponseGiven()
         {
             LastResponseGivenTime = DateTime.Now;
+            LastResponsesThisMinute++;
         }
 
         public bool CanGiveResponseNow()
@@ -1796,11 +1885,25 @@ namespace RTParser
             TimeSpan TSP = thisResponseTime.Subtract(LastResponseGivenTime);
             double timedelay = Math.Abs(TSP.TotalSeconds);
             double secPerChat = (60/(double) MaxRespondToChatPerMinute);
-            return (timedelay >
-                    // ReSharper disable PossibleLossOfFraction
-                    secPerChat
-                   );
-            // ReSharper restore PossibleLossOfFraction
+            if (timedelay > secPerChat)
+            {               
+                return true;
+            }
+            int minutes = thisResponseTime.Subtract(LastResponseByMinuteTime).Minutes;
+            if (minutes > 1)
+            {
+                LastResponsesThisMinute = 0;
+                LastResponseByMinuteTime = DateTime.Now;
+                return true;
+            }
+            if (LastResponsesThisMinute < MaxRespondToChatPerMinute)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public void Enter(ConversationScopeHolder srai)
@@ -1851,6 +1954,106 @@ namespace RTParser
         {
             IsValid = false;
             Dispose();
+        }
+        /// <summary>
+        /// the value of the "topic" predicate
+        /// </summary>
+        public string TopicString
+        {
+            get
+            {
+                return GetValueOr("topic", "*");
+            }
+        }
+
+        private string GetValueOr(string varname, string or)
+        {
+            var t = this.Predicates.grabSetting(varname);
+            if (string.IsNullOrEmpty(t)) return or;
+            return t;
+        }
+
+        /// <summary>
+        /// the value of the "state" predicate
+        /// </summary>
+        public string State
+        {
+            get
+            {
+                return GetValueOr("state", "*");
+            }
+        }
+
+        public string UserNameAndID
+        {
+            get { return UserName + "/" + UserID; }
+        }
+
+        /// <summary>
+        /// Returns the string to use for the next that part of a subsequent path
+        /// </summary>
+        /// <returns>the string to use for that</returns>
+        public IEnumerable<string> getThats()
+        {
+            List<string> outputs = new List<string>();
+            if (blackBoardThat.Length > 0)
+            {
+                outputs.Add(blackBoardThat);
+            }
+            int cnt = 0;
+            var Results = this.ResultsCopy;
+            foreach (Result result in Results)
+            {
+                string s = result.LastSentence;
+                s = s.TrimStart(" .,".ToCharArray());
+                if (!string.IsNullOrEmpty(s))
+                {
+                    if (!outputs.Contains(s))
+                    {
+                        outputs.Add(s);
+                        cnt++;
+                    }
+                }
+                s = result.BestSentence;
+                s = s.TrimStart(" .,".ToCharArray());
+                if (!string.IsNullOrEmpty(s))
+                {
+                    if (!outputs.Contains(s))
+                    {
+                        outputs.Add(s);
+                        cnt++;
+                    }
+                }
+                if (cnt > 0) break;
+            }
+            if (outputs.Count == 0) return new[] { "*" };
+            return outputs.ToArray();
+        }
+
+        public IEnumerable<string> getTopics()
+        {
+            return new[] { (string)Topic };
+        }
+        public IEnumerable<string> getPreStates()
+        {
+            return new[] { State };
+        }
+        public IEnumerable<string> getPostStates()
+        {
+            return new[] { State };
+        }
+
+        public void setUserID(string id)
+        {
+            this.id = id;
+            this.UserName = id;
+        }
+
+        public void Enter(object srai)
+        {
+        }
+        public void Exit(object srai)
+        {
         }
     }
 

@@ -569,7 +569,7 @@ namespace RTParser
                 return true;
             }
             SystemExecHandler handler;
-            if (SettingsDictionary.TryGetValue(ExecuteHandlers, cmd, out handler))
+            if (SettingsDictionaryReal.TryGetValue(ExecuteHandlers, cmd, out handler))
             {
                 object result = handler(args, request);
                 console("" + result);
@@ -859,7 +859,7 @@ namespace RTParser
             if (cmd == "setvar")
             {
                 myUser.DoUserCommand(args, console);
-                robot.GlobalSettings.DoSettingsCommand(input, console); ;
+                ((SettingsDictionaryReal)robot.GlobalSettings).DoSettingsCommand(input, console); ;
                 return myUser.DoUserCommand(args, console);
             }
             return false;
@@ -1165,7 +1165,7 @@ namespace RTParser
             if (cmd == "tasks")
             {
                 int n = 0;
-                IList<Thread> botCommandThreads = robot.ThreadList;
+                var botCommandThreads = robot.ThreadList;
                 List<string> list = new List<string>();
                 if (false) lock (botCommandThreads)
                     {

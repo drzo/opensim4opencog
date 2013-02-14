@@ -843,7 +843,7 @@ namespace RTParser.Utils
                 ISettingsDictionary dict = IsSettingsTag(currentNodeName, request);
                 if (dict != null)
                 {
-                    SettingsDictionary.loadSettingNode(dict, currentNode, true, false,
+                    SettingsDictionaryReal.loadSettingNode(dict, currentNode, true, false,
                                                        request);
                     return 1;
                 }
@@ -1490,7 +1490,7 @@ namespace RTParser.Utils
                 {
                     patternString = MatchKeyClean(patternString.Replace(thatString, ""));
                 }
-                XmlNode newLineInfoPattern = getNodeAndSetSibling("<pattern>" + patternString + "</pattern>", false,
+                XmlNode newLineInfoPattern = getNodeAndSetSibling(true, "<pattern>" + patternString + "</pattern>", false,
                                                                  false, patternNode);
                 //TODO BEFORE COMMIT DMILES
                 LineInfoElementImpl.SetParentFromNode(newLineInfoPattern, patternNode);

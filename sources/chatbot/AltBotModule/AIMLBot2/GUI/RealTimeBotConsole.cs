@@ -300,7 +300,7 @@ namespace RTParser.GUI
             else
             {
                 variablesOutput.Text = "";
-                var dictnames = idict.SettingNames(1);
+                var dictnames = idict.SettingNames(robot.ObjectRequester, 1);
                 foreach (string s in dictnames)
                 {
                     Unifiable value = idict.grabSetting(s);
@@ -386,7 +386,7 @@ namespace RTParser.GUI
                 var value = user.Predicates.grabSetting(name);
                 if (value != null)
                 {
-                    InvokeIfNeeded(box, () => box.Text = value.AsString());
+                    InvokeIfNeeded(box, () => box.Text = value);
                 }
             }
         }

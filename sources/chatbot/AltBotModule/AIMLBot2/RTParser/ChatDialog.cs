@@ -3,6 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+#if (COGBOT_LIBOMV || USE_STHREADS || true)
+using System.Linq;
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
 using System.Threading;
 using System.Xml;
 using AIMLbot;
@@ -60,7 +67,7 @@ namespace RTParser
         //public Unifiable responderJustSaid;
 
         // last user talking to bot besides itself
-        private User _lastUser;
+        public User _lastUser;
         public User LastUser
         {
             get
@@ -243,7 +250,7 @@ namespace RTParser
         public Stack<string> conversationStack = new Stack<string>();
         public Hashtable wordAttributeHash = new Hashtable();
 
-        public WordNetEngine wordNetEngine;
+        //public WordNetEngine wordNetEngine;
         // = new WordNetEngine(HostSystem.Combine(Environment.CurrentDirectory, this.GlobalSettings.grabSetting("wordnetdirectory")), true);
 
         //public string indexDir = @"C:\dev\Lucene\";
@@ -431,6 +438,7 @@ namespace RTParser
             Result result = ChatWithRequest(request, requestCurrentResult);
             if (!result.Started)
             {
+                writeToLog("result is not started " + result);
                 return result;
             }
             return result;
@@ -586,7 +594,7 @@ namespace RTParser
             {
                 childResult = request.CreateResult(request);
                 string nai = NotAcceptingUserInputMessage;
-                if (isTraced) this.writeToLog("ERROR {0} getting back {1}", request, nai);
+                if (isTraced) writeToLogWarn("ERROR {0} getting back {1}", request, nai);
                 request.AddOutputSentences(null, nai, parentResult, 1.0);
             }
             User popu = (originalRequestor ?? request.Requester ?? parentResult.Requester).Value;
@@ -1280,7 +1288,7 @@ namespace RTParser
 
             if (message.StartsWith("  "))
             {
-                return message;
+                return message.ToString();
             }
             message = CleanNops(trim);
             message = Trim(message);
@@ -1297,7 +1305,10 @@ namespace RTParser
             {
                 string messageIn = message;
                 message = ToEnglish(message);
-                if (messageIn != message) writeDebugLine("heardSelfSay - ToEnglish: " + messageIn + " -> " + message);
+                if (messageIn != message)
+                {
+                    writeDebugLine("heardSelfSay - ToEnglish: " + messageIn + " -> " + message);
+                }
             }
 
             if (message == "" || message.Contains("<"))
@@ -1379,7 +1390,7 @@ namespace RTParser
 
             if (!checkEndsAsSentence(sentenceIn))
             {
-                sentenceIn += ".";
+                return sentenceIn;// += ".";
             }
 
             return sentenceIn;

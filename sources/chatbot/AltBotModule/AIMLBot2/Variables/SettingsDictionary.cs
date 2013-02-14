@@ -3,24 +3,37 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
 using System.Threading;
 using System.Xml;
 using System.IO;
 using System.Xml.Serialization;
+/*using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLParser;*/
 using AltAIMLParser;
+using LogicalParticleFilter1;
 using Lucene.Net.Store;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using RTParser;
 using RTParser.Database;
 using RTParser.Normalize;
 using RTParser.Utils;
 
+using DataUnifiable = System.String;
+using DataUnifiableYYY = RTParser.Unifiable;
+
 namespace RTParser.Variables
 {
-    public delegate ISettingsDictionary ParentProvider();
-    public interface ISettingsDictionary : ITraceable, ITreeable
+    public delegate ISettingsDictionaryT<DataUnifiable> ParentProvider();
+    public interface ISettingsDictionary : ISettingsDictionaryT<DataUnifiable>{}
+    public interface ISettingsDictionaryT<T> : ITraceable, ITreeable
     {
         /// <summary>
         /// Adds a bespoke setting to the Settings class (accessed via the grabSettings(string name)
@@ -28,7 +41,7 @@ namespace RTParser.Variables
         /// </summary>
         /// <param name="name">The name of the new setting</param>
         /// <param name="value">The value associated with this setting</param>
-        bool addSetting(string name, Unifiable value);
+        bool addSetting(string name, object value);
         /// <summary>
         /// Removes the named setting from this class
         /// </summary>
@@ -40,13 +53,13 @@ namespace RTParser.Variables
         /// </summary>
         /// <param name="name">the name of the setting</param>
         /// <param name="value">the new value</param>
-        bool updateSetting(string name, Unifiable value);
+        bool updateSetting(string name, object value);
         /// <summary>
         /// Returns the value of a setting given the name of the setting
         /// </summary>
         /// <param name="name">the name of the setting whose value we're interested in</param>
         /// <returns>the value of the setting</returns>
-        Unifiable grabSetting(string name);
+        T grabSetting(string name);
         /// <summary>
         /// Checks to see if a setting of a particular name exists
         /// </summary>
@@ -57,24 +70,405 @@ namespace RTParser.Variables
 
     }
 
+    public interface SettingsDictionary : ISettingsDictionary, IDictionary<string, DataUnifiable>, ICollectionProvider
+    {
+        void loadSettings(string uri);
+        void loadSettings(string uri, Request req);
+        void InsertFallback(ParentProvider func);
+        void clearHierarchy();
+        void clearSettings();
+        void InsertMetaProvider(ParentProvider func);
+        void InsertProvider(ParentProvider provider);
+        string ToDebugString();
+        string GetMeta(string name, string prop);
+        string bbPrefix { get; set; }
+        bool IsIdentityReadOnly { get; set; }
+        void Clone(ISettingsDictionary settingsDictionary);
+        string grabSetting(string name, bool searchUpMt);
+        Unifiable grabSettingNoDebug(string name);
+        string grabSettingOrDefault(string systemlang, string bot);
+    }
+
+    public interface KeyValueList
+    {
+        //ICollection<string> Keys { get; }
+        bool ContainsKey(string name);
+        ICollection<string> Values { get; }
+        int Count { get; }
+        ICollection<string> Keys { get; }
+        bool IsOrdered { get; set; }
+        void Set(string name, string value);
+        //string this[string name] { get; }
+        void Clear();
+        void Remove(string name);
+
+        string GetValue(string normalizedName);
+        void AddKey(string name);
+
+        void AddFallback(string p);
+    }
+
+    public class KeyValueListSIProlog : KeyValueList
+    {
+        public string dictMt;
+
+        private SIProlog.PNode _pnodeMt = null;
+        public SIProlog.PNode pnodeMt
+        {
+            get
+            {
+                return _pnodeMt ?? (_pnodeMt = prologEngine.FindOrCreateKB(dictMt));
+            }    
+        }
+        public string predicateName;
+        public string arg1Name;
+        private FirstUse<SIProlog> _prologEngine;
+        private SIProlog prologEngine
+        {
+            get
+            {
+                return _prologEngine;
+            }
+        }
+
+        public KeyValueListSIProlog(Func<LogicalParticleFilter1.SIProlog> pl, string mtName, string predicate)
+        {
+            _prologEngine = (Func<SIProlog>) (() =>
+                                                  {
+                                                      var plv = pl();
+                                                      plv.FindOrCreateKB(mtName);
+                                                      return plv;
+                                                  });
+            dictMt = mtName;
+            predicateName = predicate;
+        }
+
+        public bool ContainsKey(string name)
+        {
+            return GetArgVal(name, false) != null;
+        }
+
+        public ICollection<string> Values
+        {
+            get
+            {
+                List<string> values = new List<string>();
+                foreach (var key in Keys)
+                {
+                    values.Add(GetValue(key));
+                }
+                return values;
+            }
+        }
+
+        private SIProlog.PartListImpl KeyValueTerm
+        {
+            get
+            {
+                return QueryForNameValue(new SIProlog.Variable("KEY"), new SIProlog.Variable("VALUE"));
+            }
+        }
+        public int Count
+        {
+            get
+            {
+                List<Dictionary<string, SIProlog.Part>> bingingsList = new List<Dictionary<string, SIProlog.Part>>();
+                this.prologEngine.askQuery(KeyValueTerm, dictMt, true, bingingsList, null);
+                return bingingsList.Count;
+            }
+        }
+
+        public ICollection<string> Keys
+        {
+            get
+            {
+
+                List<Dictionary<string, SIProlog.Part>> bingingsList = new List<Dictionary<string, SIProlog.Part>>();
+                this.prologEngine.askQuery(KeyValueTerm, dictMt, true, bingingsList, null);
+                if (bingingsList.Count == 0) return new string[0];
+                List<string> keys = new List<string>();
+                foreach (var list in bingingsList)
+                {
+                    keys.Add(ArgToValue(list["KEY"]));
+                }
+                return keys;
+            }
+
+        }
+
+        public bool IsOrdered
+        {
+            get { return true;  }
+            set { throw new NotImplementedException(); }
+        }
+
+        public void Set(string name, string value)
+        {
+            name = KeyCase.Default.NormalizeKey(name);
+            var key = MakeKey(name);
+            var valArg = MakeArg(value);
+            //Remove(name);
+            var before = GetArgVal(name, false);
+            if (valArg == before) return;
+            SIProlog.Rule newRule = RuleForNameValue(key, valArg);
+            if (before != null)
+            {
+                prologEngine.replaceInKB(RuleForNameValue(key, before),
+                                         newRule, pnodeMt);
+            }
+            else
+            {
+                prologEngine.appendKB(new SIProlog.RuleList() { newRule }, pnodeMt);
+            }
+            if (SIProlog.RdfDeveloperSanityChecks < 1) return;
+            var now = GetArgVal(name, false);
+            if (now != valArg)
+            {
+                string err = "BUG asserting: " + newRule + " found " + (now != null ? now.StringReadable : "MISSINGVALUE");
+                if (SIProlog.RdfDeveloperSanityChecks > 1) 
+                    throw new NotImplementedException(err);
+            }
+        }
+
+        private LogicalParticleFilter1.SIProlog.Atom MakeArg(string value)
+        {
+            return LogicalParticleFilter1.SIProlog.Atom.MakeString(value);
+        }
+        private LogicalParticleFilter1.SIProlog.Atom MakeKey(string value)
+        {
+            return LogicalParticleFilter1.SIProlog.Atom.FromName(value);
+        }
+
+        public void Clear()
+        {
+            prologEngine.clearKB(dictMt);
+        }
+
+        public void Remove(string name)
+        {
+            name = KeyCase.Default.NormalizeKey(name);
+            SIProlog.Part valArg = GetArgVal(name, false);
+            if (valArg == null) return;
+            SIProlog.Rule remove = RuleForNameValue(MakeKey(name), valArg);
+            var didit = prologEngine.retractKB(remove, pnodeMt);
+            var valarg2 = GetArgVal(name, false);
+            if (null != valarg2)
+            {
+                throw new NotImplementedException("retracting " + valArg);
+            }
+
+        }
+
+        public SIProlog.Part GetArgVal(string normalizedName, bool followGenlMt)
+        {
+            normalizedName = KeyCase.Default.NormalizeKey(normalizedName);
+            var bingingsList = new List<Dictionary<string, SIProlog.Part>>();
+            this.prologEngine.askQuery(QueryForNameValue(MakeKey(normalizedName), new SIProlog.Variable("VALUE")),
+                                       dictMt, followGenlMt,
+                                       bingingsList, null);
+            int cnt = bingingsList.Count;
+            if (cnt == 0) return null;
+            SIProlog.Part res;
+            if (cnt == 1 || !followGenlMt)
+            {
+                res = bingingsList[0]["VALUE"];
+            }
+            else
+            {
+                if (followGenlMt)
+                {
+                    res = bingingsList[0]["VALUE"];
+                }
+                else
+                {
+                    res = bingingsList[cnt - 1]["VALUE"];
+                }
+            }
+            return res;
+        }
+
+        public string GetValue(string normalizedName)
+        {
+            var res = GetArgVal(normalizedName, true);
+            return ArgToValue(res);
+        }
+
+        private string ArgToValue(SIProlog.Part res)
+        {
+            return res.Text;
+        }
+
+        private SIProlog.Rule RuleForNameValue(SIProlog.Part name, SIProlog.Part value)
+        {
+            SIProlog.Rule newRule =  new SIProlog.Rule(SIProlog.MakeTerm(predicateName, name, value));;
+            return newRule;
+        }
+        private SIProlog.PartListImpl QueryForNameValue(SIProlog.Part name, SIProlog.Part value)
+        {
+            return new SIProlog.PartListImpl(SIProlog.MakeTerm(predicateName, name, value));
+        }
+
+        public void AddKey(string name)
+        {
+            string before = GetValue(name);
+            if (before == null)
+            {
+                Set(name, "");
+            }
+        }
+
+        public void AddFallback(string p)
+        {
+            if (Equals(p,dictMt))
+            {
+                return;
+            }
+            prologEngine.connectMT(dictMt, p);
+        }
+    }
+    public class KeyValueListCSharp : KeyValueList
+    {
+        public KeyValueList settingsHash0;// = new Dictionary<string, DataUnifiable>();
+        public Dictionary<string, DataUnifiable> settingsHash;// = new Dictionary<string, DataUnifiable>();
+        public IList<string> orderedKeys = new List<string>();
+
+        public string GetValue(string key)
+        {
+            if (settingsHash0 != null) return settingsHash0.GetValue(key);
+            return settingsHash[key];
+        }
+
+        public ICollection<string> Values
+        {
+            get
+            {
+                if (settingsHash0 != null) return settingsHash0.Values;
+                return settingsHash.Values;
+            }
+        }
+
+        public ICollection<string> Keys
+        {
+            get
+            {
+                if (orderedKeys == null)
+                {
+                    if (settingsHash0 != null) return settingsHash0.Keys;
+                    return settingsHash.Keys;
+                }
+                return orderedKeys;
+            }
+        }
+
+        public bool IsOrdered
+        {
+            get { return orderedKeys != null || (settingsHash0 != null && settingsHash0.IsOrdered); }
+            set { throw new NotImplementedException(); }
+        }
+
+        public int Count
+        {
+            get
+            {
+                if (orderedKeys == null)
+                {
+                    if (settingsHash0 != null) return settingsHash0.Count;
+                    return settingsHash.Count;
+                }
+                return orderedKeys.Count;
+            }
+        }
+
+        public bool ContainsKey(string name)
+        {
+            if (orderedKeys != null && orderedKeys.Contains(name)) return true;
+            if (settingsHash0 != null && settingsHash0.ContainsKey(name)) return true;
+            if (settingsHash != null && settingsHash.ContainsKey(name)) return true;
+            return false;
+        }
+
+        public void Set(string name, string value)
+        {
+            if (orderedKeys != null)
+            {
+                if (!orderedKeys.Contains(name)) orderedKeys.Add(name);
+            } 
+            if (settingsHash0 != null) settingsHash0.Set(name, value);
+            if (settingsHash != null) settingsHash[name] = value;
+        }
+
+        public KeyValueListCSharp(IList<string> list, Dictionary<System.String, System.String> dictionary)
+        {
+            orderedKeys = list;
+            settingsHash = dictionary;
+        }
+        public void Remove(string name)
+        {
+            if (orderedKeys != null) orderedKeys.Remove(name);
+            if (settingsHash != null) settingsHash.Remove(name);
+            if (settingsHash0 != null) settingsHash0.Remove(name);
+        }
+
+        public void Clear()
+        {
+            if (orderedKeys != null) orderedKeys.Clear();
+            if (settingsHash != null) settingsHash.Clear();
+            if (settingsHash0 != null) settingsHash0.Clear();
+        }
+
+        public void AddKey(string name)
+        {
+            if (orderedKeys != null)
+            {
+                orderedKeys.Add(name);
+            }
+            else
+            {
+                if (settingsHash != null)
+                {
+                    if (!settingsHash.ContainsKey(name))
+                    {
+                        settingsHash.Add(name, null);
+                    }
+                }
+                if (settingsHash0 != null)
+                {
+                    if (!settingsHash0.ContainsKey(name))
+                    {
+                        settingsHash0.Set(name, null);
+                    }
+                }
+            }
+        }
+
+        public void AddFallback(string p)
+        {
+            //throw new NotImplementedException();
+        }
+    }
+
     /// <summary>
     /// A bespoke Dictionary<,> for loading, adding, checking, removing and extracting
     /// settings.
     /// </summary>
-    public class SettingsDictionary : ISettingsDictionary, IDictionary<string, Unifiable>
+    public class SettingsDictionaryReal : SettingsDictionary, ISettingsDictionary, IDictionary<string, DataUnifiable>,
+                                          ICollectionProvider
     {
         #region Attributes
 
         /// <summary>
         /// Holds a dictionary of settings
         /// </summary>
-        readonly public Dictionary<string, Unifiable> settingsHash = new Dictionary<string, Unifiable>();
+        public readonly KeyValueList settingsHash;
 
         /// <summary>
         /// Contains an ordered collection of all the keys (unfortunately Dictionary<,>s are
         /// not ordered)
         /// </summary>
-        readonly private List<string> orderedKeys = new List<string>();
+        private KeyValueList KeyZ
+        {
+            get { return settingsHash; }
+        }
 
         // prechecks and uses if settings exist
         private List<ParentProvider> _overides = new List<ParentProvider>();
@@ -83,14 +477,18 @@ namespace RTParser.Variables
         // fallbacks (therefore inherits)
         private List<ParentProvider> _listeners = new List<ParentProvider>();
         // fallbacks (therefore inherits)
-        private readonly PrefixProvider prefixProvider;
-        internal bool IsIdentityReadOnly = false;
+        //private readonly PrefixProvider prefixProvider;
         internal bool SuspendUpdates = false;
 
         /// <summary>
         /// The bot this dictionary is associated with (only for writting log)
         /// </summary>
         protected AltBot bot;
+
+        protected AltBot rbot
+        {
+            get { return bot; }
+        }
 
         private string theNameSpace;
         public bool TrimKeys = true;
@@ -102,7 +500,7 @@ namespace RTParser.Variables
         /// <param name="item">The object to add to the <see cref="T:System.Collections.Generic.ICollection`1"/>.
         ///                 </param><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.
         ///                 </exception>
-        public void Add(KeyValuePair<string, Unifiable> item)
+        public void Add(KeyValuePair<string, DataUnifiable> item)
         {
             Add(item.Key, item.Value);
         }
@@ -125,7 +523,7 @@ namespace RTParser.Variables
         /// </returns>
         /// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
         ///                 </param>
-        public bool Contains(KeyValuePair<string, Unifiable> item)
+        public bool Contains(KeyValuePair<string, DataUnifiable> item)
         {
             return Unifiable.IsStringMatch(grabSetting(item.Key), item.Value);
         }
@@ -143,13 +541,29 @@ namespace RTParser.Variables
         ///                     -or-
         ///                     The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.
         ///                     -or-
-        ///                     Type <paramref name="T"/> cannot be cast automatically to the type of the destination <paramref name="array"/>.
+        ///                     Type <paramref name="array"/> cannot be cast automatically to the type of the destination <paramref name="array"/>.
         ///                 </exception>
-        public void CopyTo(KeyValuePair<string, Unifiable>[] array, int arrayIndex)
+        public void CopyTo(KeyValuePair<string, DataUnifiable>[] array, int arrayIndex)
         {
             foreach (string key in Keys)
             {
-                array[arrayIndex++] = new KeyValuePair<string, Unifiable>(key, grabSetting(key));
+                array[arrayIndex++] = new KeyValuePair<string, DataUnifiable>(key, grabSetting(key));
+            }
+        }
+
+        public void CopyFrom(SettingsDictionary from, bool localOnly, bool existingOnly)
+        {
+            foreach (string key in from.Keys)
+            {
+                if (existingOnly && !containsSettingCalled(key))
+                {
+                    continue;
+                }
+                if (localOnly && !containsLocalCalled(key))
+                {
+                    continue;
+                }
+                addSetting(key, from.grabSetting(key));
             }
         }
 
@@ -162,9 +576,9 @@ namespace RTParser.Variables
         /// <param name="item">The object to remove from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
         ///                 </param><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.
         ///                 </exception>
-        public bool Remove(KeyValuePair<string, Unifiable> item)
+        public bool Remove(KeyValuePair<string, DataUnifiable> item)
         {
-            foreach (var hash in SettingNames(1))
+            foreach (var hash in SettingNames(rbot.ObjectRequester, 1))
             {
                 if (IsKeyMatch(item.Key, hash))
                 {
@@ -189,10 +603,7 @@ namespace RTParser.Variables
         /// </summary>
         public int Count
         {
-            get
-            {
-                return this.orderedKeys.Count;
-            }
+            get { return this.orderedKeysCount; }
         }
 
         /// <summary>
@@ -203,13 +614,17 @@ namespace RTParser.Variables
         /// </returns>
         public bool IsReadOnly
         {
-            get { return SuspendUpdates || TextPatternUtils.IsTrue(grabSettingNoDebug("isReadOnly")); }
+            get { return SuspendUpdates || TextPatternUtils.IsTrue(grabSetting("isReadOnly")); }
         }
 
         public string NameSpace
         {
             get { return theNameSpace; }
-            set { theNameSpace = value; }
+            set
+            {
+                AddName(value);
+                theNameSpace = value;
+            }
         }
 
         public bool IsTraced { get; set; }
@@ -221,7 +636,7 @@ namespace RTParser.Variables
         /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
         /// </returns>
         /// <filterpriority>1</filterpriority>
-        public IEnumerator<KeyValuePair<string, Unifiable>> GetEnumerator()
+        public IEnumerator<KeyValuePair<string, DataUnifiable>> GetEnumerator()
         {
             return new SettingsDictionaryEnumerator(Keys, this);
         }
@@ -245,7 +660,8 @@ namespace RTParser.Variables
 
         public string ToDebugString()
         {
-            return theNameSpace + "(" + Count + ") " + DictionaryAsXML.DocumentElement.InnerXml.Replace("<item name=", "\n<item name =");
+            return theNameSpace + "(" + Count + ") " +
+                   DictionaryAsXML.DocumentElement.InnerXml.Replace("<item name=", "\n<item name =");
         }
 
         /// <summary>
@@ -260,7 +676,7 @@ namespace RTParser.Variables
                 result.AppendChild(dec);
                 XmlNode root = result.CreateNode(XmlNodeType.Element, "root", "");
                 XmlAttribute newAttr = result.CreateAttribute("name");
-                lock (orderedKeys)
+                lock (orderedKeyLock)
                 {
                     string dupeCheck = "";
                     newAttr.Value = NameSpace;
@@ -309,7 +725,7 @@ namespace RTParser.Variables
                         string nameValue = normalizedName.NameSpace;
                         if (dupeCheck == nameValue)
                         {
-                            WriteErrorLine("Listeners DUPES " + dupeCheck); 
+                            WriteErrorLine("Listeners DUPES " + dupeCheck);
                             break;
                         }
                         dupeCheck = nameValue;
@@ -320,7 +736,7 @@ namespace RTParser.Variables
                         item.Attributes.Append(name);
                         root.AppendChild(item);
                     }
-                    foreach (var normalizedName in this.prefixProvider._prefixes)
+                    /*foreach (var normalizedName in this.prefixProvider._prefixes)
                     {
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "prefixes", "");
                         XmlAttribute name = result.CreateAttribute("name");
@@ -331,6 +747,7 @@ namespace RTParser.Variables
                         item.Attributes.Append(value);
                         root.AppendChild(item);
                     }
+                     */
                     foreach (var normalizedName in ProvidersFrom(this.MetaProviders))
                     {
                         string nameValue = normalizedName.NameSpace;
@@ -347,7 +764,7 @@ namespace RTParser.Variables
                         item.Attributes.Append(name);
                         root.AppendChild(item);
                     }
-                    foreach (var normalizedName in this.makedvars)
+                    foreach (var normalizedName in LockInfo.CopyOf(this.maskedVars))
                     {
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "maskedvar", "");
                         XmlAttribute name = result.CreateAttribute("name");
@@ -355,13 +772,14 @@ namespace RTParser.Variables
                         item.Attributes.Append(name);
                         root.AppendChild(item);
                     }
-                    foreach (string n in this.orderedKeys)
+                    foreach (string n in this.LocalKeys)
                     {
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "item", "");
                         XmlAttribute name = result.CreateAttribute("name");
-                        name.Value = n; ;
+                        name.Value = n;
+                        ;
                         XmlAttribute value = result.CreateAttribute("value");
-                        value.Value = this.settingsHash[TransformKey(n)];
+                        value.Value = this.settingsHash.GetValue(TransformKey(n));
                         item.Attributes.Append(name);
                         item.Attributes.Append(value);
                         root.AppendChild(item);
@@ -393,31 +811,32 @@ namespace RTParser.Variables
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot for whom this is a settings dictionary</param>
-        public SettingsDictionary(String name, AltBot bot, ParentProvider parent)
+        public SettingsDictionaryReal(String name, AltBot bot, KeyValueList list)
         {
-            theNameSpace = name;
+            settingsHash = list;
+            IsTraced = true;
+            theNameSpace = name; // ScriptManager.ToKey(name);//.ToLower();
+            this.bot = bot;
             IsSubsts = name.Contains("subst");
             TrimKeys = !name.Contains("subst");
-            this.bot = bot;
-            if (!IsSubsts)
-            {
-                if (bot.RelationMetaProps != null) this.InsertMetaProvider(bot.GetRelationMetaProps);
-            }
-            IsTraced = true;
             bot.RegisterDictionary(name, this);
-            if (parent != null) _fallbacks.Add(parent);
-            prefixProvider = new PrefixProvider();
-            string prefixName = name + ".prefixProvider";
-            prefixProvider.NameSpace = prefixName;
-            ParentProvider pp = () => prefixProvider;
-            bot.RegisterDictionary(prefixName, prefixProvider);
-            var dict = FindDictionary(prefixName, () => this);
+            if (!IsSubsts) this.InsertMetaProvider(bot.GetRelationMetaProps);
             IsTraced = false;
-            AddSettingToCollection(null, pp, _fallbacks);
-            AddSettingToCollection(null, pp, _listeners);
+        }
+
+        public bool IsOrdered
+        {
+            get { return settingsHash.IsOrdered; }
+            set { settingsHash.IsOrdered = value; }
         }
 
         #region Methods
+
+        public void loadSettings(string pathToSettings)
+        {
+            loadSettings(pathToSettings, SettingsPolicy.Default, null);
+        }
+
         /// <summary>
         /// Loads bespoke settings into the class from the file referenced in pathToSettings.
         /// 
@@ -432,10 +851,45 @@ namespace RTParser.Variables
         /// <param name="pathToSettings">The file containing the settings</param>
         public void loadSettings(string pathToSettings, Request request)
         {
-            pathToSettings = HostSystem.ResolveToExistingPath(pathToSettings);
-            OutputDelegate writeToLog = request.writeToLog;
+            loadSettings(pathToSettings, SettingsPolicy.Default, request);
+        }
+
+        public void loadSettings(string pathToSettings, SettingsPolicy settingsPolicy, Request request)
+        {
             if (pathToSettings == null) return;
-            lock (orderedKeys)
+            AddMonitorPath(pathToSettings, settingsPolicy);
+            loadSettingsNow(pathToSettings, settingsPolicy, request);
+        }
+
+        public void loadSettingsFromPrefix(string prefixToSettings, SettingsPolicy settingsPolicy, Request request)
+        {
+            lock (MonitorPaths)
+            {
+                foreach (var path in MonitorPaths)
+                {
+                    string pathToSettings = HostSystem.Combine(prefixToSettings, path.Key);
+                    try
+                    {
+                        loadSettingsNow(pathToSettings, path.Value, request);
+                    }
+                    catch (FileNotFoundException fnf)
+                    {
+
+                    }
+                }
+            }
+        }
+
+        public void loadSettingsNow(string pathToSettings, SettingsPolicy settingsPolicy, Request request)
+        {
+            if (request == null)
+                request = bot.GetBotRequest("<!-- Loads Config to " + this + " from: '" + pathToSettings + "' -->");
+            pathToSettings = HostSystem.ResolveToExistingPath(pathToSettings);
+            pathToSettings = HostSystem.FileSystemPath(pathToSettings);
+            OutputDelegate writeToLog = this.writeToLog;
+            if (request != null) writeToLog = request.writeToLog;
+            if (pathToSettings == null) return;
+            lock (orderedKeyLock)
             {
                 if (pathToSettings.Length > 0)
                 {
@@ -449,7 +903,7 @@ namespace RTParser.Variables
                             xmlDoc.Load(stream);
                             HostSystem.Close(stream);
                             IsIdentityReadOnly = false;
-                            this.loadSettings(xmlDoc, request);
+                            loadSettingNode(this, xmlDoc, settingsPolicy, request);
                         }
                         catch (ChatSignal e)
                         {
@@ -479,17 +933,19 @@ namespace RTParser.Variables
             }
         }
 
-        static public void loadSettings(ISettingsDictionary dict0, string pathToSettings,
-            bool overwriteExisting, bool onlyIfUnknown, Request request)
+        public static void loadSettingsNow(ISettingsDictionary dict0, string prefix, string pathToSettings0,
+                                           SettingsPolicy settingsPolicy, Request request)
         {
-            if (pathToSettings == null) return;
-            SettingsDictionary dict = ToSettingsDictionary(dict0);
+            if (pathToSettings0 == null) return;
+            string pathToSettings = HostSystem.Combine(prefix, pathToSettings0);
+            pathToSettings = HostSystem.FileSystemPath(pathToSettings);
+            SettingsDictionaryReal dict = ToSettingsDictionary(dict0);
             OutputDelegate writeToLog = dict.writeToLog;
             // or else
             // ReSharper disable ConstantNullColescingCondition
             writeToLog = writeToLog ?? request.writeToLog;
             // ReSharper restore ConstantNullColescingCondition
-            lock (dict.orderedKeys)
+            lock (LockInfo.Watch(dict.orderedKeyLock))
             {
                 if (pathToSettings.Length > 0)
                 {
@@ -497,13 +953,13 @@ namespace RTParser.Variables
                     {
                         foreach (string s in HostSystem.GetFiles(pathToSettings, "*.xml"))
                         {
-                            loadSettings(dict, s, overwriteExisting, onlyIfUnknown, request);
+                            loadSettingsNow(dict, null, s, settingsPolicy, request);
                         }
                         return;
                     }
                     if (!HostSystem.FileExists(pathToSettings))
                     {
-                        writeToLog("ERROR No settings found in: " + pathToSettings);
+                        writeToLog("WARNING no settings file: " + pathToSettings);
                         //throw new FileNotFoundException(pathToSettings);
                         return;
                     }
@@ -514,7 +970,7 @@ namespace RTParser.Variables
                         var stream = HostSystem.GetStream(pathToSettings);
                         xmlDoc.Load(stream);
                         HostSystem.Close(stream);
-                        loadSettingNode(dict, xmlDoc, overwriteExisting, onlyIfUnknown, request);
+                        loadSettingNode(dict, xmlDoc, settingsPolicy, request);
                         writeToLog("Loaded Settings found in: " + pathToSettings);
                         if (dict.fromFile == null) dict.fromFile = pathToSettings;
                     }
@@ -554,35 +1010,27 @@ namespace RTParser.Variables
         /// <item name="name" value="value"/>
         /// </summary>
         /// <param name="settingsAsXML">The settings as an XML document</param>
-        public void loadSettings(XmlDocument settingsAsXML, Request request)
-        {
-            lock (orderedKeys)
-            {
-                if (settingsAsXML.DocumentElement == null)
-                {
-                    writeToLog("ERROR no doc element in " + settingsAsXML);
-                }
-                loadSettingNode(this, settingsAsXML.Attributes, true, false, request);
-                loadSettingNode(this, settingsAsXML.DocumentElement, true, false, request);
-            }
-        }
-
-        static public void loadSettingNode(ISettingsDictionary dict, IEnumerable Attributes, bool overwriteExisting, bool onlyIfUnknown, Request request)
+        public static void loadSettingNode(ISettingsDictionary dict, IEnumerable Attributes,
+                                           SettingsPolicy settingsPolicy, Request request)
         {
             if (Attributes == null) return;
             foreach (object o in Attributes)
             {
                 if (o is XmlNode)
                 {
-                    XmlNode n = (XmlNode)o;
-                    loadSettingNode(dict, n, overwriteExisting, onlyIfUnknown, request);
+                    XmlNode n = (XmlNode) o;
+                    loadSettingNode(dict, n, settingsPolicy, request);
                 }
             }
         }
 
-        private static void loadNameValueSetting(ISettingsDictionary dict, string name, string value, string updateOrAddOrDefualt, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
+        private static void loadNameValueSetting(ISettingsDictionary dict, string name, string value,
+                                                 string updateOrAddOrDefualt, XmlNode myNode,
+                                                 SettingsPolicy settingsPolicy, Request request)
         {
             updateOrAddOrDefualt = updateOrAddOrDefualt.ToLower().Trim();
+            bool overwriteExisting = settingsPolicy.overwriteExisting;
+            bool onlyIfUnknown = settingsPolicy.onlyIfUnknown;
 
             overwriteExisting =
                 Boolean.Parse(StaticXMLUtils.GetAttribValue(myNode, "overwriteExisting", "" + overwriteExisting));
@@ -595,7 +1043,10 @@ namespace RTParser.Variables
             if (returnNameWhenSet != null)
             {
                 var returnNameWhenSetUPPER = StaticXMLUtils.Trim(StaticXMLUtils.ToUpper(returnNameWhenSet));
-                if (returnNameWhenSetUPPER.Length == 0) { returnNameWhenSet = "false"; }
+                if (returnNameWhenSetUPPER.Length == 0)
+                {
+                    returnNameWhenSet = "false";
+                }
                 else if (IsMissing(returnNameWhenSet)) returnNameWhenSet = "value";
                 else if (StaticXMLUtils.IsFalseOrNo(returnNameWhenSetUPPER)) returnNameWhenSet = "value";
                 else if (StaticXMLUtils.IsTrueOrYes(returnNameWhenSetUPPER)) returnNameWhenSet = "name";
@@ -607,9 +1058,10 @@ namespace RTParser.Variables
                 ToSettingsDictionary(dict).addMetaValue(name, "set-return", returnNameWhenSet);
             }
 
-            SettingsDictionary dictionary = ToSettingsDictionary(dict);
+            SettingsDictionaryReal dictionary = ToSettingsDictionary(dict);
             string englishFormatter =
-                StaticXMLUtils.GetAttribValue(myNode, "formatter,pred-format,genformat,format,printf,lucene,english", null);
+                StaticXMLUtils.GetAttribValue(myNode, "formatter,pred-format,genformat,format,printf,lucene,english",
+                                              null);
             if (englishFormatter != null)
             {
                 string formatter = englishFormatter;
@@ -691,35 +1143,37 @@ namespace RTParser.Variables
             }
         }
 
-        static R WithoutTrace<R>(ISettingsDictionary dict, Func<R> func)
+        private static R WithoutTrace<R>(ISettingsDictionary dict, Func<R> func)
         {
             return StaticXMLUtils.WithoutTrace(dict, func);
         }
 
-        static public void loadSettingNode(ISettingsDictionary dict, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
+        public static void loadSettingNode(ISettingsDictionary dict, XmlNode myNode, SettingsPolicy settingsPolicy,
+                                           Request request)
         {
-            lock (dict)
+            lock (LockInfo.Watch(dict))
             {
 
                 SettingsDictionary settingsDict = ToSettingsDictionary(dict);
                 WithoutTrace(dict, () =>
-                {
-                    loadSettingNode0(settingsDict, myNode, overwriteExisting,
-                                     onlyIfUnknown, request);
-                    return true;
-                });
+                                       {
+                                           loadSettingNode0(settingsDict, myNode, settingsPolicy, request);
+                                           return true;
+                                       });
             }
         }
 
-        static public void loadSettingNode0(ISettingsDictionary dict, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
+        public static void loadSettingNode0(ISettingsDictionary dict, XmlNode myNode, SettingsPolicy settingsPolicy,
+                                            Request request)
         {
+            bool onlyIfUnknown = settingsPolicy.onlyIfUnknown;
 
             if (myNode == null) return;
             if (myNode.NodeType == XmlNodeType.Comment) return;
             if (myNode.NodeType == XmlNodeType.Attribute)
             {
                 // attribues should not overwrite existing? 
-                loadNameValueSetting(dict, myNode.Name, myNode.Value, "add", myNode, overwriteExisting, onlyIfUnknown, request);
+                loadNameValueSetting(dict, myNode.Name, myNode.Value, "add", myNode, settingsPolicy, request);
                 return;
             }
             int atcount = 0;
@@ -730,22 +1184,22 @@ namespace RTParser.Variables
             }
             if (myNode.NodeType == XmlNodeType.XmlDeclaration)
             {
-                loadSettingNode(dict, myNode.Attributes, false, onlyIfUnknown, request);
-                loadSettingNode(dict, myNode.ChildNodes, overwriteExisting, onlyIfUnknown, request);
+                loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, onlyIfUnknown), request);
+                loadSettingNode(dict, myNode.ChildNodes, settingsPolicy, request);
                 return;
             }
             string lower = myNode.Name.ToLower();
 
             if (myNode.NodeType == XmlNodeType.Document || lower == "#document")
             {
-                loadSettingNode(dict, myNode.Attributes, false, onlyIfUnknown, request);
-                loadSettingNode(dict, myNode.ChildNodes, overwriteExisting, onlyIfUnknown, request);
+                loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, onlyIfUnknown), request);
+                loadSettingNode(dict, myNode.ChildNodes, settingsPolicy, request);
                 return;
             }
             if (lower == "substitutions")
             {
                 //loadSettingNode(dict, myNode.Attributes, false, true, request);
-                SettingsDictionary substDict = ToSettingsDictionary(dict);
+                SettingsDictionaryReal substDict = ToSettingsDictionary(dict);
                 string substName = StaticXMLUtils.GetAttribValue(myNode, "name,dict,value", "input");
                 var chdict = request.GetSubstitutions(substName, true);
                 foreach (XmlNode n in myNode.ChildNodes)
@@ -762,7 +1216,7 @@ namespace RTParser.Variables
                                 chdict = request.GetSubstitutions(substName, true);
                                 substDict.writeToLog("Creating substitutions: " + chdict);
                             }
-                            loadSettingNode(chdict, n.ChildNodes, overwriteExisting, onlyIfUnknown, request);
+                            loadSettingNode(chdict, n.ChildNodes, settingsPolicy, request);
                             continue;
                         }
                         catch (Exception e)
@@ -775,7 +1229,7 @@ namespace RTParser.Variables
                     else
                     {
                         /// ProgramD shoukd nbot actually be here
-                        loadSettingNode(chdict, n, overwriteExisting, onlyIfUnknown, request);
+                        loadSettingNode(chdict, n, settingsPolicy, request);
                     }
                 }
                 return;
@@ -786,7 +1240,7 @@ namespace RTParser.Variables
                 if (href != null && href.Length > 0)
                 {
                     string name = StaticXMLUtils.GetAttribValue(myNode, "id", myNode.Name);
-                    loadNameValueSetting(dict, name, href, "add", myNode, false, true, request);
+                    loadNameValueSetting(dict, name, href, "add", myNode, new SettingsPolicy(false, true), request);
                     return;
                 }
             }
@@ -796,8 +1250,9 @@ namespace RTParser.Variables
                 var p = myNode.ParentNode;
                 if (p != null && p.Name.ToLower() == "bots")
                 {
-                    loadSettingNode(dict, myNode.ChildNodes, overwriteExisting, onlyIfUnknown, request);
-                    loadSettingNode(dict, myNode.Attributes, false, false, request);
+                    return; //we are not program D definining bots TODO maybe we will be
+                    loadSettingNode(dict, myNode.ChildNodes, settingsPolicy, request);
+                    loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, false), request);
                     return;
                 }
             }
@@ -805,12 +1260,13 @@ namespace RTParser.Variables
             if (lower == "root" || lower == "vars" || lower == "items" || lower == "properties"
                 || lower == "bots" || lower == "testing" || lower == "predicates")
             {
-                loadSettingNode(dict, myNode.ChildNodes, overwriteExisting, onlyIfUnknown, request);
-                loadSettingNode(dict, myNode.Attributes, false, false, request);
+                loadSettingNode(dict, myNode.ChildNodes, settingsPolicy, request);
+                loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, false), request);
                 return;
             }
             if ((lower == "include"))
             {
+                bool overwriteExisting = settingsPolicy.overwriteExisting;
                 string path = StaticXMLUtils.GetAttribValue(myNode, "path", myNode.InnerText);
 
                 overwriteExisting =
@@ -819,13 +1275,14 @@ namespace RTParser.Variables
                 onlyIfUnknown =
                     Boolean.Parse(StaticXMLUtils.GetAttribValue(myNode, "onlyIfKnown", "" + onlyIfUnknown));
 
-                loadSettings(ToSettingsDictionary(dict), path, overwriteExisting, onlyIfUnknown, request);
+                loadSettingsNow(ToSettingsDictionary(dict), null, path,
+                                new SettingsPolicy(overwriteExisting, onlyIfUnknown), request);
                 return;
             }
-            SettingsDictionary settingsDict = ToSettingsDictionary(dict);
+            SettingsDictionaryReal settingsDict = ToSettingsDictionary(dict);
             if ((lower == "parent" || lower == "override" || lower == "fallback" || lower == "listener"
-                || lower == "provider" || lower == "synchon" || lower == "prefixes"
-                || lower == "metaproviders" || lower == "formatter"))
+                 || lower == "provider" || lower == "synchon" || lower == "prefixes"
+                 || lower == "metaproviders" || lower == "formatter"))
             {
                 string name = StaticXMLUtils.GetAttribValue(myNode, "value,dict,name", null);
                 if (!String.IsNullOrEmpty(name))
@@ -833,7 +1290,8 @@ namespace RTParser.Variables
                     ParentProvider pp = settingsDict.FindDictionary(name, null);
                     if (pp == null /* || pp() == null*/)
                     {
-                        settingsDict.writeToLog("DEBUG9 Cannot ResolveToObject settings line {0} in {1}", name, settingsDict);
+                        settingsDict.writeToLog("DEBUG9 Cannot ResolveToObject settings line {0} in {1}", name,
+                                                settingsDict);
                         return;
                     }
                     var pdict = pp();
@@ -858,11 +1316,13 @@ namespace RTParser.Variables
                         case "metaproviders":
                             settingsDict.InsertMetaProvider(pp);
                             return;
-                        case "prefixes":
-                            settingsDict.AddChild(StaticXMLUtils.GetAttribValue(myNode, "prefix,name,dict,value", name), pp);
-                            return;
+                            /*
+                    case "prefixes":
+                        settingsDict.AddChild(StaticXMLUtils.GetAttribValue(myNode, "prefix,name,dict,value", name), pp);
+                        return;*/
                         default:
-                            settingsDict.writeToLog("ERROR cannot make a name/v from " + StaticXMLUtils.TextAndSourceInfo(myNode));
+                            settingsDict.writeToLog("ERROR cannot make a name/v from " +
+                                                    StaticXMLUtils.TextAndSourceInfo(myNode));
                             return;
                     }
                     return;
@@ -900,7 +1360,8 @@ namespace RTParser.Variables
                     XmlNode holder = StaticXMLUtils.FindNode("name,var,old,key,find", myNode, null);
                     if (holder == null)
                     {
-                        settingsDict.SettingsLog("ERROR cannot make a name/v from " + StaticXMLUtils.TextAndSourceInfo(myNode));
+                        settingsDict.SettingsLog("ERROR cannot make a name/v from " +
+                                                 StaticXMLUtils.TextAndSourceInfo(myNode));
                         return;
                     }
                     name = holder.InnerText;
@@ -920,13 +1381,15 @@ namespace RTParser.Variables
                     if (maybe != null) value = maybe;
                 }
                 if (value == null)
-                    settingsDict.writeToLog("ERROR cannot make a n/value from " + StaticXMLUtils.TextAndSourceInfo(myNode));
+                    settingsDict.writeToLog("ERROR cannot make a n/value from " +
+                                            StaticXMLUtils.TextAndSourceInfo(myNode));
 
                 loadNameValueSetting(dict, name, value, StaticXMLUtils.GetAttribValue(myNode, "type", "add"), myNode,
-                            overwriteExisting, onlyIfUnknown, request);
+                                     settingsPolicy, request);
                 return;
             }
-            if (lower == "learn" || lower == "srai" || lower == "aiml" || lower == "that" || lower == "category" || lower == "topic")
+            if (lower == "learn" || lower == "srai" || lower == "aiml" || lower == "that" || lower == "category" ||
+                lower == "topic")
             {
                 request.Loader.loadAIMLNode(myNode, request.LoadOptions, request);
                 return;
@@ -939,20 +1402,21 @@ namespace RTParser.Variables
                 if (itext == value)
                 {
                     string name = myNode.Name;
-                    loadNameValueSetting(dict, name, value, "add", myNode, false, true, request);
+                    loadNameValueSetting(dict, name, value, "add", myNode, new SettingsPolicy(false, true), request);
                     return;
                 }
 
             }
             {
-                settingsDict.writeToLog("-DICTRACE: ERROR unknow settings line {0} in {1}", StaticXMLUtils.TextAndSourceInfo(myNode), dict);
+                settingsDict.writeToLog("-DICTRACE: ERROR unknow settings line {0} in {1}",
+                                        StaticXMLUtils.TextAndSourceInfo(myNode), dict);
             }
         }
 
         private static bool IsNameValueTag(string lower)
         {
             return lower == "item" || lower == "set" || lower == "entry" || lower == "predicate" || lower == "property" ||
-            lower == "substitution" || lower == "param" || lower == "parameter" || lower == "substitute";
+                   lower == "substitution" || lower == "param" || lower == "parameter" || lower == "substitute";
         }
 
 
@@ -962,22 +1426,27 @@ namespace RTParser.Variables
             {
                 return fallback;
             }
-            if (name.EndsWith(".prefixProvider"))
+            /*if (name.EndsWith(".prefixProvider"))
             {
                 int keylen = name.Length - ".prefixProvider".Length;
 
-                ParentProvider dict = FindDictionary(name.Substring(0, keylen), fallback);
+                var dict = FindDictionary(name.Substring(0, keylen), fallback);
                 if (dict != null)
                 {
                     var sd = ToSettingsDictionary(dict());
                     if (sd != null)
                         return ToParentProvider(sd.prefixProvider);
                 }
-            }
-            ParentProvider pp = FindDictionary0(name, fallback);
+            }*/
+            var pp = FindDictionary0(name, fallback);
             if (pp != null) return pp.Invoke;
             Func<ParentProvider> provider0 = () => FindDictionary0(name, fallback);
-            return () => new ProvidedSettingsDictionary(name, provider0);
+            return () =>
+                       {
+                           //new ProvidedSettingsDictionary(name, provider0)
+                           throw new NotImplementedException();
+                           return null;
+                       };
         }
 
         public ParentProvider FindDictionary0(string name, ParentProvider fallback)
@@ -986,13 +1455,13 @@ namespace RTParser.Variables
             if (rtpbotobjCol == null || rtpbotobjCol.Count == 0)
             {
                 string clipIt;
-                var prep = prefixProvider.GetChildPrefixed(name, out clipIt);
+                /*var prep = prefixProvider.GetChildPrefixed(name, out clipIt);
                 if (prep != null)
                 {
                     if (clipIt == ".") return prep;
                     var pp0 = prep();
                     return prep;
-                }
+                }*/
                 var botGetDictionary = bot.GetDictionary(name);
                 if (botGetDictionary != null) return ToParentProvider(botGetDictionary);
                 //writeToLog("DEBUG9 Cannot ResolveToObject0 settings line {0} in {1}", name, this);
@@ -1009,16 +1478,16 @@ namespace RTParser.Variables
             return pp;
         }
 
-        public static SettingsDictionary ToSettingsDictionary(object dictionary)
+        public static SettingsDictionaryReal ToSettingsDictionary(object dictionary)
         {
             if (dictionary == null)
             {
                 AltBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got NULL");
                 return null;
             }
-            if (dictionary is SubQuery) dictionary = ((SubQuery)dictionary).TargetSettings;
-            if (dictionary is User) dictionary = ((User)dictionary).Predicates;
-            SettingsDictionary sd = dictionary as SettingsDictionary;
+            if (dictionary is SubQuery) dictionary = ((SubQuery) dictionary).TargetSettings;
+            if (dictionary is User) dictionary = ((User) dictionary).Predicates;
+            SettingsDictionaryReal sd = dictionary as SettingsDictionaryReal;
             if (sd != null) return sd;
             AltBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got type={0} '{1}'",
                                   dictionary.GetType(),
@@ -1037,7 +1506,7 @@ namespace RTParser.Variables
             if (sd != null) return sd;
             if (dictionary is ISettingsDictionary)
             {
-                return (() => (ISettingsDictionary)dictionary);
+                return (() => (ISettingsDictionary) dictionary);
             }
             if (dictionary is IEnumerable)
             {
@@ -1060,7 +1529,7 @@ namespace RTParser.Variables
             if (fromFile == null) fromFile = tofile;
             HostSystem.BackupFile(tofile);
             XmlDocument xmldoc;
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 var restore = NameSpace;
                 try
@@ -1082,9 +1551,9 @@ namespace RTParser.Variables
         /// </summary>
         /// <param name="name">The name of the new setting</param>
         /// <param name="value">The value associated with this setting</param>
-        public bool addSetting(string name, Unifiable value)
+        public bool addSetting(string name, object value0)
         {
-            value = TransformValueIn(value);
+            var value = TransformValueIn(value0);
             foreach (var setname in GetSettingsAliases(name))
             {
                 addSetting0(setname, value);
@@ -1104,10 +1573,10 @@ namespace RTParser.Variables
             return aliases;
         }
 
-        public bool addSetting0(string name, Unifiable value)
+        public bool addSetting0(string name, DataUnifiable value)
         {
             bool found = true;
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 name = TransformName(name);
                 string normalizedName = TransformKey(name);
@@ -1115,43 +1584,80 @@ namespace RTParser.Variables
                 {
                     IsSubsts = TextPatternUtils.IsTrue(value);
                 }
-                if (makedvars.Contains(normalizedName))
+                if (IsMaskedVar(normalizedName))
                 {
+                    updateListeners(name, value, true, !found);
                     SettingsLog("ERROR MASKED ADD SETTING '" + name + "'=" + str(value) + " ");
                     return false;
                 }
-                if (normalizedName.Length > 0)
+                if (!AllowedNameValue(name, value))
                 {
-                    if (!AllowedNameValue(name, value))
-                    {
-                        SettingsLog("!NameValueCheck ADD Setting Local '" + name + "'=" + str(value) + " ");
-                        return true;
-                    }
-                    SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
-                    value = MakeLocalValue(name, value);
-                    found = this.removeSettingReal(name);
-                    if (value != null)
-                    {
-                        this.orderedKeys.Add(name);
-                        this.settingsHash.Add(normalizedName, value);
-                    }
-                    updateListeners(name, value, true, !found);
+                    SettingsLog("!NameValueCheck ADD Setting Local '" + name + "'=" + str(value) + " ");
+                    return true;
+                }
+                // check blackboard
+                if ((isBBPrefixCorrect()))
+                {
+                    string bbKey = bbPrefix + MakeCaseInsensitive.TransformInput(name).ToLower();
+                    ;
+                    this.bot.setBBHash0(bbKey, value);
+                }
+                SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
+                value = MakeLocalValue(name, value);
+                //found = this.removeSettingReal(name);
+                if (value != null)
+                {
+                    this.settingsHash.Set(normalizedName, value);
+                    //this.settingsHash.AddKey(name);
                 }
                 else
                 {
-                    SettingsLog("ERROR ADD Setting Local '" + name + "'=" + str(value) + " ");
+                    removeSetting(normalizedName);
                 }
+                updateListeners(name, value, true, !found);
             }
             return !found;
         }
 
-        private Unifiable MakeLocalValue(string name, Unifiable value)
+        private bool isBBPrefixCorrect()
         {
-            Unifiable oldSetting = grabSettingNoDebug(name);
-            bool isCollection = IsCollection(name);            
+            if (bbPrefix == null) return false;
+            if (bbPrefix == "user")
+            {
+                var lu = rbot._lastUser;
+                return  lu == null || lu.Predicates == this;
+            }
+            if (bbPrefix == "bot")
+            {
+                return bot.GlobalSettings == this;
+            }
+            return true;
+        }
+
+        private bool IsMaskedVar(string name)
+        {
+            lock (maskedVars) if (maskedVars.Contains(name)) return true;
+            foreach (ParentProvider list in _overides)
+            {
+                var p = list();
+                if (p != null)
+                {
+                    if (p.containsLocalCalled(name))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private DataUnifiable MakeLocalValue(string name, DataUnifiable value)
+        {
+            DataUnifiable oldSetting = grabSetting0(name, false);
+            bool isCollection = IsCollection(name);
             if (isCollection)
             {
-                string commaVersion = "<li>" + value.AsString() + "</li>";
+                string commaVersion = "<li>" + value.ToString() + "</li>";
                 string svalue = "";
                 if (IsMissing(oldSetting))
                 {
@@ -1159,19 +1665,20 @@ namespace RTParser.Variables
                 }
                 else
                 {
-                    if (oldSetting is BestUnifiable)
+                    BestUnifiable bunif = (((object) oldSetting) as BestUnifiable);
+                    if (bunif != null)
                     {
-                        oldSetting = (oldSetting as BestUnifiable).AddItem(value);
+                        oldSetting = bunif.AddItem(value);
                     }
                     else
                     {
-                        var nl = new List<Unifiable>();
+                        var nl = new List<DataUnifiable>();
                         nl.Add(oldSetting);
                         nl.Add(value);
                         oldSetting = new BestUnifiable(nl);
                     }
-                    string soldSetting = oldSetting.AsString();
-                    svalue = soldSetting;// "<or>" + commaVersion + soldSetting.Substring(4);
+                    string soldSetting = rbot.ToValueString(oldSetting);
+                    svalue = soldSetting; // "<or>" + commaVersion + soldSetting.Substring(4);
                 }
                 value = svalue;
                 return value;
@@ -1181,7 +1688,7 @@ namespace RTParser.Variables
 
         private bool IsCollection(string name)
         {
-            return false;// name == "topic";
+            return false; // name == "topic";
         }
 
         public static string[] unsettableTs =
@@ -1274,23 +1781,29 @@ namespace RTParser.Variables
             };
 
         public static HashSet<string> UnsettableTopic = new HashSet<string>(unsettableTs);
-        
-        protected bool AllowedNameValue(string name, Unifiable value)
+
+        protected bool AllowedNameValue(string name, DataUnifiable value)
         {
+            if (name.Length < 1)
+            {
+                writeToLog(String.Format("! NameValueCheck '{0}' = '{1}'", name, value));
+                return false;
+            }
             if (name == "topic")
             {
                 if (UnsettableTopic.Contains(value.ToLower())) return false;
             }
-            string s = (string)value;
-            if ((s == null) || s.Contains(">"))
+            string s = (string) value;
+
+            if ((s == null) || s.Contains(">") || s.Contains("_to_") || name == "startgraph")
             {
-                writeToLog(String.Format("! NameValueCheck {0} = {1}", name, value.AsString()));
+                writeToLog(String.Format("! NameValueCheck {0} = {1}", name, rbot.ToValueString(value)));
                 return !SuspendUpdates;
             }
             if (IsIdentityReadOnly && (name.ToLower() == "name" || name.ToLower() == "id"))
             {
                 if (TextPatternUtils.IsUnknown(value) || s.Length < 3 || s.ToLower() == "friend"
-                     ||  s.ToLower() == "that really")
+                    || s.ToLower() == "that really")
                 {
                     writeToLog(String.Format("! NameValueCheck {0} = {1}", name, value));
                     return false;
@@ -1300,32 +1813,95 @@ namespace RTParser.Variables
             return !SuspendUpdates;
         }
 
-        private void updateListeners(string name, Unifiable value, bool locally, bool addedNew)
+        private void updateListeners(string name, DataUnifiable value, bool locally, bool addedNew)
         {
             if (SuspendUpdates) return;
-            foreach (var list in _listeners)
+            if (LoopingOn(name, "update"))
             {
-                var l = list();
+                return;
+            }
+            foreach (var l in Listeners)
+            {
                 if (addedNew) l.addSetting(name, value);
                 else
                     l.updateSetting(name, value);
             }
         }
-        public Unifiable TransformValueIn(Unifiable value)
+
+        public static int generation
         {
-            string s = TransformValue0(value);
+            get { return MushDLR223.ScriptEngines.ScriptManager.Generation; }
+        }
+
+        [ThreadStatic] private Dictionary<string, Dictionary<string, int>> checkingFallbacksOfN = null;
+
+        public bool LoopingOn(string name, string type)
+        {
+            if (LoopingOn0(name, type))
+            {
+                if (LoopingOn0(name, type + "1"))
+                {
+                    if (ScriptManager.GettingDeeper(NameSpace + "." + name, type + "-aiml",
+                                                    (new System.Diagnostics.StackTrace(true)).FrameCount))
+                    {
+                        return true;
+                    }
+                    return true;
+                }
+
+            }
+            return false;
+        }
+
+        public bool LoopingOn0(string name, string type)
+        {
+            Dictionary<string, int> fallbacksOf;
+            if (checkingFallbacksOfN == null)
+            {
+                checkingFallbacksOfN = new Dictionary<string, Dictionary<string, int>>();
+            }
+            lock (checkingFallbacksOfN)
+            {
+                if (!checkingFallbacksOfN.TryGetValue(type, out fallbacksOf))
+                {
+                    fallbacksOf = checkingFallbacksOfN[type] = new Dictionary<string, int>();
+                }
+            }
+            int gen, ggen = generation;
+            lock (fallbacksOf)
+            {
+                if (!fallbacksOf.TryGetValue(name, out gen))
+                {
+                    fallbacksOf[name] = ggen;
+                }
+                else if (gen == generation)
+                {
+                    return true;
+                }
+                else
+                {
+                    fallbacksOf[name] = ggen;
+                }
+            }
+            return false;
+        }
+
+        public DataUnifiable TransformValueIn(object value)
+        {
+            var s = TransformValue0(value);
             if (s == null) return Unifiable.NULL;
             if (s == "") return Unifiable.EmptyRef;
-            if (Unifiable.IsMissing(value)) 
+            if (Unifiable.IsMissing(value))
             {
                 if (NoSettingsAliaes) return null;
                 return Unifiable.MISSING;
             }
             return s;
         }
-        public Unifiable TransformValueOut(Unifiable value)
+
+        public DataUnifiable TransformValueOut(DataUnifiable value)
         {
-            string s = TransformValue0(value);
+            DataUnifiable s = TransformValue0(value);
             if (s == null) return Unifiable.NULL;
             if (s == "OM")
             {
@@ -1334,17 +1910,17 @@ namespace RTParser.Variables
             }
             if (s == "")
             {
-                return "";// Unifiable.Empty;
+                return ""; // Unifiable.Empty;
             }
             if (s == Unifiable.EmptyRef)
             {
-                return "";// 
+                return ""; // 
             }
 
             return s;
         }
 
-        public string TransformValue0(Unifiable value)
+        public DataUnifiable TransformValue0(object value)
         {
             if (Unifiable.IsNull(value))
             {
@@ -1365,7 +1941,12 @@ namespace RTParser.Variables
                 if (NoSettingsAliaes) return null;
                 return "OM";
             }
-            string ss = value.ToUpper();
+            string s0 = value.ToString();
+            if (s0.Contains("<xor"))
+            {
+                Console.WriteLine("I am doing someting crazy " + s0);
+            }
+            string ss = s0.ToUpper();
             if (ss.Contains("TAG-"))
             {
                 return Unifiable.EnglishNothing;
@@ -1378,23 +1959,29 @@ namespace RTParser.Variables
             }
             if (Unifiable.IsMulti(value))
             {
-                return value;
+                return (string) value;
             }
-            var v = StaticXMLUtils.ValueText(value);
-            if (false)if (v.Contains("<") || v.Contains("&"))
-            {
-                writeToLog("!@ERROR BAD INPUT? " + value);
-            }
-            if (false) if (v.Contains("???"))
-            {
-                writeToLog("!?????@ERROR BAD INPUT? " + value);
-            }
+            if (value is Unifiable) return (Unifiable) value;
+            if (value is string) return (string) value;
+            Type valueTyp = value.GetType();
+            if (valueTyp.IsPrimitive) return s0;
+            var v = StaticXMLUtils.ValueText((string) value);
+            if (false)
+                if (v.Contains("<") || v.Contains("&"))
+                {
+                    writeToLog("!@ERROR BAD INPUT? " + value);
+                }
+            if (false)
+                if (v.Contains("???"))
+                {
+                    writeToLog("!?????@ERROR BAD INPUT? " + value);
+                }
             return v;
         }
 
-        public bool addListSetting(string name, Unifiable value)
+        public bool addListSetting(string name, DataUnifiable value)
         {
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 name = TransformName(name);
                 value = TransformValueIn(value);
@@ -1402,12 +1989,38 @@ namespace RTParser.Variables
                 if (normalizedName.Length > 0)
                 {
                     this.removeSetting(name);
-                    this.orderedKeys.Add(name);
-                    this.settingsHash.Add(normalizedName, value);
+                    this.settingsHash.Set(normalizedName, value);
                 }
             }
             return true;
         }
+
+        private ICollection<string> LocalKeys
+        {
+            get { return KeyZ.Keys; }
+        }
+
+        protected int orderedKeysCount
+        {
+            get { lock (KeyZ) return KeyZ.Count; }
+        }
+
+        private bool orderedKeysContains(string name)
+        {
+            lock (KeyZ) return KeyZ.ContainsKey(name);
+        }
+
+        private void orderedKeysRemove(string name)
+        {
+            lock (KeyZ) KeyZ.Remove(name);
+
+        }
+
+        private void orderedKeysClear()
+        {
+            lock (KeyZ) KeyZ.Clear();
+        }
+
 
         internal string TransformName(string name)
         {
@@ -1420,21 +2033,21 @@ namespace RTParser.Variables
         /// <param name="name">The name of the setting to remove</param>
         public bool removeSetting(string name)
         {
-			return removeSettingReal(name);
+            return removeSettingReal(name);
             return addSetting(name, Unifiable.MISSING);
         }
 
         public bool removeSettingReal(string name)
         {
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 if (SuspendUpdates) return true;
                 name = TransformName(name);
                 string normalizedName = TransformKey(name);
-                bool ret = orderedKeys.Contains(name);
-                this.orderedKeys.Remove(name);
+                bool ret = orderedKeysContains(name);
+                this.orderedKeysRemove(name);
                 // shouldnt need this next one (but just in case)
-                this.orderedKeys.Remove(normalizedName);
+                this.orderedKeysRemove(normalizedName);
                 this.removeFromHash(name);
                 if (ret)
                 {
@@ -1456,7 +2069,8 @@ namespace RTParser.Variables
             name = name.Replace("fav_", "fav");
             name = name.Replace("fav.", "fav");
 
-            if (false) foreach (var k in new[] { "favorite", "fav" })
+            if (false)
+                foreach (var k in new[] {"favorite", "fav"})
                 {
                     if (name.StartsWith(k))
                     {
@@ -1477,7 +2091,7 @@ namespace RTParser.Variables
         /// <param name="name">the key for the Dictionary<,></param>
         private void removeFromHash(string name)
         {
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 name = TransformName(name);
                 string normalizedName = TransformKey(name);
@@ -1491,22 +2105,22 @@ namespace RTParser.Variables
         /// </summary>
         /// <param name="name">the name of the setting</param>
         /// <param name="value">the new value</param>
-        public bool updateSetting(string name, Unifiable value)
+        public bool updateSetting(string name, object value0)
         {
             if (SuspendUpdates) return true;
-            value = TransformValueIn(value);
+            var value = TransformValueIn(value0);
             foreach (var setname in GetSettingsAliases(name))
             {
                 updateSetting0(setname, value);
             }
             return updateSetting0(name, value);
         }
-        public bool updateSetting0(string name, Unifiable value)
+
+        public bool updateSetting0(string name, DataUnifiable value)
         {
             bool overriden = false;
-            foreach (var parent in _overides)
+            foreach (var p in Overides)
             {
-                var p = parent();
                 if (p.updateSetting(name, value))
                 {
                     SettingsLog("OVERRIDDEN UPDATE " + p + " '" + name + "'=" + str(value));
@@ -1517,27 +2131,36 @@ namespace RTParser.Variables
             {
                 return true;
             }
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 name = TransformName(name);
                 string normalizedName = TransformKey(name);
                 if (this.settingsHash.ContainsKey(normalizedName))
                 {
-                    var old = this.settingsHash[normalizedName];
+                    var old = this.settingsHash.GetValue(normalizedName);
 
-                    if (makedvars.Contains(normalizedName))
+                    updateListeners(name, value, true, false);
+                    if (IsMaskedVar(normalizedName))
                     {
                         SettingsLog("MASKED Not Update Local '" + name + "'=" + str(value) + " keeped " + str(old));
                     }
                     else
                     {
-                        updateListeners(name, value, true, false);
                         if (AllowedNameValue(name, value))
                         {
                             value = MakeLocalValue(name, value);
+                            if (value == old) return true;
                             this.removeFromHash(name);
                             SettingsLog("UPDATE Setting Local '" + name + "'=" + str(value));
-                            this.settingsHash.Add(normalizedName, value);
+                            this.settingsHash.Set(normalizedName, value);
+                            // check blackboard
+                            if ((isBBPrefixCorrect()) && (this.bot.myChemistry != null))
+                            {
+                                string bbKey = bbPrefix + MakeCaseInsensitive.TransformInput(name).ToLower();
+                                ;
+                                this.bot.setBBHash0(bbKey, value);
+                            }
+                            SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
                             return true;
                         }
                         else
@@ -1547,7 +2170,7 @@ namespace RTParser.Variables
                     }
                 }
                 // before fallbacks
-                if (makedvars.Contains(normalizedName))
+                if (IsMaskedVar(normalizedName))
                 {
                     SettingsLog("MASKED NOT UPDATE FALLBACKS '" + name + "'=" + str(value));
                     return false;
@@ -1564,7 +2187,7 @@ namespace RTParser.Variables
             return false;
         }
 
-        public string str(Unifiable value)
+        public string str(DataUnifiable value)
         {
             value = TransformValueOut(value);
             return "'" + Unifiable.DescribeUnifiable(value) + "'";
@@ -1575,36 +2198,37 @@ namespace RTParser.Variables
         /// </summary>
         public void clearSettings()
         {
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
-                this.orderedKeys.Clear();
+                this.orderedKeysClear();
                 this.settingsHash.Clear();
             }
         }
         public void clearHierarchy()
         {
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 _overides.Clear();
                 _fallbacks.Clear();
-                _fallbacks.Add(() => prefixProvider);
-                makedvars.Clear();
+                //  _fallbacks.Add(() => prefixProvider);
+                lock (maskedVars) maskedVars.Clear();
             }
         }
 
         public void clearSyncs()
         {
             _listeners.Clear();
-            _listeners.Add(() => prefixProvider);
+            //_listeners.Add(() => prefixProvider);
         }
 
-        private HashSet<string> makedvars = new HashSet<string>();
+        private HashSet<string> maskedVars = new HashSet<string>();
+
         public void maskSetting(string name)
         {
             name = TransformName(name);
             name = TransformKey(name);
             writeToLog("MASKING: " + name);
-            lock (orderedKeys) makedvars.Add(name);
+            lock (maskedVars) maskedVars.Add(name);
         }
 
         /// <summary>
@@ -1612,62 +2236,60 @@ namespace RTParser.Variables
         /// </summary>
         /// <param name="name">the name of the setting whose value we're interested in</param>
         /// <returns>the value of the setting</returns>
-        public Unifiable grabSetting(string name)
+        public string grabSetting(string name, bool useBlackboad)
         {
-#if debug
-            var v = grabSetting0(name);
-            if (Unifiable.IsNullOrEmpty(v))
-            {
-                writeToLog("DICT '{0}'=null", null);
-            }
-            return v;
-#else
+            return grabSetting0(name, useBlackboad);
+        }
+
+        public Unifiable grabSettingNoDebug(string name)
+        {
+            return grabSetting(name);
+        }
+
+        /// <summary>
+        /// Returns the value of a setting given the name of the setting
+        /// </summary>
+        /// <param name="name">the name of the setting whose value we're interested in</param>
+        /// <returns>the value of the setting</returns>
+        public DataUnifiable grabSetting(string name)
+        {
             try
             {
                 name = TransformName(name);
-                var setting = grabSetting0(name);
-                var settingo = TransformValueOut(setting);
-                if (!ReferenceEquals(setting,settingo))
-                {
-                    if (IsMissing(setting))
-                    {
-                        return Unifiable.MISSING;
-                    }
-                    return settingo;                    
-                }
-                return setting;
+                var setting = grabSetting0(name, true);
+                var setting0 = TransformValueOut(setting);
+                return setting0;
             }
             catch (Exception e)
             {
                 writeToLog("ERROR {0}", e);
 
-                return null;
+                return default(DataUnifiable);
             }
-#endif
         }
 
-        public string grabSettingOrDefault(string name, string fallback)
+        public DataUnifiable grabSettingOrDefault(string name, string fallback)
         {
-            HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() { this };
-            foreach (ParentProvider overide in _overides)
+            //HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() { this };
+            foreach (ParentProvider overide in LockInfo.CopyOf(_overides))
             {
-                ISettingsDictionary dict = overide();
-                if (!noGo.Add(dict)) continue;
+                var dict = overide();
+                //  if (!noGo.Add(dict)) continue;
                 if (dict.containsLocalCalled(name))
                 {
-                    string v = grabSettingOrDefault(dict, name, fallback);
+                    DataUnifiable v = grabSettingOrDefault(dict, name, fallback);
                     SettingsLog("OVERRIDE '{0}'='{1}'", name, str(v));
                     return v;
                 }
             }
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 string normalizedName = TransformKey(name);
 
                 if (this.settingsHash.ContainsKey(normalizedName))
                 {
-                    string v = this.settingsHash[normalizedName];
-                    if (makedvars.Contains(normalizedName))
+                    string v = this.settingsHash.GetValue(normalizedName);
+                    if (IsMaskedVar(normalizedName))
                     {
                         SettingsLog("MASKED RETURNLOCAL '" + name + "=NULL instead of" + str(v));
                         return null;
@@ -1679,7 +2301,7 @@ namespace RTParser.Variables
                 {
                     ISettingsDictionary firstFallBack = null;
                     bool returnIt;
-                    Unifiable u = CheckFallbacks(noGo, Fallbacks, name, normalizedName, ref firstFallBack, out returnIt);
+                    DataUnifiable u = CheckFallbacks(Fallbacks, name, normalizedName, ref firstFallBack, out returnIt);
                     if (returnIt) return u;
                     if (firstFallBack != null)
                     {
@@ -1697,21 +2319,29 @@ namespace RTParser.Variables
             }
         }
 
-        private Unifiable CheckFallbacks(HashSet<ISettingsDictionary> noGo, IEnumerable<ISettingsDictionary> fallbacks, string name, string normalizedName, ref ISettingsDictionary firstFallBack, out bool returnIt)
+        private DataUnifiable CheckFallbacks(IEnumerable<ISettingsDictionary> fallbacks, string name,
+                                             string normalizedName, ref ISettingsDictionary firstFallBack,
+                                             out bool returnIt)
         {
+            if (LoopingOn(name, "fallback"))
+            {
+                returnIt = false;
+                return null;
+            }
             foreach (ISettingsDictionary list in fallbacks)
             {
-                if (!noGo.Add(list)) continue;
+                // if (!noGo.Add(list)) continue;
                 firstFallBack = firstFallBack ?? list;
-                lock (list)
+                object watch = LockInfo.Watch(list);
+                lock (watch)
                 {
                     bool prev = list.IsTraced;
                     list.IsTraced = false;
-                    Unifiable v = grabSettingOrDefault(list, name, null);
+                    DataUnifiable v = grabSettingOrDefault(list, name, null);
                     ;
                     if (v == null) continue;
 
-                    if (makedvars.Contains(normalizedName))
+                    if (IsMaskedVar(normalizedName))
                     {
                         SettingsLog("MASKED PARENT '" + name + "=NULL instead of" + str(v));
                         list.IsTraced = prev;
@@ -1731,35 +2361,101 @@ namespace RTParser.Variables
             return null;
         }
 
-        private string grabSettingOrDefault(ISettingsDictionary dictionary, string name, string o)
+        private DataUnifiable grabSettingOrDefault(ISettingsDictionaryT<DataUnifiable> dictionary, string name,
+                                                   DataUnifiable o)
         {
-            if (dictionary.containsLocalCalled(name)) return dictionary.grabSetting(name);
-            if (dictionary.containsSettingCalled(name)) return dictionary.grabSetting(name);
+            if (dictionary.containsSettingCalled(name))
+            {
+                return dictionary.grabSetting(name);
+            }
             return o;
 
         }
 
-        public Unifiable grabSetting0(string name)
+        public DataUnifiable grabSetting0(string name, bool useBlackboard)
         {
-            HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() {this};
-            foreach (ParentProvider overide in GraphMaster.CopyOf(_overides))
+            //string normalizedName = MakeCaseInsensitive.TransformInput(name);
+            string normalizedName = TransformKey(name);
+            // check blackboard
+            if (useBlackboard)
             {
-                ISettingsDictionary dict = overide();
-                if (!noGo.Add(dict)) continue;
-                if (dict.containsSettingCalled(name))
+                if ((isBBPrefixCorrect()) && (this.bot.myChemistry != null))
                 {
-                    Unifiable v = dict.grabSetting(name);
-                    SettingsLog("OVERRIDE '" + name + "'=" + str(v));
-                    return v;
+                    string bbKey = bbPrefix + normalizedName.ToLower();
+                    if (!bbKey.Contains(" "))
+                    {
+                        string bbValue = this.bot.getBBHash0(bbKey);
+                        //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
+                        if (bbValue.Length > 0)
+                        {
+                            // update local value
+                            if (this.orderedKeysContains(normalizedName))
+                            {
+                                DataUnifiable v = localValue(name, normalizedName);
+                                if (bbValue != v)
+                                {
+                                    // this.removeFromHash(normalizedName);
+                                    this.settingsHash.Set(normalizedName, bbValue);
+                                }
+                            }
+                            return bbValue;
+                        }
+                        //Console.WriteLine("*** grabSetting use internal: {0}",name);
+                    }
                 }
             }
-            bool needsUnlock = System.Threading.Monitor.TryEnter(orderedKeys, TimeSpan.FromSeconds(2));
-            string normalizedName = TransformKey(name);
+
+            this.mayUseOverides = true;
+            if (LoopingOn(name, "override"))
+            {
+                mayUseOverides = false;
+            }
+            //HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() {this};
+            if (this.mayUseOverides)
+            {
+                foreach (ParentProvider overide in LockInfo.CopyOf(_overides))
+                {
+                    var dict = overide();
+                    //if (!noGo.Add(dict)) continue;
+                    if (dict.containsSettingCalled(name))
+                    {
+                        DataUnifiable v = dict.grabSetting(name);
+                        SettingsLog("OVERRIDE '" + name + "'=" + str(v));
+                        return v;
+                    }
+                }
+            }
+            bool isMaskedVar = IsMaskedVar(name);
+            bool needsUnlock = Monitor.TryEnter(orderedKeyLock, TimeSpan.FromSeconds(2));
+            //string normalizedName = TransformKey(name);
+            // check blackboard
+            if ((isBBPrefixCorrect()) && (this.bot.myChemistry != null))
+            {
+                string bbKey = bbPrefix + normalizedName.ToLower();
+                if (!bbKey.Contains(" "))
+                {
+                    string bbValue = this.bot.getBBHash0(bbKey);
+                    //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
+                    if (bbValue.Length > 0 && false)
+                    {
+                        // update local value
+                        if (this.orderedKeysContains(normalizedName))
+                        {
+                            this.removeFromHash(normalizedName);
+                            this.settingsHash.Set(normalizedName, bbValue);
+                        }
+                        return bbValue;
+                    }
+
+                    //Console.WriteLine("*** grabSetting use internal: {0}",name);
+                }
+            }
             try
             {
                 if (containsLocalCalled0(name))
                 {
-                    Unifiable v = localValue(name, normalizedName);
+                    if (isMaskedVar) throw new InvalidOperationException("conatins a masked var!");
+                    DataUnifiable v = localValue(name, normalizedName);
                     if (IsMissing(v))
                     {
                         foreach (var setname in GetSettingsAliases(name))
@@ -1780,39 +2476,51 @@ namespace RTParser.Variables
                     ISettingsDictionary firstFallBack = null;
 
                     bool returnIt;
-                    Unifiable u = CheckFallbacks(noGo, Fallbacks, name, normalizedName, ref firstFallBack, out returnIt);
-                    if (returnIt) return u;
+                    DataUnifiable u = CheckFallbacks(Fallbacks, name, normalizedName, ref firstFallBack, out returnIt);
+                    if (returnIt)
+                    {
+                        if (isMaskedVar && !Unifiable.IsNull(u))
+                        {
+                            throw new InvalidOperationException("conatins a masked var too!");
+                        }
+                        return u;
+                    }
                     if (firstFallBack != null)
                     {
                         var v0 = firstFallBack.grabSetting(name);
                         if (!IsMissing(v0))
                         {
+                            if (isMaskedVar) throw new InvalidOperationException("conatins a masked var three!");
                             SettingsLog("RETURN FALLBACK0 '" + name + "'=" + str(v0));
                             return v0;
                         }
                     }
+                }
+                if (IsSubsts) return Unifiable.MISSING;
+                if (name == "maxlogbuffersize")
+                {
                 }
                 SettingsLog("MISSING '" + name + "'");
                 return Unifiable.MISSING;
             }
             finally
             {
-                if (needsUnlock) System.Threading.Monitor.Exit(orderedKeys);
+                if (needsUnlock) System.Threading.Monitor.Exit(orderedKeyLock);
             }
         }
 
-        public static bool IsMissing(Unifiable tsetting)
+        public static bool IsMissing(object tsetting)
         {
             return TextPatternUtils.IsIncomplete(tsetting);
         }
 
-        private Unifiable localValue(string name, string normalizedName)
+        private DataUnifiable localValue(string name, string normalizedName)
         {
             if (this.settingsHash.ContainsKey(normalizedName))
             {
-                Unifiable v = this.settingsHash[normalizedName];
+                DataUnifiable v = this.settingsHash.GetValue(normalizedName);
                 v = TransformValueOut(v);
-                if (makedvars.Contains(normalizedName))
+                if (IsMaskedVar(normalizedName))
                 {
                     SettingsLog("MASKED RETURNLOCAL '" + name + "=NULL instead of" + str(v));
                     return null;
@@ -1838,6 +2546,7 @@ namespace RTParser.Variables
                 writeToLog("ERROR DICTLOG ???????: " + NameSpace + " (" + fmt + ")   " + message, args);
             }
             if (!IsTraced) return;
+            IsTraced = false;
             var fc = new StackTrace().FrameCount;
             writeToLog("DICTLOG: " + NameSpace + " (" + fc + ")   " + message, args);
             if (fc > 200)
@@ -1867,18 +2576,18 @@ namespace RTParser.Variables
             name = TransformName(name);
             string normalizedName = TransformKey(name);
 
-            if (makedvars.Contains(normalizedName)) return true;
+            if (IsMaskedVar(normalizedName)) return false;
 
             if (normalizedName.Length > 0)
             {
-                bool needsUnlock = System.Threading.Monitor.TryEnter(orderedKeys, TimeSpan.FromSeconds(2));
+                bool needsUnlock = System.Threading.Monitor.TryEnter(orderedKeyLock, TimeSpan.FromSeconds(2));
                 try
                 {
                     return settingsHash.ContainsKey(normalizedName);
                 }
                 finally
                 {
-                    if (needsUnlock) System.Threading.Monitor.Exit(orderedKeys);
+                    if (needsUnlock) System.Threading.Monitor.Exit(orderedKeyLock);
                 }
             }
             return false;
@@ -1886,21 +2595,33 @@ namespace RTParser.Variables
 
         public bool containsSettingCalled(string name)
         {
-            var value = grabSettingNoDebug(name);
-            return !IsMissing(value);
+            if (containsLocalCalled(name)) return true;
+            foreach (ISettingsDictionary dictionary in Overides)
+            {
+                if (dictionary.containsLocalCalled(name)) return true;
+            }
+            if (LoopingOn(name, "contains"))
+            {
+                return false;
+            }
+            foreach (ISettingsDictionary dictionary in Fallbacks)
+            {
+                if (dictionary.containsSettingCalled(name)) return true;
+            }
+            return false;
         }
 
         /// <summary>
         /// Returns a collection of the names of all the settings defined in the dictionary
         /// </summary>
         /// <returns>A collection of the names of all the settings defined in the dictionary</returns>
-        public IEnumerable<string> SettingNames(int depth)
+        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
             //       get
             {
-                lock (orderedKeys)
+                lock (orderedKeyLock)
                 {
-                    IEnumerable<string> prefixProviderSettingNames = prefixProvider.SettingNames(depth);
+                    /*IEnumerable<string> prefixProviderSettingNames = prefixProvider.SettingNames(requester, depth);
                     var list = prefixProviderSettingNames as List<string>;
                     if (list == null)
                     {
@@ -1911,20 +2632,30 @@ namespace RTParser.Variables
                     {
                         list.AddRange(orderedKeys);
                         return list.ToArray();
+                    }*/
+                    List<string> list = new List<string>();
+                    int i = 0;
+                    foreach (var s in LocalKeys)
+                    {
+                        list.Add(s);
                     }
-                    string[] result = new string[this.orderedKeys.Count];
-                    this.orderedKeys.CopyTo(result, 0);
-                    return result;
+                    return list;
                 }
+            }
+        }
+
+        protected object orderedKeyLock
+        {
+            get
+            {
+                // return new object();
+                return LockInfo.Watch(KeyZ);
             }
         }
 
         public List<ISettingsDictionary> Fallbacks
         {
-            get
-            {
-                return ProvidersFrom(_fallbacks);
-            }
+            get { return ProvidersFrom(_fallbacks); }
         }
 
 
@@ -1951,7 +2682,7 @@ namespace RTParser.Variables
         ///                 </exception><exception cref="T:System.ArgumentException">An element with the same key already exists in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         ///                 </exception><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.
         ///                 </exception>
-        public void Add(string key, Unifiable value)
+        public void Add(string key, DataUnifiable value)
         {
             addSetting(key, value);
         }
@@ -1981,13 +2712,13 @@ namespace RTParser.Variables
         ///                 </param><param name="value">When this method returns, the value associated with the specified key, if the key is found; otherwise, the default value for the type of the <paramref name="value"/> parameter. This parameter is passed uninitialized.
         ///                 </param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.
         ///                 </exception>
-        public bool TryGetValue(string key, out Unifiable value)
+        public bool TryGetValue(string key, out DataUnifiable value)
         {
             value = grabSetting(key);
             return !IsMissing(value);
         }
 
-        public Unifiable this[string name]
+        public DataUnifiable this[string name]
         {
             get { return IndexGet(this, name); }
             set { IndexSet(this, name, value); }
@@ -2001,7 +2732,7 @@ namespace RTParser.Variables
         /// </returns>
         public ICollection<string> Keys
         {
-            get { return orderedKeys; }
+            get { lock (orderedKeyLock) return LocalKeys; }
         }
 
         /// <summary>
@@ -2010,12 +2741,12 @@ namespace RTParser.Variables
         /// <returns>
         /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
-        public ICollection<Unifiable> Values
+        public ICollection<DataUnifiable> Values
         {
             get { return settingsHash.Values; }
         }
 
-        public static void IndexSet(ISettingsDictionary dictionary, string name, Unifiable value)
+        public static void IndexSet(ISettingsDictionary dictionary, string name, DataUnifiable value)
         {
             if (Unifiable.IsIncomplete(value))
             {
@@ -2025,14 +2756,24 @@ namespace RTParser.Variables
             dictionary.addSetting(name, value);
         }
 
-        public static Unifiable IndexGet(ISettingsDictionary dictionary, string name)
+        public static DataUnifiable IndexGet(ISettingsDictionary dictionary, string name)
         {
             return dictionary.grabSetting(name);
         }
 
         public static IEnumerable<string> NO_SETTINGS = new string[0];
         public static IEnumerable<string> TOO_DEEP = new string[0];
-        public bool IsSubsts;
+        private bool _isSubsts;
+
+        public bool IsSubsts
+        {
+            get { return _isSubsts; }
+            set
+            {
+                _isSubsts = value;
+                if (value) TrimKeys = false;
+            }
+        }
 
 
         public void InsertMetaProvider(ParentProvider pp)
@@ -2072,8 +2813,8 @@ namespace RTParser.Variables
                     writeToLog("ERROR: should not place NULL inside self");
                     return null;
                 }
-                dictionary = pp();
-                if (dictionary == null)
+                dictionary = (ISettingsDictionary) pp();
+                if (dictionary == null && WarnOnNull)
                 {
                     writeToLog("WARN: NULL inside pp");
                     return null;
@@ -2092,14 +2833,18 @@ namespace RTParser.Variables
                     writeToLog("ERROR: NULL Provider and IDictionary");
                     return false;
                 }
-                writeToLog("WARNING: NULL Dictionary");
+                if (WarnOnNull)
+                {
+                    writeToLog("WARNING: NULL Dictionary");
+                }
             }
             if (dictionary == this)
             {
                 writeToLog("ERROR: should not place inside self");
                 return false;
             }
-            lock (cols)
+            object watch = LockInfo.Watch(cols);
+            lock (watch)
             {
                 foreach (var deep in cols)
                 {
@@ -2115,7 +2860,7 @@ namespace RTParser.Variables
                     }
                     if (inner == dictionary)
                     {
-                        writeToLog("VVARN: alread contains inner " + inner);
+                        // writeToLog("WARN: alread contains inner " + inner);
                         //cols.Remove(deep);
                         return false;
                     }
@@ -2124,9 +2869,9 @@ namespace RTParser.Variables
                         writeToLog("WARN: this was found in inner " + inner);
                         return false;
                     }
-                    if (inner is SettingsDictionary)
+                    if (inner is SettingsDictionaryReal)
                     {
-                        var sd = (SettingsDictionary)inner;
+                        var sd = (SettingsDictionaryReal) inner;
                         if (!sd.CheckAddToCollection(dictionary, pp, sd._listeners))
                         {
                             writeToLog("WARN: this was found in inner fallbacks " + inner);
@@ -2141,7 +2886,8 @@ namespace RTParser.Variables
         /// <summary>
         /// //"$bot feels $value emotion towards $user";
         /// </summary>
-        public String DefaultFormatter = "$subject $relation is $value";  //default
+        public String DefaultFormatter = "$subject $relation is $value"; //default
+
         /// <summary>
         /// $user $relation $value   $robot  $dict
         ///   1      2        3       4       5 
@@ -2156,8 +2902,10 @@ namespace RTParser.Variables
                                  (realName0) => DefaultFormatter.Replace("$relation", realName0));
         }
 
-        public static Unifiable WithProviders(ISettingsDictionary dictionary, string name, string props, out string realName,
-            IEnumerable<ParentProvider> providers, Func<string, Unifiable> Else)
+        public static DataUnifiable WithProviders(ISettingsDictionary dictionary, string name, string props,
+                                                  out string realName,
+                                                  IEnumerable<ParentProvider> providers,
+                                                  Func<string, DataUnifiable> Else)
         {
             //SettingsDictionary dictionary = ToSettingsDictionary(dictionary0);
             realName = name;
@@ -2189,17 +2937,20 @@ namespace RTParser.Variables
         public List<ParentProvider> MetaProviders = new List<ParentProvider>();
         public static bool NoSettingsAliaes = true;
         public static bool UseUndoPush = false;
+        private bool mayUseOverides;
+        public string bbPrefix { get; set; }
+        public bool IsIdentityReadOnly { get; set; }
 
-        public Unifiable GetSetReturn(string name, out string realName)
+        public DataUnifiable GetSetReturn(string name, out string realName)
         {
             const string prop = "set-return";
             return WithProviders(this, name, prop, out realName, MetaProviders,
                                  realname =>
-                                 {
-                                     string prep = Preposition;
-                                     return (String.IsNullOrEmpty(prep) ? "" : prep + " ")
-                                            + realname;
-                                 });
+                                     {
+                                         string prep = Preposition;
+                                         return (String.IsNullOrEmpty(prep) ? "" : prep + " ")
+                                                + realname;
+                                     });
         }
 
         private List<ISettingsDictionary> ProvidersFrom(IEnumerable<ParentProvider> providers)
@@ -2207,7 +2958,7 @@ namespace RTParser.Variables
             return ProvidersFrom(providers, this);
         }
 
-        static List<ISettingsDictionary> ProvidersFrom(IEnumerable<ParentProvider> providers, object exceptFor)
+        private static List<ISettingsDictionary> ProvidersFrom(IEnumerable<ParentProvider> providers, object exceptFor)
         {
             var icol = (ICollection<ParentProvider>) providers;
             if (icol.Count > 1000)
@@ -2215,11 +2966,12 @@ namespace RTParser.Variables
 
             }
             var found = new List<ISettingsDictionary>();
-            lock (providers)
+            object watch = LockInfo.Watch(providers);
+            lock (watch)
             {
                 foreach (var list in providers)
                 {
-                    var res = list();
+                    ISettingsDictionary res = (ISettingsDictionary) list();
                     if (res == null)
                     {
                         //writeToLog("NULL provider " + list);
@@ -2258,15 +3010,20 @@ namespace RTParser.Variables
         public void Clone(ISettingsDictionary target)
         {
             var dt = ToSettingsDictionary(target);
-            lock (MetaProviders) foreach (var pp in MetaProviders)
+            if (dt == this)
+            {
+                return;
+            }
+            lock (LockInfo.Watch(MetaProviders))
+                foreach (var pp in MetaProviders)
                 {
                     dt.InsertMetaProvider(pp);
                 }
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
-                foreach (string name in this.orderedKeys)
+                foreach (string name in LocalKeys)
                 {
-                    target.addSetting(name, this.grabSetting(name));
+                    target.addSetting(name, grabSetting(name));
                 }
             }
         }
@@ -2275,14 +3032,15 @@ namespace RTParser.Variables
         /// If the keys are missing
         /// </summary>
         /// <param name="target">The target to recieve the values from this SettingsDictionary</param>
-        public void AddMissingKeys(ISettingsDictionary target)
+        public static void AddMissingKeys(ISettingsDictionary source, ISettingsDictionary target,
+                                          ICollectionRequester requester)
         {
-            lock (orderedKeys)
+            // lock (orderedKeyLock)
             {
-                foreach (string name in this.orderedKeys)
+                foreach (string name in source.SettingNames(requester, 0))
                 {
                     if (target.containsLocalCalled(name)) continue;
-                    target.addSetting(name, this.grabSetting(name));
+                    target.addSetting(name, source.grabSetting(name));
                 }
             }
         }
@@ -2298,23 +3056,26 @@ namespace RTParser.Variables
 
         public void AddObjectProperty(object o, String name)
         {
-            addGetSet(new ObjectPropertyDictionary(name, name, o));
+            addGetSet(new ObjectPropertyDictionary<DataUnifiable>(name, name, o));
         }
 
 
         private void addObjectProperty(object o, PropertyInfo info)
         {
             string name = info.Name;
-            addGetSet(new ObjectPropertyDictionary(name, name, o));
+            addGetSet(new ObjectPropertyDictionary<DataUnifiable>(name, name, o));
         }
 
-        private void addGetSet(ObjectPropertyDictionary o)
+        private void addGetSet(ObjectPropertyDictionary<DataUnifiable> o)
         {
             InsertProvider(() => { return o; });
         }
 
         public void InsertFallback(ParentProvider provider)
         {
+            var providerD = provider();
+            string pn = providerD.NameSpace;
+            settingsHash.AddFallback(pn);
             AddSettingToCollection(provider, _fallbacks);
         }
 
@@ -2334,36 +3095,43 @@ namespace RTParser.Variables
             AddSettingToCollection(provider, _fallbacks);
         }
 
-        public void AddChild(string prefix, ParentProvider dict)
-        {
-            ISettingsDictionary sdict = dict();
-            prefixProvider.AddChild(prefix, dict);
-        }
 
-        public void AddGetSetProperty(string topic, GetUnifiable getter, Action<Unifiable> setter)
+        /*
+         * public void AddChild(string prefix, ParentProvider dict)
         {
-            var prov = new GetSetDictionary(topic, new GetSetProperty(getter, setter));
+            //ISettingsDictionary sdict = (ISettingsDictionary)dict();
+            throw new NotImplementedException();
+            //prefixProvider.AddChild(prefix, dict);
+        }*/
+
+        /*public void AddGetSetProperty(string topic, GetUnifiable<DataUnifiable> getter, Action<DataUnifiable> setter)
+        {
+            GetSetDictionary<DataUnifiable> prov = new GetSetDictionary<DataUnifiable>(topic, new GetSetProperty<DataUnifiable>(getter, setter));
             InsertProvider(() => prov);
         }
 
-        internal void AddGetSetProperty(string p, CollectionProperty v)
+        internal void AddGetSetProperty(string p, CollectionProperty<DataUnifiable> v)
         {
-            GetSetDictionary prov = new GetSetDictionary(p, v.GetProvider());
+            GetSetDictionary<DataUnifiable> prov = new GetSetDictionary<DataUnifiable>(p, v.GetProvider());
             InsertProvider(() => prov);
         }
-
-        public Unifiable grabSettingNoDebug(string name)
+        
+        public DataUnifiable grabSetting(string name)
         {
             return WithoutTrace(this, () => grabSetting(name));
         }
+        */
 
-        public static Unifiable grabSettingDefault(ISettingsDictionary dictionary, string name, out string realName, SubQuery query)
+        public static DataUnifiable grabSettingDefault(ISettingsDictionary dictionary, string name, out string realName,
+                                                       SubQuery query)
         {
             bool succeed;
             return NamedValuesFromSettings.GetSettingForType(dictionary.NameSpace, query, dictionary, name,
-                out realName, name, null, out succeed, null);
+                                                             out realName, name, null, out succeed, null);
         }
-        public static Unifiable grabSettingDefaultDict(ISettingsDictionary dictionary, string name, out string realName)
+
+        public static DataUnifiable grabSettingDefaultDict(ISettingsDictionary dictionary, string name,
+                                                           out string realName)
         {
             realName = name;
             var un = dictionary.grabSetting(name);
@@ -2382,7 +3150,7 @@ namespace RTParser.Variables
                     return un;
                 }
                 int intLen = name.Length;
-                string[] chops = new string[] { "favorite.", "favorite", "fav" };
+                string[] chops = new string[] {"favorite.", "favorite", "fav"};
                 foreach (var chop in chops)
                 {
                     int chopLength = chop.Length;
@@ -2391,7 +3159,7 @@ namespace RTParser.Variables
                     {
                         string newName = name.Substring(chopLength);
                         string realName0;
-                        Unifiable withChop = grabSettingDefaultDict(dictionary, newName, out realName0);
+                        DataUnifiable withChop = grabSettingDefaultDict(dictionary, newName, out realName0);
                         if (withChop != null)
                         {
                             realName = realName0;
@@ -2405,8 +3173,8 @@ namespace RTParser.Variables
                     string realName0 = chop + name;
                     if (dictionary is SettingsDictionary)
                     {
-                        SettingsDictionary sd = (SettingsDictionary)dictionary;
-                        un = sd.grabSettingNoDebug(realName0);
+                        SettingsDictionary sd = (SettingsDictionary) dictionary;
+                        un = sd.grabSetting(realName0);
                     }
                     else
                     {
@@ -2422,14 +3190,17 @@ namespace RTParser.Variables
             return un;
         }
 
+        /*
         public void AddPrefix(string prefix, ParentProvider dict)
         {
             prefixProvider.AddChild(prefix, dict);
         }
+        */
 
         public static bool TryGetValue<T>(IDictionary<string, T> dictionary, string search, out T value)
         {
-            lock (dictionary)
+            object watch = LockInfo.Watch(dictionary);
+            lock (watch)
             {
                 if (dictionary.TryGetValue(search, out value))
                 {
@@ -2459,7 +3230,7 @@ namespace RTParser.Variables
             }
             else
             {
-                Unifiable prevSetting = dict.grabSetting(name);
+                DataUnifiable prevSetting = dict.grabSetting(name);
                 if (dict.removeSetting(name))
                 {
                     if (locally) query.AddUndo("undoing " + debugStr, () => dict.addSetting(name, prevSetting));
@@ -2470,7 +3241,8 @@ namespace RTParser.Variables
             return locally;
         }
 
-        public static bool addSettingWithUndoCommit(SubQuery query, ISettingsDictionary dict, Func<string, Unifiable, bool> SideEffect, string name, Unifiable newValue)
+        public static bool addSettingWithUndoCommit(SubQuery query, ISettingsDictionary dict,
+                                                    Func<string, object, bool> SideEffect, string name, object newValue)
         {
             bool locally = dict.containsLocalCalled(name);
             string debugStr = String.Format("ADD SETTING {0} {1} {2}", dict, name, newValue);
@@ -2480,68 +3252,69 @@ namespace RTParser.Variables
             }
             else
             {
-                Unifiable prevSetting = dict.grabSetting(name);
+                DataUnifiable prevSetting = dict.grabSetting(name);
                 bool res = SideEffect(name, newValue);
                 query.AddUndo("undo " + debugStr, () =>
-                                  {
-                                      var now = dict.grabSetting(name);
-                                      if (now == newValue && now != prevSetting)
-                                      {
-                                          if (!locally)
-                                          {
-                                              dict.removeSetting(name);
-                                          }
-                                          else
-                                          {
-                                              if (locally) dict.addSetting(name, prevSetting);
-                                          }
-                                          if (!IsMissing(prevSetting))
-                                          {
-                                              dict.updateSetting(name, prevSetting);
-                                          }
-                                      }
-                                  });
+                                                      {
+                                                          var now = dict.grabSetting(name);
+                                                          if (((string)newValue == now) && now != prevSetting)
+                                                          {
+                                                              if (!locally)
+                                                              {
+                                                                  dict.removeSetting(name);
+                                                              }
+                                                              else
+                                                              {
+                                                                  if (locally) dict.addSetting(name, prevSetting);
+                                                              }
+                                                              if (!IsMissing(prevSetting))
+                                                              {
+                                                                  dict.updateSetting(name, prevSetting);
+                                                              }
+                                                          }
+                                                      });
             }
-            if (newValue.AsString().Contains(">"))
+            if (newValue.ToString().Contains(">"))
             {
-                
+
             }
             query.AddSideEffect("SIDE EFFECT " + debugStr, () => SideEffect(name, newValue));
             return !locally;
         }
 
-        public static T WithUndoCommit<T>(SubQuery query, ISettingsDictionary dict, Func<T> SideEffect, string name, Unifiable newValue)
+        public static T WithUndoCommit<T>(SubQuery query, ISettingsDictionary dict, Func<T> SideEffect, string name,
+                                          DataUnifiable newValue)
         {
             bool locally = dict.containsLocalCalled(name);
-            Unifiable prevSetting = dict.grabSetting(name);
+            DataUnifiable prevSetting = dict.grabSetting(name);
             string debugStr = String.Format("ADD SETTING {0} {1} {2}", dict, name, newValue);
             T res = SideEffect();
-            query.AddUndo("undo " + debugStr,() =>
-                              {
-                                  var now = dict.grabSetting(name);
-                                  if (now == newValue && now != prevSetting)
-                                  {
-                                      if (!locally)
-                                      {
-                                          dict.removeSetting(name);
-                                      }
-                                      else
-                                      {
-                                          if (locally) dict.addSetting(name, prevSetting);
-                                      }
-                                      if (!IsMissing(prevSetting))
-                                      {
-                                          dict.updateSetting(name, prevSetting);
-                                      }
-                                  }
-                              });
+            query.AddUndo("undo " + debugStr, () =>
+                                                  {
+                                                      var now = dict.grabSetting(name);
+                                                      if (now == newValue && now != prevSetting)
+                                                      {
+                                                          if (!locally)
+                                                          {
+                                                              dict.removeSetting(name);
+                                                          }
+                                                          else
+                                                          {
+                                                              if (locally) dict.addSetting(name, prevSetting);
+                                                          }
+                                                          if (!IsMissing(prevSetting))
+                                                          {
+                                                              dict.updateSetting(name, prevSetting);
+                                                          }
+                                                      }
+                                                  });
             query.AddSideEffect(debugStr, () => SideEffect());
             return res;
         }
 
         public bool DoSettingsCommand(string input, OutputDelegate console)
         {
-            if(input=="")
+            if (input == "")
             {
                 console(ToDebugString());
                 return true;
@@ -2552,18 +3325,118 @@ namespace RTParser.Variables
             string value = input.Substring(firstWhite + 1).Trim();
             if (value == "")
             {
-                console(var + " = " + (grabSettingNoDebug(var) ?? " <NULL> "));
+                console(var + " = " + (grabSetting(var) ?? " <NULL> "));
                 return true;
             }
             console("addSetting: " + addSetting(var, value));
             return true;
         }
+
+        #region ICollectionProvider Members
+
+        public ICollection GetGroup(ICollectionRequester requester, string name)
+        {
+            return SingleNameValue.AsCollection(grabSetting(name));
+        }
+
+        #endregion
+
+        #region Implementation of ICollectionProviderSettable
+
+        public void SetValue(ICollectionRequester requester, string name, object value)
+        {
+            updateSetting(name, Unifiable.Create(value));
+        }
+
+        public bool AcceptsNewKeys
+        {
+            get { return true; }
+        }
+
+        public IEnumerable<string> SettingNames0
+        {
+            get { return Keys; }
+        }
+
+        #endregion
+
+        public static void AddPseudonym(ISettingsDictionary dictionary, string key)
+        {
+            var dict = ToSettingsDictionary(dictionary);
+            if (dict == null)
+            {
+                return;
+            }
+            if (dict.AddName(key))
+            {
+                dict.AddMonitorPath(key + ".xml", SettingsPolicy.Default);
+            }
+        }
+
+        public List<string> Names = new List<string>();
+
+        private bool AddName(string key)
+        {
+            key = TransformKey(key);
+            lock (Names)
+            {
+                if (Names.Contains(key)) return false;
+                Names.Add(key);
+            }
+            return true;
+        }
+
+        public Dictionary<string, SettingsPolicy> MonitorPaths = new Dictionary<string, SettingsPolicy>();
+        public static bool WarnOnNull;
+
+        private bool AddMonitorPath(string key, SettingsPolicy policy)
+        {
+            lock (MonitorPaths)
+            {
+                if (MonitorPaths.ContainsKey(key)) return false;
+                MonitorPaths.Add(key, policy);
+            }
+            return true;
+        }
+
+        internal static void loadSettingNode(ISettingsDictionary dict, XmlNode currentNode, bool oE, bool oU,
+                                             Request request)
+        {
+            loadSettingNode(dict, currentNode, new SettingsPolicy(oE, oU), request);
+        }
+
+        public void AddChild(string s, Func<SettingsDictionaryReal> func)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal static void loadSettingNode(ISettingsDictionary dict, DataUnifiable currentNode, bool oE, bool oU,
+                                             Request request)
+        {
+            loadSettingNode(dict, currentNode, new SettingsPolicy(oE, oU), request);
+        }
+
     }
-    public class SettingsDictionaryEnumerator : IEnumerator<KeyValuePair<string, Unifiable>>
+
+    public class SettingsPolicy
     {
-        private readonly ISettingsDictionary Root;
+        public SettingsPolicy(bool oE, bool oU)
+        {
+            overwriteExisting = oE;
+            onlyIfUnknown = oU;
+        }
+
+        public static SettingsPolicy Default = new SettingsPolicy(true, false);
+        public bool overwriteExisting = true;
+        public bool onlyIfUnknown = false;
+    }
+
+    public class SettingsDictionaryEnumerator : IEnumerator<KeyValuePair<string, DataUnifiable>>
+    {
+        private readonly ISettingsDictionaryT<DataUnifiable> Root;
         private readonly IEnumerator<string> keysE;
-        public SettingsDictionaryEnumerator(IEnumerable<string> keys, ISettingsDictionary dict)
+        public SettingsDictionaryEnumerator(IEnumerable<string> keys, ISettingsDictionaryT<DataUnifiable> dict)
         {
             Root = dict;
             keysE = keys.GetEnumerator();
@@ -2613,12 +3486,12 @@ namespace RTParser.Variables
         /// <returns>
         /// The element in the collection at the current position of the enumerator.
         /// </returns>
-        public KeyValuePair<string, Unifiable> Current
+        public KeyValuePair<string, DataUnifiable> Current
         {
             get
             {
                 string key = keysE.Current;
-                return new KeyValuePair<string, Unifiable>(key, Root.grabSetting(key));
+                return new KeyValuePair<string, DataUnifiable>(key, Root.grabSetting(key));
             }
         }
 

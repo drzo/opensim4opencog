@@ -385,7 +385,7 @@ namespace RTParser
                     throw new InvalidCastException("fullname=" + fullname);
                 }
                 key = key.ToLower();
-                User myUser = new MasterUser(key, this);
+                User myUser = new MasterUser(fullname, key, this);
                 myUser.userTrace = writeToUserLog;
                 myUser.UserName = fullname;
                 writeToUserLog("New User " + fullname + " -DEBUG9");
@@ -401,11 +401,13 @@ namespace RTParser
         {
             {
                 SetupUserWithGraph(fullname, key, myUser);
-                GlobalSettings.AddChild("user." + key + ".", () => myUser.Predicates);
+                /*
+                var ud = ((SettingsDictionaryReal) myUser.Predicates);
+                ud.AddChild("user." + key + ".", () => ud);
 
-                OnBotCreated(() => { myUser.Predicates.AddChild("bot.", () => BotAsUser.Predicates); });
+                OnBotCreated(() => { ud.AddChild("bot.", () => (SettingsDictionaryReal) BotAsUser.Predicates); });
 
-
+                */
                 string userdir = GetUserDir(key);
                 myUser.SyncDirectory(userdir);
                 myUser.AddTodoItem(() =>
@@ -704,7 +706,7 @@ namespace RTParser
                     // remove old acct from dict
                     lock (microBotUsersLock) BotUsers.Remove(oldkey);
                     // grab it into new user
-                    olduser.Predicates.AddMissingKeys(newuser.Predicates);
+                    SettingsDictionaryReal.AddMissingKeys(olduser.Predicates, newuser.Predicates, ObjectRequester);
                     newuser = olduser;
                     lock (microBotUsersLock) BotUsers[newkey] = newuser;
                     newuser.IsRoleAcct = false;

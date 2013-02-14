@@ -771,7 +771,7 @@ namespace RTParser.Utils
             bool doIt = !toplevel.IsComplete(request);
             request.TimeOutFromNow = TimeSpan.FromSeconds(3);
             request.Requester.ProofTemplates.Clear();
-            writeToLog("GETQUERIES: " + request);
+            //writeToLog("GETQUERIES: " + request);
             //clearDiabled(rootNode);
             //request.ResetValues(false);
             //request.ParentMostRequest.ResetValues(false);
