@@ -1,10 +1,16 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Text;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
 using System.Threading;
 using System.Web;
 using HttpServer.FormDecoders;
@@ -34,7 +40,7 @@ namespace MushDLR223.Utilities
             clientManager = bc;
             PortNum = port;
             RobotName = robotName;
-            Init();
+            ThreadPool.QueueUserWorkItem((o) => Init());
         }
 
         internal void Init()
@@ -317,7 +323,7 @@ namespace MushDLR223.Utilities
                 if (cmd != "MeNe")
                 {
                     res = _botClient.ExecuteXmlCommand(cmd + " " + GetVariable(getvars, postvars, "args", () => ""),
-                                                       response.WriteLine);
+                                                       request, response.WriteLine);
 
                 }
                 else
@@ -352,12 +358,13 @@ namespace MushDLR223.Utilities
                     if (String.IsNullOrEmpty(username))
                     {
                         //res = _botClient.ExecuteCommand(cmd + " " + text, wrresp.WriteLine);
-                        res = _botClient.ExecuteCommand("aiml @withuser " + defaultUser + " - " + text,
-                                                        response.WriteLine);
+                        res = _botClient.ExecuteCommand("aiml @withuser " + defaultUser + " - " + text, request,
+                                                        response.WriteLine, CMDFLAGS.Foregrounded);
                     }
                     else
                     {
-                        res = _botClient.ExecuteCommand("aiml @withuser " + username + " - " + text, response.WriteLine);
+                        res = _botClient.ExecuteCommand("aiml @withuser " + username + " - " + text, request,
+                                                        response.WriteLine, CMDFLAGS.Foregrounded);
                     }
                     AddToBody(response, "");
                     AddToBody(response, "\n<!-- End Response !-->");

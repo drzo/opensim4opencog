@@ -3,16 +3,37 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
-//using java.lang;
+using System.Reflection.Emit;
 using MushDLR223.Utilities;
 using Exception=System.Exception;
-using Thread = System.Threading.Thread;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
+using System.Threading;
+
 using DotLisp;
 namespace MushDLR223.ScriptEngines
 {
-    public class ScriptManager
+    public partial class ScriptManager
     {
+        public static Exception InnerMostException(Exception ex)
+        {
+            if (ex is ReflectionTypeLoadException)
+            {
+                var ile = ((ReflectionTypeLoadException)ex).LoaderExceptions;
+                if (ile.Length == 1) return InnerMostException(ile[0]);
+            }
+            var ie = ex.InnerException;
+            if (ie != null && ie != ex)
+            {
+                return InnerMostException(ie);
+            }
+            return ex;
+        }
+
         static private System.Diagnostics.TraceListener tl;
         static ScriptManager()
         {
@@ -72,7 +93,6 @@ namespace MushDLR223.ScriptEngines
                 return changed;
             }
         }
-
 
         private static bool ScanType(Type type)
         {
@@ -356,7 +376,7 @@ namespace MushDLR223.ScriptEngines
         }
 
 
-        public static ScriptInterpreter LoadScriptInterpreter(string type, object self)
+        public static ScriptInterpreter LoadScriptInterpreter(string type, object self, ScriptInterpreter parent)
         {
 
             try
@@ -364,8 +384,12 @@ namespace MushDLR223.ScriptEngines
                 //lock (Lock)
                 {
                     ScriptInterpreter si = UsedCSharpScriptDefinedType(self, type);
-                    if (si != null) return si; 
-                    si = LoadScriptInterpreter0(type, self);
+                    if (si != null)
+                    {
+                        si.Self = self;
+                        return si;
+                    } 
+                    si = LoadScriptInterpreter0(type, self, parent);
                     StartScanningAppDomain();
                     return si;
                 }
@@ -380,6 +404,10 @@ namespace MushDLR223.ScriptEngines
         static object ScanAppDomainLock = new object();
         private static bool ScanAppDomainInProgress = false;
         private static Thread ScanAppDomainThread;
+
+        private static Dictionary<string, ScriptInterpreterFactory> TypeToInterpFactory =
+            new Dictionary<string, ScriptInterpreterFactory>();
+
         public static void StartScanningAppDomain()
         {
             lock (ScanAppDomainLock)
@@ -387,6 +415,7 @@ namespace MushDLR223.ScriptEngines
                 if (ScanAppDomainInProgress) return;
                 ScanAppDomainInProgress = true;
                 ScanAppDomainThread = new Thread(DoScanningAppDomain);
+                ScanAppDomainThread.Name = "DoScanningAppDomain";
                 ScanAppDomainThread.Start();
             }
 
@@ -396,10 +425,14 @@ namespace MushDLR223.ScriptEngines
             int ScannedAssembliesCount = ScannedAssemblies.Count;
             if (ScanAppDomain())
             {
-                WriteLine("Found new Assemblies: {0}", ScannedAssemblies.Count - ScannedAssembliesCount);
-                foreach (var s in CopyOf(ScannedTypes))
+                int found = ScannedAssemblies.Count - ScannedAssembliesCount;
+                if (found > 0)
                 {
-                    AddType(s);
+                    WriteLine("Found new Assemblies: {0}", found);
+                    foreach (var s in CopyOf(ScannedTypes))
+                    {
+                        AddType(s);
+                    }
                 }
             }
             lock (ScanAppDomainLock)
@@ -427,38 +460,93 @@ namespace MushDLR223.ScriptEngines
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static ScriptInterpreter LoadScriptInterpreter0(string type, object self)
+        public static ScriptInterpreter LoadScriptInterpreter0(string type, object self, ScriptInterpreter parent)
         {
             var Interpreters = ScriptManager.Interpreters;
             lock (Interpreters)
             {
-                if (Interpreters.Count == 0)
+                var ret = UsedCSharpScriptDefinedType(self, type);
+                if (ret != null) return ret;
+                ScriptInterpreter typed = null;
+                foreach (ScriptInterpreter set in Interpreters)
                 {
-                    var ret = UsedCSharpScriptDefinedType(self, type);
-                    if (ret != null) return ret;
-                    ScanPredfinedAssemblies();
-                    InstanceNewInterpTypes(self);
-                }
-                foreach (var set in Interpreters)
-                {
-                    if (set.LoadsFileType(type, self))
+                    if (set.LoadsFileType(type))
                     {
-#if COGBOT
-                        if (set is BotScriptInterpreter)
-                        {
-                            if (self is BotClient)
-                            {
-                                ((BotScriptInterpreter)set).BotClient = self as BotClient;
-                            }
-                        }
-#endif
-                        return set;
+                        typed = set;
+                        if (self != null) if (typed.IsSelf(self)) return set;
                     }
                 }
-                return UsedCSharpScriptDefinedType(self, type);
+                if (typed != null)
+                {
+                    return typed.newInterpreter(self);
+                }
+                ScanPredfinedAssemblies();
+                InstanceNewInterpTypes(self);
+                return FindOrCreate(type, self, parent);
                 //default
-                return new DotLispInterpreter(self);
+                var dl = new DotLispInterpreter();
+                dl.Self = self;
+                return dl;
             } // method: LoadScriptInterpreter
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="lang"></param>
+        /// <param name="source"></param>
+        /// <param name="extendEnv"></param>
+        /// <param name="scopeOrCurrentResolver"></param>
+        /// <param name="reusableIdentityOrSelf"></param>
+        /// <param name="parentCtx"></param>
+        /// <returns></returns>
+        public static object EvalFromReader(string lang, TextReader source, bool extendEnv,
+            ICollectionProvider scopeOrCurrentResolver, object reusableIdentityOrSelf, ScriptInterpreter parentCtx)
+        {
+            if (parentCtx == null)
+            {
+                parentCtx = FindOrCreate(lang, reusableIdentityOrSelf, null);
+            }
+            var si = parentCtx.newInterpreter(reusableIdentityOrSelf);
+            if (extendEnv) si = si.newInterpreter(scopeOrCurrentResolver);
+            return si.Eval(source);
+        }
+
+
+        public static ScriptInterpreter FindOrCreate(string type, object self, ScriptInterpreter parent)
+        {
+            ScriptInterpreterFactory maker;
+            if (parent == null)
+            {
+                maker = GetInterpreterFactory(type);
+            }
+            else
+            {
+                maker = parent.GetLoaderOfFiletype(type) ?? GetInterpreterFactory(type);
+            }
+            if (maker == null) return null;
+            ScriptInterpreter si = maker.GetLoaderOfFiletype(type);
+            if (si == null) return null;
+            return si.newInterpreter(self);
+        }
+
+        public static ScriptInterpreterFactory GetInterpreterFactory(string type)
+        {
+            lock (TypeToInterpFactory)
+            {
+                ScriptInterpreterFactory function;
+                if (TypeToInterpFactory.TryGetValue(type, out function)) return function;
+                lock (Interpreters)
+                {
+                    foreach (ScriptInterpreterFactory interpreter in Interpreters)
+                    {
+                        var nonnull = interpreter.GetLoaderOfFiletype(type);
+                        if (nonnull != null) return nonnull;
+                    }
+                    ScanPredfinedAssemblies();
+                    StartScanningAppDomain();
+                    return null;// return new ScriptManager();
+                }
+            }
         }
 
         private static ScriptInterpreter UsedCSharpScriptDefinedType(object self, string type)
@@ -468,16 +556,10 @@ namespace MushDLR223.ScriptEngines
                 type = type.ToLower();
                 if (type.StartsWith("dotlisp"))
                 {
-                    return new DotLispInterpreter(self);
-                }/*
-                if (type.StartsWith("cyc"))
-                {
-                    return (ScriptInterpreter)new CycInterpreter(self);
+                    var dl = new DotLispInterpreter();
+                    dl.Self = self;
+                    return dl;
                 }
-                if (type.StartsWith("abcl"))
-                {
-                    return (ScriptInterpreter)new ABCLInterpreter(self);
-                }*/
             }
             return null;
         }
@@ -505,7 +587,7 @@ namespace MushDLR223.ScriptEngines
 
         private static bool ScanAppDomain()
         {
-            bool changed = true;
+            bool changed = false;
             foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
             {
                 Assembly assembly = a;
@@ -660,7 +742,8 @@ namespace MushDLR223.ScriptEngines
             if (types == null) return null;
             lock (types)
             {
-                List<T> copy = new List<T>(/*types.Count*/);
+                List<T> copy = new List<T>();
+                copy.Capacity = types.Count;
                 copy.AddRange(types);
                 return copy;                
             }
@@ -761,13 +844,13 @@ namespace MushDLR223.ScriptEngines
             return objs;
         }
 
-        public static object EvalScriptInterpreter(string src, string lang, object seff, OutputDelegate wl)
+        public static object EvalScriptInterpreter(string src, string lang, object seff, ScriptInterpreter parent, OutputDelegate wl)
         {
-            var si = LoadScriptInterpreter(lang, seff);
+            var si = LoadScriptInterpreter(lang, seff, parent);
             object so = si.Read("EvalScriptInterpreter read: " + src, new StringReader(src.ToString()), wl);
             if (so is CmdResult) return (CmdResult) so;
-            if (so == null) return new CmdResult("void", true);
-            if (si.Eof(so)) return new CmdResult("EOF " + so, true);
+            if (so == null) return ACmdResult.Complete(lang + " " + src, "void", true);
+            if (si.Eof(so)) return ACmdResult.Complete(lang + " " + src, "EOF " + so, true);
             object o = si.Eval(so);
             return o;
         }
@@ -775,6 +858,373 @@ namespace MushDLR223.ScriptEngines
         public static Type[] GetTypeArray(object[] argarray)
         {
              return CLSMember.GetTypeArray(argarray);
+        }
+
+
+    }
+
+    public static class OKAssemblyResolve
+    {
+        public static bool ResolverEnabled { get; set; }
+
+        static OKAssemblyResolve()
+        {
+            //The AssemblyResolve event is called when the common language runtime tries to bind to the assembly and fails.
+            AppDomain currentDomain = AppDomain.CurrentDomain;
+            currentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
+        }
+
+        public static bool GetResolverOnOff()
+        {
+            return ResolverEnabled;
+        }
+        public static void SetResolverOnOff(bool onOff)
+        {
+            ResolverEnabled = onOff;
+        }
+        static Dictionary<string,Assembly> ResolvedAssemblies = new Dictionary<string, Assembly>(); 
+        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            if (!ResolverEnabled)
+            {
+                return null;
+            }
+            try
+            {
+                string s = args.Name;
+                lock (ResolvedAssemblies)
+                {
+                    Assembly fnd;
+                    if (ResolvedAssemblies.TryGetValue(s, out fnd))
+                    {
+                        if (fnd == null)
+                        {
+                            return null;
+                        }
+                        return fnd;
+                    }
+                    ResolvedAssemblies[s] = null;
+                    Assembly try1 = CurrentDomain_AssemblyResolveType1(sender as AppDomain, s);
+                    if (try1 != null)
+                    {
+                        ResolvedAssemblies[s] = try1;
+                        return try1;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                DLRConsole.DebugWriteLine("AssemblyResolver: " + sender + " lookingfor=<" + args.Name + "> cause: " + e);
+            }
+            return null;
+        }
+
+
+        private static bool AssemblyMatches(Assembly assembly, string assemblyName)
+        {
+            if (assembly.FullName == assemblyName)
+                return true;
+            if (assembly.ManifestModule.Name == assemblyName)
+                return true;
+            if (assembly.CodeBase == assemblyName)
+                return true;
+            return false;
+        }
+        private static bool AssemblyMatches(AssemblyName assembly, string assemblyName)
+        {
+            if (assembly.FullName == assemblyName)
+                return true;
+            if (assembly.Name == assemblyName)
+                return true;
+            if (assembly.CodeBase == assemblyName)
+                return true;
+            return false;
+        }
+
+
+        private static Assembly CurrentDomain_AssemblyResolveType1(AppDomain domain, string assemblyName)
+        {
+            if (domain != null)
+            {
+                foreach (var assembly in LockInfo.CopyOf(domain.GetAssemblies()))
+                {
+                    if (AssemblyMatches(assembly, assemblyName)) return assembly;
+                }
+            }
+            foreach (Assembly assembly in LockInfo.CopyOf(AssembliesLoaded))
+            {
+                if (AssemblyMatches(assembly, assemblyName)) return assembly;
+            }
+
+            var objExecutingAssemblies = Assembly.GetExecutingAssembly();
+            if (objExecutingAssemblies != null)
+            {
+                AssemblyName[] arrReferencedAssmbNames = objExecutingAssemblies.GetReferencedAssemblies();
+                foreach (var assemblyN in arrReferencedAssmbNames)
+                {
+                    if (AssemblyMatches(assemblyN, assemblyName))
+                    {
+                         Assembly load =  Assembly.Load(assemblyN);
+                    }
+                }
+            }
+
+            int comma = assemblyName.IndexOf(",");
+            if (comma > 0)
+            {
+                assemblyName = assemblyName.Substring(0, comma);
+            }
+            return LoadAssemblyByFile(assemblyName);
+        }
+
+        private static Assembly LoadAssemblyByFile(string assemblyName)
+        {
+            if (File.Exists(assemblyName))
+            {
+                try
+                {
+                    var fi = new FileInfo(assemblyName);
+                    if (fi.Exists) return Assembly.LoadFile(fi.FullName);
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+            IList<string> sp = LockInfo.CopyOf((IEnumerable<string>)AssemblySearchPaths);
+            foreach (
+                var dir in
+                    new[]
+                        {
+                            AppDomain.CurrentDomain.BaseDirectory, new DirectoryInfo(".").FullName,
+                            Path.GetDirectoryName(typeof (ScriptInterpreter).Assembly.CodeBase), Environment.CurrentDirectory
+                        })
+            {
+                if (!sp.Contains(dir)) sp.Add(dir);
+            }
+            string lastTested = "";
+            foreach (var s in LockInfo.CopyOf(AppDomain.CurrentDomain.GetAssemblies()))
+            {
+                try
+                {
+                    if (s is AssemblyBuilder) continue;
+                    string dir = Path.GetDirectoryName(s.CodeBase);
+                    if (dir.StartsWith("file:\\"))
+                    {
+                        dir = dir.Substring(6);
+                    }
+                    if (dir == lastTested) continue;
+                    lastTested = dir;
+                    if (!sp.Contains(dir)) sp.Add(dir);
+                }
+                catch (NotSupportedException)
+                {
+                    // Reflected Assemblies do this
+                }
+            }
+            foreach (string pathname in sp)
+            {
+                var assemj = FindAssemblyByPath(assemblyName, pathname);
+                if (assemj != null) return assemj;
+            }
+
+            return null;
+        }
+
+        private static string NormalizePath(string dirname1)
+        {
+            string dirname = dirname1;
+            if (dirname.StartsWith("file:\\"))
+            {
+                dirname = dirname.Substring(6);
+            }
+            if (dirname.StartsWith("file://"))
+            {
+                dirname = dirname.Substring(7);
+            }
+            dirname = new FileInfo(dirname).FullName;
+            if (dirname != dirname1)
+            {
+                return dirname;
+            }
+            return dirname1;
+        }
+
+
+        private static readonly List<string>
+            LoaderExtensionStrings = new List<string>
+                                         {
+                                             "dll",
+                                             "exe",
+                                             "jar",
+                                             "lib",
+                                             "dynlib",
+                                             "class",
+                                             "so"
+                                         };
+
+        public static Assembly FindAssemblyByPath(string assemblyName, string dirname)
+        {
+
+            dirname = NormalizePath(dirname);
+            string filename = Path.Combine(dirname, assemblyName);
+            string loadfilename = filename;
+            bool tryexts = !File.Exists(loadfilename);
+            string filenameLower = filename.ToLower();
+            List<string> LoaderExtensions = new List<string>();
+            lock (LoaderExtensionStrings)
+            {
+                LoaderExtensions.AddRange(LoaderExtensionStrings);
+            }
+            foreach (string extension in LoaderExtensions)
+            {
+                if (filenameLower.EndsWith("." + extension))
+                {
+                    tryexts = false;
+                    break;
+                }
+            }
+
+            if (tryexts)
+            {
+                foreach (var s in LoaderExtensions)
+                {
+                    string testfile = loadfilename + "." + s;
+                    if (File.Exists(testfile))
+                    {
+                        loadfilename = testfile;
+                        break;
+                    }
+
+                }
+            }
+            if (File.Exists(loadfilename))
+            {
+                try
+                {
+                    return Assembly.LoadFile(new FileInfo(loadfilename).FullName);
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+            return null;
+        }
+
+        public static Assembly AssemblyLoad(string assemblyName)
+        {
+            Assembly assembly = null;
+            try
+            {
+                assembly = Assembly.Load(assemblyName);
+            }
+            catch (FileNotFoundException fnf)
+            {
+                if (fnf.FileName != assemblyName) throw fnf;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            if (assembly != null) return assembly;
+            assembly = LoadAssemblyByFile(assemblyName);
+            if (assembly != null) return assembly;
+            return Assembly.LoadFrom(assemblyName);
+
+        }
+
+        public static List<string> AssemblySearchPaths = new List<string>();
+        public static List<Assembly> AssembliesLoaded = new List<Assembly>();
+        public static List<string> AssembliesLoading = new List<string>();
+        public static List<Type> TypesLoaded = new List<Type>();
+        public static List<Type> TypesLoading = new List<Type>();
+
+        public static bool ResolveAssembly(Assembly assembly)
+        {
+            string assemblyName = assembly.FullName;
+            lock (AssembliesLoaded)
+            {
+                if (AssembliesLoading.Contains(assemblyName))
+                {
+                    return true;
+                }
+                AssembliesLoading.Add(assemblyName);
+                LoadReferencedAssemblies(assembly);
+                // push to the front
+                AssembliesLoaded.Remove(assembly);
+                AssembliesLoaded.Insert(0, assembly);
+            }
+            return true;
+        }
+
+        private static void LoadReferencedAssemblies(Assembly assembly)
+        {
+            foreach (var refed in assembly.GetReferencedAssemblies())
+            {
+                string assemblyName = refed.FullName;
+                try
+                {
+                    Assembly assemblyLoad = Assembly.Load(refed);
+                    ResolveAssembly(assemblyLoad);
+                    continue;
+                }
+                catch (Exception e)
+                {
+                    var top = Path.Combine(Path.GetDirectoryName(assembly.Location), refed.Name);
+
+                    foreach (var ext in LoaderExtensionStrings)
+                    {
+                        string filename = top + "." + ext;
+                        try
+                        {
+                            if (!File.Exists(filename)) continue;
+                            Assembly assemblyLoad = Assembly.LoadFrom(filename);
+                            ResolveAssembly(assemblyLoad);
+                            continue;
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+                    DLRConsole.DebugWriteLine("LoadReferencedAssemblies:{0} caused {1}", assemblyName, e);
+                }
+            }
+        }
+
+
+        static Assembly currentDomain_AssemblyResolveType2(object sender, ResolveEventArgs args)
+        {
+            //This handler is called only when the common language runtime tries to bind to the assembly and fails.
+
+            //Retrieve the list of referenced assemblies in an array of AssemblyName.
+            Assembly MyAssembly, objExecutingAssemblies;
+            string strTempAssmbPath = "";
+
+            objExecutingAssemblies = Assembly.GetExecutingAssembly();
+            AssemblyName[] arrReferencedAssmbNames = objExecutingAssemblies.GetReferencedAssemblies();
+
+            //Loop through the array of referenced assembly names.
+            foreach (AssemblyName strAssmbName in arrReferencedAssmbNames)
+            {
+                //Check for the assembly names that have raised the "AssemblyResolve" event.
+                if (strAssmbName.FullName.Substring(0, strAssmbName.FullName.IndexOf(",")) ==
+                    args.Name.Substring(0, args.Name.IndexOf(",")))
+                {
+                    //Build the path of the assembly from where it has to be loaded.
+                    //The following line is probably the only line of code in this method you may need to modify:
+                    strTempAssmbPath = ".";// txtAssemblyDir.Text;
+                    if (strTempAssmbPath.EndsWith("\\")) strTempAssmbPath += "\\";
+                    strTempAssmbPath += args.Name.Substring(0, args.Name.IndexOf(",")) + ".dll";
+                    break;
+                }
+
+            }
+            //Load the assembly from the specified path.
+            MyAssembly = Assembly.LoadFrom(strTempAssmbPath);
+
+            //Return the loaded assembly.
+            return MyAssembly;
         }
     }
 

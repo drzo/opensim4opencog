@@ -1,4 +1,5 @@
-﻿#define USEVSAHOST
+﻿#if !(__MonoCS__)
+#define USEVSAHOST
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,60 +12,219 @@ using System;
 using System.CodeDom.Compiler;
 using System.Reflection;
 #if USEVSAHOST
-using Evaluator;
+using EvaluatorNS;
 #endif
 using Microsoft.JScript;
 using Microsoft.JScript.Vsa;
 using Microsoft.Vsa;
 using System.Diagnostics;
+using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using Convert = Microsoft.JScript.Convert;
 
 #if !(NOJAVASCRIPT)
 #if USEVSAHOST
-namespace Evaluator
+namespace EvaluatorNS
 {
+
+    //[AutoLoaded]
+    public class JavaScriptInterpreter : CommonScriptInterpreter, ScriptInterpreter, ScriptInterpreterFactory
+    {
+
+        public JavaScriptInterpreter()
+        {
+            TheEvaluator = new Evaluator();
+        }
+        public JavaScriptInterpreter(JavaScriptInterpreter parent)
+        {
+            TheEvaluator = new Evaluator(parent.TheEvaluator);
+        }
+        #region Overrides of CommonScriptInterpreter
+
+        readonly Evaluator TheEvaluator;
+
+        public override void Init(object self)
+        {
+            OriginalSelf = self;
+            Self = self;
+        }        
+        
+        /// <summary>
+        /// 
+        /// 
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public override bool LoadFile(string filename, OutputDelegate WriteLine)
+        {
+            if (!File.Exists(filename)) return false;
+            System.IO.FileStream f = System.IO.File.OpenRead(filename);
+            StreamReader r = new StreamReader(f);
+            r.BaseStream.Seek(0, SeekOrigin.Begin);
+            return Read(filename, new StringReader(r.ReadToEnd()),WriteLine) != null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="context_name"></param>
+        /// <param name="stringCodeReader"></param>
+        /// <returns></returns>
+        public override object Read(string context_name, System.IO.TextReader stringCodeReader, OutputDelegate WriteLine)
+        {
+            string res = null;
+            int line = 0;
+            while (stringCodeReader.Peek() != -1)
+            {
+                line++;
+                res += stringCodeReader.ReadToEnd();
+            }
+            return res;
+        } // method: Read
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="codeTree"></param>
+        /// <returns></returns>
+        public override bool Eof(object codeTree)
+        {
+            if (codeTree == null) return true;
+            String str = codeTree.ToString().Trim();
+            return String.IsNullOrEmpty(str);
+        } // method: Eof
+
+
+
+        public override ScriptInterpreter GetLoaderOfFiletype(string filenameorext)
+        {
+            return LoadsFileType(filenameorext) ? this : null;
+        }
+
+        public override bool LoadsFileType(string filenameorext)
+        {
+            return "js" == filenameorext || "javascript" == filenameorext;
+        }
+
+        public override void InternType(Type t)
+        {
+            TheEvaluator._host.AddType(t);
+        }
+
+        override public object Impl
+        {
+            get { return TheEvaluator; }
+        }
+         
+        override public object Self
+        {
+            get { return GetSymbol("self") ?? OriginalSelf; }
+            set { Intern("self", value); }
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public override void Dispose()
+        {
+        }
+
+        public override void Intern(string varname, object value)
+        {
+            TheEvaluator.AddGlobalItem(varname, value);
+        }
+
+        public override object Eval(object code)
+        {
+            return TheEvaluator.EvalJScript(Str(code));
+        }
+
+        public override string Str(object code)
+        {
+            return "" + code;
+        }
+
+        public override ScriptInterpreter newInterpreter(object self)
+        {
+            lock (interpsForObjects)
+            {
+                ScriptInterpreter mini;
+                if (!interpsForObjects.TryGetValue(self, out mini))
+                {
+                    mini = new JavaScriptInterpreter(this);
+                    mini.Init(self);
+                    interpsForObjects[self] = mini;
+                }
+                return mini;
+            }
+        }
+
+        public override bool IsSubscriberOf(string eventName)
+        {
+            return GetSymbol(eventName) != null;
+        }
+
+        public override object GetSymbol(string eventName)
+        {
+            if (!eventName.EndsWith(";")) eventName += ";";
+            try
+            {
+                return Eval(eventName);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        #endregion
+    }
+
+   
     // so extension methods will allow me to pass arround my simple types.. such as "nephrael rae" but have it work as unificable
     // OutputDelegate/ExceptionHandlingThreadController/ 
-    static public class Evaluator
+    public class Evaluator
     {
-        readonly public static Microsoft.JScript.Vsa.VsaEngine Engine;
-        readonly public static IVsaScriptScope globalScope;
+        readonly public Microsoft.JScript.Vsa.VsaEngine Engine;
+        readonly public IVsaScriptScope globalScope;
         public static readonly List<VsaScriptingHost> hosts = new List<VsaScriptingHost>();
         /// <summary>
         /// Create a new host factory
         /// </summary>
         public static VsaScriptingHostFactory HostFactory = new VsaScriptingHostFactory();
 
-        public static readonly VsaScriptingHost _host;
-        public static readonly string rootHostName = @"MyScriptingHost";
-        public static GlobalScope thisGlobalObj;
+        public readonly VsaScriptingHost _host;
+        public readonly static string rootHostName = @"MyScriptingHost";
+        public readonly GlobalScope thisGlobalObj;
 
-        public static object EvalJScript(string srcJScript)
+        public object EvalJScript(string srcJScript)
         {
                 //Engine.Host.CreateGlobalItem("_scriptableForm", _scriptableForm, false);
                return Microsoft.JScript.Eval.JScriptEvaluate(srcJScript, Engine);
 
         }
 
-        public static int EvalToInteger(string statement)
+        public int EvalToInteger(string statement)
         {
             string s = EvalToString(statement);
             return int.Parse(s.ToString());
         }
 
-        public static double EvalToDouble(string statement)
+        public double EvalToDouble(string statement)
         {
             string s = EvalToString(statement);
             return double.Parse(s);
         }
 
-        public static string EvalToString(string statement)
+        public string EvalToString(string statement)
         {
             object o = EvalToObject(statement);
             return o.ToString();
         }
 
-        public static object EvalToObject(string statement)
+        public object EvalToObject(string statement)
         {
             return _evaluatorType.InvokeMember(
                         "Eval",
@@ -75,9 +235,12 @@ namespace Evaluator
                      );
         }
 
-        static Evaluator()
+        public Evaluator():this(null)
         {
+        }
 
+        public Evaluator(Evaluator theEvaluator)
+        {
             ICodeCompiler compiler;
             compiler = new JScriptCodeProvider().CreateCompiler();
 
@@ -89,7 +252,7 @@ namespace Evaluator
             results = compiler.CompileAssemblyFromSource(parameters, _jscriptSource);
 
             Assembly assembly = results.CompiledAssembly;
-            _evaluatorType = assembly.GetType("Evaluator.Evaluator");
+            _evaluatorType = assembly.GetType("EvaluatorNS.Evaluator");
             //_evaluatorCtxType = assembly.GetType("Evaluator.Context");
             _evaluator = Activator.CreateInstance(_evaluatorType);
 
@@ -109,6 +272,7 @@ namespace Evaluator
                 _host.AddType(typeof(System.Object));
                 _host.AddType(typeof(System.String));
                 AddGlobalItem("$engine", Engine);
+                AddGlobalItem("$superE", theEvaluator);
                 // hosts.AddRange(HostFactory.Create(@"MyScriptingHost", @"Scripting", true, Environment.CurrentDirectory));                
             }
 
@@ -130,14 +294,14 @@ namespace Evaluator
 
         }
 
-        public static object Context;
+        public object Context;
 
-        private static readonly object _evaluator;
-        private static readonly Type _evaluatorType;
+        private readonly object _evaluator;
+        private readonly Type _evaluatorType;
         //private static Type _evaluatorCtxType = null;
         private const string _jscriptSource =
 
-            @"package Evaluator            
+            @"package EvaluatorNS            
             {
                class Evaluator
                {
@@ -148,7 +312,7 @@ namespace Evaluator
                }
             }";
 
-        public static void AddGlobalItem(string name, object value)
+        public void AddGlobalItem(string name, object value)
         {
             //VsaItemType vsaItemType = VsaItemType.AppGlobal;
             //var v = globalScope.CreateDynamicItem(name, vsaItemType);
@@ -680,7 +844,7 @@ namespace Evaluator
         public virtual IVsaGlobalItem CreateGlobalItem(string itemName, object instance, bool isAnEventSource)
         {
             Debug.Assert(itemName != null && itemName != string.Empty);
-            Debug.Assert(instance != null);
+            //this is OK  Debug.Assert(instance != null);
 
             IVsaGlobalItem item = this.LookupEngineItem(itemName) as IVsaGlobalItem;
 
@@ -692,14 +856,20 @@ namespace Evaluator
                 this.AssertEngineItemUnique(itemName);
 
                 // create a new global item
-                item = (IVsaGlobalItem)_engine.Items.CreateItem(itemName, VsaItemType.AppGlobal, VsaItemFlag.None);
+                item = (IVsaGlobalItem) _engine.Items.CreateItem(itemName, VsaItemType.AppGlobal, VsaItemFlag.None);
 
                 // cash item in globalItemTable
                 _globalItemLookupTable.Add(itemName, instance);
             }
 
-            AddType(instance.GetType());
-            string typeName = instance.GetType().FullName;
+            Type it = typeof (object);
+            if (instance != null)
+            {
+                it = instance.GetType();
+                AddType(it);
+            }
+
+            string typeName = it.FullName;
 
             // set the item's type string to the instance's type's fullname
             item.TypeString = typeName;
@@ -721,6 +891,15 @@ namespace Evaluator
             //Add a reference to the ColorPicker assembly
             string dllName = type.Assembly.ManifestModule.Name;
             if (AlreadyAdded(dllName)) return;
+            if (!File.Exists(dllName)) return;
+            try
+            {
+                var str = type.Assembly.Location;
+            }
+            catch (NotSupportedException)
+            {
+                return;
+            }
             var refItem =
                 (IVsaReferenceItem)_engine.Items.CreateItem(
                                        dllName, VsaItemType.Reference, VsaItemFlag.None);
@@ -1300,3 +1479,5 @@ namespace Evaluator
 
 }
 #endif
+
+#endif  //FUBQARENCE

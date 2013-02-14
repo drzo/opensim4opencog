@@ -34,7 +34,7 @@ namespace MushDLR223.ScriptEngines
         }
 
         public ClojureInterpreter(object self)
-            : base(self)
+            : base()
         {
         }
 
@@ -61,7 +61,7 @@ namespace MushDLR223.ScriptEngines
 
         public override bool LoadsFileType(string filename)
         {
-            return filename.EndsWith("cloj") || base.LoadsFileType(filename);
+            return filename.ToLower().EndsWith("cloj");
         }
 
 // method: LoadFile
@@ -131,7 +131,7 @@ namespace MushDLR223.ScriptEngines
         /// 
         /// </summary>
         /// <returns></returns>
-        public override DotLispInterpreterBase MakeInterp(object self)
+        protected override DotLispInterpreterBase MakeInterp(object self)
         {
             var v = new ClojureInterpreter(self);
             v.Intern("*SELF*", self);

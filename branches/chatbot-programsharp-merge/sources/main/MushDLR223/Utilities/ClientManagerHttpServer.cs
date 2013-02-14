@@ -1,7 +1,8 @@
-﻿#define USE_HTTPSERVER_DLL
+#define USE_HTTPSERVER_DLL
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -18,6 +19,13 @@ using HttpServer.FormDecoders;
 using IHttpResponse = System.Web.HttpResponse;
 using IHttpRequest = System.Web.HttpRequest;
 using IHttpClientContext = System.Web.HttpContext;
+#endif
+
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
 #endif
 
 namespace MushDLR223.Utilities
@@ -84,7 +92,7 @@ namespace MushDLR223.Utilities
             {
                 _listener.Start(10);
                 LogInfo("Ready for HTTPD port " + _port);
-                new SystemHttpServer(clientManager, _port + 10, "the_robot_name_10");
+                new SystemHttpServer(clientManager, _port + 10, "first_robot_name");
                 WriteLine("Ready for HTTPD port " + _port);
             }
             catch (Exception e)
@@ -220,6 +228,8 @@ namespace MushDLR223.Utilities
             }
             try
             {
+                if (OverrideHandlers(request, response)) return;
+
                 if (useHtml)
                 {
                     AddToBody(response, "<html>");
@@ -250,7 +260,8 @@ namespace MushDLR223.Utilities
                 // this is our default handler
                 if (cmd != "MeNe")
                 {
-                    res = _botClient.ExecuteXmlCommand(cmd + " " + GetVariable(request, "args", ""), wrresp.WriteLine);
+                    res = _botClient.ExecuteXmlCommand(cmd + " " + GetVariable(request, "args", ""), request,
+                                                       wrresp.WriteLine);
 
                 }
                 else
@@ -286,6 +297,17 @@ namespace MushDLR223.Utilities
             }
         }
 
+        public static List<OverrideHandlerDelegate> OverrideHandlerList = new List<OverrideHandlerDelegate>();
+        public delegate bool OverrideHandlerDelegate(IHttpRequest request, IHttpResponse response);
+        public bool OverrideHandlers(IHttpRequest request, IHttpResponse response)
+        {
+            foreach (OverrideHandlerDelegate hand in OverrideHandlerList)
+            {
+                if (hand(request, response)) return true;
+            }
+            return false;
+        }
+
         private void InvokeAsMene(IHttpRequest request, IHttpResponse response, ScriptExecutor _botClient, string pathd, WriteLineToResponse wrresp)
         {
             {
@@ -319,11 +341,13 @@ namespace MushDLR223.Utilities
                     if (String.IsNullOrEmpty(username))
                     {
                         //res = _botClient.ExecuteCommand(cmd + " " + text, wrresp.WriteLine);
-                        res = _botClient.ExecuteCommand("aiml @withuser " + defaultUser + " - " + text, wrresp.WriteLine);
+                        res = _botClient.ExecuteCommand("aiml @withuser " + defaultUser + " - " + text, request,
+                                                        wrresp.WriteLine, CMDFLAGS.Foregrounded);
                     }
                     else
                     {
-                        res = _botClient.ExecuteCommand("aiml @withuser " + username + " - " + text, wrresp.WriteLine);
+                        res = _botClient.ExecuteCommand("aiml @withuser " + username + " - " + text, request,
+                                                        wrresp.WriteLine, CMDFLAGS.Foregrounded);
                     }
                     AddToBody(response, "");
                     AddToBody(response, "\n<!-- End Response !-->");
@@ -526,8 +550,8 @@ namespace MushDLR223.Utilities
 
     public interface ScriptExecutor
     {
-        CmdResult ExecuteCommand(string s, OutputDelegate outputDelegate);
-        CmdResult ExecuteXmlCommand(string s, OutputDelegate outputDelegate);
+        CmdResult ExecuteCommand(string s, object session, OutputDelegate outputDelegate, CMDFLAGS needResult);
+        CmdResult ExecuteXmlCommand(string s, object session, OutputDelegate outputDelegate);
         string GetName();
         object getPosterBoard(object slot);
     }
@@ -547,11 +571,12 @@ namespace MushDLR223.Utilities
             try
             {
                 TcpClient client = new TcpClient();
-                client.Connect("localhost", port);
+                client.Connect("localhost", port);            
+                client.Close();
             }
             catch (Exception exception)
             {
-                DLRConsole.DebugWriteLine("Listener workarround: " + exception.Message);
+               // DLRConsole.DebugWriteLine("Listener workarround: " + exception.Message);
             }
         }
     }

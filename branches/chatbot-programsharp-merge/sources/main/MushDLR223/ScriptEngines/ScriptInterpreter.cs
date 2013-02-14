@@ -1,15 +1,20 @@
 using System;
-using System.Threading;
+using DotLisp;
 
 namespace MushDLR223.ScriptEngines
 {
     public delegate void OutputDelegate(string s, params object[] args);
 
-    public interface ScriptInterpreter : IDisposable
+    public interface ScriptInterpreterFactory
     {
+        ScriptInterpreter GetLoaderOfFiletype(string type);
+    }
+
+    public interface ScriptInterpreter : ScriptInterpreterFactory, IDisposable
+    {        
         bool LoadFile(string filename, OutputDelegate WriteLine);
 
-        bool LoadsFileType(string filenameorext, object self);
+        bool LoadsFileType(string filenameorext);
 
         object Read(string context_name, System.IO.TextReader stringCodeReader, OutputDelegate WriteLine);
 
@@ -34,6 +39,10 @@ namespace MushDLR223.ScriptEngines
         void InternType(Type t);
 
         object Self { get; set; }
+        object Impl { get; }
+
+        bool IsSelf(object self);
+        void Init(object self);
     }
 
     public class subtask
@@ -43,54 +52,5 @@ namespace MushDLR223.ScriptEngines
         public String results; // the evaluation results as a string
         public Object codeTree; // the lisp code as an evaluatable object
 
-    }
-
-    public class CmdResult : IAsyncResult
-    {
-        public String Message;
-        public bool Success;
-        public bool InvalidArgs;
-
-        public CmdResult(string usage, bool b)
-        {
-            Message = usage;
-            Success = b;
-            IsCompleted = true;
-            CompletedSynchronously = true;
-            InvalidArgs = false;
-        }
-        public override string ToString()
-        {
-            if (!Success) return string.Format("ERROR: {0}", Message);
-            return Message;
-        }
-
-        public bool IsCompleted { get; set; }
-
-        /// <summary>
-        /// Gets a System.Threading.WaitHandle that is used to wait for an asynchronous operation to complete.
-        /// </summary>
-        /// A System.Threading.WaitHandle that is used to wait for an asynchronous operation to complete.
-        public WaitHandle AsyncWaitHandle
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        /// <summary>
-        /// Gets a user-defined object that qualifies or contains information about an asynchronous operation.
-        /// </summary>
-        /// Returns: A user-defined object that qualifies or contains information about an asynchronous operation.
-        public object AsyncState
-        {
-            get
-            {
-                return this;/* throw new NotImplementedException();*/
-            }
-        }
-
-        /// <summary>
-        /// true if the asynchronous operation completed synchronously; otherwise, false.
-        /// </summary>
-        public bool CompletedSynchronously { get; set; }
     }
 }
