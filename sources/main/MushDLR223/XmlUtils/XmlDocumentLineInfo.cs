@@ -13,7 +13,8 @@ namespace MushDLR223.Utilities
     public class XmlDocumentLineInfo : XmlDocument, XmlSourceInfo, IDisposable, IHasFilename
     {
         private static readonly ICollection<string> MustFormat = new HashSet<string>();
-        private static readonly ICollection<string> MustNotFormat = new HashSet<string>();
+        private static readonly List<string> MustNotReFormat = new List<string>();
+        private static readonly ICollection<string> MustPreserveWhitespace = new HashSet<string>();
 
         private static readonly string[][] PredefinedNamespaces =
             {
@@ -84,9 +85,11 @@ namespace MushDLR223.Utilities
                 MustFormat.Add("pre");
                 MustFormat.Add("pattern");
                 MustFormat.Add("that");
-                MustNotFormat.Add("category");
-                MustNotFormat.Add("template");
-                MustNotFormat.Add("regex");
+                MustNotReFormat.Add("category");
+                MustPreserveWhitespace.Add("template");
+                MustPreserveWhitespace.Add("regex");
+                MustNotReFormat.AddRange(MustPreserveWhitespace);
+                MustPreserveWhitespace.Add("pre");
             }
         }
 
@@ -523,7 +526,11 @@ namespace MushDLR223.Utilities
             {
                 if (reader is IXmlLineInfo)
                 {
-                    LineTracker = (IXmlLineInfo) reader;
+                    LineTracker = (IXmlLineInfo)reader;
+                }
+                else
+                {
+
                 }
                 if (!reader.EOF)
                 {
@@ -932,13 +939,19 @@ namespace MushDLR223.Utilities
         {
             XmlTextLineInfo node;
             string clean = text;
-            if (MustSpaceWildcards)
+            if (false && MustSpaceWildcards)
             {
                 clean = FormatTextNode(text);
+                if (clean != text.Trim() && text.Contains("_"))
+                {
+                }
             }
             else
             {
-                clean = CleanWhitepaces(text);
+                if (!PreserveWhitespace)
+                {
+                    clean = CleanWhitepaces(text);
+                }
             }
             if (clean != text)
             {
@@ -1006,9 +1019,13 @@ namespace MushDLR223.Utilities
 
         public override XmlWhitespace CreateWhitespace(string text)
         {
+            if (PreserveWhitespace) return base.CreateWhitespace(Intern(text));
+            string nospaceWhites = text.Replace(" ", "").Replace("\t", "");
             //return new XmlWhitespace(text, this);
-            if (text != " ")
+            if (nospaceWhites.Length > 0)
             {
+                nospaceWhites = nospaceWhites.Replace("\r", "\n").Replace("\n\n", "\n");
+                return base.CreateWhitespace(Intern(nospaceWhites));
                 //writeToLog("WHITE='" + text + "'");
             }
             return base.CreateWhitespace(Intern(" "));
@@ -1031,13 +1048,27 @@ namespace MushDLR223.Utilities
             string name = null;
             TransformElement(ref nodeTypeString, ref prefix, ref localName, ref name, ref namespaceURI);
             bool prev = MustSpaceWildcards;
+            bool mustPReserveWhitespace = PreserveWhitespace;
             try
             {
                 if (MustFormat.Contains(localName))
+                {
                     MustSpaceWildcards = true;
-                if (MustNotFormat.Contains(localName))
+                }
+                if (MustNotReFormat.Contains(localName))
+                {
                     MustSpaceWildcards = false;
-
+                }
+                if (MustPreserveWhitespace.Contains(localName))
+                {
+                    PreserveWhitespace = true;
+                } else
+                {
+                    if (PreserveWhitespace)
+                    {
+                      //  PreserveWhitespace = false;
+                    }
+                }
                 // prevNodeType = currentNodeType;
                 currentNodeType = localName;
                 elem = new LineInfoElementImpl(prefix, localName, namespaceURI, this);
@@ -1079,18 +1110,28 @@ namespace MushDLR223.Utilities
 
         public static XmlReader CreateXmlTextReader(Stream stream)
         {
-            return XmlReader.Create(stream, DefaultSettings);
+            return Wrap(XmlReader.Create(stream, DefaultSettings));
         }
 
         public static XmlReader CreateXmlTextReader(XmlTextReader xmlTextReader)
         {
-            return XmlReader.Create(xmlTextReader, DefaultSettings);
+            return Wrap(XmlReader.Create(xmlTextReader, DefaultSettings));
+        }
+        public static XmlReader CreateXmlTextReader(string uri)
+        {
+            return Wrap(XmlReader.Create(uri, DefaultSettings));
         }
 
         public static XmlReader CreateXmlTextReader(TextReader tr)
         {
             //XmlTextReader xmlTextReader = new XmlTextReader(tr);
-            return XmlReader.Create(tr, DefaultSettings);
+            return Wrap(XmlReader.Create(tr, DefaultSettings));
+        }
+
+        private static XmlReader Wrap(XmlReader create)
+        {
+            create.MoveToContent();
+            return create;
         }
 
 
