@@ -1,10 +1,10 @@
 using System;
 using System.Collections;
 using System.Threading;
-using TASK = System.Threading.ThreadStart;
 
-namespace MushDLR223.Utilities
+namespace ThreadPoolUtil
 {
+
     /// <summary>
     /// A ThreadRunInfo contains info relating to each queued WorkItem. 
     /// </summary>
@@ -23,14 +23,14 @@ namespace MushDLR223.Utilities
     }
 
     /// <summary>
-    /// A collection of threads that can be cancelled
+    /// A collection of Threads that can be cancelled
     /// </summary>
     public class CancellableThreadPool
     {
         private ThreadStartEvaluator _startEvaluator = null;
         private bool _stopped = false;
 
-        private Hashtable _threads = new Hashtable();
+        private Hashtable _Threads = new Hashtable();
         private ArrayList _workItems = new ArrayList();
 
         public CancellableThreadPool(ThreadStartEvaluator startEvaluator)
@@ -39,32 +39,36 @@ namespace MushDLR223.Utilities
         }
 
 
-        public void QueueWorkItem(WaitCallback callback, object state)
+        public bool QueueWorkItem(WaitCallback callback, object state)
         {
+            bool workItemsContains = false;
             lock (_workItems)
             {
+                workItemsContains = _workItems.Contains(callback);
                 //Make sure I don't duplicate this
                 //(If its running it qont be in the queue so its not a problem)
-                if (_workItems.Contains(callback) == false)
+                if (workItemsContains == false)
                 {
                     //Add the work item into the queue		
                     _workItems.Add(new ThreadRunInfo(callback, state));
+
                 }
             }
             //We never abort from here
             EvaluateThreadMaybeAbort(EvaluationReason.NewWorkItemQueued);
+            return workItemsContains;
         }
 
         private void AddNewThread()
         {
             if (_stopped == false)
             {
-                var newThread = new Thread(
+                var newThread = new System.Threading.Thread(
                     new ThreadStart(ThreadRunner));
                 //Add it to the collection
-                lock (_threads)
+                lock (_Threads)
                 {
-                    _threads.Add(newThread, null);
+                    _Threads.Add(newThread, null);
                 }
                 newThread.Start();
             }
@@ -73,7 +77,7 @@ namespace MushDLR223.Utilities
         private void ThreadRunner()
         {
             ThreadRunInfo runInfo = null;
-            bool threadStop = false;
+            bool ThreadStop = false;
 
             try
             {
@@ -86,7 +90,7 @@ namespace MushDLR223.Utilities
                         {
                             if (_workItems.Count > 0)
                             {
-                                runInfo = (ThreadRunInfo) _workItems[0];
+                                runInfo = (ThreadRunInfo)_workItems[0];
                                 _workItems.Remove(runInfo);
                             }
                             else
@@ -96,9 +100,9 @@ namespace MushDLR223.Utilities
                         //Now try to run
                         if (runInfo != null)
                         {
-                            lock (_threads)
+                            lock (_Threads)
                             {
-                                _threads[Thread.CurrentThread] = runInfo;
+                                _Threads[System.Threading.Thread.CurrentThread] = runInfo;
                             }
 
                             //Record when we start
@@ -109,13 +113,13 @@ namespace MushDLR223.Utilities
                             //back again
                             //Remove the job from the queue
                             runInfo = null;
-                            lock (_threads)
+                            lock (_Threads)
                             {
-                                _threads[Thread.CurrentThread] = null;
+                                _Threads[System.Threading.Thread.CurrentThread] = null;
                             }
                         }
                     }
-                    catch (ThreadAbortException)
+                    catch (System.Threading.ThreadAbortException)
                     {
                         lock (_workItems)
                         {
@@ -125,10 +129,10 @@ namespace MushDLR223.Utilities
                         }
                     }
                     if (_stopped == false)
-                        threadStop = EvaluateThreadMaybeAbort(EvaluationReason.WorkItemCompleted);
-                } while (_workItems.Count > 0 && _stopped == false && threadStop == false);
+                        ThreadStop = EvaluateThreadMaybeAbort(EvaluationReason.WorkItemCompleted);
+                } while (_workItems.Count > 0 && _stopped == false && ThreadStop == false);
             }
-            catch (ThreadAbortException)
+            catch (System.Threading.ThreadAbortException)
             {
                 lock (_workItems)
                 {
@@ -138,10 +142,10 @@ namespace MushDLR223.Utilities
             }
             finally
             {
-                //Finally remove this thread from the collection
-                lock (_threads)
+                //Finally remove this SThread from the collection
+                lock (_Threads)
                 {
-                    _threads.Remove(Thread.CurrentThread);
+                    _Threads.Remove(System.Threading.Thread.CurrentThread);
                 }
             }
         }
@@ -149,12 +153,12 @@ namespace MushDLR223.Utilities
         public void Stop() //bool requeue)
         {
             _stopped = true;
-            //Cant lock both _threads and _workItems
+            //Cant lock both _Threads and _workItems
             //That might cause a deadlock
-            lock (_threads)
-                foreach (Thread thread in _threads.Keys)
+            lock (_Threads)
+                foreach (System.Threading.Thread SThread in _Threads.Keys)
                 {
-                    thread.Abort();
+                    SThread.Abort();
                 }
         }
 
@@ -175,14 +179,14 @@ namespace MushDLR223.Utilities
             {
                 workItemsCount = _workItems.Count;
             }
-            lock (_threads)
+            lock (_Threads)
             {
-                foreach (Thread thread in _threads)
+                foreach (System.Threading.Thread SThread in _Threads)
                 {
-                    if (thread.ThreadState != ThreadState.Running)
+                    if (SThread.ThreadState != ThreadState.Running)
                     {
                         _startEvaluator.CurrentlyQueuedWorkItems = workItemsCount;
-                        _startEvaluator.CurrentlyRunningThreadCount = _threads.Count;
+                        _startEvaluator.CurrentlyRunningThreadCount = _Threads.Count;
                         switch (_startEvaluator.EvaluateThreadStartStop(reason))
                         {
                             case EvaluationResult.FinishCurrentThreadWhenWorkItemCompleted:
@@ -199,6 +203,7 @@ namespace MushDLR223.Utilities
         }
     }
 
+
     /// <summary>
     /// Summary description for ThreadStartEvaluator.
     /// </summary>
@@ -210,13 +215,13 @@ namespace MushDLR223.Utilities
         public int CurrentlyQueuedWorkItems;
 
         /// <summary>
-        /// This is the time number of currently running threads. Changing this value has no effect.
+        /// This is the time number of currently running Threads. Changing this value has no effect.
         /// </summary>
         public int CurrentlyRunningThreadCount;
 
 
         /// <summary>
-        /// Override this method to determine whether you wish to start a new thread, stop the current thread, or just leave
+        /// Override this method to determine whether you wish to start a new SThread, stop the current SThread, or just leave
         /// the current number as is. Refer to the <see cref="EvaluationReason"/> parameter and the 
         /// <see cref="CurrentlyRunningThreadCount"/> and <see cref="CurrentlyQueuedWorkItems"/> properties to 
         /// work out what you wish to do.
@@ -237,7 +242,7 @@ namespace MushDLR223.Utilities
         NewWorkItemQueued,
 
         /// <summary>
-        /// A WorkItem has been completed by the thread pool
+        /// A WorkItem has been completed by the SThread pool
         /// </summary>
         WorkItemCompleted,
 
@@ -253,15 +258,15 @@ namespace MushDLR223.Utilities
     public enum EvaluationResult
     {
         /// <summary>
-        /// Indicates that a new Thread should be added to the thread pool
+        /// Indicates that a new SThread should be added to the SThread pool
         /// </summary>
         StartNewThread,
         /// <summary>
-        /// Indicates that the current numbers of threads running is sufficient.
+        /// Indicates that the current numbers of Threads running is sufficient.
         /// </summary>
         NoOperation,
         /// <summary>
-        /// Indicates that too many threads are running so we can drop the current one IF AND ONLY IF we are in 
+        /// Indicates that too many Threads are running so we can drop the current one IF AND ONLY IF we are in 
         /// <see cref="EvaluationReason"/> of <see cref="EvaluationReason.WorkItemCompleted"/>
         /// </summary>
         FinishCurrentThreadWhenWorkItemCompleted
@@ -286,14 +291,14 @@ namespace MushDLR223.Utilities
 
         public override EvaluationResult EvaluateThreadStartStop(EvaluationReason reason)
         {
-            //Run another thread if we have a big queue
+            //Run another SThread if we have a big queue
             if (CurrentlyRunningThreadCount == 0
-                || CurrentlyRunningThreadCount < CurrentlyQueuedWorkItems/MaxDesiredQueued)
+                || CurrentlyRunningThreadCount < CurrentlyQueuedWorkItems / MaxDesiredQueued)
             {
                 return EvaluationResult.StartNewThread;
             }
             if (CurrentlyRunningThreadCount > 1
-                && CurrentlyRunningThreadCount > CurrentlyQueuedWorkItems/MaxDesiredQueued)
+                && CurrentlyRunningThreadCount > CurrentlyQueuedWorkItems / MaxDesiredQueued)
                 return EvaluationResult.FinishCurrentThreadWhenWorkItemCompleted;
 
             return EvaluationResult.NoOperation;

@@ -8,7 +8,7 @@ namespace MushDLR223.ScriptEngines
 {
     sealed public class DotLispInterpreter : DotLispInterpreterBase, ScriptInterpreter
     {
-        public DotLispInterpreter(object self) : base(self)
+        public DotLispInterpreter() : base()
         {
         }
 
@@ -17,16 +17,22 @@ namespace MushDLR223.ScriptEngines
         /// 
         /// </summary>
         /// <returns></returns>
-        public override DotLispInterpreterBase MakeInterp(object self)
+        protected override DotLispInterpreterBase MakeInterp(object self)
         {
-            var v = this; // new DotLispInterpreter();
+            var v = new DotLispInterpreter();
+            v._dotLispInterpreter = new Interpreter(_dotLispInterpreter);
+            v.EnsureInit();
             v.Intern("*SELF*", self);
             return v;
         } // method: newInterpreter
     }
     abstract public class DotLispInterpreterBase : LispInterpreter
     {
-        static private Interpreter _dotLispInterpreter;
+        public object Impl
+        {
+            get { return _dotLispInterpreter;  }
+        }
+        internal Interpreter _dotLispInterpreter;
         static private int _dotLispInterpreterCount = 0;
         static private object _dotLispInterpreterInitLock = new object();
 
@@ -42,7 +48,7 @@ namespace MushDLR223.ScriptEngines
 
         public override bool LoadsFileType(string filename)
         {
-            return filename.EndsWith("lisp") || base.LoadsFileType0(filename);
+            return filename.EndsWith("lisp") || base.LoadsFileType(filename);
         }
 
         public override bool IsSubscriberOf(string eventName)
@@ -67,9 +73,8 @@ namespace MushDLR223.ScriptEngines
             ScriptManager.AddType(t);
         }
 
-        public DotLispInterpreterBase(object self):base(self)
+        public DotLispInterpreterBase():base()
         {
-            Init(self);
         }
 
         public void WriteLine(string s, params object[] args)
@@ -149,7 +154,8 @@ namespace MushDLR223.ScriptEngines
         /// <param name="textForm"></param>
         public override void Intern(string varname, object value)
         {
-           dotLispInterpreter.Intern(varname, value);
+            EnsureInit();
+            dotLispInterpreter.Intern(varname, value);
         } // method: Intern
 
 
@@ -160,6 +166,7 @@ namespace MushDLR223.ScriptEngines
         /// <returns></returns>
         public override object Eval(object code)
         {
+            EnsureInit();
             return dotLispInterpreter.Eval(code);
         } // method: Eval
 
@@ -180,7 +187,7 @@ namespace MushDLR223.ScriptEngines
         /// </summary>
         /// <returns></returns>
         /// 
-        public abstract DotLispInterpreterBase MakeInterp(object self);
+        protected abstract DotLispInterpreterBase MakeInterp(object selt);
 
         public override ScriptInterpreter newInterpreter(object self)
         {

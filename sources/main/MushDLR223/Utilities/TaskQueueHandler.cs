@@ -3,16 +3,245 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Threading;
 using MushDLR223.ScriptEngines;
 using TASK = System.Threading.ThreadStart;
+#if (COGBOT_LIBOMV || USE_STHREADS)
+using ThreadPoolUtil;
+using Thread = ThreadPoolUtil.Thread;
+using ThreadPool = ThreadPoolUtil.ThreadPool;
+using Monitor = ThreadPoolUtil.Monitor;
+#endif
+using System.Threading;
 using ThreadState=System.Threading.ThreadState;
 
 namespace MushDLR223.Utilities
 {
-    public class TaskQueueHandler : IDisposable
-    {        
+    public interface IOwned
+    {
+        object Owner { get; set; }
+    }
+    public interface Abortable : IEquatable<Abortable>, IOwned
+    {
+        object Impl { get; }
+        bool IsAlive { get; }
+        bool Busy { get; }
+        string Name { get; }
+        bool DebugQueue { get; set; }
+        void Abort();
+        void Join();
+        string ToDebugString(bool b);
+        void Enqueue(ThreadStart thread);
+        bool MatchesId(string id);
+        void Resume();
+    }
+    public class AAbortable : Abortable
+    {
+        public Thread thread;
+        public String name;
+        public TaskQueueHandler tq;
+        private object owner;
+        private Action<Abortable> OnDeath;
+        public AAbortable(Thread thread1, Action<Abortable> onDeath)
+        {
+            name = thread1.Name;
+            thread = thread1;
+            OnDeath = onDeath;
+        }
+        public AAbortable(TaskQueueHandler thread1)
+        {
+            tq = thread1;
+        }
+
+        public void Abort()
+        {
+            if (tq != null) tq.DestroyAllCurrentTasks(true);
+            if (thread != null) thread.Abort();
+            if (OnDeath != null) OnDeath(this);
+        }
+
+        public void Resume()
+        {
+            if (tq != null) tq.Start();
+            if (thread != null)
+            {
+                {
+                    thread.Resume();
+                }
+            }
+        }
+
+        public string Name
+        {
+            get
+            {
+                if (name != null) return name;
+                if (tq != null) return tq.Name;
+                if (thread != null) return thread.Name;
+                return "Abortable" + GetHashCode();
+            }
+            set
+            {
+                name = value;
+            }
+        }
+
+        public bool IsAlive
+        {
+            get
+            {
+                if (tq != null) return tq.Busy;
+                if (thread != null) return thread.IsAlive;
+                return false;
+            }
+        }
+
+        public bool Busy
+        {
+            get { return IsAlive; }
+        }
+
+        public bool DebugQueue
+        {
+            get { return (tq != null) && tq.DebugQueue; }
+            set { if (tq != null) tq.DebugQueue = value; }
+        }
+
+        public void Join()
+        {
+            if (tq != null) tq.InvokeJoin("Abortable " + Name, 5 * 60000); // 5 minutes
+            if (thread != null) thread.Join();
+        }
+
+        /// <summary>
+        /// Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>.
+        /// </summary>
+        /// <returns>
+        /// true if the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>; otherwise, false.
+        /// </returns>
+        /// <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:System.Object"/>. 
+        ///                 </param><exception cref="T:System.NullReferenceException">The <paramref name="obj"/> parameter is null.
+        ///                 </exception><filterpriority>2</filterpriority>
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (!(obj is Abortable)) return false;
+            return Equals((Abortable)obj);
+        }
+
+        /// <summary>
+        /// Indicates whether the current object is equal to another object of the same type.
+        /// </summary>
+        /// <returns>
+        /// true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
+        /// </returns>
+        /// <param name="other">An object to compare with this object.
+        ///                 </param>
+        public bool Equals(Abortable other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.Impl, Impl);
+        }
+
+        /// <summary>
+        /// Serves as a hash function for a particular type. 
+        /// </summary>
+        /// <returns>
+        /// A hash code for the current <see cref="T:System.Object"/>.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = (thread != null ? thread.GetHashCode() : 0);
+                result = (result * 397) ^ (name != null ? name.GetHashCode() : 0);
+                result = (result * 397) ^ (tq != null ? tq.GetHashCode() : 0);
+                return result;
+            }
+        }
+
+
+        public string ToDebugString(bool b)
+        {
+            if (tq != null) return tq.ToDebugString(b);
+            if (thread != null) return "Thread: " + thread.Name + " isBusy=" + Busy;
+            return "Abortable " + name + GetHashCode();
+        }
+
+        public void Enqueue(ThreadStart task)
+        {
+            if (tq != null)
+            {
+                tq.Enqueue(task);
+                return;
+            }
+            throw new NotImplementedException();
+            thread = new Thread(task);
+        }
+
+        #region Implementation of IOwned
+
+        public object Owner
+        {
+            get
+            {
+                if (tq != null) return tq.Owner;
+                return owner;
+            }
+            set
+            {
+                if (tq != null) tq.Owner = value;
+                owner = value;
+            }
+        }
+
+        #endregion
+
+        #region Implementation of Abortable
+
+        public object Impl
+        {
+            get { return (object)thread ?? tq; }
+        }
+
+        #endregion
+        public bool MatchesId(string id)
+        {
+            return TaskQueueHandler.MatchesIdExtracted(id, Name);
+        }
+
+        public void AddFinalizer(Action<Abortable> fin)
+        {
+            var add = OnDeath;
+            OnDeath = (o) =>
+                          {
+                              OnDeath(o);
+                              fin(o);
+                          };
+        }
+    }
+
+    public class TaskQueueHandler : IDisposable, IOwned, Abortable
+    {
+        public static bool MatchesIdExtracted(string id, string name)
+        {
+            if (string.IsNullOrEmpty(id)) return true;
+            return (" " + (name.ToLower()) + " ").Contains(" " + id.ToLower() + " ");
+        }
+        public bool MatchesId(string id)
+        {
+            return TaskQueueHandler.MatchesIdExtracted(id, Name);
+        }
+
+        public void Resume()
+        {
+            Start();
+        }
+
         public static readonly OutputDelegate errOutput = DLRConsole.SYSTEM_ERR_WRITELINE;
+        public static bool TurnOffDebugMessages = true;
         protected ThreadControl LocalThreadControl = new ThreadControl(new ManualResetEvent(false));
         readonly List<ThreadStart> OnFinnaly = new List<ThreadStart>();
         public TimeSpan PING_INTERVAL = TimeSpan.FromSeconds(30); // 30 seconds
@@ -22,14 +251,16 @@ namespace MushDLR223.Utilities
         public static readonly TimeSpan TOO_SHORT_INTERVAL = TimeSpan.FromMilliseconds(3);
         public static readonly HashSet<TaskQueueHandler> TaskQueueHandlers = new HashSet<TaskQueueHandler>();
         private readonly LinkedList<TASK> EventQueue = new LinkedList<TASK>();
-
+        public object Owner { get; set; }
         private readonly object EventQueueLock = new object();
         private readonly object PingNeverAbortLock = new object();
         private readonly object OneTaskAtATimeLock = new object();
+        private readonly object TaskThreadChangeLockReal = new object();
         private object TaskThreadChangeLock
         {
             get
             {
+                //return TaskThreadChangeLockReal;
                 return new object();
             }
         } 
@@ -39,18 +270,24 @@ namespace MushDLR223.Utilities
         private readonly object EventQueueTimeLock = new object();
 
         private bool WasStartCalled;
-        public bool UsePinger = true;
         private Thread PingerThread;
         private Thread TaskThreadCurrent;
-        private Thread StackerThread;
+        public Thread StackerThread;
         private TaskThreadHolder TaskHolder;
         //private Dictionary<Thread,TaskThreadKit> TaskThreadAbortKit = new Dictionary<Thread, TaskThreadKit>();
 
         public readonly List<Thread> InteruptableThreads = new List<Thread>();
 
         //public delegate ThreadStart NameThreadStart(string named, ThreadStart action);
-
-        public object Name;
+        public string Name
+        {
+            get
+            {
+                if (_Name is Func<string>) return ((Func<string>) _Name)();
+                return "" + _Name;
+            }
+        }
+        public object _Name;
         //static private readonly TASK NOP;
         private readonly AutoResetEvent WaitingOn = new AutoResetEvent(false);
         //private readonly AutoResetEvent IsCurrentTaskStarted = new AutoResetEvent(false);
@@ -176,7 +413,22 @@ namespace MushDLR223.Utilities
         //public ulong GoodPings = 0;
         public bool IsDisposing = false;
         //public ulong LatePings = 0;
-        public bool problems = false;
+        public bool _problems = false;
+        public bool problems
+        {
+            get
+            {
+                return _problems;
+            }
+            set
+            {
+                if (value)
+                {
+                    
+                }
+                _problems = value; 
+            }
+        }
         public bool SimplyLoopNoWait = false;
 
         public bool WaitingForPong = false;
@@ -211,10 +463,10 @@ namespace MushDLR223.Utilities
             }
         }
 
-        public TaskQueueHandler(object named)
-            : this(named, TimeSpan.FromMilliseconds(10), TimeSpan.MaxValue, true, true)
+        public TaskQueueHandler(object owner, object named)
+            : this(owner, named, TimeSpan.FromMilliseconds(10), TimeSpan.MaxValue, true, true)
         {
-            VeryBad("CREATE TaskQueueHandler1 " + named);
+            if (DebugLevel > 0) VeryBad("CREATE TaskQueueHandler1 " + named);
         }
 
         /*
@@ -224,19 +476,22 @@ namespace MushDLR223.Utilities
         }
         */
 
-        public TaskQueueHandler(object named, TimeSpan msWaitBetween, bool autoStart)
-            : this(named, msWaitBetween, TimeSpan.MaxValue, autoStart, true)
+        public TaskQueueHandler(object owner, object named, TimeSpan msWaitBetween, bool autoStart)
+            : this(owner, named, msWaitBetween, TimeSpan.MaxValue, autoStart, true)
         {
-            VeryBad("CREATE TaskQueueHandler3");
+            if (DebugLevel > 0) VeryBad("CREATE TaskQueueHandler3");
         }
-        public TaskQueueHandler(object str, TimeSpan msWaitBetween, bool autoStart, bool doDebug) :
-            this(str, msWaitBetween, TimeSpan.MaxValue, autoStart, doDebug)
+        public TaskQueueHandler(object owner, object str, TimeSpan msWaitBetween, bool autoStart, bool doDebug) :
+            this(owner, str, msWaitBetween, TimeSpan.MaxValue, autoStart, doDebug)
         {
-            VeryBad("CREATE TaskQueueHandler4");
+            if (DebugLevel > 0) VeryBad("CREATE TaskQueueHandler4");
         }
 
-        public TaskQueueHandler(object str, TimeSpan msWaitBetween, TimeSpan maxPerOperation, bool autoStart, bool doDebug)
+        public TaskQueueHandler(object owner, object str, TimeSpan msWaitBetween, TimeSpan maxPerOperation, bool autoStart, bool doDebug)
         {
+            Owner = owner;
+            _Name = str;
+            System.Diagnostics.Debug.Listeners.Clear();
             NeverStart = !doDebug;
             NeverStart = false;
             debugRequested = doDebug;
@@ -247,11 +502,11 @@ namespace MushDLR223.Utilities
             }
             Trackers = new List<TaskStatistics> {Total, SinceLastPong, Every30Secs, SinceLastTaskStarted};
             KillTasksOverTimeLimit = false;
+            debugOutput = DLRConsole.DebugWriteLine;
             //NOP = NOP ?? (() => { });
             lock (TaskQueueHandlers)
             {
                 SinceLastTaskStarted.End = SinceLastTaskStarted.Start;
-                Name = str;
                 TaskQueueHandlers.Add(this);
 
                 // 1ms min - ten minutes max
@@ -264,8 +519,7 @@ namespace MushDLR223.Utilities
                 // zero secs - ten minutes max
                 PauseBetweenOperations = TimeSpanBetween(msWaitBetween, TimeSpan.Zero, TOO_LONG_INTERVAL);
 
-                PingerThread = new Thread(LoopNoAbort(EventQueue_Ping, PingNeverAbortLock))
-                                   {Name = str + " pinger", Priority = ThreadPriority.Lowest};
+                PingerThread = new Thread(LoopNoAbort(EventQueue_Ping, PingNeverAbortLock)) { Name = str + " pinger", Priority = System.Threading.ThreadPriority.Lowest };
             }
             ResetTimedProgress(Total);
             if (!PingerThread.IsAlive) RestartCurrentTask(PingerThread);//.Start();
@@ -274,13 +528,13 @@ namespace MushDLR223.Utilities
 
         static TaskQueueHandler()
         {
+            DebugLevel = 0;
             // If we don't have a high resolution timer then Stopwatch will fall back
             // to DateTime, which is much less reliable
-            if (Stopwatch.IsHighResolution)
-                DLRConsole.DebugWriteLine("We have a high resolution timer available");
+            //if (DebugLevel > 2) if (Stopwatch.IsHighResolution) DLRConsole.DebugWriteLine("We have a high resolution timer available");
 
             long frequency = Stopwatch.Frequency;
-            DLRConsole.DebugWriteLine(" Timer frequency in ticks per second = {0}", frequency);
+            if (DebugLevel > 1) DLRConsole.DebugWriteLine(" Timer frequency in ticks per second = {0}", frequency);
         }
 
         static TimeSpan TimeSpanBetween(TimeSpan orig, TimeSpan low, TimeSpan high)
@@ -350,6 +604,7 @@ namespace MushDLR223.Utilities
         {
             try
             {
+                debugOutput = errOutput;
                 if (IsDisposing) return;
                 IsDisposing = true;
                 lock (TaskQueueHandlers)
@@ -397,7 +652,7 @@ namespace MushDLR223.Utilities
 
         private void TestLock(object busyTrackingLock)
         {
-            return;
+           // return;
             if (Monitor.TryEnter(busyTrackingLock, TimeSpan.FromSeconds(10)))
             {
                 Monitor.Exit(busyTrackingLock);
@@ -449,7 +704,7 @@ namespace MushDLR223.Utilities
                 StackerThread = new Thread(LoopNoAbort(EventQueue_Handler, OneTaskAtATimeLock))
                                     {
                                         Name = tname + " queueworker",
-                                        Priority = ThreadPriority.BelowNormal,
+                                        Priority = System.Threading.ThreadPriority.BelowNormal,
                                     };
             }
             if (!StackerThread.IsAlive)
@@ -458,6 +713,19 @@ namespace MushDLR223.Utilities
             }
             if (PingerThread != null && !PingerThread.IsAlive) RestartCurrentTask(PingerThread);//.Start();
             debugOutput = debugOutput ?? errOutput;
+        }
+
+        /// <summary>
+        /// Indicates whether the current object is equal to another object of the same type.
+        /// </summary>
+        /// <returns>
+        /// true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
+        /// </returns>
+        /// <param name="other">An object to compare with this object.
+        ///                 </param>
+        public bool Equals(Abortable other)
+        {
+            return Impl == other.Impl;
         }
 
         public override string ToString()
@@ -488,6 +756,16 @@ namespace MushDLR223.Utilities
                                }
                            }
                        };
+        }
+
+        public void Abort()
+        {
+            DestroyAllCurrentTasks(true);
+        }
+
+        public void Join()
+        {
+            InvokeJoin("Abortable.Join " + this, 10*60000);
         }
 
         public string ToDebugString(bool detailed)
@@ -619,7 +897,7 @@ namespace MushDLR223.Utilities
                 if (!needsExit)
                 {
                     string str = "EventQueue_Handler is locked out!";
-                    errOutput(str);
+                    if (!TurnOffDebugMessages) errOutput(str);
                     VeryBad(str);
                     throw new InternalBufferOverflowException(str);
 
@@ -672,15 +950,23 @@ namespace MushDLR223.Utilities
                 {
                     NoExceptions(() => DoNow(evt));
                     SinceLastTaskStarted.Busy = false;
-                    if (evtCount > 1)
+                    //if (evtCount > 1)
                     {
                         //if (WaitingForPong) 
 
                         // dont bother sleeping
-                        if (evtCount > 1000 && PauseBetweenOperations < TimeSpan.FromMilliseconds(500)) continue;
+                        //if (evtCount > 1000 && PauseBetweenOperations < TimeSpan.FromMilliseconds(500)) continue;
 
                         Sleep(PauseBetweenOperations);
                         // avoid reset/set semantics ?
+                        continue;
+                    }
+                }
+                lock (EventQueueLock)
+                {
+                    evtCount = EventQueue.Count;
+                    if (evtCount > 0)
+                    {
                         continue;
                     }
                 }
@@ -692,7 +978,7 @@ namespace MushDLR223.Utilities
         {
             if (PauseBetweenOperations >= TOO_SHORT_INTERVAL) 
             {
-                if (PauseBetweenOperations > TimeSpan.Zero) Thread.Sleep(pauseBetweenOperations);
+                if (PauseBetweenOperations > TimeSpan.Zero) ThreadSleep(pauseBetweenOperations);
             }
         }
 
@@ -740,9 +1026,13 @@ namespace MushDLR223.Utilities
                     //wait longer (still no tasks)
                     continue;
                 }
-                errOutput(CreateMessage("WaitOne: TIMEOUT ERROR {0} was {1} ", INFO,
-                                        GetTimeString(ThisMaxOperationTimespan)));
-                problems = true;
+                if (!TurnOffDebugMessages)
+                    WriteLine(CreateMessage("WaitOne: TIMEOUT ERROR {0} was {1} ", INFO,
+                                            GetTimeString(ThisMaxOperationTimespan)));
+                if (RealTodo > 1)
+                {
+                    problems = true;
+                } 
                 //TestLock(BusyTrackingLock);
                 //lock (BusyTrackingLock)
                 {
@@ -752,7 +1042,8 @@ namespace MushDLR223.Utilities
                     }
                     //var len = DateTime.Now.Subtract(BusyStart);
                 }
-                errOutput(CreateMessage("Moving on with TIMEOUT {0} was {1} ", INFO,
+                if (this.RealTodo > 0) return true; ////r = true;
+                if (!TurnOffDebugMessages) WriteLine(CreateMessage("Moving on with TIMEOUT {0} was {1} ", INFO,
                                         GetTimeString(ThisMaxOperationTimespan)));
                 if (this.RealTodo > 0) return true; ////r = true;
                 return false;
@@ -786,7 +1077,7 @@ namespace MushDLR223.Utilities
             while (!(IsDisposing))
             {
                 ResetTimedProgress(Every30Secs); 
-                Thread.Sleep(PING_INTERVAL);
+                ThreadSleep(PING_INTERVAL);
 
                 if (IsDisposing) break;
                 //if (!UsePinger) continue;
@@ -806,11 +1097,19 @@ namespace MushDLR223.Utilities
                 CheckTimedProgress(Every30Secs);
                 if (RealTodo > 1 || problems || !WasStartCalled)
                 {
+                    if (RealTodo < 2) problems = false;
                     VeryBad("REALTODO = " + RealTodo + " " + INFO);
                 }
                 continue;
                 CheckPingerTime(SinceLastPong);
             }
+        }
+
+// ReSharper disable MemberCanBeMadeStatic.Local
+        private void ThreadSleep(TimeSpan interval)
+        // ReSharper restore MemberCanBeMadeStatic.Local
+        {
+            System.Threading.Thread.Sleep(interval);
         }
 
         private void LiveCheck()
@@ -1017,7 +1316,7 @@ namespace MushDLR223.Utilities
                 }
                 if (ms == 0)
                 {
-                    return string.Format("0ms");
+                    return "0ms";
                 }
                 // why do we ever get here?!
                 return string.Format("{0}ms", ms);
@@ -1562,6 +1861,7 @@ namespace MushDLR223.Utilities
 
         public void WriteLine(string s, params object[] parms)
         {
+            if (TurnOffDebugMessages) return;
             if (inWriteline)
             {
                 DLRConsole.SYSTEM_ERR_WRITELINE("inWriteLine!!!!!!!!=" + new Exception().StackTrace);
@@ -1583,12 +1883,14 @@ namespace MushDLR223.Utilities
 
         private void VeryBad(String action)
         {
+            if (TurnOffDebugMessages || DebugLevel == 0) return;
             action = CreateMessage(action);
             WriteLine(action);
         }
 
         public void WriteLine00(string s, params object[] parms)
         {
+            if (TurnOffDebugMessages) return;
             debugOutput = debugOutput ?? errOutput;
             s = CreateMessage(s, parms);
             string trimmed = s.Trim(" .\n".ToCharArray());
@@ -1625,8 +1927,8 @@ namespace MushDLR223.Utilities
 
         public void Enqueue(TASK evt)
         {
-            string str = null;
-            if (DebugQueue) str = DLRConsole.FindCallerInStack(null, null, true);
+            string str = "EnqueueTask";
+            if (DebugQueue) str = DLRConsole.FindCallerInStackTrace(null, null, true);
             Enqueue(str, evt);
         }
 
@@ -1656,7 +1958,10 @@ namespace MushDLR223.Utilities
         {
             Enqueue0(NamedTask(named, evt));
         }
-
+        public void EnqueueNot(String named, TASK evt)
+        {
+            evt();
+        }
         public void AddFirst(String named, TASK evt)
         {
             AddFirst0(NamedTask(named, evt));
@@ -1664,8 +1969,8 @@ namespace MushDLR223.Utilities
 
         public void AddFirst(TASK evt)
         {
-            string str = null;
-            if (DebugQueue) str = DLRConsole.FindCallerInStack(null, null, true);
+            string str = "AddFirstTask";
+            if (DebugQueue) str = DLRConsole.FindCallerInStackTrace(null, null, true);
             AddFirst(str, evt);
         }
         public void AddFirst0(TASK evt)
@@ -1791,7 +2096,7 @@ namespace MushDLR223.Utilities
                                  () =>
                                      {
                                          CallNow(pretask, "pre ", s);
-                                         CallNow(() => NoExceptions<bool>(are.Set), "setter ", s);
+                                         are.Set();
                                      });
             if (!WasStartCalled && !NeverStart)
             {
@@ -1801,6 +2106,7 @@ namespace MushDLR223.Utilities
             if (IsTaskThread)
             {
                 TJ();
+                return true;
             }
             else
             {
@@ -1856,10 +2162,17 @@ namespace MushDLR223.Utilities
             }
         }
 
+        public bool IsAlive
+        {
+            get { return Busy || true; }
+        }
+
         public bool Busy
         {
             get { return SinceLastTaskStarted.Busy; }
         }
+
+        public static int DebugLevel { get; set; }
 
         private void PopDebugString(string s)
         {
@@ -1899,7 +2212,7 @@ namespace MushDLR223.Utilities
 
         public void MakeSyncronousTask(TASK action, string name, TimeSpan maxTime)
         {
-            EventWaitHandle IsComplete = new EventWaitHandle(false, EventResetMode.ManualReset);
+            EventWaitHandle IsComplete = new EventWaitHandle(false, System.Threading.EventResetMode.ManualReset);
             Thread t = new Thread(CreateTask(action, name, null, IsComplete));
             Thread tr = new Thread(() =>
                                        {
@@ -1959,7 +2272,7 @@ namespace MushDLR223.Utilities
 
         public void DestroyAllCurrentTasks(bool clearQueue)
         {
-            throw new NotImplementedException();
+                if(clearQueue) Clear();
         }
 
         public TASK CreateTask(TASK action, string name,EventWaitHandle isStarted, EventWaitHandle isComplete)
@@ -2046,7 +2359,7 @@ namespace MushDLR223.Utilities
             }
         }
 
-        private T NoExceptions<T>(Func<T> func)
+        public T NoExceptions<T>(Func<T> func)
         {
             try
             {
@@ -2064,9 +2377,9 @@ namespace MushDLR223.Utilities
             }
         }
 
-        private void NoException(ThreadStart func)
+        public bool NoExceptionsV(ThreadStart func)
         {
-            if (func == null) return;
+            if (func == null) return false;
             try
             {
                 if (IsDisposing)
@@ -2074,10 +2387,12 @@ namespace MushDLR223.Utilities
                     WriteLine("IsDisposing");
                 }
                 func.Invoke();
+                return true;
             }
             catch (Exception e)
             {
                 VeryBad("" + e);
+                return false;
             }
         }
 
@@ -2119,6 +2434,23 @@ namespace MushDLR223.Utilities
             }
             return used;
         }
+
+        public void Clear()
+        {
+            lock (EventQueue)
+            {
+                EventQueue.Clear();
+            }
+        }
+
+        #region Implementation of Abortable
+
+        public object Impl
+        {
+            get { return this; }
+        }
+
+        #endregion
     }
 
     public class TaskThreadHolder

@@ -7,7 +7,7 @@ namespace MushDLR223.Utilities
 {
     public class OutputDelegateWriter : TextWriter
     {
-        private OutputDelegate output;
+        private readonly OutputDelegate output;
         private StringWriter sw = new StringWriter();
         private object locker;
 
@@ -15,6 +15,18 @@ namespace MushDLR223.Utilities
         {
             output = od;
             locker = od;
+        }
+
+        public override int GetHashCode()
+        {
+            return output.GetHashCode();
+        }
+        public override bool Equals(object obj)
+        {
+            if (base.Equals(obj)) return true;
+            OutputDelegateWriter odw = obj as OutputDelegateWriter;
+            if (odw == null) return false;
+            return odw.output.Equals(output);
         }
 
         public override void Write(string format, params object[] arg)
@@ -27,7 +39,9 @@ namespace MushDLR223.Utilities
         }
         public override void Write(char[] buffer, int index, int count)
         {
+            DLRConsole.InitialConsoleOut.Flush(); 
             lock (locker) sw.Write(buffer, index, count);
+            Flush();
         }
         public override void Close()
         {
@@ -54,22 +68,36 @@ namespace MushDLR223.Utilities
         {
             lock (locker)
             {
-                //sw.WriteLine();
+                sw.WriteLine();
                 Flush();
             }
         }
         public override void Flush()
         {
+            Flush0();
+            DLRConsole.InitialConsoleOut.Flush();
+        }
+        public void Flush0()
+        {
             string toWrite = "";
             lock (locker)
             {
-                StringWriter s = sw;
+                toWrite = sw.ToString();
+                int lastlf = toWrite.LastIndexOf('\n');
+                if (lastlf == -1)
+                {
+                    if (!DLRConsole.ContainsSubscribedBreakpointWords(toWrite))
+                        return;
+                }
                 sw = new StringWriter();
-                s.Flush();
-                toWrite = s.ToString().TrimEnd();
+                string nextWrite = toWrite.Substring(lastlf).TrimStart();
+                sw.Write(nextWrite);
+                var thisWrite = toWrite.Substring(0, lastlf).TrimEnd();
+                toWrite = thisWrite;
             }
             try
             {
+                bool debug = DLRConsole.ContainsSubscribedBreakpointWords(toWrite);
                 output(toWrite);
             }
             catch (Exception e)

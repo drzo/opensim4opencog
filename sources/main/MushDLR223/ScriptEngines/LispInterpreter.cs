@@ -9,14 +9,14 @@ namespace MushDLR223.ScriptEngines
     abstract public class LispInterpreter : CommonScriptInterpreter
     {
 
-        public LispInterpreter(object self)
-            : base(self)
+        protected LispInterpreter()
+            : base()
         {
         }
 
         sealed public override object Self
         {
-            get { return GetSymbol("this"); }
+            get { return GetSymbol("this") ?? GetSymbol("*SELF*"); }
             set
             {
                 Intern("*SELF*", value);
@@ -25,7 +25,7 @@ namespace MushDLR223.ScriptEngines
             }
         }
 
-        public override bool LoadsFileType(string filename)
+        public override ScriptInterpreter GetLoaderOfFiletype(string filename)
         {
             filename = filename.ToLower();
             bool b = GetType().Name.ToLower().StartsWith(filename);
@@ -33,7 +33,7 @@ namespace MushDLR223.ScriptEngines
             {
                 ScriptManager.WriteLine("LispInterpreter LoadsFileType " + GetType() + " => " + filename);
             }
-            return b;
+            return b ? this : null;
         }
 
         /// <summary>
