@@ -1,3 +1,4 @@
+#if false
 using System;
 using System.Collections.Generic;
 
@@ -220,3 +221,4 @@ namespace RTParser.Variables
         #endregion
     }
 }
+#endif

@@ -1338,7 +1338,7 @@ namespace RTParser
         /// Converts the value of this instance to an equivalent 8-bit signed integer using the specified culture-specific formatting information.
         /// </summary>
         /// <returns>
-        /// An 8-bit signed integer equivalent to the value of `instance.
+        /// An 8-bit signed integer equivalent to the value of this instance.
         /// </returns>
         /// <param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
         ///                 </param><filterpriority>2</filterpriority>

@@ -4,6 +4,8 @@ using System.Threading;
 using System.Xml;
 using AltAIMLParser;
 using AltAIMLbot;
+using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using RTParser.Database;
 using RTParser.Variables;
 using UPath = RTParser.Unifiable;
@@ -229,14 +231,19 @@ namespace RTParser.Utils
 
         public bool IsTraced { get; set; }
 
-        public IEnumerable<string> SettingNames(int depth)
+        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
             //get 
             {
-                return Request.TargetSettings.SettingNames(depth);
+                return Request.TargetSettings.SettingNames(requester, depth);
             }
         }
 
+
+        public bool addSetting(string name, object value)
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Removes the named setting from this class
@@ -244,7 +251,17 @@ namespace RTParser.Utils
         /// <param name="name">The name of the setting to remove</param>
         public bool removeSetting(string name)
         {
-            return SettingsDictionary.removeSettingWithUndoCommit(this, TargetSettings, name);
+            return SettingsDictionaryReal.removeSettingWithUndoCommit(this, TargetSettings, name);
+        }
+
+        public bool updateSetting(string name, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        string ISettingsDictionaryT<string>.grabSetting(string name)
+        {
+            return grabSetting(name);
         }
 
         /// <summary>
@@ -255,7 +272,7 @@ namespace RTParser.Utils
         /// <param name="value">the new value</param>
         public bool updateSetting(string name, Unifiable value)
         {
-            return SettingsDictionary.addSettingWithUndoCommit(this, TargetSettings, TargetSettings.updateSetting, name, value);
+            return SettingsDictionaryReal.addSettingWithUndoCommit(this, TargetSettings, TargetSettings.updateSetting, name, value);
         }
 
         /// <summary>
@@ -317,7 +334,7 @@ namespace RTParser.Utils
             bool succeed;
             Unifiable v;
             if (!UseLuceneForGet)
-                v = SettingsDictionary.grabSettingDefaultDict(dict, name, out realName);
+                v = SettingsDictionaryReal.grabSettingDefaultDict(dict, name, out realName);
             else
             {
                 v = NamedValuesFromSettings.GetSettingForType(dict.NameSpace, this, dict, name, out realName, name, null,
@@ -338,7 +355,7 @@ namespace RTParser.Utils
             ISettingsDictionary dict = Request.TargetSettings;
             if (!UseLuceneForSet)
             {
-                return SettingsDictionary.addSettingWithUndoCommit(this, dict, dict.addSetting, name, value);
+                return SettingsDictionaryReal.addSettingWithUndoCommit(this, dict, dict.addSetting, name, value);
             }
             else
             {

@@ -22,12 +22,12 @@ namespace AIMLbot
     }
     public class MasterUser : RTParser.UserImpl
     {
-        public MasterUser(string UserID, Bot bot)
-            : base(UserID, bot)
+        public MasterUser(string fullname, string UserID, Bot bot)
+            : base(fullname, UserID, bot)
         {
         }
-        public MasterUser(string UserID, AltBot bot)
-            : base(UserID, bot)
+        public MasterUser(string fullname, string UserID, AltBot bot)
+            : base(fullname, UserID, bot)
         {
         }
     }

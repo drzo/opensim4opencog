@@ -174,7 +174,7 @@ namespace RTParser.Utils
         public static XmlNode getTemplateNode(string sentence)
         {
             string makeTemplate = "<template>" + sentence + "</template>";
-            var vv = getDocNode(makeTemplate, false, false, StringOnlyDoc);
+            var vv = getDocNode(false, makeTemplate, false, false, StringOnlyDocPreserve);
             return vv;
         }
 

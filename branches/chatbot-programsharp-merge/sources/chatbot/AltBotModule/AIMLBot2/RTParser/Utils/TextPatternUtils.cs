@@ -40,7 +40,7 @@ namespace RTParser.Utils
         static public bool checkEndsAsSentence(string sentence)
         {
             sentence = Trim(sentence);
-
+            if (sentence.Length <= 1) return false;
             if ("!?.".Contains(sentence.Substring(sentence.Length - 1))) return true;
             foreach (Unifiable splitter in AltBot.Splitters)
             {

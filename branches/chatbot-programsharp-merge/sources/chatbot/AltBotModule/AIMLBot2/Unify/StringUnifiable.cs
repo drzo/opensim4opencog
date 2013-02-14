@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Xml;
+using MushDLR223.Utilities;
 using RTParser.Database;
 using RTParser.Utils;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
@@ -866,7 +867,8 @@ namespace RTParser
                                                  new[] {"&qt;", "<qt />"},
                                                  new[] {"&amp;", "<amp />"},
                                              });
-                XmlNode firstChild = StaticAIMLUtils.getDocNode("<li>" + strTrim + "</li>", false, false, StaticAIMLUtils.StringOnlyDoc);
+                XmlNode firstChild = StaticAIMLUtils.getDocNode(false, "<li>" + strTrim + "</li>", false, false,
+                                                                StaticAIMLUtils.StringOnlyDocPreserve);
                 if (firstChild.ChildNodes.Count == 1)
                 {
                     return new Unifiable[] {this};
@@ -1412,7 +1414,7 @@ namespace RTParser
                 {
                     return GetNode2();
                 }
-                XmlNode nodeOuter0 = StaticAIMLUtils.getDocNode("<li>" + str + "</li>", false, false, null);
+                XmlNode nodeOuter0 = StaticAIMLUtils.getDocNode(false, "<li>" + str + "</li>", false, false, null);
                 if (nodeOuter0.ChildNodes.Count == 1)
                 {
                     nodeOuter0 = nodeOuter0.FirstChild;

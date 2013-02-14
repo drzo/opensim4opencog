@@ -279,11 +279,29 @@ namespace AltAIMLbot
                             }
                             writeToLog("The bot could not find any response for the input: " + RawInput +
                                        " with the path(s): " +
-                                       Environment.NewLine + Unifiable.DescribeUnifiable(paths) + " from the user with an id: " +
+                                       Environment.NewLine + Unifiable.DescribeUnifiable(paths) +
+                                       " from the user with an id: " +
                                        Requester.UserID);
                             return Unifiable.NULL;
                         }
                     }
+            }
+        }
+
+        public string LastSentence
+        {
+            get
+            {
+                throw new NotImplementedException();
+                return null;
+            }
+        }
+        public string BestSentence
+        {
+            get
+            {
+                throw new NotImplementedException();
+                return null;
             }
         }
 

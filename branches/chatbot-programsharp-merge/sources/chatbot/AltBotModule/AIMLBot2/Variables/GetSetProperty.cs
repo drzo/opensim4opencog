@@ -2,15 +2,15 @@ using System;
 
 namespace RTParser.Variables
 {
-    public delegate Unifiable GetUnifiable();
     //public delegate void SetUnifiable(Unifiable unifiable);
 
-    public class GetSetProperty
+    public delegate TT GetUnifiable<TT>();
+    public class GetSetProperty<T>
     {
-        readonly GetUnifiable getter;
-        readonly Action<Unifiable> setter;
+        readonly GetUnifiable<T> getter;
+        readonly Action<T> setter;
 
-        public GetSetProperty(GetUnifiable g, Action<Unifiable> s)
+        public GetSetProperty(GetUnifiable<T> g, Action<T> s)
         {
             getter = g;
             setter = s;
@@ -18,7 +18,7 @@ namespace RTParser.Variables
 
         public void SetValue(object oldValue, object newValue, object unused)
         {
-            setter.Invoke(Unifiable.Create(newValue));
+            setter.Invoke((T)(object)Unifiable.Create(newValue));
         }
 
         public object GetValue(object oldValue, object unused)

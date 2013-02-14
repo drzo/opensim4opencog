@@ -1,4 +1,64 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections;
+using System.Globalization;
+using System.Text.RegularExpressions;
+using System.IO;
+using System.Xml;
+using System.Text;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Reflection;
+using System.Net.Mail;
+using AIMLbot;
+#if false
+using DcBus;
+using Aima.Core.Logic.Propositional.Algorithms;
+using Aima.Core.Logic.Propositional.Parsing;
+using Aima.Core.Logic.Propositional.Parsing.AST;
+using LAIR.ResourceAPIs.WordNet;
+using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
+using MushDLR223.Virtualization;
+using org.opencyc.api;
+using RTParser.AIMLTagHandlers;
+using RTParser.Database;
+using RTParser.Normalize;
+using RTParser.Utils;
+using RTParser.Variables;
+using AIMLLoader = AltAIMLbot.Utils.AIMLLoaderS;
+using AIMLTagHandler=AltAIMLbot.Utils.AIMLTagHandler;
+using bot=AltAIMLbot.AIMLTagHandlers.bot;
+using CustomTagAttribute=AltAIMLbot.Utils.CustomTagAttribute;
+using Gender=AltAIMLbot.Utils.Gender;
+using MatchState=AltAIMLbot.Utils.MatchState;
+using Node=AltAIMLbot.Utils.Node;
+using recursiveVerbatum=AltAIMLbot.AIMLTagHandlers.recursiveVerbatum;
+using TagHandler=AltAIMLbot.Utils.TagHandler;
+using verbatum=AltAIMLbot.AIMLTagHandlers.verbatum;
+#endif
+using AltAIMLParser;
+using DcBus;
+using LogicalParticleFilter1;
+using Action=System.Action;
+
+/******************************************************************************************
+AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
+OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+**************************************************************************************************/
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -44,11 +104,110 @@ namespace RTParser
     /// Encapsulates a Proccessor. If no settings.xml file is found or referenced the Proccessor will try to
     /// default to safe settings.
     /// </summary>
+    [Serializable]
     public partial class AltBot : StaticAIMLUtils, IChatterBot
     {
+        #region Attributes
+
+        /// <summary>
+        /// A chemistry connection object
+        /// </summary>
+        //public RChem myChemistry = new RChem(myConst.MEMHOST, true);
+        //public Qchem realChem = new Qchem(myConst.MEMHOST);
+        
+        /// <summary>
+        /// @TODO @WORKAROUND Currently adding some padding around Template expanded tags
+        /// </summary>
+        public static bool PadAroundTemplateTags = false;
+
+        public RChem myChemistry = null;
+
+#if false
+        public Qchem realChem = null;
+        public ChemTrace myChemTrace = null;
+        public QfsmSet myFSMS = new QfsmSet();
+        public BehaviorSet myBehaviors;
+        public Cron myCron = null;
+        public bool inCritical = false;
+        private bool _blockCron = false;
+
+        public bool blockCron
+        {
+            get
+            {
+                if (_blockCron) return true;
+                if (servitor.IsBackgroundDisabled) return true;
+                return false;
+            }
+            set
+            {
+                _blockCron = value;
+            }
+        }
+        public bool loadChanging = true;
+        public RandomMemory myRandMem = new RandomMemory();
+#endif
+
+        [NonSerialized]
+        public readonly SIProlog prologEngine = SIProlog.CurrentProlog;
+
+        static public object BotInitLock = new object();
+        static public object WordNetEngineLock
+        {
+            get { return BotInitLock; }
+        }
+        static private WordNetEngine _wordNetEngine;
+        public WordNetEngine wordNetEngine
+        {
+            get
+            {
+                lock (WordNetEngineLock) return _wordNetEngine;
+            }
+            set
+            {
+                LockInfo.CheckLocked(WordNetEngineLock);
+                _wordNetEngine = _wordNetEngine ?? value;
+            }
+        }
+
+#if false
+        [NonSerialized]
+        public KnowledgeBase myKB = new KnowledgeBase();
+        [NonSerialized]
+        public KnowledgeBase myBaseKB = new KnowledgeBase();
+        [NonSerialized]
+        public WalkSAT myWalkSAT = new WalkSAT();
+        [NonSerialized]
+        public Model myModel = null;
+        [NonSerialized]
+        public Model myActiveModel = null;
+        public string myPositiveSATModleString = null;
+
+        public object guestEvalObject = null;
+        public Queue<string> outputQueue = new Queue<string>();
+
+        private Servitor _myServitor;
+        public Servitor myServitor
+        {
+            get
+            {
+                if (_myServitor != null) return _myServitor;
+                return _myServitor;
+            }
+            set
+            {
+                _myServitor = value;
+                if (value != null) RegisterObject("robot", value);
+            }
+        }
+#endif
+
         public static bool IncludeMeNeValue;
         public static Dictionary<string, AltBot> Robots = new Dictionary<string, AltBot>();
-
+        static AltBot()
+        {
+            MushDLR223.ScriptEngines.OKAssemblyResolve.ResolverEnabled = true;
+        }
         public static AltBot FindOrCreateRobot(string text)
         {
             AltBot robot;
@@ -117,6 +276,7 @@ namespace RTParser
             if (!string.IsNullOrEmpty(NamePath)) return s + " NamePath=" + NamePath;
             return s;
         }
+        public Queue<string> outputQueue = new Queue<string>();
 
         /// <summary>
         /// Will ensure the same loader options are used between loaders
@@ -169,21 +329,20 @@ namespace RTParser
             }
         }
 
-        #region Attributes
 
         public List<CrossAppDomainDelegate> ReloadHooks = new List<CrossAppDomainDelegate>();
 
         /// <summary>
         /// A dictionary object that looks after all the settings associated with this Proccessor
         /// </summary>
-        public SettingsDictionary GlobalSettings;
+        public SettingsDictionaryReal GlobalSettings;
 
         public SettingsDictionary SharedGlobalSettings;
 
         #endregion
 
         /// <summary>
-        /// A dictionary of all the gender based substitutions used by this Proccessor
+        /// A dictionary of all the gender based substitutions used by this bot
         /// </summary>
         public SettingsDictionary GenderSubstitutions;
 
@@ -239,11 +398,132 @@ namespace RTParser
         /// </summary>
         static public List<string> Splitters = new List<string>();
 
+
+        public void processOutputQueue()
+        {
+            if (!isPerformingOutput)
+            {
+                if (outputQueue.Count > 0)
+                {
+                    logText("BOT OUTPUT GOING TO NOT COME OUT:" + outputQueue.Count);
+                }
+                return;
+            }
+            while (outputQueue.Count > 0)
+            {
+                string msg = outputQueue.Dequeue();
+                if (sayProcessor != null)
+                {
+                    sayProcessor(msg);
+                }
+                else
+                {
+                    Console.WriteLine("Missing sayProcessor! BOT OUTPUT:{0}", msg);
+                }
+                logText("BOT OUTPUT:" + msg);
+
+            }
+        }
+
+        public void flushOutputQueue()
+        {
+            outputQueue.Clear();
+            logText("BOT flushOutputQueue:");
+            string flushsignal = GlobalSettings.grabSetting("flushsignal", false);
+            if ((flushsignal != null) && (flushsignal.Length > 2))
+            {
+                postOutput(flushsignal);
+            }
+
+        }
+
+        Regex SentRegex = new Regex(@"(\S.+?[.!?,\)])(?=\s+|$)");
+
+        public void postOutput(string msg)
+        {
+            if (string.IsNullOrEmpty(msg)) return;
+
+            if (msg.Length < 256)
+            {
+                // just post output
+                outputQueue.Enqueue(msg);
+                logText("BOT postOutput:" + msg);
+            }
+            else
+            {
+                //http://stackoverflow.com/questions/1936388/what-is-a-regular-expression-for-parsing-out-individual-sentences
+                //  a quick splitter better than just using '.'
+                //Regex Sentrx = new Regex(@"(\S.+?[.!?])(?=\s+|$)");
+                foreach (Match match in SentRegex.Matches(msg))
+                {
+                    int i = match.Index;
+                    string s = match.Value;
+                    outputQueue.Enqueue(s);
+                    logText("BOT postOutput:" + s);
+
+                }
+
+            }
+        }
+        public void sendOutput(string msg)
+        {
+            // posts and processes
+            if (msg.Length < 1024)
+            {
+                // just post output
+                outputQueue.Enqueue(msg);
+                logText("BOT sendOutput:" + msg);
+            }
+            else
+            {
+                string[] sents = msg.Split('.');
+                foreach (string s in sents)
+                {
+                    outputQueue.Enqueue(s);
+                    logText("BOT sendOutput:" + s);
+
+                }
+            }
+            processOutputQueue();
+        }
+
+        public string getPendingOutput()
+        {
+            string outmsg = "";
+            while (outputQueue.Count > 0)
+            {
+                string msg = outputQueue.Dequeue();
+                outmsg += msg + "\r\n";
+            }
+            return outmsg;
+        }
+
         /// <summary>
-        /// Flag to show if the Proccessor is willing to accept user input
+        /// Flag to show if the bot is willing to accept user input
         /// </summary>
         public bool isAcceptingUserInput = true;
 
+        /// <summary>
+        /// Flag to show if the bot is producing output
+        /// </summary>
+        public bool isPerformingOutput
+        {
+            get { return _isPerformingOutput; }
+            set
+            {
+                if (value == false  && outputQueue.Count > 0)
+                {
+                    if (_isPerformingOutput == true)
+                    {
+                        writeToLog("ERROR Was preformingOUTUT! ");
+                    }
+                    processOutputQueue();
+                }
+                _isPerformingOutput = value;
+            }
+        }
+
+        public bool _isPerformingOutput = false;
         /// <summary>
         /// A dictionary of all inherited settings betten users
         /// </summary>
@@ -288,12 +568,12 @@ namespace RTParser
         {
             get
             {
-                return 7000;
+                return 70000;
                 if (GlobalSettings == null || !GlobalSettings.containsSettingCalled("timeout"))
                 {
                     return 2000000;
                 }
-                String s = GlobalSettings.grabSettingNoDebug("timeout").ToValue(null);
+                String s = ToValueString(GlobalSettings.grabSetting("timeout"));
                 return Convert.ToDouble(s);
             }
         }
@@ -301,18 +581,22 @@ namespace RTParser
         /// <summary>
         /// The message to display in the event of a timeout
         /// </summary>
-        public Unifiable TimeOutMessage
+        public string TimeOutMessage
         {
             get { return GlobalSettings.grabSetting("timeoutmessage"); }
         }
 
         /// <summary>
-        /// The locale of the Proccessor as a CultureInfo object
+        /// The locale of the bot as a CultureInfo object
         /// </summary>
         public CultureInfo Locale
         {
-            get { return new CultureInfo(GlobalSettings.grabSetting("culture")); }
+            get
+            {
+                return new CultureInfo(this.GlobalSettings.grabSetting("culture"));
+            }
         }
+         
 
         /// <summary>
         /// Will match all the illegal characters that might be inputted by the user
@@ -331,23 +615,26 @@ namespace RTParser
         /// </summary>
         public string AdminEmail
         {
-            get { return GlobalSettings.grabSetting("adminemail"); }
+            get
+            {
+                return this.GlobalSettings.grabSetting("adminemail");
+            }
             set
             {
                 if (value.Length > 0)
                 {
                     // check that the email is valid
-                    Unifiable patternStrict = @"^(([^<>()[\]\\.,;:\s@\""]+"
-                                              + @"(\.[^<>()[\]\\.,;:\s@\""]+)*)|(\"".+\""))@"
-                                              + @"((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"
-                                              + @"\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+"
-                                              + @"[a-zA-Z]{2,}))$";
+                    string patternStrict = @"^(([^<>()[\]\\.,;:\s@\""]+"
+                                           + @"(\.[^<>()[\]\\.,;:\s@\""]+)*)|(\"".+\""))@"
+                                           + @"((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"
+                                           + @"\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+"
+                                           + @"[a-zA-Z]{2,}))$";
                     Regex reStrict = new Regex(patternStrict);
 
                     if (reStrict.IsMatch(value))
                     {
                         // update the settings
-                        GlobalSettings.addSetting("adminemail", value);
+                        this.GlobalSettings.addSetting("adminemail", value);
                     }
                     else
                     {
@@ -362,17 +649,16 @@ namespace RTParser
         }
 
         /// <summary>
-        /// Flag to denote if the Proccessor is writing messages to its logs
+        /// Flag to denote if the bot is writing messages to its logs
         /// </summary>
         public bool IsLogging
         {
             get
             {
-                // otherwse we use up too much ram
-                if (true) return false;
-                if (!GlobalSettings.containsSettingCalled("islogging")) return false;
-                Unifiable islogging = GlobalSettings.grabSettingNoDebug("islogging");
-                if (IsTrue(islogging))
+                if (GlobalSettings == null) return true;
+                return true;
+                string islogging = ((string) GlobalSettings.grabSetting("islogging")) ?? "true";
+                if (islogging.ToLower() == "true")
                 {
                     return true;
                 }
@@ -384,7 +670,7 @@ namespace RTParser
         }
 
         /// <summary>
-        /// Flag to denote if the Proccessor will email the botmaster using the AdminEmail setting should an error
+        /// Flag to denote if the bot will email the botmaster using the AdminEmail setting should an error
         /// occur
         /// </summary>
         public bool WillCallHome
@@ -397,18 +683,18 @@ namespace RTParser
         }
 
         /// <summary>
-        /// When the AltBot was initialised
+        /// When the Bot was initialised
         /// </summary>
         public DateTime StartedOn = DateTime.Now;
 
         /// <summary>
-        /// The supposed sex of the Proccessor
+        /// The supposed sex of the bot
         /// </summary>
         public Gender Sex
         {
             get
             {
-                int sex = Convert.ToInt32(GlobalSettings.grabSetting("gender"));
+                int sex = Convert.ToInt32(this.GlobalSettings.grabSetting("gender"));
                 Gender result;
                 switch (sex)
                 {
@@ -436,9 +722,9 @@ namespace RTParser
             get
             {
                 if (_PathToUserFiles != null) return _PathToUserFiles;
-                if (GlobalSettings.containsSettingCalled("userdirectory"))
+                if (GlobalSettings.containsSettingCalled("usersdirectory"))
                 {
-                    Unifiable dir = GlobalSettings.grabSettingNoDebug("userdirectory");
+                    Unifiable dir = GlobalSettings.grabSetting("usersdirectory");
                     HostSystem.CreateDirectory(dir);
                     _PathToUserFiles = dir;
                     return HostSystem.ToRelativePath(dir, RuntimeDirectory);
@@ -463,6 +749,30 @@ namespace RTParser
 
         private string _PathToBotPersonalFiles;
 
+        protected string PersonalReadWriteDirectory
+        {
+            get { return _PathToBotPersonalFiles; }
+            set
+            {
+                lock (_RuntimeDirectories)
+                {
+                    if (_PathToBotPersonalFiles != null)
+                    {
+                        _RuntimeDirectories.Remove(_PathToBotPersonalFiles);
+                    }
+                    _PathToBotPersonalFiles = value;
+                    if (value != null)
+                    {
+                        _RuntimeDirectories.Remove(value);
+                        _RuntimeDirectories.Insert(0, value);
+                        if (value.Contains("shared_aiml"))
+                        {
+                            Console.WriteLine("WARN - using shared aiml as personal aiml");
+                        }
+                    }
+                }
+            }
+        }
         protected string PersonalAiml
         {
             get { return _PathToBotPersonalFiles; }
@@ -470,12 +780,27 @@ namespace RTParser
             {
                 lock (_RuntimeDirectories)
                 {
-                    if (_PathToUserFiles != null) _RuntimeDirectories.Remove(_PathToUserFiles);
-                    _PathToUserFiles = value;
-                    _RuntimeDirectories.Remove(value);
-                    _RuntimeDirectories.Insert(0, value);
+                    if (_PathToBotPersonalFiles != null)
+                    {
+                        _RuntimeDirectories.Remove(_PathToBotPersonalFiles);
+                    }
+                    _PathToBotPersonalFiles = value;
+                    if (value != null)
+                    {
+                        _RuntimeDirectories.Remove(value);
+                        _RuntimeDirectories.Insert(0, value);
+                        if (value.Contains("shared_aiml"))
+                        {
+                            Console.WriteLine("WARN - using shared aiml as personal aiml");
+                        }
+                    }
                 }
             }
+        }
+
+        protected bool HavePersonalPath
+        {
+            get { return !string.IsNullOrEmpty(_PathToBotPersonalFiles); }
         }
 
         /// <summary>
@@ -493,6 +818,8 @@ namespace RTParser
             get { lock (RuntimeDirectoriesLock) return new List<string>(_RuntimeDirectories); }
         }
 
+        private string _rapStoreDirectory;
+
         private string _dataDir = Environment.CurrentDirectory;
 
         protected string RuntimeDirectory
@@ -500,6 +827,48 @@ namespace RTParser
             get { return _dataDir ?? Environment.CurrentDirectory; }
             set { _dataDir = value; }
         }
+
+        internal bool _UseRapstoreDB = true;
+        public bool UseRapstoreDB
+        {
+            get
+            {
+                if (_UseRapstoreDB)
+                {
+                    if (_rapStoreDirectory == null)
+                    {
+                        Console.WriteLine("WARN Check: this.bot.rapStoreDirectory == null");
+                    }
+                }
+                return _UseRapstoreDB;
+            }
+            set { _UseRapstoreDB = value; }
+        }
+        public bool UseRapstore(string graphName)
+        {
+            if (!UseRapstoreDB) return false;
+            // later on decide if we will set some graphs as non rapstoreusing
+            return true;
+        }
+
+        /// <summary>
+        /// in the <say> tag should the sapi be passed as-is (using innerXML) or not (using innerText)
+        /// usually set when the sayProcessor delegate is set
+        /// </summary>
+        public bool saySapi = false;
+
+
+        #region Delegates
+
+        public sayProcessorDelegate sayProcessor;
+        public systemPersonaDelegate personaProcessor = null;
+
+        public string lastBehaviorChatInput;
+        public string lastBehaviorChatOutput;
+        public User lastBehaviorUser;
+        public Queue<string> chatInputQueue = new Queue<string>();
+
+        #endregion
 
         /// <summary>
         /// The directory to look in for the various XML configuration files
@@ -517,6 +886,8 @@ namespace RTParser
             get { return GetPathSetting("logdirectory", null); }
         }
 
+        public object loglock = new object();
+        
         /// <summary>
         /// If set to false the input from AIML files will undergo the same normalization process that
         /// user input goes through. If true the Proccessor will assume the AIML is correct. Defaults to true.
@@ -790,6 +1161,21 @@ namespace RTParser
                 request.GraphsAcceptingUserInput = prev;
             }
         }
+        public void logText(string msg)
+        {
+
+            lock (loglock)
+            {
+                try
+                {
+                    string miniLog = String.Format(@"./aiml/BTTrace.txt");
+                    System.IO.File.AppendAllText(miniLog, msg + "\n");
+                    Console.WriteLine(msg);
+                }
+                catch
+                { }
+            }
+        }
 
         public SettingsDictionary GetRelationMetaProps()
         {
@@ -805,34 +1191,33 @@ namespace RTParser
             try
             {
                 isAcceptingUserInput = false;
-                RelationMetaProps = new SettingsDictionary("chat.relationprops", this, null);
+                RelationMetaProps = MakeSettingsDictionary("chat.relationprops");
                 RegisterDictionary("meta", RelationMetaProps);
                 RegisterDictionary("metaprops", RelationMetaProps);
 
-                GlobalSettings = new SettingsDictionary("bot.globalsettings", this, null);
+                GlobalSettings = MakeSettingsDictionary("bot.globalsettings");
                 GlobalSettings.InsertMetaProvider(GetRelationMetaProps);
 
-                GenderSubstitutions = new SettingsDictionary("nl.substitutions.gender", this, null);
+                GenderSubstitutions = MakeSubstsDictionary("nl.substitutions.gender");
                 RegisterSubstitutions("gender", GenderSubstitutions);
-                Person2Substitutions = new SettingsDictionary("nl.substitutions.person2", this, null);
+                Person2Substitutions = MakeSubstsDictionary("nl.substitutions.person2"); 
                 RegisterSubstitutions("person2", Person2Substitutions);
-                PersonSubstitutions = new SettingsDictionary("nl.substitutions.person", this, null);
+                PersonSubstitutions = MakeSubstsDictionary("nl.substitutions.person");
                 RegisterSubstitutions("person", PersonSubstitutions);
-                InputSubstitutions = new SettingsDictionary("nl.substitutions.input", this, null);
-                InputSubstitutions.IsSubsts = true;
+                InputSubstitutions = MakeSubstsDictionary("nl.substitutions.input");
                 InputSubstitutions.IsTraced = true;
                 RegisterSubstitutions("input", InputSubstitutions);
-                OutputSubstitutions = new SettingsDictionary("nl.substitutions.output", this, null);
+                OutputSubstitutions = MakeSubstsDictionary("nl.substitutions.output");
                 RegisterSubstitutions("output", OutputSubstitutions);
 
 
                 //ParentProvider provider = new ParentProvider(() => GlobalSettings);
-                DefaultPredicates = new SettingsDictionary("bot.defaultpredicates", this, null);
-                DefaultPredicates = new SettingsDictionary("defaults", this, null);
+                DefaultPredicates = MakeSettingsDictionary("bot.defaultpredicates");
+                DefaultPredicates = MakeSettingsDictionary("defaults");
                 DefaultPredicates.InsertMetaProvider(GetRelationMetaProps);
-                HeardPredicates = new SettingsDictionary("chat.heardpredicates", this, null);
+                HeardPredicates = MakeSettingsDictionary("chat.heardpredicates");
                 RegisterDictionary("heard", HeardPredicates);
-                AllUserPreds = new SettingsDictionary("bot.alluserpred", this, null);
+                AllUserPreds = MakeSettingsDictionary("bot.alluserpred");
                 RegisterDictionary("predicates", AllUserPreds);
                 EnginePreds = AllUserPreds;
                 RegisterDictionary("enginepreds", EnginePreds);
@@ -840,7 +1225,7 @@ namespace RTParser
                 AllUserPreds.InsertMetaProvider(GetRelationMetaProps);
 
 
-                User guser = ExemplarUser = LastUser = new MasterUser("globalPreds", this);
+                User guser = ExemplarUser = LastUser = new MasterUser("unknown partner", "globalPreds", this);
                 lock (microBotUsersLock)
                 {
                     BotUsers["globalpreds"] = guser;
@@ -849,8 +1234,9 @@ namespace RTParser
                 guser.Predicates.clearSettings();
                 guser.Predicates.clearHierarchy();
                 guser.Predicates.InsertFallback(() => HeardPredicates);
-                guser.Predicates.maskSetting("name");
-                guser.Predicates.maskSetting("id");
+                var pred = ((SettingsDictionaryReal) guser.Predicates);
+                pred.maskSetting("name");
+                pred.maskSetting("id");
 
                 // try a safe default setting for the settings xml file
                 // Checks for some important default settings
@@ -869,6 +1255,47 @@ namespace RTParser
             {
                 isAcceptingUserInput = prev;
             }
+        }
+
+        private static string MakeMtName(string named)
+        {
+            int len = named.Length;
+            if (len > 2)
+            {
+                string toUpper = named.ToUpper();
+
+                string suffix = toUpper.Substring(named.Length - 2);
+                if (suffix == "KB" || suffix == "MT" || suffix == "DB")
+                    named = named.Substring(0, named.Length - 2);
+            }
+            named = ToMtCase(named);
+            return named;
+        }
+
+        public SettingsDictionaryReal MakeSubstsDictionary(string named)
+        {
+            return new SettingsDictionaryReal(named, this, new KeyValueListCSharp(new List<string>(), new Dictionary<string, string>())) { IsSubsts = true, TrimKeys = false };
+        }
+
+        public static string ToMtCase(string fullname)
+        {
+            string fn2 = Parser.ToCamelCase(fullname.Replace(" ", "_").Replace(".", "_").Replace("-", "_")).Replace(
+                "_", "");
+            return fn2;
+        }
+        public SettingsDictionaryReal MakeSettingsDictionary(string named)
+        {
+            named = named.Trim();
+            named = MakeMtName(named);
+            string mtName = "chat" + named + "Mt";
+            KeyValueListSIProlog v = new KeyValueListSIProlog(() => prologEngine, mtName, "chatVar");
+            var dict = new SettingsDictionaryReal(mtName, this, (KeyValueList)v);
+            dict.bbPrefix = "user";
+            if (mtName != named)
+            {
+                RegisterDictionary(named, dict);
+            }
+            return dict;
         }
 
         /// <summary>
@@ -981,9 +1408,13 @@ namespace RTParser
             thiz.RelationMetaProps.loadSettings(HostSystemCombine(pathToSettings, "genformat.xml"), request);
 
 
+            string gpss ="globalpreds.xml";
             User guser = thiz.FindUser("globalPreds");
-            SettingsDictionary.loadSettings(guser.Predicates, HostSystemCombine(pathToSettings, "globalpreds.xml"),
-                                            true, false, request);
+            if (HostSystem.FileExists(HostSystemCombine(pathToSettings, gpss)))
+            {
+                SettingsDictionaryReal.loadSettingsNow((ISettingsDictionary) guser.Predicates, pathToSettings,
+                                                       gpss, SettingsPolicy.Default, request);
+            }
             thiz.writeToLog("Files left to process = " + files.Count);
             foreach (string list in files)
             {
@@ -1450,7 +1881,7 @@ The AIMLbot program.
             Unifiable s = "The system tag should be doing '" + cmd + "' lang=" + langu;
             writeToLog(s.AsString());
             SystemExecHandler handler;
-            if (SettingsDictionary.TryGetValue(ExecuteHandlers, langu, out handler))
+            if (SettingsDictionaryReal.TryGetValue(ExecuteHandlers, langu, out handler))
             {
                 try
                 {
@@ -1468,8 +1899,9 @@ The AIMLbot program.
                 try
                 {
                     object self = user;
-                    ScriptInterpreter si = ScriptManager.LoadScriptInterpreter(langu, self);
-                    object o = ScriptManager.EvalScriptInterpreter(cmd.ToValue(user.CurrentQuery), langu, self, writeToLog);
+                    ScriptInterpreter si = ScriptManager.LoadScriptInterpreter(langu, self, null);
+                    object o = ScriptManager.EvalScriptInterpreter(cmd.ToValue(user.CurrentQuery), langu, self, si,
+                                                                   writeToLog);
                     string siStr = si.Str(o);
                     return Unifiable.Create(siStr);
                 }
@@ -1692,7 +2124,7 @@ The AIMLbot program.
             {
                 return "default";
             }
-            if (graphPath == "heardselfsay" || graphPath == "headself")
+            if (graphPath == "heardselfsay" || graphPath == "heardself")
             {
                 return "heardselfsay";
             }
@@ -1883,12 +2315,13 @@ The AIMLbot program.
             clojureInterpreter.Intern("BotAsUser", thisBotAsUser);
             thisBotAsUser.IsRoleAcct = true;
             SharedGlobalSettings = this.GlobalSettings;
-            thisBotAsUser.Predicates = new SettingsDictionary(myName, this, () => SharedGlobalSettings);
+            thisBotAsUser.Predicates = MakeSettingsDictionary(myName);
+            ///, this, () => SharedGlobalSettings)
             thisBotAsUser.Predicates.InsertFallback(() => AllUserPreds);
             AllUserPreds.InsertFallback(() => SharedGlobalSettings);
 
             GlobalSettings.IsTraced = true;
-            GlobalSettings = thisBotAsUser.Predicates;
+            GlobalSettings = (SettingsDictionaryReal) thisBotAsUser.Predicates;
             //BotAsUser.UserDirectory = "aiml/users/heardselfsay";
             //BotAsUser.UserID = "heardselfsay";
             //BotAsUser.UserName = "heardselfsay";
@@ -2090,7 +2523,36 @@ The AIMLbot program.
         private PrologScriptInterpreter swiInterpreter;
 #endif
         private List<string> _RuntimeDirectories;
+        ICollectionRequester _objr;
+        private readonly List<Action> PostObjectRequesterSet = new List<Action>();
+        //private AltBot TheAltBot;
 
+        public ICollectionRequester ObjectRequester
+        {
+            get
+            {
+                if (_objr == null)
+                {
+                    logText("Warn no ObjectRequester");
+                }
+                return _objr;
+            }
+            set
+            {
+                _objr = value;
+                if (value != null)
+                {
+                    lock (PostObjectRequesterSet)
+                    {
+                        foreach (var set in PostObjectRequesterSet)
+                        {
+                            set();
+                        }
+                        PostObjectRequesterSet.Clear();
+                    }
+                }
+            }
+        }
         #region Overrides of QuerySettings
 
         /*
@@ -2152,7 +2614,7 @@ The AIMLbot program.
                 User pu = o as User;
                 if (pp != null)
                 {
-                    pi = pp();
+                    pi = pp() as ISettingsDictionary;
                 }
                 if (pi != null)
                 {
@@ -2168,7 +2630,7 @@ The AIMLbot program.
 
         public ISettingsDictionary GetDictionary0(string named)
         {
-            Func<ISettingsDictionary, SettingsDictionary> SDCAST = SettingsDictionary.ToSettingsDictionary;
+            Func<ISettingsDictionary, SettingsDictionaryReal> SDCAST = SettingsDictionaryReal.ToSettingsDictionary;
             //dict = FindDict(type, query, dict);
             if (named == null) return null;
             string key = named.ToLower().Trim();
@@ -2213,12 +2675,13 @@ The AIMLbot program.
                     ISettingsDictionary f = GetDictionary(path[0]);
                     if (f != null)
                     {
-                        SettingsDictionary sd = SDCAST(f);
+                        SettingsDictionaryReal sd = SDCAST(f);
                         ParentProvider pp = sd.FindDictionary(string.Join(".", path, 1, path.Length - 1), null);
                         if (pp != null)
                         {
-                            ISettingsDictionary pi = pp();
-                            if (pi != null) return SDCAST(pi);
+                            object pi;
+                            pi = pp();
+                            if (pi != null) return SDCAST((ISettingsDictionary) pi);
                         }
                     }
                 }
@@ -2238,7 +2701,7 @@ The AIMLbot program.
                     if (sdict != null) return sdict;
                     if (createIfMissing)
                     {
-                        dict = AllDictionaries[key] = AllDictionaries[named] = new SettingsDictionary(named, this, null);
+                        dict = AllDictionaries[key] = AllDictionaries[named] = MakeSettingsDictionary(named);
                         User user = ExemplarUser ?? BotAsUser;
                         Request r = //user.CurrentRequest ??
                                     user.CreateRequest(
@@ -2271,7 +2734,9 @@ The AIMLbot program.
                         {
                             try
                             {
-                                SettingsDictionary.loadSettings(dictionary, named, true, false, r);
+                                SettingsDictionaryReal.loadSettingsNow(
+                                    dictionary, Path.GetDirectoryName(named), Path.GetFileName(named),
+                                    SettingsPolicy.Default, r);
                                 loaded++;
                                 break;
                             }
@@ -2379,11 +2844,257 @@ The AIMLbot program.
         public long RunLowMemHooks()
         {
             long total = Unifiable.LowMemExpireUnifiableCaches();
-            foreach (GraphMaster graph in SetOfGraphs)
+            foreach (var graph in SetOfGraphs)
             {
                 total += graph.RunLowMemHooks();
             }
             return total;
         }
+
+        #region BlackBoard
+
+        public void importBBBotSettings(string bbKey, string settingKey)
+        {
+            string myValue = myChemistry.m_cBus.getHash(bbKey);
+            if (myValue.Length > 0)
+            {
+                GlobalSettings.updateSetting(settingKey, myValue);
+            }
+        }
+
+        public void importBBUserSettings(User myUser, string bbKey, string settingKey)
+        {
+            string myValue = myChemistry.m_cBus.getHash(bbKey);
+            if (myValue.Length > 0)
+            {
+                myUser.Predicates.updateSetting(settingKey, myValue);
+            }
+        }
+
+        public void importBBUser(User myUser)
+        {
+            importBBUserSettings(myUser, "username", "name");
+            importBBUserSettings(myUser, "userage", "age");
+            importBBUserSettings(myUser, "userbirthday", "birthday");
+            importBBUserSettings(myUser, "userboyfriend", "boyfriend");
+            importBBUserSettings(myUser, "usergirlfriend", "girlfriend");
+            importBBUserSettings(myUser, "userbrother", "brother");
+            importBBUserSettings(myUser, "usersister", "sister");
+            importBBUserSettings(myUser, "usercat", "cat");
+            importBBUserSettings(myUser, "userdog", "dog");
+            importBBUserSettings(myUser, "userfather", "father");
+            importBBUserSettings(myUser, "userfavcolor", "favcolor");
+            importBBUserSettings(myUser, "userfavmovie", "favmovie");
+            importBBUserSettings(myUser, "userfriend", "friend");
+            importBBUserSettings(myUser, "userfullname", "fullname");
+            importBBUserSettings(myUser, "usergender", "gender");
+            importBBUserSettings(myUser, "usergirlfriend", "girlfriend");
+            importBBUserSettings(myUser, "userhas", "has");
+            importBBUserSettings(myUser, "userheard", "heard");
+            importBBUserSettings(myUser, "userhusband", "husband");
+            importBBUserSettings(myUser, "useris", "is");
+            importBBUserSettings(myUser, "userjob", "job");
+            importBBUserSettings(myUser, "userlastname", "lastname");
+            importBBUserSettings(myUser, "userlike", "like");
+            importBBUserSettings(myUser, "userlocation", "location");
+            importBBUserSettings(myUser, "userlooklike", "looklike");
+            importBBUserSettings(myUser, "usermemory", "memory");
+            importBBUserSettings(myUser, "usernickname", "nickname");
+            importBBUserSettings(myUser, "usermiddlename", "middlename");
+            importBBUserSettings(myUser, "usermother", "mother");
+            importBBUserSettings(myUser, "userpersonality", "personality");
+            importBBUserSettings(myUser, "usersign", "sign");
+            importBBUserSettings(myUser, "userthought", "thought");
+            importBBUserSettings(myUser, "userwant", "want");
+
+            // Dynamic state info for condition/li
+            importBBUserSettings(myUser, "fsmstate", "state");
+            importBBUserSettings(myUser, "pmotion", "pmotion");
+            importBBUserSettings(myUser, "porientation", "porientation");
+            importBBUserSettings(myUser, "facename", "facename");
+            importBBUserSettings(myUser, "TTSText", "TTSText");
+            importBBUserSettings(myUser, "TTSVoice", "TTSVoice");
+
+
+        }
+        public void importBBBot()
+        {
+            importBBBotSettings("dollcharname", "name");
+            importBBBotSettings("botmaster", "botmaster");
+            importBBBotSettings("master", "master");
+            importBBBotSettings("botlocation", "location");
+            importBBBotSettings("botgender", "gender");
+            importBBBotSettings("botbirthday", "birthday");
+            importBBBotSettings("botbirthplace", "birthplace");
+            importBBBotSettings("botnationality", "nationality");
+            importBBBotSettings("botsign", "sign");
+
+            importBBBotSettings("botgenus", "genus");
+            importBBBotSettings("botspecies", "species");
+            importBBBotSettings("botorder", "order");
+            importBBBotSettings("botfamily", "family");
+            importBBBotSettings("botphylum", "phylum");
+            importBBBotSettings("botclass", "class");
+
+            importBBBotSettings("botreligion", "religion");
+            importBBBotSettings("botetype", "etype");
+            importBBBotSettings("botorientation", "orientation");
+            importBBBotSettings("botethics", "ethics");
+            importBBBotSettings("botemotions", "emotions");
+            importBBBotSettings("botfeelings", "feelings");
+            importBBBotSettings("botwear", "wear");
+            importBBBotSettings("botlooklike", "looklike");
+
+            importBBBotSettings("botforfun", "forfun");
+            importBBBotSettings("botfriend", "friend");
+            importBBBotSettings("botboyfriend", "boyfriend");
+            importBBBotSettings("botgirlfriend", "girlfriend");
+            importBBBotSettings("botfriends", "friends");
+            importBBBotSettings("bottalkabout", "talkabout");
+            importBBBotSettings("botquestion", "question");
+
+            importBBBotSettings("botparty", "party");
+            importBBBotSettings("botpresident", "president");
+
+            importBBBotSettings("botfavoritefood", "favoritefood");
+            importBBBotSettings("botfavoritecolor", "favoritecolor");
+
+            importBBBotSettings("botkindmusic", "kindmusic");
+            importBBBotSettings("botfavoriteband", "favoriteband");
+
+            importBBBotSettings("botfavoriteauthor", "favoriteauthor");
+            importBBBotSettings("botfavoriteartist", "favoriteartist");
+            importBBBotSettings("botfavoritemovie", "favoritemovie");
+            importBBBotSettings("botfavoriteactor", "favoriteactor");
+            importBBBotSettings("botfavoriteactress", "favoriteactress");
+
+            importBBBotSettings("botcelebrity", "celebrity");
+            importBBBotSettings("botcelebrities", "celebrities");
+
+            importBBBotSettings("botfavoritesport", "favoritesport");
+            importBBBotSettings("bothockeyteam", "hockeyteam");
+            importBBBotSettings("botfootballteam", "footballteam");
+            importBBBotSettings("botbaseballteam", "baseballteam");
+        }
+
+        public void exportBB()
+        {
+        }
+
+
+        // The dictionary that is a mirror of the blackboard
+        // We hit this for local applications 
+        public bool bbSafe = false;
+        public bool useMemcache = false;
+
+        public Dictionary<string, string> BBDict = new Dictionary<string, string>();
+        public void setBBHash(string key, string data)
+        {
+            if (key == null) return;
+            string okey = key;
+            try
+            {
+                //(SettingsDictionaryReal)
+                if (key.StartsWith("bot"))
+                {
+                    var botAsUser = BotAsUser;
+                    key = key.Substring(3);
+                    if (botAsUser != null) botAsUser.Predicates.addSetting(key, data);
+                }
+                else if (key.StartsWith("user"))
+                {
+                    key = key.Substring(4);
+                    if (LastUser != null) LastUser.Predicates.addSetting(key, data);
+                }
+                else
+                {
+                    if (GlobalSettings != null) GlobalSettings.addSetting(key, data);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("CHECK setBBHash({0},{1}) ERR:{2}", key, data, e.Message);
+            }
+            setBBHash0(okey, data);
+        }
+        public void setBBHash0(string key, string data)
+        {
+            //curBot.myChemistry.m_cBus.setHash(key,data);
+            lock (BBDict) BBDict[key] = data;
+            if (useMemcache)
+            {
+                if ((myChemistry != null) && (myChemistry.m_cBus != null))
+                {
+                    myChemistry.m_cBus.setHash(key, data);
+                }
+                else
+                {
+                    //                   Console.WriteLine("CHECK setBBHash0 :NO BUS ({0},{1})", key,data);
+                }
+            }
+            else
+            {
+                //                Console.WriteLine("CHECK setBBHash0: useMemcache=false({0},{1})", key, data);
+            }
+        }
+        public string getBBHash(string key)
+        {
+            if (string.IsNullOrEmpty(key)) return "";
+
+            string gs = getBBHash0(key);
+            if (!string.IsNullOrEmpty(gs)) return gs;
+            if (GlobalSettings != null)
+            {
+                gs = GlobalSettings.grabSetting(key, false);
+                if (!string.IsNullOrEmpty(gs)) return gs;
+            }
+            if (key.StartsWith("bot"))
+            {
+                key = key.Substring(3);
+                gs = BotAsUser.Predicates.grabSetting(key, false);
+                if (!string.IsNullOrEmpty(gs)) return gs;
+            }
+            else if (key.StartsWith("user"))
+            {
+                key = key.Substring(4);
+                gs = LastUser.Predicates.grabSetting(key, true);
+                if (!string.IsNullOrEmpty(gs)) return gs;
+            }
+            return "";
+        }
+
+        public string getBBHash0(string key)
+        {
+            try
+            {
+                string val;
+                if (useMemcache)
+                {
+                    if ((myChemistry != null) && (myChemistry.m_cBus != null))
+                    {
+                        val = myChemistry.m_cBus.getHash(key);
+                        lock (BBDict) BBDict[key] = val;
+                        if (!string.IsNullOrEmpty(val)) return val;
+                        return "";
+                    }
+                }
+                lock (BBDict) if (BBDict.TryGetValue(key, out val)) return val;
+                return "";
+            }
+            catch
+            {
+                return "";
+            }
+        }
+        #endregion
+
+        public string ToValueString(object oldSetting)
+        {
+            return "" + oldSetting;
+        }
     }
+
+    public delegate void sayProcessorDelegate(string message);
+    public delegate void systemProcessorDelegate(string message);
+    public delegate void systemPersonaDelegate(string message);
 }
