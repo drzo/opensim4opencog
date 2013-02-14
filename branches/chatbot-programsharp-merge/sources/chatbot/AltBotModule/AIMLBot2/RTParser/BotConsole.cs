@@ -18,6 +18,7 @@ using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
+using java.lang;
 using org.opencyc.api;
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
@@ -26,6 +27,10 @@ using RTParser.Utils;
 using RTParser.Variables;
 using RTParser.Web;
 using Console=System.Console;
+using Exception = System.Exception;
+using Object = System.Object;
+using String = System.String;
+using Thread = System.Threading.Thread;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
 
@@ -39,7 +44,7 @@ namespace RTParser
         int UseHttpd = -1;
         private static Bot ConsoleRobot;
         public static string AIMLDEBUGSETTINGS =
-            "clear -spam +user +bina +error +aimltrace +cyc -dictlog -tscore +loaded";
+            "clear -spam +user +bina +err +aimltrace +cyc -dictlog -tscore +loaded";
 
         //    "clear +*";
         public static string[] RUNTIMESETTINGS = { "-GRAPH", "-USERTRACE" };
@@ -86,6 +91,12 @@ namespace RTParser
             return s;
         }
 
+
+        static void writeToLogWarn(string unifiable, params object[] objs)
+        {
+            writeDebugLine("WARNING: " + unifiable, objs);
+        }
+
         /// <summary>
         /// Writes a (timestamped) message to the Processor's log.
         /// 
@@ -98,6 +109,16 @@ namespace RTParser
         {
             message = SafeFormat(message, args);
             if (String.IsNullOrEmpty(message)) return;
+            string stup = DLRConsole.SafeFormat(message, args).ToUpper();
+            if (!stup.StartsWith("WARNING"))
+            {
+                if (stup.ContainsAny("warn", "= null", "error", "bad") > -1)
+                {
+                    writeToLogWarn("BAD " + message, args);
+                }
+                return;
+            }
+
             if (lastMessage == message)
             {
                 return;
@@ -1355,6 +1376,10 @@ namespace RTParser
         {
             writeDebugLine(writeException(invalidOperationException));
             return invalidOperationException;
+        }
+        public Exception RaiseError(string f, params object[] a)
+        {
+            return RaiseError(new InvalidOperationException(DLRConsole.SafeFormat(f, a)));
         }
     }
 }

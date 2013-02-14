@@ -177,7 +177,7 @@ namespace RTParser.Utils
 
             // most graphs try to recuse on themselves until otehrwise stated (like in make-parallel)
             Srai = gn;
-            RootNode = new Node(null, Unifiable.Empty);
+            RootNode = new Node(null, "");
             RootNode.Graph = this;
             //PostParallelRootNode = new Node(this, Unifiable.Empty);
             if (!TrackTemplates)
@@ -201,6 +201,7 @@ namespace RTParser.Utils
             }
             else
             {
+                CannotHaveParallel = true;
                 // CanMaxOutStage1 = false;
                 if (gn.Contains("parallel") || gn.Contains("parent"))
                 {
@@ -221,7 +222,7 @@ namespace RTParser.Utils
                 }
                 if (CannotHaveParallel)
                 {
-                    writeToLog("CantHaveParallels!");
+                    writeToLog("ERROR CantHaveParallels!");
                     return this;
                 }
                 if (_parallel == null)
@@ -928,6 +929,7 @@ namespace RTParser.Utils
 
         internal void AddGenlMT(GraphMaster fallback, OutputDelegate writeToLog)
         {
+            if (OnlyOneGM != null) return;
             lock (LockerObject)
             {
                 if (fallback == this)
@@ -1623,17 +1625,44 @@ namespace RTParser.Utils
 
         public ParentChild ParentObject { get; set; }
 
-        public static GraphMaster OnlyOneGM = new GraphMaster("default");
-        public static GraphMaster FindOrCreate(string dgn)
+        public static GraphMaster OnlyOneGM = null;//new GraphMaster("default");
+        public static GraphMaster FindOrCreate(string dgn0)
         {
-            if (OnlyOneGM != null) return OnlyOneGM;
+            var nggn0 = dgn0.RemoveEnd("graph");
+            if (nggn0 != null && dgn0 != nggn0)
+            {
+                AltBot.RaiseErrorStatic(new InvalidOperationException(dgn0 + " ending with graph!"));
+                dgn0 = nggn0;
+            }
+
+            var dgn = AltBot.ToGraphPathName(dgn0, null); 
+
+            bool uoo = OnlyOneGM != null;
             var gbn = AltBot.GraphsByName;
+            lock (gbn)
+            {
+                GraphMaster v;
+                if (gbn.TryGetValue(dgn, out v))
+                {
+                    return v;
+                }
+            } 
+            if (dgn.Contains("_"))
+            {
+                uoo = true;
+            }
+            if (dgn.StartsWith("default_to_"))
+            {
+                dgn = dgn.Substring("default_to_".Length);
+            }
+            if (uoo && OnlyOneGM != null) return OnlyOneGM;
             lock (gbn)
             {
                 GraphMaster v;
                 if (!gbn.TryGetValue(dgn, out v))
                 {
-                    v = gbn[dgn] = new GraphMaster(dgn);
+                    AltBot.writeDebugLine("CREATE GRAPHMASTER = " + dgn0);
+                    v = gbn[dgn] = new GraphMaster(dgn0);
                 }
                 return v;
             }

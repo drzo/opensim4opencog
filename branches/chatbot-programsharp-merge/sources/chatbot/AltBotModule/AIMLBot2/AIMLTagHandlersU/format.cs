@@ -36,7 +36,7 @@ namespace RTParser.AIMLTagHandlers
         /// <returns>The resulting processed text</returns>
         sealed protected override Unifiable ProcessChange()
         {
-            return Format(TransformAtomically(OnEach, isRecursive && !ReadOnly));
+            return Format(TransformAtomically(OnEach, isRecursiveSubclass && !ReadOnly));
         }
 
         private Unifiable OnEach(Unifiable text)

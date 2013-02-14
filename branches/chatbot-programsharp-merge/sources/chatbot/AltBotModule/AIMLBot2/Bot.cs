@@ -11,6 +11,7 @@ using System.Web;
 using System.Xml;
 using AIMLbot;
 using AltAIMLParser;
+using AltAIMLbot;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -355,7 +356,7 @@ namespace RTParser
                 }
                 else
                 {
-                    GlobalSettings.addSetting("adminemail", Unifiable.Empty);
+                    GlobalSettings.addSetting("adminemail", Unifiable.MISSING);
                 }
             }
         }
@@ -1545,24 +1546,21 @@ The AIMLbot program.
 
         public GraphMaster GetUserGraph(string graphPath)
         {
-            //graphPath = "default";
-            if (!graphPath.Contains("_to_"))
+            var changed = ToGraphPathName(graphPath, BotID);
+            if (changed != graphPath)
             {
-                graphPath = ToLower(ConsolidSpaces(Trim(graphPath + "_to_" + this.NamePath)));
+                writeToLog("ERROR GetUserGraph " + graphPath + " -> " + changed);
+                graphPath = changed;
             }
-            GraphMaster g;
             lock (GraphsByName)
             {
+                GraphMaster g;
                 if (LocalGraphsByName.TryGetValue(graphPath, out g))
                 {
                     return g;
                 }
-                g = GraphsByName[graphPath] = GraphMaster.FindOrCreate(graphPath);
-                GraphMaster dtob = Utils.GraphMaster.FindOrCreate("default_to_" + this.NamePath);
-                g.AddGenlMT(dtob, writeToLog);
-                //ㄴdtob.AddGenlMT(Utils.GraphMaster.FindOrCreate("default"), writeToLog);
-            } 
-            return g;
+            }
+            return FindGraph(graphPath, null);
         }
 
         static public GraphMaster FindGraph(string graphPath)
@@ -1575,11 +1573,12 @@ The AIMLbot program.
         public GraphMaster GetGraph(string graphPath, GraphMaster current)
         {
             GraphMaster g = FindGraph(graphPath, current);
-            if (g != null) return g;
+            if (g != null) return g;            
             if (graphPath == null)
             {
                 if (current == null)
                 {
+                    writeToLog("ERROR GetGraph Null");
                 }
                 return current;
             }
@@ -1603,16 +1602,20 @@ The AIMLbot program.
                 }
                 if (!GraphsByName.TryGetValue(graphPath, out g))
                 {
-                    g = GraphsByName[graphPath] = GraphMaster.FindOrCreate(graphPath);
+                    g = LocalGraphsByName[graphPath] = GraphMaster.FindOrCreate(graphPath);
                 }
             }
             return g;
         }
 
         public GraphMaster FindGraph(string graphPath, GraphMaster current)
-        {
-            if (graphPath == null)
+        {            
+            if (graphPath == null || (",current,*,,".Contains("," + graphPath.ToLower() + ",")))
             {
+                if (current == null)
+                {
+                    writeToLog("ERROR GetGraph Null");
+                }
                 return current;
             }
 
@@ -1626,28 +1629,30 @@ The AIMLbot program.
                 return FindGraph(left, vg);
             }
 
-            graphPath = ToScriptableName(graphPath);
-
-            if (graphPath == "current" || graphPath == "")
-            {
-                return current;
-            }
-
+            graphPath = ToGraphPathName(graphPath, NamePath);
             if (true)
             {
                 if (_g != null && graphPath == "default")
                 {
                     return DefaultStartGraph;
                 }
-
+                if (_g != null && graphPath == "*")
+                {
+                    return DefaultStartGraph;
+                }
                 if (_h != null && graphPath == "heardselfsay")
                 {
                     return DefaultHeardSelfSayGraph;
+                }
+                if (TheUserListenerGraph != null && graphPath == "heardyousay")
+                {
+                    return DefaultHeardYouSayGraph;
                 }
             }
             if (graphPath == "parent" || graphPath == "parallel")
             {
                 if (current == null) return null;
+                if (current.CannotHaveParallel) return current;
                 return current.Parallel;
             }
 
@@ -1664,6 +1669,38 @@ The AIMLbot program.
                 }
             }
             return g;
+        }
+
+        public static string ToGraphPathName(string graphPath0, string botname)
+        {
+            var graphPath = HelperForMerge.RemoveEnd(graphPath0);
+            if (string.IsNullOrEmpty(graphPath) || graphPath == "*" || graphPath == "current")
+            {
+                return null;
+            }
+            graphPath = ToScriptableName(graphPath);
+            if (botname != null)
+            {
+                var sbotname = ToScriptableName(botname);
+                if (botname == graphPath || botname == graphPath)
+                {
+                    return "default";
+                }
+            }
+            if (graphPath == "default" || graphPath == "base" || graphPath == "*" || graphPath == "start" ||
+                graphPath == "root")
+            {
+                return "default";
+            }
+            if (graphPath == "heardselfsay" || graphPath == "headself")
+            {
+                return "heardselfsay";
+            }
+            if (graphPath == "heardyousay" || graphPath == "heardyou")
+            {
+                return "listener";
+            }
+            return graphPath;
         }
 
         public static string ToScriptableName(string path)
@@ -1867,35 +1904,25 @@ The AIMLbot program.
             //OnTaskAtATimeHandler.Name = "TaskQueue For " + myName;
 
             thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
-            string dgn = "default_to_" + NamePath;
-            string n2n = NamePath + "_to_" + NamePath;
-            string hgn = "heardselfsay_to_" + NamePath;
             lock (GraphsByName)
             {
-                if (String.IsNullOrEmpty(NamePath))
+                foreach (var cn in new object[]
+                                       {
+                                           DefaultEventGraph, 
+                                           DefaultPredicates, 
+                                           HeardPredicates,
+                                           DefaultStartGraph,
+                                           DefaultHeardSelfSayGraph,
+                                       })
                 {
-                    throw new NullReferenceException("SetName! = " + myName);
-                }
-                if (_g == null)
-                {
-                    GraphMaster od;
-                    GraphsByName.TryGetValue("default", out od);
-                    _g = GraphMaster.FindOrCreate(dgn);
-                    if (od == null) GraphsByName["default"] = _g;
-                    else _g.AddGenlMT(od, writeToLog);
-                    _h //= TheUserListernerGraph 
-                        = GraphMaster.FindOrCreate(hgn);
-                    GraphsByName[n2n] = _h;
-                    _h.AddGenlMT(GraphsByName["heardselfsay"], writeToLog);
-                    _h.AddGenlMT(GraphsByName["listener"], writeToLog);
-                    GraphsByName[dgn] = _g;
-                    GraphsByName[hgn] = _h;
-                }
+                    if (cn == null)
+                    {
 
-                GraphsByName[n2n].RemoveGenlMT(GraphsByName[dgn], writeToLog);
+                    }
+                }
+                GraphMaster listeningGraph = DefaultHeardSelfSayGraph;
+                if (listeningGraph != null) BotAsUser.HeardSelfSayGraph = listeningGraph;
             }
-            GraphMaster listeningGraph = DefaultHeardSelfSayGraph;
-            if (listeningGraph != null) BotAsUser.HeardSelfSayGraph = listeningGraph;
             lock (OnBotCreatedHooks)
             {
                 foreach (Action list in OnBotCreatedHooks)
@@ -1945,7 +1972,7 @@ The AIMLbot program.
                 TheUserListenerGraph.SilentTagsInPutParallel = false;
                 // var defaultGraph = GraphsByName["default"] = GraphMaster.FindOrCreate("default");
                 // defaultGraph.RemovePreviousTemplatesFromNodes = false;
-                GraphsByName["heardselfsay"] = TheUserListenerGraph;////new GraphMaster("heardselfsay");
+                ///GraphsByName["heardselfsay"] = Defau;////new GraphMaster("heardselfsay");
                 AddSettingsAliases("lastuserid", "you");
                 AddSettingsAliases("lastusername", "you");
                 AddSettingsAliases("you", "lastusername");
@@ -1994,6 +2021,15 @@ The AIMLbot program.
                     bool wasStopped = true;
                     string real = SafeFormat(message, args);
                     message = real.ToUpper();
+                    if (!real.StartsWith("WARNING"))
+                    {
+                        if (message.ContainsAny("warn", "= null", "error", "bad") > -1)
+                        {
+                            writeToLogWarn("BAD " + message, args);
+                            return;
+                        }
+                    }
+
                     if (message.Contains("ERROR") && !message.Contains("TIMEOUTMESSAGE"))
                     {
                         wasStopped = Breakpoint(real);

@@ -57,10 +57,14 @@ namespace RTParser.AIMLTagHandlers
         }
         public override float CanUnify(Unifiable with)
         {
-            writeToLogWarn("CANUNIFY: " + with);
+            writeToLogWarn("VERBATUM CANUNIFY: " + with);
+            IsTraced = true;
             return base.CanUnify(with);
         }
-
+        public override Unifiable CompleteAimlProcess()
+        {
+            return data;
+        }
         public override Unifiable RecurseResult
         {
             get { return data; }

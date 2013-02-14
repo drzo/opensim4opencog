@@ -44,5 +44,9 @@ namespace RTParser.AIMLTagHandlers
             return AND_FALSE;
         }
 
+        protected override Unifiable ComputeInnerOrNull()
+        {
+            return base.AsOneOf();
+        }
     }
 }

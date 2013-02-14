@@ -38,8 +38,8 @@ namespace MushDLR223.Utilities
         public static OutputDelegate errorOutput;
 
         public static bool SkipXmlns = true;
-        public static Func<string, string> TextFormatter = StaticXMLUtils.CleanWhitepaces;
-        public static Func<string, string> TextWhitespaceCleaner = StaticXMLUtils.CleanWhitepaces;
+        public Func<string, string> TextFormatter = null;
+        public Func<string, string> TextWhitespaceCleaner = null;
         public readonly XmlNamespaceManager Manager;
 
         public bool RemoveXmlns = SkipXmlns;
@@ -1114,7 +1114,7 @@ namespace MushDLR223.Utilities
         internal string FormatTextNode(string text)
         {
             if (TextFormatter != null && FormatTextNode != TextFormatter) return TextFormatter(text);
-            return CleanWhitepaces(text);
+            return text;
         }
 
         internal string CleanWhitepaces(string text)

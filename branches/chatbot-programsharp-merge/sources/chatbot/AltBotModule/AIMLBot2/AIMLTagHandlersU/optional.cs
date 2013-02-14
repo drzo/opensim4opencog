@@ -67,5 +67,10 @@ namespace RTParser.AIMLTagHandlers
             }
             return bestValue;
         }
+
+        protected override Unifiable ComputeInnerOrNull()
+        {
+            return AsOneOf();
+        }
     }
 }

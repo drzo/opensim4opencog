@@ -56,6 +56,17 @@ namespace RTParser.AIMLTagHandlers
 
         protected int DefaultIndex { get; set; }
 
+        override protected Unifiable Recurse()
+        {
+            var vorNull = ComputeInnerOrNull();
+            if (!Unifiable.IsNull(vorNull))
+            {
+                return vorNull;
+            }
+            writeToLogWarn("Why is a star in Recurse?");
+            return base.Recurse();
+        }
+
         protected Func<IList<Unifiable>> StarDict;
         internal const float STAR_TRUE = 0;
         internal const float STAR_FALSE = 1;
@@ -124,7 +135,7 @@ namespace RTParser.AIMLTagHandlers
         /// The method that does the actual processing of the text.
         /// </summary>
         /// <returns>The resulting processed text</returns>
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ComputeInnerOrNull()
         {
             IList<Unifiable> stars = GetStarDict();
 

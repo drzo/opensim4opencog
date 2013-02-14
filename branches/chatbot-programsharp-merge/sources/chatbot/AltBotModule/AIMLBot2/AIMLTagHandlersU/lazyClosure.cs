@@ -155,7 +155,7 @@ namespace RTParser.AIMLTagHandlers
                     return RecurseResult;
                 }
                 Func<Unifiable, Unifiable> Format = (v) => RTParser.Normalize.ApplySubstitutions.Substitute(sd, templateNodeInnerText);
-                if (isRecursive && !ReadOnly)
+                if (isRecursiveSubclass && !ReadOnly)
                 {
                     RecurseResult = Format(TransformAtomically(null, true));
                     return finalResult.Value;

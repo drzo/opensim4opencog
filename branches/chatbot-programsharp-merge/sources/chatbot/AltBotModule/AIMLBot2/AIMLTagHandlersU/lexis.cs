@@ -161,11 +161,11 @@ namespace RTParser.AIMLTagHandlers
             return AND_FALSE;
         }
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ComputeInnerOrNull()
         {
             var v1 = ComputeInner();
             var v2 = templateNodeInnerText;
-            return v2;
+            return v1 ?? v2;
         }
     }
 }

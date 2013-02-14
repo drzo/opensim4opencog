@@ -1,5 +1,6 @@
 using System;
 using System.Xml;
+using AltAIMLbot;
 using MushDLR223.Utilities;
 using RTParser.Variables;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
@@ -33,11 +34,11 @@ namespace RTParser.Utils
             {
                 ss = s + " -FROM- " + templateNode.OuterXml;
             }
-            if (!s.Replace(" /","/").Contains(initialString))
+            if (!s.Replace(" /", "/").Contains(initialString.Replace(" /","/")))
             {
-                return "-WAS- '" + initialString + "' -NOW- " + ss;
+                ss = "-WAS- '" + initialString + "' -NOW- " + ss;
             }
-            return ss;
+            return GetType().Name + ": " + ss;
         }
 
         public string LineTextInfo()
@@ -102,16 +103,20 @@ namespace RTParser.Utils
             return s;
         }
 
-        protected void writeToLogWarn(string unifiable, params object[] objs)
+        public void writeToLogWarn(string unifiable, params object[] objs)
         {
             writeToLog("WARNING: " + unifiable, objs);
         }
 
         public virtual void writeToLog(string unifiable, params object[] objs)
         {
-            if (unifiable.ToUpper().StartsWith("ERROR"))
+            string stup = unifiable.ToUpper();
+            if (!stup.StartsWith("WARNING"))
             {
-                writeToLogWarn("BAD " + unifiable, objs);
+                if (stup.ContainsAny("warn", "= null", "error", "bad") > -1)
+                {
+                    writeToLogWarn("BAD " + unifiable, objs);
+                }
                 return;
             }
             this.Proc.writeToLog("AIMLTRACE: " + unifiable + DLRConsole.NoFormatDirectives(" in " + GetType().Name + "  " + LineNumberTextInfo()), objs);

@@ -30,7 +30,7 @@ namespace RTParser.Utils
         public TextTransformer(AltBot bot)
         {
             this.Proc = bot;
-            this.inputString = Unifiable.Empty;
+            this.inputString = Unifiable.EmptyRef;
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace RTParser.Utils
         public TextTransformer()
         {
             this.Proc = null;
-            this.inputString = Unifiable.Empty;
+            this.inputString = Unifiable.EmptyRef;
         }
 
         public virtual float CallCanUnify(Unifiable with)

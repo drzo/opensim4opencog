@@ -74,7 +74,7 @@ namespace RTParser.Variables
             {
                 return Unifiable.Create(propGet());
             }
-            return Unifiable.Empty;
+            return Unifiable.MISSING;
         }
 
         public bool containsLocalCalled(string name)

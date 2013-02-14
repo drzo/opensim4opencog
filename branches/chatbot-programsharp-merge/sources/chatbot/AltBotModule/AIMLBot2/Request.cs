@@ -764,6 +764,11 @@ namespace AltAIMLParser
 
         public GraphMaster GetGraph(string value)
         {
+            if (value == null)
+            {
+                writeDebugLine("WARN GetGraph == null");
+                return sGraph;
+            }
             return TargetBot.GetGraph(value, sGraph);
         }
 

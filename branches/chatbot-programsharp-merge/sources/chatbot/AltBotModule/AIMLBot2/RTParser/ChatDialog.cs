@@ -164,9 +164,11 @@ namespace RTParser
             get
             {
                 if (_g != null) return _g;
+                var NamePath = this.NamePath;
+                NamePath = "default";
                 if (String.IsNullOrEmpty(NamePath))
                 {
-                    writeToLog("No graphmapster!");
+                    writeToLog("ERROR NoName = No graphmapster!");
                     return null;
                 }
                 return GetGraph(NamePath, _g);
@@ -179,17 +181,20 @@ namespace RTParser
                 return DefaultStartGraph;
             }
         }
+        public GraphMaster DefaultHeardYouSayGraph
+        {
+            get
+            {
+                if (TheUserListenerGraph != null) return TheUserListenerGraph;
+                return GraphMaster.FindOrCreate("heardyousay");
+            }
+        }
         public GraphMaster DefaultHeardSelfSayGraph
         {
             get
             {
                 if (_h != null) return _h;
-                if (String.IsNullOrEmpty(NamePath))
-                {
-                    writeToLog("No HeardSelfSayGraph!");
-                    return null;
-                }
-                return GetGraph(NamePath + "_heardselfsay", _h);
+                return GraphMaster.FindOrCreate("heardselfsay");
             }
         }
 
@@ -1439,7 +1444,7 @@ namespace RTParser
                 if (loadcount == 0)
                 {
                     writeToLog(
-                        " **** WARNING: No Markovian Brain Training nor N-Gram file found for '{0}' . **** ", name);
+                        " **** VVARNING: No Markovian Brain Training nor N-Gram file found for '{0}' . **** ", name);
                 }
             }
 

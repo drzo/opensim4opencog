@@ -201,9 +201,27 @@ namespace RTParser.AIMLTagHandlers
                         KnowsCanProcess = true;
                         string toUpper = MakeMatchable(templateNodeInnerValue);
                         var rp = request.ParentRequest;
-                        if (rp != null && !rp.CanProcess(toUpper)) return null;
+                        if (rp != null && !rp.CanProcess(toUpper))
+                        {
+                            writeToLogWarn("SRAI intends to return null");
+                            return null;
+                        }
                     }
-                    if (false &&  IsNull(templateNodeInnerValue))
+                    return ProcessChangeSraiPre(templateNodeInnerValue);
+                }
+                finally
+                {
+                    Proc.chatTrace = chatTraced;
+                }
+            }
+            return Unifiable.Empty;
+        }
+
+        protected Unifiable ProcessChangeSraiPre(Unifiable templateNodeInnerValue)
+        {
+            {try
+                {
+                   {if (false &&  IsNull(templateNodeInnerValue))
                     {
                         templateNodeInnerValue = Recurse();
                     }
@@ -222,7 +240,7 @@ namespace RTParser.AIMLTagHandlers
                         }
                     }
                     templateNodeInnerValue = Proc.CleanupCyc(templateNodeInnerValue);
-                    var vv = ProcessChangeSrai(request, query, templateNodeInnerValue, templateNode, initialString, writeToLog);
+                    var vv = ProcessChangeSrai(templateNodeInnerValue);
                     if (!Unifiable.IsNullOrEmpty(vv))
                     {
                         return vv;
@@ -239,14 +257,18 @@ namespace RTParser.AIMLTagHandlers
                         }
                         return vv; // Empty
                     }
-                    if (ProcessChange12) return null;
+                    if (ProcessChange12)
+                    {
+                        writeToLogWarn("ProcessChange12 cant get result");
+                        return null;
+                    }
                     if (Unifiable.IsNull(vv))
                     {
                         vv = GetTemplateNodeInnerText();
                         return FAIL;
                     }
                     return vv;
-                }
+                }}
                 catch (ChatSignal ex)
                 {
                     throw;
@@ -256,20 +278,24 @@ namespace RTParser.AIMLTagHandlers
                     writeToLog("ERROR: " + e);
                     throw;
                 }
-                finally
-                {
-                    Proc.chatTrace = chatTraced;
-                }
             }
-            return Unifiable.Empty;
         }
 
-        static internal Unifiable ProcessChangeSrai(Request request, SubQuery query,
+        private Unifiable ProcessChangeSrai(Unifiable templateNodeInnerValue)
+        {
+#if false
+            var vv = ProcessChangeSrai(request, query, templateNodeInnerValue, templateNode, initialString, writeToLog);
+            return vv;
+        }
+
+
+        internal Unifiable ProcessChangeSrai(Request request, SubQuery query,
             Unifiable templateNodeInnerValue, XmlNode templateNode, string initialString, OutputDelegate writeToLog)
         {
+#endif
             if (IsNullOrEmpty(templateNodeInnerValue))
             {
-                writeToLog("ERROR BAD REQUEST " + request);
+                writeToLogWarn("ERROR BAD REQUEST " + request);
                 return templateNodeInnerValue;
             }
             var salientRequest = MasterRequest.GetOriginalSalientRequest(request);
@@ -279,7 +305,7 @@ namespace RTParser.AIMLTagHandlers
                 var CurrentTemplate = query.CurrentTemplate;
                 if (!salientRequest.EnterSalientSRAI(templateNodeInnerValue, out prevResult))
                 {
-                    writeToLog("ERROR EnterSailentSRAI: " + prevResult);
+                    writeToLogWarn("ERROR EnterSailentSRAI: " + prevResult);
                     if (true)
                     {
                         var disable = CurrentTemplate;
@@ -304,9 +330,11 @@ namespace RTParser.AIMLTagHandlers
                     }
                 }
                 Unifiable subResultOutput = null;
+#if false
                 writeToLog = writeToLog ?? DEVNULL;
                 AltBot mybot = request.TargetBot;
                 User user = request.Requester;
+#endif
                 var thisrequest = request;
                 var thisresult = request.CurrentResult;
                 /*
@@ -370,6 +398,7 @@ namespace RTParser.AIMLTagHandlers
                         {
                             showDebug = false;
                         }
+                        if (IsTraced) showDebug = true;
 
                         if (showDebug)
                             writeToLog(prefix + " CALLING '" + subRequestrawInput + "'");

@@ -58,5 +58,9 @@ namespace RTParser.AIMLTagHandlers
             return ISA_TRUE;
         }
 
+        protected override Unifiable ComputeInnerOrNull()
+        {
+            return AsOneOf();
+        }
     }
 }

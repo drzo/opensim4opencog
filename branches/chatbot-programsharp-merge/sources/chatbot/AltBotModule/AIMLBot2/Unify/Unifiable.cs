@@ -93,7 +93,7 @@ namespace RTParser
     }
 
     [Serializable]
-    public abstract class Unifiable : BaseUnifiable, IConvertible, IComparable<Unifiable>, Indexable, IndexTarget, IDeserializationCallback
+    public abstract class Unifiable : BaseUnifiable, IConvertible, IComparable<Unifiable>, Indexable, IndexTarget, IDeserializationCallback, IComparable<string>
     {
         #region UFlags enum
 
@@ -139,7 +139,11 @@ namespace RTParser
 
         public static readonly Unifiable[] DontStore = new Unifiable[0];
         public static readonly string[] DontStoreString = new string[0];
-        public static readonly SpecialStringUnifiable Empty = CreateSpecial("$EMPTY", "");
+        public static SpecialStringUnifiable Empty
+        {
+            get { return EmptyRef; }
+        }
+        public static readonly SpecialStringUnifiable EmptyRef = CreateSpecial("$EMPTY", "");
         public static readonly Unifiable FAIL_NIL = CreateSpecial("$FAIL_NIL", "NIL");
         public static readonly Unifiable TRUE_T = CreateSpecial("$TRUE_T", "T");
         public static readonly Unifiable INCOMPLETE = CreateSpecial("$INCOMPLETE", null);
@@ -587,7 +591,7 @@ namespace RTParser
         public static Unifiable MakeUnifiableFromString(string value, bool useTrimmingRules)
         {
             if (value == null) return null;
-            if (value == "") return Empty;
+            if (value == "") return EmptyRef;
             Unifiable u;
             if (true)
                 lock (internedUnifiables)
@@ -947,6 +951,12 @@ namespace RTParser
         }
 
         public abstract void OfferNode(XmlNode node, string inner);
+
+        public int CompareTo(string other)
+        {
+            if (other == null) return 1;
+            return -other.CompareTo(AsString());
+        }
 
         public override string ToString()
         {
@@ -1328,7 +1338,7 @@ namespace RTParser
         /// Converts the value of this instance to an equivalent 8-bit signed integer using the specified culture-specific formatting information.
         /// </summary>
         /// <returns>
-        /// An 8-bit signed integer equivalent to the value of this instance.
+        /// An 8-bit signed integer equivalent to the value of `instance.
         /// </returns>
         /// <param name="provider">An <see cref="T:System.IFormatProvider"/> interface implementation that supplies culture-specific formatting information. 
         ///                 </param><filterpriority>2</filterpriority>
@@ -1518,7 +1528,21 @@ namespace RTParser
 
         public abstract bool WillMatch0(string word, SubQuery query);
 
+        public abstract void SetFromString(string inlist);
 
+        #region IDeserializationCallback Members
+
+        void IDeserializationCallback.OnDeserialization(object sender)
+        {
+            // throw new NotImplementedException();
+        }
+
+        #endregion
+
+    }
+
+    public class UnifiableExtensionMethods
+    {
         public static bool IsEMPTY(Object unifiable)
         {
             return StaticAIMLUtils.IsEMPTY(unifiable);
@@ -1586,21 +1610,15 @@ namespace RTParser
         {
             return StaticAIMLUtils.IsFalseOrNo(str);
         }
-
-        public abstract void SetFromString(string inlist);
-
-        #region IDeserializationCallback Members
-
-        void IDeserializationCallback.OnDeserialization(object sender)
+        public static bool IsSomething(Unifiable fullPath)
         {
-           // throw new NotImplementedException();
+            Unifiable s;
+            return TextPatternUtils.IsSomething(fullPath, out s) && s != null;
         }
-
-        #endregion
     }
 
     [Serializable]
-    public abstract class BaseUnifiable //: StaticAIMLUtils
+    public abstract class BaseUnifiable: UnifiableExtensionMethods
     {
         public abstract string SpecialName { get; }
         public abstract string OverlyMatchableString { get; }

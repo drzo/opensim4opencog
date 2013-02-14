@@ -165,7 +165,7 @@ namespace RTParser.Utils
             GuardInfo guard, TopicInfo topicInfo, Node patternNode, ThatInfo thatInfo)
             : base(pattern, cateNode, options)
         {
-            if (templateNode == null || responseInfo.FullPath == Unifiable.Empty)
+            if (templateNode == null || !Unifiable.IsSomething(responseInfo.FullPath))
             {
                 throw new NotImplementedException();                
             }       

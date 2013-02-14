@@ -566,6 +566,10 @@ namespace RTParser
             XmlNode templateNode = sOutput;
             bool childOriginal = true;
             result.Started = true;
+            if (!isTraced && parentHandler != null)
+            {
+                isTraced = parentHandler.IsTraced;
+            }
             if (usedGuard)
             {
                 output = "<template>" + sGuard.PatternNode.OuterXml + " GUARDBOM " + output +
