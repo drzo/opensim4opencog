@@ -16,7 +16,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="bot">The bot this transformer is a part of</param>
         /// <param name="inputString">The input Unifiable to be transformed</param>
-        public TextTransformer(RTPBot bot, Unifiable inputString)
+        public TextTransformer(AltBot bot, Unifiable inputString)
         {
             this.Proc = bot;
             this.inputString = inputString;
@@ -27,7 +27,7 @@ namespace RTParser.Utils
         /// ctor
         /// </summary>
         /// <param name="bot">The bot this transformer is a part of</param>
-        public TextTransformer(RTPBot bot)
+        public TextTransformer(AltBot bot)
         {
             this.Proc = bot;
             this.inputString = Unifiable.Empty;
@@ -102,7 +102,7 @@ namespace RTParser.Utils
         /// <summary>
         /// The Proc that this transformation is connected with
         /// </summary>
-        public RTPBot Proc;
+        public AltBot Proc;
 
         /// <summary>
         /// The input Unifiable to be transformed in some way

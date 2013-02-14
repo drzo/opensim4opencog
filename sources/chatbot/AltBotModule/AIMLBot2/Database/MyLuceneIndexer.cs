@@ -6,6 +6,7 @@ using System.Text;
 using System.IO;
 using System.Xml;
 using System.Xml.XPath;
+using AltAIMLParser;
 using LAIR.Collections.Generic;
 using LAIR.ResourceAPIs.WordNet;
 using Lucene.Net.Analysis;
@@ -41,7 +42,7 @@ namespace RTParser.Database
         private ulong _docid = 0;
         //private static System.IO.FileInfo _path;
         public WordNetEngine wordNetEngine;
-        public RTPBot TheBot;
+        public AltBot TheBot;
         public bool userCached = false;
         public bool userCachedPending = false;
 
@@ -121,7 +122,7 @@ namespace RTParser.Database
         /// </summary>
         /// <param name="indexDir"></param>
         /// <param name="fieldName">usually "TEXT_MATTER"</param>
-        public MyLuceneIndexer(string indexDir, string fieldName, RTPBot myBot, WordNetEngine myWNEngine)
+        public MyLuceneIndexer(string indexDir, string fieldName, AltBot myBot, WordNetEngine myWNEngine)
         {
             SearchSources = new List<IDocSearch>() { this };
             _indexDir = indexDir;
@@ -823,7 +824,7 @@ namespace RTParser.Database
             string userFilter = "";
             // Do we only want responses with the current user name in it ?
             // As in "what is my favorite color?" 
-            string onlyUserStr = RTPBot.GetAttribValue(templateNode, "onlyUser", "false").ToLower();
+            string onlyUserStr = AltBot.GetAttribValue(templateNode, "onlyUser", "false").ToLower();
             if (onlyUserStr.Equals("true"))
             {
                 userFilter = TripleStoreProxy.Entify(TheBot.UserID);
@@ -847,10 +848,10 @@ namespace RTParser.Database
 
                 int numHits;
 
-                string maxReplyStr = RTPBot.GetAttribValue(templateNode, "max", "1").ToLower();
+                string maxReplyStr = AltBot.GetAttribValue(templateNode, "max", "1").ToLower();
                 int maxReply = Int16.Parse(maxReplyStr);
                 
-                string thresholdStr = RTPBot.GetAttribValue(templateNode, "threshold", null);
+                string thresholdStr = AltBot.GetAttribValue(templateNode, "threshold", null);
                 if (!string.IsNullOrEmpty(thresholdStr))
                 {
                     float parsed;

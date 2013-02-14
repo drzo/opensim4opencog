@@ -3,6 +3,8 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Text;
 using System.Collections.Generic;
+using AltAIMLParser;
+using AltAIMLbot;
 using RTParser.Utils;
 // For Wordnet access
 using LAIR.ResourceAPIs.WordNet;
@@ -24,11 +26,11 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public lexis(RTParser.RTPBot bot,
+        public lexis(RTParser.AltBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -45,16 +47,16 @@ namespace RTParser.AIMLTagHandlers
             //Lookup definition for current word we could unify with
             string wordAttributes = "";
             string key = (string)with.ToValue(query).Trim();
-            if (this.user.bot.wordAttributeHash.Contains(key) )
+            if (this.user.rbot.wordAttributeHash.Contains(key) )
             { 
-                wordAttributes = (string)this.user.bot.wordAttributeHash[key];
+                wordAttributes = (string)this.user.rbot.wordAttributeHash[key];
             }
             else
             {
-                if (this.user.bot.wordAttributeHash.Contains(key.ToLower()) )
+                if (this.user.rbot.wordAttributeHash.Contains(key.ToLower()) )
                 {
                     key = key.ToLower();
-                    wordAttributes = (string)this.user.bot.wordAttributeHash[key];
+                    wordAttributes = (string)this.user.rbot.wordAttributeHash[key];
                 }
             }
             // Can you find a match inside ?
@@ -63,7 +65,7 @@ namespace RTParser.AIMLTagHandlers
 
 
             // Ok, lets try WordNet
-            WordNetEngine ourWordNetEngine = this.user.bot.wordNetEngine;
+            WordNetEngine ourWordNetEngine = this.user.rbot.wordNetEngine;
             Set < SynSet > synPatternSet = null;
 
             // find our POS domain if possible

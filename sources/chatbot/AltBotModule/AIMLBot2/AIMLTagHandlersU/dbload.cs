@@ -9,6 +9,8 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics;
+using AltAIMLParser;
+using AltAIMLbot;
 using RTParser;
 using RTParser.Utils;
 using Lucene.Net.Store;
@@ -27,11 +29,11 @@ namespace RTParser.AIMLTagHandlers
     public class dbload : RTParser.Utils.AIMLTagHandler
     {
 
-        public dbload(RTParser.RTPBot bot,
+        public dbload(RTParser.AltBot bot,
                 RTParser.User user,
                 RTParser.Utils.SubQuery query,
-                RTParser.Request request,
-                RTParser.Result result,
+                Request request,
+                Result result,
                 XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {

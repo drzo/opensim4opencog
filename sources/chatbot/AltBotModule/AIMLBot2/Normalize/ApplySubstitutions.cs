@@ -13,11 +13,11 @@ namespace RTParser.Normalize
     /// </summary>
     public class ApplySubstitutions : RTParser.Utils.TextTransformer
     {
-        public ApplySubstitutions(RTParser.RTPBot bot, Unifiable inputString)
+        public ApplySubstitutions(RTParser.AltBot bot, Unifiable inputString)
             : base(bot, inputString)
         { }
 
-        public ApplySubstitutions(RTParser.RTPBot bot)
+        public ApplySubstitutions(RTParser.AltBot bot)
             : base(bot)
         { }
 
@@ -152,7 +152,7 @@ namespace RTParser.Normalize
             return "\\b" + makeRegexSafe(fromValueTrim) + "\\b";
         }
 
-        public static string SubstituteRecurse(RTParser.RTPBot bot, SettingsDictionary dictionary, string target)
+        public static string SubstituteRecurse(RTParser.AltBot bot, SettingsDictionary dictionary, string target)
         {
             string result = Unifiable.ToVMString(target);
             String prev = "";

@@ -1,6 +1,8 @@
 using System;
 using System.Text;
 using System.Xml;
+using AltAIMLParser;
+using AltAIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser.Utils;
@@ -19,11 +21,11 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public lazyClosure(RTParser.RTPBot bot,
+        public lazyClosure(RTParser.AltBot bot,
                            RTParser.User user,
                            RTParser.Utils.SubQuery query,
-                           RTParser.Request request,
-                           RTParser.Result result,
+                           Request request,
+                           Result result,
                            XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -66,9 +68,9 @@ namespace RTParser.AIMLTagHandlers
             }
             if (currentNodeName == "genlmt")
             {
-                string name = RTPBot.GetAttribValue(templateNode, "name,mt,to,super,into", null);
-                string removeTo = RTPBot.GetAttribValue(templateNode, "remove", null);
-                string from = RTPBot.GetAttribValue(templateNode, "graph,from", null);
+                string name = AltBot.GetAttribValue(templateNode, "name,mt,to,super,into", null);
+                string removeTo = AltBot.GetAttribValue(templateNode, "remove", null);
+                string from = AltBot.GetAttribValue(templateNode, "graph,from", null);
                 bool deleteLink = false;
                 if (name == null)
                 {
@@ -96,8 +98,8 @@ namespace RTParser.AIMLTagHandlers
             }
             if (currentNodeName == "sraigraph")
             {
-                string name = RTPBot.GetAttribValue(templateNode, "name,mt,to,super,into", null);
-                string from = RTPBot.GetAttribValue(templateNode, "graph,from", null);
+                string name = AltBot.GetAttribValue(templateNode, "name,mt,to,super,into", null);
+                string from = AltBot.GetAttribValue(templateNode, "graph,from", null);
                 if (name == null)
                 {
                     name = Trim(templateNode.InnerText);
@@ -161,7 +163,7 @@ namespace RTParser.AIMLTagHandlers
                 return RecurseResult = TransformAtomically(Format, false);
             }
 
-            if (RTPBot.UnknownTagsAreBotVars)
+            if (AltBot.UnknownTagsAreBotVars)
             {
                 var v = Proc.GlobalSettings.grabSetting(currentNodeName);
                 if (!Unifiable.IsIncomplete(v)) return v;
@@ -176,7 +178,7 @@ namespace RTParser.AIMLTagHandlers
                 total++;
                 string nodeOuterXml = ToXmlValue(node);
                 WriteLine(nodeOuterXml);
-                string p = RTPBot.GetAttribValue(node,"PASSED","FALSE");
+                string p = AltBot.GetAttribValue(node,"PASSED","FALSE");
                 if (p=="False")
                 {
                     writeThrus++;

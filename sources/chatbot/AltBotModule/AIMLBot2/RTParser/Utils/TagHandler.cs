@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Xml;
+using AltAIMLParser;
+using AltAIMLbot;
 
 namespace RTParser.Utils
 {
@@ -12,7 +14,7 @@ namespace RTParser.Utils
     {
         public static Type[] CONSTRUCTOR_TYPES = new[]
                                                      {
-                                                         typeof (RTPBot), typeof (User), typeof (SubQuery),
+                                                         typeof (AltBot), typeof (User), typeof (SubQuery),
                                                          typeof (Request), typeof (Result), typeof (XmlNode)
                                                      };
 
@@ -49,7 +51,7 @@ namespace RTParser.Utils
         /// <param name="Assemblies">All the assemblies the bot knows about</param>
         /// <returns>The instantiated class</returns>
         public AIMLTagHandler Instantiate(Dictionary<string, Assembly> Assemblies, User user, SubQuery query,
-                                          Request request, Result result, XmlNode node, RTPBot bot)
+                                          Request request, Result result, XmlNode node, AltBot bot)
         {
             lock (Assemblies)
                 if (Assemblies.ContainsKey(this.AssemblyName))

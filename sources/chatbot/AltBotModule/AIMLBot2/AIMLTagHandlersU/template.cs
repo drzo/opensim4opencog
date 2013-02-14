@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Xml;
 using System.Text;
+using AltAIMLParser;
+using AltAIMLbot;
 using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
@@ -19,11 +21,11 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public template(RTParser.RTPBot bot,
+        public template(RTParser.AltBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -79,7 +81,7 @@ namespace RTParser.AIMLTagHandlers
             return templateResult;
             string THINKYTAG = think.THINKYTAG;
             string tr = templateResult;
-            string tr2 = RTPBot.ReplaceAll(tr.Replace(THINKYTAG + ".", " "), THINKYTAG, " ").Replace("  ", " ").Trim();
+            string tr2 = AltBot.ReplaceAll(tr.Replace(THINKYTAG + ".", " "), THINKYTAG, " ").Replace("  ", " ").Trim();
             if (tr != tr2)
             {
                 if (tr2 == "")

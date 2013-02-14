@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Xml;
 using System.Text;
+using AltAIMLParser;
+using AltAIMLbot;
 using RTParser.Utils;
 
 namespace RTParser.CycNLTagHandlers
@@ -19,11 +21,11 @@ namespace RTParser.CycNLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public OptionalOne(RTParser.RTPBot bot,
+        public OptionalOne(RTParser.AltBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -53,7 +55,7 @@ namespace RTParser.CycNLTagHandlers
                     }
                     catch (Exception e)
                     {
-                        RTPBot.writeDebugLine("" + e);
+                        AltBot.writeDebugLine("" + e);
                     }
                 }
                 return OR_FALSE;

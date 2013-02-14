@@ -19,7 +19,7 @@ namespace RTParser.AIMLTagHandlers
     /// </summary>
     public class srai_legacy : RTParser.Utils.AIMLTagHandler
     {
-        RTParser.RTPBot mybot;
+        RTParser.AltBot mybot;
         /// <summary>
         /// Ctor
         /// </summary>
@@ -29,7 +29,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public srai_legacy(RTParser.RTPBot bot,
+        public srai_legacy(RTParser.AltBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
                         RTParser.Request request,

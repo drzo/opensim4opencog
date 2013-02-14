@@ -2,6 +2,8 @@ using System;
 using System.Xml;
 using System.Text;
 using System.IO;
+using AltAIMLParser;
+using AltAIMLbot;
 using MushDLR223.Utilities;
 using RTParser.Utils;
 
@@ -23,11 +25,11 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public learn(RTParser.RTPBot bot,
+        public learn(RTParser.AltBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -37,13 +39,14 @@ namespace RTParser.AIMLTagHandlers
         protected override Unifiable ProcessChange()
         {
             IsStarted = true;
-            isRecursive = true;
+            IsSetRecursiveSecondPass = true;
             var recursiveResult = Unifiable.CreateAppendable();
 
             if (templateNode.HasChildNodes)
             {
 
                 XmlNode attach = StaticXMLUtils.CopyNode("aiml", templateNode, false);
+                // remove children (our goal was to simpley copy attributes
                 attach.RemoveAll();
                 // recursively check
                 foreach (XmlNode childNode in templateNode.ChildNodes)
@@ -110,9 +113,13 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
         {
-            if (CheckNode("learn,load,graph"))
+            if (CheckNode("learn,load,graph,aiml"))
             {
-               // LoaderOptions loaderOptions = loaderOptions0;// ?? LoaderOptions.GetDefault(request);
+                if (templateNode.Name == "aiml")
+                {
+
+                }
+                // LoaderOptions loaderOptions = loaderOptions0;// ?? LoaderOptions.GetDefault(request);
                 
                 //recurse here? 
                 bool outRecurse;                

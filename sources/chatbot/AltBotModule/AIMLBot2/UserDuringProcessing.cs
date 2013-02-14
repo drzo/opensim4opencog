@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using AltAIMLParser;
+using AltAIMLbot;
 using MushDLR223.Utilities;
 using RTParser.AIMLTagHandlers;
 using RTParser.Utils;

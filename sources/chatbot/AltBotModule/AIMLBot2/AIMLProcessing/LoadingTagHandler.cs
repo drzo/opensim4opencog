@@ -1,4 +1,6 @@
 using System.Xml;
+using AltAIMLParser;
+using AltAIMLbot;
 
 namespace RTParser.Utils
 {
@@ -13,7 +15,7 @@ namespace RTParser.Utils
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public LoadingTagHandler(RTPBot bot,
+        public LoadingTagHandler(AltBot bot,
                                  User user,
                                  SubQuery query,
                                  Request request,
@@ -27,7 +29,7 @@ namespace RTParser.Utils
         protected override Unifiable ProcessChange()
         {
             IsStarted = true;
-            isRecursive = true;
+            IsSetRecursiveSecondPass = true;
             StringAppendableUnifiableImpl recursiveResult = Unifiable.CreateAppendable();
             if (templateNode.HasChildNodes)
             {

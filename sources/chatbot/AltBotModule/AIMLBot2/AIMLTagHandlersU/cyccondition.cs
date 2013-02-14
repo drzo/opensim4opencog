@@ -2,6 +2,8 @@ using System;
 using System.Xml;
 using System.Text;
 using System.Text.RegularExpressions;
+using AltAIMLParser;
+using AltAIMLbot;
 using RTParser.Database;
 using RTParser.Variables;
 
@@ -104,11 +106,11 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public cyccondition(RTParser.RTPBot bot,
+        public cyccondition(RTParser.AltBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {

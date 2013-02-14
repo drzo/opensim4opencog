@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using AltAIMLParser;
+using AltAIMLbot;
 using RTParser.Utils;
 using RTParser.Variables;
 
@@ -10,7 +12,7 @@ namespace RTParser
         /// <summary>
         /// The bot that is providing the answer
         /// </summary>
-        //     RTPBot TargetBot { get; set; }
+        //     AltBot TargetBot { get; set; }
         /// The user that is providing the <that/> answer
         //        User Responder { get; set; }
         //        string WhyComplete { get; set; }

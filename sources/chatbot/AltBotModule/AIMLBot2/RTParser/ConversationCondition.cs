@@ -130,7 +130,7 @@ namespace RTParser.Utils
         }
         private void writeToLog(string s, params object[] args)
         {
-            RTPBot.writeDebugLine("" + this + " " + s, args);
+            AltBot.writeDebugLine("" + this + " " + s, args);
         }
 
 

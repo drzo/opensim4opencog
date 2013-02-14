@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using AltAIMLParser;
+using AltAIMLbot;
 using RTParser;
 using RTParser.Utils;
 
 namespace AIMLbot
 {
-    public class Bot : RTParser.RTPBot
+    public class Bot : RTParser.AltBot
     {
          
         public Bot()
@@ -24,7 +26,7 @@ namespace AIMLbot
             : base(UserID, bot)
         {
         }
-        public MasterUser(string UserID, RTPBot bot)
+        public MasterUser(string UserID, AltBot bot)
             : base(UserID, bot)
         {
         }
@@ -37,17 +39,17 @@ namespace AIMLbot
  Request
     {
 /*
-        public Request(String rawInput, RTParser.User user, RTPBot bot)
+        public Request(String rawInput, RTParser.User user, AltBot bot)
             : this(rawInput, user, bot, null)
         {
         }
       
-              public MasterRequest(String rawInput, RTParser.User user, RTPBot bot, RTParser.Request r)
+              public MasterRequest(String rawInput, RTParser.User user, AltBot bot, RTParser.Request r)
             : base(rawInput, user, bot, r, null)
         {
         }
 */
-        public MasterRequest(string rawInput, User user, string thatSaid, User targetUser, RTPBot bot, Request parent, GraphMaster graphMaster)
+        public MasterRequest(string rawInput, User user, string thatSaid, User targetUser, AltBot bot, Request parent, GraphMaster graphMaster)
             : base(rawInput, user, thatSaid, targetUser, bot, parent, graphMaster)
         {
         }
@@ -59,7 +61,7 @@ namespace AIMLbot
 #endif
         Result , InteractionResult 
     {
-        public MasterResult(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
+        public MasterResult(string rawInput, User user, AltBot bot, Request parent, User targetUser)
             : base(rawInput, user, bot, parent, targetUser)
         {
         }
@@ -109,7 +111,7 @@ namespace AIMLbot
     {
         public class AIMLLoader : RTParser.Utils.AIMLLoader
         {
-            public AIMLLoader(RTPBot bot)
+            public AIMLLoader(AltBot bot)
                 : base(bot, bot == null ? null : bot.GetBotRequest("-AIMLLoader-"))
             {
             }

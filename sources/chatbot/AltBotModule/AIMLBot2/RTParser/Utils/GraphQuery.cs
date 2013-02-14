@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
 using AIMLbot;
+using AltAIMLParser;
+using AltAIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 
@@ -188,7 +190,7 @@ namespace RTParser.Utils
 
         internal static void writeToLog(string message, params object[] args)
         {
-            RTPBot.writeDebugLine("QUERYTRACE: " + message, args);
+            AltBot.writeDebugLine("QUERYTRACE: " + message, args);
         }
 
         private void CheckConsistent()

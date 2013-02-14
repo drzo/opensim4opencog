@@ -2,7 +2,7 @@
 {
     class WikiAnswersFactoidEngine : WebGetFactiodEngine
     {
-        public WikiAnswersFactoidEngine(IEnglishFactiodEngine fallback, RTPBot rtpBot) : base(fallback, rtpBot)
+        public WikiAnswersFactoidEngine(IEnglishFactiodEngine fallback, AltBot rtpBot) : base(fallback, rtpBot)
         {
         }
 

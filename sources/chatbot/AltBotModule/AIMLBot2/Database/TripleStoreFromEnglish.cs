@@ -51,13 +51,13 @@ namespace RTParser.Database
         }
 
         private readonly IEnglishFactiodEngine EnglishFactiodStore;
-        readonly RTPBot TheBot;
+        readonly AltBot TheBot;
         private readonly WordExpander WordNetExpand;
         private bool ExtremeDebug;
         private XmlNode templateNodeInit;
         public IEntityFilter EntityFilter { get; private set; }
 
-        public TripleStoreFromEnglish(IEnglishFactiodEngine englishFactiodStore, RTPBot theBot, WordExpander expander)
+        public TripleStoreFromEnglish(IEnglishFactiodEngine englishFactiodStore, AltBot theBot, WordExpander expander)
         {
             EntityFilter = this;
             TheBot = theBot;

@@ -33,7 +33,7 @@ namespace RTParser
     /// Encapsulates a Proccessor. If no settings.xml file is found or referenced the Proccessor will try to
     /// default to safe settings.
     /// </summary>
-    public partial class RTPBot //: QuerySettings
+    public partial class AltBot //: QuerySettings
     {
 #if NEED_SOMETHING_FOMLEGACY_BOT
         private static int skipMany = 0;
@@ -366,7 +366,7 @@ namespace RTParser
         }
 
         /// <summary>
-        /// When the RTPBot was initialised
+        /// When the AltBot was initialised
         /// </summary>
         public DateTime StartedOn = DateTime.Now;
 
@@ -561,7 +561,7 @@ namespace RTParser
         /// <summary>
         /// Ctor
         /// </summary>
-        public RTPBot()
+        public AltBot()
             : base(QuerySettings.CogbotDefaults)
         {
             _g = new GraphMaster("default", this);
@@ -599,7 +599,7 @@ namespace RTParser
 
 #if !(NOT_FAKE_LISTENERS)
         public Dictionary<string, object> listeners = new Dictionary<string, object>();
-        public RTPBot MyBot
+        public AltBot MyBot
         {
             get { return this; }
         }
@@ -835,8 +835,8 @@ namespace RTParser
             }
         }
 
-        // Load the dictionaries for this RTPBot from the various configuration files
-        static public void loadConfigs(RTPBot thiz, string pathToSettings, Request request)
+        // Load the dictionaries for this AltBot from the various configuration files
+        static public void loadConfigs(AltBot thiz, string pathToSettings, Request request)
         {
             if (!HostSystem.DirExists(pathToSettings))
             {
@@ -1316,7 +1316,7 @@ namespace RTParser
                                                }
                                                catch (Exception e)
                                                {
-                                                   //RTPBot.writeDebugLine("ERROR " + name + " " + e);
+                                                   //AltBot.writeDebugLine("ERROR " + name + " " + e);
                                                }
                                            }
                                            finally
@@ -1339,7 +1339,7 @@ namespace RTParser
                     }
                     catch (Exception e)
                     {
-                        RTPBot.writeDebugLine("ERROR " + name + " " + e);
+                        AltBot.writeDebugLine("ERROR " + name + " " + e);
                     }
                 }
                 finally
@@ -1433,7 +1433,7 @@ namespace RTParser
                 writeDebugLine("-----------------------------------------------------------------");
                 return null;
             }
-            RTPBot.writeDebugLine("HEARDSELF: " + message);
+            AltBot.writeDebugLine("HEARDSELF: " + message);
             writeDebugLine("-----------------------------------------------------------------");
             try
             {
@@ -1466,7 +1466,7 @@ namespace RTParser
                 AddHeardPreds0(s, dictionary);
             }
             writeDebugLine("-----------------------------------------------------------------");
-            //RTPBot.writeDebugLine("" + dictionary.ToDebugString());
+            //AltBot.writeDebugLine("" + dictionary.ToDebugString());
         }
         private void AddHeardPreds0(Unifiable unifiable, SettingsDictionary dictionary)
         {
@@ -1860,7 +1860,7 @@ namespace RTParser
         private AIMLbot.Result ImmediateAIML0(Request parentRequest, XmlNode templateNode, AIMLTagHandler handler)
         {
             string requestName = "<underline>" + templateNode.OuterXml + "</underline>";
-            RTPBot request0Proccessor = this;
+            AltBot request0Proccessor = this;
             GuardInfo sGuard = null;
             Request request = null;
             User user = BotAsUser;
@@ -2865,7 +2865,7 @@ The AIMLbot program.
         }
         public static void Main(string[] args)
         {
-            RTPBot myBot = new Bot();
+            AltBot myBot = new Bot();
             OutputDelegate writeLine = MainConsoleWriteLn;
             bool usedHttpd = false;
             foreach (var s in args)
@@ -2885,7 +2885,7 @@ The AIMLbot program.
             }
             Main(args, myBot, writeLine);
         }
-        public static void Main(string[] args, RTPBot myBot, OutputDelegate writeLine)
+        public static void Main(string[] args, AltBot myBot, OutputDelegate writeLine)
         {
             myBot.outputDelegate = null;/// ?? Console.Out.WriteLine;
 
@@ -3440,7 +3440,7 @@ The AIMLbot program.
         {
             TheCyc.WriteConfig();
             GraphMaster.WriteConfig();
-            RTPBot.writeDebugLine("Bot loaded");
+            AltBot.writeDebugLine("Bot loaded");
         }
         public bool LoadPersonalDirectory(string myName)
         {

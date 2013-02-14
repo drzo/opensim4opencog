@@ -6,6 +6,8 @@ using System.IO;
 using System.Threading;
 using System.Xml;
 using AIMLbot;
+using AltAIMLParser;
+using AltAIMLbot;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -30,7 +32,7 @@ namespace RTParser
         SystemExecHandler ChatWithHandler(string userName);
     }
 
-    public partial class RTPBot
+    public partial class AltBot
     {
         public static bool BE_COMPLETE_NOT_FAST = false;
         public static int SraiDepthMax = 17;
@@ -1188,7 +1190,7 @@ namespace RTParser
         private Result ImmediateAIMLNode(Request parentRequest, XmlNode templateNode)
         {
             string requestName = ToTemplateXML(templateNode);
-            RTPBot request0Proccessor = this;
+            AltBot request0Proccessor = this;
             GuardInfo sGuard = null;
             Request request = null;
             User user = BotAsUser;
@@ -1478,33 +1480,33 @@ namespace RTParser
         private void Sleep16Seconds(int secs)
         {
             napNum++;
-            DateTime start = RTPBot.Now;
+            DateTime start = AltBot.Now;
             var errOutput = DLRConsole.SYSTEM_ERR_WRITELINE;
             string thisTime = " #" + napNum;
             try
             {
-                errOutput("START Sleep" + secs + "Seconds " + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalMilliseconds);
+                errOutput("START Sleep" + secs + "Seconds " + thisTime + " \ntime=" + AltBot.Now.Subtract(start).TotalMilliseconds);
                 Thread.Sleep(TimeSpan.FromSeconds(secs));
-                errOutput("COMPLETE Sleep" + secs + "Seconds " + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalSeconds);
+                errOutput("COMPLETE Sleep" + secs + "Seconds " + thisTime + " \ntime=" + AltBot.Now.Subtract(start).TotalSeconds);
                 Enqueue("ENQUE Sleep" + secs + "Seconds #" + thisTime, () => Sleep16Seconds(secs));
 
             }
             catch (ThreadAbortException e)
             {
-                errOutput("ThreadAbortException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalSeconds);
+                errOutput("ThreadAbortException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + AltBot.Now.Subtract(start).TotalSeconds);
             }
             catch (ThreadInterruptedException e)
             {
-                errOutput("ThreadInterruptedException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalSeconds);
+                errOutput("ThreadInterruptedException Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + AltBot.Now.Subtract(start).TotalSeconds);
             }
             catch (Exception e)
             {
-                errOutput("Exception Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalSeconds);
+                errOutput("Exception Sleep" + secs + "Seconds " + e + " " + thisTime + " \ntime=" + AltBot.Now.Subtract(start).TotalSeconds);
                 throw;
             }
             finally
             {
-                errOutput("Finanaly Sleep" + secs + "Seconds #" + thisTime + " \ntime=" + RTPBot.Now.Subtract(start).TotalSeconds);
+                errOutput("Finanaly Sleep" + secs + "Seconds #" + thisTime + " \ntime=" + AltBot.Now.Subtract(start).TotalSeconds);
             }
         }
 

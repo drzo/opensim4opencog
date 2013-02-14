@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Xml;
+using AltAIMLParser;
+using AltAIMLbot;
 using RTParser.Database;
 using RTParser.Variables;
 using UPath = RTParser.Unifiable;
@@ -24,7 +26,7 @@ namespace RTParser.Utils
         public
             //static 
             Dictionary<string, AIMLTagHandler> TagHandlers;
-        private RTPBot ov_TargetBot;
+        private AltBot ov_TargetBot;
         public TemplateInfo CurrentTemplate;
         public AIMLTagHandler LastTagHandler;
         public Node Pattern;
@@ -67,7 +69,7 @@ namespace RTParser.Utils
             get { return Request.Requester; }
         }
 
-        public RTPBot TargetBot
+        public AltBot TargetBot
         {
             get { return ov_TargetBot ?? Request.TargetBot; }
             set { ov_TargetBot = value; }
@@ -494,7 +496,7 @@ namespace RTParser.Utils
 
                 User user = subquery.CurrentUser;
                 Request request = subquery.Request;
-                RTPBot bot = subquery.TargetBot;
+                AltBot bot = subquery.TargetBot;
                 Result result = subquery.Result;
 
                 // if (node.ChildNodes.Count == 0) ;         
