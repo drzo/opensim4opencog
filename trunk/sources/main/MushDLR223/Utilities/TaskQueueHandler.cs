@@ -1928,7 +1928,7 @@ namespace MushDLR223.Utilities
         public void Enqueue(TASK evt)
         {
             string str = "EnqueueTask";
-            if (DebugQueue) str = DLRConsole.FindCallerInStack(null, null, true);
+            if (DebugQueue) str = DLRConsole.FindCallerInStackTrace(null, null, true);
             Enqueue(str, evt);
         }
 
@@ -1970,7 +1970,7 @@ namespace MushDLR223.Utilities
         public void AddFirst(TASK evt)
         {
             string str = "AddFirstTask";
-            if (DebugQueue) str = DLRConsole.FindCallerInStack(null, null, true);
+            if (DebugQueue) str = DLRConsole.FindCallerInStackTrace(null, null, true);
             AddFirst(str, evt);
         }
         public void AddFirst0(TASK evt)

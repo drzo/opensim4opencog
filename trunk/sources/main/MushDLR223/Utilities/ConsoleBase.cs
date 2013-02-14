@@ -972,21 +972,34 @@ namespace MushDLR223.Utilities
 
         static public void WriteNewLine(ConsoleColor senderColor, string sender, ConsoleColor color, string format, params object[] args)
         {
+            bool mustPrint = false;
+            if (ContainsSubscribedBreakpointWords(format))
+            {
+                mustPrint = true;
+            }
+            WriteNewLinePhysical(senderColor, sender, color, format, args, mustPrint);
+        }
+
+        static public void WriteNewLinePhysical(ConsoleColor senderColor, string sender, ConsoleColor color, string format, object[] args, bool mustPrint)
+        {
             if (NoConsoleVisible) return;
             if (AvoidPrefix(sender))
             {
-                var c = CurrentCaller;
-                if (c == sender)
+                var c = CurrentCallerTrace;
+                if (c != sender)
                 {
-
-                }
-                else if (!AvoidPrefix(c))
-                {
-                    sender = c;
+                    if (!AvoidPrefix(c))
+                    {
+                        format = sender + " " + format;
+                        sender = c;
+                    }
                 }
                 format = sender + ": " + format;
             }
-            if (IgnoreSender(sender)) return;
+            if (IgnoreSender(sender))
+            {
+                return;
+            }
             lock (cmdline) lock (m_syncRoot)
                 {
                     if (m_cursorYPosition != -1)
@@ -1010,9 +1023,10 @@ namespace MushDLR223.Utilities
                     string[] safeFormatSplit = safeFormat.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
                     foreach (var argsFmt in safeFormatSplit)
                     {
+                        string fmt = argsFmt;
                         ExecWithMaxTime(() =>
                                             {
-                                                WriteNewLine_Helper(senderColor, sender, color, argsFmt.Trim(trim));
+                                                WriteNewLine_Helper(senderColor, sender, color, fmt.Trim(trim));
                                                 if (m_cursorYPosition != -1)
                                                     m_cursorYPosition = CursorTop;
                                             }, 2000);
@@ -1020,9 +1034,22 @@ namespace MushDLR223.Utilities
                 }
         }
 
+        public static bool IsCallerNoDebug
+        {
+            get
+            {
+                string ctn = CurrentCallerTrace;
+                if (IgnoreSender(ctn))
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
         public static bool IgnoreSender(string sender)
         {
-            if (DebugLevel > 8) return true;
+            if (DebugLevel > 8) return false;
             lock (IgnoredSenders) return (IgnoredSenders.Contains(sender));
         }
         public static void SetIgnoreSender(string sender, bool tf)
@@ -1848,7 +1875,7 @@ namespace MushDLR223.Utilities
             string testit = format.Trim();
             if (testit.EndsWith(":") || testit.Length < 4 || testit.StartsWith(":"))
             {
-                prefix = CurrentCaller;
+                prefix = CurrentCallerTrace;
                 return format;
             }
             if (testit.StartsWith("["))
@@ -1857,13 +1884,13 @@ namespace MushDLR223.Utilities
                 int fi = format.IndexOf("]", 0);
                 if (fi < 4)
                 {
-                    prefix = CurrentCaller;
+                    prefix = CurrentCallerTrace;
                     return format;
                 }
                 prefix = format.Substring(1, fi - 1);
                 if (AvoidPrefix(prefix))
                 {
-                    prefix = CurrentCaller;
+                    prefix = CurrentCallerTrace;
                     return format;
                 }
                 return format.Substring(prefix.Length + 2);
@@ -1880,13 +1907,17 @@ namespace MushDLR223.Utilities
                     return canformat.Substring(fc + 1);
                 }
             }
-            prefix = CurrentCaller;
+            prefix = CurrentCallerTrace;
             return format;
 
         }
 
         private static bool AvoidPrefix(string canprefix)
         {
+            if (ContainsReportName("" + canprefix))
+            {
+                return true;
+            }
             int len = canprefix.Length;
             if (len < 4) return true;
             if (canprefix.Contains("(") || canprefix.Contains(" ")) return true;
@@ -1913,47 +1944,68 @@ namespace MushDLR223.Utilities
         {
             SystemWrite0(format, args);
         }
-        static public string CurrentCaller
+        static public string CurrentCallerTrace
         {
             get
             {
-                string cc = FindCallerInStack(TransparentCallers, OpacheCallers, false);
+                string cc = FindCallerInStackTrace(TransparentCallers, OpacheCallers, false);
                 if (cc == null || AvoidPrefix(cc))
                 {
-                    cc = FindCallerInStack(TransparentCallers, OpacheCallers, true);
+                    cc = FindCallerInStackTrace(TransparentCallers, OpacheCallers, true);
                 }
                 return cc;
             }
         }
 
         private static bool SkipStackTracesBusy = false;
-        public static string FindCallerInStack(HashSet<MemberInfo> transparentCallers, HashSet<MemberInfo> opacheCallers, bool useMethodName)
+        public static string FindCallerInStackTrace(HashSet<MemberInfo> transparentCallers, HashSet<MemberInfo> opacheCallers, bool useMethodName)
         {
             if (SkipStackTraces) return "FCISSkip";
             if (SkipStackTracesBusy) return "FCISBusy";
-            //SkipStackTracesBusy = true;
+            SkipStackTracesBusy = true;
             var st = new System.Diagnostics.StackTrace(true).GetFrames();
             if (st == null)
             {
                 SkipStackTracesBusy = false;
-                return "FCISNoStackTrace";
+                return "FCISNoST";
             }
+            try
+            {
+                int startAt = transparentCallers == null ? 1 : 3;
+                int stLast = st.Length - 1;
+                if (transparentCallers == null) transparentCallers = TransparentCallers;
+                return FindCallerInStackTrace0(st, startAt, stLast,
+                                          transparentCallers, opacheCallers ?? OpacheCallers, useMethodName);
+            }
+            finally
+            {
+                SkipStackTracesBusy = false;
+            }
+        }
+
+        public static string FindCallerInStackTrace0(StackFrame[] st, int startAt, int stLast, 
+            HashSet<MemberInfo> transparentCallers, HashSet<MemberInfo> opacheCallers, bool useMethodName) {
             string fallBackName = null;
             string cn = null;
-            {
-                if (opacheCallers == null) opacheCallers = OpacheCallers;
-                int startAt = transparentCallers == null ? 0 : 2;
-                if (transparentCallers == null) transparentCallers = TransparentCallers;
+            bool lastWasAvoidPrefix = false;
+            StackFrame afterAvoidPrefix = null;
+            {                
                 MemberInfo typeSkipped = typeof(DLRConsole);
                 StackFrame s2 = null;
                 MemberInfo caller2 = null;
-                for (int i = startAt; i < st.Length - 1; i++)
+                for (int i = startAt; i < stLast; i++)
                 {
                     StackFrame s = s2 ?? st[i];
                     s2 = st[i + 1];
+                    if (lastWasAvoidPrefix)
+                    {
+                        lastWasAvoidPrefix = false;
+                        afterAvoidPrefix = s;
+                    }
                     var m = s.GetMethod();
                     var m2 = s2.GetMethod();
                     cn = CallerName(s, useMethodName);
+                    string cmn = null;
                     if (m != null)
                     {
                         var caller = caller2 ?? ResolveType(m);
@@ -1964,7 +2016,7 @@ namespace MushDLR223.Utilities
                             continue;
                         }
                         if (caller == typeof(TextFilter)) continue;
-                        typeSkipped = caller;
+                        //typeSkipped = caller;
                         lock (UltraTransparentCallers)
                         {
                             if (IsTypeOf(caller, UltraTransparentCallers)) continue;
@@ -1973,14 +2025,26 @@ namespace MushDLR223.Utilities
                         {
                             if (IsTypeOf(caller, opacheCallers))
                             {
-                                return CallerName(s, useMethodName);
+                                if (ContainsReportName("" + m))
+                                {
+                                    cmn = cmn ?? CallerName(s, !useMethodName);
+                                    string fbn = cmn;
+                                    if (fallBackName == null)
+                                    {
+                                        fallBackName = fbn;
+                                    }
+                                    lastWasAvoidPrefix = true;
+                                    continue;
+                                }
+                                return cn;// CallerName(s, useMethodName);
                             }
                         }
                         lock (transparentCallers)
                         {
                             if (IsTypeOf(caller, transparentCallers))
                             {
-                                string fbn = CallerName(s, !useMethodName);
+                                cmn = cmn ?? CallerName(s, !useMethodName);
+                                string fbn = cmn;
                                 if (!AvoidPrefix(fbn))
                                 {
                                     if (fallBackName == null)
@@ -1988,28 +2052,48 @@ namespace MushDLR223.Utilities
                                         fallBackName = fbn;
                                     }
                                 }
+                                lastWasAvoidPrefix = true;
                                 continue;
                             }
                         }
                     }
-                    SkipStackTracesBusy = false;                  
                     if (AvoidPrefix(cn))
                     {
+                        lastWasAvoidPrefix = true;
                         continue;
-                    }
-                    if (cn == "KEYVALUELISTSIPROLOG")
-                    {
-                        return cn;
                     }
                     return cn;
                 }
             }
             SkipStackTracesBusy = false;
+            if (afterAvoidPrefix != null)
+            {
+                return CallerName(afterAvoidPrefix, useMethodName);
+            }
             if (fallBackName != null)
             {
                 return fallBackName;
             }
-            return CallerName(st[st.Length - 1], useMethodName);
+            return cn;// CallerName(st[stLast], useMethodName);
+        }
+
+        private static bool ContainsReportName(string callerString)
+        {
+            callerString = callerString.ToLower();
+            foreach (
+                var variable in
+                    new string[]
+                        {
+                            "write", "trace", "print", "debug", "warn", "error", "info",
+                            "exception", "flush", "break", "format"
+                        })
+            {
+                if (callerString.Contains(variable))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private static bool IsTypeOf(MemberInfo caller, HashSet<MemberInfo> transparentCallers)
@@ -2468,6 +2552,18 @@ namespace MushDLR223.Utilities
                 ThreadDelegateWriter.RemoveAt(0);
                 if (count == 1) ThreadDelegateWriter = null;
             }            
+        }
+
+        public static bool ContainsSubscribedBreakpointWords(string toWrite)
+        {
+            if (string.IsNullOrEmpty(toWrite)) return false;
+            string l = toWrite.ToLower();
+            if (l.Contains("warn") || l.Contains("error") || l.Contains("bad") || l.Contains("exce") || l.Contains("== null"))
+            {
+                if (IsCallerNoDebug) return false;
+                return true;
+            }
+            return false;
         }
     }
 

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Reflection.Emit;
 using MushDLR223.Utilities;
 using Exception=System.Exception;
 #if (COGBOT_LIBOMV || USE_STHREADS)
@@ -860,6 +861,371 @@ namespace MushDLR223.ScriptEngines
         }
 
 
+    }
+
+    public static class OKAssemblyResolve
+    {
+        public static bool ResolverEnabled { get; set; }
+
+        static OKAssemblyResolve()
+        {
+            //The AssemblyResolve event is called when the common language runtime tries to bind to the assembly and fails.
+            AppDomain currentDomain = AppDomain.CurrentDomain;
+            currentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
+        }
+
+        public static bool GetResolverOnOff()
+        {
+            return ResolverEnabled;
+        }
+        public static void SetResolverOnOff(bool onOff)
+        {
+            ResolverEnabled = onOff;
+        }
+        static Dictionary<string,Assembly> ResolvedAssemblies = new Dictionary<string, Assembly>(); 
+        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            if (!ResolverEnabled)
+            {
+                return null;
+            }
+            try
+            {
+                string s = args.Name;
+                lock (ResolvedAssemblies)
+                {
+                    Assembly fnd;
+                    if (ResolvedAssemblies.TryGetValue(s, out fnd))
+                    {
+                        if (fnd == null)
+                        {
+                            return null;
+                        }
+                        return fnd;
+                    }
+                    ResolvedAssemblies[s] = null;
+                    Assembly try1 = CurrentDomain_AssemblyResolveType1(sender as AppDomain, s);
+                    if (try1 != null)
+                    {
+                        ResolvedAssemblies[s] = try1;
+                        return try1;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                DLRConsole.DebugWriteLine("AssemblyResolver: " + sender + " lookingfor=<" + args.Name + "> cause: " + e);
+            }
+            return null;
+        }
+
+
+        private static bool AssemblyMatches(Assembly assembly, string assemblyName)
+        {
+            if (assembly.FullName == assemblyName)
+                return true;
+            if (assembly.ManifestModule.Name == assemblyName)
+                return true;
+            if (assembly.CodeBase == assemblyName)
+                return true;
+            return false;
+        }
+        private static bool AssemblyMatches(AssemblyName assembly, string assemblyName)
+        {
+            if (assembly.FullName == assemblyName)
+                return true;
+            if (assembly.Name == assemblyName)
+                return true;
+            if (assembly.CodeBase == assemblyName)
+                return true;
+            return false;
+        }
+
+
+        private static Assembly CurrentDomain_AssemblyResolveType1(AppDomain domain, string assemblyName)
+        {
+            if (domain != null)
+            {
+                foreach (var assembly in LockInfo.CopyOf(domain.GetAssemblies()))
+                {
+                    if (AssemblyMatches(assembly, assemblyName)) return assembly;
+                }
+            }
+            foreach (Assembly assembly in LockInfo.CopyOf(AssembliesLoaded))
+            {
+                if (AssemblyMatches(assembly, assemblyName)) return assembly;
+            }
+
+            var objExecutingAssemblies = Assembly.GetExecutingAssembly();
+            if (objExecutingAssemblies != null)
+            {
+                AssemblyName[] arrReferencedAssmbNames = objExecutingAssemblies.GetReferencedAssemblies();
+                foreach (var assemblyN in arrReferencedAssmbNames)
+                {
+                    if (AssemblyMatches(assemblyN, assemblyName))
+                    {
+                         Assembly load =  Assembly.Load(assemblyN);
+                    }
+                }
+            }
+
+            int comma = assemblyName.IndexOf(",");
+            if (comma > 0)
+            {
+                assemblyName = assemblyName.Substring(0, comma);
+            }
+            return LoadAssemblyByFile(assemblyName);
+        }
+
+        private static Assembly LoadAssemblyByFile(string assemblyName)
+        {
+            if (File.Exists(assemblyName))
+            {
+                try
+                {
+                    var fi = new FileInfo(assemblyName);
+                    if (fi.Exists) return Assembly.LoadFile(fi.FullName);
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+            IList<string> sp = LockInfo.CopyOf((IEnumerable<string>)AssemblySearchPaths);
+            foreach (
+                var dir in
+                    new[]
+                        {
+                            AppDomain.CurrentDomain.BaseDirectory, new DirectoryInfo(".").FullName,
+                            Path.GetDirectoryName(typeof (ScriptInterpreter).Assembly.CodeBase), Environment.CurrentDirectory
+                        })
+            {
+                if (!sp.Contains(dir)) sp.Add(dir);
+            }
+            string lastTested = "";
+            foreach (var s in LockInfo.CopyOf(AppDomain.CurrentDomain.GetAssemblies()))
+            {
+                try
+                {
+                    if (s is AssemblyBuilder) continue;
+                    string dir = Path.GetDirectoryName(s.CodeBase);
+                    if (dir.StartsWith("file:\\"))
+                    {
+                        dir = dir.Substring(6);
+                    }
+                    if (dir == lastTested) continue;
+                    lastTested = dir;
+                    if (!sp.Contains(dir)) sp.Add(dir);
+                }
+                catch (NotSupportedException)
+                {
+                    // Reflected Assemblies do this
+                }
+            }
+            foreach (string pathname in sp)
+            {
+                var assemj = FindAssemblyByPath(assemblyName, pathname);
+                if (assemj != null) return assemj;
+            }
+
+            return null;
+        }
+
+        private static string NormalizePath(string dirname1)
+        {
+            string dirname = dirname1;
+            if (dirname.StartsWith("file:\\"))
+            {
+                dirname = dirname.Substring(6);
+            }
+            if (dirname.StartsWith("file://"))
+            {
+                dirname = dirname.Substring(7);
+            }
+            dirname = new FileInfo(dirname).FullName;
+            if (dirname != dirname1)
+            {
+                return dirname;
+            }
+            return dirname1;
+        }
+
+
+        private static readonly List<string>
+            LoaderExtensionStrings = new List<string>
+                                         {
+                                             "dll",
+                                             "exe",
+                                             "jar",
+                                             "lib",
+                                             "dynlib",
+                                             "class",
+                                             "so"
+                                         };
+
+        public static Assembly FindAssemblyByPath(string assemblyName, string dirname)
+        {
+
+            dirname = NormalizePath(dirname);
+            string filename = Path.Combine(dirname, assemblyName);
+            string loadfilename = filename;
+            bool tryexts = !File.Exists(loadfilename);
+            string filenameLower = filename.ToLower();
+            List<string> LoaderExtensions = new List<string>();
+            lock (LoaderExtensionStrings)
+            {
+                LoaderExtensions.AddRange(LoaderExtensionStrings);
+            }
+            foreach (string extension in LoaderExtensions)
+            {
+                if (filenameLower.EndsWith("." + extension))
+                {
+                    tryexts = false;
+                    break;
+                }
+            }
+
+            if (tryexts)
+            {
+                foreach (var s in LoaderExtensions)
+                {
+                    string testfile = loadfilename + "." + s;
+                    if (File.Exists(testfile))
+                    {
+                        loadfilename = testfile;
+                        break;
+                    }
+
+                }
+            }
+            if (File.Exists(loadfilename))
+            {
+                try
+                {
+                    return Assembly.LoadFile(new FileInfo(loadfilename).FullName);
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+            return null;
+        }
+
+        public static Assembly AssemblyLoad(string assemblyName)
+        {
+            Assembly assembly = null;
+            try
+            {
+                assembly = Assembly.Load(assemblyName);
+            }
+            catch (FileNotFoundException fnf)
+            {
+                if (fnf.FileName != assemblyName) throw fnf;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            if (assembly != null) return assembly;
+            assembly = LoadAssemblyByFile(assemblyName);
+            if (assembly != null) return assembly;
+            return Assembly.LoadFrom(assemblyName);
+
+        }
+
+        public static List<string> AssemblySearchPaths = new List<string>();
+        public static List<Assembly> AssembliesLoaded = new List<Assembly>();
+        public static List<string> AssembliesLoading = new List<string>();
+        public static List<Type> TypesLoaded = new List<Type>();
+        public static List<Type> TypesLoading = new List<Type>();
+
+        public static bool ResolveAssembly(Assembly assembly)
+        {
+            string assemblyName = assembly.FullName;
+            lock (AssembliesLoaded)
+            {
+                if (AssembliesLoading.Contains(assemblyName))
+                {
+                    return true;
+                }
+                AssembliesLoading.Add(assemblyName);
+                LoadReferencedAssemblies(assembly);
+                // push to the front
+                AssembliesLoaded.Remove(assembly);
+                AssembliesLoaded.Insert(0, assembly);
+            }
+            return true;
+        }
+
+        private static void LoadReferencedAssemblies(Assembly assembly)
+        {
+            foreach (var refed in assembly.GetReferencedAssemblies())
+            {
+                string assemblyName = refed.FullName;
+                try
+                {
+                    Assembly assemblyLoad = Assembly.Load(refed);
+                    ResolveAssembly(assemblyLoad);
+                    continue;
+                }
+                catch (Exception e)
+                {
+                    var top = Path.Combine(Path.GetDirectoryName(assembly.Location), refed.Name);
+
+                    foreach (var ext in LoaderExtensionStrings)
+                    {
+                        string filename = top + "." + ext;
+                        try
+                        {
+                            if (!File.Exists(filename)) continue;
+                            Assembly assemblyLoad = Assembly.LoadFrom(filename);
+                            ResolveAssembly(assemblyLoad);
+                            continue;
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+                    DLRConsole.DebugWriteLine("LoadReferencedAssemblies:{0} caused {1}", assemblyName, e);
+                }
+            }
+        }
+
+
+        static Assembly currentDomain_AssemblyResolveType2(object sender, ResolveEventArgs args)
+        {
+            //This handler is called only when the common language runtime tries to bind to the assembly and fails.
+
+            //Retrieve the list of referenced assemblies in an array of AssemblyName.
+            Assembly MyAssembly, objExecutingAssemblies;
+            string strTempAssmbPath = "";
+
+            objExecutingAssemblies = Assembly.GetExecutingAssembly();
+            AssemblyName[] arrReferencedAssmbNames = objExecutingAssemblies.GetReferencedAssemblies();
+
+            //Loop through the array of referenced assembly names.
+            foreach (AssemblyName strAssmbName in arrReferencedAssmbNames)
+            {
+                //Check for the assembly names that have raised the "AssemblyResolve" event.
+                if (strAssmbName.FullName.Substring(0, strAssmbName.FullName.IndexOf(",")) ==
+                    args.Name.Substring(0, args.Name.IndexOf(",")))
+                {
+                    //Build the path of the assembly from where it has to be loaded.
+                    //The following line is probably the only line of code in this method you may need to modify:
+                    strTempAssmbPath = ".";// txtAssemblyDir.Text;
+                    if (strTempAssmbPath.EndsWith("\\")) strTempAssmbPath += "\\";
+                    strTempAssmbPath += args.Name.Substring(0, args.Name.IndexOf(",")) + ".dll";
+                    break;
+                }
+
+            }
+            //Load the assembly from the specified path.
+            MyAssembly = Assembly.LoadFrom(strTempAssmbPath);
+
+            //Return the loaded assembly.
+            return MyAssembly;
+        }
     }
 
     internal class VerifyEx : Exception
