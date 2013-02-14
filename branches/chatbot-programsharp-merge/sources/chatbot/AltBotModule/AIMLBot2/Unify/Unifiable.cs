@@ -50,7 +50,7 @@ namespace RTParser
             {
                 if (u.GetType() != obj.GetType())
                 {
-                    RTPBot.writeDebugLine("BAD ERROR in Deserialization " + Unifiable.DescribeUnifiable(u) + "!-" +
+                    AltBot.writeDebugLine("BAD ERROR in Deserialization " + Unifiable.DescribeUnifiable(u) + "!-" +
                                           Unifiable.DescribeUnifiable(obj));
                 }
                 return u;
@@ -58,7 +58,7 @@ namespace RTParser
             u = Unifiable.MakeUnifiableFromString(infoGetString, false);
             if (u.GetType() != obj.GetType())
             {
-                RTPBot.writeDebugLine("BAD ERROR in Deserialization " + Unifiable.DescribeUnifiable(u) + "!-" +
+                AltBot.writeDebugLine("BAD ERROR in Deserialization " + Unifiable.DescribeUnifiable(u) + "!-" +
                                       Unifiable.DescribeUnifiable(obj));
             }
             return u; // Formatters ignore this return value?
@@ -497,7 +497,7 @@ namespace RTParser
             }
             catch (Exception e)
             {
-                RTPBot.writeDebugLine("" + e.Message + ": " + " " + e.StackTrace + "\n" + stringAppendable);
+                AltBot.writeDebugLine("" + e.Message + ": " + " " + e.StackTrace + "\n" + stringAppendable);
                 throw;
             }
         }
@@ -971,7 +971,7 @@ namespace RTParser
         {
             try
             {
-                RTPBot.writeDebugLine("UNIFYABLETRACE: " + message, args);
+                AltBot.writeDebugLine("UNIFYABLETRACE: " + message, args);
             }
             catch
             {
@@ -1192,6 +1192,11 @@ namespace RTParser
 
         public abstract double Strictness { get; }
 
+        public string ScriptingName
+        {
+            get { return ToVMString(this); }
+        }
+
         public static string DescribeUnifiable(Object value)
         {
             if (value == null) return "-UOBJECT-";
@@ -1274,7 +1279,7 @@ namespace RTParser
             return i - 1;
         }
 
-        public static bool IsMulti(Unifiable value)
+        public static bool IsMulti(object value)
         {
             return value is BestUnifiable;
         }

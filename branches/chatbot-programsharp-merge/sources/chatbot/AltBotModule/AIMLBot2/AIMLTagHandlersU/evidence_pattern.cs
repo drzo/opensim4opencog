@@ -9,6 +9,8 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics;
+using AltAIMLParser;
+using AltAIMLbot;
 using RTParser;
 using RTParser.Utils;
 
@@ -17,11 +19,11 @@ namespace RTParser.AIMLTagHandlers
     public class evidence_pattern : RTParser.Utils.AIMLTagHandler
     {
 
-        public evidence_pattern(RTParser.RTPBot bot,
+        public evidence_pattern(RTParser.AltBot bot,
                 RTParser.User user,
                 RTParser.Utils.SubQuery query,
-                RTParser.Request request,
-                RTParser.Result result,
+                Request request,
+                Result result,
                 XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -53,9 +55,9 @@ namespace RTParser.AIMLTagHandlers
                                          //@"</aiml>";
                     //this.user.bot.AddAiml(evidenceCode);
                     GraphMaster myGraph = request.GetGraph("msm");
-                    AddSideEffect("ADD AIML " + evidenceCode, () => this.user.bot.AddAiml(myGraph, evidenceCode));
+                    AddSideEffect("ADD AIML " + evidenceCode, () => this.user.rbot.AddAiml(myGraph, evidenceCode));
 
-                    RTPBot.writeDebugLine("MSM: evidence_pattern evidenceCode = {0}", evidenceCode);
+                    AltBot.writeDebugLine("MSM: evidence_pattern evidenceCode = {0}", evidenceCode);
 
                 }
                 catch (Exception e)

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Web;
 using System.Xml;
+using AltAIMLParser;
+using AltAIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser.AIMLTagHandlers;
@@ -60,7 +62,7 @@ namespace RTParser
         {
             AIMLTagHandler tagHandler = getBespokeTags(user, query, request, result, node);
             string nodeNameLower = ToLower(node.LocalName);
-            RTPBot targetBot = query.TargetBot;
+            AltBot targetBot = query.TargetBot;
             if (Equals(null, tagHandler))
             {
                 switch (nodeNameLower)
@@ -427,7 +429,7 @@ namespace RTParser
 
         static public void writeToLog(string message, params object[] args)
         {
-            RTPBot.writeDebugLine(message, args);
+            AltBot.writeDebugLine(message, args);
         }
 
 
@@ -552,7 +554,7 @@ namespace RTParser
                                                 AIMLTagHandler parentHandler, TemplateInfo templateInfo,
                                                 bool copyChild, bool copyParent)
         {
-            RTPBot Proc = query.TargetBot;
+            AltBot Proc = query.TargetBot;
 
             //query.LastTagHandler = handler;
             bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput ||
@@ -805,7 +807,7 @@ namespace RTParser
                                   AIMLTagHandler parentHandler, bool protectChild, bool copyParent,
                                   AIMLTagHandler tagHandler, out bool childSuccess)
         {
-            RTPBot TargetBot = request.TargetBot;
+            AltBot TargetBot = request.TargetBot;
             childSuccess = true;
             if (node == null)
             {

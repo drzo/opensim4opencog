@@ -1,6 +1,8 @@
 using System;
 using System.Xml;
 using System.Text;
+using AltAIMLParser;
+using AltAIMLbot;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -21,11 +23,11 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public date(RTParser.RTPBot bot,
+        public date(RTParser.AltBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -35,7 +37,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "date")
             {
-                return RTPBot.Now.ToString(this.Proc.Locale);
+                return AltBot.Now.ToString(this.Proc.Locale);
             }
             return Unifiable.Empty;
         }

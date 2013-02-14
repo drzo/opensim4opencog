@@ -5,6 +5,8 @@ using System.Xml;
 using System.Text;
 using System.IO;
 using AIMLbot;
+using AltAIMLParser;
+using AltAIMLbot;
 using MushDLR223.ScriptEngines;
 using RTParser.Utils;
 
@@ -22,7 +24,7 @@ namespace RTParser.AIMLTagHandlers
     public class srai : RTParser.Utils.AIMLTagHandler
     {
         public static bool UseSraiLimiters = false;
-        RTParser.RTPBot mybot;
+        RTParser.AltBot mybot;
         /// <summary>
         /// Ctor
         /// </summary>
@@ -32,11 +34,11 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public srai(RTParser.RTPBot bot,
+        public srai(RTParser.AltBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -303,7 +305,7 @@ namespace RTParser.AIMLTagHandlers
                 }
                 Unifiable subResultOutput = null;
                 writeToLog = writeToLog ?? DEVNULL;
-                RTPBot mybot = request.TargetBot;
+                AltBot mybot = request.TargetBot;
                 User user = request.Requester;
                 var thisrequest = request;
                 var thisresult = request.CurrentResult;
@@ -491,7 +493,7 @@ namespace RTParser.AIMLTagHandlers
             }
         }
 
-        private static void ShowChatTrace(string subRequestrawInput, RTPBot mybot, int depth, MasterResult subResult, XmlNode templateNode)
+        private static void ShowChatTrace(string subRequestrawInput, AltBot mybot, int depth, MasterResult subResult, XmlNode templateNode)
         {
             mybot.writeChatTrace("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
             mybot.writeChatTrace("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
@@ -504,7 +506,7 @@ namespace RTParser.AIMLTagHandlers
             mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:MISSING({1})\" ;\n", depth, depth);
         }
 
-        static MasterResult GetSubResult(String prefix, Request prevRequest, User user, RTPBot mybot, MasterRequest subRequest, bool showDebug, out Unifiable subResultOutput, out  string subQueryRawOutput1, OutputDelegate writeToLog)
+        static MasterResult GetSubResult(String prefix, Request prevRequest, User user, AltBot mybot, MasterRequest subRequest, bool showDebug, out Unifiable subResultOutput, out  string subQueryRawOutput1, OutputDelegate writeToLog)
         {
             var prev = subRequest.GraphsAcceptingUserInput;
             var prevSO = user.SuspendAddResultToUser;
@@ -526,7 +528,7 @@ namespace RTParser.AIMLTagHandlers
                 subResult = (MasterResult) mybot.ChatWithToplevelResults(subRequest,subResult);
                 subResultOutput = subResult.RawOutput;
                 int resultCount = subResult.OutputSentences.Count;
-                if (RTPBot.BE_COMPLETE_NOT_FAST && resultCount == 0)
+                if (AltBot.BE_COMPLETE_NOT_FAST && resultCount == 0)
                 {
                     subRequest.ResetValues(false);
                     if (UseSraiLimiters) originalSalientRequest.ResetSRAIResults(sraiMark);

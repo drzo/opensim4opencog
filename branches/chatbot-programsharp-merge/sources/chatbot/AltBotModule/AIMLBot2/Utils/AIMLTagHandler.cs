@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Xml;
+using AltAIMLParser;
+using AltAIMLbot;
 using MushDLR223.Utilities;
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
@@ -41,7 +43,13 @@ namespace RTParser.Utils
         /// <summary>
         /// A flag to denote if inner tags are to be processed recursively before processing this tag
         /// </summary>
-        public bool isRecursive = true;
+        protected bool isRecursive { get; set; }
+
+        public bool IsSetRecursiveSecondPass
+        {
+            set { isRecursive = value; }
+        }
+
 
         public bool IsStarAtomically = false; // true break it right now
         public bool IsStarted;
@@ -62,7 +70,7 @@ namespace RTParser.Utils
         /// <summary>
         /// The template node to be processed by the class
         /// </summary>
-        public XmlNode templateNode;
+        public XmlNode templateNode { get; set; }
 
         /// <summary>
         /// A representation of the user who made the request
@@ -98,14 +106,15 @@ namespace RTParser.Utils
         /// <param name="request">The request itself</param>
         /// <param name="result">The result to be passed back to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public AIMLTagHandler(RTPBot bot,
+        public AIMLTagHandler(AltBot bot,
                               User user,
                               SubQuery query,
                               Request request,
                               Result result,
                               XmlNode templateNode)
             : base(bot, templateNode.OuterXml)
-        {            
+        {
+            isRecursive = true;
             this.query = query;
             this._request = request;
             this.result = result;
@@ -172,14 +181,14 @@ namespace RTParser.Utils
 
         protected bool ReadOnly;
 
-        public RTPBot TargetBot
+        public AltBot TargetBot
         {
             get
             {
                 if (query != null) return query.TargetBot;
                 if (result != null) return result.TargetBot;
                 if (request != null) return request.TargetBot;
-                if (user != null) return user.bot;
+                if (user != null) return user.rbot;
                 return Proc;
             }
         }
@@ -503,7 +512,7 @@ namespace RTParser.Utils
                     return recurseResult;
                 }
                 
-                if (!RTPBot.BE_COMPLETE_NOT_FAST) return recurseResult0;
+                if (!AltBot.BE_COMPLETE_NOT_FAST) return recurseResult0;
 
                 var recurseResult1 = RecurseProcess();
                 if (CompleteEvaluatution(recurseResult1, this, out recurseResult))
@@ -667,6 +676,11 @@ namespace RTParser.Utils
         {
             string w = with.ToValue(query);
             Unifiable t1 = ProcessAimlChange();
+            if (IsNullOrEmpty(t1))
+            {
+                IsTraced = true;
+                writeToLogWarn("Failed to eval");
+            }
             float score1 = t1.Unify(with, query);
             if (score1 == 0) return score1;
             Unifiable t2 = CompleteAimlProcess();
@@ -1111,7 +1125,7 @@ namespace RTParser.Utils
 
         static public Unifiable ProcessNonElement(bool saveOnInnerXML, XmlNode childNode, out bool success)
         {
-            if (saveOnInnerXML && throwOnSave) RTPBot.RaiseErrorStatic(new InvalidOperationException("saveOnInnerXML! " + childNode)); 
+            if (saveOnInnerXML && throwOnSave) AltBot.RaiseErrorStatic(new InvalidOperationException("saveOnInnerXML! " + childNode)); 
             
             {
                 string childNodeInnerXml = childNode.InnerXml;
@@ -1210,7 +1224,7 @@ namespace RTParser.Utils
                     if (tagHandlerChild.QueryHasFailed) success = false;
                     if (tagHandlerChild.QueryHasSuceeded) success = true;
 
-                    if (!RTPBot.BE_COMPLETE_NOT_FAST)
+                    if (!AltBot.BE_COMPLETE_NOT_FAST)
                     {
                         return value;
                     }
@@ -1796,11 +1810,14 @@ namespace RTParser.Utils
 
         protected bool CheckNode(string name)
         {
+            string lname = name.ToLower();
+            bool caseSensitive = (lname != name);
             string templateNodeName = this.templateNode.Name;
-            if (templateNodeName.ToLower() == name) return true;
+            if (!caseSensitive) templateNodeName = templateNodeName.ToLower();
+            if (templateNodeName == name) return true;
             if (name.Contains(","))
             {
-                string[] nameSplit = name.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                string[] nameSplit = name.Split(',');
                 foreach (string s in nameSplit)
                 {
                     if (templateNodeName == s) return true;
@@ -1811,7 +1828,7 @@ namespace RTParser.Utils
                 }
             }
             //writeToLog("CheckNode change " + name + " -> " + templateNode.Name);
-            return true;
+            return false;
         }
 
         protected Unifiable GetActualValue(string name, string dictName, out bool succeed)
@@ -1874,6 +1891,9 @@ namespace RTParser.Utils
         {
             get { return user.botActionMSM; }
         }
+
+        public bool IsTraced = false;
+
         /// <summary>
         /// Machine SideEffect - this denoates that he state of machine will change when processing the taghandler
         /// </summary>
@@ -2150,7 +2170,7 @@ namespace RTParser.Utils
 
     public interface IAIMLTransaction
     {
-        RTPBot TargetBot { get; }
+        AltBot TargetBot { get; }
         SubQuery CurrentQuery { get; }
         User user { get; }
         Request request { get; }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,6 +7,7 @@ using System.Threading;
 using System.Xml;
 using System.IO;
 using System.Xml.Serialization;
+using AltAIMLParser;
 using Lucene.Net.Store;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -89,7 +90,7 @@ namespace RTParser.Variables
         /// <summary>
         /// The bot this dictionary is associated with (only for writting log)
         /// </summary>
-        protected RTPBot bot;
+        protected AltBot bot;
 
         private string theNameSpace;
         public bool TrimKeys = true;
@@ -392,7 +393,7 @@ namespace RTParser.Variables
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot for whom this is a settings dictionary</param>
-        public SettingsDictionary(String name, RTPBot bot, ParentProvider parent)
+        public SettingsDictionary(String name, AltBot bot, ParentProvider parent)
         {
             theNameSpace = name;
             IsSubsts = name.Contains("subst");
@@ -538,7 +539,7 @@ namespace RTParser.Variables
             if (!message.Contains(nameSpace)) message += " in " + nameSpace;
             if (!tol.Contains("dictlog")) message = "DICTLOG: " + message;
             if (bot != null) bot.writeToLog(message);
-            else RTPBot.writeDebugLine(message);
+            else AltBot.writeDebugLine(message);
         }
 
         /// <summary>
@@ -1012,14 +1013,14 @@ namespace RTParser.Variables
         {
             if (dictionary == null)
             {
-                RTPBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got NULL");
+                AltBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got NULL");
                 return null;
             }
             if (dictionary is SubQuery) dictionary = ((SubQuery)dictionary).TargetSettings;
             if (dictionary is User) dictionary = ((User)dictionary).Predicates;
             SettingsDictionary sd = dictionary as SettingsDictionary;
             if (sd != null) return sd;
-            RTPBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got type={0} '{1}'",
+            AltBot.writeDebugLine("-DICTRACE: Warning ToSettingsDictionary got type={0} '{1}'",
                                   dictionary.GetType(),
                                   dictionary);
             return null;
@@ -1029,7 +1030,7 @@ namespace RTParser.Variables
         {
             if (dictionary == null)
             {
-                RTPBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got NULL");
+                AltBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got NULL");
                 return null;
             }
             ParentProvider sd = dictionary as ParentProvider;
@@ -1046,7 +1047,7 @@ namespace RTParser.Variables
                     if (e != null) return e;
                 }
             }
-            RTPBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got type={0} '{1}'",
+            AltBot.writeDebugLine("-DICTRACE: Warning ToParentProvider got type={0} '{1}'",
                                   dictionary.GetType(),
                                   dictionary);
             return null;
@@ -1096,7 +1097,7 @@ namespace RTParser.Variables
             if (NoSettingsAliaes) return NO_SETTINGS;
             string key = TransformKey(TransformName(name));
             string[] aliases;
-            if (!RTPBot.SettingsAliases.TryGetValue(key, out aliases))
+            if (!AltBot.SettingsAliases.TryGetValue(key, out aliases))
             {
                 return NO_SETTINGS;
             }
@@ -2010,7 +2011,7 @@ namespace RTParser.Variables
         {
             if (Unifiable.IsIncomplete(value))
             {
-                RTPBot.writeDebugLine("IndexSet IsIncomplete " + name);
+                AltBot.writeDebugLine("IndexSet IsIncomplete " + name);
                 //return;
             }
             dictionary.addSetting(name, value);

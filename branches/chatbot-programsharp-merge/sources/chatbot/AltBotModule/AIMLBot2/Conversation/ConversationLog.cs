@@ -26,7 +26,7 @@ namespace RTParser
             User2 = user2;
         }
 
-        public static ConversationLog GetConversationLog(RTPBot robot, string userName1In, string userName2In, bool createIfMissing)
+        public static ConversationLog GetConversationLog(AltBot robot, string userName1In, string userName2In, bool createIfMissing)
         {
             User user1 = robot.FindOrCreateUser(userName1In);
             User user2 = robot.FindOrCreateUser(userName2In);
@@ -62,10 +62,10 @@ namespace RTParser
             }
         }
 
-        public Utterance AddSpoken(RTPBot robot, User speaker, User toWhom, Unifiable message)
+        public Utterance AddSpoken(AltBot robot, User speaker, User toWhom, Unifiable message)
         {
             var ce = new Utterance(robot.EnsureEnglish, speaker, toWhom, message, -1);
-            RTPBot.writeDebugLine("AddSpoken: " + ce);
+            AltBot.writeDebugLine("AddSpoken: " + ce);
             Elements.AddFirst(ce);
             return ce;
         }

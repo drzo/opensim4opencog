@@ -9,10 +9,10 @@ namespace RTParser.Normalize
     /// </summary>
     public class MakeCaseInsensitive : RTParser.Utils.TextTransformer
     {
-        public MakeCaseInsensitive(RTParser.RTPBot bot, Unifiable inputString) : base(bot, inputString)
+        public MakeCaseInsensitive(RTParser.AltBot bot, Unifiable inputString) : base(bot, inputString)
         { }
 
-        public MakeCaseInsensitive(RTParser.RTPBot bot) : base(bot) 
+        public MakeCaseInsensitive(RTParser.AltBot bot) : base(bot) 
         { }
 
         protected override Unifiable ProcessChange()

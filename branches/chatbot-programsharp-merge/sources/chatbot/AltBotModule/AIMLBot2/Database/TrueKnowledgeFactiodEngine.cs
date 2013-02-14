@@ -6,7 +6,7 @@ namespace RTParser.Database
         : WebGetFactiodEngine
     {
         protected static string API_ACCT = "api_account_id=api_douglasmiles&api_password=it9ndxsw51d611to";
-        public TrueKnowledgeFactiodEngine(IEnglishFactiodEngine fallback, RTPBot rtpBot)
+        public TrueKnowledgeFactiodEngine(IEnglishFactiodEngine fallback, AltBot rtpBot)
             : base(fallback, rtpBot)
         {
         }

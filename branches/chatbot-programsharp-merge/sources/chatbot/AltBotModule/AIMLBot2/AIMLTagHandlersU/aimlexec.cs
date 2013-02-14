@@ -2,6 +2,8 @@ using System;
 using System.Threading;
 using System.Xml;
 using System.Text;
+using AltAIMLParser;
+using AltAIMLbot;
 using MushDLR223.Utilities;
 using RTParser.Utils;
 
@@ -27,11 +29,11 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public aimlexec(RTParser.RTPBot bot,
+        public aimlexec(RTParser.AltBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -44,7 +46,7 @@ namespace RTParser.AIMLTagHandlers
             try
             {
                 ResetValues(true);
-                isRecursive = true;
+                IsSetRecursiveSecondPass = true;
                 Unifiable f = Recurse();
                 //depth++;
                /* int d = request.GetCurrentDepth();

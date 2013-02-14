@@ -9,6 +9,8 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics;
+using AltAIMLParser;
+using AltAIMLbot;
 using RTParser;
 using RTParser.Utils;
 using Lucene.Net.Store;
@@ -31,11 +33,11 @@ namespace RTParser.AIMLTagHandlers
     public class dbquery : RTParser.Utils.AIMLTagHandler
     {
 
-        public dbquery(RTParser.RTPBot bot,
+        public dbquery(RTParser.AltBot bot,
                 RTParser.User user,
                 RTParser.Utils.SubQuery query,
-                RTParser.Request request,
-                RTParser.Result result,
+                Request request,
+                Result result,
                 XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -56,9 +58,9 @@ namespace RTParser.AIMLTagHandlers
                     const bool expandOnNoHits = true; // actually WordNet
                     const float threshold = 0.0f;
                     Unifiable templateNodeInnerValue = ProcessChildNode(((XmlNode)node));
-                    string failPrefix = RTPBot.GetAttribValue(((XmlNode)node), "failprefix", "").ToLower();
-                    string passPrefix = RTPBot.GetAttribValue(((XmlNode)node), "passprefix", "").ToLower();
-                    string resultPrefix = RTPBot.GetAttribValue(((XmlNode)node), "resultprefix", "").ToLower();
+                    string failPrefix = AltBot.GetAttribValue(((XmlNode)node), "failprefix", "").ToLower();
+                    string passPrefix = AltBot.GetAttribValue(((XmlNode)node), "passprefix", "").ToLower();
+                    string resultPrefix = AltBot.GetAttribValue(((XmlNode)node), "resultprefix", "").ToLower();
                     if (!string.IsNullOrEmpty(failPrefix))
                     {
                         //on <dbquery> failure, use a <srai> fallback
@@ -141,7 +143,7 @@ namespace RTParser.AIMLTagHandlers
                     return FAIL;
                 }
                 float reliability;
-                string failPrefix = RTPBot.GetAttribValue(templateNode, "failprefix", "").ToLower();
+                string failPrefix = AltBot.GetAttribValue(templateNode, "failprefix", "").ToLower();
                 Unifiable converseMemo = TargetBot.LuceneIndexer.AskQuery(searchTerm1, this.writeToLog,
                                                                           () =>
                                                                               {

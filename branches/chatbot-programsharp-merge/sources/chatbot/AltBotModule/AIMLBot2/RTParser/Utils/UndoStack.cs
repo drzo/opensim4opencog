@@ -29,13 +29,13 @@ namespace RTParser.Utils
         {
             try
             {
-               // if (prefix != null) RTPBot.writeDebugLine(prefix + "INVOKING: " + Name);
+               // if (prefix != null) AltBot.writeDebugLine(prefix + "INVOKING: " + Name);
                 Value.Invoke();
             }
             catch (Exception e)
             {
 
-                RTPBot.writeDebugLine("ERROR " + prefix + " in " + this + "\n -reason: " + e);
+                AltBot.writeDebugLine("ERROR " + prefix + " in " + this + "\n -reason: " + e);
                 
                 
             }
@@ -118,7 +118,7 @@ namespace RTParser.Utils
 
         internal void writeToLog(string message, params object[] args)
         {
-            RTPBot.writeDebugLine(message, args);
+            AltBot.writeDebugLine(message, args);
         }
 
         public void AddUndo(string named, ThreadStart start)
@@ -162,7 +162,7 @@ namespace RTParser.Utils
                         }
                         catch (Exception exception)
                         {
-                            RTPBot.writeDebugLine("ERROR in DoAll " + exception);
+                            AltBot.writeDebugLine("ERROR in DoAll " + exception);
                         }
                     }
                 }

@@ -6,6 +6,8 @@ using Evaluator;
 #endif
 using System.Reflection;
 using System.Xml;
+using AltAIMLParser;
+using AltAIMLbot;
 using Microsoft.JScript;
 using Microsoft.JScript.Vsa;
 
@@ -26,11 +28,11 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public javascript(RTParser.RTPBot bot,
+        public javascript(RTParser.AltBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {

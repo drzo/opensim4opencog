@@ -10,10 +10,12 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
 using AIMLbot;
+using AltAIMLParser;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
+using RTParser;
 using org.opencyc.api;
 #if USE_SWIPROLOG
 using PrologScriptEngine;
@@ -41,21 +43,21 @@ namespace RTParser
     /// Encapsulates a Proccessor. If no settings.xml file is found or referenced the Proccessor will try to
     /// default to safe settings.
     /// </summary>
-    public partial class RTPBot : StaticAIMLUtils, IChatterBot
+    public partial class AltBot : StaticAIMLUtils, IChatterBot
     {
         public static bool IncludeMeNeValue;
-        public static Dictionary<string, RTPBot> Robots = new Dictionary<string, RTPBot>();
+        public static Dictionary<string, AltBot> Robots = new Dictionary<string, AltBot>();
 
-        public static RTPBot FindOrCreateRobot(string text)
+        public static AltBot FindOrCreateRobot(string text)
         {
-            RTPBot robot;
+            AltBot robot;
             lock (Robots)
             {
                 if (TryGetValueLocked(Robots, Robots, text, out robot))
                 {
                     return robot;
                 }
-                Robots[text] = robot = new RTPBot();
+                Robots[text] = robot = new AltBot();
             }
             robot.SetName(text);
             return robot;
@@ -394,7 +396,7 @@ namespace RTParser
         }
 
         /// <summary>
-        /// When the RTPBot was initialised
+        /// When the AltBot was initialised
         /// </summary>
         public DateTime StartedOn = DateTime.Now;
 
@@ -562,7 +564,7 @@ namespace RTParser
         /// <summary>
         /// Ctor
         /// </summary>
-        public RTPBot()
+        public AltBot()
             : base()
         {
             rtpbotcommands = new RTPBotCommands(this);
@@ -686,7 +688,7 @@ namespace RTParser
 #if !(NOT_FAKE_LISTENERS)
         public Dictionary<string, object> listeners = new Dictionary<string, object>();
 
-        public RTPBot MyBot
+        public AltBot MyBot
         {
             get { return this; }
         }
@@ -758,7 +760,7 @@ namespace RTParser
 
         internal AIMLLoader GetLoader(Request request)
         {
-            RTPBot bot = this;
+            AltBot bot = this;
             AIMLLoader loader = bot.Loader;
             if (!bot.StaticLoader || loader == null)
             {
@@ -895,8 +897,8 @@ namespace RTParser
             }
         }
 
-        // Load the dictionaries for this RTPBot from the various configuration files
-        public static void loadConfigs(RTPBot thiz, string pathToSettings, Request request)
+        // Load the dictionaries for this AltBot from the various configuration files
+        public static void loadConfigs(AltBot thiz, string pathToSettings, Request request)
         {
             if (!HostSystem.DirExists(pathToSettings))
             {
@@ -1514,7 +1516,7 @@ The AIMLbot program.
         {
             get
             {
-                lock (RTPBot.GraphsByName) return new ListAsSet<GraphMaster>(GraphMaster.CopyOf(RTPBot.GraphsByName).Values);
+                lock (AltBot.GraphsByName) return new ListAsSet<GraphMaster>(GraphMaster.CopyOf(AltBot.GraphsByName).Values);
             }
         }
 
@@ -1882,7 +1884,7 @@ The AIMLbot program.
                     if (od == null) GraphsByName["default"] = _g;
                     else _g.AddGenlMT(od, writeToLog);
                     _h //= TheUserListernerGraph 
-                        = new GraphMaster(hgn);
+                        = GraphMaster.FindOrCreate(hgn);
                     GraphsByName[n2n] = _h;
                     _h.AddGenlMT(GraphsByName["heardselfsay"], writeToLog);
                     _h.AddGenlMT(GraphsByName["listener"], writeToLog);
@@ -1927,7 +1929,7 @@ The AIMLbot program.
                 var tc = DLRConsole.TransparentCallers;
                 lock (tc)
                 {
-                    tc.Add(typeof(RTPBot));
+                    tc.Add(typeof(AltBot));
                     tc.Add(typeof(AIMLbot.MasterRequest));
                     // ReSharper disable AssignNullToNotNullAttribute
                     tc.Add(typeof(MasterResult).BaseType);

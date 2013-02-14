@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
+using AltAIMLParser;
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using UPath = RTParser.Unifiable;
@@ -95,7 +96,7 @@ namespace RTParser.Utils
         {
             get
             {
-                if (_graph != null) return RTPBot.FindGraph(_graph);
+                if (_graph != null) return AltBot.FindGraph(_graph);
                 Node Parent0 = _parentObject;
                 if (Parent0 != null)
                 {
@@ -321,7 +322,7 @@ namespace RTParser.Utils
 
         private void writeToLog(string message, params object[] args)
         {
-            RTPBot.writeDebugLine("!NODE: " + message + " in " + ToString(), args);
+            AltBot.writeDebugLine("!NODE: " + message + " in " + ToString(), args);
         }
 
         public void RotateTemplate(TemplateInfo templateInfo)

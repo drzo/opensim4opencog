@@ -12,6 +12,8 @@ using System.Web;
 using System.Windows.Forms;
 using System.Xml;
 using AIMLbot;
+using AltAIMLParser;
+using AltAIMLbot;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -31,7 +33,7 @@ namespace RTParser
 {
     /// <summary>
     /// </summary>
-    public partial class RTPBot
+    public partial class AltBot
     {
         internal readonly Dictionary<string, SystemExecHandler> ConsoleCommands = new Dictionary<string, SystemExecHandler>();
         int UseHttpd = -1;
@@ -181,12 +183,12 @@ namespace RTParser
 
         public static void Main(string[] args)
         {
-            //Application.Run(new RTParser.GUI.AIMLPadEditor("layout check",new RTPBot()));
+            //Application.Run(new RTParser.GUI.AIMLPadEditor("layout check",new AltBot()));
             Run(args);
         }
         public static void Run(string[] args)
         {
-            RTPBot myBot = null;
+            AltBot myBot = null;
             TaskQueueHandler.TimeProcess("ROBOTCONSOLE: STARTUP", () => { myBot = Startup(args); });
             if (new List<string>(args).Contains("--gui"))
             {
@@ -197,9 +199,9 @@ namespace RTParser
             }
         }
 
-        private static RTPBot Startup(string[] args)
+        private static AltBot Startup(string[] args)
         {
-            RTPBot myBot;
+            AltBot myBot;
             lock (typeof(Bot))
             {
                 TaskQueueHandler.TimeProcess("ROBOTCONSOLE: PREPARE", () => Prepare(args));
@@ -212,7 +214,7 @@ namespace RTParser
 
         public static void Prepare(string[] args)
         {
-            RTPBot myBot = new Bot();
+            AltBot myBot = new Bot();
             ConsoleRobot = myBot as Bot;
             OutputDelegate writeLine = MainConsoleWriteLn;
             for (int index = 0; index < args.Length; index++)
@@ -252,7 +254,7 @@ namespace RTParser
             }
         }
 
-        public static void Load(string[] args, RTPBot myBot, OutputDelegate writeLine)
+        public static void Load(string[] args, AltBot myBot, OutputDelegate writeLine)
         {
             myBot.outputDelegate = null; /// ?? Console.Out.WriteLine;
 
@@ -308,13 +310,13 @@ namespace RTParser
             myBot.SetName(myName);
             myBot.isAcceptingUserInput = true;
         }
-        public static void RunGUI(string[] args, RTPBot myBot, OutputDelegate writeLine)
+        public static void RunGUI(string[] args, AltBot myBot, OutputDelegate writeLine)
         {
             GUIForm = new GUI.AIMLPadEditor(myBot.NameAsSet, myBot);
             Application.Run(GUIForm);
         }
 
-        public static void Run(string[] args, RTPBot myBot, OutputDelegate writeLine)
+        public static void Run(string[] args, AltBot myBot, OutputDelegate writeLine)
         {
             string evidenceCode = "<topic name=\"collectevidencepatterns\"> " +
                                   "<category><pattern>HOW ARE YOU</pattern><template>" +
@@ -359,7 +361,7 @@ namespace RTParser
 
         public void AcceptInput(OutputDelegate writeLine, string input, User myUser)
         {
-            RTPBot myBot = this;
+            AltBot myBot = this;
             User BotAsAUser = myBot.BotAsUser;
             myUser = myUser ?? myBot.LastUser;
             if (string.IsNullOrEmpty(input))
@@ -560,21 +562,21 @@ namespace RTParser
 
     }
 
-    public partial class RTPBotCommands //: RTPBot
+    public partial class RTPBotCommands //: AltBot
     {
         private static bool SplitOff(string args, string s, out string user, out string said)
         {
             return TextPatternUtils.SplitOff(args, s, out user, out said);
         }
 
-        public static RTPBot robotIn;
+        public static AltBot robotIn;
 
-        public RTPBotCommands(RTPBot bot)
+        public RTPBotCommands(AltBot bot)
         {
             robotIn = bot;
         }
 
-        internal static bool ExecAnyAtAll(RTPBot robot, string input, User myUser, string cmd, OutputDelegate console, bool showHelp, string args, User targetBotUser, ThreadControl control)
+        internal static bool ExecAnyAtAll(AltBot robot, string input, User myUser, string cmd, OutputDelegate console, bool showHelp, string args, User targetBotUser, ThreadControl control)
         {
             
             if (showHelp)
@@ -607,7 +609,7 @@ namespace RTParser
                 }
                 request.SaveResultsOnJustHeard = !waitUntilVerbalOutput;
                 request.ResponderSelfListens = !waitUntilVerbalOutput;
-                Result res = robot.GlobalChatWithUser(request, said, user, null, RTPBot.writeDebugLine, !waitUntilVerbalOutput, request.SaveResultsOnJustHeard);
+                Result res = robot.GlobalChatWithUser(request, said, user, null, AltBot.writeDebugLine, !waitUntilVerbalOutput, request.SaveResultsOnJustHeard);
                 request.ResponderSelfListens = false;
                 // detect a user "rename"
                 bool userChanged = robot.DetectUserChange(myUser, wasUser, user);
@@ -656,7 +658,7 @@ namespace RTParser
                 }
                 string gn = args.Substring(0, indexof);
                 GraphMaster g = robot.GetGraph(gn, myUser.StartGraph);
-                String aiml = RTPBot.Trim(args.Substring(indexof));
+                String aiml = AltBot.Trim(args.Substring(indexof));
                 robot.AddAiml(g, aiml, myUser.LastRequest);
                 console("Done with " + args);
                 return true;
@@ -827,9 +829,9 @@ namespace RTParser
 
         [HelpText("@setvar dictname.name [value] -- get/sets a variable using a global namespace context")]
         [CommandText("setvar")]
-        private static bool ExecCmdSetVar(RTPBot robot, bool showHelp, string input, OutputDelegate console, string cmd, string args, User myUser)
+        private static bool ExecCmdSetVar(AltBot robot, bool showHelp, string input, OutputDelegate console, string cmd, string args, User myUser)
         {
-         //   RTPBot robot = request.TargetBot;
+         //   AltBot robot = request.TargetBot;
             if (showHelp)
                 console(
                     "@setvar dictname.name [value] -- get/sets a variable using a global namespace context");
@@ -844,7 +846,7 @@ namespace RTParser
 
         [HelpText("@bot [var [value]] -- lists or changes the bot GlobalPredicates.\n  example: @bot ProcessHeardPreds True or @bot ProcessHeardPreds False")]
         [CommandText("bot")]
-        private static bool ExecCmdBot(RTPBot robot, bool showHelp, OutputDelegate console, string cmd, string args, User targetBotUser)
+        private static bool ExecCmdBot(AltBot robot, bool showHelp, OutputDelegate console, string cmd, string args, User targetBotUser)
         {
             if (showHelp) console("@bot [var [value]] -- lists or changes the bot GlobalPredicates.\n  example: @bot ProcessHeardPreds True or @bot ProcessHeardPreds False");
             if (cmd == "bot")
@@ -859,7 +861,7 @@ namespace RTParser
 
         [HelpText("@[bot]proof [clear|enable|reset|disable|[save [filename.aiml]]] - clears or prints a content buffer being used")]
         [CommandText("proof", "prf", "botproof")]
-        static internal bool ExecProof(RTPBot robot, string cmd, OutputDelegate console, bool showHelp, string args, User myUser)
+        static internal bool ExecProof(AltBot robot, string cmd, OutputDelegate console, bool showHelp, string args, User myUser)
         {
 
             if (showHelp)
@@ -892,7 +894,7 @@ namespace RTParser
                     r = myUser.GetResult(i);
                     console("-----------------------------------------------------------------");
                     if (r != null)
-                        RTPBot.PrintResult(r, console, printOptions);
+                        AltBot.PrintResult(r, console, printOptions);
                 }
                 else
                 {
@@ -920,16 +922,16 @@ namespace RTParser
                     TimeSpan sleepBetween = TimeSpan.FromMilliseconds(500);
                     console("-----------------------------------------------------------------");
                     console("-------DISABLED--------------------------------------");
-                    RTPBot.PrintTemplates(myUser.DisabledTemplates, console, printOptions, sleepBetween);
+                    AltBot.PrintTemplates(myUser.DisabledTemplates, console, printOptions, sleepBetween);
                     console("-----------------------------------------------------------------");
                     console("-------PROOF--------------------------------------");
-                    RTPBot.PrintTemplates(myUser.ProofTemplates, console, printOptions, sleepBetween);
+                    AltBot.PrintTemplates(myUser.ProofTemplates, console, printOptions, sleepBetween);
                     console("-----------------------------------------------------------------");
                     console("-------CHILD--------------------------------------");
-                    RTPBot.PrintTemplates(myUser.UsedChildTemplates, console, printOptions, sleepBetween);
+                    AltBot.PrintTemplates(myUser.UsedChildTemplates, console, printOptions, sleepBetween);
                     console("-----------------------------------------------------------------");
                     console("-------USED--------------------------------------");
-                    RTPBot.PrintTemplates(myUser.VisitedTemplates, console, printOptions, sleepBetween);
+                    AltBot.PrintTemplates(myUser.VisitedTemplates, console, printOptions, sleepBetween);
                     console("-----------------------------------------------------------------");
 
                     if (args == "clear" || args == "reset")
@@ -964,7 +966,7 @@ namespace RTParser
             if (showHelp) console("@query <text> - conducts a findall using all tags");
             if (cmd == "query")
             {
-                RTPBot robot = request.TargetBot;
+                AltBot robot = request.TargetBot;
                 PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
                 console("-----------------------------------------------------------------");
                 if (args == "")
@@ -992,7 +994,7 @@ namespace RTParser
                 console("-----------------------------------------------------------------");
                 var result = robot.ChatWithToplevelResults(ur, request.CurrentResult);//, myUser, targetBotUser, myUser.ListeningGraph);
                 console("-----------------------------------------------------------------");
-                RTPBot.PrintResult(result, console, printOptions);
+                AltBot.PrintResult(result, console, printOptions);
                 console("-----------------------------------------------------------------");
                 return true;
             }
@@ -1005,7 +1007,7 @@ namespace RTParser
             if (showHelp) console("@chgraph <graph> - changes the users graph");
             if (cmd == "graph" || cmd == "chgraph" || cmd == "cd")
             {
-                RTPBot robot = request.TargetBot;
+                AltBot robot = request.TargetBot;
                 PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
                 GraphMaster current = myUser.StartGraph;
                 GraphMaster graph = robot.FindGraph(args, current);
@@ -1035,7 +1037,7 @@ namespace RTParser
                         console("-----------------------------------------------------------------");
                     }
                     console("-----------------------------------------------------------------");
-                    foreach (var ggg in RTPBot.SetOfGraphs)
+                    foreach (var ggg in AltBot.SetOfGraphs)
                     {
                         console("-----------------------------------------------------------------");
                         console("global=" + ggg + " keys='" + AsString(ggg.GraphNames) + "'");
@@ -1083,7 +1085,7 @@ namespace RTParser
                 args = "@" + myUser.Predicates.grabSettingOrDefault("interp", "cloj") + " " + args;
             }
 
-            RTPBot robot = request.TargetBot;
+            AltBot robot = request.TargetBot;
             PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
 
             SystemExecHandler seh;
@@ -1103,8 +1105,8 @@ namespace RTParser
                     int lastIndex = args.IndexOf(" ");
                     if (lastIndex > 0)
                     {
-                        source = RTPBot.Trim(args.Substring(lastIndex + 1));
-                        slang = RTPBot.Trim(args.Substring(0, lastIndex));
+                        source = AltBot.Trim(args.Substring(lastIndex + 1));
+                        slang = AltBot.Trim(args.Substring(0, lastIndex));
                     }
                     else
                     {
@@ -1138,7 +1140,7 @@ namespace RTParser
         [CommandText("tasks", "thread", "threads", "kill")]
         internal static bool TaskCommand(Request request, OutputDelegate console, string cmd, string args)
         {
-            RTPBot robot = request.TargetBot;
+            AltBot robot = request.TargetBot;
             if (cmd == "tasks")
             {
                 int n = 0;
@@ -1311,7 +1313,7 @@ namespace RTParser
         }
     }
 
-    public partial class RTPBot
+    public partial class AltBot
     {
 
         private void AddBotCommand(string s, Action action)

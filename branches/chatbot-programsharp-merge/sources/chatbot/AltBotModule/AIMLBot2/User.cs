@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using AIMLbot;
+using AltAIMLParser;
+using AltAIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
@@ -22,7 +24,7 @@ namespace RTParser
 
     public interface UserStaticModel: IUser
     {
-        RTPBot bot { get; }
+        AltBot rbot { get; }
         string UserID { get; set; }
         string UserName { get; set; }
 
@@ -73,7 +75,7 @@ namespace RTParser
         GraphMaster HeardYouSayGraph { get; set; }
         Request LastRequest { get; set; }
 
-        void RaiseEvent(string p, RTPBot robot);
+        void RaiseEvent(string p, AltBot robot);
 
         MasterRequest CreateRequest(Unifiable message, User targetUser);
     }
@@ -86,11 +88,11 @@ namespace RTParser
                                      User
     {
 
-        public void RaiseEvent(string name, RTPBot robot)
+        public void RaiseEvent(string name, AltBot robot)
         {
             try
             {
-                var R = CreateRequest("ONUSER" + name + " " + UserID, ResponderJustSaid , bot.BotAsUser);
+                var R = CreateRequest("ONUSER" + name + " " + UserID, ResponderJustSaid , rbot.BotAsUser);
                 R.Graph = robot.DefaultEventGraph;
                 R.AddGraph(robot.DefaultEventGraph);
                 R.AddGraph(StartGraph);
@@ -106,7 +108,7 @@ namespace RTParser
         {
             get
             {
-                if (_lastRequest == null) return CreateRequest("PING", ResponderJustSaid, bot.BotAsUser);
+                if (_lastRequest == null) return CreateRequest("PING", ResponderJustSaid, rbot.BotAsUser);
                 return _lastRequest;
             }
             set
@@ -146,7 +148,7 @@ namespace RTParser
         {
             find = (find ?? "").Trim().ToLower();
             if (find == "") find = UserName;
-            User userFound = bot.FindOrCreateUser(find);
+            User userFound = rbot.FindOrCreateUser(find);
             ConversationLog log = ConversationLog.GetConversationLog(this, userFound, createIfMissing);
             return log;
         }
@@ -173,7 +175,7 @@ namespace RTParser
             Request req = request.CreateSubRequest(cmd, null);
             req.Responder = this;
             req.IsToplevelRequest = request.IsToplevelRequest;
-            return bot.LightWeigthBotDirective(cmd, req);
+            return rbot.LightWeigthBotDirective(cmd, req);
         }
 
         /// <summary>
@@ -184,7 +186,7 @@ namespace RTParser
         /// <summary>
         /// The bot this user is using
         /// </summary>
-        public RTPBot bot { get; set; }
+        public AltBot rbot { get; set; }
 
         public TaskQueueHandler OnTaskAtATimeHandler
         {
@@ -201,7 +203,7 @@ namespace RTParser
         }
 
         private readonly object SaveLock = new object();
-        public static void SaveAllOften(RTPBot robot)
+        public static void SaveAllOften(AltBot robot)
         {
             foreach (User node in robot.SetOfUsers)
             {
@@ -239,7 +241,7 @@ namespace RTParser
 
         public GraphMaster HeardYouSayGraph
         {
-            get { return FindGraphLocally("heardyousaygraph") ?? bot.DefaultStartGraph; }
+            get { return FindGraphLocally("heardyousaygraph") ?? rbot.DefaultStartGraph; }
             set
             {
                 if (!Predicates.containsLocalCalled("heardyousaygraph"))
@@ -248,29 +250,29 @@ namespace RTParser
                 GraphMaster lg = HeardYouSayGraph;
                 if (lg != value)
                 {
-                    bot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
+                    rbot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
                 }
             }
         }
 
         private GraphMaster FindGraphLocally(string varname)
         {
-            GraphMaster _uGraph = bot.GetUserGraph(NameSpace);
+            GraphMaster _uGraph = rbot.GetUserGraph(NameSpace);
             //Predicates.IsTraced = false;
             var v = Predicates.grabSettingNoDebug(varname);
             if (Unifiable.IsMissing(v)) return null;
-            GraphMaster _Graph = bot.GetGraph(v, _uGraph);
+            GraphMaster _Graph = rbot.GetGraph(v, _uGraph);
             if (_Graph != null)
             {
                 return _Graph;
             }
-            bot.writeToLog("ERROR CANT FIND " + varname);
+            rbot.writeToLog("ERROR CANT FIND " + varname);
             return _Graph;
         }
 
         public GraphMaster HeardSelfSayGraph
         {
-            get { return FindGraphLocally("heardselfsay") ?? bot.DefaultHeardSelfSayGraph; }
+            get { return FindGraphLocally("heardselfsay") ?? rbot.DefaultHeardSelfSayGraph; }
             set
             {
                 if (!Predicates.containsLocalCalled("heardselfsay"))
@@ -279,7 +281,7 @@ namespace RTParser
                 GraphMaster lg = HeardSelfSayGraph;
                 if (lg != value)
                 {
-                    bot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
+                    rbot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
                 }
             }
         }
@@ -292,8 +294,8 @@ namespace RTParser
         {
             get
             {
-                GraphMaster v = FindGraphLocally("startgraph") ?? bot.DefaultStartGraph;
-                if (v.Size == 0) v = bot.DefaultStartGraph;
+                GraphMaster v = FindGraphLocally("startgraph") ?? rbot.DefaultStartGraph;
+                if (v.Size == 0) v = rbot.DefaultStartGraph;
                 return v;
             }
             set
@@ -304,7 +306,7 @@ namespace RTParser
                 GraphMaster lg = StartGraph;
                 if (lg != value)
                 {
-                    bot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
+                    rbot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
                 }
             }
         }
@@ -322,7 +324,7 @@ namespace RTParser
             }
             set
             {
-                StartGraph = bot.GetGraph(value, StartGraph);
+                StartGraph = rbot.GetGraph(value, StartGraph);
             }
         }
 
@@ -409,7 +411,7 @@ namespace RTParser
                 {
                     return;
                 }
-                if (false && bot.IsLastKnownUser(value))
+                if (false && rbot.IsLastKnownUser(value))
                 {
                     return;
                 }
@@ -509,12 +511,12 @@ namespace RTParser
             {
                 if (!this.Predicates.containsSettingCalled("topic"))
                 {
-                    return bot.NOTOPIC;
+                    return rbot.NOTOPIC;
                 }
                 var t = this.Predicates.grabSetting("topic");
                 if (IsNullOrEmpty(t))
                 {
-                    return bot.NOTOPIC;
+                    return rbot.NOTOPIC;
                 }
                 return t;
             }
@@ -598,7 +600,7 @@ namespace RTParser
         /// </summary>
         /// <param name="UserID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-        internal UserImpl(string userID, RTPBot bot)
+        internal UserImpl(string userID, AltBot bot)
             : this(userID, bot, null)
         {
         }
@@ -608,7 +610,7 @@ namespace RTParser
         /// </summary>
         /// <param name="userID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-        protected internal UserImpl(string userID, RTPBot bot, ParentProvider provider)
+        protected internal UserImpl(string userID, AltBot bot, ParentProvider provider)
             // : base(bot)
         {
             IsValid = true;
@@ -628,14 +630,14 @@ namespace RTParser
             {
                 WriterOptions = new PrintOptions("PW_" + userID);
                 this.id = userID;
-                this.bot = bot;
+                this.rbot = bot;
                 qsbase.IsTraced = IsTraced = bot.IsTraced;
                 // we dont inherit the BotAsUser we inherit the bot's setings
                 // ApplySettings(bot.BotAsUser, this);
-                this.Predicates = new SettingsDictionary(userID + ".predicates", this.bot, provider);
+                this.Predicates = new SettingsDictionary(userID + ".predicates", this.rbot, provider);
                 this.Predicates.IsTraced = qsbase.IsTraced;
                 this.Predicates.AddPrefix("user.", () => this);
-                this.bot.DefaultPredicates.Clone(this.Predicates);                
+                this.rbot.DefaultPredicates.Clone(this.Predicates);                
                 //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
                 this.Predicates.addSetting("topic", bot.NOTOPIC);
                 this.Predicates.InsertFallback(() => bot.AllUserPreds);
@@ -919,7 +921,7 @@ namespace RTParser
                 if (r != null)
                 {
                     if (r.IsTraced)
-                        RTPBot.writeDebugLine("AIMLTRACE: SuspendAddResultToUser, " + latestResult);
+                        AltBot.writeDebugLine("AIMLTRACE: SuspendAddResultToUser, " + latestResult);
                 }
                 return;
             }
@@ -1042,12 +1044,12 @@ namespace RTParser
             {
                 if (IsNullOrEmpty(value))
                 {
-                    bot.RaiseError(new InvalidOperationException("set_JustSaid: " + this));
+                    rbot.RaiseError(new InvalidOperationException("set_JustSaid: " + this));
                     return;
                 }
                 if (!IsValue(value))
                 {
-                    bot.RaiseError(new InvalidOperationException("set_JustSaid: TAG: " + value + " for " + this));
+                    rbot.RaiseError(new InvalidOperationException("set_JustSaid: TAG: " + value + " for " + this));
                     return;
                 }
                 if (!IsEnglish(value))
@@ -1103,7 +1105,7 @@ namespace RTParser
                     var vv = Predicates.grabSetting("that");
                     if (Unifiable.IsMulti(vv))
                     {
-                        RTPBot.writeDebugLine("WARNING ONLY USING ONE Result: " + Unifiable.DescribeUnifiable(vv));
+                        AltBot.writeDebugLine("WARNING ONLY USING ONE Result: " + Unifiable.DescribeUnifiable(vv));
                         vv = vv.Possibles[0];
                     }
                     Unifiable output;
@@ -1119,12 +1121,12 @@ namespace RTParser
             {
                 if (IsNullOrEmpty(value))
                 {
-                    bot.RaiseError(new InvalidOperationException("set_ResponderJustSaid: " + this));
+                    rbot.RaiseError(new InvalidOperationException("set_ResponderJustSaid: " + this));
                     return;
                 }
                 if (!IsValue(value))
                 {
-                    bot.RaiseError(
+                    rbot.RaiseError(
                         new InvalidOperationException("set_ResponderJustSaid: !IsValue: " + value + " for " + this));
                     return;
                 }
@@ -1167,7 +1169,7 @@ namespace RTParser
                             return user0;
                         }
                     }
-                    User user = bot.FindUser0(lname);
+                    User user = rbot.FindUser0(lname);
                     if (user != null && user != this)
                     {
                         return user;
@@ -1263,7 +1265,7 @@ namespace RTParser
             if (input == "")
             {
                 console(Predicates.ToDebugString());
-                RTPBot.WriteUserInfo(console, "", this);
+                AltBot.WriteUserInfo(console, "", this);
                 return true;
             }
             return Predicates.DoSettingsCommand(input, console);
@@ -1278,18 +1280,18 @@ namespace RTParser
                 s = SafeFormat("{0} {1}", UserName ?? UserID, SafeFormat(s, objects));
                 if (s.ToUpper().Contains("ERROR"))
                 {
-                    bot.writeToLog(s, objects);
+                    rbot.writeToLog(s, objects);
                 }
                 if (userTrace != null)
                 {
                     userTrace(s);
                     return;
                 }
-                bot.writeToUserLog(s);
+                rbot.writeToUserLog(s);
             }
             catch (Exception exception)
             {
-                bot.writeToLog(exception);
+                rbot.writeToLog(exception);
             }
         }
 
@@ -1371,7 +1373,7 @@ namespace RTParser
                 result.SetOutput = args;
             else
             {
-                bot.writeToLog("no last result in SetOutputSentences " + args + " for " + this);
+                rbot.writeToLog("no last result in SetOutputSentences " + args + " for " + this);
             }
         }
 
@@ -1478,7 +1480,7 @@ namespace RTParser
             OutputDelegate logger = DEVNULL;
             logger("DEBUG9 Saving User Directory {0}", userdir);
             Predicates.SaveTo(userdir, "user.predicates", "UserPredicates.xml");
-            GraphMaster gm = bot.GetGraph(UserID, StartGraph);
+            GraphMaster gm = rbot.GetGraph(UserID, StartGraph);
             gm.WriteToFile(UserID, HostSystem.Combine(userdir, UserID) + ".saved", PrintOptions.SAVE_TO_FILE, logger);
         }
 
@@ -1558,24 +1560,24 @@ namespace RTParser
         {
             string[] hostSystemGetFiles = HostSystem.GetFiles(userdir, "*.aiml");
             if (hostSystemGetFiles == null || hostSystemGetFiles.Length <= 0) return;
-            var request = new MasterRequest("@echo load user aiml ", this, Unifiable.EnglishNothing, bot.BotAsUser, bot,
+            var request = new MasterRequest("@echo load user aiml ", this, Unifiable.EnglishNothing, rbot.BotAsUser, rbot,
                                             null, StartGraph);
             request.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
             request.Graph = StartGraph;
             request.LoadingFrom = userdir;
             var options = request.LoadOptions; //LoaderOptions.GetDefault(request);
-            var gs = bot.GlobalSettings;
+            var gs = rbot.GlobalSettings;
             try
             {
-                if (bot.BotAsUser == this)
+                if (rbot.BotAsUser == this)
                 {
-                    bot.GlobalSettings = Predicates;
+                    rbot.GlobalSettings = Predicates;
                 }
                 request.Loader.loadAIMLURI(userdir, options.Value);
             }
             finally
             {
-                bot.GlobalSettings = gs;
+                rbot.GlobalSettings = gs;
             }
         }
 
@@ -1694,7 +1696,7 @@ namespace RTParser
 
         public actMSM botActionMSM
         {
-            get { return bot.pMSM; }
+            get { return rbot.pMSM; }
         }
 
         public IEnumerable<string> SettingNames(int depth)
@@ -1743,11 +1745,11 @@ namespace RTParser
             if (target != null && !Unifiable.IsNull(said)) targetJustSaid = target.JustSaid;
             if (parentRequest == null)
             {
-                request = new MasterRequest(message, this, targetJustSaid, target, bot, parentRequest, G);
+                request = new MasterRequest(message, this, targetJustSaid, target, rbot, parentRequest, G);
             }
             else
             {
-                request = parentRequest.CreateSubRequest(message, this, targetJustSaid, target, bot, parentRequest, G);
+                request = parentRequest.CreateSubRequest(message, this, targetJustSaid, target, rbot, parentRequest, G);
             }
             if (parentRequest != null)
             {
@@ -1770,7 +1772,7 @@ namespace RTParser
                 request.IsToplevelRequest = true;
                 if (CurrentRequest != null) CurrentRequest = request;
                 request.Responder = target;
-                request.TargetBot = this.bot;
+                request.TargetBot = this.rbot;
                 request.writeToLog = writeDebugLine;
                 //request.TimesOutAt = DateTime.Now + TimeSpan.FromSeconds(10);
                 request.ResetValues(true);
@@ -1782,7 +1784,7 @@ namespace RTParser
                 {
                     foreach (var role in roles.ToArray())
                     {
-                        request.AddGraph(bot.GetUserGraph(role));
+                        request.AddGraph(rbot.GetUserGraph(role));
                     }
                 }
             }

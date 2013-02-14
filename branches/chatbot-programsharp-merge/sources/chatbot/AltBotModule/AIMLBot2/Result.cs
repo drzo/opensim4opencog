@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
 using AIMLbot;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
+using RTParser;
 using RTParser.Utils;
 using RTParser.Variables;
 using UPath = RTParser.Unifiable;
 
 
-namespace RTParser
+namespace AltAIMLbot
 {
 
     /// <summary>
@@ -43,7 +45,7 @@ namespace RTParser
         /// <summary>
         /// The bot that is providing the answer
         /// </summary>
-        //   public RTPBot TargetBot { get; set; }
+        //   public AltBot TargetBot { get; set; }
         /// The user that is providing the <that/> answer
         //  public UserDuringProcessing Responder { get; set; }
         public void FreeRequest()
@@ -140,7 +142,7 @@ namespace RTParser
         /// The user for whom this is a result
         /// </summary>
         // public UserDuringProcessing Requester { get; set; }
-        //  public OutputDelegate writeToLog { get; set; } // = RTPBot.writeDebugLine;
+        //  public OutputDelegate writeToLog { get; set; } // = AltBot.writeDebugLine;
         public int TemplatesSucceeded { get; set; }
 
         public int OutputsCreated { get; set; }
@@ -159,7 +161,7 @@ namespace RTParser
  Result
 #endif // interface
 
-(string rawInput, UserDuringProcessing user, RTPBot bot, Request parent, UserConversationScope targetUser)
+(string rawInput, UserDuringProcessing user, AltBot bot, Request parent, UserConversationScope targetUser)
             : base(parent)
         {
             this.request = parent;
@@ -369,7 +371,7 @@ namespace RTParser
         {
             get
             {
-                if (EndedOn < RTPBot.Now)
+                if (EndedOn < AltBot.Now)
                     return true;
                 if (request.IsTimedOutOrOverBudget)
                 {
@@ -380,7 +382,7 @@ namespace RTParser
             }
             set
             {
-                EndedOn = value ? RTPBot.Now : DateTime.MaxValue;
+                EndedOn = value ? AltBot.Now : DateTime.MaxValue;
                 //_Durration = value ? Durration : TimeSpan.Zero;
             }
         }
@@ -475,7 +477,7 @@ namespace RTParser
             ExitQueue.Commit(true);
         }
 
-        public RTPBot TargetBot
+        public AltBot TargetBot
         {
             get { return request.TargetBot; }
         }
@@ -696,7 +698,7 @@ namespace RTParser
                 {
                     writeToLog("ERROR:  AddRssult: " + Requester.UserID + " " + unifiable);
                 }
-                EndedOn = RTPBot.Now;
+                EndedOn = AltBot.Now;
                 if (addToFront)
                 {
                     OutputSentences.Insert(0, unifiable);

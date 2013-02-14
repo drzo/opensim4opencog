@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml;
+using AltAIMLParser;
+using AltAIMLbot;
 using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
@@ -32,11 +34,11 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public star(RTParser.RTPBot bot,
+        public star(RTParser.AltBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode, 1)
         {
@@ -67,11 +69,11 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public StarTagHandler(RTParser.RTPBot bot,
+        public StarTagHandler(RTParser.AltBot bot,
                                       RTParser.User user,
                                       RTParser.Utils.SubQuery query,
-                                      RTParser.Request request,
-                                      RTParser.Result result,
+                                      Request request,
+                                      Result result,
                                       XmlNode templateNode, int idx)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -109,7 +111,7 @@ namespace RTParser.AIMLTagHandlers
                         }
                         catch (Exception e)
                         {
-                            RTPBot.writeDebugLine("" + e);
+                            AltBot.writeDebugLine("" + e);
                         }
                     }
                     return IsNullOrEmpty(rest) ? STAR_TRUE : STAR_FALSE;

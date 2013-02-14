@@ -16,16 +16,16 @@ namespace RTParser
             if (Noise(m)) return;
             if (m.ToLower().StartsWith(message.ToLower()))
             {
-                message = RTPBot.ReTrimAndspace(m);
+                message = AltBot.ReTrimAndspace(m);
                 return;
             }
             message += " " + m;
-            message = RTPBot.ReTrimAndspace(message);
+            message = AltBot.ReTrimAndspace(message);
         }
 
         private bool Noise(string s)
         {
-            s = RTPBot.ReTrimAndspace(s.ToLower());
+            s = AltBot.ReTrimAndspace(s.ToLower());
             if (s == "um,") return true;
             if (s == "you know,") return true;
             if (message.ToLower().EndsWith(s)) return true;

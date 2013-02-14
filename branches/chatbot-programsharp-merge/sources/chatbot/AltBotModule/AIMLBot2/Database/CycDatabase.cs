@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml;
+using AltAIMLParser;
+using AltAIMLbot;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using org.opencyc.api;
@@ -14,11 +16,11 @@ namespace RTParser.Database
 {
     abstract public class CycTagHandler:AIMLTagHandler
     {
-        protected CycTagHandler(RTParser.RTPBot bot,
+        protected CycTagHandler(RTParser.AltBot bot,
                         RTParser.User user,
                         RTParser.Utils.SubQuery query,
-                        RTParser.Request request,
-                        RTParser.Result result,
+                        Request request,
+                        Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -43,8 +45,8 @@ namespace RTParser.Database
     {
         static public CycDatabase TheStaticCyc;
 
-        private RTPBot TheBot;
-        public CycDatabase(RTPBot bot)
+        private AltBot TheBot;
+        public CycDatabase(AltBot bot)
         {
             TheStaticCyc = this;
             TheBot = bot;   
@@ -381,7 +383,7 @@ namespace RTParser.Database
             catch (Exception)
             {                
             }
-            RTPBot.writeDebugLine("!NonVerbalCommunicating = " + id);
+            AltBot.writeDebugLine("!NonVerbalCommunicating = " + id);
             //cycAccess.setCyclist("CycAdministrator");
         }
 
@@ -401,7 +403,7 @@ namespace RTParser.Database
             {
                 TheBot.writeToLog(e);
                 string s = "ExecCycQuery: " + e;
-                RTPBot.writeDebugLine(s);
+                AltBot.writeDebugLine(s);
                 writeToLog(s);
                 return null;
             }
@@ -416,7 +418,7 @@ namespace RTParser.Database
             {
                 TheBot.writeToLog(e);
                 string s = "EvalSubLHandler: " + e;
-                RTPBot.writeDebugLine(s);
+                AltBot.writeDebugLine(s);
                 writeToLog(s);
                 return null;
             }
@@ -568,7 +570,7 @@ namespace RTParser.Database
 
         public void WriteConfig()
         {
-            RTPBot.writeDebugLine("Cyc loaded");
+            AltBot.writeDebugLine("Cyc loaded");
         }
 
         public Unifiable WhenTrue(Unifiable unifiable)

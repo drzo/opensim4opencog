@@ -10,7 +10,7 @@ using RTParser.Variables;
 
 namespace RTParser
 {
-    public partial class RTPBot
+    public partial class AltBot
     {
         public static string UNKNOWN_PARTNER = "UNKNOWN_PARTNER";
         public readonly object ListUserDirs = new object();
@@ -86,7 +86,7 @@ namespace RTParser
 
         public bool BotUserDirective(User myUser, string input, OutputDelegate console)
         {
-            RTPBot myBot = this;
+            AltBot myBot = this;
             if (input == null) return false;
             input = input.Trim();
             if (input == "") return false;
@@ -1007,7 +1007,7 @@ namespace RTParser
                                  : stringPlit[2].Split(new char[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0];
             if (vstring == null || double.TryParse(vstring, out vscored))
             {
-                if (!RTPBot.IncludeMeNeValue)
+                if (!AltBot.IncludeMeNeValue)
                 {
 //                    useOut = string.Format("{0}", said);
                     useOut = string.Format("{0} menevalue= 1{1:1} ", said, res.Score * 1.4);

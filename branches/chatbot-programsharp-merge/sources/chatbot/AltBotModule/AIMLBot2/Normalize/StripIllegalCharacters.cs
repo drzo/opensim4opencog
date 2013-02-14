@@ -10,10 +10,10 @@ namespace RTParser.Normalize
     /// </summary>
     public class StripIllegalCharacters : RTParser.Utils.TextTransformer
     {
-        public StripIllegalCharacters(RTParser.RTPBot bot, Unifiable inputString) : base(bot, inputString)
+        public StripIllegalCharacters(RTParser.AltBot bot, Unifiable inputString) : base(bot, inputString)
         { }
 
-        public StripIllegalCharacters(RTParser.RTPBot bot)
+        public StripIllegalCharacters(RTParser.AltBot bot)
             : base(bot) 
         { }
 

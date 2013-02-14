@@ -76,13 +76,13 @@ namespace RTParser.GUI
         }
 
 
-        private RTParser.RTPBot robot;
+        private RTParser.AltBot robot;
         private readonly string _tabname;
         private Thread TodoThread;
         private object ExecuteCommandLock = new object();
         private User user;
 
-        public AIMLPadEditor(string name, RTParser.RTPBot bc)
+        public AIMLPadEditor(string name, RTParser.AltBot bc)
         {
             robot = bc;
             _tabname = name;
@@ -345,7 +345,7 @@ namespace RTParser.GUI
             if (robot == null) return;
             GetVariable("you", robotNameBox);
             robotNameBox.Text = robot.NameAsSet;
-            foreach (var name in RTPBot.Robots.Keys)
+            foreach (var name in AltBot.Robots.Keys)
             {
                 InsertNewItem(robotNameBox,name);
             }
@@ -353,11 +353,11 @@ namespace RTParser.GUI
             {
                 InsertNewItem(userNameBox, user0.UserName);
             }
-            foreach (var g in RTPBot.GraphsByName.Values)
+            foreach (var g in AltBot.GraphsByName.Values)
             {
                 InsertNewItem(graphNameBox, g.ScriptingName);
             }
-            foreach (var g in RTPBot.GraphsByName.Keys)
+            foreach (var g in AltBot.GraphsByName.Keys)
             {
                 InsertNewItem(graphNameBox, g);
             }
@@ -405,7 +405,7 @@ namespace RTParser.GUI
 
         private void robotNameBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            robot =  RTPBot.FindOrCreateRobot(robotNameBox.Text);
+            robot =  AltBot.FindOrCreateRobot(robotNameBox.Text);
             PopulateRobotChange();
         }
 

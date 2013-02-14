@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Xml;
+using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 
 namespace RTParser.Utils

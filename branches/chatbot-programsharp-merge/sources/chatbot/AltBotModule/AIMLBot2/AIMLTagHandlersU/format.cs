@@ -1,5 +1,7 @@
 using System;
 using System.Xml;
+using AltAIMLParser;
+using AltAIMLbot;
 using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
@@ -53,11 +55,11 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public format(RTParser.RTPBot bot,
+        public format(RTParser.AltBot bot,
                       RTParser.User user,
                       RTParser.Utils.SubQuery query,
-                      RTParser.Request request,
-                      RTParser.Result result,
+                      Request request,
+                      Result result,
                       XmlNode templateNode, Func<Unifiable, Unifiable> formatter, Func<Unifiable, Unifiable> formattereach)
             : base(bot, user, query, request, result, templateNode)
         {
@@ -65,11 +67,11 @@ namespace RTParser.AIMLTagHandlers
             this.UFormatterE = formattereach;
         }
 
-        public format(RTParser.RTPBot bot,
+        public format(RTParser.AltBot bot,
                       RTParser.User user,
                       RTParser.Utils.SubQuery query,
-                      RTParser.Request request,
-                      RTParser.Result result,
+                      Request request,
+                      Result result,
                       XmlNode templateNode, Func<string, string> formatter, Func<string, string> formattereach)
             : base(bot, user, query, request, result, templateNode)
         {

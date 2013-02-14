@@ -16,7 +16,7 @@ namespace RTParser.Utils
             if (!request.IsTraced) return;
             if (request.DebugLevel < i)
             {
-                RTPBot.Breakpoint("Level " + request.DebugLevel + "<" + i);
+                AltBot.Breakpoint("Level " + request.DebugLevel + "<" + i);
             }
         }
 

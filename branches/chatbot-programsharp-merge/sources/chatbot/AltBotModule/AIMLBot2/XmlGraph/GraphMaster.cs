@@ -9,6 +9,8 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml;
 using AIMLbot;
+using AltAIMLParser;
+using AltAIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
@@ -47,9 +49,9 @@ namespace RTParser.Utils
             get
             {
                 var names = new List<string>();
-                lock (RTPBot.GraphsByName)
+                lock (AltBot.GraphsByName)
                 {
-                    foreach (KeyValuePair<string, GraphMaster> pair in RTPBot.GraphsByName)
+                    foreach (KeyValuePair<string, GraphMaster> pair in AltBot.GraphsByName)
                     {
                         if (pair.Value == this)
                         {
@@ -165,7 +167,7 @@ namespace RTParser.Utils
         public GraphMaster(string gn, GraphMaster child, bool isParallel)
         //: base(bot)
         {
-            RTPBot.GraphsByName[gn] = this;
+            AltBot.GraphsByName[gn] = this;
             IsParallel = isParallel;
             SilentTagsInPutParallel = DefaultSilentTagsInPutParallel;
             SilentTagsInPutParallel = false;
@@ -279,7 +281,7 @@ namespace RTParser.Utils
                 if (_STAR_PATH == null)
                 {
                     _STAR_PATH = "TAG-INPUT * TAG-THAT * TAG-TOPIC * TAG-FLAG *";
-                    // ((RTPBot)null).Loader.generatePath("*", "*", "*", "*", false);
+                    // ((AltBot)null).Loader.generatePath("*", "*", "*", "*", false);
                 }
                 return _STAR_PATH;
             }
@@ -899,7 +901,7 @@ namespace RTParser.Utils
 
         internal void writeToLog(string message, params object[] args)
         {
-            RTPBot.writeDebugLine("GRAPH: " + message + " in " + ToString(), args);
+            AltBot.writeDebugLine("GRAPH: " + message + " in " + ToString(), args);
         }
 
 
@@ -1009,7 +1011,7 @@ namespace RTParser.Utils
         private List<Result> DoParallelEval(List<GraphMaster> totry, Request request, Unifiable unifiable)
         {
             var pl = new List<Result>();
-            RTPBot proc = request.TargetBot;
+            AltBot proc = request.TargetBot;
             foreach (GraphMaster p in CopyOf(totry))
             {
                 if (request.IsTimedOutOrOverBudget) return pl;
@@ -1621,9 +1623,11 @@ namespace RTParser.Utils
 
         public ParentChild ParentObject { get; set; }
 
+        public static GraphMaster OnlyOneGM = new GraphMaster("default");
         public static GraphMaster FindOrCreate(string dgn)
         {
-            var gbn = RTPBot.GraphsByName;
+            if (OnlyOneGM != null) return OnlyOneGM;
+            var gbn = AltBot.GraphsByName;
             lock (gbn)
             {
                 GraphMaster v;

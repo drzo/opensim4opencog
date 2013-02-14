@@ -42,7 +42,7 @@ namespace RTParser.Utils
             sentence = Trim(sentence);
 
             if ("!?.".Contains(sentence.Substring(sentence.Length - 1))) return true;
-            foreach (Unifiable splitter in RTPBot.Splitters)
+            foreach (Unifiable splitter in AltBot.Splitters)
             {
                 if (sentence.EndsWith(splitter))
                 {

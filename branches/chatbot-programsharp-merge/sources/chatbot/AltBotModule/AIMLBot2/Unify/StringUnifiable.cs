@@ -126,6 +126,14 @@ namespace RTParser
             if (str == "*" || str == "_") return true;
             if (IsLazy)
             {
+                AIMLTagHandler tagHandler = GetTagHandler(query);
+                IUnifibleTagHandler utagHandler = tagHandler as IUnifibleTagHandler;
+                if (utagHandler != null)
+                {
+                    
+                    return tagHandler.CallCanUnify(word) == UNIFY_TRUE;
+                }
+                valueCache = tagHandler;
                 var toString = ToValue(query);
                 if (toString == null)
                 {
@@ -874,7 +882,7 @@ namespace RTParser
             }
             catch (Exception e)
             {
-                RTPBot.writeDebugLine("" + e.Message + ": " + " '" + str0 + "'");
+                AltBot.writeDebugLine("" + e.Message + ": " + " '" + str0 + "'");
                 StringUnifiable su = MakeUnifiableFromString(str0, false) as StringUnifiable;
                 Unifiable[] suu = new Unifiable[] {su};
                 su.splittedCache = suu;
@@ -947,7 +955,7 @@ namespace RTParser
             }
             catch (Exception e)
             {
-                RTPBot.writeDebugLine("" + e.Message + ": " + " " + e.StackTrace + "\n" +
+                AltBot.writeDebugLine("" + e.Message + ": " + " " + e.StackTrace + "\n" +
                                       DescribeUnifiable(stringAppendable));
                 throw;
             }
@@ -1481,6 +1489,8 @@ namespace RTParser
                         return (string) valueCache;
                     }
                     writeToLog("Failed Eval " + str);
+                    tagHandler.IsTraced = true;
+                    outputSentence = tagHandler.CompleteAimlProcess();
                 }
                 finally
                 {
