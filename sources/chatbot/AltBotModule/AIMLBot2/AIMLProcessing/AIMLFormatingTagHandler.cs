@@ -23,7 +23,7 @@ namespace RTParser.Utils
                                        XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
-            isRecursive = true;
+            // default is true // isRecursive = true;
             IsStarAtomically = true;
         }
 
@@ -36,7 +36,7 @@ namespace RTParser.Utils
         protected override Unifiable ProcessChange()
         {
             if (RecurseResultValid) return RecurseResult;
-            if (isRecursive && !ReadOnly)
+            if (isRecursiveSubclass && !ReadOnly)
             {
                 return RecurseResult = Format(TransformAtomically(FormatEach, true));
             }

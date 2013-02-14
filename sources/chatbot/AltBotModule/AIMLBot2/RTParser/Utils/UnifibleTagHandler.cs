@@ -142,11 +142,11 @@ namespace RTParser.Utils
             return target;
         }
 
-        public abstract float CanUnify(Unifiable with);
+        public abstract override float CanUnify(Unifiable with);
 
         public virtual float DefaultCanUnify(Unifiable with)
         {
-            return base.CanUnify(with);
+            return ComputeInnerOrNull().Unify(with, this.query);
         }
 
         protected void SetWith(XmlNode childNode, Unifiable with)
@@ -175,8 +175,17 @@ namespace RTParser.Utils
             if (MEMBER != null && MEMBER.Length > 0) return MEMBER[0];
             var v1 = ComputeInner();
             var v2 = templateNodeInnerText;
+            if ((string)v1==(string)v2) return v2;
+            writeToLogWarn("Not sure if i should return '{0}' isntead of '{1}'", v1, v2);
             return v2;
         }
+
+        protected Unifiable AsOneOf()
+        {
+            writeToLogWarn("AsOneOf Many choices");
+            throw new NotImplementedException();
+        }
+        protected abstract Unifiable ComputeInnerOrNull();
 
         public string ComputeInner()
         {
@@ -185,7 +194,7 @@ namespace RTParser.Utils
             {
                 return ValueText(templateNodeInnerText);
             }
-            if (templateNode.HasChildNodes)
+            if (templateNode.HasChildNodesNonText())
             {
                 // recursively check
                 foreach (XmlNode childNode in templateNode.ChildNodes)
@@ -195,10 +204,29 @@ namespace RTParser.Utils
             }
             else
             {
-                re = Recurse();
-                templateNodeInnerText = re;
+                re = ComputeInnerOrNull();
+                string res = (string)re;
+                if (string.IsNullOrEmpty(res))
+                {
+                    re = Recurse();
+                }
+                if (!InUnify)
+                {
+                    templateNodeInnerText = re;
+                }
             }
             return re;
+        }
+        
+        override protected Unifiable Recurse()
+        {
+            var vorNull = ComputeInnerOrNull();
+            if (!Unifiable.IsNull(vorNull))
+            {
+                return vorNull;
+            }
+            writeToLogWarn("Why are we in Recurse?");
+            return base.Recurse();
         }
 
         virtual protected float ChildUnify(Unifiable with, XmlNode childNode)

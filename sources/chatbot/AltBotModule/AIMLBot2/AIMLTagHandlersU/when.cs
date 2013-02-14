@@ -67,7 +67,7 @@ namespace RTParser.AIMLTagHandlers
             return AND_TRUE;
         }
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ComputeInnerOrNull()
         {
             return Recurse();
         }

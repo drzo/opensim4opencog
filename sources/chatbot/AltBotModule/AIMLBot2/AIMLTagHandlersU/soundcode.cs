@@ -36,7 +36,7 @@ namespace RTParser.AIMLTagHandlers
             throw new NotImplementedException();
         }
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ComputeInnerOrNull()
         {
             if (this.templateNode.Name.ToLower() == "soundcode")
             {

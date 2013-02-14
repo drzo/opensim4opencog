@@ -43,13 +43,40 @@ namespace RTParser.Utils
         /// <summary>
         /// A flag to denote if inner tags are to be processed recursively before processing this tag
         /// </summary>
-        protected bool isRecursive { get; set; }
+        protected bool _isRecursive = false;
+
+        protected bool isRecursive
+        {
+            set
+            {
+                if (_isRecursive == value)
+                {
+                    writeToLogWarn("why not use defaults?");
+                }
+                _isRecursive = value;
+            }
+        }
+
+        protected bool isRecursiveSubclass
+        {
+            get { return _isRecursive; }
+        }
 
         public bool IsSetRecursiveSecondPass
         {
-            set { isRecursive = value; }
+            get { throw new NotImplementedException(); }
+            set
+            {
+                if (_isRecursive == value) return;
+                throw new NotImplementedException();
+                isRecursive = value;
+            }
         }
 
+        public bool IsRecursiveExternal
+        {
+            get { throw new NotSupportedException("Is Recursive External"); }
+        }
 
         public bool IsStarAtomically = false; // true break it right now
         public bool IsStarted;
@@ -114,7 +141,6 @@ namespace RTParser.Utils
                               XmlNode templateNode)
             : base(bot, templateNode.OuterXml)
         {
-            isRecursive = true;
             this.query = query;
             this._request = request;
             this.result = result;
@@ -123,6 +149,7 @@ namespace RTParser.Utils
             initialString = inputString;
             this.user = user;
             if (this.templateNode.Attributes != null) this.templateNode.Attributes.RemoveNamedItem("xmlns");
+            isRecursive = true;
         }
 
         public SubQuery TheQuery
@@ -619,10 +646,14 @@ namespace RTParser.Utils
         /// By calling this and not just CompleteProcess() 
         /// You've ensure we have a proper calling context
         /// </summary>
-        public Unifiable CompleteAimlProcess()
+        public virtual Unifiable CompleteAimlProcess()
         {
             if (finalResult.IsValid) return finalResult.Value;
-            if (RecurseResultValid) return RecurseResult;
+            if (RecurseResultValid)
+            {
+                writeToLogWarn("RecurseResultValid but not finalResult?! " + RecurseResult);
+                return RecurseResult;
+            }
 
             ThreadStart OnExit = EnterTag(request, templateNode, query);
             try
@@ -634,14 +665,16 @@ namespace RTParser.Utils
                     return src ?? OuterSource();
                 }
                 var test = CompleteProcess();
-                if (Unifiable.IsNull(test))
+                string rest = (string) test;
+                if (string.IsNullOrEmpty(test))
                 {
                     if (QueryHasFailed)
                     {
                         return FAIL;
                     }
                     test = GetTemplateNodeInnerText();
-                    if (test == null) writeToLogWarn("NULL response in " + templateNode.OuterXml + " for " + query);
+                    rest = test;
+                    if (rest == null) writeToLogWarn("NULL response in " + templateNode.OuterXml + " for " + query);
                     string value2;
                     if (CompleteEvaluatution(test, this, out value2))
                     {
@@ -734,10 +767,15 @@ namespace RTParser.Utils
         public Unifiable Succeed(string p)
         {
             Succeed();
-            if (true) return think.THINKYTAG;
+            if (false) return think.THINKYTAG;
             return "<!-- SUCCEED: " + p.Replace("<!--", "<#-").Replace("-->", "-#>") + "-->";
         }
-
+        public Unifiable Succeed(ICollection p)
+        {
+            Succeed();
+            if (false) return think.THINKYTAG;
+            return "<!-- SUCCEED: " + p.Count + "-->";
+        }
         public void Succeed()
         {
             if (query != null && query.CurrentTemplate != null)
@@ -917,7 +955,7 @@ namespace RTParser.Utils
 
         public virtual Unifiable CheckValue(Unifiable value)
         {
-            if (ReferenceEquals(value, Unifiable.Empty)) return value;
+            if (ReferenceEquals(value, Unifiable.EmptyRef)) return value;
             if (value == null)
             {
                 writeToLogWarn("ChackValue NULL");
@@ -1337,7 +1375,7 @@ namespace RTParser.Utils
             return value;
         }
 
-        protected Unifiable Recurse()
+        virtual protected Unifiable Recurse()
         {
             bool _wasRecurseResultValid = innerResult.IsValid;
             try
@@ -1352,6 +1390,7 @@ namespace RTParser.Utils
                 Unifiable real = RecurseReal(templateNode, false);
                 if (IsNullOrEmpty(real))
                 {
+                    writeToLogWarn("Recurse() Returning null !!" + RecurseResult); 
                     if (IsStarAtomically)
                     {
                         if (IsNull(real)) return null;
@@ -1384,6 +1423,10 @@ namespace RTParser.Utils
         }
         protected Unifiable RecurseReal(Func<Unifiable, Unifiable> afterEachOrNull, XmlNode node, bool saveOnChildren)
         {
+            if (!isRecursiveSubclass)
+            {
+                writeToLogWarn("this is supposed to be non recursive subclass! ");
+            }
             //Unifiable templateNodeInnerText;//= this.templateNodeInnerText;
             Unifiable templateResult = Unifiable.CreateAppendable();
             if (node.HasChildNodes)
@@ -1560,7 +1603,7 @@ namespace RTParser.Utils
         public override Unifiable CompleteProcess()
         {
             if (RecurseResultValid) return RecurseResult;
-            var vv1 = ProcessAChange();
+            var vv1 = ProcessChange();
             Unifiable vv2;
             if (CompleteEvaluatution(vv1, this, out vv2))
             {
@@ -1577,11 +1620,6 @@ namespace RTParser.Utils
                 return vv1;
             }
             return vv1;
-        }
-
-        protected string ProcessAChange()
-        {
-            return ProcessChange();
         }
 
         /*
@@ -1612,7 +1650,7 @@ namespace RTParser.Utils
                 ResetValues(true);
                 var problem = "CompleteProcess() == NULL " + LineNumberTextInfo();
                 writeToLogWarn(problem);
-                Proc.TraceTest(problem, () => ProcessAChange());
+                Proc.TraceTest(problem, () => ProcessChange());
                 return false;
             }
             if (resultValue.IsWildCard)
@@ -1705,7 +1743,7 @@ namespace RTParser.Utils
             }
             AIMLTagHandler tagHandler = this;
             Unifiable recursiveResult = null;
-            if (tagHandler.isRecursive)
+            if (tagHandler.isRecursiveSubclass)
             {
                 if (templateNode.HasChildNodes)
                 {
@@ -1715,7 +1753,7 @@ namespace RTParser.Utils
                 {
                     recursiveResult = InnerXmlText(templateNode);
                 }
-                string v = tagHandler.ProcessAChange();
+                string v = tagHandler.ProcessChange();
                 if (v == recursiveResult)
                 {
                     return v;
@@ -1812,6 +1850,13 @@ namespace RTParser.Utils
         {
             string lname = name.ToLower();
             bool caseSensitive = (lname != name);
+            if (CheckNode0(name, caseSensitive)) return true;
+            writeToLogWarn("CheckNode change " + name + " -> " + templateNode.Name);
+            if (name.IsOneOf(name.Split(',')) >= 0) return true;
+            return false;            
+        }
+        protected bool CheckNode0(string name, bool caseSensitive)
+        {
             string templateNodeName = this.templateNode.Name;
             if (!caseSensitive) templateNodeName = templateNodeName.ToLower();
             if (templateNodeName == name) return true;
@@ -1820,14 +1865,9 @@ namespace RTParser.Utils
                 string[] nameSplit = name.Split(',');
                 foreach (string s in nameSplit)
                 {
-                    if (templateNodeName == s) return true;
-                }
-                foreach (string s in nameSplit)
-                {
-                    if (CheckNode(s)) return true;
+                    if (CheckNode0(s, caseSensitive)) return true;
                 }
             }
-            //writeToLog("CheckNode change " + name + " -> " + templateNode.Name);
             return false;
         }
 

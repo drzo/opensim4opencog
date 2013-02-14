@@ -33,7 +33,7 @@ namespace RTParser.AIMLTagHandlers
         {
             data = show;
             //RecurseResult = data;
-            isRecursive = isRecurse;
+            _isRecursive = isRecurse;
         }
 
         readonly XmlNode data;

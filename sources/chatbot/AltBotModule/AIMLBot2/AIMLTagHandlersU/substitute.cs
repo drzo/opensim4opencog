@@ -85,7 +85,7 @@ namespace RTParser.AIMLTagHandlers
         /// <returns>The resulting processed text</returns>
         protected override Unifiable ProcessChange()
         {
-            if (isRecursive && !ReadOnly)
+            if (isRecursiveSubclass && !ReadOnly)
             {
                 return  Format(TransformAtomically(null, true));
             }

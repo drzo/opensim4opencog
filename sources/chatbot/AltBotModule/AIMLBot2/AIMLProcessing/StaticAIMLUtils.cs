@@ -246,7 +246,7 @@ namespace RTParser.Utils
                                 string graphName = ReduceStar<string>(node.Value, query, dict, out found);
                                 if (graphName != null)
                                 {
-                                    GraphMaster innerGraph = request.TargetBot.GetGraph(graphName, oldGraph);
+                                    GraphMaster innerGraph = request.GetGraph(graphName);
 
                                     if (innerGraph != null)
                                     {

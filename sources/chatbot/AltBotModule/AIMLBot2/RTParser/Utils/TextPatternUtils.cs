@@ -56,7 +56,7 @@ namespace RTParser.Utils
 
         static TextPatternUtils()
         {
-            XmlDocumentLineInfo.TextFormatter = CleanWildcards;
+          //  XmlDocumentLineInfo.TextFormatter = CleanWildcards;
         }
 
         public static bool IsTrue(Unifiable v)
@@ -150,7 +150,7 @@ namespace RTParser.Utils
                 {
                     return true;
                 }
-                if (ReferenceEquals(name, Unifiable.Empty))
+                if (ReferenceEquals(name, Unifiable.EmptyRef))
                 {
                     return false;
                 }
@@ -245,7 +245,7 @@ namespace RTParser.Utils
                 {
                     return false;
                 }
-                if (ReferenceEquals(name, Unifiable.Empty))
+                if (ReferenceEquals(name, Unifiable.EmptyRef))
                 {
                     return true;
                 }
@@ -257,7 +257,9 @@ namespace RTParser.Utils
                 {
                     return true;
                 }
-                return false;
+                string ss = (string)(Unifiable)name;// as string;
+                if (ss == null || ss.Length > 0) return false;
+                return true;
             }
             return false;
         }
@@ -532,7 +534,7 @@ namespace RTParser.Utils
         public static bool IsSomething(Unifiable s, out Unifiable something)
         {
             something = s;
-            if (IsNullOrEmpty(s) || IsIncomplete(s))
+            if (IsNullOrEmpty(s) || IsIncomplete(s) || IsMissing(s))
             {
                 return false;
             }

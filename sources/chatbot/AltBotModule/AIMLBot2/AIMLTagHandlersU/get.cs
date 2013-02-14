@@ -58,7 +58,7 @@ namespace RTParser.AIMLTagHandlers
             return pc;
         }
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ComputeInnerOrNull()
         {
             if (RecurseResultValid) return RecurseResult;
             Unifiable u = ProcessChange0();

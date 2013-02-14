@@ -1315,7 +1315,7 @@ namespace RTParser.Variables
         {
             string s = TransformValue0(value);
             if (s == null) return Unifiable.NULL;
-            if (s == "") return Unifiable.Empty;
+            if (s == "") return Unifiable.EmptyRef;
             if (Unifiable.IsMissing(value)) 
             {
                 if (NoSettingsAliaes) return null;
@@ -1325,7 +1325,7 @@ namespace RTParser.Variables
         }
         public Unifiable TransformValueOut(Unifiable value)
         {
-            Unifiable s = TransformValue0(value);
+            string s = TransformValue0(value);
             if (s == null) return Unifiable.NULL;
             if (s == "OM")
             {
@@ -1336,7 +1336,7 @@ namespace RTParser.Variables
             {
                 return "";// Unifiable.Empty;
             }
-            if (s == Unifiable.Empty)
+            if (s == Unifiable.EmptyRef)
             {
                 return "";// 
             }
@@ -1626,7 +1626,15 @@ namespace RTParser.Variables
             {
                 name = TransformName(name);
                 var setting = grabSetting0(name);
-                setting = TransformValueOut(setting);
+                var settingo = TransformValueOut(setting);
+                if (!ReferenceEquals(setting,settingo))
+                {
+                    if (IsMissing(setting))
+                    {
+                        return Unifiable.MISSING;
+                    }
+                    return settingo;                    
+                }
                 return setting;
             }
             catch (Exception e)
@@ -2107,7 +2115,7 @@ namespace RTParser.Variables
                     }
                     if (inner == dictionary)
                     {
-                        writeToLog("WARN: alread contains inner " + inner);
+                        writeToLog("VVARN: alread contains inner " + inner);
                         //cols.Remove(deep);
                         return false;
                     }

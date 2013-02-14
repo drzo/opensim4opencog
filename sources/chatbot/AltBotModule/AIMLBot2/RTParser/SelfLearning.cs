@@ -330,6 +330,7 @@ namespace RTParser
         }
         private GraphMaster SetupUserWithGraph(string newname, string newkey, User newuser)
         {
+#if false
             GraphMaster graph = GetUserGraph(newkey);
             SetupUserWithGraph0(graph, newname, newkey, newuser);
             return graph;
@@ -338,9 +339,10 @@ namespace RTParser
         {            
             //graph.AddParallelMT(AltBot.TheUserListenerGraph, newuser.WriteToUserTrace);
             newuser.StartGraph = graph;
+#endif
             newuser.UserID = newkey;
             newuser.UserName = newname;
-            OnBotCreated(() => graph.AddGenlMT(DefaultStartGraph, newuser.WriteToUserTrace));
+         //   OnBotCreated(() => graph.AddGenlMT(DefaultStartGraph, newuser.WriteToUserTrace));
             newuser.Predicates.IsIdentityReadOnly = false;
             newuser.Predicates.addSetting("name", newname);
             newuser.Predicates.addSetting("id", newkey);
@@ -348,9 +350,10 @@ namespace RTParser
             newuser.AddTodoItem(() =>
                                     {
                                         newuser.SyncDirectory(GetUserDir(newkey));
-                                        if (graph.Size == 0) graph.UnTraced = true;
+                                //        if (graph.Size == 0) graph.UnTraced = true;
                                     });
             newuser.Predicates.IsIdentityReadOnly = true;
+            return null;
         }
 
         public static string NoSpaceLowerCaseName(string path)

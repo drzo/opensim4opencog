@@ -241,13 +241,20 @@ namespace RTParser
 
         public GraphMaster HeardYouSayGraph
         {
-            get { return FindGraphLocally("heardyousaygraph") ?? rbot.DefaultStartGraph; }
-            set
+            get { return FindGraphLocallyOrNull("heardyousay") ?? rbot.DefaultHeardYouSayGraph; }
+            set { SetGraphLocally("heardyousay", value, () => HeardYouSayGraph); }
+        }
+
+        private void SetGraphLocally(string heardyousay, GraphMaster value, Func<GraphMaster> test)
+        {
+            string gn = value.ScriptingName;
+            if (!heardyousay.EndsWith("graph")) heardyousay += "graph";
+            if (!Predicates.containsLocalCalled(heardyousay))
+                Predicates.addSetting(heardyousay, gn);
+            else Predicates.updateSetting(heardyousay, gn);
+            if (test != null)
             {
-                if (!Predicates.containsLocalCalled("heardyousaygraph"))
-                    Predicates.addSetting("heardyousaygraph", value.ScriptingName);
-                else Predicates.updateSetting("heardyousaygraph", value.ScriptingName);
-                GraphMaster lg = HeardYouSayGraph;
+                var lg = test();
                 if (lg != value)
                 {
                     rbot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
@@ -255,13 +262,17 @@ namespace RTParser
             }
         }
 
-        private GraphMaster FindGraphLocally(string varname)
+        private GraphMaster FindGraphLocallyOrNull(string varname)
         {
-            GraphMaster _uGraph = rbot.GetUserGraph(NameSpace);
-            //Predicates.IsTraced = false;
+            if (!varname.EndsWith("graph")) varname += "graph";
             var v = Predicates.grabSettingNoDebug(varname);
             if (Unifiable.IsMissing(v)) return null;
-            GraphMaster _Graph = rbot.GetGraph(v, _uGraph);
+            if (Unifiable.IsIncomplete(v)||Unifiable.IsNullOrEmpty(v))
+            {
+                rbot.writeToLog("Bad value found in " + varname);
+                return null;
+            }
+            GraphMaster _Graph = rbot.GetGraph(v, null);
             if (_Graph != null)
             {
                 return _Graph;
@@ -272,18 +283,8 @@ namespace RTParser
 
         public GraphMaster HeardSelfSayGraph
         {
-            get { return FindGraphLocally("heardselfsay") ?? rbot.DefaultHeardSelfSayGraph; }
-            set
-            {
-                if (!Predicates.containsLocalCalled("heardselfsay"))
-                    Predicates.addSetting("heardselfsay", value.ScriptingName);
-                else Predicates.updateSetting("heardselfsay", value.ScriptingName);
-                GraphMaster lg = HeardSelfSayGraph;
-                if (lg != value)
-                {
-                    rbot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
-                }
-            }
+            get { return FindGraphLocallyOrNull("heardselfsay") ?? rbot.DefaultHeardSelfSayGraph; }
+            set { SetGraphLocally("heardselfsay", value, () => HeardSelfSayGraph); }
         }
 
         /// <summary>
@@ -294,21 +295,11 @@ namespace RTParser
         {
             get
             {
-                GraphMaster v = FindGraphLocally("startgraph") ?? rbot.DefaultStartGraph;
+                GraphMaster v = FindGraphLocallyOrNull("startgraph") ?? rbot.DefaultStartGraph;
                 if (v.Size == 0) v = rbot.DefaultStartGraph;
                 return v;
             }
-            set
-            {
-                if (!Predicates.containsLocalCalled("startgraph"))
-                    Predicates.addSetting("startgraph", value.ScriptingName);
-                else Predicates.updateSetting("startgraph", value.ScriptingName);
-                GraphMaster lg = StartGraph;
-                if (lg != value)
-                {
-                    rbot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
-                }
-            }
+            set { SetGraphLocally("startgraph", value, () => StartGraph); }
         }
 
         public object TemplatesLock

@@ -63,5 +63,9 @@ namespace RTParser.CycNLTagHandlers
             return OR_FALSE;
         }
 
+        protected override Unifiable ComputeInnerOrNull()
+        {
+            return AsOneOf();
+        }
     }
 }

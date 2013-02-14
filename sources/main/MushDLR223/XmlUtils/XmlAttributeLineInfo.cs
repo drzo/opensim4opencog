@@ -4,7 +4,7 @@ using System.Xml;
 namespace MushDLR223.Utilities
 {
     public class XmlAttributeLineInfo : XmlAttribute, XmlSourceLineInfo
-    {
+    {       
         public void SetOwnerDocument(XmlDocumentLineInfo newDoc)
         {
             var prev = OwnerDocument as XmlDocumentLineInfo;

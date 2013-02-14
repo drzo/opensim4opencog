@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using AltAIMLbot;
 using java.lang;
 using RTParser.Variables;
 using Exception=System.Exception;
@@ -89,7 +90,7 @@ namespace RTParser.Utils
                 AddUndo(debugStr,() =>
                             {
                                 Unifiable newValue = settings.grabSetting(n);
-                                if (newValue != v)
+                                if (newValue.TrimIC('.') != v.TrimIC('.'))
                                 {
                                     writeToLog("ERROR unexpected '" + n + "'='" +
                                         Unifiable.DescribeUnifiable(newValue) + "' expecting '" +
@@ -106,7 +107,7 @@ namespace RTParser.Utils
                                 Unifiable newValue = settings.grabSetting(n);
                                 if (newValue != v)
                                 {
-                                    writeToLog("ERROR unexpected '" + n + "'='" +
+                                    writeToLog("3Rr0R unexpected '" + n + "'='" +
                                         Unifiable.DescribeUnifiable(newValue) + "' expecting '" +
                                               Unifiable.DescribeUnifiable(v) + "' ");
                                 }
