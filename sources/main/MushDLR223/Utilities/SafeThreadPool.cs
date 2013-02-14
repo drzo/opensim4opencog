@@ -93,6 +93,9 @@ namespace ThreadPoolUtil
             SafelyInvoke(creationTrace, act);
             return res[0];
         }
+
+        public static bool NeverCrash = true;
+
         private static void SafelyInvoke(string creationTrace, Delegate action, params object[] args)       
         {
             Thread thread = Thread.CurrentThread;
@@ -107,7 +110,13 @@ namespace ThreadPoolUtil
             {
                 thread.LastException = e;
                 Issue(thread, e);
-                if (!thread.HandleException(e)) throw thread.LastException;
+                if (!thread.HandleException(e))
+                {
+                    if (!NeverCrash)
+                    {
+                        throw thread.LastException;
+                    }
+                }
             }
             finally
             {

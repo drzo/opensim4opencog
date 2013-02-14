@@ -39,8 +39,8 @@ namespace MushDLR223.Utilities
         public static OutputDelegate errorOutput;
 
         public static bool SkipXmlns = true;
-        public static Func<string, string> TextFormatter = StaticXMLUtils.CleanWhitepaces;
-        public static Func<string, string> TextWhitespaceCleaner = StaticXMLUtils.CleanWhitepaces;
+        public Func<string, string> TextFormatter = null;
+        public Func<string, string> TextWhitespaceCleaner = null;
         public readonly XmlNamespaceManager Manager;
 
         public bool RemoveXmlns = SkipXmlns;
@@ -1110,22 +1110,28 @@ namespace MushDLR223.Utilities
 
         public static XmlReader CreateXmlTextReader(Stream stream)
         {
-            return XmlReader.Create(stream, DefaultSettings);
+            return Wrap(XmlReader.Create(stream, DefaultSettings));
         }
 
         public static XmlReader CreateXmlTextReader(XmlTextReader xmlTextReader)
         {
-            return XmlReader.Create(xmlTextReader, DefaultSettings);
+            return Wrap(XmlReader.Create(xmlTextReader, DefaultSettings));
         }
         public static XmlReader CreateXmlTextReader(string uri)
         {
-            return XmlReader.Create(uri, DefaultSettings);
+            return Wrap(XmlReader.Create(uri, DefaultSettings));
         }
 
         public static XmlReader CreateXmlTextReader(TextReader tr)
         {
             //XmlTextReader xmlTextReader = new XmlTextReader(tr);
-            return XmlReader.Create(tr, DefaultSettings);
+            return Wrap(XmlReader.Create(tr, DefaultSettings));
+        }
+
+        private static XmlReader Wrap(XmlReader create)
+        {
+            create.MoveToContent();
+            return create;
         }
 
 
@@ -1149,7 +1155,7 @@ namespace MushDLR223.Utilities
         internal string FormatTextNode(string text)
         {
             if (TextFormatter != null && FormatTextNode != TextFormatter) return TextFormatter(text);
-            return CleanWhitepaces(text);
+            return text;
         }
 
         internal string CleanWhitepaces(string text)

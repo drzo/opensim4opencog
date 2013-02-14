@@ -86,7 +86,8 @@ namespace MushDLR223.Utilities
                 int lastlf = toWrite.LastIndexOf('\n');
                 if (lastlf == -1)
                 {
-                    return;
+                    if (!DLRConsole.ContainsSubscribedBreakpointWords(toWrite))
+                        return;
                 }
                 sw = new StringWriter();
                 string nextWrite = toWrite.Substring(lastlf).TrimStart();
@@ -96,6 +97,7 @@ namespace MushDLR223.Utilities
             }
             try
             {
+                bool debug = DLRConsole.ContainsSubscribedBreakpointWords(toWrite);
                 output(toWrite);
             }
             catch (Exception e)
