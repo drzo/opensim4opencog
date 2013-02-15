@@ -54,7 +54,11 @@ namespace AltAIMLbot.AIMLTagHandlers
                         message = this.TemplateNodeOuterXml;
                         message = message.Replace(@"<sapi>", "");
                         message = message.Replace(@"</sapi>", "");
+#if STANDALONE_TESTS
                         message = MyBehFacade.FixXmlEnitites(message);
+#else
+                        message = BehaviorTree.FixXmlEnitites(message);
+#endif
                     }
                     else
                     {

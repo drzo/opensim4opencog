@@ -1458,6 +1458,13 @@ namespace AltAIMLbot.Utils
                 return TIs.ToArray();
             }
         }
+
+        public object templates
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
         internal void SetDisabled(TemplateInfo templateInfo, bool value)
         {
             lock (SyncObject)
@@ -1489,6 +1496,16 @@ namespace AltAIMLbot.Utils
                     this.TemplateInfos.Add(templateInfo);
                 }
             }
+        }
+
+        public static void addCategoryDB(string empty, string categoryPath, string template, string vfilename, int i, int i1, string s, object extDb)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void searchFullPathsShortCategory(string path, string empty, ArrayList myCollector)
+        {
+            throw new NotImplementedException();
         }
     }
 

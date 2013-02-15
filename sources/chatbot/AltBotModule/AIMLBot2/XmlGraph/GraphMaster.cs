@@ -1673,10 +1673,69 @@ namespace AltAIMLbot.Utils
             return GraphNames.Contains(p);
         }
 
+        public Node root
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
         public bool InRunLowMemHooks = false;
         public long RunLowMemHooks()
         {
             return RootNode.RunLowMemHooks();
+        }
+
+        public string searchFullPathsJSON(string gmPath, string empty, int jtStartIndex, int jtPageSize, string jtSorting)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void searchFullPaths(string path, string empty, List<string> allPaths)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void collectFullPaths(string empty, List<string> allPaths)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void addCategory(string categoryPath, string template, string vfilename, int p, int p_2)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void webWriter(TextWriter writer, string action, string query, string mt, string serverRoot)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ExternDBFacade ensureEdb()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ArrayList selectPageResults(ArrayList collector, int jtStartIndex, int jtPageSize, string jtSorting)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class ExternDBFacade
+    {
+        public void ClearCache()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Node fetchNode(string categoryPath, bool b)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void saveNode(string categoryPath, Node myNode, bool b)
+        {
+            throw new NotImplementedException();
         }
     }
 }

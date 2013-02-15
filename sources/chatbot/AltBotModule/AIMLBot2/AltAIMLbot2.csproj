@@ -72,7 +72,7 @@
     <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;DEBUG;VISUAL_STUDIO</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;VISUAL_STUDIO;STANDALONE_TESTS</DefineConstants>
     <DocumentationFile>
     </DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
@@ -154,6 +154,7 @@
     <Compile Include="AIMLTagHandlersU\botsetting.cs" />
     <Compile Include="AIMLTagHandlersU\btxml.cs" />
     <Compile Include="AIMLTagHandlersU\chemcmd.cs" />
+    <Compile Include="AIMLTagHandlersU\condition_aima.cs" />
     <Compile Include="AIMLTagHandlersU\crontag.cs" />
     <Compile Include="AIMLTagHandlersU\filterqa.cs" />
     <Compile Include="AIMLTagHandlersU\format_prev.cs" />
@@ -175,11 +176,20 @@
     <Compile Include="AIMLTagHandlersU\scxml.cs" />
     <Compile Include="AIMLTagHandlersU\sentence_prev.cs" />
     <Compile Include="AIMLTagHandlersU\subaiml.cs" />
+    <Compile Include="AIMLTagHandlersU\summerize.cs" />
     <Compile Include="AIMLTagHandlersU\trueknowledgeserver.cs" />
     <Compile Include="AIMLTagHandlersU\wolframserver.cs" />
+    <Compile Include="BayesClassifier.cs" />
+    <Compile Include="BehaviorTree.cs" />
     <Compile Include="Bot.cs">
     </Compile>
+    <Compile Include="Cron.cs" />
     <Compile Include="HelpCodeFileMerge.cs" />
+    <Compile Include="MicroThreader.cs" />
+    <Compile Include="PorterStemmer.cs" />
+    <Compile Include="Qchem.cs" />
+    <Compile Include="Qfsm.cs" />
+    <Compile Include="RTParser\Bot.cs" />
     <Compile Include="RTParser\BotConsole.cs">
     </Compile>
     <Compile Include="RTParser\ChatDialog.cs">
@@ -204,6 +214,10 @@
     </Compile>
     <Compile Include="RTParser\TemplateResult.cs">
     </Compile>
+    <Compile Include="Servitor.cs" />
+    <Compile Include="ServitorEndpoint.cs" />
+    <Compile Include="ServitorProgram.cs" />
+    <Compile Include="TextRanker.cs" />
     <Compile Include="User.cs">
     </Compile>
     <Compile Include="UserDuringProcessing.cs">
@@ -473,6 +487,8 @@
     <Compile Include="RTParser\Utils\GraphLinkInfo.cs">
     </Compile>
     <Compile Include="Utils\AIMLTagHandlerU.cs" />
+    <Compile Include="Utils\RandomMemory.cs" />
+    <Compile Include="WebServitor.cs" />
     <Compile Include="XmlGraph\GraphMaster.cs">
     </Compile>
     <Compile Include="RTParser\Utils\GraphQuery.cs">
@@ -539,6 +555,7 @@
     </Compile>
     <Compile Include="XmlGraph\XmlNodeEvaluator.cs">
     </Compile>
+    <Compile Include="YBtrees.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

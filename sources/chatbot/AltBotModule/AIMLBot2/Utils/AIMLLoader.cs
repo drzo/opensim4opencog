@@ -1842,5 +1842,10 @@ namespace AltAIMLbot.Utils
         }
 
         #endregion
+
+        internal string generatePath(string graphName, string pattern, string that, string topic, string state1, string state2, bool p)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

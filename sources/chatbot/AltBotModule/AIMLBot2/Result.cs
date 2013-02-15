@@ -974,5 +974,10 @@ namespace AltAIMLbot
                 return scope;
             }
         }
+
+        public bool isValidOutput
+        {
+            get { throw new NotImplementedException(); }
+        }
     }
 }
