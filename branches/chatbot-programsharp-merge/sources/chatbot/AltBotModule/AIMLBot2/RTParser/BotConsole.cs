@@ -40,7 +40,7 @@ namespace AltAIMLbot
     {
         internal readonly Dictionary<string, SystemExecHandler> ConsoleCommands = new Dictionary<string, SystemExecHandler>();
         int UseHttpd = -1;
-        private static Bot ConsoleRobot;
+        public static Bot ConsoleRobot;
         public static string AIMLDEBUGSETTINGS =
             "clear -spam +user +bina +err +aimltrace +cyc -dictlog -tscore +loaded";
 

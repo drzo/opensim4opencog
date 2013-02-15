@@ -1,3 +1,5 @@
+#if STANDALONE_TESTS
+#else
 using System;
 using System.Xml;
 using System.Text;
@@ -99,7 +101,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// AIML predicate, and a required attribute value, which contains a simple pattern expression. The 
     /// element may contain any AIML template elements. 
     /// </summary>
-    public class condition : Utils.AIMLTagHandler
+    public class condition_aima : Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -122,7 +124,7 @@ namespace AltAIMLbot.AIMLTagHandlers
         }
         protected int maxTrueConditions = 1;
         protected int currentTrueConditions = 0;
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (this.TemplateNodeName == "condition")
             {
@@ -228,3 +230,4 @@ namespace AltAIMLbot.AIMLTagHandlers
         }
     }
 }
+#endif //STANDALONE_TESTS

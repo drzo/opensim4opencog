@@ -489,6 +489,19 @@ namespace AltAIMLbot
 
         public Request OriginalSalientRequest { get; set; }
 
+        public Request(string sentStr, User user, string that, AltBot bot, bool p, RequestKind requestKind)
+            : this(bot.GetQuerySettings(), false)
+        {
+            // TODO: Complete member initialization
+            this.sentStr = sentStr;
+            this.user = user;
+            this.that = that;
+            this.bot = bot;
+            this.p = p;
+            this.requestKind = requestKind;
+            throw new NotImplementedException("6 constructort request!");
+        }
+
 #if interface
         protected RequestImpl(QuerySettingsReadOnly defaults)        
 #else
@@ -619,7 +632,6 @@ namespace AltAIMLbot
                 throw new NullReferenceException("invalid That " + this);
             }
         }
-
 
         public void SetSpeakerAndResponder(User speaker, User targetUser)
         {
@@ -1809,6 +1821,12 @@ namespace AltAIMLbot
 
         public CommitQueue ExitQueue { get; set; }
         private bool HasExited;
+        private string sentStr;
+        private User user;
+        private string that;
+        private AltBot bot;
+        private bool p;
+        private RequestKind requestKind;
 
         public string SraiGraph
         {
@@ -1885,6 +1903,17 @@ namespace AltAIMLbot
             set;
         }
 
+        public Result result
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
         #endregion
+
+        public static bool IsToplevelRealtimeChat(bool isToplevel, RequestKind requestType)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
