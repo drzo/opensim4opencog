@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml;
-using AltAIMLParser;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser;
-using RTParser.Utils;
-using RTParser.Variables;
 
-namespace RTParser.Database
+namespace AltAIMLbot.Database
 {
     public class NamedValuesFromSettings: StaticAIMLUtils
     {
@@ -22,9 +21,9 @@ namespace RTParser.Database
             OutputDelegate writeToLog = request.writeToLog ?? DEVNULL;
             AltBot TargetBot = request.TargetBot;
             ISettingsDictionary udict;
-            string dictName = AIMLTagHandler.GetNameOfDict(query, subject ?? dict.NameSpace, node, out udict);
+            string dictName = AIMLTagHandlerU.GetNameOfDict(query, subject ?? dict.NameSpace, node, out udict);
             // try to use a global blackboard predicate
-            RTParser.User gUser = TargetBot.ExemplarUser;
+            User gUser = TargetBot.ExemplarUser;
 
             defaultVal = AltBot.GetAttribValue(node, "default,defaultValue", defaultVal);
             gName = AltBot.GetAttribValue(node, "global_name", gName);
@@ -137,7 +136,7 @@ namespace RTParser.Database
             Request request = query.Request;
             AltBot TargetBot = request.TargetBot;
             // try to use a global blackboard predicate
-            RTParser.User gUser = TargetBot.ExemplarUser;
+            User gUser = TargetBot.ExemplarUser;
 
             string realName;
             Unifiable resultGet = SettingsDictionaryReal.grabSettingDefaultDict(dict, name, out realName);

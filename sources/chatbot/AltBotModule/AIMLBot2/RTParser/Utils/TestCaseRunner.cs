@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Xml;
-using AltAIMLParser;
 using AltAIMLbot;
+using AltAIMLbot.Utils;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     internal class TestCaseRunner : XmlNodeEvaluatorImpl
     {
@@ -114,7 +115,7 @@ namespace RTParser.Utils
             User user = request.Requester;
             AltBot robot = request.TargetBot ?? Loader.TargetBot;
 
-            string tcname = FindNodeOrAttrib(src, "name", null);
+            string tcname = StaticXMLUtils.FindNodeOrAttrib(src, "name", null);
             string tcdesc = FindNodeOrAttrib(src, "Description", null);
             string input = FindNodeOrAttrib(src, "Input", null);
             if (input == null)
@@ -236,7 +237,7 @@ namespace RTParser.Utils
 
         private static string Fudge(string expectedAnswer)
         {
-            expectedAnswer = CleanPunct(CleanWhitepaces(expectedAnswer));
+            expectedAnswer = StaticAIMLUtils.CleanPunct(CleanWhitepaces(expectedAnswer));
             expectedAnswer = expectedAnswer.Replace("<html:", "<");
             expectedAnswer = expectedAnswer.Replace(" />", "/>");
             string was = expectedAnswer;

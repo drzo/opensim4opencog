@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Xml;
-using AltAIMLParser;
+using AltAIMLbot.Utils;
 using AltAIMLbot;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     /// <summary>
     /// Encapsulates information about a custom tag class
@@ -50,7 +50,7 @@ namespace RTParser.Utils
         /// </summary>
         /// <param name="Assemblies">All the assemblies the bot knows about</param>
         /// <returns>The instantiated class</returns>
-        public AIMLTagHandler Instantiate(Dictionary<string, Assembly> Assemblies, User user, SubQuery query,
+        public AIMLTagHandlerU Instantiate(Dictionary<string, Assembly> Assemblies, User user, SubQuery query,
                                           Request request, Result result, XmlNode node, AltBot bot)
         {
             lock (Assemblies)
@@ -60,10 +60,10 @@ namespace RTParser.Utils
                     {
                         if (info == null) info = type.GetConstructor(CONSTRUCTOR_TYPES);
                         if (info != null)
-                            return (AIMLTagHandler) info.Invoke(new object[] {bot, user, query, request, result, node});
+                            return (AIMLTagHandlerU) info.Invoke(new object[] {bot, user, query, request, result, node});
                     }
                     Assembly tagDLL = Assemblies[this.AssemblyName];
-                    AIMLTagHandler newCustomTag = (AIMLTagHandler) tagDLL.CreateInstance(ClassName);
+                    AIMLTagHandlerU newCustomTag = (AIMLTagHandlerU) tagDLL.CreateInstance(ClassName);
                     if (newCustomTag == null) return null;
                     newCustomTag.query = query;
                     newCustomTag.request = request;

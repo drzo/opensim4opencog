@@ -2,10 +2,11 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Xml;
+using AltAIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     [Serializable]
     public class TextPatternUtils : StaticXMLUtils

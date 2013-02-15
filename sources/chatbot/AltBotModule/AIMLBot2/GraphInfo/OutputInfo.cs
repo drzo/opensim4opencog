@@ -1,7 +1,7 @@
 using System;
 using System.Xml;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
 #if false
     [Serializable]

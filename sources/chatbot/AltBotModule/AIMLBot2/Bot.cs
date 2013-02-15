@@ -26,7 +26,7 @@ using RTParser.Normalize;
 using RTParser.Utils;
 using RTParser.Variables;
 using AIMLLoader = AltAIMLbot.Utils.AIMLLoaderS;
-using AIMLTagHandler=AltAIMLbot.Utils.AIMLTagHandler;
+using AIMLTagHandlerU=AltAIMLbot.Utils.AIMLTagHandlerU;
 using bot=AltAIMLbot.AIMLTagHandlers.bot;
 using CustomTagAttribute=AltAIMLbot.Utils.CustomTagAttribute;
 using Gender=AltAIMLbot.Utils.Gender;
@@ -36,7 +36,9 @@ using recursiveVerbatum=AltAIMLbot.AIMLTagHandlers.recursiveVerbatum;
 using TagHandler=AltAIMLbot.Utils.TagHandler;
 using verbatum=AltAIMLbot.AIMLTagHandlers.verbatum;
 #endif
-using AltAIMLParser;
+using AltAIMLbot.Database;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 using DcBus;
 using LogicalParticleFilter1;
 using Action=System.Action;
@@ -70,27 +72,21 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
 using AIMLbot;
-using AltAIMLParser;
 using AltAIMLbot;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using RTParser;
 using org.opencyc.api;
 #if USE_SWIPROLOG
 using PrologScriptEngine;
 #endif
-using RTParser.AIMLTagHandlers;
-using RTParser.Database;
-using RTParser.Utils;
-using RTParser.Variables;
-using RTParser.Web;
+using AltAIMLbot.Web;
 using Console=System.Console;
-using UPath = RTParser.Unifiable;
-using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
+using UPath = AltAIMLbot.Unifiable;
+using UList = System.Collections.Generic.List<AltAIMLbot.Utils.TemplateInfo>;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     /// <summary>
     /// Return a Response object
@@ -1995,7 +1991,7 @@ The AIMLbot program.
             return FindGraph(graphPath, null);
         }
 
-        static public GraphMaster FindGraph(string graphPath)
+        static public GraphMaster FindGlobalGraph(string graphPath)
         {
             GraphMaster g;
             lock (GraphsByName) GraphsByName.TryGetValue(graphPath, out g);

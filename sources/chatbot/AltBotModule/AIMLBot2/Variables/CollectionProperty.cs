@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 
-namespace RTParser.Variables
+namespace AltAIMLbot.Variables
 {
     public class CollectionProperty<T>
     {

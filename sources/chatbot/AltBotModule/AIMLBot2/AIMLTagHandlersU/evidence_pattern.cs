@@ -1,27 +1,17 @@
 ﻿using System;
-using System.Runtime;
-using System.Text;
 using System.Xml;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-//using System.Linq;
-using System.Text.RegularExpressions;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics;
-using AltAIMLParser;
-using AltAIMLbot;
-using RTParser;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+//using System.Linq;
+
+namespace AltAIMLbot.AIMLTagHandlersU
 {
-    public class evidence_pattern : RTParser.Utils.AIMLTagHandler
+    public class evidence_pattern : AIMLTagHandlerU
     {
 
-        public evidence_pattern(RTParser.AltBot bot,
-                RTParser.User user,
-                RTParser.Utils.SubQuery query,
+        public evidence_pattern(AltBot bot,
+                User user,
+                SubQuery query,
                 Request request,
                 Result result,
                 XmlNode templateNode)
@@ -31,13 +21,13 @@ namespace RTParser.AIMLTagHandlers
 
 
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (CheckNode("evidencepattern"))
             {
                 try
                 {
-                    var varMSM = this.botActionMSM;
+                    var varMSM = botActionMSM;
 
                     string payload = templateNodeInnerText.ToValue(query);
 
@@ -53,9 +43,9 @@ namespace RTParser.AIMLTagHandlers
                                          @" prob=" + quote + prob_str + quote +
                                          @" /></think>ep "+evidence+"</template></category></topic>";
                                          //@"</aiml>";
-                    //this.user.bot.AddAiml(evidenceCode);
+                    //Proc.AddAiml(evidenceCode);
                     GraphMaster myGraph = request.GetGraph("msm");
-                    AddSideEffect("ADD AIML " + evidenceCode, () => this.user.rbot.AddAiml(myGraph, evidenceCode));
+                    AddSideEffect("ADD AIML " + evidenceCode, () => Proc.AddAiml(myGraph, evidenceCode));
 
                     AltBot.writeDebugLine("MSM: evidence_pattern evidenceCode = {0}", evidenceCode);
 

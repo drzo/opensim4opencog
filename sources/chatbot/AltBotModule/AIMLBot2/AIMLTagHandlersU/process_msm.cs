@@ -1,28 +1,18 @@
-﻿using System;
-using System.Runtime;
-using System.Text;
+﻿using System.Collections;
 using System.Xml;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-//using System.Linq;
-using System.Text.RegularExpressions;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics;
 using AIMLbot;
-using AltAIMLParser;
-using AltAIMLbot;
-using RTParser;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+//using System.Linq;
+
+namespace AltAIMLbot.AIMLTagHandlersU
 {
-    public class process_msm : RTParser.Utils.AIMLTagHandler
+    public class process_msm : AIMLTagHandlerU
     {
 
-        public process_msm(RTParser.AltBot bot,
-                RTParser.User user,
-                RTParser.Utils.SubQuery query,
+        public process_msm(AltBot bot,
+                User user,
+                SubQuery query,
                 Request request,
                 Result result,
                 XmlNode templateNode)
@@ -30,9 +20,9 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
-            if (this.templateNode.Name.ToLower() == "processmsm")
+            if (templateNode.Name.ToLower() == "Processmsm")
             {
                 string machine = GetAttribValue("name", null);
                 string line = templateNodeInnerText.ToValue(query);
@@ -46,19 +36,19 @@ namespace RTParser.AIMLTagHandlers
 
         protected Unifiable ProcessChangeMSM()
         {
-            //if (this.templateNode.Name.ToLower() == "processmsm")
+            //if (this.templateNode.Name.ToLower() == "Processmsm")
             {
                 string machine = GetAttribValue("name", null);
                 string line = templateNodeInnerText.ToValue(query);
                 AltBot.writeDebugLine("\n\n >>>>>>>>>>>>>>>>>>>>>> PROCESSMSM : |{0}|<<<<<<<<<<<<<<<<<<<<", line);
                 //varMSM.lastDefMachine = machine;
-                var varMSM = this.botActionMSM;
+                var varMSM = botActionMSM;
 
                 varMSM.addMachine(machine);
                 // set topic to "collectevidencepatterns"
-                //this.user.bot.AddAiml("<set name='topic'>collectevidencepatters</set>");
+                //Proc.AddAiml("<set name='topic'>collectevidencepatters</set>");
                 //this.user.Predicates.updateSetting("topic", "collectevidencepatters");
-                this.user.TopicSetting = "CEP";
+                user.TopicSetting = "CEP";
 
                 // Clear the evidence and next state
                 varMSM.clearEvidence();
@@ -67,10 +57,10 @@ namespace RTParser.AIMLTagHandlers
                 // estimate what evidence can be gleaned from the current state
                 varMSM.inspectEvidenceStates();
 
-                // process the input text
+                // Process the input text
 
-                //string evidenceReply = this.user.bot.ChatString(line, this.user.UserID);
-                string evidenceReply = subChat(line, this.user.TopicSetting, request, true);
+                //string evidenceReply = Proc.ChatString(line, this.user.UserID);
+                string evidenceReply = subChat(line, user.TopicSetting, request, true);
 
                 AltBot.writeDebugLine("MSM: WithEvidence {0} ", varMSM.ToString());
 
@@ -87,7 +77,7 @@ namespace RTParser.AIMLTagHandlers
                 varMSM.advanceStateValues();
                 AltBot.writeDebugLine("MSM: AfterAdvance {0} ", varMSM.ToString());
 
-                // For each machine set the appropriate topic, and process the input text
+                // For each machine set the appropriate topic, and Process the input text
                 string totalReply = "";
                 double strongestVal = -9999;
                 foreach (string actingMachine in machinesTopState.Keys)
@@ -105,10 +95,10 @@ namespace RTParser.AIMLTagHandlers
                             string responseTopicUp = ToUpper(responseTopic);
                             //string topicSet = "<set name='topic'>"+responseTopic+"</set>";
                             //this.user.Predicates.updateSetting("topic", responseTopic);
-                            this.user.TopicSetting = responseTopicUp;
-                            //this.user.bot.AddAiml(topicSet);
+                            user.TopicSetting = responseTopicUp;
+                            //Proc.AddAiml(topicSet);
                             string actionReply = "";
-                            //actionReply = this.user.bot.ChatString(line, this.user.UserID);
+                            //actionReply = Proc.ChatString(line, this.user.UserID);
 
 
                             actionReply = subChat(line, responseTopicUp, request, false);
@@ -159,7 +149,7 @@ namespace RTParser.AIMLTagHandlers
                 var newresult = request.CreateResult(subRequest);
                 //subRequest.CurrentResult = newresult;
                 user.SuspendAddResultToUser = true;
-                subResult = (Result) this.Proc.ChatWithRequest(subRequest);
+                subResult = (Result) Proc.ChatWithRequest(subRequest);
                 // subResult = this.Proc.Chat(subRequest, request.Graph);
             }
             finally

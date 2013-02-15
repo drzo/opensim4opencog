@@ -2,17 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.Xml;
 using AIMLbot;
-using AltAIMLParser;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+
 
 //using CategoryInfo = RTParser.Utils.TemplateInfo;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
-    public class LoaderOptions
+    /// <summary>
+    /// A utility class for loading AIML files from disk into the graphmaster structure that 
+    /// forms an AIML bot's "brain"
+    /// </summary>
+    public partial class LoaderOptions
     {
         //public LoaderOptions prevoious;
         public static readonly string MISSING_FILE = "loadopts_MISSING_FILE";
-        public readonly MasterRequest TheRequest;
+        public Request TheRequest;
         private string _curently_loading;
         public string _currently_loadingfrom;
         private GraphMaster _specified_Graph;

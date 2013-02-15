@@ -1,10 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLParser;
-using AltAIMLbot;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// The atomic version of the gender element is a shortcut for:
@@ -15,10 +12,10 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The non-atomic gender element instructs the AIML interpreter to: 
     /// 
-    /// 1. replace male-gendered words in the result of processing the contents of the gender element 
+    /// 1. replace male-gendered words in the result of Processing the contents of the gender element 
     /// with the grammatically-corresponding female-gendered words; and 
     /// 
-    /// 2. replace female-gendered words in the result of processing the contents of the gender element 
+    /// 2. replace female-gendered words in the result of Processing the contents of the gender element 
     /// with the grammatically-corresponding male-gendered words. 
     /// 
     /// The definition of "grammatically-corresponding" is left up to the implementation.
@@ -27,7 +24,7 @@ namespace RTParser.AIMLTagHandlers
     /// fact that most AIML has been written in English. However, the decision about whether to 
     /// transform gender of other words is left up to the implementation.
     /// </summary>
-    public class gender : RTParser.Utils.AIMLDictSubstFormatingTagHandler
+    public class gender : AIMLDictSubstFormatingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -37,10 +34,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public gender(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public gender(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)

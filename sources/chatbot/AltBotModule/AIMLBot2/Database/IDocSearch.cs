@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 
-namespace RTParser.Database
+namespace AltAIMLbot.Database
 {
     public interface IDocSearch
     {

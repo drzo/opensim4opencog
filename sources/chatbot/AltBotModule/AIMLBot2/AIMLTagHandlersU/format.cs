@@ -1,12 +1,10 @@
 using System;
 using System.Xml;
-using AltAIMLParser;
-using AltAIMLbot;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
-    public class format : AIMLTagHandler
+    public class format : AIMLTagHandlerU
     {
         private Func<Unifiable, Unifiable> UFormatter;
         private Func<string, string> SFormatter;
@@ -16,7 +14,7 @@ namespace RTParser.AIMLTagHandlers
         #region Overrides of AIMLFormatingTagHandler
 
         /// <summary>
-        /// The subclass only needs to process the non atomic inner text
+        /// The subclass only needs to Process the non atomic inner text
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
@@ -31,10 +29,10 @@ namespace RTParser.AIMLTagHandlers
 
 
         /// <summary>
-        /// The method that does the actual processing of the text.
+        /// The method that does the actual Processing of the text.
         /// </summary>
-        /// <returns>The resulting processed text</returns>
-        sealed protected override Unifiable ProcessChange()
+        /// <returns>The resulting Processed text</returns>
+        sealed protected override Unifiable ProcessChangeU()
         {
             return Format(TransformAtomically(OnEach, isRecursiveSubclass && !ReadOnly));
         }
@@ -54,29 +52,29 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public format(RTParser.AltBot bot,
-                      RTParser.User user,
-                      RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public format(AltBot bot,
+                      User user,
+                      SubQuery query,
                       Request request,
                       Result result,
                       XmlNode templateNode, Func<Unifiable, Unifiable> formatter, Func<Unifiable, Unifiable> formattereach)
             : base(bot, user, query, request, result, templateNode)
         {
-            this.UFormatter = formatter;
-            this.UFormatterE = formattereach;
+            UFormatter = formatter;
+            UFormatterE = formattereach;
         }
 
-        public format(RTParser.AltBot bot,
-                      RTParser.User user,
-                      RTParser.Utils.SubQuery query,
+        public format(AltBot bot,
+                      User user,
+                      SubQuery query,
                       Request request,
                       Result result,
                       XmlNode templateNode, Func<string, string> formatter, Func<string, string> formattereach)
             : base(bot, user, query, request, result, templateNode)
         {
-            this.SFormatter = formatter;
-            this.SFormatterE = formattereach;
+            SFormatter = formatter;
+            SFormatterE = formattereach;
         }
     }
 }

@@ -1,27 +1,17 @@
 ﻿using System;
-using System.Runtime;
-using System.Text;
 using System.Xml;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-//using System.Linq;
-using System.Text.RegularExpressions;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics;
-using AltAIMLParser;
-using AltAIMLbot;
-using RTParser;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+//using System.Linq;
+
+namespace AltAIMLbot.AIMLTagHandlersU
 {
-    public class lexset : RTParser.Utils.UnifibleTagHandler
+    public class lexset : UnifibleTagHandler
     {
 
-        public lexset(RTParser.AltBot bot,
-                RTParser.User user,
-                RTParser.Utils.SubQuery query,
+        public lexset(AltBot bot,
+                User user,
+                SubQuery query,
                 Request request,
                 Result result,
                 XmlNode templateNode)
@@ -37,7 +27,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ComputeInnerOrNull()
         {
-            if (this.templateNode.Name.ToLower() == "lexset")
+            if (templateNode.Name.ToLower() == "lexset")
             {
                 // Simply push the filled in tag contents onto the stack
                 try
@@ -48,17 +38,17 @@ namespace RTParser.AIMLTagHandlers
                     string [] lexset = lexlist.Split(' ');
                     string lexspec = word;
                     // Append the definition of any tokens including the original set and the token list
-                    if (this.user.rbot.wordAttributeHash.Contains(word)) { lexspec +=" "+ (string)this.user.rbot.wordAttributeHash[word]; }
+                    if (Proc.wordAttributeHash.Contains(word)) { lexspec +=" "+ (string)Proc.wordAttributeHash[word]; }
                     lexspec += " "+lexlist;
                     foreach (string lexcat in lexset)
                     {
                         try
                         {
-                            lexspec += " " + ((string)this.user.rbot.wordAttributeHash[lexcat]);
+                            lexspec += " " + ((string)Proc.wordAttributeHash[lexcat]);
                         }
                         catch { }
                     }
-                    this.user.rbot.wordAttributeHash[word]=lexspec.Trim();
+                    Proc.wordAttributeHash[word]=lexspec.Trim();
                 }
                 catch
                 {

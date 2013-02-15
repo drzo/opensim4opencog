@@ -3,7 +3,7 @@ using System.Collections;
 using System.Xml;
 using MushDLR223.ScriptEngines;
 
-namespace RTParser.Database
+namespace AltAIMLbot.Database
 {
     public interface IEnglishFactiodEngine
     {

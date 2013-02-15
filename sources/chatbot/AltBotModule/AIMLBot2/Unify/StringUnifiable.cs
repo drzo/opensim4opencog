@@ -3,14 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Xml;
+using AltAIMLbot;
+using AltAIMLbot.Database;
+using AltAIMLbot.Utils;
 using MushDLR223.Utilities;
-using RTParser.Database;
-using RTParser.Utils;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
-using IndexTargetList = System.Collections.Generic.ICollection<RTParser.IndexTarget>;
-using IndexTargetListImpl = System.Collections.Generic.HashSet<RTParser.IndexTarget>;
+using IndexTargetList = System.Collections.Generic.ICollection<AltAIMLbot.IndexTarget>;
+using IndexTargetListImpl = System.Collections.Generic.HashSet<AltAIMLbot.IndexTarget>;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     [Serializable]
     public class StringUnifiable : Unifiable
@@ -127,7 +128,7 @@ namespace RTParser
             if (str == "*" || str == "_") return true;
             if (IsLazy)
             {
-                AIMLTagHandler tagHandler = GetTagHandler(query);
+                AIMLTagHandlerU tagHandler = GetTagHandler(query);
                 IUnifibleTagHandler utagHandler = tagHandler as IUnifibleTagHandler;
                 if (utagHandler != null)
                 {
@@ -1348,7 +1349,7 @@ namespace RTParser
                         writeToLog("UnifyLazy: SUCCEED T1 " + ov + " in " + query);
                         return true;
                     }
-                AIMLTagHandler tagHandler = GetTagHandler(query);
+                AIMLTagHandlerU tagHandler = GetTagHandler(query);
                 if (tagHandler.CallCanUnify(ov) == UNIFY_TRUE)
                 {
                     writeToLog("UnifyLazy: SUCCEED" + ov + " in " + query);
@@ -1390,13 +1391,13 @@ namespace RTParser
         }
 
         //private SubQuery savedSQ;
-        //AIMLTagHandler savedTagHandler;
+        //AIMLTagHandlerU savedTagHandler;
         //public XmlNode node;
-        public AIMLTagHandler GetTagHandler(SubQuery subquery)
+        public AIMLTagHandlerU GetTagHandler(SubQuery subquery)
         {
-            if (valueCache is AIMLTagHandler)
+            if (valueCache is AIMLTagHandlerU)
             {
-                AIMLTagHandler tagHandler = (AIMLTagHandler) valueCache;
+                AIMLTagHandlerU tagHandler = (AIMLTagHandlerU) valueCache;
                 tagHandler.ResetValues(false);
                 return tagHandler;
             }
@@ -1480,7 +1481,7 @@ namespace RTParser
             {
                 //todo 
                 if (query == null) return AsString();
-                AIMLTagHandler tagHandler = GetTagHandler(query);
+                AIMLTagHandlerU tagHandler = GetTagHandler(query);
                 ThreadStart undo = tagHandler.EnterUnify();
                 try
                 {

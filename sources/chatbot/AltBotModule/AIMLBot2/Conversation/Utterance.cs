@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using AltAIMLParser;
+using AltAIMLbot.Database;
+using AltAIMLbot.Normalize;
+using AltAIMLbot.Utils;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser.Database;
-using RTParser.Normalize;
-using RTParser.Utils;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     public class Utterance
     {

@@ -1,23 +1,24 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser.Variables;
 
-namespace RTParser.Normalize
+namespace AltAIMLbot.Normalize
 {
     /// <summary>
     /// Checks the text for any matches in the bot's substitutions dictionary and makes
     /// any appropriate changes.
     /// </summary>
-    public class ApplySubstitutions : RTParser.Utils.TextTransformer
+    public class ApplySubstitutions : TextTransformer
     {
-        public ApplySubstitutions(RTParser.AltBot bot, Unifiable inputString)
+        public ApplySubstitutions(AltBot bot, Unifiable inputString)
             : base(bot, inputString)
         { }
 
-        public ApplySubstitutions(RTParser.AltBot bot)
+        public ApplySubstitutions(AltBot bot)
             : base(bot)
         { }
 
@@ -38,7 +39,7 @@ namespace RTParser.Normalize
             return result.ToString();
         }
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (inputString != null) return inputString;
             return ApplySubstitutions.Substitute(this.Proc.InputSubstitutions, this.inputString);
@@ -54,6 +55,7 @@ namespace RTParser.Normalize
         /// <returns>The processed Unifiable</returns>
         public static string Substitute(ISettingsDictionary dictionary, string target)
         {
+            if (dictionary == null) return target;
             string marker = ApplySubstitutions.getMarker(5);
             string markerSP = ApplySubstitutions.getMarker(3);
             string result = " " + Unifiable.ToVMString(target) + " ";
@@ -152,7 +154,7 @@ namespace RTParser.Normalize
             return "\\b" + makeRegexSafe(fromValueTrim) + "\\b";
         }
 
-        public static string SubstituteRecurse(RTParser.AltBot bot, SettingsDictionary dictionary, string target)
+        public static string SubstituteRecurse(AltBot bot, SettingsDictionary dictionary, string target)
         {
             string result = Unifiable.ToVMString(target);
             String prev = "";

@@ -1,16 +1,12 @@
-using System;
-using System.Collections.Generic;
 using System.Xml;
-using System.Text;
-using AltAIMLParser;
-using AltAIMLbot;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// &lt;cycterm&gt; translates an English word/phrase into a Cyc symbol 
     /// </summary>
-    public class cycterm : RTParser.Utils.AIMLTagHandler
+    public class cycterm : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -20,10 +16,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public cycterm(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public cycterm(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -32,11 +28,11 @@ namespace RTParser.AIMLTagHandlers
             //isRecursive = false;
         }
 
-        public override Unifiable CompleteProcess()
+        public override Unifiable CompleteProcessU()
         {
             return ProcessAimlChange();
         }
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (base.CheckNode("cycterm"))
             {

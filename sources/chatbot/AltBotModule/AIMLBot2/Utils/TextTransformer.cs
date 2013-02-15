@@ -1,4 +1,4 @@
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     /// <summary>
     /// Encapsulates all the required methods and attributes for any text transformation.
@@ -6,7 +6,7 @@ namespace RTParser.Utils
     /// An input Unifiable is provided and various methods and attributes can be used to grab
     /// a transformed Unifiable.
     /// 
-    /// The protected ProcessChange() method is abstract and should be overridden to contain 
+    /// The protected ProcessChangeU() method is abstract and should be overridden to contain 
     /// the code for transforming the input text into the output text.
     /// </summary   
     public abstract class TextTransformer : StaticAIMLUtils
@@ -76,16 +76,16 @@ namespace RTParser.Utils
 
         public virtual Unifiable ProcessAimlChange()
         {
-            return ProcessChange();
+            return ProcessChangeU();
         }
 
         /// <summary>
         /// The method that does the actual processing of the text.
         /// </summary>
         /// <returns>The resulting processed text</returns>
-        protected abstract Unifiable ProcessChange();
+        protected abstract Unifiable ProcessChangeU();
 
-        public virtual Unifiable CompleteProcess()
+        public virtual Unifiable CompleteProcessU()
         {
             return inputString;
         }

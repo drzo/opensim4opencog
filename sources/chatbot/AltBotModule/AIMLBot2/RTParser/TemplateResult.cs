@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using AltAIMLParser;
-using RTParser.Utils;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     internal class TemplateResult : ChatSignal
     {
@@ -22,7 +22,7 @@ namespace RTParser
         public bool TemplateSucceeded;
         public bool CreatedOutput;
         public string TemplateOutput;
-        public AIMLTagHandler TagHandler;
+        public AIMLTagHandlerU TagHandler;
         public SubQuery SubQuery;
         public TemplateInfo TemplateInfo;
         public AIMLbot.MasterResult result;

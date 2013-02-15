@@ -5,15 +5,15 @@ using System.Drawing;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using AltAIMLbot;
+using AltAIMLbot.Variables;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 using Exception=System.Exception;
 using String=System.String;
-using RTParser.Variables;
 
-namespace RTParser.GUI
+namespace AltAIMLbot.GUI
 {
     public sealed partial class AIMLPadEditor : Form
     {
@@ -76,13 +76,13 @@ namespace RTParser.GUI
         }
 
 
-        private RTParser.AltBot robot;
+        private AltBot robot;
         private readonly string _tabname;
         private Thread TodoThread;
         private object ExecuteCommandLock = new object();
         private User user;
 
-        public AIMLPadEditor(string name, RTParser.AltBot bc)
+        public AIMLPadEditor(string name, AltBot bc)
         {
             robot = bc;
             _tabname = name;

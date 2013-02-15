@@ -1,27 +1,17 @@
 ﻿using System;
-using System.Runtime;
-using System.Text;
 using System.Xml;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-//using System.Linq;
-using System.Text.RegularExpressions;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics;
-using AltAIMLParser;
-using AltAIMLbot;
-using RTParser;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+//using System.Linq;
+
+namespace AltAIMLbot.AIMLTagHandlersU
 {
-    public class evidence_assoc : RTParser.Utils.AIMLTagHandler
+    public class evidence_assoc : AIMLTagHandlerU
     {
 
-        public evidence_assoc(RTParser.AltBot bot,
-                RTParser.User user,
-                RTParser.Utils.SubQuery query,
+        public evidence_assoc(AltBot bot,
+                User user,
+                SubQuery query,
                 Request request,
                 Result result,
                 XmlNode templateNode)
@@ -31,13 +21,13 @@ namespace RTParser.AIMLTagHandlers
 
 
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (CheckNode("evidenceassoc"))
             {
                 try
                 {
-                    var varMSM = this.botActionMSM;
+                    var varMSM = botActionMSM;
                     string payload = templateNodeInnerText.ToValue(query);
 
                     string machine = GetAttribValue("machine", varMSM.lastDefMachine);

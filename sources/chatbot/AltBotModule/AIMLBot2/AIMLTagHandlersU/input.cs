@@ -1,10 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLParser;
-using AltAIMLbot;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// The input element tells the AIML interpreter that it should substitute the contents of a 
@@ -24,7 +21,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The input element does not have any content. 
     /// </summary>
-    public class input : RTParser.Utils.AIMLConstraintTagHandler
+    public class input : AIMLConstraintTagHandler
     {
         /// <summary>
         /// Ctor
@@ -34,10 +31,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public input(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public input(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -45,9 +42,9 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        public input(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        public input(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                 XmlNode templateNode, int offset)
@@ -56,7 +53,7 @@ namespace RTParser.AIMLTagHandlers
             offetFrom = offset;
         }
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (CheckNode("input,justthat,beforethat,request"))
             {
@@ -67,7 +64,7 @@ namespace RTParser.AIMLTagHandlers
                     {
                         //if (at1.Length > 0)
                         {
-                            return CheckValue(GetIndexes(at1, request.Responder, this.user.getInputSentence,
+                            return CheckValue(GetIndexes(at1, request.Responder, user.getInputSentence,
                                               (str, args) => localError(at1, str)));
                         }
                     }

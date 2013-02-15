@@ -1,13 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLParser;
-using AltAIMLbot;
-using RTParser.Database;
-using RTParser.Utils;
-using RTParser.Variables;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// The get element tells the AIML interpreter that it should substitute the contents of a 
@@ -25,7 +19,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The get element does not have any content.
     /// </summary>
-    public class get : RTParser.Utils.UnifibleTagHandler
+    public class get : UnifibleTagHandler
     {
         /// <summary>
         /// Ctor
@@ -35,10 +29,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public get(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public get(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -47,9 +41,9 @@ namespace RTParser.AIMLTagHandlers
         }
         protected override bool ExpandingSearchWillYieldNoExtras { get { return true; } }
 
-        public override Unifiable CompleteProcess()
+        public override Unifiable CompleteProcessU()
         {
-            Unifiable pc = ProcessChange();
+            Unifiable pc = ProcessChangeU();
             string s = (string) pc;
             if (pc != null && pc == "name")
             {

@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using MushDLR223.ScriptEngines;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 
-namespace RTParser.Variables
+namespace AltAIMLbot.Variables
 {
     internal class ObjectPropertyDictionary<T> : ISettingsDictionaryT<T>
     {

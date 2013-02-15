@@ -5,6 +5,11 @@ using System.Globalization;
 using System.IO;
 #if (COGBOT_LIBOMV || USE_STHREADS || true)
 using System.Linq;
+using AltAIMLbot.AIMLTagHandlersU;
+using AltAIMLbot.Database;
+using AltAIMLbot.Normalize;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;
@@ -13,26 +18,20 @@ using Monitor = ThreadPoolUtil.Monitor;
 using System.Threading;
 using System.Xml;
 using AIMLbot;
-using AltAIMLParser;
 using AltAIMLbot;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using RTParser.AIMLTagHandlers;
-using RTParser.Database;
-using RTParser.Normalize;
-using RTParser.Utils;
-using RTParser.Variables;
-using UPath = RTParser.Unifiable;
-using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
-using PatternInfo = RTParser.Unifiable;
-using ThatInfo = RTParser.Unifiable;
-using TopicInfo = RTParser.Unifiable;
-using GuardInfo = RTParser.Unifiable;
-using ResponseInfo = RTParser.Unifiable;
+using UPath = AltAIMLbot.Unifiable;
+using UList = System.Collections.Generic.List<AltAIMLbot.Utils.TemplateInfo>;
+using PatternInfo = AltAIMLbot.Unifiable;
+using ThatInfo = AltAIMLbot.Unifiable;
+using TopicInfo = AltAIMLbot.Unifiable;
+using GuardInfo = AltAIMLbot.Unifiable;
+using ResponseInfo = AltAIMLbot.Unifiable;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     interface IChatterBot
     {
@@ -1075,9 +1074,9 @@ namespace RTParser
             return solutions;
         }
 
-        private AIMLTagHandler ProcessQueryTemplate(Request request, SubQuery query, TemplateInfo s, Result result, AIMLTagHandler lastHandler, ref int solutions, out bool hasMoreSolutions)
+        private AIMLTagHandlerU ProcessQueryTemplate(Request request, SubQuery query, TemplateInfo s, Result result, AIMLTagHandlerU lastHandler, ref int solutions, out bool hasMoreSolutions)
         {
-            AIMLTagHandler childHandler = null;
+            AIMLTagHandlerU childHandler = null;
             request.TopLevelScore = 1.0;
             hasMoreSolutions = false;
             try
@@ -1204,7 +1203,7 @@ namespace RTParser
         {
             string requestName = ToTemplateXML(templateNode);
             AltBot request0Proccessor = this;
-            GuardInfo sGuard = null;
+            Unifiable sGuard = null;
             Request request = null;
             User user = BotAsUser;
 
@@ -1259,7 +1258,7 @@ namespace RTParser
                 copyChild = false;
             }
             var lastHandler = TagHandling.proccessResponse(query, request, result, templateNode, sGuard, out createdOutput, out templateSucceeded,
-                             (AIMLTagHandler)null, templateInfo, copyChild, false); //not sure if should copy parent
+                             (AIMLTagHandlerU)null, templateInfo, copyChild, false); //not sure if should copy parent
             if (doUndos) query.UndoAll();
             request.LastHandler = lastHandler;
             return result;

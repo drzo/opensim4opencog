@@ -120,9 +120,6 @@
     <Reference Include="OpenCyc.dll">
       <Name>OpenCyc.dll</Name>
     </Reference>
-    <Reference Include="IKVM.Runtime.dll">
-      <Name>IKVM.Runtime.dll</Name>
-    </Reference>
     <Reference Include="IKVM.OpenJDK.Core.dll">
       <Name>IKVM.OpenJDK.Core.dll</Name>
     </Reference>
@@ -134,9 +131,6 @@
     </Reference>
     <Reference Include="Microsoft.VisualBasic">
       <Name>Microsoft.VisualBasic</Name>
-    </Reference>
-    <Reference Include="Microsoft.Vsa">
-      <Name>Microsoft.Vsa</Name>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -156,6 +150,33 @@
   <ItemGroup>
     <Compile Include="AIMLbot.cs">
     </Compile>
+    <Compile Include="AIMLTagHandlersU\behavior.cs" />
+    <Compile Include="AIMLTagHandlersU\botsetting.cs" />
+    <Compile Include="AIMLTagHandlersU\btxml.cs" />
+    <Compile Include="AIMLTagHandlersU\chemcmd.cs" />
+    <Compile Include="AIMLTagHandlersU\crontag.cs" />
+    <Compile Include="AIMLTagHandlersU\filterqa.cs" />
+    <Compile Include="AIMLTagHandlersU\format_prev.cs" />
+    <Compile Include="AIMLTagHandlersU\inject.cs" />
+    <Compile Include="AIMLTagHandlersU\ketext.cs" />
+    <Compile Include="AIMLTagHandlersU\logicact.cs" />
+    <Compile Include="AIMLTagHandlersU\logictext.cs" />
+    <Compile Include="AIMLTagHandlersU\nop.cs" />
+    <Compile Include="AIMLTagHandlersU\pannouserver.cs" />
+    <Compile Include="AIMLTagHandlersU\postcache.cs" />
+    <Compile Include="AIMLTagHandlersU\prolist.cs" />
+    <Compile Include="AIMLTagHandlersU\rbehavior.cs" />
+    <Compile Include="AIMLTagHandlersU\refserver.cs" />
+    <Compile Include="AIMLTagHandlersU\rnddbl.cs" />
+    <Compile Include="AIMLTagHandlersU\rndint.cs" />
+    <Compile Include="AIMLTagHandlersU\sapi.cs" />
+    <Compile Include="AIMLTagHandlersU\satisfied.cs" />
+    <Compile Include="AIMLTagHandlersU\say.cs" />
+    <Compile Include="AIMLTagHandlersU\scxml.cs" />
+    <Compile Include="AIMLTagHandlersU\sentence_prev.cs" />
+    <Compile Include="AIMLTagHandlersU\subaiml.cs" />
+    <Compile Include="AIMLTagHandlersU\trueknowledgeserver.cs" />
+    <Compile Include="AIMLTagHandlersU\wolframserver.cs" />
     <Compile Include="Bot.cs">
     </Compile>
     <Compile Include="HelpCodeFileMerge.cs" />
@@ -441,8 +462,6 @@
     </Compile>
     <Compile Include="Utils\AIMLLoader.cs">
     </Compile>
-    <Compile Include="Utils\AIMLTagHandler.cs">
-    </Compile>
     <Compile Include="AIMLProcessing\AIMLTagHandlerUtils.cs">
     </Compile>
     <Compile Include="GraphInfo\CategoryInfo.cs">
@@ -453,6 +472,7 @@
     </Compile>
     <Compile Include="RTParser\Utils\GraphLinkInfo.cs">
     </Compile>
+    <Compile Include="Utils\AIMLTagHandlerU.cs" />
     <Compile Include="XmlGraph\GraphMaster.cs">
     </Compile>
     <Compile Include="RTParser\Utils\GraphQuery.cs">

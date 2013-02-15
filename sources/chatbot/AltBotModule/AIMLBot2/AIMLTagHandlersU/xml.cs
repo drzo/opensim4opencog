@@ -1,10 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLParser;
-using AltAIMLbot;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// An element called bot, which may be considered a restricted version of get, is used to 
@@ -17,7 +14,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The bot element does not have any content. 
     /// </summary>
-    public class xml : RTParser.Utils.AIMLTagHandler
+    public class xml : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -27,10 +24,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public xml(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public xml(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -38,11 +35,11 @@ namespace RTParser.AIMLTagHandlers
         {
             isRecursive = false;
         }
-        public override Unifiable CompleteProcess()
+        public override Unifiable CompleteProcessU()
         {
             return templateNode.InnerXml;
         }
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             return templateNode.InnerXml;
         }

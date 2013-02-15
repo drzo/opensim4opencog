@@ -10,23 +10,21 @@ using Monitor = ThreadPoolUtil.Monitor;
 #endif
 using System.Threading;
 using AIMLbot;
+using AltAIMLbot.AIMLTagHandlersU;
 using AltAIMLbot;
-using AltAIMLParser;
+using AltAIMLbot.Database;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using RTParser;
-using RTParser.AIMLTagHandlers;
-using RTParser.Database;
-using RTParser.Utils;
-using RTParser.Variables;
-
 //using MasterRequest = AltAIMLParser.Request;
 using DataUnifiable = System.String;
-using DataUnifiableYYY = RTParser.Unifiable;
+using DataUnifiableYYY = AltAIMLbot.Unifiable;
 //using GraphMaster = RTParser.Unifiable;
-using UserStaticModel = RTParser.Unifiable;
-namespace RTParser
+using UserStaticModel = AltAIMLbot.Unifiable;
+
+namespace AltAIMLbot
 {
     public interface IUser
     {
@@ -78,20 +76,6 @@ namespace RTParser
         QuerySettings GetQuerySettingsSRAI();
         ConversationLog GetConversationLog(string userName, bool createIfMissing);
         bool IsNamed(string lname);
-    }
-
-    public interface User : IUser, UserStaticModel, UserConversationScope, UserDuringProcessing
-    {
-        void DisposeObject();
-        bool IsValid { get; set; }
-        GraphMaster StartGraph { get; set; }
-        object TemplatesLock { get; }
-        GraphMaster HeardYouSayGraph { get; set; }
-        Request LastRequest { get; set; }
-
-        void RaiseEvent(string p, AltBot robot);
-
-        MasterRequest CreateRequest(Unifiable message, User targetUser);
     }
 
     /// <summary>
@@ -2060,5 +2044,19 @@ namespace RTParser
     public interface ConversationScopeHolder
     {
         SituationInConversation ContextScope { get; }
+    }
+
+    public interface User : IUser, AltAIMLbot.UserStaticModel, UserConversationScope, UserDuringProcessing
+    {
+        void DisposeObject();
+        bool IsValid { get; set; }
+        GraphMaster StartGraph { get; set; }
+        object TemplatesLock { get; }
+        GraphMaster HeardYouSayGraph { get; set; }
+        Request LastRequest { get; set; }
+
+        void RaiseEvent(string p, AltBot robot);
+
+        MasterRequest CreateRequest(Unifiable message, User targetUser);
     }
 }

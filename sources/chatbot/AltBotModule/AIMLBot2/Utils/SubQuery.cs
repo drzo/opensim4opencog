@@ -2,41 +2,123 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Xml;
-using AltAIMLParser;
+using AltAIMLbot.Utils;
 using AltAIMLbot;
+using AltAIMLbot.Variables;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser.Database;
-using RTParser.Variables;
-using UPath = RTParser.Unifiable;
-using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
+using AltAIMLbot.Database;
+using UPath = AltAIMLbot.Unifiable;
+using UList = System.Collections.Generic.List<AltAIMLbot.Utils.TemplateInfo>;
 
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
+    public interface RequestOrQuery : ConversationScopeHolder
+    {
+
+        /// <summary>
+        /// The get/set user dictionary
+        /// </summary>
+        ISettingsDictionary RequesterPredicates { get; }
+        /// <summary>
+        /// The get/set bot dictionary (or user)
+        /// </summary>
+        ISettingsDictionary ResponderPredicates { get; }
+        /// <summary>
+        /// If loading/saing settings from this request this may be eitehr the requestor/responders Dictipoanry
+        /// </summary>
+        ISettingsDictionary TargetSettings { get; set; }
+    }
+
+#if _FALSE_
+    public class UList : IEnumerable<TemplateInfo>
+    {
+        public List<TemplateInfo> root = new List<TemplateInfo>();
+        public int Count
+        {
+            get { lock (root) return root.Count; }
+        }
+
+        public void Insert(int i, TemplateInfo info)
+        {
+            lock (root) root.Insert(i, info);
+
+        }
+
+        public void ForEach(Action<TemplateInfo> action)
+        {
+            lock (root) root.ForEach(action);
+        }
+
+        public void Remove(TemplateInfo info)
+        {
+            lock (root) root.Remove(info);
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>1</filterpriority>
+        IEnumerator<TemplateInfo> IEnumerable<TemplateInfo>.GetEnumerator()
+        {
+            return GetRootEnumerator();
+        }
+
+        public IEnumerator GetEnumerator()
+        {
+            return GetRootEnumerator();
+        }
+
+        private IEnumerator<TemplateInfo> GetRootEnumerator()
+        {
+            var next = new List<TemplateInfo>();
+            lock (root)
+            {
+                next.AddRange(root);
+            }
+            return next.GetEnumerator();
+        }
+
+        public void AddRange(UList infos)
+        {
+            lock (root)
+            {
+                lock (infos.root)
+                {
+                    root.AddRange(infos.root);                    
+                }
+            }
+        }
+    }
+#endif
+
     /// <summary>
     /// A container class for holding wildcard matches encountered during an individual path's 
     /// interrogation of the graphmaster.
     /// </summary>
     [Serializable]
     public class SubQuery : StaticAIMLUtils, ISettingsDictionary, IComparable<SubQuery>, RequestOrQuery, UndoStackHolder,
-        ConversationScopeHolder, SituationInConversation
+                            ConversationScopeHolder, SituationInConversation
     {
         public
             //static 
             object TagHandlerLock = new object();
         public
             //static 
-            Dictionary<string, AIMLTagHandler> TagHandlers;
+            Dictionary<string, AIMLTagHandlerU> TagHandlers;
         private AltBot ov_TargetBot;
         public TemplateInfo CurrentTemplate;
-        public AIMLTagHandler LastTagHandler;
+        public AIMLTagHandlerU LastTagHandler;
         public Node Pattern;
         public string prefix;
         public Request Request;
         public Result Result;
         public GraphQuery TopLevel;
-        public AIMLTagHandler CurrentTagHandler;
+        public AIMLTagHandlerU CurrentTagHandler;
         public XmlNode CurrentNode;
 
         public override bool Equals(object obj)
@@ -182,7 +264,7 @@ namespace RTParser.Utils
         public int GetDictValue;
         public int SetDictValue;
 
-        public bool IsSourceRequest(AIMLTagHandler node, out  string src)
+        public bool IsSourceRequest(AIMLTagHandlerU node, out  string src)
         {
             src = null;
             return false;
@@ -196,7 +278,7 @@ namespace RTParser.Utils
             get
             {
                 return (NamedValuesFromSettings.UseLuceneForSet && Request != null &&
-                       Request.depth < Request.UseLuceneForSetMaxDepth);
+                        Request.depth < Request.UseLuceneForSetMaxDepth);
             }
         }
         /// <summary>
@@ -207,7 +289,7 @@ namespace RTParser.Utils
             get
             {
                 return (NamedValuesFromSettings.UseLuceneForGet && Request != null &&
-                       Request.depth < Request.UseLuceneForGetMaxDepth);
+                        Request.depth < Request.UseLuceneForGetMaxDepth);
             }
         }
 
@@ -383,10 +465,10 @@ namespace RTParser.Utils
         {
             string nodePattern = ((object)Pattern ?? "-no-pattern-").ToString().Trim();
             string s = SafeFormat("\nINPUT='{6}'\nPATTERN='{0}' InThToGu={1}:{2}:{3}:{4} Tc={5} Graph={7}\n",
-                         nodePattern,
-                                     InputStar.Count, ThatStar.Count, TopicStar.Count,
-                                     GuardStar.Count, Templates == null ? 0 : Templates.Count,
-                         FullPath, Graph);
+                                  nodePattern,
+                                  InputStar.Count, ThatStar.Count, TopicStar.Count,
+                                  GuardStar.Count, Templates == null ? 0 : Templates.Count,
+                                  FullPath, Graph);
             if (Templates != null)
                 foreach (TemplateInfo path in Templates)
                 {
@@ -416,7 +498,7 @@ namespace RTParser.Utils
             {
                 if (TagHandlers != null)
                 {
-                    foreach (KeyValuePair<string, AIMLTagHandler> aimlTagHandler in TagHandlers)
+                    foreach (KeyValuePair<string, AIMLTagHandlerU> aimlTagHandler in TagHandlers)
                     {
                         aimlTagHandler.Value.Dispose();
                     }
@@ -494,16 +576,16 @@ namespace RTParser.Utils
             }
         }
 
-        public AIMLTagHandler GetTagHandler(XmlNode node)
+        public AIMLTagHandlerU GetTagHandler(XmlNode node)
         {
             lock (TagHandlerLock)
             {
                 string str = node.OuterXml;
                 str = TextPatternUtils.CleanWhitepaces(str).ToLower();
-                AIMLTagHandler handler;
+                AIMLTagHandlerU handler;
                 if (TagHandlers == null)
                 {
-                    TagHandlers = new Dictionary<string, AIMLTagHandler>();
+                    TagHandlers = new Dictionary<string, AIMLTagHandlerU>();
                 }
                 else if (TagHandlers.TryGetValue(str, out handler))
                 {
@@ -782,86 +864,4 @@ namespace RTParser.Utils
 
         #endregion
     }
-
-    public interface RequestOrQuery : ConversationScopeHolder
-    {
-
-        /// <summary>
-        /// The get/set user dictionary
-        /// </summary>
-        ISettingsDictionary RequesterPredicates { get; }
-        /// <summary>
-        /// The get/set bot dictionary (or user)
-        /// </summary>
-        ISettingsDictionary ResponderPredicates { get; }
-        /// <summary>
-        /// If loading/saing settings from this request this may be eitehr the requestor/responders Dictipoanry
-        /// </summary>
-        ISettingsDictionary TargetSettings { get; set; }
-    }
-
-#if _FALSE_
-    public class UList : IEnumerable<TemplateInfo>
-    {
-        public List<TemplateInfo> root = new List<TemplateInfo>();
-        public int Count
-        {
-            get { lock (root) return root.Count; }
-        }
-
-        public void Insert(int i, TemplateInfo info)
-        {
-            lock (root) root.Insert(i, info);
-
-        }
-
-        public void ForEach(Action<TemplateInfo> action)
-        {
-            lock (root) root.ForEach(action);
-        }
-
-        public void Remove(TemplateInfo info)
-        {
-            lock (root) root.Remove(info);
-        }
-
-        /// <summary>
-        /// Returns an enumerator that iterates through the collection.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
-        /// </returns>
-        /// <filterpriority>1</filterpriority>
-        IEnumerator<TemplateInfo> IEnumerable<TemplateInfo>.GetEnumerator()
-        {
-            return GetRootEnumerator();
-        }
-
-        public IEnumerator GetEnumerator()
-        {
-            return GetRootEnumerator();
-        }
-
-        private IEnumerator<TemplateInfo> GetRootEnumerator()
-        {
-            var next = new List<TemplateInfo>();
-            lock (root)
-            {
-                next.AddRange(root);
-            }
-            return next.GetEnumerator();
-        }
-
-        public void AddRange(UList infos)
-        {
-            lock (root)
-            {
-                lock (infos.root)
-                {
-                    root.AddRange(infos.root);                    
-                }
-            }
-        }
-    }
-#endif
 }

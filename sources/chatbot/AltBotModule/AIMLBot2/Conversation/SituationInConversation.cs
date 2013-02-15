@@ -1,7 +1,8 @@
 using System.Collections.Generic;
-using RTParser.Utils;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     public interface SituationInConversation
     {

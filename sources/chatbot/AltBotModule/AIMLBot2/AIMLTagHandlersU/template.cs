@@ -1,16 +1,12 @@
-﻿using System;
-using System.Xml;
-using System.Text;
-using AltAIMLParser;
-using AltAIMLbot;
-using RTParser.Utils;
+﻿using System.Xml;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// IMPLEMENTED FOR COMPLETENESS REASONS
     /// </summary>
-    public class template : RTParser.Utils.AIMLTagHandler
+    public class template : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -20,10 +16,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public template(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public template(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -31,7 +27,7 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (!IsStarted && QueryHasFailed)
             {
@@ -46,7 +42,7 @@ namespace RTParser.AIMLTagHandlers
             return templateResult;
         }
 
-        public override Unifiable CompleteProcess()
+        public override Unifiable CompleteProcessU()
         {
             if (RecurseResultValid) return RecurseResult;
             TemplateInfo queryTemplate = query.CurrentTemplate;
@@ -67,7 +63,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     return FAIL;
                 }
-                if (IsSilentTag(this.templateNode))
+                if (IsSilentTag(templateNode))
                 {
                     return templateResult;
                 }
@@ -81,7 +77,7 @@ namespace RTParser.AIMLTagHandlers
             return templateResult;
             string THINKYTAG = think.THINKYTAG;
             string tr = templateResult;
-            string tr2 = AltBot.ReplaceAll(tr.Replace(THINKYTAG + ".", " "), THINKYTAG, " ").Replace("  ", " ").Trim();
+            string tr2 = ReplaceAll(tr.Replace(THINKYTAG + ".", " "), THINKYTAG, " ").Replace("  ", " ").Trim();
             if (tr != tr2)
             {
                 if (tr2 == "")

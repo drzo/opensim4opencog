@@ -3,12 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Xml;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser.Utils;
-using RTParser.Variables;
 
-namespace RTParser.Database
+namespace AltAIMLbot.Database
 {
     public class TripleStoreFromEnglish : ITripleStore, IEntityFilter
     {
@@ -334,7 +335,7 @@ namespace RTParser.Database
         public bool IsExcludedRelation(string value)
         {
             if (string.IsNullOrEmpty(value)) return true;
-            if (AIMLTagHandler.ReservedAttributes.Contains(value)) return true;
+            if (AIMLTagHandlerU.ReservedAttributes.Contains(value)) return true;
             return NullOrMatchInSet(ExcludeRels, value);
         }
 

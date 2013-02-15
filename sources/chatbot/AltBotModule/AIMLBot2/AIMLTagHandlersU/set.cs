@@ -1,18 +1,17 @@
 using System.Xml;
-using AltAIMLParser;
-using AltAIMLbot;
-using RTParser.Database;
-using RTParser.Variables;
+using AltAIMLbot.Database;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// The set element instructs the AIML interpreter to set the value of a predicate to the result 
-    /// of processing the contents of the set element. The set element has a required attribute name, 
+    /// of Processing the contents of the set element. The set element has a required attribute name, 
     /// which must be a valid AIML predicate name. If the predicate has not yet been defined, the AIML 
     /// interpreter should define it in memory. 
     /// 
-    /// The AIML interpreter should, generically, return the result of processing the contents of the 
+    /// The AIML interpreter should, generically, return the result of Processing the contents of the 
     /// set element. The set element must not perform any text formatting or other "normalization" on 
     /// the predicate contents when returning them. 
     /// 
@@ -23,7 +22,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// A set element may contain any AIML template elements.
     /// </summary>
-    public class set : RTParser.Utils.AIMLTagHandler
+    public class set : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -33,10 +32,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public set(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public set(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -44,7 +43,7 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             Unifiable defaultVal = GetAttribValue("default,defaultValue", null);
             if (CheckNode("set"))
@@ -86,7 +85,7 @@ namespace RTParser.AIMLTagHandlers
                         value = strV;
                     }
                 }
-                string setReturn = GetAttribValue(templateNode, "set-return",
+                string setReturn = GetAttribValue<string>(templateNode, "set-return",
                                                   () =>((string) Proc.GetRelationMetaProps().GetMeta(name, "set-return")),
                                                   ReduceStarAttribute<string>);
                 if (value == null)

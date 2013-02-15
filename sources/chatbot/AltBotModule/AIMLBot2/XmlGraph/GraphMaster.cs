@@ -9,23 +9,22 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml;
 using AIMLbot;
-using AltAIMLParser;
+using AltAIMLbot.Utils;
 using AltAIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using RTParser.AIMLTagHandlers;
-using UPath = RTParser.Unifiable;
-using PatternInfo = RTParser.Unifiable;
-using ThatInfo = RTParser.Unifiable;
-using TopicInfo = RTParser.Unifiable;
-using GuardInfo = RTParser.Unifiable;
-using ResponseInfo = RTParser.Unifiable;
+using UPath = AltAIMLbot.Unifiable;
+using PatternInfo = AltAIMLbot.Unifiable;
+using ThatInfo = AltAIMLbot.Unifiable;
+using TopicInfo = AltAIMLbot.Unifiable;
+using GuardInfo = AltAIMLbot.Unifiable;
+using ResponseInfo = AltAIMLbot.Unifiable;
 using System.Threading;
 
 //using StringAppendableUnifiable = System.Text.StringBuilder;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     //[Serializable]
     public class GraphMaster : ParentChild
@@ -41,7 +40,7 @@ namespace RTParser.Utils
         /// <summary>
         /// Should template Objects be stored in graphmasters
         /// </summary>
-        [UserScopedSettingAttribute]
+        [UserScopedSetting]
         public bool TrackTemplates { get { return StaticAIMLUtils.TrackTemplates; } }
 
         public List<string> GraphNames
@@ -81,7 +80,7 @@ namespace RTParser.Utils
         /// <summary>
         /// All the &lt;guard&gt;s (if any) associated with this database
         /// </summary>
-        private readonly List<GuardInfo> Guards = new List<GuardInfo>();
+        private readonly List<Unifiable> Guards = new List<Unifiable>();
 
         private readonly Dictionary<string, DateTime> LoadedFiles = new Dictionary<string, DateTime>();
 
@@ -90,22 +89,22 @@ namespace RTParser.Utils
         /// <summary>
         /// All the &lt;pattern&gt;s (if any) associated with this database
         /// </summary>
-        private readonly Dictionary<String, PatternInfo> Patterns = new Dictionary<string, PatternInfo>();
+        private readonly Dictionary<String, Unifiable> Patterns = new Dictionary<string, Unifiable>();
 
         /// <summary>
         /// All the &lt;templates&gt;s (if any) associated with this database
         /// </summary>
-        internal readonly Dictionary<string, ResponseInfo> ResponseInfos = new Dictionary<string, ResponseInfo>();
+        internal readonly Dictionary<string, Unifiable> ResponseInfos = new Dictionary<string, Unifiable>();
 
         /// <summary>
         /// All the &lt;that&gt;s (if any) associated with this database
         /// </summary>
-        internal readonly Dictionary<String, ThatInfo> Thats = new Dictionary<string, ThatInfo>();
+        internal readonly Dictionary<String, Unifiable> Thats = new Dictionary<string, Unifiable>();
 
         /// <summary>
         /// All the &lt;topic&gt;s (if any) associated with this database
         /// </summary>
-        internal readonly Dictionary<String, TopicInfo> Topics = new Dictionary<string, TopicInfo>();
+        internal readonly Dictionary<String, Unifiable> Topics = new Dictionary<string, Unifiable>();
 
         private GraphMaster _parallel;
 
@@ -288,7 +287,7 @@ namespace RTParser.Utils
             }
         }
 
-        public PatternInfo FindPattern(XmlNode pattern, Unifiable unifiable)
+        public Unifiable FindPattern(XmlNode pattern, Unifiable unifiable)
         {
             if (NoIndexing) return null;
             string pats = unifiable;
@@ -328,7 +327,7 @@ namespace RTParser.Utils
 #endif
         }
 
-        public ResponseInfo FindResponse(XmlNode responseNode, Unifiable responseText)
+        public Unifiable FindResponse(XmlNode responseNode, Unifiable responseText)
         {
 #if false
             if (NoIndexing) return null;
@@ -355,7 +354,7 @@ namespace RTParser.Utils
             return responseText;
         }
 
-        public ThatInfo FindThat(XmlNode thatNode, Unifiable topicName)
+        public Unifiable FindThat(XmlNode thatNode, Unifiable topicName)
         {
             if (NoIndexing) return null;
             return topicName;
@@ -437,7 +436,7 @@ namespace RTParser.Utils
             }
         }
 
-        public TopicInfo FindTopic(Unifiable topicName)
+        public Unifiable FindTopic(Unifiable topicName)
         {
             if (NoIndexing) return null;
             return topicName;
@@ -465,8 +464,8 @@ namespace RTParser.Utils
 #endif
         }
 
-        public CategoryInfo FindCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename, XmlNode templateNode,
-            ResponseInfo template, GuardInfo guard, TopicInfo topicInfo, Node patternNode, ThatInfo thatInfo, IEnumerable<ConversationCondition> conds)
+        public CategoryInfo FindCategoryInfo(Unifiable info, XmlNode node, LoaderOptions filename, XmlNode templateNode,
+            Unifiable template, Unifiable guard, Unifiable topicInfo, Node patternNode, Unifiable thatInfo, IEnumerable<ConversationCondition> conds)
         {
             return TemplateInfoImpl.MakeCategoryInfo(info, node, filename, templateNode, template, guard, topicInfo, patternNode,
                                                  thatInfo, conds);
@@ -529,8 +528,8 @@ namespace RTParser.Utils
             loadFile.Close();
         }
 
-        public List<CategoryInfo> addCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, // out CategoryInfo category,
-                                   XmlNode categoryNode, XmlNode templateNode, GuardInfo guard, TopicInfo topicInfo, ThatInfo thatInfo,
+        public List<CategoryInfo> addCategoryTag(Unifiable generatedPath, Unifiable patternInfo, // out CategoryInfo category,
+                                   XmlNode categoryNode, XmlNode templateNode, Unifiable guard, Unifiable topicInfo, Unifiable thatInfo,
                                    List<ConversationCondition> additionalRules, out bool wouldBeRemoval, LoaderOptions loaderOptions)
         {
             lock (LockerObject)
@@ -540,8 +539,8 @@ namespace RTParser.Utils
             }
         }
 
-        private List<CategoryInfo> addCategoryTag0(Unifiable generatedPath, PatternInfo patternInfo,// CategoryInfo category,
-                                   XmlNode categoryNode, XmlNode templateNode, GuardInfo guard, TopicInfo topicInfo, ThatInfo thatInfo,
+        private List<CategoryInfo> addCategoryTag0(Unifiable generatedPath, Unifiable patternInfo,// CategoryInfo category,
+                                   XmlNode categoryNode, XmlNode templateNode, Unifiable guard, Unifiable topicInfo, Unifiable thatInfo,
                                    List<ConversationCondition> additionalRules, out bool wouldBeRemoval, LoaderOptions loaderOptions)
         {
             if (SilentTagsInPutParallel && !StaticAIMLUtils.IsEmptyTemplate(templateNode) && StaticAIMLUtils.IsSilentTag(templateNode))
@@ -1171,12 +1170,12 @@ namespace RTParser.Utils
             lock (LockerObject)
             {
                 lock (Topics)
-                    foreach (KeyValuePair<string, TopicInfo> info in Topics)
+                    foreach (KeyValuePair<string, Unifiable> info in Topics)
                     {
                         writeToLog("topic = " + info.Key);
                     }
                 lock (Thats)
-                    foreach (KeyValuePair<string, ThatInfo> info in Thats)
+                    foreach (KeyValuePair<string, Unifiable> info in Thats)
                     {
                         writeToLog("that = " + info.Key);
                     }
@@ -1618,7 +1617,7 @@ namespace RTParser.Utils
             return false;
         }
 
-        public GuardInfo GetGuardInfo(XmlNode guardnode)
+        public Unifiable GetGuardInfo(XmlNode guardnode)
         {
             return guardnode.InnerXml;
         }

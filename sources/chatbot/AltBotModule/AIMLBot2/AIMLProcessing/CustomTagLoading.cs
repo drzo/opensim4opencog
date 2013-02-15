@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Xml;
-using AltAIMLParser;
 using AltAIMLbot;
+using AltAIMLbot.Utils;
 using MushDLR223.Virtualization;
-using RTParser.Utils;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     /// <summary>
     /// Encapsulates an AIML Custom Tag Proccessor.
@@ -45,7 +44,7 @@ namespace RTParser
         /// <param name="result">the result to be sent to the user</param>
         /// <param name="node">the node to evaluate</param>
         /// <returns>the output Unifiable</returns>
-        static public AIMLTagHandler getBespokeTags(User user, SubQuery query, Request request, Result result, XmlNode node)
+        static public AIMLTagHandlerU getBespokeTags(User user, SubQuery query, Request request, Result result, XmlNode node)
         {
             AltBot targetBot = query.TargetBot;
             string nodename = node.Name.ToLower();
@@ -61,7 +60,7 @@ namespace RTParser
                         {
                             TagHandler customTagHandler = CustomTags[node.Name.ToLower()];
 
-                            AIMLTagHandler newCustomTag = customTagHandler.Instantiate(LateBindingAssemblies, user,
+                            AIMLTagHandlerU newCustomTag = customTagHandler.Instantiate(LateBindingAssemblies, user,
                                                                                        query,
                                                                                        request, result, node, targetBot);
                             if (Equals(null, newCustomTag))
@@ -87,7 +86,7 @@ namespace RTParser
                     Type t = Type.GetType(typeName);
                     if (t == null) return null;
                     ConstructorInfo c = t.GetConstructor(TagHandler.CONSTRUCTOR_TYPES);
-                    return (AIMLTagHandler)c.Invoke(new object[] { targetBot, user, query, request, result, node });
+                    return (AIMLTagHandlerU)c.Invoke(new object[] { targetBot, user, query, request, result, node });
                 }
                 catch (Exception e)
                 {
@@ -120,7 +119,7 @@ namespace RTParser
                 try
                 {
                     var typeCustomAttributes = type.GetCustomAttributes(false);
-                    if (typeCustomAttributes.Length == 0 && typeof (AIMLTagHandler).IsAssignableFrom(type) &&
+                    if (typeCustomAttributes.Length == 0 && typeof (AIMLTagHandlerU).IsAssignableFrom(type) &&
                         !type.IsAbstract && !type.IsInterface)
                     {
                         try

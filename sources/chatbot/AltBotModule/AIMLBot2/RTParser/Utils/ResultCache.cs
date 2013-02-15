@@ -1,7 +1,7 @@
 ﻿using System;
 using MushDLR223.Utilities;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     public class ResultCache //:TextPatternUtils
     {

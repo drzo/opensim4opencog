@@ -2,10 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
+using AltAIMLbot;
 using MushDLR223.Utilities;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     [Serializable]
     public class BestUnifiable : Unifiable

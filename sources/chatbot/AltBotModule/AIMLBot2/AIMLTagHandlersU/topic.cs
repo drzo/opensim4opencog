@@ -1,11 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLParser;
-using AltAIMLbot;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// An element called bot, which may be considered a restricted version of get, is used to 
@@ -18,7 +14,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The bot element does not have any content. 
     /// </summary>
-    public class topic : RTParser.Utils.LoadingTagHandler
+    public class topic : LoadingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -28,10 +24,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public topic(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public topic(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -41,9 +37,9 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
         {
-            if (this.templateNode.Name.ToLower() == "topic")
+            if (templateNode.Name.ToLower() == "topic")
             {
-                // process each of these child "settings"? nodes
+                // Process each of these child "settings"? nodes
                 return Succeed(Proc.Loader.processTopic(templateNode, templateNode.ParentNode, loaderOptions, loaderOptions.AdditionalPreconditions));
             }
             return Succeed(UnifiableEmpty);

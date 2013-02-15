@@ -1,23 +1,25 @@
 // #define USEVSAHOST
+
 using System;
 using System.Collections.Generic;
-#if USEVSAHOST
-using Evaluator;
-#endif
+using System.IO;
 using System.Reflection;
 using System.Xml;
-using AltAIMLParser;
-using AltAIMLbot;
+using AltAIMLbot.Utils;
 using Microsoft.JScript;
 using Microsoft.JScript.Vsa;
 
-namespace RTParser.AIMLTagHandlers
+#if USEVSAHOST
+using Evaluator;
+#endif
+
+namespace AltAIMLbot.AIMLTagHandlersU
 {
 
     /// <summary>
     /// NOT IMPLEMENTED FOR SECURITY REASONS
     /// </summary>
-    public class javascript : RTParser.Utils.AIMLTagHandler
+    public class javascript : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -27,10 +29,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public javascript(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public javascript(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -38,7 +40,7 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             string innerText = SafelyGetInnerText(false);
             if (IsNullOrEmpty(innerText))
@@ -81,7 +83,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 if (saveForNexTime)
                 {
-                    this.templateNodeInnerText = innerText;
+                    templateNodeInnerText = innerText;
                 }
                 return innerText;
             }
@@ -114,7 +116,9 @@ namespace RTParser.AIMLTagHandlers
                                                                    "System.Windows.Forms",
                                                                    "System.Xml",
                                                                };
-        public static readonly Microsoft.JScript.Vsa.VsaEngine Engine;
+#if !(_MonoCS__)		
+        public static readonly VsaEngine Engine;
+#endif
 
         static javascript()
         {
@@ -132,7 +136,7 @@ namespace RTParser.AIMLTagHandlers
 
                     if (assembly.GlobalAssemblyCache)
                     {
-                        codeBase = System.IO.Path.GetFileName(assembly.Location);
+                        codeBase = Path.GetFileName(assembly.Location);
                     }
                     else
                     {
@@ -173,7 +177,7 @@ namespace RTParser.AIMLTagHandlers
             try
             {
                 With.JScriptWith(this, Engine);
-                return Microsoft.JScript.Eval.JScriptEvaluate(src, "unsafe", engine);
+                return Eval.JScriptEvaluate(src, "unsafe", engine);
             }
             finally
             {
