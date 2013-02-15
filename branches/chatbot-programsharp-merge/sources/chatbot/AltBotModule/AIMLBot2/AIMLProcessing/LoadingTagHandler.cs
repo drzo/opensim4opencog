@@ -1,10 +1,10 @@
 using System.Xml;
-using AltAIMLParser;
+using AltAIMLbot.Utils;
 using AltAIMLbot;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
-    public abstract class LoadingTagHandler : AIMLTagHandler
+    public abstract class LoadingTagHandler : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -30,10 +30,10 @@ namespace RTParser.Utils
         
         protected virtual Unifiable PreProcessChange()
         {
-            return ProcessChange();
+            return ProcessChangeU();
         }
 
-        sealed protected override Unifiable ProcessChange()
+        sealed protected override Unifiable ProcessChangeU()
         {
             if (IsLoadReady)
             {
@@ -59,7 +59,7 @@ namespace RTParser.Utils
             return recursiveResult;
         }
 
-        sealed public override Unifiable CompleteProcess()
+        sealed public override Unifiable CompleteProcessU()
         {
             if (!IsLoadReady)
             {

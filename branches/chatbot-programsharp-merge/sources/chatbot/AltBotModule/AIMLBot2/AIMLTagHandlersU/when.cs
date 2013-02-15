@@ -1,10 +1,8 @@
 using System;
 using System.Xml;
-using AltAIMLParser;
-using AltAIMLbot;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// The date element tells the AIML interpreter that it should substitute the system local 
@@ -12,7 +10,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The date element does not have any content. 
     /// </summary>
-    public class when : RTParser.Utils.UnifibleTagHandler
+    public class when : UnifibleTagHandler
     {
         /// <summary>
         /// Ctor
@@ -22,10 +20,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public when(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public when(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -53,7 +51,7 @@ namespace RTParser.AIMLTagHandlers
                             string srch = (" " + with.ToValue(query) + " ").ToUpper();
                             return ((" " + childNode.InnerText + " ").ToUpper().Contains(srch)) ? AND_TRUE : AND_FALSE;
                         }
-                        AIMLTagHandler part = GetChildTagHandler(childNode);
+                        AIMLTagHandlerU part = GetChildTagHandler(childNode);
                         if (part.CallCanUnify(with) > 0) return AND_FALSE;
                     }
                     catch (Exception e)
@@ -72,7 +70,7 @@ namespace RTParser.AIMLTagHandlers
             return Recurse();
         }
 
-        public override Unifiable CompleteProcess()
+        public override Unifiable CompleteProcessU()
         {
             return Recurse();
         }

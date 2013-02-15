@@ -4,20 +4,20 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
-using AltAIMLParser;
-using RTParser.AIMLTagHandlers;
-using RTParser.Database;
-using UPath = RTParser.Unifiable;
-using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Database;
+using UPath = AltAIMLbot.Unifiable;
+using UList = System.Collections.Generic.List<AltAIMLbot.Utils.TemplateInfo>;
 //using CategoryInfo = RTParser.Utils.TemplateInfo;
 //using StringAppendableUnifiable = System.Text.StringBuilder;
-using PatternInfo = RTParser.Unifiable;
-using ThatInfo = RTParser.Unifiable;
-using TopicInfo = RTParser.Unifiable;
-using GuardInfo = RTParser.Unifiable;
-using ResponseInfo = RTParser.Unifiable;
+using PatternInfo = AltAIMLbot.Unifiable;
+using ThatInfo = AltAIMLbot.Unifiable;
+using TopicInfo = AltAIMLbot.Unifiable;
+using GuardInfo = AltAIMLbot.Unifiable;
+using ResponseInfo = AltAIMLbot.Unifiable;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     /// <summary>
     /// Encapsulates a node in the graphmaster tree structure
@@ -96,7 +96,7 @@ namespace RTParser.Utils
         {
             get
             {
-                if (_graph != null) return AltBot.FindGraph(_graph);
+                if (_graph != null) return AltBot.FindGlobalGraph(_graph);
                 Node Parent0 = _parentObject;
                 if (Parent0 != null)
                 {
@@ -367,8 +367,8 @@ namespace RTParser.Utils
         /// <param name="path">the path for the category</param>
         /// <param name="template">the template to find at the end of the path</param>
         /// <param name="filename">the file that was the source of this category</param>
-        public List<CategoryInfo> addTerminal(XmlNode templateNode, XmlNode cateNode, GuardInfo guard, TopicInfo topicInfo, ThatInfo thatInfo,
-                                        LoaderOptions master, PatternInfo patternInfo, List<ConversationCondition> additionalRules, out bool wouldBeRemoval)
+        public List<CategoryInfo> addTerminal(XmlNode templateNode, XmlNode cateNode, Unifiable guard, Unifiable topicInfo, Unifiable thatInfo,
+                                        LoaderOptions master, Unifiable patternInfo, List<ConversationCondition> additionalRules, out bool wouldBeRemoval)
         {
             List<CategoryInfo> categoryInfos = null;
             wouldBeRemoval = false;
@@ -492,10 +492,10 @@ namespace RTParser.Utils
                                         LoaderOptions master, PatternInfo patternInfo, List<ConversationCondition> additionalRules,
 
          */
-        private TemplateInfo addTerminal_0_Lock(XmlNode templateNode, XmlNode cateNode, GuardInfo guard,
-            TopicInfo topicInfo,
-                                                ThatInfo thatInfo,
-                                                LoaderOptions loaderOptions, PatternInfo patternInfo,
+        private TemplateInfo addTerminal_0_Lock(XmlNode templateNode, XmlNode cateNode, Unifiable guard,
+            Unifiable topicInfo,
+                                                Unifiable thatInfo,
+                                                LoaderOptions loaderOptions, Unifiable patternInfo,
                                                 List<ConversationCondition> additionalRules)
         {
             string templateKey = TemplateInfoImpl.MakeKey(templateNode, (guard != null ? guard.PatternNode : null),
@@ -569,7 +569,7 @@ namespace RTParser.Utils
             }
 
             // last in first out addition
-            ResponseInfo responseInfo = templateNode.InnerXml;
+            Unifiable responseInfo = templateNode.InnerXml;
             TemplateInfo newTemplateInfo =
                 (TemplateInfo)CategoryInfoImpl1.GetCategoryInfo(patternInfo, cateNode, loaderOptions, templateNode,
                                                             responseInfo, guard, topicInfo, this, thatInfo,
@@ -591,7 +591,7 @@ namespace RTParser.Utils
             newTemplateInfo.TemplateKey = templateKey;
             newTemplateInfo.That = thatInfo;
             CategoryInfo category = newTemplateInfo.CategoryInfo;
-            PatternInfo pat = patternInfo;
+            Unifiable pat = patternInfo;
             if (category != null)
             {
                 category.That = thatInfo;

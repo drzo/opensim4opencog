@@ -1,10 +1,8 @@
 using System;
 using System.Xml;
-using System.Text;
-using AltAIMLParser;
-using AltAIMLbot;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// The version element tells the AIML interpreter that it should substitute the version number
@@ -12,7 +10,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The version element does not have any content. 
     /// </summary>
-    public class verbatum : RTParser.Utils.AIMLTagHandler
+    public class verbatum : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -22,10 +20,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public verbatum(String show, RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public verbatum(String show, AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -38,13 +36,13 @@ namespace RTParser.AIMLTagHandlers
 
         protected override bool ExpandingSearchWillYieldNoExtras { get { return true; } }
         readonly Unifiable data;
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             RecurseResult = data;
             return data;
         }
 
-        public override Unifiable CompleteProcess()
+        public override Unifiable CompleteProcessU()
         {
             RecurseResult = data;
             if (RecurseResultValid) return RecurseResult;

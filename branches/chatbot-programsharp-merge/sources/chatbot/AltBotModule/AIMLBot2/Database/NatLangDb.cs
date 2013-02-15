@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using AltAIMLParser;
+using AltAIMLbot.AIMLTagHandlersU;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Database.NLP;
 using MushDLR223.Utilities;
 using System.IO;
 using System.Runtime.Serialization;
@@ -10,21 +12,19 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Collections;
 using System.Text.RegularExpressions;
 using MushDLR223.Virtualization;
-using RTParser;
-using RTParser.AIMLTagHandlers;
-using RTParser.Database.NLP;
+using AltAIMLbot;
 
 //using NLPlib = RTParser.Database.NatLangDb;
 ///uses System.Runtime.Serialization.Formatters.Soap.dll
 /// 
-namespace RTParser.Database
+namespace AltAIMLbot.Database
 {
     public class NatLangDb
     {
         private GoogleTranslator googleTranslator = null;
         public static NatLangDb NatLangProc;
         static AltBot bot;
-        public NatLangDb(RTParser.AltBot p)
+        public NatLangDb(AltBot p)
         {
             bot = p;
             googleTranslator = new GoogleTranslator(p);

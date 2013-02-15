@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RTParser.Database
+namespace AltAIMLbot.Database
 {
     public class TrueKnowledgeFactiodEngine
         : WebGetFactiodEngine

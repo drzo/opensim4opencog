@@ -3,22 +3,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml;
-using AltAIMLParser;
 using AltAIMLbot;
+using AltAIMLbot.Utils;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using org.opencyc.api;
 using org.opencyc.cycobject;
-using RTParser;
-using RTParser.Utils;
 
-namespace RTParser.Database
+namespace AltAIMLbot.Database
 {
-    abstract public class CycTagHandler:AIMLTagHandler
+    abstract public class CycTagHandler:AIMLTagHandlerU
     {
-        protected CycTagHandler(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        protected CycTagHandler(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -37,7 +35,7 @@ namespace RTParser.Database
         /// The method that does the actual processing of the text.
         /// </summary>
         /// <returns>The resulting processed text</returns>
-        protected abstract override Unifiable ProcessChange();
+        protected abstract override Unifiable ProcessChangeU();
 
         #endregion
     }

@@ -7,14 +7,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
-using AltAIMLParser;
+using AltAIMLbot.Utils;
 using AltAIMLbot;
+using AltAIMLbot.Database;
+using AltAIMLbot.Variables;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser.Database;
-using RTParser.Variables;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     [Serializable]
     public class StaticAIMLUtils : TextPatternUtils

@@ -1,15 +1,15 @@
 using System;
 using System.Xml;
 using AltAIMLbot;
+using AltAIMLbot.Variables;
 using MushDLR223.Utilities;
-using RTParser.Variables;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 
 //using StringAppendableUnifiable = System.Text.StringBuilder;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
-    public abstract partial class AIMLTagHandler
+    public abstract partial class AIMLTagHandlerU
     {
         protected void DebugCheck(int i)
         {

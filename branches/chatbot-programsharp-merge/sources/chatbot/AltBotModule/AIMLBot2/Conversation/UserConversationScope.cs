@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using AltAIMLParser;
 using AltAIMLbot;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     public interface UserConversationScope : UserStaticModel, IUser
     {

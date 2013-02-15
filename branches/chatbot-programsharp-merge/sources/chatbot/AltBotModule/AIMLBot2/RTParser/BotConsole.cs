@@ -12,29 +12,27 @@ using System.Web;
 using System.Windows.Forms;
 using System.Xml;
 using AIMLbot;
-using AltAIMLParser;
 using AltAIMLbot;
+using AltAIMLbot.GUI;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
+using AltAIMLbot.Web;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using java.lang;
 using org.opencyc.api;
-using RTParser.AIMLTagHandlers;
-using RTParser.Database;
-using RTParser.GUI;
-using RTParser.Utils;
-using RTParser.Variables;
-using RTParser.Web;
+using AltAIMLbot.Database;
 using Console=System.Console;
 using Exception = System.Exception;
 using Object = System.Object;
 using String = System.String;
 using Thread = System.Threading.Thread;
-using UPath = RTParser.Unifiable;
-using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
+using UPath = AltAIMLbot.Unifiable;
+using UList = System.Collections.Generic.List<AltAIMLbot.Utils.TemplateInfo>;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     /// <summary>
     /// </summary>

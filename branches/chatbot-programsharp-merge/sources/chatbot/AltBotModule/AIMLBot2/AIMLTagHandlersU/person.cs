@@ -1,13 +1,8 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLParser;
-using AltAIMLbot;
-using RTParser.AIMLTagHandlers;
-using RTParser.Utils;
-using RTParser.Variables;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// The atomic version of the person element is a shortcut for: 
@@ -18,10 +13,10 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The non-atomic person element instructs the AIML interpreter to: 
     /// 
-    /// 1. replace words with first-person aspect in the result of processing the contents of the 
+    /// 1. replace words with first-person aspect in the result of Processing the contents of the 
     /// person element with words with the grammatically-corresponding third-person aspect; and 
     /// 
-    /// 2. replace words with third-person aspect in the result of processing the contents of the 
+    /// 2. replace words with third-person aspect in the result of Processing the contents of the 
     /// person element with words with the grammatically-corresponding first-person aspect.
     /// 
     /// The definition of "grammatically-corresponding" is left up to the implementation. 
@@ -40,10 +35,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public person(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public person(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)

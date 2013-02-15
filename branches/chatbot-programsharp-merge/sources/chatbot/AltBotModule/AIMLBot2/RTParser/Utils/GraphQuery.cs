@@ -3,12 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
 using AIMLbot;
-using AltAIMLParser;
+using AltAIMLbot.Utils;
 using AltAIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     public class GraphQuery : QuerySettings
     {

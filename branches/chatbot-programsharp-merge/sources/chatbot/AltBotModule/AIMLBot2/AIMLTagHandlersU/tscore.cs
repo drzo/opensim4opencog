@@ -1,27 +1,17 @@
 ﻿using System;
-using System.Runtime;
-using System.Text;
 using System.Xml;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-//using System.Linq;
-using System.Text.RegularExpressions;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics;
-using AltAIMLParser;
-using AltAIMLbot;
-using RTParser;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+//using System.Linq;
+
+namespace AltAIMLbot.AIMLTagHandlersU
 {
-    public class tscore : RTParser.Utils.AIMLTagHandler
+    public class tscore : AIMLTagHandlerU
     {
 
-        public tscore(RTParser.AltBot bot,
-                RTParser.User user,
-                RTParser.Utils.SubQuery query,
+        public tscore(AltBot bot,
+                User user,
+                SubQuery query,
                 Request request,
                 Result result,
                 XmlNode templateNode)
@@ -31,7 +21,7 @@ namespace RTParser.AIMLTagHandlers
 
 
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (CheckNode("tscore"))
             {

@@ -16,20 +16,19 @@ using System.Xml.Serialization;
 /*using AltAIMLbot;
 using AltAIMLbot.Utils;
 using AltAIMLParser;*/
-using AltAIMLParser;
+using AltAIMLbot;
+using AltAIMLbot.Database;
+using AltAIMLbot.Normalize;
+using AltAIMLbot.Utils;
 using LogicalParticleFilter1;
 using Lucene.Net.Store;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using RTParser.Database;
-using RTParser.Normalize;
-using RTParser.Utils;
-
 using DataUnifiable = System.String;
-using DataUnifiableYYY = RTParser.Unifiable;
+using DataUnifiableYYY = AltAIMLbot.Unifiable;
 
-namespace RTParser.Variables
+namespace AltAIMLbot.Variables
 {
     public delegate ISettingsDictionaryT<DataUnifiable> ParentProvider();
     public interface ISettingsDictionary : ISettingsDictionaryT<DataUnifiable>{}

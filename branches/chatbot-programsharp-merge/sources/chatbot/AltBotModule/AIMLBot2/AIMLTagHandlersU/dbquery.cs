@@ -1,41 +1,21 @@
-﻿using System;
-using System.Runtime;
-using System.Text;
-using System.Xml;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-//using System.Linq;
-using System.Text.RegularExpressions;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics;
-using AltAIMLParser;
-using AltAIMLbot;
-using RTParser;
-using RTParser.Utils;
-using Lucene.Net.Store;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Standard;
-using Lucene.Net.Index;
-using Lucene.Net.Documents;
-using Lucene.Net.Search;
-using Lucene.Net.QueryParsers;
-using MushDLR223.ScriptEngines;
+﻿using System.Xml;
+using AltAIMLbot.Utils;
 using MushDLR223.Utilities;
-using MushDLR223.Virtualization;
 
-namespace RTParser.AIMLTagHandlers
+//using System.Linq;
+
+namespace AltAIMLbot.AIMLTagHandlersU
 {
 
     /// <summary>
     /// 
     /// </summary>
-    public class dbquery : RTParser.Utils.AIMLTagHandler
+    public class dbquery : AIMLTagHandlerU
     {
 
-        public dbquery(RTParser.AltBot bot,
-                RTParser.User user,
-                RTParser.Utils.SubQuery query,
+        public dbquery(AltBot bot,
+                User user,
+                SubQuery query,
                 Request request,
                 Result result,
                 XmlNode templateNode)
@@ -44,7 +24,7 @@ namespace RTParser.AIMLTagHandlers
         }
 
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (CheckNode("dbquery"))
             {
@@ -58,9 +38,9 @@ namespace RTParser.AIMLTagHandlers
                     const bool expandOnNoHits = true; // actually WordNet
                     const float threshold = 0.0f;
                     Unifiable templateNodeInnerValue = ProcessChildNode(((XmlNode)node));
-                    string failPrefix = AltBot.GetAttribValue(((XmlNode)node), "failprefix", "").ToLower();
-                    string passPrefix = AltBot.GetAttribValue(((XmlNode)node), "passprefix", "").ToLower();
-                    string resultPrefix = AltBot.GetAttribValue(((XmlNode)node), "resultprefix", "").ToLower();
+                    string failPrefix = GetAttribValue(((XmlNode)node), "failprefix", "").ToLower();
+                    string passPrefix = GetAttribValue(((XmlNode)node), "passprefix", "").ToLower();
+                    string resultPrefix = GetAttribValue(((XmlNode)node), "resultprefix", "").ToLower();
                     if (!string.IsNullOrEmpty(failPrefix))
                     {
                         //on <dbquery> failure, use a <srai> fallback
@@ -83,7 +63,7 @@ namespace RTParser.AIMLTagHandlers
                     float reliability;
                     Unifiable converseMemo = TargetBot.LuceneIndexer.AskQuery(
                         searchTerm1,
-                        this.writeToLog,
+                        writeToLog,
                         () =>
                         {
                             if (string.IsNullOrEmpty(failPrefix)) return null;
@@ -91,7 +71,7 @@ namespace RTParser.AIMLTagHandlers
                             string sariCallStr = failPrefix + " " + (string)templateNodeInnerValue;
                             return callSRAI(sariCallStr);
                         },
-                        this.templateNode,
+                        templateNode,
                         threshold,
                         true, // use Wordnet
                         expandOnNoHits, out reliability);
@@ -112,7 +92,7 @@ namespace RTParser.AIMLTagHandlers
                             return callSRAI(sariCallStr);
                         }
                         return converseMemo;
-                        //Unifiable converseMemo = this.user.bot.conversationStack.Pop();
+                        //Unifiable converseMemo = Proc.conversationStack.Pop();
                     }
                 }
                 if (hasPassed)
@@ -143,8 +123,8 @@ namespace RTParser.AIMLTagHandlers
                     return FAIL;
                 }
                 float reliability;
-                string failPrefix = AltBot.GetAttribValue(templateNode, "failprefix", "").ToLower();
-                Unifiable converseMemo = TargetBot.LuceneIndexer.AskQuery(searchTerm1, this.writeToLog,
+                string failPrefix = GetAttribValue(templateNode, "failprefix", "").ToLower();
+                Unifiable converseMemo = TargetBot.LuceneIndexer.AskQuery(searchTerm1, writeToLog,
                                                                           () =>
                                                                               {
                                                                                   //on <dbquery> failure, use a <srai> fallback
@@ -152,7 +132,7 @@ namespace RTParser.AIMLTagHandlers
                                                                                   return callSRAI(sariCallStr);
 
                                                                               },
-                                                                             this.templateNode, 
+                                                                             templateNode, 
                                                                              threshold, 
                                                                              true, // use Wordnet
                                                                              expandOnNoHits, out reliability);
@@ -161,7 +141,7 @@ namespace RTParser.AIMLTagHandlers
                 // otherwise there is a conversation memo then pop it??
                 if (IsNullOrEmpty(converseMemo))
                 {
-                    //Unifiable converseMemo = this.user.bot.conversationStack.Pop();
+                    //Unifiable converseMemo = Proc.conversationStack.Pop();
                 }
                 return converseMemo;
             }
@@ -173,11 +153,11 @@ namespace RTParser.AIMLTagHandlers
 
         public override void writeToLog(string s, params object[] p)
         {
-            //this.user.bot.writeToLog("DBQUERY: " + s, p);
-            //bool tempB = this.user.bot.IsLogging;
-            //this.user.bot.IsLogging = true;
+            //Proc.writeToLog("DBQUERY: " + s, p);
+            //bool tempB = Proc.IsLogging;
+            //Proc.IsLogging = true;
             // base.user.bot.writeToLog("DBQUERY: " + s, p);
-            //this.user.bot.IsLogging = tempB;
+            //Proc.IsLogging = tempB;
             DLRConsole.DebugWriteLine("DBQUERY: " + s, p);
 
         }

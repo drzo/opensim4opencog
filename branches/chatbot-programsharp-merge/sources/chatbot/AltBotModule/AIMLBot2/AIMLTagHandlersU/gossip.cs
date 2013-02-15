@@ -1,20 +1,17 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLParser;
-using AltAIMLbot;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
-    /// The gossip element instructs the AIML interpreter to capture the result of processing the 
+    /// The gossip element instructs the AIML interpreter to capture the result of Processing the 
     /// contents of the gossip elements and to store these contents in a manner left up to the 
     /// implementation. Most common uses of gossip have been to store captured contents in a separate 
     /// file. 
     /// 
     /// The gossip element does not have any attributes. It may contain any AIML template elements.
     /// </summary>
-    public class gossip : RTParser.Utils.AIMLFormatingTagHandler
+    public class gossip : AIMLFormatingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -24,10 +21,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public gossip(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public gossip(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -36,11 +33,11 @@ namespace RTParser.AIMLTagHandlers
         }
 
         /// <summary>
-        /// The method that does the actual processing of the text.
+        /// The method that does the actual Processing of the text.
         /// 
         /// This like the think tag retunns nothihng.. but logs it to the console
         /// </summary>
-        /// <returns>The resulting processed text</returns>
+        /// <returns>The resulting Processed text</returns>
         protected override Unifiable Format(Unifiable templateNodeInnerText)
         {
             if (CheckNode("gossip"))
@@ -48,7 +45,9 @@ namespace RTParser.AIMLTagHandlers
                 // gossip is merely logged by the Proc and written to log files
                 if (!IsNullOrEmpty(templateNodeInnerText))
                 {
-                    writeToLog(SafeFormat("GOSSIP from user: {0}, '{1}'", this.user.UserID, Unifiable.DescribeUnifiable(templateNodeInnerText)));
+                    Unifiable intext = Unifiable.DescribeUnifiable(templateNodeInnerText);
+                    writeToLog(SafeFormat("GOSSIP from user: {0}, '{1}'", user.UserID, intext));
+                    return intext;
                 }
             }
             return Succeed(templateNodeInnerText);

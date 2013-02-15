@@ -1,20 +1,16 @@
 using System;
 using System.Xml;
-using System.Text;
-using System.IO;
-using AltAIMLParser;
-using AltAIMLbot;
+using AltAIMLbot.Utils;
 using MushDLR223.Utilities;
-using RTParser.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// The learn element instructs the AIML interpreter to retrieve a resource specified by a URI, 
-    /// and to process its AIML object contents.
+    /// and to Process its AIML object contents.
     /// supports network HTTP and web service based AIML learning (as well as local filesystem)
     /// </summary>
-    public class learn : RTParser.Utils.LoadingTagHandler
+    public class learn : LoadingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -24,10 +20,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public learn(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public learn(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -43,9 +39,9 @@ namespace RTParser.AIMLTagHandlers
             string cmd = templateNode.LocalName;
             if (HelperForMerge.HasChildNodesNonText(templateNode))
             {
-                this.ProcessInnerXmlAsLoad = true;
+                ProcessInnerXmlAsLoad = true;
 
-                XmlNode attach = StaticXMLUtils.CopyNode("aiml", templateNode, false);
+                XmlNode attach = CopyNode("aiml", templateNode, false);
                 // remove children (our goal was to simpley copy attributes
                 attach.RemoveAll();
                 // recursively check

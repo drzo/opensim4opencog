@@ -2,20 +2,20 @@
 using System.Collections.Generic;
 using System.Web;
 using System.Xml;
-using AltAIMLParser;
+using AltAIMLbot.AIMLTagHandlers;
+using AltAIMLbot.AIMLTagHandlersU;
 using AltAIMLbot;
+using AltAIMLbot.Utils;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser.AIMLTagHandlers;
-using RTParser.Utils;
-using PatternInfo = RTParser.Unifiable;
-using ThatInfo = RTParser.Unifiable;
-using TopicInfo = RTParser.Unifiable;
-using GuardInfo = RTParser.Unifiable;
-using ResponseInfo = RTParser.Unifiable;
+using PatternInfo = AltAIMLbot.Unifiable;
+using ThatInfo = AltAIMLbot.Unifiable;
+using TopicInfo = AltAIMLbot.Unifiable;
+using GuardInfo = AltAIMLbot.Unifiable;
+using ResponseInfo = AltAIMLbot.Unifiable;
 using AIMLbot;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     /// <summary>
     /// Encapsulates an AIML Tag Proccessor.
@@ -23,10 +23,10 @@ namespace RTParser
     public partial class TagHandlerProcessor : StaticAIMLUtils
     {
 
-        internal AIMLTagHandler GetTagHandler(User user, SubQuery query, Request request, Result result, XmlNode node,
-                                              AIMLTagHandler parentTagHandler)
+        internal AIMLTagHandlerU GetTagHandler(User user, SubQuery query, Request request, Result result, XmlNode node,
+                                              AIMLTagHandlerU parentTagHandler)
         {
-            AIMLTagHandler tag = GetTagHandler00(user, query, request, result, node, true);
+            AIMLTagHandlerU tag = GetTagHandler00(user, query, request, result, node, true);
             if (query != null) query.CurrentTagHandler = tag;
             if (query != null) query.CurrentNode = node;
             if (tag == null)
@@ -58,9 +58,9 @@ namespace RTParser
             return tag;
         }
 
-        internal AIMLTagHandler GetTagHandler00(User user, SubQuery query, Request request, Result result, XmlNode node, bool liText)
+        internal AIMLTagHandlerU GetTagHandler00(User user, SubQuery query, Request request, Result result, XmlNode node, bool liText)
         {
-            AIMLTagHandler tagHandler = getBespokeTags(user, query, request, result, node);
+            AIMLTagHandlerU tagHandler = getBespokeTags(user, query, request, result, node);
             string nodeNameLower = ToLower(node.LocalName);
             AltBot targetBot = query.TargetBot;
             if (Equals(null, tagHandler))
@@ -448,11 +448,11 @@ namespace RTParser
         /// <param name="copyChild"></param>
         /// <param name="copyParent"></param>
         /// <returns></returns>
-        public AIMLTagHandler proccessResponse(SubQuery query,
+        public AIMLTagHandlerU proccessResponse(SubQuery query,
                                      Request request, Result result,
-                                     XmlNode templateNode, GuardInfo sGuard,
+                                     XmlNode templateNode, Unifiable sGuard,
                                      out bool createdOutput, out bool templateSucceeded,
-                                     AIMLTagHandler parentHandler, TemplateInfo templateInfo,
+                                     AIMLTagHandlerU parentHandler, TemplateInfo templateInfo,
                                      bool copyChild, bool copyParent)
         {
             //request.CurrentResult = result;
@@ -489,10 +489,10 @@ namespace RTParser
             }
         }
 
-        private AIMLTagHandler proccessTemplate(SubQuery query, Request request, Result result,
-                                                XmlNode templateNode, GuardInfo sGuard,
+        private AIMLTagHandlerU proccessTemplate(SubQuery query, Request request, Result result,
+                                                XmlNode templateNode, Unifiable sGuard,
                                                 out bool createdOutput, out bool templateSucceeded,
-                                                AIMLTagHandler parentHandler, TemplateInfo templateInfo,
+                                                AIMLTagHandlerU parentHandler, TemplateInfo templateInfo,
                                                 bool copyChild, bool copyParent)
         {
             ChatLabel label = request.PushScope;
@@ -548,10 +548,10 @@ namespace RTParser
             }
         }
 
-        public AIMLTagHandler proccessResponse000(SubQuery query, Request request, Result result,
-                                                XmlNode sOutput, GuardInfo sGuard,
+        public AIMLTagHandlerU proccessResponse000(SubQuery query, Request request, Result result,
+                                                XmlNode sOutput, Unifiable sGuard,
                                                 out bool createdOutput, out bool templateSucceeded,
-                                                AIMLTagHandler parentHandler, TemplateInfo templateInfo,
+                                                AIMLTagHandlerU parentHandler, TemplateInfo templateInfo,
                                                 bool copyChild, bool copyParent)
         {
             AltBot Proc = query.TargetBot;
@@ -559,7 +559,7 @@ namespace RTParser
             //query.LastTagHandler = handler;
             bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput ||
                             (templateInfo != null && templateInfo.IsTraced);
-            //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
+            //XmlNode guardNode = AIMLTagHandlerU.getNode(s.Guard.InnerXml);
             bool usedGuard = sGuard != null && sGuard.PatternNode != null;
             sOutput = sOutput ?? templateInfo.ClonedOutput;
             string output = sOutput.OuterXml;
@@ -581,7 +581,7 @@ namespace RTParser
 
             bool protectChild = copyChild || childOriginal;
             bool suspendingLimits = request.IsToplevelRequest || request.SuspendSearchLimits;
-            AIMLTagHandler tagHandler = GetTagHandler(request.Requester, query, request, result,
+            AIMLTagHandlerU tagHandler = GetTagHandler(request.Requester, query, request, result,
                                                                   templateNode, parentHandler);
             string outputSentenceOut = processNode(templateNode, query,
                                                                request, result, request.Requester, parentHandler,
@@ -751,8 +751,8 @@ namespace RTParser
         /// <returns>the output Unifiable</returns>
         public string processNode(XmlNode node, SubQuery query,
                                   Request request, Result result, User user,
-                                  AIMLTagHandler parentHandler, bool protectChild, bool copyParent,
-                                  AIMLTagHandler nodeHandler, bool suspendLimits, out bool templateSucceeded)
+                                  AIMLTagHandlerU parentHandler, bool protectChild, bool copyParent,
+                                  AIMLTagHandlerU nodeHandler, bool suspendLimits, out bool templateSucceeded)
         {
             Request originalSalientRequest = MasterRequest.GetOriginalSalientRequest(request);
             var wasSuspendRestrati = request.SuspendSearchLimits;
@@ -808,8 +808,8 @@ namespace RTParser
         /// <returns>the output Unifiable</returns>
         public string processNodeVV(XmlNode node, SubQuery query,
                                   Request request, Result result, User user,
-                                  AIMLTagHandler parentHandler, bool protectChild, bool copyParent,
-                                  AIMLTagHandler tagHandler, out bool childSuccess)
+                                  AIMLTagHandlerU parentHandler, bool protectChild, bool copyParent,
+                                  AIMLTagHandlerU tagHandler, out bool childSuccess)
         {
             AltBot TargetBot = request.TargetBot;
             childSuccess = true;
@@ -935,7 +935,7 @@ namespace RTParser
                         if (false && Unifiable.IsNullOrEmpty(cp))
                         {
                             // trace the next line to see why
-                            AIMLTagHandler handler = tagHandler;
+                            AIMLTagHandlerU handler = tagHandler;
                             TargetBot.TraceTest("ERROR: Try Again since NULL " + handler,
                                 () => { cp = handler.CompleteAimlProcess(); });
                         }

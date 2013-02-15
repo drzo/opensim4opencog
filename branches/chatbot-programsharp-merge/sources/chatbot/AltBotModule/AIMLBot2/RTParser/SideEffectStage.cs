@@ -1,6 +1,6 @@
 using System;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     public class SideEffectStage : IComparable<SideEffectStage>
     {

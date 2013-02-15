@@ -1,10 +1,10 @@
 using System.Xml;
-using AltAIMLParser;
+using AltAIMLbot.Utils;
 using AltAIMLbot;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
-    public abstract class AIMLFormatingTagHandler : AIMLTagHandler
+    public abstract class AIMLFormatingTagHandler : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -27,13 +27,13 @@ namespace RTParser.Utils
             IsStarAtomically = true;
         }
 
-        #region Overrides of AIMLTagHandler
+        #region Overrides of AIMLTagHandlerU
 
         /// <summary>
         /// The method that does the actual processing of the text.
         /// </summary>
         /// <returns>The resulting processed text</returns>
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (RecurseResultValid) return RecurseResult;
             if (isRecursiveSubclass && !ReadOnly)
@@ -48,7 +48,7 @@ namespace RTParser.Utils
             return text;
         }
 
-        public override Unifiable CompleteProcess()
+        public override Unifiable CompleteProcessU()
         {
             if (RecurseResultValid) return RecurseResult;
             var vv = ProcessAimlChange();

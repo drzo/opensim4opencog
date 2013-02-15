@@ -1,12 +1,8 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLParser;
-using AltAIMLbot;
-using RTParser.Utils;
-using RTParser.Variables;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// An element called bot, which may be considered a restricted version of get, is used to 
@@ -19,7 +15,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The bot element does not have any content. 
     /// </summary>
-    public class root : RTParser.Utils.LoadingTagHandler
+    public class root : LoadingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -29,10 +25,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public root(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public root(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode, ParentProvider pp)
@@ -46,7 +42,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (CheckNode("root,vars,substitutions,substitutions,bots,properties,predicates"))
             {
-                // process each of these child "settings"? nodes
+                // Process each of these child "settings"? nodes
                 var prevDict = request.TargetSettings;
                 try
                 {

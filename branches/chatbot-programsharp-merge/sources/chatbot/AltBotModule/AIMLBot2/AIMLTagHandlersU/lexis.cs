@@ -1,16 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Xml;
-using System.Text;
-using System.Collections.Generic;
-using AltAIMLParser;
-using AltAIMLbot;
-using RTParser.Utils;
-// For Wordnet access
-using LAIR.ResourceAPIs.WordNet;
+using AltAIMLbot.Utils;
 using LAIR.Collections.Generic;
+using LAIR.ResourceAPIs.WordNet;
 
-namespace RTParser.AIMLTagHandlers
+// For Wordnet access
+
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// IMPLEMENTED FOR COMPLETENESS REASONS
@@ -25,10 +23,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public lexis(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public lexis(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -47,16 +45,16 @@ namespace RTParser.AIMLTagHandlers
             //Lookup definition for current word we could unify with
             string wordAttributes = "";
             string key = (string)with.ToValue(query).Trim();
-            if (this.user.rbot.wordAttributeHash.Contains(key) )
+            if (Proc.wordAttributeHash.Contains(key) )
             { 
-                wordAttributes = (string)this.user.rbot.wordAttributeHash[key];
+                wordAttributes = (string)Proc.wordAttributeHash[key];
             }
             else
             {
-                if (this.user.rbot.wordAttributeHash.Contains(key.ToLower()) )
+                if (Proc.wordAttributeHash.Contains(key.ToLower()) )
                 {
                     key = key.ToLower();
-                    wordAttributes = (string)this.user.rbot.wordAttributeHash[key];
+                    wordAttributes = (string)Proc.wordAttributeHash[key];
                 }
             }
             // Can you find a match inside ?
@@ -65,7 +63,7 @@ namespace RTParser.AIMLTagHandlers
 
 
             // Ok, lets try WordNet
-            WordNetEngine ourWordNetEngine = this.user.rbot.wordNetEngine;
+            WordNetEngine ourWordNetEngine = Proc.wordNetEngine;
             Set < SynSet > synPatternSet = null;
 
             // find our POS domain if possible
@@ -82,7 +80,13 @@ namespace RTParser.AIMLTagHandlers
                         }
                     }
             }
-
+            if (ourWordNetEngine == null)
+            {
+                writeDebugLine("Wordnet engine not loaded .. returning AND_FALSE");
+                {
+                    return AND_FALSE;
+                }
+            }
             try { synPatternSet = ourWordNetEngine.GetSynSets(re, ourPOS); }
             catch (Exception)
             {

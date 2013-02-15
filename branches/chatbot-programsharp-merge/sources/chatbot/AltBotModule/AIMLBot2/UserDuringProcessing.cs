@@ -1,12 +1,11 @@
 using System.Collections.Generic;
-using AltAIMLParser;
+using AltAIMLbot.AIMLTagHandlersU;
 using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 using MushDLR223.Utilities;
-using RTParser.AIMLTagHandlers;
-using RTParser.Utils;
-using RTParser.Variables;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     public interface UserDuringProcessing : ISettingsDictionary, IUser, UserConversationScope
     {

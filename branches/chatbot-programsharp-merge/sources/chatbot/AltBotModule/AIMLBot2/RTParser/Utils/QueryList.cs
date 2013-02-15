@@ -2,11 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
-using AltAIMLParser;
-using GraphQuery = RTParser.Utils.QueryList;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using GraphQuery = AltAIMLbot.Utils.QueryList;
 using MushDLR223.Utilities;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     public partial class QueryList : QuerySettings
     {

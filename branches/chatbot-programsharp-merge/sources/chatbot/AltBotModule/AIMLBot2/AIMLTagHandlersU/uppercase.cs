@@ -1,10 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLParser;
-using AltAIMLbot;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// The uppercase element tells the AIML interpreter to render the contents of the element
@@ -14,7 +11,7 @@ namespace RTParser.AIMLTagHandlers
     /// If no character in this Unifiable has a different uppercase version, based on the Unicode 
     /// standard, then the original Unifiable is returned. 
     /// </summary>
-    public class uppercase : RTParser.Utils.AIMLFormatingTagHandler
+    public class uppercase : AIMLFormatingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -24,10 +21,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public uppercase(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public uppercase(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -36,14 +33,14 @@ namespace RTParser.AIMLTagHandlers
         }
 
         /// <summary>
-        /// The method that does the actual processing of the text.
+        /// The method that does the actual Processing of the text.
         /// </summary>
-        /// <returns>The resulting processed text</returns>
+        /// <returns>The resulting Processed text</returns>
         protected override Unifiable Format(Unifiable templateNodeInnerText)
         {
             if (CheckNode("uppercase"))
             {
-                return templateNodeInnerText.ToValue(query).ToUpper(this.Proc.Locale);
+                return templateNodeInnerText.ToValue(query).ToUpper(Proc.Locale);
             }
             return Unifiable.Empty;
         }

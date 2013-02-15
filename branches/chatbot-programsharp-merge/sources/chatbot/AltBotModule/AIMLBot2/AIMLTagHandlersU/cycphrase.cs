@@ -1,16 +1,13 @@
-using System;
-using System.Collections.Generic;
 using System.Xml;
-using System.Text;
-using AltAIMLParser;
-using AltAIMLbot;
+using AltAIMLbot.Database;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// &lt;cycphrase&gt; translates a Cyc symbol into an English word/phrase
     /// </summary>
-    public class cycphrase : RTParser.Database.CycTagHandler
+    public class cycphrase : CycTagHandler
     {
         /// <summary>                    s
         /// Ctor
@@ -20,10 +17,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public cycphrase(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public cycphrase(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -33,10 +30,10 @@ namespace RTParser.AIMLTagHandlers
 
 
         /// <summary>
-        /// The method that does the actual processing of the text.
+        /// The method that does the actual Processing of the text.
         /// </summary>
-        /// <returns>The resulting processed text</returns>
-        protected override Unifiable ProcessChange()
+        /// <returns>The resulting Processed text</returns>
+        protected override Unifiable ProcessChangeU()
         {
             if (CheckNode("cycphrase"))
             {

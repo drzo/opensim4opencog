@@ -1,15 +1,12 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLParser;
-using AltAIMLbot;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// NOT IMPLEMENTED FOR SECURITY REASONS
     /// </summary>
-    public class system : RTParser.Utils.AIMLTagHandler
+    public class system : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -19,10 +16,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public system(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public system(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -31,12 +28,12 @@ namespace RTParser.AIMLTagHandlers
         }
 
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (!finalResult.IsValid)
             {
                 var v = Recurse();
-                var r  = this.Proc.SystemExecute(v, GetAttribValue("lang", "bot"), request);
+                var r  = Proc.SystemExecute(v, GetAttribValue("lang", "bot"), request);
                 if (Unifiable.IsFalse(r))
                 {
                     //finalResult = r;

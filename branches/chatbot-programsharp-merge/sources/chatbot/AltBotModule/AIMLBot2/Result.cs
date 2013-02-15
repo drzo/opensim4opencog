@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using AIMLbot;
-using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser;
-using RTParser.Utils;
-using RTParser.Variables;
-using UPath = RTParser.Unifiable;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
+using UPath = AltAIMLbot.Unifiable;
 
 
 namespace AltAIMLbot

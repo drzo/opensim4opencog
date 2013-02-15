@@ -1,18 +1,16 @@
 using System;
-using System.Xml;
-using System.Text;
 using System.Collections.Generic;
-using AltAIMLParser;
-using AltAIMLbot;
+using System.Xml;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// The random element instructs the AIML interpreter to return exactly one of its contained li 
     /// elements randomly. The random element must contain one or more li elements of type 
     /// defaultListItem, and cannot contain any other elements.
     /// </summary>
-    public class random : RTParser.Utils.AIMLTagHandler
+    public class random : AIMLTagHandlerU
     {
         static Random r = new Random();
         /// <summary>
@@ -23,20 +21,20 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public random(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public random(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
-            this.isRecursive = false;
+            isRecursive = false;
         }
 
 
-        protected override Unifiable ProcessChange()     
+        protected override Unifiable ProcessChangeU()     
         {
             if (RecurseResultValid)
             {
@@ -49,7 +47,7 @@ namespace RTParser.AIMLTagHandlers
             if (CheckNode("random"))
             {
                 Unifiable appendable = Unifiable.CreateAppendable();
-                if (this.templateNode.HasChildNodes)
+                if (templateNode.HasChildNodes)
                 {
                     // only grab <li> nodes
                     List<XmlNode> listNodes = new List<XmlNode>();

@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using AltAIMLParser;
 using AltAIMLbot;
-using RTParser;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 
 namespace AIMLbot
 {
-    public class Bot : RTParser.AltBot
+    public class Bot : AltAIMLbot.AltBot
     {
          
         public Bot()
@@ -20,7 +18,7 @@ namespace AIMLbot
             base.loadAIMLFromDefaults();
         }
     }
-    public class MasterUser : RTParser.UserImpl
+    public class MasterUser : AltAIMLbot.UserImpl
     {
         public MasterUser(string fullname, string UserID, Bot bot)
             : base(fullname, UserID, bot)
@@ -74,12 +72,12 @@ namespace AIMLbot
             get { return this;  }
         }
 
-        public override RTParser.Variables.ISettingsDictionary RequesterChanges
+        public override AltAIMLbot.Variables.ISettingsDictionary RequesterChanges
         {
             get { throw new NotImplementedException(); }
         }
 
-        public override RTParser.Variables.ISettingsDictionary ResponderChanges
+        public override AltAIMLbot.Variables.ISettingsDictionary ResponderChanges
         {
             get { throw new NotImplementedException(); }
         }
@@ -109,7 +107,7 @@ namespace AIMLbot
     
     namespace Utils
     {
-        public class AIMLLoader : RTParser.Utils.AIMLLoader
+        public class AIMLLoader : AltAIMLbot.Utils.AIMLLoader
         {
             public AIMLLoader(AltBot bot)
                 : base(bot, bot == null ? null : bot.GetBotRequest("-AIMLLoader-"))

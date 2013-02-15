@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Xml;
-using AltAIMLParser;
-using AltAIMLbot;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
     /// The star element indicates that an AIML interpreter should substitute the value "captured" 
@@ -33,10 +30,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public star(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public star(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -46,7 +43,7 @@ namespace RTParser.AIMLTagHandlers
         }
     }
 
-    public class StarTagHandler : RTParser.Utils.UnifibleTagHandler
+    public class StarTagHandler : UnifibleTagHandler
     {
         protected override bool ExpandingSearchWillYieldNoExtras { get { return true; } }
         protected virtual IList<Unifiable> GetStarDict()
@@ -79,10 +76,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public StarTagHandler(RTParser.AltBot bot,
-                                      RTParser.User user,
-                                      RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public StarTagHandler(AltBot bot,
+                                      User user,
+                                      SubQuery query,
                                       Request request,
                                       Result result,
                                       XmlNode templateNode, int idx)
@@ -117,7 +114,7 @@ namespace RTParser.AIMLTagHandlers
                                            ? STAR_TRUE
                                            : STAR_FALSE;
                             }
-                            AIMLTagHandler part = GetChildTagHandler(childNode);
+                            AIMLTagHandlerU part = GetChildTagHandler(childNode);
                             if (part.CallCanUnify(with) > 0) return STAR_FALSE;
                         }
                         catch (Exception e)
@@ -132,9 +129,9 @@ namespace RTParser.AIMLTagHandlers
         }
 
         /// <summary>
-        /// The method that does the actual processing of the text.
+        /// The method that does the actual Processing of the text.
         /// </summary>
-        /// <returns>The resulting processed text</returns>
+        /// <returns>The resulting Processed text</returns>
         protected override Unifiable ComputeInnerOrNull()
         {
             IList<Unifiable> stars = GetStarDict();
@@ -142,7 +139,7 @@ namespace RTParser.AIMLTagHandlers
             int starsCount = stars.Count;
             string value = GetAttribValue("index", "" + DefaultIndex);
 
-            string starName = this.templateNode.Name.ToLower();
+            string starName = templateNode.Name.ToLower();
             if (CheckNode("star,thatstar,inputstar,topicstar"))
             {
                 if (starsCount > 0)

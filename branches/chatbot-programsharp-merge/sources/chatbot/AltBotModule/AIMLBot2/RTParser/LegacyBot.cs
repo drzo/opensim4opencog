@@ -12,20 +12,21 @@ using System.Xml;
 using System.Reflection;
 using System.Net.Mail;
 using AIMLbot;
+using LogicalParticleFilter1;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using RTParser.AIMLTagHandlers;
-using RTParser.Database;
-using RTParser.Normalize;
-using RTParser.Utils;
-using RTParser.Variables;
-using RTParser.Web;
-using UPath = RTParser.Unifiable;
-using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
+using AltAIMLbot.Database;
+using AltAIMLbot.Normalize;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
+using AltAIMLbot.Web;
+using UPath = AltAIMLbot.Unifiable;
+using UList = System.Collections.Generic.List<AltAIMLbot.Utils.TemplateInfo>;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 
-namespace RTParser
+
+namespace AltAIMLbot
 {
     //public delegate object SystemExecHandler(string cmd, Request user);
 
@@ -1374,7 +1375,7 @@ namespace RTParser
                 try
                 {
                     string s = "";
-                    var v = AIMLTagHandler.getNode("<pre>" + message + "</pre>");
+                    var v = AIMLTagHandlerU.getNode("<pre>" + message + "</pre>");
                     v.ReadOnly = false;
                     foreach (XmlNode childNode in v.ChildNodes)
                     {
@@ -1587,7 +1588,7 @@ namespace RTParser
             {
                 try
                 {
-                    result = ImmediateAiml(AIMLTagHandler.getNode(rawInputString), request, Loader, null);
+                    result = ImmediateAiml(AIMLTagHandlerU.getNode(rawInputString), request, Loader, null);
                     request.rawInput = result.Output;
                 }
                 catch (Exception e)
@@ -1837,12 +1838,12 @@ namespace RTParser
 
         public static string GetAttribValue(XmlNode templateNode, string attribName, string defaultIfEmpty)
         {
-            return AIMLTagHandler.GetAttribValue(templateNode, attribName, () => defaultIfEmpty, null);
+            return AIMLTagHandlerU.GetAttribValue(templateNode, attribName, () => defaultIfEmpty, null);
         }
 
 
         public AIMLbot.Result ImmediateAiml(XmlNode templateNode, Request request0,
-            AIMLLoader loader, AIMLTagHandler handler)
+            AIMLLoader loader, AIMLTagHandlerU handler)
         {
 
             var prev = request0.GraphsAcceptingUserInput;
@@ -1857,7 +1858,7 @@ namespace RTParser
             }
         }
 
-        private AIMLbot.Result ImmediateAIML0(Request parentRequest, XmlNode templateNode, AIMLTagHandler handler)
+        private AIMLbot.Result ImmediateAIML0(Request parentRequest, XmlNode templateNode, AIMLTagHandlerU handler)
         {
             string requestName = "<underline>" + templateNode.OuterXml + "</underline>";
             AltBot request0Proccessor = this;
@@ -1920,11 +1921,11 @@ namespace RTParser
             return result;
         }
 
-        public AIMLTagHandler proccessResponse(SubQuery query,
+        public AIMLTagHandlerU proccessResponse(SubQuery query,
             Request request, Result result,
             XmlNode templateNode, GuardInfo sGuard,
             out bool createdOutput, out bool templateSucceeded,
-            AIMLTagHandler handler, TemplateInfo templateInfo,
+            AIMLTagHandlerU handler, TemplateInfo templateInfo,
             bool copyChild, bool copyParent)
         {
             request.CurrentResult = result;
@@ -1951,14 +1952,14 @@ namespace RTParser
             }
         }
 
-        public AIMLTagHandler proccessResponse000(SubQuery query, Request request, Result result,
+        public AIMLTagHandlerU proccessResponse000(SubQuery query, Request request, Result result,
             XmlNode sOutput, GuardInfo sGuard,
             out bool createdOutput, out bool templateSucceeded,
-            AIMLTagHandler handler, TemplateInfo templateInfo,
+            AIMLTagHandlerU handler, TemplateInfo templateInfo,
             bool copyChild, bool copyParent)
         {
             bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput;
-            //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
+            //XmlNode guardNode = AIMLTagHandlerU.getNode(s.Guard.InnerXml);
             bool usedGuard = sGuard != null && sGuard.Output != null;
             sOutput = sOutput ?? templateInfo.ClonedOutput;
             string output = sOutput.OuterXml;
@@ -1967,12 +1968,12 @@ namespace RTParser
             if (usedGuard)
             {
                 string guardStr = "<template>" + sGuard.Output.InnerXml + " GUARDBOM " + sOutput.OuterXml + "</template>";
-                templateNode = AIMLTagHandler.getNode(guardStr, sOutput);
+                templateNode = AIMLTagHandlerU.getNode(guardStr, sOutput);
                 childOriginal = false;
             }
 
             bool protectChild = copyChild || childOriginal;
-            AIMLTagHandler tagHandler;
+            AIMLTagHandlerU tagHandler;
             string outputSentence = this.processNode(templateNode, query,
                 request, result, request.user, handler,
                 protectChild, copyParent, out tagHandler);
@@ -2091,7 +2092,7 @@ namespace RTParser
         /// <returns>the output Unifiable</returns>
         public string processNode(XmlNode node, SubQuery query,
             Request request, Result result, User user,
-            AIMLTagHandler parent, bool protectChild, bool copyParent, out AIMLTagHandler tagHandler)
+            AIMLTagHandlerU parent, bool protectChild, bool copyParent, out AIMLTagHandlerU tagHandler)
         {
             // check for timeout (to avoid infinite loops)
             if (request != null && DateTime.Now > request.TimesOutAt)
@@ -2135,7 +2136,7 @@ namespace RTParser
         }
 
 
-        internal AIMLTagHandler GetTagHandler(User user, SubQuery query, Request request, Result result, XmlNode node, AIMLTagHandler handler)
+        internal AIMLTagHandlerU GetTagHandler(User user, SubQuery query, Request request, Result result, XmlNode node, AIMLTagHandlerU handler)
         {
             var tag = GetTagHandler00(user, query, request, result, node);
             if (tag != null)
@@ -2157,9 +2158,9 @@ namespace RTParser
             }
             return tag;
         }
-        internal AIMLTagHandler GetTagHandler00(User user, SubQuery query, Request request, Result result, XmlNode node)
+        internal AIMLTagHandlerU GetTagHandler00(User user, SubQuery query, Request request, Result result, XmlNode node)
         {
-            AIMLTagHandler tagHandler = this.getBespokeTags(user, query, request, result, node);
+            AIMLTagHandlerU tagHandler = this.getBespokeTags(user, query, request, result, node);
             string nodeNameLower = node.LocalName.ToLower();
             bool liText = false;
             if (Equals(null, tagHandler))
@@ -2478,7 +2479,7 @@ namespace RTParser
         /// <param name="result">the result to be sent to the user</param>
         /// <param name="node">the node to evaluate</param>
         /// <returns>the output Unifiable</returns>
-        public AIMLTagHandler getBespokeTags(User user, SubQuery query, Request request, Result result, XmlNode node)
+        public AIMLTagHandlerU getBespokeTags(User user, SubQuery query, Request request, Result result, XmlNode node)
         {
             string nodename = node.Name.ToLower();
             if (CustomTags != null)
@@ -2493,7 +2494,7 @@ namespace RTParser
                         {
                             TagHandler customTagHandler = (TagHandler) this.CustomTags[node.Name.ToLower()];
 
-                            AIMLTagHandler newCustomTag = customTagHandler.Instantiate(this.LateBindingAssemblies, user,
+                            AIMLTagHandlerU newCustomTag = customTagHandler.Instantiate(this.LateBindingAssemblies, user,
                                                                                        query,
                                                                                        request, result, node, this);
                             if (Equals(null, newCustomTag))
@@ -2519,7 +2520,7 @@ namespace RTParser
                     Type t = Type.GetType(typeName);
                     if (t == null) return null;
                     var c = t.GetConstructor(TagHandler.CONSTRUCTOR_TYPES);
-                    return (AIMLTagHandler) c.Invoke(new object[] {user, query, request, result, node, this});
+                    return (AIMLTagHandlerU) c.Invoke(new object[] {user, query, request, result, node, this});
                 }
                 catch (Exception e)
                 {
@@ -2569,7 +2570,7 @@ namespace RTParser
             {
                 Type type = tagDLLTypes[i];
                 object[] typeCustomAttributes = type.GetCustomAttributes(false);
-                if (typeCustomAttributes.Length == 0 && typeof(AIMLTagHandler).IsAssignableFrom(type) && !type.IsAbstract && !type.IsInterface)
+                if (typeCustomAttributes.Length == 0 && typeof(AIMLTagHandlerU).IsAssignableFrom(type) && !type.IsAbstract && !type.IsInterface)
                 {
                     AddTagHandler(type);
                     continue;
@@ -2676,7 +2677,7 @@ The AIMLbot program.
         private object EvalAIMLHandler(string cmd, Request user)
         {
             string evalTemplate = "<template>" + cmd + "</template>";
-            var node = AIMLTagHandler.getNode(evalTemplate);
+            var node = AIMLTagHandlerU.getNode(evalTemplate);
             node.ReadOnly = false;
             var res = ImmediateAiml(node, user, Loader, null);
             return res;
@@ -2802,7 +2803,7 @@ The AIMLbot program.
         }
         public GraphMaster GetGraph(string graphPath, GraphMaster current)
         {
-            GraphMaster g = FindGraph(graphPath, current);
+            GraphMaster g = FindGlobalGraph(graphPath, current);
             if (g != null) return g;
             if (graphPath == null)
             {
@@ -2819,7 +2820,7 @@ The AIMLbot program.
             return g;
         }
 
-        public GraphMaster FindGraph(string graphPath, GraphMaster current)
+        public GraphMaster FindGlobalGraph(string graphPath, GraphMaster current)
         {
             if (graphPath == null)
             {
@@ -3306,7 +3307,7 @@ The AIMLbot program.
             if (cmd == "graph" || cmd == "chgraph" || cmd == "cd")
             {
                 GraphMaster current = myUser.ListeningGraph;
-                GraphMaster graph = FindGraph(args, current);
+                GraphMaster graph = FindGlobalGraph(args, current);
                 if (graph != null && graph != current)
                 {
                     console("Changing to graph " + graph);
@@ -3691,5 +3692,177 @@ The AIMLbot program.
             throw new NotImplementedException();
         }
 #endif
+
+        public MyBehFacade myBehaviors
+        {
+            get { throw new NotImplementedException(); }
+        }
+        public MyServFacade servitor
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public MyBotFacade sm
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public RealChemFacade realChem
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public MyCronFacade myCron
+        {
+            get { throw new NotImplementedException(); }
+
+        }
+    }
+    public class MyCronFacade
+    {
+        public void addLine(string myTimeLine)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class RealChemFacade
+    {
+        public void addChemical(string queueName, double parse, string aiml)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void tick_chemistry(bool b)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void interepretCmdList(string templateNodeInnerValue)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class MyServFacade
+    {
+        public SIProlog prologEngine;
+    }
+
+    public class MyBehFacade
+    {
+        public EventQueueFacade eventQueue;
+
+        public void queueEvent(string onFail)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void runBTXML(XmlNode templateNode)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void defineSubAIML(XmlNode templateNode)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static string FixXmlEnitites(string message)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void satisfyDrive(string driveName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void keepTime(string lastchatoutput, object success)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void activationTime(string lastchatoutput, object success)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Values that can be returned from composites and the like.
+    /// </summary> 
+    public enum RunStatus
+    {
+        Non,
+        Success,
+        Failure,
+        Running,
+    }
+    public enum Threshold
+    {
+        Positive,
+        Negative,
+    }
+
+
+    public class EventQueueFacade
+    {
+        public bool Contains(string myBehavior)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class MyBotFacade
+    {
+        public void defineBehavior(string myName, string templateNodeTotalValue)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Result Chat(Request subRequest0, string graphName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void defineFSM(string myName, string templateNodeTotalValue)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    [Flags]
+    public enum RequestKind
+    {
+        NaturalLang = 1,
+        EventLang = 2,
+        CommentLang = 4,
+        Realtime = 8,
+        ForString = 16,
+        Process = 32,
+        TagHandler = 64,
+        InnerDialog = 128,
+        TemplateExpander = 256,
+        ForLoader = 512,
+        SubProcess = 1024,
+        BackgroundThread = 2048,
+        MTalk = 4096,
+        FSM = 8192,
+        BTX = 16384,
+
+        AIMLLoader = Process | ForLoader,
+        ChatRealTime = NaturalLang | Realtime,
+        ChatForString = NaturalLang | ForString,
+        InnerSelfTalk = ChatForString | InnerDialog,
+        EventProcessor = Process | EventLang,
+        BotPropertyEval = CommentLang | Process,
+        PushPopTag = NaturalLang | TagHandler,
+        SraiTag = NaturalLang | TagHandler | SubProcess,
+        BehaviourChat = ChatRealTime | BackgroundThread | BTX,
+        MTalkThread = ChatRealTime | BackgroundThread | MTalk,
+        StateMachineProcess = TemplateExpander | FSM | Process,
+        BehaviourProcess = TemplateExpander | BTX | Realtime | Process,
+        EvalAIMLHandler = ForString | EventLang | Process | SubProcess,
+        CommandAndChatProcessor = EvalAIMLHandler | ChatRealTime | BackgroundThread | Process | ForString | EventLang | Process | SubProcess,
     }
 }

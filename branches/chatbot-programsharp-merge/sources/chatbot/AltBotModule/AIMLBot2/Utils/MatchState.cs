@@ -1,4 +1,4 @@
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     /// <summary>
     /// Denotes what part of the input path a node represents.

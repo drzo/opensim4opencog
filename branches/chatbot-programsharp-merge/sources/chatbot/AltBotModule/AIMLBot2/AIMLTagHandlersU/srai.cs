@@ -1,30 +1,25 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Xml;
-using System.Text;
-using System.IO;
 using AIMLbot;
-using AltAIMLParser;
-using AltAIMLbot;
+using AltAIMLbot.Utils;
 using MushDLR223.ScriptEngines;
-using RTParser.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlersU
 {
     /// <summary>
-    /// The srai element instructs the AIML interpreter to pass the result of processing the contents 
+    /// The srai element instructs the AIML interpreter to pass the result of Processing the contents 
     /// of the srai element to the AIML matching loop, as if the input had been produced by the user 
-    /// (this includes stepping through the entire input normalization process). The srai element does 
+    /// (this includes stepping through the entire input normalization Process). The srai element does 
     /// not have any attributes. It may contain any AIML template elements. 
     /// 
     /// As with all AIML elements, nested forms should be parsed from inside out, so embedded srais are 
     /// perfectly acceptable. 
     /// </summary>
-    public class srai : RTParser.Utils.AIMLTagHandler
+    public class srai : AIMLTagHandlerU
     {
         public static bool UseSraiLimiters = false;
-        RTParser.AltBot mybot;
+        AltBot mybot;
         /// <summary>
         /// Ctor
         /// </summary>
@@ -33,10 +28,10 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="query">The query that originated this node</param>
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public srai(RTParser.AltBot bot,
-                        RTParser.User user,
-                        RTParser.Utils.SubQuery query,
+        /// <param name="templateNode">The node to be Processed</param>
+        public srai(AltBot bot,
+                        User user,
+                        SubQuery query,
                         Request request,
                         Result result,
                         XmlNode templateNode)
@@ -86,7 +81,7 @@ namespace RTParser.AIMLTagHandlers
         }
 #endif
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (RecurseResultValid) return RecurseResult;
             if (InUnify)
@@ -115,7 +110,7 @@ namespace RTParser.AIMLTagHandlers
                     if (!IsNullOrEmpty(vv))
                     {
                         RecurseResult = vv;
-                        templateNode.InnerXml = MushDLR223.Utilities.StaticXMLUtils.XmlValueSettable(vv);
+                        templateNode.InnerXml = XmlValueSettable(vv);
                         return vv;
                     }
                     if (!IsNull(vv))
@@ -126,7 +121,7 @@ namespace RTParser.AIMLTagHandlers
                             return vv;
                         }
                         RecurseResult = vv;
-                        templateNode.InnerXml = MushDLR223.Utilities.StaticXMLUtils.XmlValueSettable(vv);
+                        templateNode.InnerXml = XmlValueSettable(vv);
                         return vv;
                     }
                     return vv;
@@ -148,7 +143,7 @@ namespace RTParser.AIMLTagHandlers
         }
 
         private const bool ProcessChange12 = true;
-        public override Unifiable CompleteProcess()
+        public override Unifiable CompleteProcessU()
         {
             if (RecurseResultValid) return RecurseResult;
             if (InUnify)
@@ -162,16 +157,16 @@ namespace RTParser.AIMLTagHandlers
             {
                 return sraiResult;
                 ResetValues(true);
-                sraiResult = base.CompleteProcess();
+                sraiResult = base.CompleteProcessU();
                 if (RecurseResultValid)
                 {
                     return RecurseResult;
                 }
-                writeToLogWarn("srai.CompleteProcess() == NULL!");
+                writeToLogWarn("srai.CompleteProcessU() == NULL!");
                 return sraiResult;
             }
             return sraiResult;
-            // return base.CompleteProcess();
+            // return base.CompleteProcessU();
         }
 
         public override string Transform()
@@ -182,7 +177,7 @@ namespace RTParser.AIMLTagHandlers
         }/*
         public override Unifiable RecurseProcess()
         {
-            return ProcessChange();
+            return ProcessChangeU();
         }
         */
         protected Unifiable ProcessChange0()
@@ -426,7 +421,7 @@ namespace RTParser.AIMLTagHandlers
                             return Unifiable.INCOMPLETE;
                             throw new InvalidCastException("loop STDCATCHALL STDCATCHALL");
                         }
-                        AIMLbot.MasterResult subResult;
+                        MasterResult subResult;
                         string subQueryRawOutputText;
                         subResult = GetSubResult(prefix, request, user, mybot, (MasterRequest) subRequest, showDebug,
                                                  out subResultOutput,
@@ -530,7 +525,7 @@ namespace RTParser.AIMLTagHandlers
             mybot.writeChatTrace("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n",
                                  subRequestrawInput, depth, subResult.InputPaths);
             mybot.writeChatTrace("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth,
-                                 AIMLLoader.TextAndSourceInfo(templateNode));
+                                 TextAndSourceInfo(templateNode));
 
             mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:MISSING({1})\" ;\n", depth, depth);
         }

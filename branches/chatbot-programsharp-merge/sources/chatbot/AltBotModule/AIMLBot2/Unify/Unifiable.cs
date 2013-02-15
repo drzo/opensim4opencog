@@ -6,15 +6,16 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
 using System.Xml;
+using AltAIMLbot;
+using AltAIMLbot.Database;
+using AltAIMLbot.Utils;
 using MushDLR223.Virtualization;
-using RTParser.Database;
-using RTParser.Utils;
-using UPath = RTParser.Unifiable;
+using UPath = AltAIMLbot.Unifiable;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
-using IndexTargetList = System.Collections.Generic.ICollection<RTParser.IndexTarget>;
-using IndexTargetListImpl = System.Collections.Generic.HashSet<RTParser.IndexTarget>;
+using IndexTargetList = System.Collections.Generic.ICollection<AltAIMLbot.IndexTarget>;
+using IndexTargetListImpl = System.Collections.Generic.HashSet<AltAIMLbot.IndexTarget>;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     sealed public class UnifiableSerializationSurrogate : ISerializationSurrogate
     {

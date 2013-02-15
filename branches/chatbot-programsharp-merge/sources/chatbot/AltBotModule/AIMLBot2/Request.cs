@@ -5,16 +5,129 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using AIMLbot;
+using AltAIMLbot.AIMLTagHandlersU;
 using AltAIMLbot;
+using AltAIMLbot.Utils;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser;
-using RTParser.AIMLTagHandlers;
-using RTParser.Utils;
-using RTParser.Variables;
+using AltAIMLbot.Variables;
 
-namespace AltAIMLParser
+namespace AltAIMLbot
 {
+    public class CommitQueue
+    {
+
+        private bool IgnoreTasks;
+        private readonly List<NamedAction> commitHooks = new List<NamedAction>();
+        public static List<NamedAction> DoAll(List<NamedAction> todo)
+        {
+            var newList = new List<NamedAction>();
+            lock (todo)
+            {
+                newList.AddRange(todo);
+                todo.Clear();
+            }
+            foreach (NamedAction start in newList)
+            {
+                DoTask(start);
+            }
+            todo.Clear();
+            return newList;
+        }
+
+        private static void DoTask(NamedAction start)
+        {
+            try
+            {
+                //  writeToLog("DOING NOW " + start.Key);
+                start.Invoke("Commit ");
+            }
+            catch (Exception exception)
+            {
+                AltBot.writeDebugLine("ERROR in " + start.Name + " " + exception);
+            }
+        }
+
+        public static void writeToLog(string p)
+        {
+            // throw new NotImplementedException();
+        }
+
+        readonly object SyncLock = new object();
+        public void Commit(bool clearAfter)
+        {
+            lock (SyncLock)
+            {
+                bool prevCommitNow = Immediate;
+                try
+                {
+                    if (commitHooks == null || commitHooks.Count == 0)
+                    {
+                        return;
+                    }
+
+                    while (true)
+                    {
+                        lock (commitHooks)
+                        {
+                            if (commitHooks.Count == 0)
+                            {
+                                return;
+                            }
+                        }
+                        Immediate = false;
+                        List<NamedAction> prev = DoAll(commitHooks);
+                        if (!clearAfter)
+                        {
+                            lock (commitHooks)
+                            {
+                                commitHooks.AddRange(prev);
+                                Immediate = true;
+                                return;
+                            }
+                        }
+                        Immediate = true;
+                    }
+                }
+                finally
+                {
+                    Immediate = prevCommitNow;
+                }
+            }
+        }
+
+        public bool Immediate = false;
+        public void Add(string name, ThreadStart action)
+        {
+            var newKeyValuePair = new NamedAction(name, action);
+            lock (SyncLock)
+            {
+                if (Immediate)
+                {
+                    if (!IgnoreTasks)
+                    {
+                        DoTask(newKeyValuePair);
+                    }
+                }
+                else
+                {
+                    commitHooks.Add(newKeyValuePair);
+                }
+            }
+        }
+
+        public List<NamedAction> Items
+        {
+            get { return commitHooks; }
+        }
+
+        public int Count
+        {
+            get { return commitHooks.Count; }
+        }
+
+    }
+
     /// <summary>
     /// Encapsulates all sorts of information about a request to the Proccessor for processing
     /// </summary>
@@ -1280,9 +1393,9 @@ namespace AltAIMLParser
             }
         }
 
-        private AIMLTagHandler _lastHandler;
+        private AIMLTagHandlerU _lastHandler;
 
-        public AIMLTagHandler LastHandler
+        public AIMLTagHandlerU LastHandler
         {
             get { return _lastHandler; }
             set { if (value != null) _lastHandler = value; }
@@ -1605,7 +1718,7 @@ namespace AltAIMLParser
                 }
                 else
                 {
-                    if (!AIMLTagHandler.IsUnevaluated(templateNodeInnerValue))
+                    if (!AIMLTagHandlerU.IsUnevaluated(templateNodeInnerValue))
                     {
                         writeToLog("Looped maybe '" + prevResults + "' on: " + templateNodeInnerValue);
                         return false;
@@ -1773,122 +1886,5 @@ namespace AltAIMLParser
         }
 
         #endregion
-    }
-}
-
-namespace RTParser
-{
-    public class CommitQueue
-    {
-
-        private bool IgnoreTasks;
-        private readonly List<NamedAction> commitHooks = new List<NamedAction>();
-        public static List<NamedAction> DoAll(List<NamedAction> todo)
-        {
-            var newList = new List<NamedAction>();
-            lock (todo)
-            {
-                newList.AddRange(todo);
-                todo.Clear();
-            }
-            foreach (NamedAction start in newList)
-            {
-                DoTask(start);
-            }
-            todo.Clear();
-            return newList;
-        }
-
-        private static void DoTask(NamedAction start)
-        {
-            try
-            {
-                //  writeToLog("DOING NOW " + start.Key);
-                start.Invoke("Commit ");
-            }
-            catch (Exception exception)
-            {
-                AltBot.writeDebugLine("ERROR in " + start.Name + " " + exception);
-            }
-        }
-
-        public static void writeToLog(string p)
-        {
-            // throw new NotImplementedException();
-        }
-
-        readonly object SyncLock = new object();
-        public void Commit(bool clearAfter)
-        {
-            lock (SyncLock)
-            {
-                bool prevCommitNow = Immediate;
-                try
-                {
-                    if (commitHooks == null || commitHooks.Count == 0)
-                    {
-                        return;
-                    }
-
-                    while (true)
-                    {
-                        lock (commitHooks)
-                        {
-                            if (commitHooks.Count == 0)
-                            {
-                                return;
-                            }
-                        }
-                        Immediate = false;
-                        List<NamedAction> prev = DoAll(commitHooks);
-                        if (!clearAfter)
-                        {
-                            lock (commitHooks)
-                            {
-                                commitHooks.AddRange(prev);
-                                Immediate = true;
-                                return;
-                            }
-                        }
-                        Immediate = true;
-                    }
-                }
-                finally
-                {
-                    Immediate = prevCommitNow;
-                }
-            }
-        }
-
-        public bool Immediate = false;
-        public void Add(string name, ThreadStart action)
-        {
-            var newKeyValuePair = new NamedAction(name, action);
-            lock (SyncLock)
-            {
-                if (Immediate)
-                {
-                    if (!IgnoreTasks)
-                    {
-                        DoTask(newKeyValuePair);
-                    }
-                }
-                else
-                {
-                    commitHooks.Add(newKeyValuePair);
-                }
-            }
-        }
-
-        public List<NamedAction> Items
-        {
-            get { return commitHooks; }
-        }
-
-        public int Count
-        {
-            get { return commitHooks.Count; }
-        }
-
     }
 }

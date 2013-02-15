@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using AltAIMLParser;
 using AltAIMLbot;
-using RTParser.Utils;
-using RTParser.Variables;
+using AltAIMLbot.Variables;
+using AltAIMLbot.Utils;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     public interface InteractionResult
     {

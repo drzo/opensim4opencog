@@ -1,4 +1,4 @@
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     /// <summary>
     /// Used to determine the gender of things
