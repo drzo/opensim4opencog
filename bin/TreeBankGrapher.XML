@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>TreeBankGrapher</name>
+    </assembly>
+    <members>
+        <member name="T:TreeBankGrapher.TreeBankGrapher">
+            <summary>
+            Application for graphing trees
+            </summary>
+        </member>
+        <member name="F:TreeBankGrapher.TreeBankGrapher.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:TreeBankGrapher.TreeBankGrapher.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:TreeBankGrapher.TreeBankGrapher.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="M:TreeBankGrapher.TreeBankGrapher.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:TreeBankGrapher.TreeBankGrapher.CreateGraph(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Creates a graph from a node, prompting use to save file
+            </summary>
+            <param name="n"></param>
+        </member>
+        <member name="M:TreeBankGrapher.Program.Main">
+            <summary>
+            The main entry point for the application.
+            </summary>
+        </member>
+        <member name="T:TreeBankGrapher.Properties.Resources">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:TreeBankGrapher.Properties.Resources.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:TreeBankGrapher.Properties.Resources.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+    </members>
+</doc>

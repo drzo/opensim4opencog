@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>MirrorTables</name>
+    </assembly>
+    <members>
+        <member name="T:MirrorTables.MirrorTablesForm">
+            <summary>
+            Mirror table creation
+            </summary>
+        </member>
+        <member name="M:MirrorTables.MirrorTablesForm.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:MirrorTables.MirrorTablesForm.startCreationBtn_Click(System.Object,System.EventArgs)">
+            <summary>
+            Starts the creation of the mirrored database from the vanilla imported Wikipedia data
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="F:MirrorTables.MirrorTablesForm.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:MirrorTables.MirrorTablesForm.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:MirrorTables.MirrorTablesForm.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:MirrorTables.Properties.Resources">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:MirrorTables.Properties.Resources.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:MirrorTables.Properties.Resources.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+        <member name="M:MirrorTables.Program.Main">
+            <summary>
+            The main entry point for the application.
+            </summary>
+        </member>
+    </members>
+</doc>

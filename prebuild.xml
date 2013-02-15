@@ -3,7 +3,7 @@
   <Solution name="Cogbot" activeConfig="Debug" version="0.6.0-$Rev: 5161 $">
       <Configuration name="Debug">
         <Options>
-          <CompilerDefines>TRACE;DEBUG;COGBOT_LIBOMV</CompilerDefines>
+          <CompilerDefines>TRACE;DEBUG;COGBOT_LIBOMV;ROBOKIND</CompilerDefines>
           <OptimizeCode>false</OptimizeCode>
           <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
           <AllowUnsafe>true</AllowUnsafe>
@@ -19,7 +19,7 @@
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <CompilerDefines>TRACE</CompilerDefines>
+          <CompilerDefines>TRACE;COGBOT_LIBOMV;ROBOKIND</CompilerDefines>
           <OptimizeCode>true</OptimizeCode>
           <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
           <AllowUnsafe>true</AllowUnsafe>
@@ -374,7 +374,10 @@
 
 
       <Files>
-        <Match pattern="*.cs" recurse="true"/>
+          <Match pattern="*.cs" recurse="true"/>
+          <Match pattern="frm*.cs" subType="Form"/>
+          <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
+           <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
       </Files>
     </Project>
 
@@ -559,10 +562,12 @@
         <Reference name="System.Core"/>
         <Reference name="System.Xml"/>
         <Reference name="PrimMesher.dll" localCopy="false"/>
+        <Reference name="MushDLR223" localCopy="false"/>
         <Files>
           <Match pattern="*.cs" recurse="true"/>
         </Files>
       </Project>
+  
 
       <Project name="OpenMetaverse.StructuredData" path="sources/external/LibOpenMetaverse/OpenMetaverse.StructuredData" type="Library" rootNamespace="OpenMetaverse.StructuredData" frameworkVersion="v3_5">
         <Configuration name="Debug">
@@ -583,6 +588,7 @@
         <Reference name="System.Xml"/>
        <Reference name="System.Core"/>
         <Reference name="OpenMetaverseTypes"/>
+        <Reference name="MushDLR223" localCopy="false"/>
         <Files>
           <Match pattern="*.cs" recurse="true"/>
         </Files>
@@ -614,6 +620,7 @@
         <Reference name="zlib.net.dll" localCopy="false"/>
         <Reference name="PrimMesher.dll" localCopy="false"/>
         <Reference name="XMLRPC" localCopy="false"/>
+        <Reference name="MushDLR223" localCopy="false"/>
         <Files>
           <Match pattern="*.cs" recurse="true"/>
         </Files>
@@ -640,6 +647,7 @@
         <Reference name="OpenMetaverse"/>
         <Reference name="OpenMetaverseTypes"/>        
         <Reference name="OpenMetaverse.StructuredData"/>
+        <Reference name="MushDLR223" localCopy="false"/>
         <!-- <Reference name="OpenMetaverse.Http"/> -->
         <Files>
           <Match pattern="*.cs" recurse="true"/>
@@ -666,13 +674,14 @@
         <Reference name="OpenMetaverse"/>
         <Reference name="OpenMetaverseTypes"/>
         <Reference name="PrimMesher.dll" localCopy="false"/>
+        <Reference name="MushDLR223" localCopy="false"/>
         <Files>
           <Match pattern="*.cs" recurse="true"/>
         </Files>
       </Project>
 
       <!--
-      <Project name="WebDAVSharp" path="sources/external/WebDAVSharp" type="Library">
+      <Project name="WebDAVSharp" path="sources/external/WebDAVSharp" type="Library"  frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
             <OutputPath>../../../bin/</OutputPath>
@@ -696,7 +705,7 @@
       </Project>
 -->
 <!--
-      <Project name="OpenMetaverse.Rendering.GPL" path="OpenMetaverse.Rendering.GPL" type="Library">
+      <Project name="OpenMetaverse.Rendering.GPL" path="OpenMetaverse.Rendering.GPL" type="Library"  frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
             <OutputPath>../../bin/</OutputPath>
@@ -742,6 +751,40 @@
       </Files>
     </Project>
 
+
+    <Project name="dotNetRDF" path="sources/external/dotNetRDFCore" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+          <XmlDocFile>dotNetRDF.XML</XmlDocFile>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+          <XmlDocFile>dotNetRDF.XML</XmlDocFile>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../bin</ReferencePath>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="System.Core" localCopy="false"/>
+      <Reference name="System.Web" localCopy="false"/>
+      <Reference name="System.Configuration" localCopy="false"/>
+      <Reference name="System.Windows.Forms" localCopy="false"/>
+    <Reference name="Newtonsoft.Json.dll" localCopy="false"   />
+    <Reference name="HtmlAgilityPack.dll" localCopy="false"   />
+      <Files>
+        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.txt" buildAction="EmbeddedResource" recurse="true"/>
+        <Match pattern="*.ttl" buildAction="EmbeddedResource" recurse="true"/>
+      </Files>
+
+    </Project>
+
+
     <Project name="MushDLR223" path="sources/main/MushDLR223" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
@@ -771,40 +814,12 @@
       <Reference name="DotLisp" localCopy="false"/>
       <Reference name="Microsoft.JScript"  localCopy="false"/>
       <Reference name="Microsoft.Vsa"  localCopy="false"/>
+      <Reference name="Mono.CSharp.dll" localCopy="false"   />
       <Files>
         <Match pattern="*.cs" recurse="true"/>
       </Files>
     </Project>
-<!--
-    <Project name="AIMLbot" path="sources/chatbot/RTParser" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-          <XmlDocFile>AIMLBot.XML</XmlDocFile>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>            
-          <OutputPath>../../../bin/</OutputPath>
-          <XmlDocFile>AIMLBot.XML</XmlDocFile>
-        </Options>
-      </Configuration>
-!     <ReferencePath>../../../bin/</ReferencePath>
-      <Reference name="System" localCopy="false"/>
-      <Reference name="System.Data" localCopy="false"/>
-      <Reference name="System.Xml" localCopy="false"/>
-      <Reference name="System.Web" localCopy="false"/>
-      <Reference name="System.Windows.Forms" localCopy="false"/>
-      <Reference name="System.Drawing" localCopy="false"/>
-      <Reference name="System.Core" localCopy="false" />
-      <Reference name="AltAIMLbot"  localCopy="false"/>
- 
-      <Files>
-          <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="AssemblyInfo.cs"/><Exclude name="Program.cs"/></Match>
-      </Files>
-  </Project>
--->
- 
+
 
 
     <Project name="Iesi.Collections.Generic" path="sources/chatbot/AltBotModule/GenericSets/src/Iesi.Collections.Generic" type="Library" frameworkVersion="v3_5">
@@ -897,12 +912,12 @@
       </Files>
   </Project>
 
-
-    <Project name="RaptorDB" path="sources/chatbot/RaptorDB" type="Library" frameworkVersion="v3_5">
+<!---
+    <Project name="RaptorDB_skipped" path="sources/chatbot/RaptorDB" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
-          <XmlDocFile>AltAIMLbot.XML</XmlDocFile>
+          <XmlDocFile>RaptorDB.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
@@ -919,8 +934,145 @@
           <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
       </Files>
   </Project>
+-->
 
-    <Project name="AltAIMLbot" path="sources/chatbot/AltBotModule/AIMLBot/AIMLBot" type="Library" frameworkVersion="v3_5">
+        <Project name="CAMeRAVUEmotion" path="sources/chatbot/CAMeRAVUEmotion" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+          <XmlDocFile>CAMeRAVUEmotion.XML</XmlDocFile>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+          <XmlDocFile>CAMeRAVUEmotion.XML</XmlDocFile>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../bin/</ReferencePath>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Data" />
+      <Reference name="System.Xml" />
+      <Reference name="System.Core"/>
+      <Reference name="MushDLR223" localCopy="false"/>
+
+      <Files>
+          <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
+      </Files>
+  </Project>
+
+      <Project name="AIXI01" path="sources/chatbot/AIXI01" type="Library" frameworkVersion="v3_5">
+    <Configuration name="Debug">
+      <Options>
+        <OutputPath>../../../bin/</OutputPath>
+        <XmlDocFile>AIXI01.XML</XmlDocFile>
+      </Options>
+    </Configuration>
+    <Configuration name="Release">
+      <Options>
+        <OutputPath>../../../bin/</OutputPath>
+        <XmlDocFile>AIXI01.XML</XmlDocFile>
+      </Options>
+    </Configuration>
+
+    <ReferencePath>../../../bin/</ReferencePath>
+    <Reference name="System" localCopy="false"/>
+    <Reference name="System.Data" />
+    <Reference name="System.Xml" />
+    <Reference name="System.Core"/>
+    <Reference name="AltAIMLbot"  localCopy="false"/>
+    <Reference name="LogicalParticleFilter1"  localCopy="false"/>
+    <Reference name="MushDLR223" localCopy="false"/>
+
+    <Files>
+        <Match path="." pattern="*.cs" recurse="true" subType="Code" />
+        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="frm*.cs" recurse="true" subType="Form"/>
+        <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
+         <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+    </Files>
+</Project>
+
+
+    <Project name="LogicalParticleFilter1" path="sources/chatbot/LogicalParticleFilter" type="Exe" frameworkVersion="v3_5">
+  <Configuration name="Debug">
+    <Options>
+      <OutputPath>../../../bin/</OutputPath>
+      <XmlDocFile>LogicalParticleFilter1.XML</XmlDocFile>
+    </Options>
+  </Configuration>
+  <Configuration name="Release">
+    <Options>
+      <OutputPath>../../../bin/</OutputPath>
+      <XmlDocFile>LogicalParticleFilter1.XML</XmlDocFile>
+    </Options>
+  </Configuration>
+
+  <ReferencePath>../../../bin/</ReferencePath>
+  <Reference name="System" localCopy="false"/>
+  <Reference name="System.Data" />
+  <Reference name="System.Xml" />
+  <Reference name="System.Core" />
+  <Reference name="System.Xml.Linq" />
+  <Reference name="System.Web" />
+  <Reference name="System.Core" />
+  <Reference name="System.Data.DataSetExtensions" />
+  <Reference name="dotNetRDF" localCopy="false"/>
+<Reference name="Newtonsoft.Json" localCopy="false"   />
+<Reference name="Mono.CSharp" localCopy="false"   />
+<Reference name="HtmlAgilityPack" localCopy="false"   />
+<Reference name="MushDLR223" localCopy="false"/>
+
+  <Files>
+      <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
+  </Files>
+</Project>
+
+<!---
+    <Project name="RoboKindChat" path="sources/chatbot/RoboKindChat" type="Exe" frameworkVersion="v3_5">
+  <Configuration name="Debug">
+    <Options>
+      <OutputPath>../../../bin/</OutputPath>
+      <XmlDocFile>RoboKindChat.XML</XmlDocFile>
+    </Options>
+  </Configuration>
+  <Configuration name="Release">
+    <Options>
+      <OutputPath>../../../bin/</OutputPath>
+      <XmlDocFile>RoboKindChat.XML</XmlDocFile>
+    </Options>
+  </Configuration>
+
+  <ReferencePath>../../../bin/</ReferencePath>
+  <Reference name="System" localCopy="false"/>
+  <Reference name="System.Data" />
+  <Reference name="System.Xml" />
+  <Reference name="System.Core"/>
+  <Reference name="LogicalParticleFilter1" copyLocal="false"/>
+  <Reference name="dotNetRDF" localCopy="false"/>
+  <Reference name="MushDLR223" localCopy="false"/>
+  <Reference name="RoboKindAvroQPID" localCopy="false"/>
+  <Reference name="AltAIMLbot" localCopy="false"/>
+  <Reference name="RaptorDB" localCopy="false"/>
+  <Reference name="LAIR.ResourceAPIs.WordNet" localCopy="false"/>
+  <Reference name="System.Xml.Linq"/>
+  <Reference name="System.Data.DataSetExtensions"/>
+  <Reference name="System.Data" />
+
+  <Files>
+      <Match path="." pattern="*.cs" recurse="true" subType="Code" />
+      <Match pattern="*.cs" recurse="true"/>
+      <Match pattern="frm*.cs" recurse="true" subType="Form"/>
+      <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
+       <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+     
+  </Files>
+</Project>
+
+-->
+
+    <Project name="AltAIMLbot" path="sources/chatbot/AltBotModule/AIMLbot/AIMLbot" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
@@ -948,6 +1100,7 @@
       <Reference name="Microsoft.VisualBasic"  localCopy="false"/>
       <Reference name="Microsoft.Vsa"  localCopy="false"/>
       <Reference name="MiniSatCs" localCopy="false"/>      
+      <Reference name="LogicalParticleFilter1" copyLocal="false"/>
       <Reference name="MushDLR223" localCopy="false"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="RaptorDB"  localCopy="false"/>
@@ -958,8 +1111,68 @@
       <Reference name="System.Web" localCopy="false"/>
       <Reference name="System.Windows.Forms" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
- 
+      <Reference name="dotNetRDF" localCopy="false"/>
+      <Reference name="CAMeRAVUEmotion" localCopy="false"/>
+      <Reference name="Mono.CSharp" localCopy="false"   />
+
+
       <Files>
+          <Match path="GUI/" pattern="*.cs"  recurse="true"  subType="Form"> <Exclude name="EXCLUDED.cs"/></Match>
+          <Match pattern="frm*.cs" recurse="true" subType="Form"/>
+          <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
+           <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+          <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
+      </Files>
+  </Project>
+
+    <Project name="AltAIMLbot2" path="sources/chatbot/AltBotModule/AIMLBot/AltAIMLbot2" type="Exe" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../../../bin/</OutputPath>
+          <XmlDocFile>AltAIMLbot2.XML</XmlDocFile>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../../../../bin/</OutputPath>
+          <XmlDocFile>AltAIMLbot2.XML</XmlDocFile>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../../../bin/</ReferencePath>
+      <Reference name="Aima.NET" localCopy="false"/>
+      <Reference name="DcBus.dll" localCopy="false" />
+      <Reference name="Enyim.Caching.dll"  localCopy="false"/>
+      <Reference name="Iesi.Collections.Generic" localCopy="false"/>      
+      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+      <Reference name="LAIR.Collections" localCopy="false"/>
+      <Reference name="LAIR.ResourceAPIs.WordNet"  localCopy="false"/>
+      <Reference name="Lucene.Net"  localCopy="false"/>
+      <Reference name="Microsoft.JScript"  localCopy="false"/>
+      <Reference name="Microsoft.VisualBasic"  localCopy="false"/>
+      <Reference name="Microsoft.Vsa"  localCopy="false"/>
+      <Reference name="MiniSatCs" localCopy="false"/>      
+      <Reference name="LogicalParticleFilter1" copyLocal="false"/>
+      <Reference name="MushDLR223" localCopy="false"/>
+      <Reference name="OpenCyc.dll" localCopy="false"/>
+      <Reference name="RaptorDB"  localCopy="false"/>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Core" localCopy="false" />
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Drawing" localCopy="false"/>
+      <Reference name="System.Web" localCopy="false"/>
+      <Reference name="System.Windows.Forms" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="dotNetRDF" localCopy="false"/>
+      <Reference name="CAMeRAVUEmotion" localCopy="false"/>
+     <Reference name="Mono.CSharp" localCopy="false"   />
+
+      <Files>
+          <Match path="GUI/" pattern="*.cs"  recurse="true"  subType="Form"> <Exclude name="EXCLUDED.cs"/></Match>
+          <Match pattern="frm*.cs" recurse="true" subType="Form"/>
+          <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
+           <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
           <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
       </Files>
   </Project>
@@ -1072,6 +1285,7 @@
         <Reference name="log4net.dll" localCopy="false" />
         <Reference name="CommandLine.dll"  localCopy="false" />
         <Reference name="XMLRPC.dll" localCopy="false" />
+        <Reference name="MushDLR223"  localCopy="false"/>
 
         <Files>
             <Match path="." pattern="*.cs" recurse="true" subType="Code">
@@ -1275,8 +1489,7 @@
    <Reference name="MushDLR223"  localCopy="false"/>
    <Reference name="Swicli.Library" localCopy="false"/>
   <Files>
-      <Match path="." pattern="*.cs"  recurse="true"  subType="Form">  
-      <Exclude name="EXCLUDED.cs"/></Match>
+      <Match path="." pattern="*.cs"  recurse="true"  subType="Form"> <Exclude name="EXCLUDED.cs"/></Match>
   </Files>
 </Project>
 
@@ -1577,6 +1790,8 @@
          <Reference name="System.Data.DataSetExtensions"/>
          <Reference name="System.Data" />
          <Reference name="System.Xml" />
+         <Reference name="MushDLR223"  localCopy="false"/>
+
          <Files>
              <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
              <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
@@ -1777,9 +1992,9 @@
 
       <Files>
           <Match pattern="*.cs" recurse="true"/>
-          <!--<Match pattern="frm*.cs" subType="Form"/>-->
+          <Match pattern="frm*.cs" recurse="true" subType="Form"/>
           <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
-          <!--<Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>-->
+           <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
       </Files>
     </Project>
 

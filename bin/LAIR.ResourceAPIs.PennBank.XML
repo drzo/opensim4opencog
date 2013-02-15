@@ -1,0 +1,2798 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>LAIR.ResourceAPIs.PennBank</name>
+    </assembly>
+    <members>
+        <member name="T:LAIR.ResourceAPIs.PennBank.TreeBank.RawParseText">
+            <summary>
+            Encapsulates a raw parse text string so that copies are not made during the recursive parsing process
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.RawParseText.#ctor(System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="rawParseText">Raw parse text to store</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.RawParseText.Substring(System.Int32,System.Int32)">
+            <summary>
+            Gets a substring of the parse text
+            </summary>
+            <param name="startIndex">Start of substring</param>
+            <param name="length">Length of substring</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.RawParseText.GetMatch(System.Text.RegularExpressions.Regex,System.Int32)">
+            <summary>
+            Gets a match for a RE
+            </summary>
+            <param name="re">RE to match</param>
+            <param name="start">Where to start match</param>
+            <returns>Match</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.RawParseText.Item(System.Int32)">
+            <summary>
+            Gets a character at a location
+            </summary>
+            <param name="index"></param>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.RawParseText.Length">
+            <summary>
+            Gets the length of the parse text
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNodeList">
+            <summary>
+            List of TreeBank nodes
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNodeList.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNodeList.#ctor(System.Int32)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="initialCapacity">Initial capacity of list</param>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine">
+            <summary>
+            Provides access to TreeBank layer of information.
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine._headIndexRE">
+            <summary>
+            For grabbing head index number:  "H:" followed by numbers, possibly some spaces, and a non-whitespace, non-right paren character
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.ExtractNode(System.String,System.Boolean)">
+            <summary>
+            Extracts node from raw parse text
+            </summary>
+            <param name="parseText">Parse text</param>
+            <param name="permitWhitespaceInLeaves">Whether or not to permit whitespace in leaf nodes</param>
+            <returns>TreeBankNode</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.ExtractNode(LAIR.ResourceAPIs.PennBank.TreeBank.RawParseText,LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,System.Boolean,System.Int32@,System.Int32@,System.Int32@,LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNodeList@)">
+            <summary>
+            Extracts node from raw parse text
+            </summary>
+            <param name="rawParse">Parse text</param>
+            <param name="parent">Parent node of extracted node</param>
+            <param name="permitWhitespaceInLeaves">Whether or not to permit whitespace in leaf nodes</param>
+            <param name="currentLeafNumber">Current leaf number of parse</param>
+            <param name="currentTokenNumber">Current token number of parse</param>
+            <param name="currentTokenStartCharacter">Current start character of token nodes. This only include non-whitespace
+            characters. See TokenStartCharacter for more on what this gets used for.</param>
+            <param name="nullElementNodes">List of null element nodes in tree</param>
+            <returns>TreeBankNode</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.GetNextNonWhitespaceIndex(LAIR.ResourceAPIs.PennBank.TreeBank.RawParseText,System.Int32)">
+            <summary>
+            Gets the next printable (non-whitespace) character within a piece of text
+            </summary>
+            <param name="text">Text to search</param>
+            <param name="start">Where to start search</param>
+            <returns>Index of first non-whitespace character within text at or beyond specified start</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.GetNextWhitespaceIndex(LAIR.ResourceAPIs.PennBank.TreeBank.RawParseText,System.Int32)">
+            <summary>
+            Gets the next whitespace character within a piece of text
+            </summary>
+            <param name="text">Text to search</param>
+            <param name="start">Where to start search</param>
+            <returns>Index of first whitespace character within text at or beyond specified start</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.NextParenthesis(LAIR.ResourceAPIs.PennBank.TreeBank.RawParseText,System.Int32)">
+            <summary>
+            Gets the next parenthesis within a piece of text
+            </summary>
+            <param name="text">Text to search</param>
+            <param name="start">Where to start search</param>
+            <returns>Index of first parenthesis within text at or beyond specified start</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.IndexOfBalancingParen(LAIR.ResourceAPIs.PennBank.TreeBank.RawParseText,System.Int32)">
+            <summary>
+            Gets the index of the parenthesis that balances the parenthesis at a specified position
+            </summary>
+            <param name="text">Text to search</param>
+            <param name="startParenIndex">Where to start search</param>
+            <returns>Index of balancing parenthesis</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.FindHead(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,LAIR.Collections.Generic.Set{LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode})">
+            <summary>
+            Finds syntactic head using Collins's 1999 dissertation rules for identifying heads
+            </summary>
+            <param name="node">Node to find head for</param>
+            <param name="excludeNodes">Nodes to exclude from the search</param>
+            <returns>Syntactic head</returns>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine._nounPartsOfSpeech">
+            <summary>
+            All noun parts of speech
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine._verbPartsOfSpeech">
+            <summary>
+            All verb parts of speech
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine._adverbPartsOfSpeech">
+            <summary>
+            All adverb parts of speech
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine._adjectivePartsOfSpeech">
+            <summary>
+            All adjective parts of speech
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine._punctuationCategories">
+            <summary>
+            All punctuation parts of speech
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.TrimTag(System.String,System.String)">
+            <summary>
+            Trims a tag off of bracketed text. This will peel off the outmost tag instance only. Furthermore, it won't
+            work for parse text that doesn't represent a tree. Basically, this is a dangerous function that shouldn't
+            be used unless you understand exactly how it works.
+            </summary>
+            <param name="parseText">Parse text containing tag</param>
+            <param name="tag">Tag to trim</param>
+            <returns>Same parse text, sans tag</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.#cctor">
+            <summary>
+            Static constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.IsClause(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategory)">
+            <summary>
+            Gets whether or not a category is a clause
+            </summary>
+            <param name="category">Category to check</param>
+            <returns>True if category is a clause, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.IsPhrase(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategory)">
+            <summary>
+            Gets whether or not a category is a phrase
+            </summary>
+            <param name="category">Category to check</param>
+            <returns>True if category is a phrase, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.IsTerminal(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategory)">
+            <summary>
+            Gets whether or not a category is a terminal
+            </summary>
+            <param name="category">Category to check</param>
+            <returns>True if category is a terminal, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.GetSyntacticCategory(System.String)">
+            <summary>
+            Gets the syntactic category from its mnemonic form
+            </summary>
+            <param name="s">Mnemonic form of syntactic category</param>
+            <returns>SyntacticCategory</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.GetFunction(System.String)">
+            <summary>
+            Gets the grammatical function given a string
+            </summary>
+            <param name="s">String form of grammatical function</param>
+            <returns>GrammaticalFunction</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.GetMnemonicFor(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategory)">
+            <summary>
+            Gets the mnemonic for a syntactic category (e.g., "NP" for SyntacticCategory.NounPhrase)
+            </summary>
+            <param name="category">Gets mnemonic for a SyntacticCategory</param>
+            <returns>String mnemonic</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.UnescapeBrackets(System.String)">
+            <summary>
+            Replaces escaped bracket characters (e.g., -LRB-, -RRB- , etc.) with their standard characters
+            </summary>
+            <param name="s">String to replace characters in</param>
+            <returns>String with bracket characters converted to standard characters</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.GetSpecialCharLabel(System.Char)">
+            <summary>
+            Gets the label for a special character
+            </summary>
+            <param name="specialChar">Special character</param>
+            <returns>Label</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.ContainsSpecialChar(System.Char)">
+            <summary>
+            Gets whether or not a special char is contained
+            </summary>
+            <param name="specialChar">Special char to check for</param>
+            <returns>True if char is contained, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.ConvertParseTreePath(System.String,LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategoryDescriptor,LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategoryDescriptor)">
+            <summary>
+            Converts a parse tree path's category descriptors to a different type
+            </summary>
+            <param name="path">Path to convert</param>
+            <param name="sourceDescriptor">Source descriptor type</param>
+            <param name="destinationDescriptor">Destination descriptor type</param>
+            <returns>Converted parse tree path</returns>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine._pathSentenceStartLength">
+            <summary>
+            Index from (TreeBank .mrg file and sentence number) to (character start and length of parse tree within TreeBank .mrg file)
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine._mrgPath">
+            <summary>
+            Path to the directory of the TreeBank from which MRG files were drawn
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine._indexDirectory">
+            <summary>
+            Path to the index directory
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine._mrgFileNameFullPath">
+            <summary>
+            Maps MRG file names (e.g., "wsj_0000.mrg") to their full paths (e.g., "c:\path\to\wsj_0000.mrg")
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine._mrgFileNameRE">
+            <summary>
+            Matches MRG file names
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.#ctor(System.String,System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="mrgPath">Directory to search (recursively) for .mrg files</param>
+            <param name="indexDirectory">Path to the index directory, where all indexing information is stored</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.#ctor(System.String,System.String,System.Text.RegularExpressions.Regex)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="mrgPath">Directory to search (recursively) for .mrg files</param>
+            <param name="indexDirectory">Path to the index directory, where all indexing information is stored</param>
+            <param name="mrgFileNameRE">Regular expression for MRG file name. See MrgFileNameRE property for details.</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.BuildMrgSentencePositionIndex">
+            <summary>
+            Recursively builds the sentence position index, starting in some parent directory.
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.BuildMrgSentencePositionIndexRecursive(System.String)">
+            <summary>
+            Recursively builds sentence position index
+            </summary>
+            <param name="directory">Directory to build index from</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.GetFullMrgPath(System.String)">
+            <summary>
+            Gets full path to MRG file (e.g., "c:\path\to\wsj_0000.mrg") from a partial path (e.g., "wsj_0000.mrg") or a full
+            path with different directory structure (e.g., "c:\some\other\path\to\wsj_0000.mrg")
+            </summary>
+            <param name="mrgFile">Path to (or filename of) MRG file</param>
+            <returns>Full path (e.g., "c:\path\to\wsj_0000.mrg") within this index</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.GetSentenceNumbers(System.String)">
+            <summary>
+            Gets sorted list of sentence numbers in an indexed MRG file
+            </summary>
+            <param name="path">Path to indexed MRG file</param>
+            <returns>Sorted list of sentence numbers</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.GetParseTree(System.String,System.Int32)">
+            <summary>
+            Gets a parse tree from a TreeBank MRG file
+            </summary>
+            <param name="path">MRG file to get parse tree from</param>
+            <param name="sentenceNumber">Zero-based index of parse tree to get</param>
+            <returns>Parse tree</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.GetParseTreeNode(System.String,System.Int32[])">
+            <summary>
+            Gets the parse tree within a MRG file using a Gorn address, where the first Gorn index gives the sentence
+            number within the MRG file, and the remaining indexes are interpreted in the standard way.
+            </summary>
+            <param name="path">MRG file to get tree from</param>
+            <param name="gornAddress">Gorn address of tree</param>
+            <returns>TreeBankNode</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.GetNodeFromFullLocation(System.String)">
+            <summary>
+            Gets a node from its full location, as given by TreeBankNode.FullLocation
+            </summary>
+            <param name="fullLocation">Full location, as given by TreeBankNode.FullLocation</param>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.GetSectionNumber(System.String)">
+            <summary>
+            Gets TreeBank section for a file
+            </summary>
+            <param name="fileName">File to get section of</param>
+            <returns>Section number the given file comes from</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.GetArticleNumber(System.String)">
+            <summary>
+            Gets article number for a file
+            </summary>
+            <param name="fileName">File to get article number for</param>
+            <returns>Article number</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.EnsureValidQuery(System.String,System.Int32,System.Int32)">
+            <summary>
+            Checks whether or not a TreeBank query is valid. It makes sure the MRG file is actually indexed, but only
+            checks to make sure the sentence and leaf/token numbers aren't negative. Throws exception if anything is wrong.
+            </summary>
+            <param name="path">MRG file to check</param>
+            <param name="sentence">Sentence number to check</param>
+            <param name="leafTokenNumber">Leaf/token number to check</param>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.ClauseCategories">
+            <summary>
+            Gets set of clause categories. It is possible to modify the returned collection, but you do this at your own peril!
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.PhraseCategories">
+            <summary>
+            Gets set of phrase categories. It is possible to modify the returned collection, but you do this at your own peril!
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.TerminalCategories">
+            <summary>
+            Gets set of terminal categories. It is possible to modify the returned collection, but you do this at your own peril!
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.NounPartsOfSpeech">
+            <summary>
+            Gets all noun parts of speech
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.VerbPartsOfSpeech">
+            <summary>
+            Gets all verb parts of speech
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.AdverbPartsOfSpeech">
+            <summary>
+            Gets all adverb parts of speech
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.AdjectivePartsOfSpeech">
+            <summary>
+            Gets all adjective parts of speech
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.PunctuationCategories">
+            <summary>
+            Gets all punctuation parts of speech
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategoryMnemonics">
+            <summary>
+            Gets the mnemonics for all syntactic categories
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategories">
+            <summary>
+            Gets all syntactic categories
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.MrgFileNameRE">
+            <summary>
+            Gets or sets the regular expression for matching MRG file names. The default value is the one used for
+            processing Penn TreeBank files in the form "wsj_XXYY.mrg", where XX gives the section number and YY
+            gives the article number. If you set this value, there must be at least two groups, "section" and 
+            "number", which capture the section and article number, respectively.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.MrgSentenceStartLengthPositionPath">
+            <summary>
+            Gets the path to the MRG sentence position index path
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.MrgPath">
+            <summary>
+            Gets the path to the MRG subdirectory
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.IndexDirectory">
+            <summary>
+            Gets the path to the index directory
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.IndexedMrgFiles">
+            <summary>
+            Gets a list of all indexed MRG files
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.GrammaticalFunction">
+            <summary>
+            Grammatical functions
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategory">
+            <summary>
+            Syntactic categories
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategory.NullElement">
+            <summary>
+            General null element tag 
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategory.CoIndexed">
+            <summary>
+            Used for tracking wh-traces, passive movement, etc.
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategory.ZeroVariant">
+            <summary>
+            Zero-variant of "that" in subordinate clauses
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategory.UnderstoodSubject">
+            <summary>
+            Understood subject of infinitive or imperative
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategory.PseudoAttachment">
+            <summary>
+            Pseudo-attachment markers
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategoryDescriptor">
+            <summary>
+            Types of syntactic category descriptors
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategoryDescriptor.Full">
+            <summary>
+            Use full syntactic categories (e.g., NounPhrase, VerbPhrase, ...)
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategoryDescriptor.Mnemonic">
+            <summary>
+            Use mnemonics for syntactic categories (e.g., NP, VP, ...)
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategoryDescriptor.Integer">
+            <summary>
+            Use integers for syntactic categories (e.g., 0, 1, ...)
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo">
+            <summary>
+            Captures information in a single line of the prop.txt file.
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.#cctor">
+            <summary>
+            Static constructor
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo._propLineRE">
+            <summary>
+            RE for proposition entries
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.#ctor(System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="propLine">Prop entry line</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.#ctor(System.String,System.String,System.Int32,System.Int32,System.String,System.Int32,System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="verb">Verb</param>
+            <param name="file">Annotation file</param>
+            <param name="sentenceNumber">Sentence wichin annotation file</param>
+            <param name="leafNumber">Leaf within sentence</param>
+            <param name="tagger">Tagger used</param>
+            <param name="roleSetID">ID of role set for this instance</param>
+            <param name="form">Form flag</param>
+            <param name="tense">Tense flag</param>
+            <param name="aspect">Aspect flag</param>
+            <param name="person">Person flag</param>
+            <param name="voice">Voice flag</param>
+            <param name="labeledNodeLocations">Labeled node locations</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.#ctor(System.String,System.String,System.Int32,System.Int32,System.String,System.Int32,LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.Form,LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.Tense,LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.Aspect,LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.Person,LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.Voice,System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="verb">Verb</param>
+            <param name="file">Annotation file</param>
+            <param name="sentenceNumber">Sentence wichin annotation file</param>
+            <param name="leafNumber">Leaf within sentence</param>
+            <param name="tagger">Tagger used</param>
+            <param name="roleSetID">ID of role set for this instance</param>
+            <param name="form">Form flag</param>
+            <param name="tense">Tense flag</param>
+            <param name="aspect">Aspect flag</param>
+            <param name="person">Person flag</param>
+            <param name="voice">Voice flag</param>
+            <param name="labeledNodeLocations">Labeled node locations</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.GetPropEntry(System.String)">
+            <summary>
+            Gets the prop entry for this verb info
+            </summary>
+            <param name="treeBankPath">Path to TreeBank upon which this information is based. Pass null to use the entire file path
+            contained in this information.</param>
+            <returns>Prop entry line</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.VerbFrame">
+            <summary>
+            Gets or sets the frame for this information
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.Tagger">
+            <summary>
+            Tagger for this verb
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.RoleSetId">
+            <summary>
+            Gets or sets the role set ID
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.VPerson">
+            <summary>
+            Gets or sets the person
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.VTense">
+            <summary>
+            Gets or sets the tense
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.VAspect">
+            <summary>
+            Gets or sets the aspect
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.VVoice">
+            <summary>
+            Gets or sets the voice
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.VForm">
+            <summary>
+            Gets or sets the form
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.LabeledNodeLocations">
+            <summary>
+            Gets or sets the labeled node locations
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.Verb">
+            <summary>
+            Gets or sets the verb
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.File">
+            <summary>
+            Gets or sets the file
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.SentenceNumber">
+            <summary>
+            Gets or sets the TreeBank sentence number within the MRG file
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.LeafNumber">
+            <summary>
+            Gets or sets the predicating leaf number within the sentence
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.Person">
+            <summary>
+            Person enumeration
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.Tense">
+            <summary>
+            Tense enumeration
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.Aspect">
+            <summary>
+            Aspect enumeration
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.Voice">
+            <summary>
+            Voice enumeration
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo.Form">
+            <summary>
+            Form enumeration
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.RoleSet">
+            <summary>
+            Represents a PropBank role set
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.RoleSet.#ctor(System.Int32,System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="id">ID of role set</param>
+            <param name="name">Name of role set</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.RoleSet.ToString">
+            <summary>
+            Provides nicely formatted text to describe this role set
+            </summary>
+            <returns>String</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.RoleSet.Add(LAIR.ResourceAPIs.PennBank.PropBank.Role)">
+            <summary>
+            Adds a role to this set
+            </summary>
+            <param name="role">Role to add to this set</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.RoleSet.Contains(System.Int32)">
+            <summary>
+            Gets whether or not this role set contains a role
+            </summary>
+            <param name="number">Argument number of role</param>
+            <returns>True if role is present and false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.RoleSet.Get(System.Int32)">
+            <summary>
+            Gets a role by its number
+            </summary>
+            <param name="number">Number of role to get</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.RoleSet.TryGet(System.Int32,LAIR.ResourceAPIs.PennBank.PropBank.Role@)">
+            <summary>
+            Tries to get a role by its number
+            </summary>
+            <param name="number">Number of role to get</param>
+            <param name="role">Corresponding role, or null if not present</param>
+            <returns>True if role was found, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.RoleSet.GetEnumerator">
+            <summary>
+            Gets an enumerator over roles in this set
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.RoleSet.System#Collections#IEnumerable#GetEnumerator">
+            <summary>
+            Gets an enumerator over roles in this set
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.RoleSet.IncludeArgumentsInToString">
+            <summary>
+            Gets or sets whether or not to include the argument list when ToString is called (default:  true)
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.RoleSet.ID">
+            <summary>
+            Gets the ID
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.RoleSet.Name">
+            <summary>
+            Gets the name
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.RoleSet.Count">
+            <summary>
+            Gets the number of roles in this set
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode">
+            <summary>
+            Represents a node in a Penn TreeBank parse tree
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.#cctor">
+            <summary>
+            Static constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.Concatenate(System.Collections.Generic.IEnumerable{LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode})">
+            <summary>
+            Concatenates the text subsumed by a list of nodes
+            </summary>
+            <param name="nodes">Nodes to concatenate</param>
+            <returns>Text</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetLowestCommonAncestor(System.Collections.Generic.IEnumerable{LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode})">
+            <summary>
+            Gets the lowest common ancestor of a list of nodes
+            </summary>
+            <param name="nodes">Nodes to get LCA for</param>
+            <returns>LCA of given nodes</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetContiguousNodes(System.Collections.Generic.IEnumerable{LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode})">
+            <summary>
+            Gets lists of contiguous nodes from a collection of nodes. Nodes in each list are sorted by linear position.
+            </summary>
+            <param name="nodes">Nodes to process</param>
+            <returns>Lists of contiguous nodes</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.NodesCoverSameTokens(System.Collections.Generic.List{LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode},System.Collections.Generic.List{LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode})">
+            <summary>
+            Checks whether two lists of nodes cover the same token span
+            </summary>
+            <param name="nodes1">First list of nodes</param>
+            <param name="nodes2">Second list of nodes</param>
+            <returns>True if lists cover the same token span and false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.#ctor(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="parent">Parent node</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.#ctor(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.TreeBankNodeConstructor)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="treeBankNode">TreeBankNode to construct the current one from</param>
+            <param name="parent">Parent of constructed node</param>
+            <param name="childConstructor">Constructor to use for creating child nodes. If null, TreeBankNode() will be used.</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.AddChildNode(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Adds a child node to the current tree. Access to this function is quite restricted due to the fact that the function
+            does not automatically update critical fields in this class, e.g., leaf indexes, leaf nodes, etc. The caller must keep
+            track of these things and update them accordingly. A naive call to this function can seriously screw up the
+            data structure, so I take the easy way out and disallow such calls.
+            </summary>
+            <param name="childNode">Child node to add</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetChild(System.Int32)">
+            <summary>
+            Gets a child node by its index
+            </summary>
+            <param name="index">Index of child node to get</param>
+            <returns>Child node</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetNode(System.Int32,System.Int32)">
+            <summary>
+            Gets a node subsumed by this one (only valid for root nodes)
+            </summary>
+            <param name="aboveTerminal">Leaf terminal above which to get node</param>
+            <param name="height">0-based height of node above terminal</param>
+            <returns>TreeBankNode</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetNode(System.String)">
+            <summary>
+            Gets a node in the tree using the "terminal:height" notation, where terminal is the zero-based terminal and height is the
+            zero-based height of node above terminal to get. Only valid for root nodes.
+            </summary>
+            <param name="location">Location of node to get, in "terminal:height" notation</param>
+            <returns>TreeBankNode</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetNodesByFunction(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.GrammaticalFunction)">
+            <summary>
+            Gets nodes at or below this one with a specified function
+            </summary>
+            <param name="function">Function to search for</param>
+            <returns>List of nodes</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetNodesBySyntacticCategory(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategory)">
+            <summary>
+            Gets list of nodes subsumed by this node of a particular syntactic category
+            </summary>
+            <param name="category">Category to retrieve</param>
+            <returns>List of nodes of category type</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetNodesBySyntacticCategory(LAIR.Collections.Generic.Set{LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategory})">
+            <summary>
+            Gets list of nodes subsumed by this node that are of one of the given categories
+            </summary>
+            <param name="categories">Categories to retrieve</param>
+            <returns>List of nodes</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetNodesBySyntacticCategory(LAIR.Collections.Generic.Set{LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategory},LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNodeList@)">
+            <summary>
+            Gets list of nodes subsumed by this node that are of one of the given categories. This is a helper function to the public
+            GetNodesBySyntacticCategory. The goal is to pass only a single list, which is added to by each child. This avoids allocation
+            of a new list by each node.
+            </summary>
+            <param name="categories">Categories to retrieve</param>
+            <param name="nodes">Current list of nodes</param>
+            <returns>List of nodes</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetVerbs">
+            <summary>
+            Gets all verb nodes in the tree
+            </summary>
+            <returns>List of verbs</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetCoIndexedNode(System.Int32)">
+            <summary>
+            Gets a co-indexed node by its index
+            </summary>
+            <param name="index">Index of node to get</param>
+            <returns>TreeBankNode</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.ToString">
+            <summary>
+            Gets the surface text of this parse tree (calls TreeBankNode.SurfaceText)
+            </summary>
+            <returns>Surface text of this parse tree</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetLowestCommonAncestor(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Gets the lowest common ancestor of this node and another
+            </summary>
+            <param name="node">Other node</param>
+            <returns>Lowest common ancestor</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.IsAncestorOf(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Checks whether this node is an ancestor of another node
+            </summary>
+            <param name="node">Proposed descendant</param>
+            <returns>True if this node is an ancestor of the given node, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.IsDescendantOf(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Gets whether or not this node is a descendant of another node
+            </summary>
+            <param name="node">Proposed ancestor</param>
+            <returns>True if this node is a descendant of the given node, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.IsDirectRelativeOf(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Gets whether or not this node is a direct relative (i.e., an ancestor or descendant) of another node
+            </summary>
+            <param name="node">Relative node to check</param>
+            <returns>True if the current node is a direct relative, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.ParseTreeDistanceFrom(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,System.Boolean)">
+            <summary>
+            Distance from another node through the parse tree
+            </summary>
+            <param name="other">Node to measure distance from</param>
+            <param name="allowDirectionChange">Whether or not to allow direction changes through the parse tree</param>
+            <returns>Distance from this node to another node in the tree</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.TokenDistanceFrom(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Gets signed token distance from another node. Throws exception if nodes are not from the same 
+            sentence (i.e., the files and sentence numbers are not the same).
+            </summary>
+            <param name="other">Node to get distance to from the current one</param>
+            <returns>Positive/negative number if the current token comes after/before the other one, or zero 
+            if the nodes overlap.</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetSurfaceText(System.Boolean,System.Boolean)">
+            <summary>
+            Similar to the SurfaceText property, but provides options for including the syntactic category of the leaf nodes
+            </summary>
+            <param name="includeSyntacticCategory">Whether or not to include the syntactic category of the leaves</param>
+            <param name="useCategoryMnemonics">Whether or not to use mnemonic categories</param>
+            <returns>Surface text</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetBracketedText(System.Boolean,System.Boolean)">
+            <summary>
+            Gets bracketed text for this parse tree
+            </summary>
+            <param name="useCategoryMnemonics">Whether or not to use mnemonic syntactic category names instead
+            of the more verbose enumeration names (e.g., "NP" instead of "NounPhrase"). Mnemonic names correspond
+            to the syntactic labels used in the TreeBank parse tree files.</param>
+            <param name="includeHeadIndexes">Whether or not to include head indexes in the output</param>
+            <returns>Bracketed text for this parse tree</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetLeaf(System.Int32)">
+            <summary>
+            Gets a leaf by its leaf number (only valid for root nodes)
+            </summary>
+            <param name="leafNumber">Number of leaf to get</param>
+            <returns>Leaf node</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetToken(System.Int32)">
+            <summary>
+            Gets a token by its token number (only valid for root nodes)
+            </summary>
+            <param name="tokenNumber">Number of token to get</param>
+            <returns>Token node</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.TryGetToken(System.Int32,LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode@)">
+            <summary>
+            Tries to get a token by its token number (only valid for root nodes)
+            </summary>
+            <param name="tokenNumber">Number of token to get</param>
+            <param name="token">Reference to token, if found</param>
+            <returns>True if token was found, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetLowestCommonAncestorOfTokens(System.Int32,System.Int32)">
+            <summary>
+            Gets the lowest common ancestor of two tokens (only valid for root nodes)
+            </summary>
+            <param name="token1Num">Number of first token</param>
+            <param name="token2Num">Number of second token</param>
+            <returns>Lowest common ancestor of the two tokens</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetCategoryDescriptor(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategoryDescriptor)">
+            <summary>
+            Gets descriptor for this node's syntactic category
+            </summary>
+            <param name="descriptor">Type of descriptor to get</param>
+            <returns>Descriptor</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetParseTreePath(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategoryDescriptor)">
+            <summary>
+            Gets parse tree path from this node to another node in the tree
+            </summary>
+            <param name="destinationNode">Node to get path to</param>
+            <param name="descriptor">Descriptor type to use in parse path</param>
+            <returns>String description of path</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetCfgRule(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine.SyntacticCategoryDescriptor)">
+            <summary>
+            Gets the context-free grammar rule that has this node as the left-hand side
+            </summary>
+            <param name="descriptor">Syntactic category descriptor type to use</param>
+            <returns>CFG rule</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetMinimallySubsumingNode(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Gets the minial subsumer of the given span (only valid for root nodes). Returns null if such a node doesn't exist.
+            </summary>
+            <param name="firstToken">First token in span</param>
+            <param name="lastToken">Last token in span</param>
+            <returns>Minimal subsumer of given span, or null if no such node exists</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetMinimallySubsumingNode(System.Int32,System.Int32,System.Boolean,System.Boolean)">
+            <summary>
+            Gets minimally subsuming node of the given start and end characters. Start and end characters
+            must land precisely on the start and end of a token, respectively. Character positions only 
+            count printable characters - they DO NOT count white space! Returns null if a MSN doesn't exist.
+            </summary>
+            <param name="startCharacter">Start character position</param>
+            <param name="endCharacter">End character position</param>
+            <param name="throwExceptionOnBadAlignment">Whether or not to throw an exception when character positions don't align perfectly.
+            If this is false and alignment is not perfect, null will be returned.</param>
+            <param name="unescapeBraces">Whether or not to unescape brace characters. TreeBank uses special strings (e.g., -LRB-) to denote
+            braces, which might affect character counting. If the caller is expecting braces to be counted as a single character, this should
+            be true. If the caller is expecting -LRB- to count for 5 characters, this should be false.</param>
+            <returns>TreeBank node denoting the minimal subsumer of the characters, or null if none exists</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetMinimallySubsumingNode(System.Int32,System.Int32)">
+            <summary>
+            Gets the minial subsumer of the given span (only valid for root nodes). Returns null if such a node doesn't exist.
+            </summary>
+            <param name="firstTokenNumber">First token in span</param>
+            <param name="lastTokenNumber">Last token in span</param>
+            <returns>Minimal subsumer of given span, or null if no such node exists</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.CoversSameTokensAs(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Gets whether or not the current node covers the same tokens as another node. Nodes may be from different sentences 
+            or documents - this function will return false in all such cases.
+            </summary>
+            <param name="node">Node to check the current node's token span against</param>
+            <returns>True if the spans are equal, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.InSameSentenceAs(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,System.Boolean)">
+            <summary>
+            Checks whether or not the current node is in the same sentence as another node. 
+            sentence numbers are the same. 
+            </summary>
+            <param name="node">Node to check the current one against</param>
+            <param name="allowObjectDistinctRoot">Whether or not to allow root nodes to be object-distinct. If this is true, the
+            function will return true as long as the MRG file names and sentence numbers are the same. NOTE:  "file names" not 
+            "entire paths". This allows the use of TreeBanked documents that have, for example, been parsed by different parsers 
+            and are contained in different directory structures. As long as the file names match, we assume the documents are the 
+            same. If this parameter is false, the current and given nodes' root nodes must have the same object reference.</param>
+            <returns>True if nodes are in the same sentence, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.AddLeaf(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Adds a leaf node to this node (only valid for root nodes, as they're the ones keeping track of the leaves)
+            </summary>
+            <param name="leafNode">Leaf node to add</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.AddNullLeafNumber(System.Int32)">
+            <summary>
+            Adds a null leaf number to this node (only valid for root nodes, as they're the ones keeping track of the leaves)
+            </summary>
+            <param name="leafNumber">Null leaf number to add</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetTokenOverlapDiceCoefficientWith(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Gets the token overlap as measured by Dice's coefficient. Returns zero if the nodes are from different sentences.
+            </summary>
+            <param name="node">Node to measure overlap with</param>
+            <returns>Token overlap as measured by Dice's coefficient</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.SetSurfaceTextWithWhitespace(System.String)">
+            <summary>
+            Sets the surface text of this node to a value that may contain whitespace. The SurfaceText property does not 
+            allow whitespace to be conservative in its handling of the Penn TreeBank; however, there are cases when a leaf 
+            node should be allowed to have whitespace in it, e.g., when abstracting a tree. This method is only valid for 
+            leaf nodes.
+            </summary>
+            <param name="text">Text to use</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.Test">
+            <summary>
+            Tests all TreeBank functionality of node
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GetDotGraphSpecification">
+            <summary>
+            Gets Dot graph specification for this node and all nodes under it
+            </summary>
+            <returns>Dot graph specification</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.SubjectHeadToken">
+            <summary>
+            Gets the subject head token node of this parse. This property can be called from any node, but it assumes that
+            the head token of the current node is something about which can reasonably be thought to take a subject, i.e.,
+            verbs (main, auxiliary, etc.).
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.Children">
+            <summary>
+            Gets an enumerator over the current node's children nodes
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.IsTreeBanked">
+            <summary>
+            Gets whether or not the current tree is drawn from a TreeBank. If false, the tree was constructed in some other way.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.TotalNodesInTree">
+            <summary>
+            Gets the total number of nodes in the tree
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.FirstLeafNumber">
+            <summary>
+            Gets or sets the number of the first leaf subsumed by this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.LastLeafNumber">
+            <summary>
+            Gets or sets the number of the last leaf subsumed by this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.MrgFile">
+            <summary>
+            Gets or sets the MRG file in which the root of this parse tree is contained
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.SentenceNumber">
+            <summary>
+            Gets or sets the sentence number within the MRG file that this tree is drawn from
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.Descendants">
+            <summary>
+            Gets all descendants of this node. A node is a descendant of this node if it is at or below this node in the tree.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.Ancestors">
+            <summary>
+            Gets all ancestors of this node. A node is an ancestor of this node if (1) it is the parent of this node (or is this node) 
+            or (2) it is the parent of an ancestor node.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.DirectRelatives">
+            <summary>
+            Gets direct relatives of this node. A node is a direct relative of this node if it is an ancestor or descendant of this node.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.PassiveVerbs">
+            <summary>
+            Gets a list of passive verbs subsumed by this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.IsPassive">
+            <summary>
+            Gets whether or not this node subsumes a passive verb construction
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.IsAnaphoric">
+            <summary>
+            Gets whether or not this node is anaphoric
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.AllNodes">
+            <summary>
+            Gets all nodes at or below this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.AmbiguousWithCategories">
+            <summary>
+            Gets or sets the list of syntactic categories this node's category is ambiguous with
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.CoIndexReferent">
+            <summary>
+            Gets the co-index referent of this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.CoIndexId">
+            <summary>
+            Gets or sets the zero-based co-index for this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.Category">
+            <summary>
+            Gets or sets the syntactic category for this constituent
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.CategoryMnemonic">
+            <summary>
+            Gets mnemonic for this node's syntactic category
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.CategoryNumber">
+            <summary>
+            Gets syntactic category number
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.ChildCount">
+            <summary>
+            Gets the number of children nodes below this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.IsLeaf">
+            <summary>
+            Gets whether or not this node is a leaf node. A node is a leaf if it has no children of any kind (null or otherwise). Compare to IsToken.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.RootLeaves">
+            <summary>
+            Gets the collection of leaf nodes stored at the root of this node. This is a constant-time alternative
+            to calling Leaves, which is linear in the number of leaves subsumed by a node; however, this will return
+            all leaves in the tree as opposed to just those subsumed by this node.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.Leaves">
+            <summary>
+            Gets the leaf nodes at or below this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.FirstLeaf">
+            <summary>
+            Gets first leaf subsumed by this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.LastLeaf">
+            <summary>
+            Gets the last leaf subsumed by this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.IsToken">
+            <summary>
+            Gets whether or not this node is a token node. A token node is a non-null leaf node.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.Tokens">
+            <summary>
+            Gets token nodes subsumed by this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.FirstToken">
+            <summary>
+            Gets the first token subsumed by this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.LastToken">
+            <summary>
+            Gets the last token subsumed by this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.SurfaceText">
+            <summary>
+            Gets or sets the surface text. For inner nodes, the surface text is the concatenation of the surface text
+            held by all children nodes. For leaf nodes, the surface text is a token from the sentence or the empty string
+            in the case of null nodes (e.g., traces).
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.UntokenizedText">
+            <summary>
+            Attempts to reconstruct the untokenized text using a variety of heuristics for removing
+            spaces around punctuation (e.g., "$ 100 dollars" becomes "$100 dollars", etc.). This is
+            approximate, and you should not rely on it for anything that is crucial.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.Functions">
+            <summary>
+            Gets or sets the grammatical functions of this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.Parent">
+            <summary>
+            Gets the parent node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.Depth">
+            <summary>
+            Gets the depth of this node (i.e., the number of ancestor nodes above the current node)
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.Height">
+            <summary>
+            Gets the height of this node above its first leaf node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.Location">
+            <summary>
+            Gets the location in terminal:height notation, where terminal is equal to FirstLeaf.LeafNumber
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.FullLocation">
+            <summary>
+            Gets the fully-specified location of this node. Includes MRG file and sentence number, in addition to what is returned by Location.
+            Format:  wsj_xxxx:sent:terminal:height
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.Root">
+            <summary>
+            Gets or sets the root of the tree containing this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.IsRoot">
+            <summary>
+            Gets whether or not this is a root node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.ChildIndex">
+            <summary>
+            Gets zero-based index of this node with respect to its parent and its left siblings
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.LeftSiblings">
+            <summary>
+            Gets list of left sibling nodes of the current node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.RightSiblings">
+            <summary>
+            Gets list of right sibling nodes of the current node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.Siblings">
+            <summary>
+            Gets all siblings of the current node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.IsNullElement">
+            <summary>
+            Gets whether or not this is a null element. A node is null if its syntactic category is 
+            in {UnderstoodSubject, ZeroVariant, CoIndexed, PseudoAttachment} or if all of its children
+            are null elements.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.LeafNumber">
+            <summary>
+            Gets or sets the zero-based leaf number of this node. This differs from TokenNumber because of the presence
+            of null nodes (e.g., trace), which are counted towards this value but not towards TokenNumber.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.TokenNumber">
+            <summary>
+            Gets or sets the zero-based token number of this node. This differs from LeafNumber because of the presence 
+            of null nodes (e.g., trace), which are not counted towards this value but are counted towards LeafNumber.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.TokenStartCharacter">
+            <summary>
+            Gets or sets the zero-based token start character. This number indicates the start position within the 
+            sentence, ignoring whitespace. This is useful for tasks that use alternate tokenizations of the same
+            TreeBank data, as this value will be constant across all tokenizations.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.TokenEndCharacter">
+            <summary>
+            Gets the zero-based token end character. This number indicates the end position within the 
+            sentence, ignoring whitespace. This is useful for tasks that use alternate tokenizations of the same
+            TreeBank data, as this value will be constant across all tokenizations.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.Head">
+            <summary>
+            Gets the head child of this node. Differs from HeadToken in that this property returns the
+            first head child instead of traversing the tree to a head token. The head child of this node 
+            is determined in one of two ways:  (1) by the head finding rules from Collins' dissertation (not very good), 
+            or (2) by assigning them explicitly via the set method of this property. If the head is not assigned
+            explicitly, it will be searched for using method (1). Subsequent gets of this property will
+            return the previously set or searched-for head.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.HeadToken">
+            <summary>
+            Gets the head token of this node. Differs from Head in that this property traverses
+            the tree via head nodes until it reaches a head token, which is returned.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.SemanticHeadToken">
+            <summary>
+            Gets the semantic head token. This is the token that semantically defines the current node. For example, the 
+            head of a PP is typically not semantically informative, whereas the head of the PP's object can be. This 
+            function is at best an approximation.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.IsNoun">
+            <summary>
+            Gets whether or not this node is a noun
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.NounPhraseDeterminer">
+            <summary>
+            Gets the determiner for NPs. Throws exception if called on a non-NP node.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.IsProperNoun">
+            <summary>
+            Gets whether or not the current node is a proper noun
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.IsVerb">
+            <summary>
+            Gets whether or not this node is a verb
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.IsAdverb">
+            <summary>
+            Gets wether or not this node is an adverb
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.IsAdjective">
+            <summary>
+            Gets whether or not this node is an adjective
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.IsPunctuation">
+            <summary>
+            Gets whether or not this node is punctuation
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.IsHead">
+            <summary>
+            Gets whether or not this node is a head node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.HighestNonbranchingAncestor">
+            <summary>
+            Gets the highest ancestor of the current node that exists along a non-branching path
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.LowestNonbranchingDescendant">
+            <summary>
+            Gets the lowest descendant of the current node that exists along a non-branching path
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.GraphVizNodeID">
+            <summary>
+            Gets the GraphViz node ID for this node
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.SiblingSide">
+            <summary>
+            Siblings, either left or right
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.SiblingSide.Left">
+            <summary>
+            Left siblings
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.SiblingSide.Right">
+            <summary>
+            Right siblings
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode.TreeBankNodeConstructor">
+            <summary>
+            Delegate for functions that construct TreeBankNodes from other TreeBankNodes
+            </summary>
+            <param name="treeBankNode">TreeBankNode from which to construct another TreeBankNode</param>
+            <param name="parent">Parent of constructed node</param>
+            <returns>Resulting TreeBankNode</returns>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.TreeBank.NodePositionComparer">
+            <summary>
+            Compares TreeBankNodes using their article/sentence/leaf positions
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.NodePositionComparer.#ctor(System.Boolean)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="throwExceptionOnNodeOverlap">Whether or not to throw an exception when compared nodes overlap</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.NodePositionComparer.Compare(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Compares the position of two TreeBankNodes, first by article, then by sentence, and last by leaf position. Both 
+            nodes must come from the same MRG file. -1 if x ends before y begins, 1 if x begins after y ends. Otherwise, the 
+            nodes overlap and either (1) zero will be returned if ThrowExceptionOnNodeOverlap is false or (2) an exception will
+            be thrown.
+            </summary>
+            <param name="x">First node</param>
+            <param name="y">Second node</param>
+            <returns>-1 if x ends before y begins, 1 if x begins after y ends. Otherwise, the nodes overlap and either (1) zero will be returned
+            if ThrowExceptionOnNodeOverlap is false or (2) an exception will be thrown.</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.NodePositionComparer.NodeIsBetween(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Checks if a node comes between two end points. The linear order of the end points does not matter.
+            </summary>
+            <param name="node">Node to check</param>
+            <param name="endPoint1">First end point</param>
+            <param name="endPoint2">Second end point</param>
+            <returns>True if node is between two end points, false otherwise.</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.NodePositionComparer.ThrowExceptionOnNodeOverlap">
+            <summary>
+            Gets or sets whether or not to throw an exception when compared nodes overlap
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.LabeledNodeCollection">
+            <summary>
+            Collection for nodes labeled in the style of PropBank and NomBank
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.LabeledNodeCollection.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.LabeledNodeCollection.AddSingleNode(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Adds a single node to this collection
+            </summary>
+            <param name="singleNode">Single node to add</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.LabeledNodeCollection.ContainsSingleNode(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Gets whether or not a single node is contained in this collection
+            </summary>
+            <param name="singleNode">Single node to check for</param>
+            <returns>True if node is contained and false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.LabeledNodeCollection.RemoveSingleNode(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Removes a single node from this collection
+            </summary>
+            <param name="singleNode">Single node to remove</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.LabeledNodeCollection.AddSplitNode(System.Collections.Generic.List{LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode})">
+            <summary>
+            Adds a split node to this collection
+            </summary>
+            <param name="splitNode">Split node to add</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.LabeledNodeCollection.GetNodes">
+            <summary>
+            Gets all nodes in this collection
+            </summary>
+            <returns>All nodes in this collection</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.LabeledNodeCollection.GetNodes(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Gets nodes within this collection
+            </summary>
+            <param name="includeNullElementNodes">Whether or not to include null-element nodes</param>
+            <param name="includeSplitNodes">Whether or not to include nodes from a split node</param>
+            <param name="headSplitNodesOnly">If including split nodes, this specifies whether or not to only include the head node
+            of the split node. The head node is defined as the node that is the semantic head of the LCA of all nodes
+            in the split node.</param>
+            <param name="includeSingleNodes">Whether or not to include single nodes</param>
+            <param name="excludeSingleNodesWhenMultiple">Whether or not to exclude single nodes if there are more than one</param>
+            <returns>Set of nodes</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.LabeledNodeCollection.ToString">
+            <summary>
+            Gets location label
+            </summary>
+            <returns>Location label</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.LabeledNodeCollection.AnyCoversSameTokenSpanAs(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Gets whether or not the token span of any node (single or split) in this collection is covered exactly by the given node's token span
+            </summary>
+            <param name="node">Given node</param>
+            <returns>True if any token span is covered, false otherwise.</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.LabeledNodeCollection.Copy">
+            <summary>
+            Gets a copy of this collection
+            </summary>
+            <returns>Copy of this collection</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.LabeledNodeCollection.SingleNodes">
+            <summary>
+            Gets the set of single coreferential nodes. WARNING:  don't add nodes to the returned collection. Instead call the 
+            appropriate function in this class.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.LabeledNodeCollection.SplitNodes">
+            <summary>
+            Gets the set of split nodes.  WARNING:  don't add nodes to the returned collection. Instead call the 
+            appropriate function in this class.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.LabeledNodeCollection.NodeLocations">
+            <summary>
+            Gets location label (in the style of PropBank) for the nodes in this collection
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankParseTreeInstanceProvider">
+            <summary>
+            Returns training nodes from all parse trees in TreeBank. This returns no duplicates, so each instance is
+            a distinct parse tree node.
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankInstanceProvider">
+            <summary>
+            Provides training instances (parse tree nodes) from the TreeBank corpus
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankInstanceProvider.#ctor(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine,LAIR.MachineLearning.TrainingInstanceProvider.InstanceFilterDelegate,LAIR.Collections.Generic.Set{System.Int32})">
+            <summary>
+            Constructor
+            </summary>
+            <param name="treeBankEngine">TreeBank engine to draw training nodes from</param>
+            <param name="instanceFilter">Instance filter to apply to training instances</param>
+            <param name="sections">TreeBank sections to draw instances from (null for all sections)</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankInstanceProvider.Start">
+            <summary>
+            Starts the instance provider before the first MRG file
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankInstanceProvider.MoveToNextValidMrgFile">
+            <summary>
+            Moves a MRG file enumerator to the next valid MRG file based on the training section restriction (if any)
+            </summary>
+            <returns>True if valid MRG file was found, false otherwise</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankInstanceProvider.TreeBankEngine">
+            <summary>
+            Gets the TreeBank engine used in this provider
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankInstanceProvider.Sections">
+            <summary>
+            Gets sections this provider draws nodes from
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankInstanceProvider.CurrentMrgFile">
+            <summary>
+            Gets the current MRG file
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankParseTreeInstanceProvider.#ctor(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine,LAIR.MachineLearning.TrainingInstanceProvider.InstanceFilterDelegate,LAIR.Collections.Generic.Set{System.Int32})">
+            <summary>
+            Constructor
+            </summary>
+            <param name="treeBankEngine">TreeBank engine to draw parse tree nodes from</param>
+            <param name="instanceFilter">Instance filter to apply to nodes</param>
+            <param name="sections">Sections to draw nodes from</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankParseTreeInstanceProvider.Start">
+            <summary>
+            Starts the training node sequence at the beginning
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankParseTreeInstanceProvider.GetNextInstance">
+            <summary>
+            Gets the next training node
+            </summary>
+            <returns>Training node</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankParseTreeInstanceProvider.GetTrainingInstanceParseTree(System.String,System.Int32)">
+            <summary>
+            Gets parse tree containing training instance nodes
+            </summary>
+            <param name="mrgFile">MRG file containing tree</param>
+            <param name="sentenceNumber">Sentence number of tree</param>
+            <returns>Training parse tree</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankParseTreeInstanceProvider.GetPreviousInstance">
+            <summary>
+            Not implemented
+            </summary>
+            <returns>Instance</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankParseTreeInstanceProvider.Count">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankParseTreeInstanceProvider.CurrentInstanceNumber">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankParseTreeInstanceProvider.Remaining">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankParseTreeInstanceProvider.CurrentInstance">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankParseTreeInstanceProvider.HasAnotherInstance">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankParseTreeInstanceProvider.HasPreviousInstance">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.TreeBank.NodeHierarchyPositionComparer">
+            <summary>
+            Compares two nodes based on their position within a tree
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.NodeHierarchyPositionComparer.Compare(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Compares two nodes based on their position within a tree. Returns -1 if the first node is a strict ancestor of the second, 
+            1 if the second node is a strict ancestor of the first, and 0 otherwise. Here, "strict" implies that the nodes are not
+            equal. Both nodes must come from the same tree.
+            </summary>
+            <param name="x">First node</param>
+            <param name="y">Second node</param>
+            <returns>-1 if the first node is an ancestor of the second, 1 if the second node is an ancestor of the first, and 
+            0 otherwise.</returns>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode">
+            <summary>
+            Represents argument trees in the PropBank resource
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.PropBankChildConstructor(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Constructs a PropBankNode from a TreeBankNode
+            </summary>
+            <param name="treeBankNode">TreeBankNode to construct a PropBankNode from</param>
+            <param name="parent">Parent node</param>
+            <returns>Constructed node</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.#ctor(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Constructor. WARNING:  this will accept an instance of any class derived from TreeBankNode (e.g., PropBankNode), but 
+            will return a PropBankNode with only TreeBankNode members instantiated.
+            </summary>
+            <param name="treeBankNode">TreeBankNode from which to construct this PropBankNode</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.#ctor(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode)">
+            <summary>
+            Constructor. WARNING:  this will accept an instance of any class derived from TreeBankNode (e.g., PropBankNode), but 
+            will return a PropBankNode with only TreeBankNode members instantiated.
+            </summary>
+            <param name="treeBankNode">TreeBankNode from which to construct this PropBankNode</param>
+            <param name="parent">Parent of this PropBank node</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.SetLabel(LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel,System.Boolean)">
+            <summary>
+            Sets the label on this node
+            </summary>
+            <param name="label">Label to use</param>
+            <param name="syncWithRootNodeCollection">Whether or not to add this node to the corresponding node collection on the root. The
+            root collections are shortcut collections that allow quick searching for particular node types. Thus, the collections need to
+            remain synchronized with the labels that are applied to the nodes. Passing true here will perform this synchronization. If you
+            will do the synchronization on your own later, pass false.</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.GetUnfilledRoles(System.Boolean)">
+            <summary>
+            Gets the set of roles not filled. Numbers in the set correspond to the argument positions in the frame file for the
+            current verbal predicate. Only valid for root nodes.
+            </summary>
+            <param name="considerNullElementNodes">Whether or not to consider null-element nodes when checking whether a role is filled</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.GetDescendants(LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeType)">
+            <summary>
+            Gets descendant nodes by their type
+            </summary>
+            <param name="type">Type of node to get</param>
+            <returns>Descendant nodes</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.GetDescendants(LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature)">
+            <summary>
+            Gets descendant nodes by their feature
+            </summary>
+            <param name="feature">Feature of nodes to get</param>
+            <returns>Nodes with given feature</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.GetBracketedText(LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.BracketedOutputOptions[])">
+            <summary>
+            Gets bracketed text for this node
+            </summary>
+            <param name="options">Bracketing options</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.GetArgumentNodes(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Gets argument nodes. Only valid for root nodes.
+            </summary>
+            <param name="includeNullElementNodes">Whether or not to include null-element argument nodes</param>
+            <param name="includeSplitArguments">Whether or not to include split arguments</param>
+            <param name="headSplitArgumentNodesOnly">If including split nodes, this specifies whether or not to only include the head node
+            of the split argument. The head node is defined as the node containing the semantic head of the LCA of all nodes
+            in the split argument.</param>
+            <param name="includeSingleNodeArguments">Whether or not to include single nodes</param>
+            <param name="excludeSingleNodeArgumentsWhenMultiple">Whether or not to exclude single nodes if there are more than one</param>
+            <returns>List of argument nodes</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.GetModifierNodes(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Gets modifier nodes. Only valid for root nodes.
+            </summary>
+            <param name="includeNullElementNodes">Whether or not to include null-element modifier nodes</param>
+            <param name="includeSplitModifiers">Whether or not to include split modifiers</param>
+            <param name="headSplitModifierNodesOnly">If including split nodes, this specifies whether or not to only include the head node
+            of the split modifier. The head node is defined as the node containing the semantic head of the LCA of all nodes
+            in the split modifier.</param>
+            <param name="includeSingleNodeModifiers">Whether or not to include single nodes</param>
+            <param name="excludeSingleNodeModifiersWhenMultiple">Whether or not to exclude single nodes if there are more than one</param>
+            <returns>List of modifier nodes</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.MarkArgumentNodesIn(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine)">
+            <summary>
+            Marks argument nodes from the current node in the corresponding parse from a different TreeBank. This is used when
+            transferring PropBank annotations to parse trees other than those distributed in the TreeBank (e.g., those produced
+            by an automatic syntactic parser).
+            </summary>
+            <param name="treeBankEngine">Initialized TreeBank engine from which to pull the parse tree to mark PropBank arguments within</param>
+            <returns>PropBank node, or null if all arguments couldn't be minimally transferred to the other parse tree. An argument
+            is minimally transferred if the corresponding node in the other parse tree subsumes precisely the same text as the node in the
+            current parse tree. Sometimes this is not possible due to parse errors.</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.ToString">
+            <summary>
+            Gets argument-bracketed text for this node
+            </summary>
+            <returns>Argument-bracketed text for this node</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.HasSameLabelingAs(LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode,System.Boolean,LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeType[])">
+            <summary>
+            Gets whether or not the current tree has the same argument labeling as another tree
+            </summary>
+            <param name="otherTree">Tree to compare the current one to</param>
+            <param name="ignoreNullNodes">Whether or not to ignore null nodes</param>
+            <param name="argumentTypesToCheck">Argument types to check</param>
+            <returns>True if argument labelings are the same, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.Test">
+            <summary>
+            Tests this node
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.GetLabeledNodeCollection(System.String,System.Boolean,System.Single)">
+            <summary>
+            Gets labeled node collection
+            </summary>
+            <param name="typeFeature">Type-feature combination of node collection to get</param>
+            <param name="createIfMissing">Whether or not to create and return a new node collection if none exists</param>
+            <param name="confidence">Confidence of newly created node collection</param>
+            <returns>Labeled node collection</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.GetLabeledNodeCollection(LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel,System.Boolean)">
+            <summary>
+            Gets labeled node collection
+            </summary>
+            <param name="label">Label of node collection to get</param>
+            <param name="createIfMissing">Whether or not to create and return a new node collection if none exists</param>
+            <returns>Labeled node collection</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.RoleSet">
+            <summary>
+            Gets the role set for this predicate tree. Beware:  some entries in PropBank don't have a role set yet (indicated by XX
+            in the prop.txt file. This will return null for such entries. Only valid for root nodes.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.Label">
+            <summary>
+            Gets the label associated with this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.LabeledNodeCollections">
+            <summary>
+            Gets the labeled node collections for the current tree
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.Information">
+            <summary>
+            Gets or sets the information for the tree containing this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.LabeledNodeLocations">
+            <summary>
+            Gets the labeled node locations as used in the PropBank props.txt file
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.PredicateNodes">
+            <summary>
+            Gets predicate nodes. Only valid for root nodes
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.BracketedOutputOptions">
+            <summary>
+            Options used when bracketing a PropBank tree
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.BracketedOutputOptions.IgnoreArgumentFeatures">
+            <summary>
+            Don't include features on argument (Arg0-Arg5) nodes. Arguments rarely have features attached to them, but it does happen.
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.BracketedOutputOptions.IgnoreBracketProbabilities">
+            <summary>
+            Don't include label probabilities
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.BracketedOutputOptions.IncludePredicateFrame">
+            <summary>
+            Whether or not to include predicate frames
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.ArgumentComparer">
+            <summary>
+            Compares arguments
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode.ArgumentComparer.Compare(LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode,LAIR.ResourceAPIs.PennBank.PropBank.PropBankNode)">
+            <summary>
+            Compares two nodes based on their argument types
+            </summary>
+            <param name="x">First node</param>
+            <param name="y">Second node</param>
+            <returns>1 if x's argument types comes after y's argument type, 0 if they are the same, and -1 otherwise</returns>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.TreeBank.ChildSearch">
+            <summary>
+            Simple rules for locating children of a node using a linear search on their syntactic categories
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.ChildSearch.#ctor(LAIR.ResourceAPIs.PennBank.TreeBank.ChildSearch.SearchDirection,System.Collections.Generic.List{System.String})">
+            <summary>
+            Constructor
+            </summary>
+            <param name="direction">Search direction</param>
+            <param name="searchList">Prioritized search list</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.ChildSearch.Run(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,LAIR.Collections.Generic.Set{LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode})">
+            <summary>
+            Runs the current search for the first match of the current rule among the children of a node
+            </summary>
+            <param name="node">Node whose children should be searched</param>
+            <param name="excludeNodes">Nodes to exclude from the search</param>
+            <returns>First child that matches the current rule</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.ChildSearch.Direction">
+            <summary>
+            Gets or sets the search direction
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.ChildSearch.SearchList">
+            <summary>
+            Gets or sets the search list
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.TreeBank.ChildSearch.SearchDirection">
+            <summary>
+            Search directions
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.ChildSearch.SearchDirection.LeftToRight">
+            <summary>
+            Searches child nodes from left to right
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.TreeBank.ChildSearch.SearchDirection.RightToLeft">
+            <summary>
+            Searches child nodes from right to left
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.Frame">
+            <summary>
+            Represents a PropBank frame
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.Frame.#ctor(System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="verb">Verb for this Frame</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.Frame.ToString">
+            <summary>
+            Gets nicely formatted string representation of this frame
+            </summary>
+            <returns>Frame description</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.Frame.AddRoleSet(LAIR.ResourceAPIs.PennBank.PropBank.RoleSet)">
+            <summary>
+            Adds a role set to this frame
+            </summary>
+            <param name="roleSet">Role set to add</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.Frame.GetRoleSet(System.Int32)">
+            <summary>
+            Gets role set by ID
+            </summary>
+            <param name="roleSetID">ID of role set to get</param>
+            <returns>Role set</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.Frame.Contains(System.Int32)">
+            <summary>
+            Gets whether or not this frame contains a role set
+            </summary>
+            <param name="roleSetID">ID of role set to check for</param>
+            <returns>True if role set is contained, false otherwise</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.Frame.Verb">
+            <summary>
+            Gets or sets the verb. This is the lemma form, which is used in the verb.id role set notation
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.Frame.RoleSets">
+            <summary>
+            Gets an enumerator over role sets in this frame
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.Frame.RoleSetCount">
+            <summary>
+            Gets the number of role sets in this frame
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.DiscourseBank.Span">
+            <summary>
+            Represents a span of text with start and end token numbers
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.DiscourseBank.Span.#ctor(System.Int32,System.Int32)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="startToken">Start token</param>
+            <param name="endToken">End token</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.DiscourseBank.Span.ToString">
+            <summary>
+            Gets nicely formatted string for this span
+            </summary>
+            <returns>Nicely formatted string for this span</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.DiscourseBank.Span.StartToken">
+            <summary>
+            Gets the start token
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.DiscourseBank.Span.EndToken">
+            <summary>
+            Gets the end token
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.DiscourseBank.Span.Length">
+            <summary>
+            Gets the length (in tokens)
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.Role">
+            <summary>
+            Represents a PropBank role
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.Role.#ctor(System.String,System.Int32)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="description">Role description</param>
+            <param name="number">Role number</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.Role.ToString">
+            <summary>
+            Provides nicely formatted string for this role
+            </summary>
+            <returns>String</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.Role.Equals(System.Object)">
+            <summary>
+            Checks whether or not to roles are equal
+            </summary>
+            <param name="obj">Role to compare this one to</param>
+            <returns>True if roles are equal, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.Role.GetHashCode">
+            <summary>
+            Gets hash code for this role
+            </summary>
+            <returns>Hash code</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.Role.Description">
+            <summary>
+            Gets or sets the description
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.Role.Number">
+            <summary>
+            Gets or sets the argument number
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.PropBankLabeledNodeCollection">
+            <summary>
+            Represents a collection of labeled PropBank nodes
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankLabeledNodeCollection.#ctor(LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="label">Label for this collection</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankLabeledNodeCollection.AddSingleNode(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Adds a single node to this list
+            </summary>
+            <param name="singleNode">Single node to add</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankLabeledNodeCollection.AddSplitNode(System.Collections.Generic.List{LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode})">
+            <summary>
+            Adds a split node to this list
+            </summary>
+            <param name="splitNode">Nodes that make up split node</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankLabeledNodeCollection.ToString">
+            <summary>
+            Gets node locations
+            </summary>
+            <returns>Node locations</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankLabeledNodeCollection.Copy">
+            <summary>
+            Gets a copy of this collection
+            </summary>
+            <returns>Copy of this collection</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankLabeledNodeCollection.Label">
+            <summary>
+            Gets the label on this node list
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankLabeledNodeCollection.NodeLocations">
+            <summary>
+            Gets node locations for this list of nodes
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.DiscourseBank.DiscourseBankEngine">
+            <summary>
+            Provides access to the Penn Discourse TreeBank data
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.DiscourseBank.DiscourseBankEngine._underscoreLineRE">
+            <summary>
+            Matches a line of underscores
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.DiscourseBank.DiscourseBankEngine._headerRE">
+            <summary>
+            Matches a header line
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.DiscourseBank.DiscourseBankEngine.#ctor(System.String,System.String,System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="dataDirectory">Path to the PDTB data directory</param>
+            <param name="mrgPath">Path to the Penn TreeBank MRG files</param>
+            <param name="indexDirectory">TreeBank index directory</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.DiscourseBank.DiscourseBankEngine.Contains(System.String)">
+            <summary>
+            Gets whether or not the PDTB contains annotations for a given MRG file
+            </summary>
+            <param name="mrgFile">MRG file to check</param>
+            <returns>True if annotations are present, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.DiscourseBank.DiscourseBankEngine.GetRelations(System.String)">
+            <summary>
+            Gets all relations within a MRG file
+            </summary>
+            <param name="mrgFile">MRG file to get relations within</param>
+            <returns>List of PDTB relations</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.DiscourseBank.DiscourseBankEngine.GetDiscourseFilePath(System.String)">
+            <summary>
+            Gets the path to the PDTB data for for a given MRG file
+            </summary>
+            <param name="mrgFile">MRG file to get PDTB data file path for</param>
+            <returns>PDTB file path, or null if none exists</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.DiscourseBank.DiscourseBankEngine.GetGornAddresses(System.String)">
+            <summary>
+            Gets Gorn addresses from the string representation used in the PDTB
+            </summary>
+            <param name="gornAddressesString">Gorn addresses string</param>
+            <returns>List of Gorn addresses</returns>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.TreeBank.ParseTextStartLength">
+            <summary>
+            Stores parse tree byte start and length values.
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.TreeBank.ParseTextStartLength.#ctor(System.Int32,System.Int32)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="start">Start byte of sentence</param>
+            <param name="length">Byte length of sentence</param>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.ParseTextStartLength.Start">
+            <summary>
+            Gets the start byte of the sentence
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.TreeBank.ParseTextStartLength.Length">
+            <summary>
+            Gets the byte length of the sentence
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.PropBankPredicateTreeInstanceProvider">
+            <summary>
+            Returns training nodes from all PropBank predicate trees, where a single predicate tree is defined as
+            an annotated instance of a PropBank verb. Since a single sentence can have multiple predicate trees (one for
+            each predicating verb in the sentence) this returns "duplicate" parse tree nodes in the sense that
+            the same parse nodes are returned for each predicating verb in the sentence, even though they're
+            labeled differently.
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankPredicateTreeInstanceProvider.#ctor(LAIR.Collections.Generic.Set{System.String},LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine,LAIR.MachineLearning.TrainingInstanceProvider.InstanceFilterDelegate,LAIR.Collections.Generic.Set{System.Int32})">
+            <summary>
+            Constructor
+            </summary>
+            <param name="verbs">Verbs to get predicates trees for (null for all)</param>
+            <param name="propBankEngine">PropBank engine to draw training predicate trees from</param>
+            <param name="instanceFilter">Instance filter to apply</param>
+            <param name="sections">TreeBank sections to draw instances from</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankPredicateTreeInstanceProvider.Start">
+            <summary>
+            Starts training instance iterator
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankPredicateTreeInstanceProvider.GetNextInstance">
+            <summary>
+            Gets next training instance for models build over PropBank
+            </summary>
+            <returns>Next training instance</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankPredicateTreeInstanceProvider.MoveToNextValidVerbInfo(System.Collections.Generic.List{LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo}.Enumerator@)">
+            <summary>
+            Moves a VerbInfo enumerator to the next valid entry
+            </summary>
+            <param name="verbInfoEnum">VerbInfo enumerator to move</param>
+            <returns>True if valid VerbInfo was found, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankPredicateTreeInstanceProvider.GetPreviousInstance">
+            <summary>
+            Not implemented
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankPredicateTreeInstanceProvider.Verbs">
+            <summary>
+            Sets the verbs that training instances should be provided for (pass null for all verbs)
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankPredicateTreeInstanceProvider.CurrentInstanceNumber">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankPredicateTreeInstanceProvider.Count">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankPredicateTreeInstanceProvider.Remaining">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankPredicateTreeInstanceProvider.CurrentInstance">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankPredicateTreeInstanceProvider.HasAnotherInstance">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankPredicateTreeInstanceProvider.HasPreviousInstance">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel">
+            <summary>
+            Describes a PropBank node in terms of its type and feature
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.#cctor">
+            <summary>
+            Static constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.GetNodeType(System.String)">
+            <summary>
+            Gets the node type given a string
+            </summary>
+            <param name="label">Node label</param>
+            <returns>NodeType</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.GetNodeTypeString(LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeType)">
+            <summary>
+            Gets node type string from the node type
+            </summary>
+            <param name="type">Type of node</param>
+            <returns>Node type string</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.GetNodeFeature(System.String)">
+            <summary>
+            Gets the feature for a string
+            </summary>
+            <param name="feature">Feature name</param>
+            <returns>NodeFeature</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.TryGetNodeFeature(System.String,LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature@)">
+            <summary>
+            Tries to get the feature for a string
+            </summary>
+            <param name="feature">Feature name</param>
+            <param name="nodeFeature">NodeFeature</param>
+            <returns>True if feature was found, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.GetNodeFeatureString(LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature)">
+            <summary>
+            Gets string for a feature
+            </summary>
+            <param name="feature">NodeFeature</param>
+            <returns>String</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.op_Equality(LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel,LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel)">
+            <summary>
+            Checks equality of two labels
+            </summary>
+            <param name="label1">First label</param>
+            <param name="label2">Second label</param>
+            <returns>True if labels are equal, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.op_Inequality(LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel,LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel)">
+            <summary>
+            Checks inequality of two labels
+            </summary>
+            <param name="label1">First label</param>
+            <param name="label2">Second label</param>
+            <returns>True if labels are not equal, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.#ctor(LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeType,System.Single)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="type">Type of node</param>
+            <param name="confidence">Confidence of label</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.#ctor(LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeType,LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature,System.Single)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="type">Type of node</param>
+            <param name="feature">Feature for node</param>
+            <param name="confidence">Confidence of label</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.#ctor(System.String,System.Single)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="label">Label string (e.g., "Arg0", "Modifier-Temporal", etc.)</param>
+            <param name="confidence">Confidence of label</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.ToString">
+            <summary>
+            Returns the type/feature in a nicely formatted string
+            </summary>
+            <returns>Label</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.ToString(System.Boolean)">
+            <summary>
+            Returns the type/feature in a nicely formatted string
+            </summary>
+            <param name="includeArgumentFeature">Whether or not to include features for argument labels</param>
+            <returns>Label</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.Equals(System.Object)">
+            <summary>
+            Gets whether or not this PropBankNodeLabel equals another object
+            </summary>
+            <param name="obj">Object to compare this one with</param>
+            <returns>True if the other object is a PropBankNodeLabel and is equal to this one, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.GetHashCode">
+            <summary>
+            Gets hash code for this label
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.ArgumentTypes">
+            <summary>
+            Gets the argument types
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.Confidence">
+            <summary>
+            Gets or sets the confidence for this label
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.Type">
+            <summary>
+            Gets or sets the type
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.Feature">
+            <summary>
+            Gets or sets the feature
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.IsArgument">
+            <summary>
+            Gets whether or not this is an argument label
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.IsModifier">
+            <summary>
+            Gets whether or not this is a modifier label
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.IsPredicate">
+            <summary>
+            Gets whether or not this is a predicate label
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.ArgumentIndex">
+            <summary>
+            Gets the argument index of this node. Only valid for argument nodes.
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeType">
+            <summary>
+            Node types
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeType.Arg0">
+            <summary>
+            Argument 0
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeType.Arg1">
+            <summary>
+            Argument 1
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeType.Arg2">
+            <summary>
+            Argument 2
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeType.Arg3">
+            <summary>
+            Argument 3
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeType.Arg4">
+            <summary>
+            Argument 4
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeType.Arg5">
+            <summary>
+            Argument 5
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeType.CausativeAgent">
+            <summary>
+            Causative agent
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeType.Predicate">
+            <summary>
+            Predicate node
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeType.Modifier">
+            <summary>
+            Modifier node
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature">
+            <summary>
+            Node features
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature.None">
+            <summary>
+            No feature
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature.Extent">
+            <summary>
+            Extent
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature.Direction">
+            <summary>
+            Direction
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature.Location">
+            <summary>
+            Location
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature.Temporal">
+            <summary>
+            Temporal
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature.Reciprocal">
+            <summary>
+            Reciprocal
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature.SecondaryPredication">
+            <summary>
+            Secondary predication
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature.Negation">
+            <summary>
+            Negation
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature.ModalVerb">
+            <summary>
+            Modal verb
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature.Adverbial">
+            <summary>
+            Adverbial
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature.Manner">
+            <summary>
+            Manner
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature.Cause">
+            <summary>
+            Cause
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature.Purpose">
+            <summary>
+            Purpose
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature.DiscourseConnective">
+            <summary>
+            Discourse connective
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.PennBank.PropBank.PropBankNodeLabel.NodeFeature.Preposition">
+            <summary>
+            For prepositions
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine">
+            <summary>
+            Provides access to PropBank layer of information on top of the TreeBank layer.
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.AddNodesToCollection(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,System.String,LAIR.ResourceAPIs.PennBank.PropBank.LabeledNodeCollection)">
+            <summary>
+            Gets relation nodes given a root and a location series label
+            </summary>
+            <param name="root">Root node to get nodes from</param>
+            <param name="locationLabel">Location series label</param>
+            <param name="nodeCollection">Collection to add nodes to</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.GetSplitNode(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,System.String)">
+            <summary>
+            Gets set of split nodes from a root node
+            </summary>
+            <param name="root">Root node to get split nodes from</param>
+            <param name="splitNodeLocations">Node locations that form the split node</param>
+            <returns>Set of split nodes</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.BuildFrameIndex(System.String)">
+            <summary>
+            Builds the Frame index
+            </summary>
+            <param name="framesDirectory">Directory containing PropBank frame XML files</param>
+            <returns>Frame index - a map from verb lemma to corresponding frame</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.#ctor(System.String,System.String,System.String,System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="mrgPath">Path to TreeBank directory to search recursively for .mrg files.</param>
+            <param name="propFilePath">Path to prop.txt file in the PropBank distribution</param>
+            <param name="framesPath">Path to the "frames" subdirectory of the PropBank distribution</param>
+            <param name="indexDirectory">Path to index directory, where all indexing information is stored</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.#ctor(System.String,System.String,System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="mrgPath">Path to TreeBank directory to search recursively for .mrg files.</param>
+            <param name="propBankPath">Path to PropBank directory. This directory must contain the "prop.txt" file as well
+            as the "frames" directory.</param>
+            <param name="indexDirectory">Path to index directory, where all indexing information is stored</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.#ctor(System.String,System.String,System.String,System.String,System.Text.RegularExpressions.Regex)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="mrgPath">Path to TreeBank directory to search recursively for .mrg files.</param>
+            <param name="propFilePath">Path to prop.txt file in the PropBank distribution</param>
+            <param name="framesPath">Path to the "frames" subdirectory of the PropBank distribution</param>
+            <param name="indexDirectory">Path to index directory, where all indexing information is stored</param>
+            <param name="mrgFileNameRE">Regular expression for MRG file name. See MrgFileNameRE property for details.</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.#ctor(System.String,System.String,System.String,System.Text.RegularExpressions.Regex)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="mrgPath">Path to TreeBank directory to search recursively for .mrg files.</param>
+            <param name="propBankPath">Path to PropBank directory. This directory must contain the "prop.txt" file as well
+            as the "frames" directory.</param>
+            <param name="indexDirectory">Path to index directory, where all indexing information is stored</param>
+            <param name="mrgFileNameRE">Regular expression for MRG file name. See MrgFileNameRE property for details.</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.Construct(System.String,System.String)">
+            <summary>
+            Constructs engine
+            </summary>
+            <param name="propFilePath">Path to prop.txt file in the PropBank distribution</param>
+            <param name="framesPath">Path to the "frames" subdirectory of the PropBank distribution</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.LoadProps(System.String)">
+            <summary>
+            Loads the propositions file
+            </summary>
+            <param name="propsPath">Path to prop.txt file</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.WriteVerbInfoList(System.Collections.Generic.List{LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo},System.IO.FileStream)">
+            <summary>
+            Writes a list of VerbInfo to a stream
+            </summary>
+            <param name="list">List of VerbInfo to write</param>
+            <param name="stream">Stream to write to</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.BuildMorphMap">
+            <summary>
+            Builds the mapping from verbs to their morphological variants. Variants are identified by looking
+            at the marked predicates throughout PropBank. For example, the verb "join" will have many different surface
+            realizations in the TreeBank:  "joins", "joined", etc.
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.GetVerbInfo(System.String)">
+            <summary>
+            Looks up all information for a given verb
+            </summary>
+            <param name="verb">Verb to look up information for</param>
+            <returns>List of VerbInfo objects</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.GetVerbInfoBySense(System.String)">
+            <summary>
+            Looks up all information for a given verb, organized by sense.
+            Key:  Sense of verb (role set ID)
+            Value:  List of VerbInfo objects for senses of verb
+            </summary>
+            <param name="verb">Verb to look up information for</param>
+            <returns>Verb information, organized by sense</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.TryGetVerbInfoForSentence(System.String,System.Int32,System.Collections.Generic.List{LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo}@)">
+            <summary>
+            Tries to get VerbInfo list for a sentence
+            </summary>
+            <param name="mrgFile">MRG file to get info from</param>
+            <param name="sentenceNumber">Number of sentence within MRG file for which to get VerbInfo</param>
+            <param name="verbInfo">List of VerbInfo</param>
+            <returns>True if successful, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.TryGetVerbInfoForLeaf(System.String,System.Int32,System.Int32,System.Collections.Generic.List{LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo}@)">
+            <summary>
+            Tries to get VerbInfo for a leaf
+            </summary>
+            <param name="mrgFile">MRG file of leaf</param>
+            <param name="sentenceNumber">Sentence number of leaf</param>
+            <param name="leafNumber">Leaf number</param>
+            <param name="verbInfo">Verb info found for leaf</param>
+            <returns>True if verb info was found, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.LoadVerbInfo(System.String,System.Int64)">
+            <summary>
+            Loads a VerbInfo list from a file starting at a specific position
+            </summary>
+            <param name="file">File to load list from</param>
+            <param name="position">Position to start at</param>
+            <returns>List of VerbInfo</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.GetPropBankTree(LAIR.ResourceAPIs.PennBank.PropBank.VerbInfo)">
+            <summary>
+            Gets a predicate tree for a PropBank propositions entry
+            </summary>
+            <param name="vi">VerbInfo specifying tree to look up</param>
+            <returns>PropBankNode</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.GetFullBracketing(System.String,System.Int32)">
+            <summary>
+            Gets full bracketing of a sentence
+            </summary>
+            <param name="mrgFile">MRG file to get sentence from</param>
+            <param name="sentNum">Sentence number</param>
+            <returns>Full bracketing</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.Contains(System.String)">
+            <summary>
+            Gets whether or not PropBank contains a verb
+            </summary>
+            <param name="verb">Verb to check for</param>
+            <returns>True if PropBank contains the verb, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.GetFrame(System.String)">
+            <summary>
+            Gets the frame for a verb
+            </summary>
+            <param name="verb">Verb to get frame for</param>
+            <returns>Frame</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.TryGetFrame(System.String,LAIR.ResourceAPIs.PennBank.PropBank.Frame@)">
+            <summary>
+            Tries to get the frame for a verb
+            </summary>
+            <param name="verb">Verb to (try to) get frame for</param>
+            <param name="frame">Frame (output)</param>
+            <returns>True if frame was found, false otherwise</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.VerbMorphs">
+            <summary>
+            Gets the mapping from base verbs to their morphological variants
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.MorphVerb">
+            <summary>
+            Gets the mapping from morphological variants to base verbs
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.AllVerbs">
+            <summary>
+            Gets a list of all verbs in the database
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.MorphMapIndexPath">
+            <summary>
+            Gets the path to the morphological variant index
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.VerbInfoFilePositionPath">
+            <summary>
+            Gets the path to the VerbInfo positions file, which indexes a verb to its list of VerbInfo objects within the index file
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.VerbInfoPath">
+            <summary>
+            Gets the path to the VerbInfo index
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.MrgSentenceInfoPath">
+            <summary>
+            Gets the path to the MRG file/sentence number VerbInfo index
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.PropBank.PropBankEngine.MrgSentenceInfoFilePositionsPath">
+            <summary>
+            Gets the path to the MRG file index, which maps a MRG file to its sentence number/VerbInfo index
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.PennBank.DiscourseBank.DiscourseBankRelation">
+            <summary>
+            Represents a PDTB relation
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.DiscourseBank.DiscourseBankRelation.#ctor(System.String,System.String,System.Collections.Generic.List{LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode},System.Collections.Generic.List{LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode})">
+            <summary>
+            Constructor
+            </summary>
+            <param name="relation">Relation type (e.g., explicit)</param>
+            <param name="semanticClass">Semantic class</param>
+            <param name="arg1Nodes">Nodes that comprise the Arg1</param>
+            <param name="arg2Nodes">Nodes that comprise the Arg2</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.DiscourseBank.DiscourseBankRelation.GetSpans(System.Collections.Generic.List{LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode})">
+            <summary>
+            Gets spans for a set of argument nodes, indexed by sentence
+            </summary>
+            <param name="argNodes">Argument nodes</param>
+            <returns>Contiguous spans, indexed by sentence</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.PennBank.DiscourseBank.DiscourseBankRelation.ToString">
+            <summary>
+            Gets nicely formatted string for relation
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.DiscourseBank.DiscourseBankRelation.Relation">
+            <summary>
+            Gets the relation
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.DiscourseBank.DiscourseBankRelation.SemanticClass">
+            <summary>
+            Gets the semantic class
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.DiscourseBank.DiscourseBankRelation.Arg1Spans">
+            <summary>
+            Gets sentence spans for the Arg1
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.PennBank.DiscourseBank.DiscourseBankRelation.Arg2Spans">
+            <summary>
+            Gets sentence spans for the Arg2
+            </summary>
+        </member>
+    </members>
+</doc>

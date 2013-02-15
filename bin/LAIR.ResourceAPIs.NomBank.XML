@@ -1,0 +1,1743 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>LAIR.ResourceAPIs.NomBank</name>
+    </assembly>
+    <members>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NomBankParseTreeInstanceProvider">
+            <summary>
+            Returns training nodes from all parse trees in TreeBank. This returns no duplicates, so each instance is
+            a distinct parse tree node. Provides the option to label support verbs and predicating nominals in the tree.
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankParseTreeInstanceProvider.#ctor(System.Boolean,System.Boolean,LAIR.ResourceAPIs.NomBank.NomBankEngine,LAIR.ResourceAPIs.NomBank.NomBankEngine,LAIR.MachineLearning.TrainingInstanceProvider.InstanceFilterDelegate,LAIR.Collections.Generic.Set{System.Int32})">
+            <summary>
+            Constructor
+            </summary>
+            <param name="labelPredicates">Whether or not to label predicates</param>
+            <param name="labelSupportVerbs">Whether or not to label support verbs</param>
+            <param name="autoParsedNomBankEngine">Automatically parsed version of NomBank, from which to draw parse tree structure</param>
+            <param name="goldParsedNomBankEngine">Gold-parsed version of NomBank, from which to draw predicate and support verb labels. This is 
+            necessary because auto-parsed versions of NomBank don't include annotations for instances whose arguments cannot all be minimally
+            subsumed.</param>
+            <param name="instanceFilter">Instance filter to apply</param>
+            <param name="sections">TreeBank sections to draw instances from (null for all sections)</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankParseTreeInstanceProvider.GetTrainingInstanceParseTree(System.String,System.Int32)">
+            <summary>
+            Gets training instance parse tree as a NomBank node, marking predicates and support verbs
+            as determined from constructor.
+            </summary>
+            <param name="mrgFile">MRG file of tree</param>
+            <param name="sentenceNumber">Sentence number of tree</param>
+            <returns>Training instance parse tree as a NomBank node</returns>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NomBankNode">
+            <summary>
+            Represents trees in the NomBank resource
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.NomBankChildConstructor(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Constructs a NomBankNode from a TreeBankNode
+            </summary>
+            <param name="treeBankNode">TreeBankNode to construct a NomBankNode from</param>
+            <param name="parent">Parent node</param>
+            <returns>Constructed node</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.#ctor(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Constructor. WARNING:  this will accept an instance of any class derived from TreeBankNode (e.g., NomBankNode), but 
+            will return a NomBankNode with only TreeBankNode members instantiated. Co-index IDs and referents are lost.
+            </summary>
+            <param name="treeBankNode">TreeBankNode from which to construct this NomBankNode</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.#ctor(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode,LAIR.ResourceAPIs.NomBank.NomBankNode)">
+            <summary>
+            Constructor. WARNING:  this will accept an instance of any class derived from TreeBankNode (e.g., NomBankNode), but 
+            will return a NomBankNode with only TreeBankNode members instantiated. Co-index IDs and referents are lost.
+            </summary>
+            <param name="treeBankNode">TreeBankNode from which to construct this NomBankNode</param>
+            <param name="parent">Parent of this NomBankNode node</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.HasFullRoleSet(System.Boolean)">
+            <summary>
+            Gets whether or not this predicate tree has a full role set (i.e., all core argument positions 
+            are filled). Only valid for root nodes.
+            </summary>
+            <param name="considerNullElementNodes">Whether or not to consider null-element nodes when checking whether a role is filled</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.GetUnfilledRoles(System.Boolean)">
+            <summary>
+            Gets the set of roles not filled. Numbers in the set correspond to the argument positions in the frame file for the
+            current nominal predicate. Only valid for root nodes.
+            </summary>
+            <param name="considerNullElementNodes">Whether or not to consider null-element nodes when checking whether a role is filled</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.GetDescendants(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType)">
+            <summary>
+            Gets descendant nodes by their type
+            </summary>
+            <param name="type">Type of node to get</param>
+            <returns>List of nodes of given type</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.GetDescendants(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature)">
+            <summary>
+            Gets descendant nodes by their feature
+            </summary>
+            <param name="feature">Feature of nodes to get</param>
+            <returns>Nodes with given feature</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.GetDescendants(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel)">
+            <summary>
+            Gets descendant nodes by label
+            </summary>
+            <param name="label">Label of nodes to get</param>
+            <returns>List of nodes matching label</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.GetBracketedText">
+            <summary>
+            Gets bracketed text for this node
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.GetBracketedText(LAIR.ResourceAPIs.NomBank.NomBankNode.BracketedOutputOptions[])">
+            <summary>
+            Gets bracketed text for this node
+            </summary>
+            <param name="options">Bracketing options</param>
+            <returns>Bracketed text</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.HasLabel(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel)">
+            <summary>
+            Gets whether or not this node has a particular label
+            </summary>
+            <param name="label">Label to check for</param>
+            <returns>True if label is present and false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.HasType(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType)">
+            <summary>
+            Gets whether or not this node is of the given type
+            </summary>
+            <param name="type">Type to check for</param>
+            <returns>True if node is of given type and false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.HasFeature(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature)">
+            <summary>
+            Gets whether or not this node has a given feature
+            </summary>
+            <param name="feature">Feature to check for</param>
+            <returns>True if node has feature, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.GetLabels(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType)">
+            <summary>
+            Gets labels matching given type
+            </summary>
+            <param name="type">Type of label to get</param>
+            <returns>Set of labels</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.GetLabel(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel)">
+            <summary>
+            Gets label on the current node that matches the given label
+            </summary>
+            <param name="label">Label to match</param>
+            <returns>Matching label</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.TryGetLabel(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel,LAIR.ResourceAPIs.NomBank.NomBankNodeLabel@)">
+            <summary>
+            Tries to get a label on this node that matches a given label
+            </summary>
+            <param name="label">Label to find</param>
+            <param name="matchingLabel">Matching label, or null if none was found</param>
+            <returns>Whether or not label was found</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.AddLabel(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel,System.Boolean)">
+            <summary>
+            Adds a label to this node
+            </summary>
+            <param name="label">Label to add</param>
+            <param name="syncWithRootNodeCollection">Whether or not to add this node to the corresponding node collection on the root. The
+            root collections are shortcut collections that allow quick searching for particular node types. Thus, the collections need to
+            remain synchronized with the labels that are applied to the nodes. Passing true here will perform this synchronization. If you
+            will do the synchronization on your own later, pass false.</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.RemoveLabel(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel)">
+            <summary>
+            Removes a label from this node
+            </summary>
+            <param name="label">Label to remove</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.RemoveLabels(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType)">
+            <summary>
+            Removes labels of a given type
+            </summary>
+            <param name="type">Type of label to remove</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.KeepBestLabel">
+            <summary>
+            Remove all but the best label
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.GetLabeledNodeCollection(System.String,System.Boolean,System.Single)">
+            <summary>
+            Gets labeled node collection
+            </summary>
+            <param name="typeFeature">Type-feature combination of node collection to get</param>
+            <param name="createIfMissing">Whether or not to create and return a new node collection if none exists</param>
+            <param name="confidence">Confidence of newly created node collection</param>
+            <returns>Labeled node collection</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.GetLabeledNodeCollection(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel,System.Boolean)">
+            <summary>
+            Gets labeled node collection
+            </summary>
+            <param name="label">Label of node collection to get</param>
+            <param name="createIfMissing">Whether or not to create and return a new node collection if none exists</param>
+            <returns>Labeled node collection</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.GetArgumentNodes(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Gets argument nodes. Only valid for root nodes.
+            </summary>
+            <param name="includeNullElementNodes">Whether or not to include null-element argument nodes</param>
+            <param name="includeSplitArguments">Whether or not to include split arguments</param>
+            <param name="headSplitArgumentNodesOnly">If including split nodes, this specifies whether or not to only include the head node
+            of the split argument. The head node is defined as the node containing the semantic head of the LCA of all nodes
+            in the split argument.</param>
+            <param name="includeSingleNodeArguments">Whether or not to include single nodes</param>
+            <param name="excludeSingleNodeArgumentsWhenMultiple">Whether or not to exclude single nodes if there are more than one</param>
+            <returns>List of argument nodes</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.GetModifierNodes(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Gets modifier nodes. Only valid for root nodes.
+            </summary>
+            <param name="includeNullElementNodes">Whether or not to include null-element modifier nodes</param>
+            <param name="includeSplitModifiers">Whether or not to include split modifiers</param>
+            <param name="headSplitModifierNodesOnly">If including split nodes, this specifies whether or not to only include the head node
+            of the split modifier. The head node is defined as the node containing the semantic head of the LCA of all nodes
+            in the split modifier.</param>
+            <param name="includeSingleNodeModifiers">Whether or not to include single nodes</param>
+            <param name="excludeSingleNodeModifiersWhenMultiple">Whether or not to exclude single nodes if there are more than one</param>
+            <returns>List of modifier nodes</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.GetSupportVerbNodes(System.Boolean)">
+            <summary>
+            Gets support verb nodes. Only valid for root nodes.
+            </summary>
+            <param name="includeNullElementNodes">Whether or not to include null-element support verb nodes</param>
+            <returns>Set of support verb nodes</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.MarkArgumentNodesIn(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankEngine)">
+            <summary>
+            Marks argument nodes from the current node in the corresponding parse from a different TreeBank. This is used when
+            transferring NomBank annotations to parse trees other than those distributed in the TreeBank (e.g., those produced
+            by an automatic syntactic parser).
+            </summary>
+            <param name="treeBankEngine">Initialized TreeBank engine from which to pull the parse tree to mark NomBank arguments within</param>
+            <returns>NomBank node, or null if all arguments couldn't be minimally transferred to the other parse tree. An argument
+            is minimally transferred if the corresponding node in the other parse tree subsumes precisely the same text as the node
+            in the current parse tree. Sometimes this is not possible due to parse errors.</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.ToString">
+            <summary>
+            Gets argument-bracketed text for this node
+            </summary>
+            <returns>Argument-bracketed text for this node</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.HasSameLabelingAs(LAIR.ResourceAPIs.NomBank.NomBankNode,System.Boolean,LAIR.ResourceAPIs.NomBank.NomBankNodeLabel[])">
+            <summary>
+            Gets whether or not the current tree has the same argument labeling as another tree
+            </summary>
+            <param name="otherTree">Tree to compare the current one to</param>
+            <param name="ignoreNullNodes">Whether or not to ignore null nodes</param>
+            <param name="labelsToCheck">Node labels to check</param>
+            <returns>True if argument labelings are the same, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.ConvertArgumentIndexesToPropBank(LAIR.Collections.Generic.Set{System.Int32})">
+            <summary>
+            Converts argument indexes for the current NomBank tree to their PropBank version
+            </summary>
+            <param name="argumentIndexes">Argument indexes to convert</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.ConvertArgumentIndexToPropBank(System.Int32)">
+            <summary>
+            Converts argument index for the current NomBank tree to its PropBank version
+            </summary>
+            <param name="argumentIndex">Argument index to convert</param>
+            <returns>Converted argument index</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.CopyLabelsTo(LAIR.ResourceAPIs.NomBank.NomBankNode,LAIR.ResourceAPIs.NomBank.NomBankNodeLabel[])">
+            <summary>
+            Copies particular labels from the current node to corresponding nodes in another tree
+            </summary>
+            <param name="n">Tree to which to copy labels</param>
+            <param name="labels">Labels to copy</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNode.Test(LAIR.ResourceAPIs.NomBank.NomBankEngine)">
+            <summary>
+            Tests the current node
+            </summary>
+            <param name="nomBankEngine">NomBankEngine to use in testing</param>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.RoleSet">
+            <summary>
+            Gets the role set for this predicate tree. Only valid for root nodes.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.Labels">
+            <summary>
+            Gets the labels on this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.LabelCount">
+            <summary>
+            Gets the number of labels on this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.ArgumentLabels">
+            <summary>
+            Gets all argument (Arg0-Arg9) labels on node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.ArgumentLabelCount">
+            <summary>
+            Gets number of argument (Arg0-Arg9) labels on node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.ArgumentIndexes">
+            <summary>
+            Gets the argument indexes of this node. Most of the time, this will return a list with a single argument;
+            however, some nodes have multiple argument labels (e.g., hyphenated nodes) and so will have multiple indexes.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.ModifierLabels">
+            <summary>
+            Gets all modifier (ArgM) labels on this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.ModifierLabelCount">
+            <summary>
+            Gets number of modifier (ArgM) labels on this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.NomLexEntries">
+            <summary>
+            Gets or sets the NomLex entries for this node (only valid for predicate nodes)
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.LabeledNodeCollections">
+            <summary>
+            Gets the labeled node collections for the tree containing this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.LabeledNodeLocations">
+            <summary>
+            Gets the labeled node locations as used in the NomBank props file for the tree containing this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.Information">
+            <summary>
+            Gets or sets the information for the tree containing this node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.IsArgument">
+            <summary>
+            Gets whether or not this node is an argument (Arg0-Arg9)
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.IsModifier">
+            <summary>
+            Gets whether or not this node is a modifier
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.IsPredicate">
+            <summary>
+            Gets whether or not this node is a predicate node
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.IsSupportVerb">
+            <summary>
+            Gets whether or not this node is a support verb
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.IsLabeled">
+            <summary>
+            Gets whether or not this node has one or more labels associated with it
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNode.PredicateNode">
+            <summary>
+            Gets predicate the predicate node. Only valid for root nodes.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NomBankNode.BracketedOutputOptions">
+            <summary>
+            Options used when bracketing a NomBank tree
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNode.BracketedOutputOptions.IgnoreArgumentFeatures">
+            <summary>
+            Don't include features on argument (Arg0-Arg9) nodes. Arguments rarely have features attached to them, but it does happen.
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNode.BracketedOutputOptions.IgnoreHyphenIndexes">
+            <summary>
+            Don't include hyphen indexes
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNode.BracketedOutputOptions.IgnoreBracketProbabilities">
+            <summary>
+            Don't include label probabilities
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNode.BracketedOutputOptions.IgnoreSupportVerbs">
+            <summary>
+            Don't bracket support verbs. If a support verb is also an argument/modifier, it will be bracketed with node types
+            other than support verb.
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNode.BracketedOutputOptions.IncludePredicateFrame">
+            <summary>
+            Whether or not to include predicate frames
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NomBankPredicateTreeInstanceProvider">
+            <summary>
+            Returns training nodes from all NomBank predicate trees, where a single predicate tree is defined as
+            an annotated instance of a NomBank noun. Since a single sentence can have multiple predicate trees (one for
+            each predicating noun in the sentence) this returns "duplicate" parse tree nodes in the sense that
+            the same parse nodes are returned for each predicating nominal in the sentence, even though they're
+            labeled differently.
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankPredicateTreeInstanceProvider.#ctor(LAIR.Collections.Generic.Set{System.String},LAIR.ResourceAPIs.NomBank.NomBankEngine,LAIR.MachineLearning.TrainingInstanceProvider.InstanceFilterDelegate,LAIR.Collections.Generic.Set{System.Int32})">
+            <summary>
+            Constructor
+            </summary>
+            <param name="nouns">Nouns to get predicates trees for (null for all)</param>
+            <param name="nomBankEngine">NomBank engine to draw training predicate trees from</param>
+            <param name="instanceFilter">Instance filter to apply</param>
+            <param name="sections">TreeBank sections to draw instances from</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankPredicateTreeInstanceProvider.Start">
+            <summary>
+            Starts training instance iterator
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankPredicateTreeInstanceProvider.GetNextInstance">
+            <summary>
+            Gets next training instance for models build over NomBank
+            </summary>
+            <returns>Next training instance</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankPredicateTreeInstanceProvider.MoveToNextValidNounInfo(System.Collections.Generic.List{LAIR.ResourceAPIs.NomBank.NounInfo}.Enumerator@)">
+            <summary>
+            Moves a NounInfo enumerator to the next valid entry
+            </summary>
+            <param name="nounInfoEnum">NounInfo enumerator to move</param>
+            <returns>True if valid NounInfo was found, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankPredicateTreeInstanceProvider.GetPreviousInstance">
+            <summary>
+            Not implemented
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankPredicateTreeInstanceProvider.Nouns">
+            <summary>
+            Sets the nominalizations that training instances should be provided for (pass null for all nouns)
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankPredicateTreeInstanceProvider.CurrentInstanceNumber">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankPredicateTreeInstanceProvider.Count">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankPredicateTreeInstanceProvider.Remaining">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankPredicateTreeInstanceProvider.CurrentInstance">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankPredicateTreeInstanceProvider.HasAnotherInstance">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankPredicateTreeInstanceProvider.HasPreviousInstance">
+            <summary>
+            Not implemented
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NomLex.StringFeatureValue">
+            <summary>
+            Represents a NomLex string feature value
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NomLex.FeatureValue">
+            <summary>
+            Represents NomLex feature values
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.StringFeatureValue.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.StringFeatureValue.#ctor(System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="stringValue">String value</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.StringFeatureValue.ToString">
+            <summary>
+            ToString override
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomLex.StringFeatureValue.String">
+            <summary>
+            Gets or sets the string
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.RoleSet">
+            <summary>
+            Represents a NomBank role set
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.RoleSet.#ctor(System.Int32,System.String,System.String,System.Int32)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="id">ID of role set</param>
+            <param name="name">Name of role set</param>
+            <param name="sourceVerb">Source verb for this role set</param>
+            <param name="sourceRoleSet">Source role set for this role set</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.RoleSet.ToString">
+            <summary>
+            Provides nicely formatted text to describe this role set
+            </summary>
+            <returns>String</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.RoleSet.Add(LAIR.ResourceAPIs.NomBank.Role)">
+            <summary>
+            Adds a role to this set
+            </summary>
+            <param name="role">Role to add to this set</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.RoleSet.Get(System.Int32)">
+            <summary>
+            Gets a role by its number
+            </summary>
+            <param name="number">Number of role to get</param>
+            <returns>Corresponding role</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.RoleSet.TryGet(System.Int32,LAIR.ResourceAPIs.NomBank.Role@)">
+            <summary>
+            Tries to get a role by its number
+            </summary>
+            <param name="number">Number of role to get</param>
+            <param name="role">Corresponding role, or null if not present</param>
+            <returns>True if role was found, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.RoleSet.GetEnumerator">
+            <summary>
+            Gets an enumerator over roles in this set
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.RoleSet.System#Collections#IEnumerable#GetEnumerator">
+            <summary>
+            Gets an enumerator over roles in this set
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.RoleSet.SourceVerb">
+            <summary>
+            Gets the source verb for this role set. NOTE:  NomBank also contains nominal predicates derived from other parts
+            of speech, in which case the source of the predicate is something other than a verb. Currently, you cannot retrieve
+            sources that are non-verb (i.e., this will return null iff the source exists and is a verb).
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.RoleSet.SourceRoleSet">
+            <summary>
+            Gets the source role set for this role set
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.RoleSet.ID">
+            <summary>
+            Gets the ID
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.RoleSet.Name">
+            <summary>
+            Gets the name
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.RoleSet.Count">
+            <summary>
+            Gets the number of roles in this set
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.Nominalization">
+            <summary>
+            Represents a nominalization that can be classified
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.Nominalization.#ctor(System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="value">Value of nominalization</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.Nominalization.ToString">
+            <summary>
+            Returns the value of this nominalization
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.Nominalization.Value">
+            <summary>
+            Gets or sets the value
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NomLex.AtomicFeatureValue">
+            <summary>
+            Represents an atomic NomLex feature value
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.AtomicFeatureValue.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.AtomicFeatureValue.#ctor(System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="atom">Atom for this value</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.AtomicFeatureValue.ToString">
+            <summary>
+            ToString override
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomLex.AtomicFeatureValue.Atom">
+            <summary>
+            Gets or sets the atom
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NounInfo">
+            <summary>
+            Represents a single line in the NomBank propositions file
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NounInfo._propLineRE">
+            <summary>
+            RE for prop entries
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NounInfo.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NounInfo.#ctor(System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="propLine">Prop entry line</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NounInfo.#ctor(System.String,System.String,System.Int32,System.Int32,System.Int32,System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="noun">Noun</param>
+            <param name="file">Annotation file</param>
+            <param name="sentenceNumber">Sentence wichin annotation file</param>
+            <param name="leafNumber">Leaf within sentence</param>
+            <param name="roleSetID">Role set ID</param>
+            <param name="labeledNodeLocations">Labeled node locations</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NounInfo.GetPropEntry(System.String)">
+            <summary>
+            Gets the prop entry for this noun info
+            </summary>
+            <param name="treeBankPath">Path to TreeBank upon which this information is based. Pass null to use the entire file path
+            contained in this information.</param>
+            <returns>Prop entry line</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NounInfo.Frame">
+            <summary>
+            Gets or sets the Frame
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NounInfo.RoleSetId">
+            <summary>
+            Gets or sets the role set ID
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NounInfo.LabeledNodeLocations">
+            <summary>
+            Gets or sets the labeled node locations, as specified in the NomBank propositions file
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NounInfo.Noun">
+            <summary>
+            Gets or sets the noun
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NounInfo.File">
+            <summary>
+            Gets or sets the MRG file that this entry refers to
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NounInfo.SentenceNumber">
+            <summary>
+            Gets or sets the TreeBank sentence number within the MRG file
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NounInfo.LeafNumber">
+            <summary>
+            Gets or sets the predicating leaf number within the sentence
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NomBankLabeledNodeCollection">
+            <summary>
+            Represents a collection of labeled NomBank nodes
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankLabeledNodeCollection.#ctor(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="label">Label for collection</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankLabeledNodeCollection.AddSingleNode(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Adds a single node to this collection
+            </summary>
+            <param name="singleNode">Single node to add</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankLabeledNodeCollection.AddSplitNode(System.Collections.Generic.List{LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode})">
+            <summary>
+            Adds a split node to this collection
+            </summary>
+            <param name="splitNode">Split node to add</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankLabeledNodeCollection.ApplyType(LAIR.ResourceAPIs.NomBank.NomBankNode)">
+            <summary>
+            Applies the current type to a node, or does nothing if the node already has the type
+            </summary>
+            <param name="n">Node to apply type to</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankLabeledNodeCollection.ToString">
+            <summary>
+            Gets node locations
+            </summary>
+            <returns>Node locations</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankLabeledNodeCollection.Copy">
+            <summary>
+            Gets a copy of this collection
+            </summary>
+            <returns>Copy of this collection</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankLabeledNodeCollection.Label">
+            <summary>
+            Gets or sets the label used in this collection
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankLabeledNodeCollection.AppliedIndexes">
+            <summary>
+            Gets the list of indexes applied to nodes in this collection
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankLabeledNodeCollection.NodeLocations">
+            <summary>
+            Gets location label for this collection
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEngine">
+            <summary>
+            Provides access to information in NomLex
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEngine.IndexOfBalancingParen(System.String)">
+            <summary>
+            Gets the index of the parenthesis that balances the parenthesis at the beginning of a piece of text
+            </summary>
+            <param name="text">Text to search</param>
+            <returns>Index of balancing parenthesis</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEngine.IndexOfBalancingParen(System.String,System.Int32)">
+            <summary>
+            Gets the index of the parenthesis that balances the parenthesis at a specified position
+            </summary>
+            <param name="text">Text to search</param>
+            <param name="startParen">Where to start search</param>
+            <returns>Index of balancing parenthesis</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEngine.#ctor(System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="path">Path to the NomLex dictionary</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEngine.ExtractEntry(System.String)">
+            <summary>
+            Extracts an entry from text
+            </summary>
+            <param name="entryText">Entry text</param>
+            <returns>NomLexEntry</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEngine.Contains(System.String)">
+            <summary>
+            Gets whether or not NomLex contains a nominalization
+            </summary>
+            <param name="nominalization">Nominalization to check</param>
+            <returns>True if the nominalization is present, false otherwise.</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEngine.GetEntries(System.String)">
+            <summary>
+            Gets entries for a nominalization
+            </summary>
+            <param name="nominalization">Nominalization to get entries for</param>
+            <returns>Entries</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEngine.TryGetEntries(System.String,System.Collections.Generic.List{LAIR.ResourceAPIs.NomBank.NomLex.NomLexEntry}@)">
+            <summary>
+            Tries to get entries for a nominalization
+            </summary>
+            <param name="nominalization">Nominalization to get entries for</param>
+            <param name="entries">Entries, if successfully retrieved, null if given nominalization does not exist</param>
+            <returns>True if entries were retrieved, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEngine.GetNominalizations(System.String,System.Boolean)">
+            <summary>
+            Gets all nominalizations in a given class
+            </summary>
+            <param name="nomLexClass">NomLex class to get nominalizations for</param>
+            <param name="allowAmbiguousNominalizations">Whether or not to return nominalizations that appear in the given class but also 
+            appear in another class</param>
+            <returns>List of nominalizations</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEngine.HasAmbiguousClass(System.String)">
+            <summary>
+            Gets whether or not the given nominalization has an ambiguous NomLex class
+            </summary>
+            <param name="nominalization">Nominalization to check</param>
+            <returns>True if given nominalization has an ambiguous class, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEngine.GetClasses(System.String)">
+            <summary>
+            Gets NomLex classes for a nominalization
+            </summary>
+            <param name="nominalization">Nominalization to get classes for</param>
+            <returns>NomLex classes</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEngine.TryGetClasses(System.String,LAIR.Collections.Generic.Set{System.String}@)">
+            <summary>
+            Tries to get classes for a nominalization
+            </summary>
+            <param name="nominalization">Nominalization to try to get classes for</param>
+            <param name="classes">Classes of nominalization</param>
+            <returns>True if classes were found, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEngine.GetVerbs(System.String)">
+            <summary>
+            Gets verbs associated with a nominalization
+            </summary>
+            <param name="nominalization">Nominalization to get verbs for</param>
+            <returns>Verb associated with nominalization</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEngine.GetVerbs(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Gets verbs for a list of nominalizations
+            </summary>
+            <param name="nominalizations">Nominalizations to get verbs for</param>
+            <returns>List of verbs</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEngine.Nouns">
+            <summary>
+            Gets nouns in NomLex
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEngine.Classes">
+            <summary>
+            Gets classes in NomLex
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.Frame">
+            <summary>
+            Represents a NomBank frame
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.Frame.#ctor(System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="noun">Noun for this frame</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.Frame.ToString">
+            <summary>
+            Gets nicely formatted string representation of this frame
+            </summary>
+            <returns>Frame description</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.Frame.AddRoleSet(LAIR.ResourceAPIs.NomBank.RoleSet)">
+            <summary>
+            Adds a role set to this frame
+            </summary>
+            <param name="roleSet">Role set to add</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.Frame.GetRoleSet(System.Int32)">
+            <summary>
+            Gets role set by ID
+            </summary>
+            <param name="roleSetID">ID of role set to get</param>
+            <returns>Role set</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.Frame.Contains(System.Int32)">
+            <summary>
+            Gets whether or not this frame contains a role set
+            </summary>
+            <param name="roleSetID">ID of role set to check for</param>
+            <returns>True if role set is contained, false otherwise</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.Frame.Noun">
+            <summary>
+            Gets the noun. This is the lemma form, which is used in the noun.id role set notation
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.Frame.RoleSetCount">
+            <summary>
+            Gets the number of role sets in this frame
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.Frame.RoleSets">
+            <summary>
+            Gets an enumerator over role sets in this frame
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NomLex.FeatureValueList">
+            <summary>
+            Represents a list of NomLex feature values
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.FeatureValueList.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.FeatureValueList.Add(LAIR.ResourceAPIs.NomBank.NomLex.FeatureValue)">
+            <summary>
+            Adds a value to this list
+            </summary>
+            <param name="value"></param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.FeatureValueList.ToString">
+            <summary>
+            ToString override
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.Role">
+            <summary>
+            Represents a role within NomBank
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.Role.#ctor(System.String,System.Int32,System.Int32)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="description">Role description</param>
+            <param name="number">Role number</param>
+            <param name="source">Source argument in PropBank</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.Role.ToString">
+            <summary>
+            Provides nicely formatted string for this role
+            </summary>
+            <returns>String</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.Role.Equals(System.Object)">
+            <summary>
+            Checks whether or not to roles are equal
+            </summary>
+            <param name="obj">Role to compare this one to</param>
+            <returns>True if roles are equal, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.Role.GetHashCode">
+            <summary>
+            Gets hash code for this role
+            </summary>
+            <returns>Hash code</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.Role.Source">
+            <summary>
+            Gets or sets the source argument position within the source role set
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.Role.Description">
+            <summary>
+            Gets or sets the description
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.Role.Number">
+            <summary>
+            Gets or sets the argument number
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEntry">
+            <summary>
+            Stores NomLex information
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEntry.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEntry.#ctor(System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="name">Name of entry</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEntry.ToString">
+            <summary>
+            ToString override
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEntry.Name">
+            <summary>
+            Gets or sets the name
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomLex.NomLexEntry.Features">
+            <summary>
+            Gets or sets the features
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NomBankEngine">
+            <summary>
+            Provides access to NomBank layer of information on top of the TreeBank.
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.SaveTokenIndex(System.Collections.Generic.Dictionary{System.String,System.Collections.Generic.Dictionary{System.UInt32,LAIR.Collections.Generic.Set{System.UInt16}}},System.String)">
+            <summary>
+            Saves a token index
+            </summary>
+            <param name="index">Index to save</param>
+            <param name="path">Path to file in which to save index</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.ReadTokenIndex(System.String)">
+            <summary>
+            Reads a token index
+            </summary>
+            <param name="path">Path to token index</param>
+            <returns>Token index</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.BuildFrameIndex(System.String)">
+            <summary>
+            Builds the Frame index
+            </summary>
+            <param name="framesDirectory">Directory containing NomBank frame XML files</param>
+            <returns>Frame index - a map from noun lemma to corresponding frame</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.#ctor(System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="mrgPath">Path to TreeBank directory to search recursively for .mrg files</param>
+            <param name="propsFilePath">Path to NomBank propositions file</param>
+            <param name="framesDirectory">Path to the NomBank frames directory</param>
+            <param name="morphFilePath">Path to NomBank morphological dictionary file</param>
+            <param name="nomLexFilePath">Path to NomLex file</param>
+            <param name="indexDirectory">Path to the index directory, where all index information is stored</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.#ctor(System.String,System.String,System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="mrgPath">Path to TreeBank directory to search recursively for .mrg files</param>
+            <param name="nomBankPath">Path to NomBank directory. This directory must contain the standard "nombank.1.0" propositions
+            file, the "frames" directory, the "nombank-morph.dict.1.0" morphological dictionary, and the "NOMLEX-plus.1.0" NomLex
+            file.</param>
+            <param name="indexDirectory">Path to the index directory, where all index information is stored</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.Text.RegularExpressions.Regex)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="mrgPath">Path to TreeBank directory to search recursively for .mrg files</param>
+            <param name="propsFilePath">Path to NomBank propositions file</param>
+            <param name="framesDirectory">Path to the NomBank frames directory</param>
+            <param name="morphFilePath">Path to NomBank morphological dictionary file</param>
+            <param name="nomLexFilePath">Path to NomLex file</param>
+            <param name="indexDirectory">Path to the index directory, where all index information is stored</param>
+            <param name="mrgFileNameRE">Regular expression for MRG file name. See MrgFileNameRE property for details.</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.#ctor(System.String,System.String,System.String,System.Text.RegularExpressions.Regex)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="mrgPath">Path to TreeBank directory to search recursively for .mrg files</param>
+            <param name="nomBankPath">Path to NomBank directory. This directory must contain the standard "nombank.1.0" propositions
+            file, the "frames" directory, the "nombank-morph.dict.1.0" morphological dictionary, and the "NOMLEX-plus.1.0" NomLex
+            file.</param>
+            <param name="indexDirectory">Path to the index directory, where all index information is stored</param>
+            <param name="mrgFileNameRE">Regular expression for MRG file name. See MrgFileNameRE property for details.</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.Construct(System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Constructs the engine
+            </summary>
+            <param name="propsFilePath">Path to NomBank propositions file</param>
+            <param name="framesDirectory">Path to the NomBank frames directory</param>
+            <param name="morphFilePath">Path to NomBank morphological dictionary file</param>
+            <param name="nomLexFilePath">Path to NomLex file</param>
+            <param name="indexDirectory">Path to the index directory, where all index information is stored</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.LoadProps(System.String)">
+            <summary>
+            Loads the propositions file
+            </summary>
+            <param name="propFilePath">Path to prop.txt file</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.WriteNounInfoList(System.Collections.Generic.List{LAIR.ResourceAPIs.NomBank.NounInfo},System.IO.FileStream)">
+            <summary>
+            Writes a list of NounInfo to a stream
+            </summary>
+            <param name="list">List of NounInfo to write</param>
+            <param name="stream">Stream to write to</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.GetNounInfo(System.String)">
+            <summary>
+            Looks up all information for a given noun
+            </summary>
+            <param name="noun">Noun to look up information for</param>
+            <returns>List of NounInfo objects</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.GetNounInfoBySense(System.String)">
+            <summary>
+            Looks up all information for a given noun, organized by sense.
+            Key:  Sense of noun (role set ID)
+            Value:  List of NounInfo objects for senses of noun
+            </summary>
+            <param name="noun">Noun to look up information for</param>
+            <returns>Noun information, organized by sense</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.TryGetNounInfoForSentence(System.String,System.Int32,System.Collections.Generic.List{LAIR.ResourceAPIs.NomBank.NounInfo}@)">
+            <summary>
+            Tries to get NounInfo for a sentence
+            </summary>
+            <param name="mrgFile">MRG file to look in</param>
+            <param name="sentenceNumber">Sentence number to look at</param>
+            <param name="nounInfo">List of NounInfo if any was found, null otherwise</param>
+            <returns>True if NounInfo was found, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.TryGetNounInfoForLeaf(System.String,System.Int32,System.Int32,System.Collections.Generic.List{LAIR.ResourceAPIs.NomBank.NounInfo}@)">
+            <summary>
+            Tries to get NounInfo for a leaf
+            </summary>
+            <param name="mrgFile">MRG file of leaf</param>
+            <param name="sentenceNumber">Sentence number of leaf</param>
+            <param name="leafNumber">Leaf number</param>
+            <param name="nounInfo">Noun info found for leaf</param>
+            <returns>True if noun info was found, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.LoadNounInfo(System.String,System.Int64)">
+            <summary>
+            Loads a NounInfo list from a file starting at a specific position
+            </summary>
+            <param name="file">File to load list from</param>
+            <param name="position">Position to start at</param>
+            <returns>List of NounInfo</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.GetNomBankTree(LAIR.ResourceAPIs.NomBank.NounInfo)">
+            <summary>
+            Gets a NomBank tree for an entry in the propositions file
+            </summary>
+            <param name="ni">NounInfo specifying tree to look up</param>
+            <returns>NomBankNode</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.Contains(System.String)">
+            <summary>
+            Gets whether or not NomBank contains a noun
+            </summary>
+            <param name="noun">Noun to check for</param>
+            <returns>True if NomBank contains the noun, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.ContainsMorphologicalVariantOf(System.String)">
+            <summary>
+            Gets whether or not NomBank contains a noun or a morphological variant of the noun
+            </summary>
+            <param name="noun">Noun to check</param>
+            <returns>True if noun/variant is contained, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.TryGetNounsForVerb(System.String,LAIR.Collections.Generic.Set{System.String}@)">
+            <summary>
+            Tries to get the nouns for a given verb
+            </summary>
+            <param name="verb">Verb to get nouns for</param>
+            <param name="nouns">Nouns corresponding to verb</param>
+            <returns>True if nouns were found</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.TryGetVerbsForNoun(System.String,LAIR.Collections.Generic.Set{System.String}@)">
+            <summary>
+            Tries to get the verbs for a given noun
+            </summary>
+            <param name="noun">Noun to get verbs for</param>
+            <param name="verbs">Verbs corresponding to noun</param>
+            <returns>True if verbs were found</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.ContainsMorphologicalVariantOf(System.String,System.Int32[])">
+            <summary>
+            Gets whether or not NomBank contains a given noun in a range of sections
+            </summary>
+            <param name="noun">Noun to check</param>
+            <param name="inSections">Sections to look in</param>
+            <returns>True if noun in contained in one of the sections, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.ContainsMorphologicalVariantOf(System.String,System.Collections.Generic.IEnumerable{System.Int32})">
+            <summary>
+            Gets whether or not NomBank contains a given noun in a range of sections
+            </summary>
+            <param name="noun">Noun to check</param>
+            <param name="inSections">Sections to look in</param>
+            <returns>True if noun in contained in one of the sections, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.TryGetBaseNoun(System.String,System.String@)">
+            <summary>
+            Tries to get the base noun for a given noun. Succeeds only if base noun is unambiguous.
+            </summary>
+            <param name="noun">Noun to get base noun for</param>
+            <param name="baseNoun">Base noun</param>
+            <returns>True if base noun was found, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.GetFrame(System.String)">
+            <summary>
+            Gets the Frame for a noun
+            </summary>
+            <param name="noun">Noun to get Frame for</param>
+            <returns>Frame</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.TryGetFrame(System.String,LAIR.ResourceAPIs.NomBank.Frame@)">
+            <summary>
+            Tries to get the frame for a noun
+            </summary>
+            <param name="noun">Noun to get frame for</param>
+            <param name="frame">Frame for noun</param>
+            <returns>True if frame was found, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.BuildMorphMap(System.String)">
+            <summary>
+            Builds the mapping from nouns to their morphological variants as specified in nombank-morph.dict.1.0
+            </summary>
+            <param name="path">Path to the NomBank morphological variant dictionary</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.GetNomLexEntries(System.String)">
+            <summary>
+            Gets NomLex entries for noun and any of its morphological variants
+            </summary>
+            <param name="noun">Noun to get NomLex entries for</param>
+            <returns>NomLex entries</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.RemoveNominalizationsNotContained(LAIR.Collections.Generic.Set{System.String})">
+            <summary>
+            Removes nominalizations from a list that aren't contained in NomBank
+            </summary>
+            <param name="nominalizations">List of nominalizations to check</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.TokenIsMarkable(System.String,System.Int32,System.Int32)">
+            <summary>
+            Gets whether or not a token is markable (i.e., whether it is annotated in this NomBank)
+            </summary>
+            <param name="mrgFile">MRG file to check</param>
+            <param name="sentence">Number of sentence to check</param>
+            <param name="tokenNumber">Token number to check</param>
+            <returns>True if token is markable, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.TokenIsSupportVerb(System.String,System.Int32,System.Int32)">
+            <summary>
+            Gets whether or not a token is a support verb
+            </summary>
+            <param name="mrgFile">MRG to file check</param>
+            <param name="sentence">Number of sentence to check</param>
+            <param name="tokenNumber">Token number to check</param>
+            <returns>True if token is a support verb, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankEngine.GetFullBracketing(System.String,System.Int32,LAIR.ResourceAPIs.NomBank.NomBankEngine.FullBracketingOptions[])">
+            <summary>
+            Gets full bracketing of a sentence
+            </summary>
+            <param name="mrgFile">MRG file to get sentence from</param>
+            <param name="sentNum">Sentence number</param>
+            <param name="options">Bracketing options</param>
+            <returns>Full bracketing</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankEngine.NomLexEngine">
+            <summary>
+            Gets the NomLex engine used
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankEngine.NounMorphs">
+            <summary>
+            Gets the mapping from base nouns to their morphological variants
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankEngine.MorphNouns">
+            <summary>
+            Gets the mapping from morphological variants to their base nouns
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankEngine.AllNouns">
+            <summary>
+            Gets a list of all nouns in the lexicon
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankEngine.NounInfoFilePositionPath">
+            <summary>
+            Gets the path to the NounInfo positions file, which stores the file positions of the NounInfo list for each noun
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankEngine.NounInfoPath">
+            <summary>
+            Gets the path to the noun info file, which stores lists of NounInfo objects, one list for each noun
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankEngine.MrgSentenceInfoPath">
+            <summary>
+            Gets the path to the MRG file/sentence number NounInfo index
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankEngine.MrgSentenceInfoFilePositionsPath">
+            <summary>
+            Gets the path to the MRG file index, which maps a MRG file to its sentence number/NounInfo index
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankEngine.MarkableTokensPath">
+            <summary>
+            Gets the path to the markable tokens file
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankEngine.SupportVerbTokenPath">
+            <summary>
+            Gets the path to the support verb tokens file
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankEngine.NounSectionPath">
+            <summary>
+            Gets the path to the noun section file, which maps nouns to the sections they appear in
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NomBankEngine.FullBracketingOptions">
+            <summary>
+            Full bracketing options
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankEngine.FullBracketingOptions.BracketPredicates">
+            <summary>
+            Bracket predicates
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankEngine.FullBracketingOptions.BracketArguments">
+            <summary>
+            Bracket arguments
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankEngine.FullBracketingOptions.BracketModifiers">
+            <summary>
+            Bracket modifiers
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankEngine.FullBracketingOptions.BracketSupportVerbs">
+            <summary>
+            Bracket support verbs
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankEngine.FullBracketingOptions.IndicateNonMarkables">
+            <summary>
+            Indicate non-markable nominals with a '*'
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankEngine.FullBracketingOptions.HorizontalLineSeparators">
+            <summary>
+            Separate predicate lines for the sentence with a line of '-'
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankEngine.FullBracketingOptions.IncludeOriginalText">
+            <summary>
+            Include original sentence text as first line
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankEngine.FullBracketingOptions.IncludeAllInformation">
+            <summary>
+            Include all available information
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel">
+            <summary>
+            Describes a NomBank node in terms of its type, feature, and hyphen indexes
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.#cctor">
+            <summary>
+            Static constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.GetNodeType(System.String)">
+            <summary>
+            Gets the node type given a string
+            </summary>
+            <param name="label">Node label</param>
+            <returns>NodeType</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.GetNodeTypeString(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType)">
+            <summary>
+            Gets node type string from the node type
+            </summary>
+            <param name="type">Type of node</param>
+            <returns>Node type string</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.GetNodeFeature(System.String)">
+            <summary>
+            Gets the feature for a string
+            </summary>
+            <param name="feature">Feature name</param>
+            <returns>NodeFeature</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.GetNodeFeatureString(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature)">
+            <summary>
+            Gets string for a feature
+            </summary>
+            <param name="feature">NodeFeature</param>
+            <returns>String</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.op_Equality(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel,LAIR.ResourceAPIs.NomBank.NomBankNodeLabel)">
+            <summary>
+            Checks equality of two labels
+            </summary>
+            <param name="label1">First label</param>
+            <param name="label2">Second label</param>
+            <returns>True if labels are equal, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.op_Inequality(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel,LAIR.ResourceAPIs.NomBank.NomBankNodeLabel)">
+            <summary>
+            Checks inequality of two labels
+            </summary>
+            <param name="label1">First label</param>
+            <param name="label2">Second label</param>
+            <returns>True if labels are not equal, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.#ctor(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType,System.Single)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="type">Type of node</param>
+            <param name="confidence">Confidence of label</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.#ctor(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType,LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature,System.Single)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="type">Type of node</param>
+            <param name="feature">Feature for node</param>
+            <param name="confidence">Confidence of label</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.#ctor(System.String,System.Single)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="label">Label string (e.g., "Arg0", "Modifier-Temporal", "Arg1-H0", etc.)</param>
+            <param name="confidence">Confidence of label</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.AddHyphenIndex(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.HyphenationIndex)">
+            <summary>
+            Adds a hyphen index to this label
+            </summary>
+            <param name="hyphenIndex">Hyphen index to add</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.ContainsHyphenIndex(LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.HyphenationIndex)">
+            <summary>
+            Gets whether or not this label contains a hyphen index
+            </summary>
+            <param name="hyphenIndex">Index to check for</param>
+            <returns>True if this label contains the given index, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.ToString">
+            <summary>
+            Returns the type/feature/indexes in a nicely formatted string
+            </summary>
+            <returns>Label</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.ToString(System.Boolean,System.Boolean)">
+            <summary>
+            Returns the type/feature/indexes in a nicely formatted string
+            </summary>
+            <param name="includeArgumentFeature">Whether or not to include features for argument labels</param>
+            <param name="includeHyphenIndexes">Whether or not to include hyphen indexes</param>
+            <returns>Label</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.Equals(System.Object)">
+            <summary>
+            Gets whether or not this NomBankNodeLabel equals another object
+            </summary>
+            <param name="obj">Object to compare this one with</param>
+            <returns>True if the other object is a NomBankNodeLabel and is equal to this one, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.GetHashCode">
+            <summary>
+            Gets hash code for this label
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.Copy">
+            <summary>
+            Gets a deep copy of this label
+            </summary>
+            <returns>Deep copy of this label</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.ArgumentTypes">
+            <summary>
+            Gets the argument types
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.FeatureTypes">
+            <summary>
+            Gets the feature types (excluding None)
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.Confidence">
+            <summary>
+            Gets or sets the confidence for this label
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.HyphenIndexes">
+            <summary>
+            Gets the list of hyphen indexes
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.Type">
+            <summary>
+            Gets or sets the type
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.Feature">
+            <summary>
+            Gets or sets the feature
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.IsArgument">
+            <summary>
+            Gets whether or not this is an argument label
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.IsModifier">
+            <summary>
+            Gets whether or not this is a modifier label
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.IsPredicate">
+            <summary>
+            Gets whether or not this is a predicate label
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.IsSupportVerb">
+            <summary>
+            Gets whether or not this is a support verb label
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType">
+            <summary>
+            NodeType enumeration
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType.Arg0">
+            <summary>
+            Argument 0
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType.Arg1">
+            <summary>
+            Argument 1
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType.Arg2">
+            <summary>
+            Argument 2
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType.Arg3">
+            <summary>
+            Argument 3
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType.Arg4">
+            <summary>
+            Argument 4
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType.Arg5">
+            <summary>
+            Argument 5
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType.Arg6">
+            <summary>
+            Argument 6
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType.Arg7">
+            <summary>
+            Argument 7
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType.Arg8">
+            <summary>
+            Argument 8
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType.Arg9">
+            <summary>
+            Argument 9
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType.Predicate">
+            <summary>
+            Predicate node
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType.Modifier">
+            <summary>
+            Modifier node
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeType.Support">
+            <summary>
+            Support item
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature">
+            <summary>
+            NodeFeature enumeration
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature.None">
+            <summary>
+            No node feature
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature.Extent">
+            <summary>
+            Extent
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature.Direction">
+            <summary>
+            Direction
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature.Location">
+            <summary>
+            Location
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature.Temporal">
+            <summary>
+            Temporal
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature.SecondaryPredication">
+            <summary>
+            Secondary predication
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature.Negation">
+            <summary>
+            Negation
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature.Adverbial">
+            <summary>
+            Adverbial
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature.Manner">
+            <summary>
+            Manner
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature.Cause">
+            <summary>
+            Cause
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature.Purpose">
+            <summary>
+            Purpose
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature.DiscourseConnective">
+            <summary>
+            Discourse connective
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.NodeFeature.OutsideReference">
+            <summary>
+            Outside reference
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.HyphenationIndex">
+            <summary>
+            Hyphenation indexes used
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.HyphenationIndex.H0">
+            <summary>
+            First hyphenated part
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.HyphenationIndex.H1">
+            <summary>
+            Second hyphenated part
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.HyphenationIndex.H2">
+            <summary>
+            Third hyphenated part
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.HyphenationIndex.H3">
+            <summary>
+            Fourth hyphenated part
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.HyphenationIndex.H4">
+            <summary>
+            Fifth hyphenated part
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.NomBank.NomBankNodeLabel.HyphenationIndex.H5">
+            <summary>
+            Sixth hyphenated part
+            </summary>
+        </member>
+    </members>
+</doc>

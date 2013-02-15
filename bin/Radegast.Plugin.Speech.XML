@@ -1,0 +1,766 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Radegast.Plugin.Speech</name>
+    </assembly>
+    <members>
+        <member name="T:RadegastSpeech.Conversation.SingleIMSession">
+            <summary>
+            Instant Message session with an individual
+            </summary>
+        </member>
+        <member name="T:RadegastSpeech.Conversation.IMSession">
+            <summary>
+            Represents a single IM conversation
+            </summary>
+            <remarks>This can be with an individual or a group</remarks>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Mode.Hear(System.String)">
+            <summary>
+            Text from speech input.
+            </summary>
+            <param name="message"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Mode.OnKeyDown(System.Object,System.Windows.Forms.KeyEventArgs)">
+            <summary>
+            Key handler for navigating lists.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Mode.FriendlyName(System.String,OpenMetaverse.UUID)">
+            <summary>
+            Convert full avatar names into more humanistic form.
+            </summary>
+            <param name="who"></param>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.IMSession.AssignSlot">
+            <summary>
+            Assign IM conversations to different spatial locations.
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.GUI.AvatarSpeechAction.OnInvoke(System.Object,System.EventArgs,System.Object)">
+            <summary>
+            Respond to a "Speech..." context menu action
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+            <param name="target"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Surroundings.Start">
+            <summary>
+            conversation becomes active
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Surroundings.Stop">
+            <summary>
+            Friends conversation becomes inactive
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Surroundings.Hear(System.String)">
+            <summary>
+            Speech input commands for Friends conversation
+            </summary>
+            <param name="message"></param>
+            <returns></returns>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Surroundings.Objects_SelectedIndexChanged(System.Object,System.EventArgs)">
+            <summary>
+            Announce which object has been selected in the list.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Surroundings.TellMeMore">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="F:RadegastSpeech.GUI.VoiceAssignment.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.GUI.VoiceAssignment.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:RadegastSpeech.GUI.VoiceAssignment.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.GUI.VoiceAssignment.SelectByName(System.String)">
+            <summary>
+            Mark a voice as selected by its name
+            </summary>
+            <param name="name"></param>
+        </member>
+        <member name="M:RadegastSpeech.GUI.VoiceAssignment.Demonstrate">
+            <summary>
+            Demonstrate the selected voice.
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.GUI.VoiceAssignment.voiceList_SelectedIndexChanged(System.Object,System.EventArgs)">
+            <summary>
+            Respond to change in selected voice.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="T:RadegastSpeech.Conversation.TalkingContextMenu">
+            <summary>
+            Talking version of a context menu.
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.TalkingContextMenu.Hear(System.String)">
+            <summary>
+            Select context menu by speaking it
+            </summary>
+            <param name="txt"></param>
+            <returns></returns>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.TalkingContextMenu.OnContentMenuOpened(System.Object,Radegast.RadegastContextMenuStrip.ContextMenuEventArgs)">
+            <summary>
+            Announce the opening of a context menu
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.TalkingContextMenu.OnSpeechMenu(System.Object,System.EventArgs)">
+            <summary>
+            Put up the voice assignment dialog box.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.TalkingContextMenu.OnContentMenuClosing(System.Object,Radegast.RadegastContextMenuStrip.ContextMenuEventArgs)">
+            <summary>
+            Announce closing of a context menu.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.InvNotecard.PrevSection">
+            <summary>
+            Delineate the previous section and read it.
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.InvNotecard.NextSection">
+            <summary>
+            Delineate the next section and read it.
+            </summary>
+        </member>
+        <member name="T:RadegastSpeech.Conversation.Control">
+            <summary>
+            Manages all conversations
+            </summary>
+        </member>
+        <member name="F:RadegastSpeech.Conversation.Control.conversations">
+            <summary>
+            Conversations correspond to tabbed panels on the main window.
+            </summary>
+        </member>
+        <member name="F:RadegastSpeech.Conversation.Control.interruptions">
+            <summary>
+            Interruptions are short-lived conversations about dialog boxes, etc
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Control.TabConsole_OnChatNotification(System.Object,Radegast.ChatNotificationEventArgs)">
+            <summary>
+            Say various notifications that come in the chat
+            </summary>
+            <param name="sender">Message sender</param>
+            <param name="e">Event args</param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Control.MainForm_KeyUp(System.Object,System.Windows.Forms.KeyEventArgs)">
+            <summary>
+            Watch for global function keys.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Control.OnTabChange(System.Object,Radegast.TabEventArgs)">
+            <summary>
+            Switch active conversation as tab focus moves.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Control.TabConsole_OnTabAdded(System.Object,Radegast.TabEventArgs)">
+            <summary>
+            Create conversations as tabs are created.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Control.TabConsole_OnTabRemoved(System.Object,Radegast.TabEventArgs)">
+            <summary>
+            Quietly close conversations.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Control.StartInterruption">
+            <summary>
+            Start an interrupting conversation.
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Control.FinishInterruption(RadegastSpeech.Conversation.Mode)">
+            <summary>
+            Finish an interruption and resume normal conversation
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Control.Network_Disconnected(System.Object,OpenMetaverse.DisconnectedEventArgs)">
+            <summary>
+            Announce reason for disconnect.
+            </summary>
+            <param name="reason"></param>
+            <param name="message"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Control.Command(System.String)">
+            <summary>
+            Check for general commands
+            </summary>
+            <param name="message"></param>
+            <returns>true if command recognized</returns>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Control.Hear(System.String)">
+            <summary>
+            Dispatch recognized text to appropriate conversation.
+            </summary>
+            <param name="message"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Control.GetConversation(System.String)">
+            <summary>
+            Find an existing conversation by name.
+            </summary>
+            <param name="title"></param>
+            <returns></returns>
+            <remarks>Used for IM sessions.</remarks>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Control.AddConversation(RadegastSpeech.Conversation.Mode)">
+            <summary>
+            Add a conversation context to those we are tracking.
+            </summary>
+            <param name="m"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Control.RemoveConversation(System.String)">
+            <summary>
+            Remove the context for a conversation that is no longer visible.
+            </summary>
+            <param name="name"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Control.AddInterruption(RadegastSpeech.Conversation.Mode)">
+            <summary>
+            Take note of a new interruption.
+            </summary>
+            <param name="m"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Control.OnNotificationDisplayed(System.Object,Radegast.NotificationEventArgs)">
+            <summary>
+            Event handler for new blue dialog boxes.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Control.Netcom_InstantMessageSent(System.Object,Radegast.Netcom.InstantMessageSentEventArgs)">
+            <summary>
+            Event handler for outgoing IMs
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Control.OnInstantMessage(System.Object,OpenMetaverse.InstantMessageEventArgs)">
+            <summary>
+            Handle Instant Messages
+            </summary>
+            <param name="im"></param>
+            <param name="simulator"></param>
+        </member>
+        <member name="M:RadegastSpeech.Sound.Control.Play(System.String,System.Int32,OpenMetaverse.Vector3,System.Boolean,System.Boolean)">
+            <summary>
+            Play a sound once at a specific location.
+            </summary>
+            <param name="?"></param>
+        </member>
+        <member name="M:RadegastSpeech.Sound.FmodSound.Play(System.String,System.Int32,OpenMetaverse.Vector3,System.Boolean,System.Boolean)">
+            <summary>
+            Play a prerecorded sound
+            </summary>
+            <param name="filename">Name of the file to play</param>
+            <param name="sps">Samples per second</param>
+            <param name="worldPos">Position of the sound</param>
+            <param name="deleteAfter">True if we should delete the file when done</param>
+            <param name="global">True if position is in world coordinates
+            instead of hed-relative</param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Friends.Start">
+            <summary>
+            Friends conversation becomes active
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Friends.Stop">
+            <summary>
+            Friends conversation becomes inactive
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Friends.Hear(System.String)">
+            <summary>
+            Speech input commands for Friends conversation
+            </summary>
+            <param name="message"></param>
+            <returns></returns>
+        </member>
+        <member name="F:RadegastSpeech.Conversation.Friends.prevMultiple">
+            <summary>
+            Was previous selection multiple
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Friends.friends_ItemSelectionChanged(System.Object,System.EventArgs)">
+            <summary>
+            Announce which friend has been selected in the list.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Friends.ListFriends">
+            <summary>
+            Speak names of all online friends.
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Substitutions.Add(System.String,System.String)">
+            <summary>
+            Add a rule to replace a symbol with an expression
+            </summary>
+            <param name="a"></param>
+            <param name="b"></param>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Substitutions.Add(System.String)">
+            <summary>
+            Add a rule to remove a pattern
+            </summary>
+            <param name="a"></param>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Substitutions.Tuple.#ctor(System.String,System.String)">
+            <summary>
+            Tuple to replace a pattern
+            </summary>
+            <param name="a"></param>
+            <param name="b"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.GroupIMSession.Start">
+            <summary>
+            A group IM session is made active.
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.GroupIMSession.OnMessage(OpenMetaverse.UUID,System.String,System.String)">
+            <summary>
+            Handle arriving message within an IM session.
+            </summary>
+            <param name="agentID"></param>
+            <param name="agentName"></param>
+            <param name="message"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.GroupIMSession.Hear(System.String)">
+            <summary>
+            Handle recognized speech during a Group IM Session.
+            </summary>
+            <param name="message"></param>
+            <returns></returns>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.ConferenceIMSession.Start">
+            <summary>
+            A group IM session is made active.
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.ConferenceIMSession.OnMessage(OpenMetaverse.UUID,System.String,System.String)">
+            <summary>
+            Handle arriving message within an IM session.
+            </summary>
+            <param name="agentID"></param>
+            <param name="agentName"></param>
+            <param name="message"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.ConferenceIMSession.Hear(System.String)">
+            <summary>
+            Handle recognized speech during a Group IM Session.
+            </summary>
+            <param name="message"></param>
+            <returns></returns>
+        </member>
+        <member name="F:RadegastSpeech.Talk.Voices.maleVoiceLibrary">
+            <summary>
+            Library of installed voices, keyed by voice name.
+            </summary>
+        </member>
+        <member name="F:RadegastSpeech.Talk.Voices.assignedVoices">
+            <summary>
+            Library of assigned voices, keyed by avatar name.
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Voices.Start">
+            <summary>
+            Load any voice presets
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Voices.SaveAssignment(System.String,RadegastSpeech.Talk.AssignedVoice)">
+            <summary>
+            Save or update a permanent voice assignment.
+            </summary>
+            <param name="name"></param>
+            <param name="v"></param>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Voices.GetRandom(System.Int32)">
+             <summary>
+            Get a random number from zero to a limit 
+             </summary>
+             <param name="max">
+             A <see cref="T:System.Int32"/>
+             </param>
+             <returns>
+             A <see cref="T:System.Int32"/>
+             </returns>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Voices.AssignVoice(RadegastSpeech.Talk.AssignedVoice,System.String,OpenMetaverse.UUID)">
+            <summary>
+            Force a particular voice assignment.
+            </summary>
+            <param name="v"></param>
+            <param name="aName"></param>
+            <param name="id"></param>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Voices.PreAssigned(OpenMetaverse.UUID)">
+            <summary>
+            Test if an avatar has a pre-selected name.
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Voices.PickRandomVoice">
+            <summary>
+            Choose a random voice from those available.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Voices.PickRandomVoice(OpenMetaverse.UUID)">
+            <summary>
+            Choose a random voice constrained by gender.
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Voices.CheckGender(OpenMetaverse.UUID,RadegastSpeech.Environment.People.AvatarInfo)">
+            <summary>
+            Possible gender reassignment based on new information.
+            </summary>
+            <param name="id"></param>
+            <param name="info"></param>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Voices.AddVariation(RadegastSpeech.Talk.AvailableVoice)">
+            <summary>
+            Turn an available voice into an assigned one by adding random variation
+            </summary>
+            <param name="v1"></param>
+            <returns></returns>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Voices.VoiceFor(System.String)">
+            <summary>
+            Pick a one-time voice for a name.
+            </summary>
+            <param name="avName"></param>
+            <returns></returns>
+            <remarks>This is used just for System and Object voices.</remarks>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Voices.VoiceFor(OpenMetaverse.UUID,System.Boolean)">
+            <summary>
+            Look up or assign a voice with a gender hint.
+            </summary>
+            <param name="name"></param>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="T:RadegastSpeech.Environment.People">
+            <summary>
+            Keep track of other avatars
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Environment.People.Avatars_OnAvatarAppearance(System.Object,OpenMetaverse.AvatarAppearanceEventArgs)">
+            <summary>
+            Save information about an avatar's appearance
+            </summary>
+            <param name="avatarID"></param>
+            <param name="isTrial"></param>
+            <param name="defaultTexture"></param>
+            <param name="faceTextures"></param>
+            <param name="visualParams"></param>
+        </member>
+        <member name="M:RadegastSpeech.Environment.People.isMale(OpenMetaverse.UUID)">
+            <summary>
+            Report the gender of an avatar.
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:RadegastSpeech.Environment.People.Location(OpenMetaverse.Vector3)">
+            <summary>
+            Verbally describe a distance and direction
+            </summary>
+            <param name="theirpos"></param>
+            <returns></returns>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Closet.WearableType(OpenMetaverse.InventoryWearable)">
+            <summary>
+            Get a pronouncable form of each wearable type.
+            </summary>
+            <param name="item"></param>
+            <returns></returns>
+        </member>
+        <member name="T:RadegastSpeech.Talk.Control">
+            <summary>
+            General control of speech synthesis
+            </summary>
+        </member>
+        <member name="F:RadegastSpeech.Talk.Control.syn">
+            <summary>
+            Interface to the platform-specific synthesizer
+            </summary>
+        </member>
+        <member name="F:RadegastSpeech.Talk.Control.queue">
+            <summary>
+            Queue of utterances waiting to be said
+            </summary>
+        </member>
+        <member name="F:RadegastSpeech.Talk.Control.speakingThread">
+            <summary>
+            Background thread to service the queue
+            </summary>
+        </member>
+        <member name="F:RadegastSpeech.Talk.Control.SystemVoice">
+            <summary>
+            The voice used for all system announcements.
+            </summary>
+        </member>
+        <member name="F:RadegastSpeech.Talk.Control.voices">
+            <summary>
+            The voice library manager
+            </summary>
+        </member>
+        <member name="F:RadegastSpeech.Talk.Control.AUDIOFILE">
+            <summary>
+            Name of the file to be written by the synthesizer.
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Control.Start">
+            <summary>
+            Initialize the synthesis subsystem.
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Control.Shutdown">
+            <summary>
+            Shut down the background thread.
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Control.FirstCheck">
+            <summary>
+            Assign system voices the first time.
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Control.AddSubstitution(System.String,System.String)">
+            <summary>
+            Add a rule substituting one word for another
+            </summary>
+            <param name="a"></param>
+            <param name="b"></param>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Control.AddRemoval(System.String)">
+            <summary>
+            Add a rule removing a word from the utterance
+            </summary>
+            <param name="a"></param>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Control.Flush">
+            <summary>
+            Empty the queue of things waiting to say.
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Control.Say(System.String)">
+            <summary>
+            Say something in the System voice.
+            </summary>
+            <param name="message"></param>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Control.Say(System.String,RadegastSpeech.Talk.BeepType)">
+            <summary>
+            Say something that requires action or announces a new session
+            </summary>
+            <param name="message"></param>
+            <param name="beep"></param>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Control.Say(System.String,System.String)">
+            <summary>
+            Say something in a named, but disembodied, voice.
+            </summary>
+            <param name="who"></param>
+            <param name="message"></param>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Control.SayMore(System.String)">
+            <summary>
+            Continue a conversation without any introduction.
+            </summary>
+            <param name="message"></param>
+            <remarks>This is used for quick exchanges while navigating something.</remarks>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Control.SayPerson(System.String,System.String,OpenMetaverse.Vector3,RadegastSpeech.Talk.AssignedVoice)">
+            <summary>
+            Speak for another avatar.
+            </summary>
+            <param name="who"></param>
+            <param name="message"></param>
+            <param name="position"></param>
+            <param name="av"></param>
+            <remarks>This includes special processing for /me and other chat
+            conventions.</remarks>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Control.SayObject(System.String,System.String,OpenMetaverse.Vector3)">
+            <summary>
+            Speak for an object, with position and the system voice.
+            </summary>
+            <param name="who"></param>
+            <param name="message"></param>
+            <param name="position"></param>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Control.Say(System.String,System.String,OpenMetaverse.Vector3,RadegastSpeech.Talk.AssignedVoice)">
+            <summary>
+            Say something as a named person or object at a location.
+            </summary>
+            <param name="who">Name of person speaking</param>
+            <param name="what">What they said</param>
+            <param name="where">Where they were standing when they said it</param>
+            <param name="v">The voice they use</param>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Control.SayAction(System.String,System.String,OpenMetaverse.Vector3,RadegastSpeech.Talk.AssignedVoice,System.Boolean)">
+            <summary>
+            Queue up an action to say.
+            </summary>
+            <param name="who"></param>
+            <param name="what"></param>
+            <param name="where"></param>
+            <param name="v"></param>
+        </member>
+        <member name="M:RadegastSpeech.Talk.Control.SpeakLoop">
+            <summary>
+            The speaking thread body.
+            </summary>
+            <remarks>This loops on the queue of things to say, and speaks them
+            one at a time.</remarks>
+        </member>
+        <member name="T:RadegastSpeech.Talk.QueuedSpeech">
+            <summary>
+            Represents something waiting to be said
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Talk.QueuedSpeech.#ctor(System.String,System.String,OpenMetaverse.Vector3,RadegastSpeech.Talk.AssignedVoice,System.Boolean)">
+            <summary>
+            Constructor for common beepless and spatialized utterances.
+            </summary>
+            <param name="who"></param>
+            <param name="what"></param>
+            <param name="where"></param>
+            <param name="v"></param>
+            <param name="action"></param>
+        </member>
+        <member name="T:RadegastSpeech.Conversation.Chat">
+            <summary>
+            Conversation mode for chatting with other avatars.
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Chat.OnChat(System.Object,OpenMetaverse.ChatEventArgs)">
+            <summary>
+            Handle somebody speaking near us.
+            </summary>
+            <param name="message"></param>
+            <param name="audible"></param>
+            <param name="type"></param>
+            <param name="sourceType"></param>
+            <param name="fromName"></param>
+            <param name="id"></param>
+            <param name="ownerid"></param>
+            <param name="position"></param>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Chat.Hear(System.String)">
+            <summary>
+            Process recognized speech
+            </summary>
+            <param name="message"></param>
+            <returns></returns>
+        </member>
+        <member name="M:RadegastSpeech.Conversation.Chat.nearby_SelectedIndexChanged(System.Object,System.EventArgs)">
+            <summary>
+            Describe a nearby avatar.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="T:RadegastSpeech.Conversation.BlueMenu">
+            <summary>
+            Represents a conversation about notifications and dialogs
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.GUI.NotecardReadAction.OnInvoke(System.Object,System.EventArgs,System.Object)">
+            <summary>
+            Respond to a "Read Notecard" context menu action
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+            <param name="target"></param>
+        </member>
+        <member name="M:RadegastSpeech.PluginControl.StartPlugin(Radegast.RadegastInstance)">
+            <summary>
+            Plugin start-up entry.
+            </summary>
+            <param name="inst"></param>
+            <remarks>Called by Radegast at start-up</remarks>
+        </member>
+        <member name="M:RadegastSpeech.PluginControl.Initialize">
+            <summary>
+            Startup code (executed only when needed)
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.PluginControl.Shutdown">
+            <summary>
+            Shutdown speech module
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.PluginControl.StartControls">
+            <summary>
+            Start all speech subsystems 
+            </summary>
+        </member>
+        <member name="M:RadegastSpeech.PluginControl.StopPlugin(Radegast.RadegastInstance)">
+            <summary>
+            Plugin shut-down entry
+            </summary>
+            <param name="inst"></param>
+            <remarks>Called by Radegast at shut-down, or when Speech is switched off.
+            We use this to release system resources.</remarks>
+        </member>
+        <member name="M:RadegastSpeech.PluginControl.OnSpeechMenuButtonClicked(System.Object,System.EventArgs)">
+            <summary>
+            Handle toggling of our enable flag
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:RadegastSpeech.PluginControl.LoadOSLayer">
+            <summary>
+            Find the system-specific DLL for this platform
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>RaptorDB</name>
+    </assembly>
+    <members>
+        <member name="F:RaptorDB.Global.BitmapOffsetSwitchOverCount">
+            <summary>
+            Store bitmap as int offsets then switch over to bitarray
+            </summary>
+        </member>
+        <member name="F:RaptorDB.Global.BackgroundSaveToOtherViews">
+            <summary>
+            True = Save to other views in process , False = background save to other views
+            </summary>
+        </member>
+        <member name="F:RaptorDB.Global.SaveIndexToDiskTimerSeconds">
+            <summary>
+            KeyStore save to disk timer
+            </summary>
+        </member>
+        <member name="F:RaptorDB.Global.FlushStorageFileImmetiatley">
+            <summary>
+            Flush the StorageFile stream immediatley
+            </summary>
+        </member>
+        <member name="F:RaptorDB.Global.SaveAsBinaryJSON">
+            <summary>
+            Save doc as binary json
+            </summary>
+        </member>
+        <member name="F:RaptorDB.Global.TaskCleanupTimerSeconds">
+            <summary>
+            Remove completed tasks timer
+            </summary>
+        </member>
+        <member name="F:RaptorDB.Global.BackgroundSaveViewTimer">
+            <summary>
+            Save to other views timer seconds if enabled 
+            </summary>
+        </member>
+        <member name="F:RaptorDB.Global.BackgroundViewSaveBatchSize">
+            <summary>
+            How many items to process in a background view save event
+            </summary>
+        </member>
+        <member name="F:RaptorDB.Global.RestoreTimerSeconds">
+            <summary>
+            Check the restore folder for new backup files to restore
+            </summary>
+        </member>
+        <member name="F:RaptorDB.Global.FullTextTimerSeconds">
+            <summary>
+            Timer for full text indexing of original documents
+            </summary>
+        </member>
+        <member name="T:RaptorDB.Properties.Resources">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:RaptorDB.Properties.Resources.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:RaptorDB.Properties.Resources.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+        <member name="P:RaptorDB.Properties.Resources.CodeTemplate">
+             <summary>
+               Looks up a localized string similar to using System;
+            using System.Collections.Generic;
+            using System.Text;
+            
+            using RaptorDB.Mapping;
+            
+            namespace mapnamespace
+            {
+            
+            %VIEW_ROW%
+            
+            
+                public class mapfunction : IMAPFunction
+                {
+            		private List&lt;object[]&gt; Rows = new List&lt;object[]&gt;();
+            
+                    public List&lt;object[]&gt; GetRows()
+                    {
+                        return Rows;
+                    }
+            
+                    public void CallMapper(object data, IMapAPI api)
+                    {
+                        map(((%BASE_TYPE%)data, api);
+                    }
+            
+                    private void emit(Guid guid, %COLUM [rest of string was truncated]&quot;;.
+             </summary>
+        </member>
+    </members>
+</doc>

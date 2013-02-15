@@ -1,0 +1,348 @@
+Index: Core/BaseGraph.cs
+===================================================================
+--- Core/BaseGraph.cs	(revision 2378)
++++ Core/BaseGraph.cs	(working copy)
+@@ -185,10 +185,14 @@
+             }
+             set
+             {
++                NamespaceMapper.NamespaceCheck(value);
+                 this._baseuri = value;
+             }
+         }
+-
++        public override string ToString()
++        {
++            return base.ToString() + " base=" + BaseUri + " tc=" + this._triples.Count + " tci=" + Triples.Count + " prefixes=" + NamespaceMap;
++        }
+         /// <summary>
+         /// Gets whether a Graph is Empty ie. Contains No Triples or Nodes
+         /// </summary>
+Index: Core/EqualityHelper.cs
+===================================================================
+--- Core/EqualityHelper.cs	(revision 2378)
++++ Core/EqualityHelper.cs	(working copy)
+@@ -178,7 +178,7 @@
+         /// <param name="a">First Blank Node</param>
+         /// <param name="b">Second Blank Node</param>
+         /// <returns></returns>
+-        public static bool AreBlankNodesEqual(IBlankNode a, IBlankNode b)
++        public static bool AreBlankNodesEqual_Before(IBlankNode a, IBlankNode b)
+         {
+             if (ReferenceEquals(a, b)) return true;
+             if (a == null)
+@@ -194,6 +194,72 @@
+             return a.InternalID.Equals(b.InternalID) && ReferenceEquals(a.Graph, b.Graph);
+         }
+ 
++        public static bool AreBlankNodesEqual(IBlankNode a, IBlankNode b)
++        {
++            if (ReferenceEquals(a, b)) return true;
++            if (a == null || b == null) return false;
++            if (!a.InternalID.Equals(b.InternalID)) return false;
++            if (ReferenceEquals(a.Graph, b.Graph))
++            {
++                if (!AreGraphUrisEqual(a, b))
++                {
++                    Error();
++                    return true;
++                }
++                return true;
++            }
++            if (a.Graph == null || null == b.Graph) return false;
++            if (Options.LiteralEqualityMode != LiteralEqualityMode.Loose) return false;
++            if (!AreUrisEqual(a.Graph.BaseUri, b.Graph.BaseUri))
++            {
++                return false;
++            } 
++            if (a.Graph.BaseUri == null || null == b.Graph.BaseUri) return false;
++            // here below should all be true
++            if (AreGraphsEqual(a.Graph, b.Graph))
++            {
++                if (!AreGraphUrisEqual(a, b))
++                {
++                    Error();
++                    return true;
++                }
++                return true;
++            }
++            if (!AreUrisEqual(a.GraphUri, b.GraphUri))
++            {
++                Error();
++                return false;
++            }
++            return true;
++        }
++
++        private static void Error()
++        {
++           // throw new NotImplementedException();
++        }
++
++
++        public static bool AreGraphUrisEqual(INode a, INode b)
++        {
++            if (ReferenceEquals(a, b)) return true;
++            if (a == null || b == null) return false;
++            if (!AreUrisEqual(a.GraphUri, b.GraphUri))
++            {
++                return false;
++            }
++            return true;
++        }
++
++        public static bool AreGraphsEqual(IGraph a, IGraph b)
++        {
++            if (ReferenceEquals(a, b)) return true;
++            if (a == null || b == null) return false;
++            if (!AreUrisEqual(a.BaseUri, b.BaseUri))
++            {
++                return false;
++            }
++            return false;
++        }
+         /// <summary>
+         /// Determines whether two Graph Literals are equal
+         /// </summary>
+Index: Core/NamespaceMapper.cs
+===================================================================
+--- Core/NamespaceMapper.cs	(revision 2378)
++++ Core/NamespaceMapper.cs	(working copy)
+@@ -115,6 +115,10 @@
+             this.Import(nsmapper);
+         }
+ 
++        public override string ToString()
++        {
++            return base.ToString() + " " + Prefixes.Count();
++        }
+         /// <summary>
+         /// Returns the Prefix associated with the given Namespace URI
+         /// </summary>
+@@ -159,6 +163,7 @@
+         {
+             if (uri == null) throw new ArgumentNullException("Cannot set a prefix to the null URI");
+             int hash = uri.GetEnhancedHashCode();
++            NamespaceMapper.NamespaceCheck(uri);
+             if (!this._uris.ContainsKey(prefix))
+             {
+                 //Add a New Prefix
+@@ -197,6 +202,25 @@
+             }
+         }
+ 
++        public static void NamespaceCheck(Uri uri)
++        {
++            if (uri == null)
++            {
++                return;
++                throw new ArgumentNullException("Cannot set a prefix to the null URI");
++            }
++            NamespaceCheck("" + uri);
++        }
++        public static void NamespaceCheck(string uri)
++        {
++            if (uri.Contains(".org/") || uri.Contains("XML") || uri.Contains("w3.org") || uri.Contains("ml/")) return;
++            char lastChar = uri[uri.Length - 1];
++            if (char.IsLetterOrDigit(lastChar))
++            {
++                throw new ArgumentNullException("Non appendable prefix: " + uri);
++            }
++        }
++
+         /// <summary>
+         /// Removes a Namespace from the NamespaceMapper
+         /// </summary>
+Index: Core/Tools.cs
+===================================================================
+--- Core/Tools.cs	(revision 2378)
++++ Core/Tools.cs	(working copy)
+@@ -241,6 +241,7 @@
+         /// <returns></returns>
+         public static String ResolveQName(String qname, INamespaceMapper nsmap, Uri baseUri)
+         {
++            NamespaceMapper.NamespaceCheck(baseUri);
+             String output;
+ 
+             if (qname.StartsWith(":"))
+@@ -249,7 +250,7 @@
+                 if (nsmap.HasNamespace(String.Empty))
+                 {
+                     //Default Namespace Defined
+-                    output = nsmap.GetNamespaceUri(String.Empty).AbsoluteUri + qname.Substring(1);
++                    output = ConcatName(nsmap.GetNamespaceUri(String.Empty).AbsoluteUri, qname.Substring(1));
+                 }
+                 else
+                 {
+@@ -261,11 +262,11 @@
+                         output = baseUri.AbsoluteUri;
+                         if (output.EndsWith("#"))
+                         {
+-                            output += qname.Substring(1);
++                            output = ConcatName(output, qname.Substring(1));
+                         }
+                         else
+                         {
+-                            output += "#" + qname.Substring(1);
++                            output = ConcatName(output + "#", qname.Substring(1));
+                         }
+                     }
+                     else
+@@ -280,17 +281,23 @@
+                 String[] parts = qname.Split(new char[] { ':' }, 2);
+                 if (parts.Length == 1)
+                 {
+-                    output = nsmap.GetNamespaceUri(String.Empty).AbsoluteUri + parts[0];
++                    output = ConcatName(nsmap.GetNamespaceUri(String.Empty).AbsoluteUri , parts[0]);
+                 }
+                 else
+                 {
+-                    output = nsmap.GetNamespaceUri(parts[0]).AbsoluteUri + parts[1];
++                    output = ConcatName(nsmap.GetNamespaceUri(parts[0]).AbsoluteUri, parts[1]);
+                 }
+             }
+ 
+             return output;
+         }
+ 
++        private static string ConcatName(string uri, string substring)
++        {
++            NamespaceMapper.NamespaceCheck(uri);
++            return uri + substring;
++        }
++
+         /// <summary>
+         /// Resolves a QName/Uri into a Uri using the Namespace Mapper and Base Uri provided
+         /// </summary>
+Index: Core/Triple.cs
+===================================================================
+--- Core/Triple.cs	(revision 2378)
++++ Core/Triple.cs	(working copy)
+@@ -67,6 +67,22 @@
+         private IGraph _g = null;
+         private int _hashcode;
+ 
++        ///<summary>
++        ///</summary>
++        public string _aInfo
++        {
++            get
++            {
++                try
++                {
++                    return ToString(true);
++                }
++                catch (Exception)
++                {
++                    return ToString();
++                }
++            }
++        }
+         /// <summary>
+         /// Constructs a Triple from Nodes that belong to the same Graph/Node Factory
+         /// </summary>
+@@ -413,7 +429,7 @@
+             outString.Append(this._predicate.ToString());
+             outString.Append(" , ");
+             outString.Append(this._object.ToString());
+-
++            outString.Append(" \n");
+             return outString.ToString();
+         }
+ 
+Index: Core/TripleCollection.cs
+===================================================================
+--- Core/TripleCollection.cs	(revision 2378)
++++ Core/TripleCollection.cs	(working copy)
+@@ -1057,6 +1057,15 @@
+             }
+         }
+ 
++        sealed public override string ToString()
++        {
++            string triplestr = "count=" + Count;
++            foreach (Triple triple in this)
++            {
++                triplestr += triple;
++            }
++            return triplestr;
++        }
+         /// <summary>
+         /// Gets the enumerator of the Collection
+         /// </summary>
+Index: Parsing/Contexts/BaseParserContext.cs
+===================================================================
+--- Parsing/Contexts/BaseParserContext.cs	(revision 2378)
++++ Parsing/Contexts/BaseParserContext.cs	(working copy)
+@@ -95,6 +95,7 @@
+             this._traceParsing = traceParsing;
+ 
+             this._baseUri = this._handler.GetBaseUri();
++            NamespaceMapper.NamespaceCheck(_baseUri);
+         }
+ 
+         /// <summary>
+@@ -145,6 +146,7 @@
+             }
+             set
+             {
++                NamespaceMapper.NamespaceCheck(value);
+                 this._baseUri = value;
+             }
+         }
+Index: Parsing/Events/RdfXml/XMLEvents.cs
+===================================================================
+--- Parsing/Events/RdfXml/XMLEvents.cs	(revision 2378)
++++ Parsing/Events/RdfXml/XMLEvents.cs	(working copy)
+@@ -295,6 +295,7 @@
+             }
+             set
+             {
++                NamespaceMapper.NamespaceCheck(value);
+                 this._baseuri = value;
+             }
+         }
+@@ -714,6 +715,7 @@
+         public XmlBaseAttributeEvent(String baseUri, String sourceXml, PositionInfo pos)
+             : base(RdfXmlEvent.XmlBaseAttribute, sourceXml, pos)
+         {
++            NamespaceMapper.NamespaceCheck(baseUri);
+             this._baseUri = baseUri;
+         }
+ 
+Index: Parsing/Tokens/SparqlTokeniser.cs
+===================================================================
+--- Parsing/Tokens/SparqlTokeniser.cs	(revision 2378)
++++ Parsing/Tokens/SparqlTokeniser.cs	(working copy)
+@@ -643,7 +643,8 @@
+ 
+                 default:
+                     //Shouldn't get anything but the above as the Previous Token
+-                    throw Error("Unexpected String '" + value + "' encountered while trying to parse the Query Prologue, expected a Base Declaration, Prefix Declaration or a Query/Update Keyword");
++                    string bad = "Unexpected String '" + value + "' encountered while trying to parse the Query Prologue, expected a Base Declaration, Prefix Declaration or a Query/Update Keyword";
++                    throw Error(bad);
+             }
+         }
+ 
+Index: Writing/RdfXmlWriter.cs
+===================================================================
+--- Writing/RdfXmlWriter.cs	(revision 2378)
++++ Writing/RdfXmlWriter.cs	(working copy)
+@@ -963,6 +963,17 @@
+                             //Literals are less than than everything else
+                             return -1;
+                         }
++                    case NodeType.GraphLiteral:
++                        if (y.NodeType == NodeType.Uri || y.NodeType == NodeType.Blank || y.NodeType == NodeType.Literal)
++                        {
++                            //Literals are greater than Blanks and URIs
++                            return 1;
++                        }
++                        else
++                        {
++                            //Literals are less than than everything else
++                            return -1;
++                        }
+                     default:
+                         throw new RdfOutputException("Cannot output an RDF Graph containing non-standard Node types as RDF/XML");
+                 }

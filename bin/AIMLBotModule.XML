@@ -1,0 +1,139 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>AIMLBotModule</name>
+    </assembly>
+    <members>
+        <member name="T:AIMLBotModule.Properties.Resources">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:AIMLBotModule.Properties.Resources.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:AIMLBotModule.Properties.Resources.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+        <member name="M:AIMLBotModule.AimlCommand.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="F:AIMLBotModule.WorldObjectsForAimLBot.RespondToChatByDefaultAllUsers">
+            <summary>
+             false = wont respond to user until they say something like "turn chat on" 
+             See next function to change the keywords
+            </summary>
+        </member>
+        <member name="F:AIMLBotModule.WorldObjectsForAimLBot.RespondToChatByDefaultMaster">
+            <summary>
+             false = wont respond to user until they say something like "turn chat on" 
+             See next function to change the keywords
+            </summary>
+        </member>
+        <member name="F:AIMLBotModule.WorldObjectsForAimLBot.RespondToGroup">
+            <summary>
+            Respond to group chat
+            </summary>
+        </member>
+        <member name="F:AIMLBotModule.WorldObjectsForAimLBot.RespondToUserIM">
+            <summary>
+            Respond to personal IM chat
+            </summary>
+        </member>
+        <member name="F:AIMLBotModule.WorldObjectsForAimLBot.RespondToChatEver">
+            <summary>
+            Respond to chat EVER
+            </summary>
+        </member>
+        <member name="F:AIMLBotModule.WorldObjectsForAimLBot.AcceptFriends">
+            <summary>
+            Accept all friendship requests
+            </summary>
+        </member>
+        <member name="F:AIMLBotModule.WorldObjectsForAimLBot.EventsToAIML">
+            <summary>
+            Send events to AIML processor
+            </summary>
+        </member>
+        <member name="F:AIMLBotModule.WorldObjectsForAimLBot.UseRealism">
+            <summary>
+            Use animation to look like tpying
+            </summary>
+        </member>
+        <member name="F:AIMLBotModule.WorldObjectsForAimLBot.UseLookAttention">
+            <summary>
+            Turn towards interesting objects
+            </summary>
+        </member>
+        <member name="F:AIMLBotModule.WorldObjectsForAimLBot.UseNameAttention">
+            <summary>
+            Turn towards interesting objects
+            </summary>
+        </member>
+        <member name="F:AIMLBotModule.WorldObjectsForAimLBot.UseMessageTurnsOnChat">
+            <summary>
+            Turn towards interesting objects
+            </summary>
+        </member>
+        <member name="F:AIMLBotModule.WorldObjectsForAimLBot.UseMoveAttention">
+            <summary>
+            Move towards interesting objects
+            </summary>
+        </member>
+        <member name="F:AIMLBotModule.WorldObjectsForAimLBot.MaxDistance">
+            <summary>
+            Max Distance for attention objects
+            </summary>
+        </member>
+        <member name="F:AIMLBotModule.WorldObjectsForAimLBot.MaxAvDistance">
+            <summary>
+            Max Distance for attention objects
+            </summary>
+        </member>
+        <member name="F:AIMLBotModule.WorldObjectsForAimLBot.MaxZDistance">
+            <summary>
+            Max Distance for attention objects on Z plane
+            </summary>
+        </member>
+        <member name="F:AIMLBotModule.WorldObjectsForAimLBot.RegisterTalkToCmd">
+            <summary>
+            REgister the Lisp Version of TalkToObject
+            </summary>
+        </member>
+        <member name="M:AIMLBotModule.WorldObjectsForAimLBot.Chat(Cogbot.BotClient,System.String,OpenMetaverse.ChatType,System.Int32)">
+            <summary>
+            A psuedo-realistic chat function that uses the typing sound and
+            animation, types at a given rate, and randomly pauses. This 
+            function will block until the message has been sent
+            </summary>
+            <param name="client">A reference to the client that will chat</param>
+            <param name="message">The chat message to send</param>
+            <param name="type">The chat type (usually Normal, Whisper or Shout)</param>
+            <param name="cps">Characters per second rate for chatting</param>
+        </member>
+        <member name="T:AIMLBotModule.WorldObjectsForAimLBot.ProvideAIMLVars">
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        </member>
+        <member name="M:AIMLBotModule.WorldObjectsForAimLBot.ProvideWorldVars.SettingNames(MushDLR223.ScriptEngines.ICollectionRequester,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="requester"></param>
+            <param name="depth"></param>
+            <returns></returns>        
+        </member>
+    </members>
+</doc>

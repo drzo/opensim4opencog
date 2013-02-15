@@ -1,0 +1,3238 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Aima.NET</name>
+    </assembly>
+    <members>
+        <member name="M:Aima.Core.Util.Datastructure.Point2D.Distance(Aima.Core.Util.Datastructure.Point2D)">
+            <summary>
+            Returns the Euclidean distance between a specified point and this point.
+            </summary>
+            <param name="pt"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Aima.Core.Util.CancelableThread">
+            <summary>
+            Implements a thread with an additional flag indicating cancellation.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.CSP.Assignment">
+            <summary>
+            An assignment assigns values to some or all variables of a CSP.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Search.CSP.Assignment.variables">
+            <summary>
+            Contains all assigned variables. Positions reflect the the order in which
+            the variables were assigned to values.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Search.CSP.Assignment.variableToValue">
+            Maps variables to their assigned values. 
+        </member>
+        <member name="M:Aima.Core.Search.CSP.Assignment.IsConsistent(System.Collections.Generic.IList{Aima.Core.Search.CSP.IConstraint})">
+            <summary>
+            Returns true if this assignment does not violate any constraints of
+            <code>constraints</code>.
+            </summary>
+            <param name="constraints"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.Assignment.IsComplete(System.Collections.Generic.IList{Aima.Core.Search.CSP.Variable})">
+            <summary>
+            Returns true if this assignment assigns values to every variable of
+            <code>vars</code>.
+            </summary>
+            <param name="vars"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.Assignment.IsComplete(Aima.Core.Search.CSP.Variable[])">
+            <summary>
+            Returns true if this assignment assigns values to every variable of
+            <code>vars</code>.
+            </summary>
+            <param name="vars"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.Assignment.IsSolution(Aima.Core.Search.CSP.CSProblem)">
+            <summary>
+            Returns true if this assignment is consistent as well as complete with
+            respect to the given CSP.
+            </summary>
+            <param name="csp"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.KB.FOLKnowledgeBase">
+            <summary>
+            A First Order Logic (FOL) Knowledge Base.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.KB.FOLKnowledgeBase.Ask(System.String)">
+            
+            @param aQuerySentence
+            @return an IInferenceResult.
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.Inference.AbstractModulation">
+            <summary>
+            Abstract base class for Demodulation and Paramodulation algorithms.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Environment.NQueens.QueenAction">
+            <summary>
+            Queens can be placed, removed, and moved. For movements, a vertical direction
+            is assumed. Therefore, only the end point needs to be specified.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Agent.IAction">
+            <summary>
+            Describes an Action that can or has been taken by an Agent via one of its Actuators.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Agent.IAction.IsNoOp">
+            <summary>
+            Indicates whether or not this Action is a 'No Operation'. <br />
+            Note: AIMA3e - NoOp, or “no operation,” is the name of an assembly
+            language instruction that does nothing.
+            </summary>
+            <returns>true if this is a NoOp Action</returns>
+        </member>
+        <member name="M:Aima.Core.Environment.NQueens.QueenAction.#ctor(System.String,Aima.Core.Util.Datastructure.XYLocation)">
+            <summary>
+            Creates a queen action. Supported values of type are <see cref="F:Aima.Core.Environment.NQueens.QueenAction.PlaceQueen"/>
+            , <see cref="F:Aima.Core.Environment.NQueens.QueenAction.RemoveQueen"/>, or <see cref="F:Aima.Core.Environment.NQueens.QueenAction.MoveQueen"/>.
+            </summary>
+            <param name="type"></param>
+            <param name="loc"></param>
+        </member>
+        <member name="T:Aima.Core.Search.Framework.IGoalTest">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 67. <para />
+            The goal test, which determines whether a given state is a goal state.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Environment.Map.IMap">
+            <summary>
+            Provides a general interface for maps.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.IMap.GetLocations">
+            <summary>
+            Returns a list of all locations.
+            </summary>
+            <returns> Returns a list of all locations.</returns>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.IMap.GetLocationsLinkedTo(System.String)">
+            <summary>
+            Answers to the question: Where can I get, following one of the
+            connections starting at the specified location?
+            </summary>
+            <param name="fromLocation"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.IMap.GetDistance(System.String,System.String)">
+            <summary>
+            Returns the travel distance between the two specified locations if they
+            are linked by a connection and null otherwise.
+            </summary>
+            <param name="fromLocation"></param>
+            <param name="toLocation"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.IMap.GetPosition(System.String)">
+            <summary>
+            Returns the position of the specified location. The position is
+            represented by two coordinates, e.g. latitude and longitude values.
+            </summary>
+            <param name="loc"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.IMap.RandomlyGenerateDestination">
+            <summary>
+            Returns a location which is selected by random.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Aima.Core.Probability.Decision.IMDPSource`2">
+            <summary>
+            </summary>
+            <typeparam name="TState">
+            </typeparam>
+            <typeparam name="TAction">
+            </typeparam>
+        </member>
+        <member name="T:Aima.Core.Agent.IPercept">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): pg 34.<br /> 
+            We use the term percept to refer the agent's perceptual inputs at any given instant.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Agent.INotifyEnvironmentViews.NotifyViews(System.String)">
+            <summary>
+            A simple notification message, to be forewarded to an Environment's
+            registered EnvironmentViews. 
+            </summary>
+            <param name="msg">the message to be forwarded to the EnvironmentViews.</param>
+        </member>
+        <member name="T:Aima.Core.Agent.IEnvironment">
+            <summary>
+            An abstract description of possible discrete Environments in which Agent(s) 
+            can perceive and act.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Agent.IEnvironment.Step">
+            <summary>
+            Move the Environment one time step forward. 
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Agent.IEnvironment.Step(System.Int32)">
+            <summary>
+            Move the Environment n time steps forward.
+            </summary>
+            <param name="n">the number of time steps to move the Environment forward.</param>
+        </member>
+        <member name="M:Aima.Core.Agent.IEnvironment.StepUntilDone">
+            <summary>
+            Step through time steps until the Environment has no more tasks. 
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Agent.IEnvironment.IsDone">
+            <summary>
+            Returns if the Environment is finished with its current task(s).
+            </summary>
+            <returns>if the Environment is finished with its current task(s).</returns>
+        </member>
+        <member name="M:Aima.Core.Agent.IEnvironment.GetPerformanceMeasure(Aima.Core.Agent.IAgent)">
+            <summary>
+            Retrieve the performance measure associated with an Agent. 
+            </summary>
+            <param name="forAgent">the Agent for which a performance measure is to be retrieved.</param>
+            <returns>the performance measure associated with the Agent.</returns>
+        </member>
+        <member name="M:Aima.Core.Agent.IEnvironment.AddEnvironmentView(Aima.Core.Agent.IEnvironmentView)">
+            <summary>
+            Add a view on the Environment.
+            </summary>
+            <param name="ev">the EnvironmentView to be added.</param>
+        </member>
+        <member name="M:Aima.Core.Agent.IEnvironment.RemoveEnvironmentView(Aima.Core.Agent.IEnvironmentView)">
+            <summary>
+            Remove a view on the Environment. 
+            </summary>
+            <param name="ev">the EnvironmentView to be removed.</param>
+        </member>
+        <member name="M:Aima.Core.Agent.IEnvironment.NotifyViews(System.String)">
+            <summary>
+            Notify all registered EnvironmentViews of a message. 
+            </summary>
+            <param name="msg">the message to notify the registered EnvironmentViews with.</param>
+        </member>
+        <member name="T:Aima.Core.Search.Uninformed.DepthLimitedSearch">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 3.17, page 88.
+            
+            <code><![CDATA[
+            function DEPTH-LIMITED-SEARCH(problem, limit) returns a solution, or failure/cutoff
+              return RECURSIVE-DLS(MAKE-NODE(problem.INITIAL-STATE), problem, limit)
+              
+            function RECURSIVE-DLS(node, problem, limit) returns a solution, or failure/cutoff
+              if problem.GOAL-TEST(node.STATE) then return SOLUTION(node)
+              else if limit = 0 then return cutoff
+              else
+                  cutoff_occurred? <- false
+                  for each action in problem.ACTIONS(node.STATE) do
+                      child <- CHILD-NODE(problem, node, action)
+                      result <- RECURSIVE-DLS(child, problem, limit - 1)
+                      if result = cutoff then cutoff_occurred? <- true
+                      else if result != failure then return result
+                  if cutoff_occurred? then return cutoff else return failure
+            ]]></code>
+            Figure 3.17 A recursive implementation of depth-limited search.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Search.Uninformed.DepthLimitedSearch.Search(Aima.Core.Search.Framework.Problem)">
+            <summary>
+            function DEPTH-LIMITED-SEARCH(problem, limit) returns a solution, or failure/cutoff
+            </summary>
+            <param name="p"></param>
+            <returns>if goal found, the list of actions to the Goal. If already at the
+            goal you will receive a IList with a single NoOp IAction in it. If
+            fail to find the Goal, an empty list will be returned to indicate
+            that the search failed. If the search was cutoff (i.e. reached
+            its limit without finding a goal) a IList with one
+            CutOffIndicatorAction.CUT_OFF in it will be returned (Note: this
+            is a NoOp action).</returns>
+        </member>
+        <member name="T:Aima.Core.Search.Uninformed.BreadthFirstSearch">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 3.11, page 82.
+            <code><![CDATA[
+            function BREADTH-FIRST-SEARCH(problem) returns a solution, or failure
+              node <- a node with STATE = problem.INITIAL-STATE, PATH-COST=0
+              if problem.GOAL-TEST(node.STATE) then return SOLUTION(node)
+              frontier <- a FIFO queue with node as the only element
+              explored <- an empty set
+              loop do
+                 if EMPTY?(frontier) then return failure
+                 node <- POP(frontier) // chooses the shallowest node in frontier
+                 add node.STATE to explored
+                 for each action in problem.ACTIONS(node.STATE) do
+                     child <- CHILD-NODE(problem, node, action)
+                     if child.STATE is not in explored or frontier then
+                         if problem.GOAL-TEST(child.STATE) then return SOLUTION(child)
+                         frontier <- INSERT(child, frontier)
+            ]]></code> 
+            Figure 3.11 Breadth-first search on a graph.
+            Note: Supports both Tree and Graph based versions by assigning an instance
+            of TreeSearch or GraphSearch to its constructor.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Informed.BestFirstSearch">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 92.
+            
+            Best-first search is an instance of the general TREE-SEARCH or GRAPH-SEARCH algorithm 
+            in which a node is selected for expansion based on an evaluation function, f(n). The 
+            evaluation function is construed as a cost estimate, so the node with the lowest evaluation 
+            is expanded first. The implementation of best-first graph search is identical to that for 
+            uniform-cost search (Figure 3.14), except for the use of f instead of g to order the 
+            priority queue.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Framework.SimpleProblemSolvingAgent">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 3.1, page 67.
+            <code><![CDATA[
+            function SIMPLE-PROBLEM-SOLVING-AGENT(percept) returns an action
+              persistent: seq, an action sequence, initially empty
+                          state, some description of the current world state
+                          goal, a goal, initially null
+                          problem, a problem formulation
+                      
+              state <- UPDATE-STATE(state, percept)
+              if seq is empty then
+                goal    <- FORMULATE-GOAL(state)
+                problem <- FORMULATE-PROBLEM(state, goal)
+                seq     <- SEARCH(problem)
+                if seq = failure then return a null action
+              action <- FIRST(seq)
+              seq <- REST(seq)
+              return action
+            ]]></code>
+            Figure 3.1 A simple problem-solving agent. It first formulates a goal and a problem,
+            searches for a sequence of actions that would solve the problem, and then executes the actions
+            one at a time. When this is complete, it formulates another goal and starts over.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Agent.IAgent">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 2.1, page 35.<br />
+            Figure 2.1 Agents interact with environments through sensors and actuators.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Agent.IEnvironmentObject">
+            <summary>
+            An interface used to indicate any object that can belong within an Environment.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Agent.IAgent.Execute(Aima.Core.Agent.IPercept)">
+            <summary>
+            Call the Agent's program, which maps any given percept sequences to an
+            action.
+            </summary>
+            <param name="percept">The current percept of a sequence perceived by the Agent.</param>
+            <returns>the Action to be taken in response to the currently perceived percept</returns>
+        </member>
+        <member name="P:Aima.Core.Agent.IAgent.Alive">
+            <summary>
+            Gets or sets life-cycle indicator as to the liveness of an Agent.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Search.Framework.SimpleProblemSolvingAgent.seq">
+            <summary>
+            seq, an action sequence, initially empty
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Search.Framework.SimpleProblemSolvingAgent.Execute(Aima.Core.Agent.IPercept)">
+            <summary>
+            function SIMPLE-PROBLEM-SOLVING-AGENT(percept) returns an action
+            </summary>
+            <param name="p"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Search.Framework.SimpleProblemSolvingAgent.UpdateState(Aima.Core.Agent.IPercept)">
+            <summary>
+            </summary>
+            <param name="p">
+            The p.
+            </param>
+            <returns>
+            </returns>
+        </member>
+        <member name="T:Aima.Core.Search.Framework.Node">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 3.10, page 79.<br />
+            
+            Figure 3.10 Nodes are the data structures from which the search tree is constructed. Each
+            has a parent, a state, and various bookkeeping fields. Arrows point from child to parent.<br />
+            <br />
+            Search algorithms require a data structure to keep track of the search tree that is being
+            constructed. For each node n of the tree, we have a structure that contains four components:
+            <ul>
+            <li>n.STATE: the state in the state space to which the node corresponds;</li>
+            <li>n.PARENT: the node in the search tree that generated this node;</li>
+            <li>n.ACTION: the action that was applied to the parent to generate the node;</li>
+            <li>n.PATH-COST: the cost, traditionally denoted by g(n), of the path from the initial state
+            to the node, as indicated by the parent pointers.</li>
+            </ul>
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.KB.Data.CNF">
+            <summary>
+            Conjunctive Normal Form (CNF) : a conjunction of clauses, where each 
+            clause is a disjunction of literals.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.KB.Data.Chain">
+            @author Ciaran O'Reilly
+            
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.KB.Data.Chain.GetContrapositives">
+            <summary>
+            A contrapositive of a chain is a permutation in which a different literal
+            is placed at the front. The contrapositives of a chain are logically
+            equivalent to the original chain.
+            </summary>
+            <returns>a list of contrapositives for this chain.</returns>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.SubstVisitor.Subst(System.Collections.Generic.IDictionary{Aima.Core.Logic.FOL.Parsing.AST.Variable,Aima.Core.Logic.FOL.Parsing.AST.ITerm},Aima.Core.Logic.FOL.Parsing.AST.ISentence)">
+            <summary>
+            Note: Refer to Artificial Intelligence A Modern Approach (3rd Edition): page 323 
+            </summary>
+            <param name="theta">a substitution.</param>
+            <param name="aSentence">the substitution has been applied to.</param>
+            <returns>a new Sentence representing the result of applying the substitution theta to aSentence.</returns>
+        </member>
+        <member name="T:Aima.Core.Agent.Impl.AbstractEnvironment">
+            <summary>
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Agent.IEnvironmentState">
+            <summary>
+            An interface used to indicate a possible state of an Environment.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Environment.Vacuum.TableDrivenVacuumAgent">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 2.3, page 36.
+            Figure 2.3 Partial tabulation of a simple agent function for the vacuum-cleaner world
+            shown in Figure 2.2.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Environment.Map.AdaptableHeuristicFunction">
+            <summary>
+            This class extends heuristic functions in two ways: It maintains a goal and a
+            map to estimate distance to goal for states in route planning problems, and
+            it provides a method to adapt to different goals.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Framework.IHeuristicFunction">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 92.<para/>
+            a heuristic function, denoted H(n):<br />
+              H(n) = estimated cost of the cheapest path from the state at node n to a goal state.<para/>
+            Notice that H(n) takes a node as input, but, unlike g(n) it depends only on the state at that node.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.AdaptableHeuristicFunction.Goal">
+            <summary>
+            The Current Goal.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.AdaptableHeuristicFunction.Map">
+            <summary>
+            The map to be used for distance to goal estimates.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.AdaptableHeuristicFunction.AdaptToGoal(System.Object,Aima.Core.Environment.Map.IMap)">
+            <summary>
+            Modifies goal and map information and returns the modified heuristic
+            function.
+            </summary>
+            <param name="goal"></param>
+            <param name="map"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Environment.EightPuzzle.EightPuzzleBoard.GetXCoord(System.Int32)">
+            <summary>
+             Note: The graphic representation maps x values on row numbers (x-axis in vertical direction).
+            </summary>
+            <param name="absPos"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Environment.EightPuzzle.EightPuzzleBoard.GetYCoord(System.Int32)">
+            <summary>
+             Note: The graphic representation maps y values on column numbers (y-axis in horizontal direction).
+            </summary>
+            <param name="absPos"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Aima.Core.Agent.Impl.AProg.TableDrivenAgentProgram">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 2.7, page 4
+            <code><![CDATA[
+            function TABLE-DRIVEN-AGENT(percept) returns an action
+              persistent: percepts, a sequence, initially empty
+                       table, a table of actions, indexed by percept sequences, initially fully specified
+                    
+              append percept to end of percepts
+              action <- LOOKUP(percepts, table)
+              return action
+            ]]></code>
+            Figure 2.7 The TABLE-DRIVEN-AGENT program is invoked for each new percept and 
+            returns an action each time. It retains the complete percept sequence in memory.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Agent.IAgentProgram">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): pg 35.<br />
+            An agent's behavior is described by the 'agent function' that maps any given percept
+            sequence to an action. Internally, the agent function for an artificial agent will be
+            implemented by an agent program.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Agent.IAgentProgram.Execute(Aima.Core.Agent.IPercept)">
+            <summary>
+            The Agent's program, which maps any given percept sequences to an action.
+            </summary>
+            <param name="percept">The current percept of a sequence perceived by the Agent.</param>
+            <returns>the Action to be taken in response to the currently perceived percept.</returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "T:Aima.Core.Util.Datastructure.PriorityQueue`1" -->
+        <member name="T:Aima.Core.Util.Datastructure.IQueue`1">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): pg 79.<br />
+            The operations on a queue are as follows:<br />
+            <ul>
+            <li>EMPTY?(queue) returns true only if there are no elements in the queue</li>
+            <li>POP(queue) removes teh first element of the queue and returns it.</li>
+            <li>INSERT(element, queue) inserts and element and returns the resulting queue.</li>
+            </ul>
+            Note: This extends the java.util.Queue collections interface in order to take advantage
+            of pre-existing implementations. The intent of this interface is purely to provide an interface
+            to Queues that corresponds to what is described in AIMA3e.
+            </summary>
+            <typeparam name="TItem"></typeparam>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.IQueue`1.IsEmpty">
+            <summary>
+            
+            </summary>
+            <returns>true only if there are no elements on the queue.</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.IQueue`1.Pop">
+            <summary>
+            POP(queue)
+            </summary>
+            <returns>the first element of the queue.</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.IQueue`1.Insert(`0)">
+            <summary>
+            INSERT(element, queue)
+            
+            @param element
+                      
+            @return 
+            </summary>
+            <param name="element">to be inserted in the queue.</param>
+            <returns>the resulting queue with the element inserted. null is returned
+            if the element could not be inserted.</returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "T:Aima.Core.Search.Online.LRTAStarAgent" -->
+        <member name="T:Aima.Core.Search.Local.SimulatedAnnealingSearch">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 4.5, page 126.
+            
+            <code><![CDATA[
+            function SIMULATED-ANNEALING(problem, schedule) returns a solution state
+                               
+              current <- MAKE-NODE(problem.INITIAL-STATE)
+              for t = 1 to INFINITY do
+                T <- schedule(t)
+                if T = 0 then return current
+                next <- a randomly selected successor of current
+                /\E <- next.VALUE - current.value
+                if /\E > 0 then current <- next
+                else current <- next only with probability e^(/\E/T)
+            ]]></code>
+            Figure 4.5 The simulated annealing search algorithm, a version of
+            stochastic hill climbing where some downhill moves are allowed. Downhill
+            moves are accepted readily early in the annealing schedule and then less
+            often as time goes on. The schedule input determines the value of
+            the temperature T as a function of time.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Local.IFitnessFunction">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 127.
+            Each state is rated by the objective function, or (in Genetic Algorithm terminology) the fitness function.
+            A fitness function should return higher values for better states.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Informed.AStarEvaluationFunction">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 93.
+            
+            The most widely known form of best-first search is called A* search (pronounced "A-star
+            Search"). It evaluates nodes by combining g(n), the cost to reach the node, and h(n), the cost
+            to get from the node to the goal:<br />
+            <code>
+                   f(n) = g(n) + h(n).
+            </code>
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Framework.IEvaluationFunction">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 92. <para />
+            The evaluation function is construed as a cost estimate, so the node with the lowest evaluation 
+            is expanded first.    
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Framework.IResultFunction">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 67. <para />
+            A description of what each action does; the formal name for this is the
+            transition model, specified by a function RESULT(s, a) that returns the state
+            that results from doing action a in state s. We also use the term successor
+            to refer to any state reachable from a given state by a single action.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Search.Framework.IResultFunction.Result(System.Object,Aima.Core.Agent.IAction)">
+            <summary>
+            Returns the state that results from doing action a in state s
+            </summary>
+            <param name="s">a particular state.</param>
+            <param name="a">an action to be performed in state s.</param>
+            <returns>the state that results from doing action a in state s.</returns>
+        </member>
+        <member name="T:Aima.Core.Search.CSP.BacktrackingStrategy">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Ed.): Figure 6.5, Page 215.
+            
+            <code>
+            function BACKTRACKING-SEARCH(csp) returns a solution, or failure
+               return BACKTRACK({ }, csp)
+            
+            function BACKTRACK(assignment, csp) returns a solution, or failure
+               if assignment is complete then return assignment
+               var = SELECT-UNASSIGNED-VARIABLE(csp)
+               for each value in ORDER-DOMAIN-VALUES(var, assignment, csp) do
+                  if value is consistent with assignment then
+                     add {var = value} to assignment
+                     inferences = INFERENCE(csp, var, value)
+                     if inferences != failure then
+                        add inferences to assignment
+                        result = BACKTRACK(assignment, csp)
+                        if result != failure then
+                           return result
+                     remove {var = value} and inferences from assignment
+               return failure
+            </code>
+            
+            Figure 6.5 A simple backtracking algorithm for constraint satisfaction
+            problems. The algorithm is modeled on the recursive depth-first search of
+            Chapter 3. By varying the functions SELECT-UNASSIGNED-VARIABLE and
+            ORDER-DOMAIN-VALUES, we can implement the general-purpose heuristic discussed
+            in the text. The function INFERENCE can optionally be used to impose arc-,
+            path-, or k-consistency, as desired. If a value choice leads to failure
+            (noticed wither by INFERENCE or by BACKTRACK), then value assignments
+            (including those made by INFERENCE) are removed from the current assignment
+            and a new value is tried.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.CSP.SolutionStrategy">
+            <summary>
+            Base class for CSP solver implementations. Solving a CSP means finding an
+            assignment, which is consistent and complete with respect to a CSP. This
+            abstract class provides the central interface method and additionally an
+            implementation of an observer mechanism.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.BacktrackingStrategy.RecursiveBackTrackingSearch(Aima.Core.Search.CSP.CSProblem,Aima.Core.Search.CSP.Assignment)">
+            <summary>
+            Template method, which can be configured by overriding the three
+            primitive operations below.
+            </summary>
+            <param name="csp"></param>
+            <param name="assignment"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.BacktrackingStrategy.SelectUnassignedVariable(Aima.Core.Search.CSP.Assignment,Aima.Core.Search.CSP.CSProblem)">
+            <summary>
+            Primitive operation, selecting a not yet assigned variable. This default
+            implementation just selects the first in the ordered list of variables
+            provided by the CSProblem.
+            </summary>
+            <param name="assignment"></param>
+            <param name="csp"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.BacktrackingStrategy.OrderDomainValues(Aima.Core.Search.CSP.Variable,Aima.Core.Search.CSP.Assignment,Aima.Core.Search.CSP.CSProblem)">
+            <summary>
+            Primitive operation, ordering the domain values of the specified
+            variable. This default implementation just takes the default order
+            provided by the CSProblem.
+            </summary>
+            <param name="var"></param>
+            <param name="assignment"></param>
+            <param name="csp"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.BacktrackingStrategy.Inference(Aima.Core.Search.CSP.Variable,Aima.Core.Search.CSP.Assignment,Aima.Core.Search.CSP.CSProblem)">
+            <summary>
+            Primitive operation, which tries to prune out values from the CSProblem which
+            are not possible anymore when extending the given assignment to a
+            solution. This default implementation just leaves the original CSProblem as it
+            is.
+            </summary>
+            <param name="var"></param>
+            <param name="assignment"></param>
+            <param name="csp"></param>
+            <returns>An object which provides informations about (1) whether changes
+                    have been performed, (2) possibly inferred empty domains , and
+            (3) how to restore the domains.</returns>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.ImprovedBacktrackingStrategy.SetVariableSelection(Aima.Core.Search.CSP.ImprovedBacktrackingStrategy.Selection)">
+            <summary>
+            Selects the algorithm for SELECT-UNASSIGNED-VARIABLE
+            </summary>
+            <param name="sStrategy"></param>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.ImprovedBacktrackingStrategy.SetInference(Aima.Core.Search.CSP.ImprovedBacktrackingStrategy.InferenceType)">
+            <summary>
+            Selects the algorithm for INFERENCE.
+            </summary>
+            <param name="iStrategy"></param>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.ImprovedBacktrackingStrategy.EnableLcv(System.Boolean)">
+            <summary>
+            Selects the least constraining value heuristic as implementation for
+            ORDER-DOMAIN-VALUES.
+            </summary>
+            <param name="state"></param>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.ImprovedBacktrackingStrategy.Solve(Aima.Core.Search.CSP.CSProblem)">
+            <summary>
+            Starts with a constraint propagation if AC-3 is enabled and then calls
+            the super class implementation.
+            </summary>
+            <param name="csp"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.ImprovedBacktrackingStrategy.SelectUnassignedVariable(Aima.Core.Search.CSP.Assignment,Aima.Core.Search.CSP.CSProblem)">
+            <summary>
+            Primitive operation, selecting a not yet assigned variable.
+            </summary>
+            <param name="assignment"></param>
+            <param name="csp"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.ImprovedBacktrackingStrategy.OrderDomainValues(Aima.Core.Search.CSP.Variable,Aima.Core.Search.CSP.Assignment,Aima.Core.Search.CSP.CSProblem)">
+            <summary>
+            Primitive operation, ordering the domain values of the specified
+            variable.
+            </summary>
+            <param name="var"></param>
+            <param name="assignment"></param>
+            <param name="csp"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.ImprovedBacktrackingStrategy.Inference(Aima.Core.Search.CSP.Variable,Aima.Core.Search.CSP.Assignment,Aima.Core.Search.CSP.CSProblem)">
+            <summary>
+            Primitive operation, which tries to prune out values from the CSProblem which
+            are not possible anymore when extending the given assignment to a
+            solution.
+            </summary>
+            <param name="var"></param>
+            <param name="assignment"></param>
+            <param name="csp"></param>
+            <returns>An object which provides informations about (1) whether changes
+                    have been performed, (2) possibly inferred empty domains , and
+                    (3) how to restore the domains.</returns>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.ImprovedBacktrackingStrategy.ApplyMrvHeuristic(Aima.Core.Search.CSP.CSProblem,Aima.Core.Search.CSP.Assignment)">
+            <summary>
+            Implements the minimum-remaining-values heuristic.
+            </summary>
+            <param name="csp"></param>
+            <param name="assignment"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.ImprovedBacktrackingStrategy.applyDegreeHeuristic(System.Collections.Generic.IList{Aima.Core.Search.CSP.Variable},Aima.Core.Search.CSP.Assignment,Aima.Core.Search.CSP.CSProblem)">
+            <summary>
+            Implements the degree heuristic.
+            </summary>
+            <param name="vars"></param>
+            <param name="assignment"></param>
+            <param name="csp"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.ImprovedBacktrackingStrategy.ApplyLeastConstrainingValueHeuristic(Aima.Core.Search.CSP.Variable,Aima.Core.Search.CSP.CSProblem)">
+            <summary>
+            Implements the least constraining value heuristic.
+            </summary>
+            <param name="var"></param>
+            <param name="csp"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.ImprovedBacktrackingStrategy.DoForwardChecking(Aima.Core.Search.CSP.Variable,Aima.Core.Search.CSP.Assignment,Aima.Core.Search.CSP.CSProblem)">
+            <summary>
+            Implements forward checking.
+            </summary>
+            <param name="var"></param>
+            <param name="assignment"></param>
+            <param name="csp"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.Inference.OTTER.ILightestClauseHeuristic">
+            <summary>
+            Heuristic for selecting lightest clause from SOS.
+             To avoid recalculating the lightest clause
+             on every call, the interface supports defining
+             the initial sos and updates to that set so
+             that it can maintain its own internal data
+             structures to allow for incremental re-calculation
+             of the lightest clause.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.Inference.IInferenceResult.IsPossiblyFalse">
+            <summary>
+            
+            </summary>
+            <returns>true, if the query is not entailed from the premises. This just means the query is not entailed, the query itself may be true.
+            </returns>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.Inference.IInferenceResult.IsTrue">
+            <summary>
+            
+            </summary>
+            <returns>
+            true, if the query is entailed from the premises (Note: can get partial results if the original 
+            query contains variables indicating that there can possibly be more than 1 proof/bindings
+            for the query, see: isPartialResultDueToTimeout()).
+            </returns>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.Inference.IInferenceResult.IsUnknownDueToTimeout">
+            <summary>
+            
+            </summary>
+            <returns>true, if the inference procedure ran for a length of time and found 
+            no proof one way or the other before it timed out.</returns>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.Inference.IInferenceResult.IsPartialResultDueToTimeout">
+            <summary>
+            
+            </summary>
+            <returns>true, if the inference procedure found a proof for a query containing variables 
+            (i.e. possibly more than 1 proof can be returned) and the inference procedure was still looking for 
+            other possible answers before it timed out.</returns>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.Inference.IInferenceResult.GetProofs">
+            <summary>
+            
+            </summary>
+            <returns>a list of 0 or more proofs (multiple proofs can be returned if 
+            the original query contains variables).</returns>
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.SubsumptionElimination">
+             <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 356.
+            
+            The subsumption method eliminates all sentences that are subsumed by (that
+            is, more specific than) an existing sentence in the KB. For example, P(x) is in the KB, then
+            there is no sense in adding P(A) and even less sense in adding P(A) V Q(B). Subsumption
+            helps keep the KB small and thus helps keep the search space small.
+            
+            Note: From slide 17.  
+            http://logic.stanford.edu/classes/cs157/2008/lectures/lecture12.pdf
+            
+            Relational Subsumption
+            
+            A relational clause Phi subsumes Psi is and only if there
+            is a substitution delta that, when applied to Phi, produces a
+            clause Phidelta that is a subset of Psi.
+             </summary>
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.CNFConverter">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 345.
+            
+            Every sentence of first-order logic can be converted into an inferentially
+            equivalent CNF sentence.
+            
+            Note: Transformation rules extracted from 346 and 347, which
+            are essentially the INSEADO method outlined in:
+            http://logic.stanford.edu/classes/cs157/2008/lectures/lecture09.pdf
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Learning.Neural.NNDataSet">
+            <summary>
+            This class represents a source of examples to the rest of the nn
+            framework. Assumes only one function approximator works on an instance at
+            a given point in time
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Learning.Neural.NNDataSet.dataset">
+            <summary>
+            the parsed and preprocessed form of the dataset.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Learning.Neural.NNDataSet.presentlyProcessed">
+            <summary>
+            a copy from which examples are drawn.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Learning.Neural.NNDataSet.means">
+            <summary>
+            list of mean Values for all components of raw data set
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Learning.Neural.NNDataSet.stdevs">
+            <summary>
+            list of stdev Values for all components of raw data set
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Learning.Neural.NNDataSet.Nds">
+            <summary>
+            the normalized data set
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Learning.Neural.NNDataSet.TargetColumnNumbers">
+            <summary>
+            the column numbers of the "target"
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Learning.Neural.NNDataSet.SetTargetColumns">
+            <summary>
+            population delegated to subclass because only subclass knows which
+            column(s) is target
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Learning.Neural.NNDataSet.CreateNormalizedDataFromFile(System.String)">
+            <summary>
+            create a normalized data "table" from the data in the file. At this
+            stage, the data isnot split into input pattern and tragets
+            </summary>
+            <param name="filename"></param>
+        </member>
+        <member name="M:Aima.Core.Learning.Neural.NNDataSet.CreateNormalizedDataFromDataSet(Aima.Core.Learning.Framework.DataSet,Aima.Core.Learning.Neural.INumerizer)">
+            <summary>
+            create a normalized data "table" from the DataSet using numerizer. At
+            this stage, the data isnot split into input pattern and targets TODO
+            remove redundancy of recreating the target columns. the numerizer has
+            already isolated the targets
+            </summary>
+            <param name="ds"></param>
+            <param name="numerizer"></param>
+        </member>
+        <member name="M:Aima.Core.Learning.Neural.NNDataSet.GetExampleAtRandom">
+            <summary>
+            Gets (and removes) a random example from the 'presentlyProcessed'
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Learning.Neural.NNDataSet.GetExample(System.Int32)">
+            <summary>
+            Gets (and removes) a random example from the 'presentlyProcessed'
+            </summary>
+            <param name="index"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Learning.Neural.NNDataSet.HasMoreExamples">
+            <summary>
+            check if any more examples remain to be processed
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Learning.Neural.NNDataSet.HowManyExamplesLeft">
+            <summary>
+            check how many examples remain to be processed
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Learning.Neural.NNDataSet.RefreshDataset">
+            <summary>
+            refreshes the presentlyProcessed dataset so it can be used for a new
+            epoch of training.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Learning.Neural.NNDataSet.CreateExamplesFromFile(System.String)">
+            <summary>
+            method called by clients to set up data set and make it ready for
+            processing
+            </summary>
+            <param name="filename"></param>
+        </member>
+        <member name="M:Aima.Core.Learning.Neural.NNDataSet.CreateExamplesFromDataSet(Aima.Core.Learning.Framework.DataSet,Aima.Core.Learning.Neural.INumerizer)">
+            <summary>
+            method called by clients to set up data set and make it ready for
+            processing
+            </summary>
+            <param name="ds"></param>
+            <param name="numerizer"></param>
+        </member>
+        <member name="M:Aima.Core.Learning.Neural.NNDataSet.CreateExamples">
+            <summary>
+            create Example instances from a normalized data "table".
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Environment.Map.SimplifiedRoadMapOfPartOfRomania">
+            <summary>
+            Represents a simplified road map of Romania. The initialization method is
+            declared static. So it can also be used to initialize other specialized
+            subclasses of <see cref="T:Aima.Core.Environment.Map.ExtendableMap"/> with road map data from Romania. Location
+            names, road distances and directions have been extracted from Artificial
+            Intelligence A Modern Approach (2nd Edition), Figure 3.2, page 63. The
+            straight-line distances to Bucharest have been taken from Artificial
+            Intelligence A Modern Approach (2nd Edition), Figure 4.1, page 95.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Environment.Map.ExtendableMap">
+            <summary>
+            Implements a map with locations, distance labeled links between the
+            locations, straight line distances, and 2d-placement positions of locations.
+            Locations are represented by strings and travel distances by double values.
+            Locations and links can be added dynamically and removed after creation. This
+            enables to read maps from file or to modify them with respect to newly
+            obtained knowledge.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.ExtendableMap.links">
+            <summary>
+            Stores map data. Locations are represented as vertices and connections
+            (links) as directed edges labeled with corresponding travel distances.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.ExtendableMap.locationPositions">
+            <summary>
+            Stores xy-coordinates for each location.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.ExtendableMap.#ctor">
+            <summary>
+            Creates an empty map.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.ExtendableMap.Clear">
+            <summary>
+            Removes everything.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.ExtendableMap.ClearLinks">
+            <summary>
+            Clears all connections but keeps location position informations.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.ExtendableMap.GetLocations">
+            <summary>
+            Returns a list of all locations.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.ExtendableMap.IsLocation(System.String)">
+            <summary>
+            Checks whether the given string is the name of a location.
+            </summary>
+            <param name="str"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.ExtendableMap.GetLocationsLinkedTo(System.String)">
+            <summary>
+            Answers to the question: Where can I get, following one of the
+            connections starting at the specified location?
+            </summary>
+            <param name="fromLocation"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.ExtendableMap.GetDistance(System.String,System.String)">
+            <summary>
+            Returns the travel distance between the two specified locations if they
+            are linked by a connection and null otherwise.
+            </summary>
+            <param name="fromLocation"></param>
+            <param name="toLocation"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.ExtendableMap.AddUnidirectionalLink(System.String,System.String,System.Double)">
+            <summary>
+            Adds a one-way connection to the map.
+            </summary>
+            <param name="fromLocation"></param>
+            <param name="toLocation"></param>
+            <param name="distance"></param>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.ExtendableMap.AddBidirectionalLink(System.String,System.String,System.Double)">
+            <summary>
+            Adds a connection which can be traveled in both direction. Internally,
+            such a connection is represented as two one-way connections.
+            </summary>
+            <param name="fromLocation"></param>
+            <param name="toLocation"></param>
+            <param name="distance"></param>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.ExtendableMap.RandomlyGenerateDestination">
+            <summary>
+            Returns a location which is selected by random.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.ExtendableMap.RemoveUnidirectionalLink(System.String,System.String)">
+            <summary>
+            Removes a one-way connection.
+            </summary>
+            <param name="fromLocation"></param>
+            <param name="toLocation"></param>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.ExtendableMap.RemoveBidirectionalLink(System.String,System.String)">
+            <summary>
+            Removes the two corresponding one-way connections.
+            </summary>
+            <param name="fromLocation"></param>
+            <param name="toLocation"></param>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.ExtendableMap.SetPosition(System.String,System.Double,System.Double)">
+            <summary>
+            Defines the position of a location as with respect to an orthogonal
+            coordinate system.
+            </summary>
+            <param name="loc"></param>
+            <param name="x"></param>
+            <param name="y"></param>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.ExtendableMap.SetDistAndDirToRefLocation(System.String,System.Double,System.Int32)">
+            <summary>
+            Defines the position of a location within the map. Using this method, one
+            location should be selected as reference position (<code>dist=0</code>
+            and <code>dir=0</code>) and all the other location should be placed
+            relative to it.
+            </summary>
+            <param name="loc">location name</param>
+            <param name="dist">distance to a reference position</param>
+            <param name="dir">bearing (compass direction) in which the location is seen from the reference position</param>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.ExtendableMap.GetPosition(System.String)">
+            <summary>
+            Returns the position of the specified location as with respect to an
+            orthogonal coordinate system.
+            </summary>
+            <param name="loc"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.SimplifiedRoadMapOfPartOfRomania.initMap(Aima.Core.Environment.Map.ExtendableMap)">
+            Initializes a map with a simplified road map of Romania.
+        </member>
+        <member name="T:Aima.Core.Search.Framework.IActionsFunction">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 67. <para />
+            Given a particular state s, ACTIONS(s) returns the set of actions that can be
+            executed in s. We say that each of these actions is <b>applicable</b> in s.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Search.Framework.IActionsFunction.Actions(System.Object)">
+            <summary>
+            Given a particular state s, returns the set of actions that can be
+            executed in s.
+            </summary>
+            <param name="s">a particular state.</param>
+            <returns>the set of actions that can be executed in s.</returns>
+        </member>
+        <member name="T:Aima.Core.Search.Framework.IPerceptToStateFunction">
+            <summary>
+            This interface is to define how to Map a Percept to a State representation
+            for a problem solver within a specific environment. This arises in the
+            description of the Online Search algorithms from Chapter 4.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Search.Framework.IPerceptToStateFunction.GetState(Aima.Core.Agent.IPercept)">
+            <summary>
+            Get the problem state associated with a Percept.
+            </summary>
+            <param name="p">the percept to be transformed to a problem state.</param>
+            <returns>a problem state derived from the Percept p.</returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "T:Aima.Core.Util.Datastructure.Matrix" -->
+        <member name="F:Aima.Core.Util.Datastructure.Matrix.A">
+            Array for internal storage of elements.
+        </member>
+        <member name="F:Aima.Core.Util.Datastructure.Matrix.m">
+            Row and column dimensions.
+        </member>
+        <member name="F:Aima.Core.Util.Datastructure.Matrix.n">
+            Row and column dimensions.
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.CreateDiagonalMatrix(System.Collections.Generic.IList{System.Double})">
+            <summary>
+            Construct a diagonal Matrix from the given IList of doubles
+            </summary>
+            <param name="values"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.#ctor(System.Int32,System.Int32)">
+            <summary>
+            Construct an m-by-n matrix of zeros.
+            </summary>
+            <param name="m">Number of rows.</param>
+            <param name="n">Number of colums.</param>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.#ctor(System.Int32,System.Int32,System.Double)">
+            <summary>
+            Construct an m-by-n constant matrix.
+            </summary>
+            <param name="m">Number of rows.</param>
+            <param name="n">Number of colums.</param>
+            <param name="s">Fill the matrix with this scalar value.</param>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.#ctor(System.Double[0:,0:])">
+            <summary>
+            Construct a matrix from a 2-D array.
+            </summary>
+            <param name="a">Two-dimensional array of doubles.</param>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.#ctor(System.Double[0:,0:],System.Int32,System.Int32)">
+            <summary>
+            Construct a matrix quickly without checking arguments.
+            </summary>
+            <param name="a">Two-dimensional array of doubles.</param>
+            <param name="m">Number of rows.</param>
+            <param name="n">Number of colums.</param>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.#ctor(System.Double[],System.Int32)">
+            <summary>
+            Construct a matrix from a one-dimensional packed array
+            </summary>
+            <param name="vals">One-dimensional array of doubles, packed by columns (ala Fortran).</param>
+            <param name="m">Number of rows.</param>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.ConstructWithCopy(System.Double[0:,0:])">
+            <summary>
+            Construct a matrix from a copy of a 2-D array.
+            </summary>
+            <param name="a">Two-dimensional array of doubles.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Copy">
+            <summary>
+            Make a deep copy of a matrix
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Clone">
+            <summary>
+            Clone the Matrix object.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.GetArray">
+            <summary>
+            Access the internal two-dimensional array.
+            </summary>
+            <returns>Pointer to the two-dimensional array of matrix elements.</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.GetArrayCopy">
+            <summary>
+            Copy the internal two-dimensional array.
+            </summary>
+            <returns>Two-dimensional array copy of matrix elements.</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.GetColumnPackedCopy">
+            <summary>
+            Make a one-dimensional column packed copy of the internal array.
+            </summary>
+            <returns>Matrix elements packed in a one-dimensional array by columns.</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.GetRowPackedCopy">
+            <summary>
+            Make a one-dimensional row packed copy of the internal array.
+            </summary>
+            <returns>Matrix elements packed in a one-dimensional array by rows.</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.GetRowDimension">
+            <summary>
+            Get row dimension.
+            </summary>
+            <returns> m,  the number of rows.</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.GetColumnDimension">
+            <summary>
+            Get column dimension.
+            </summary>
+            <returns>n, the number of columns.</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Get(System.Int32,System.Int32)">
+            <summary>
+            Get a single element.
+            </summary>
+            <param name="i">Row index.</param>
+            <param name="j">Column index.</param>
+            <returns>A(i,j)</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.GetMatrix(System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Get a submatrix.
+            </summary>
+            <param name="i0">Initial row index</param>
+            <param name="i1">Final row index</param>
+            <param name="j0">Initial column index</param>
+            <param name="j1">Final column index</param>
+            <returns>A(i0:i1,j0:j1)</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.GetMatrix(System.Int32[],System.Int32[])">
+            <summary>
+            Get a submatrix.
+            </summary>
+            <param name="r">Array of row indices.</param>
+            <param name="c">Array of column indices.</param>
+            <returns>A(r(:),c(:))</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.GetMatrix(System.Int32,System.Int32,System.Int32[])">
+            <summary>
+            Get a submatrix.
+            </summary>
+            <param name="i0">Initial row index</param>
+            <param name="i1">Final row index</param>
+            <param name="c">Array of column indices.</param>
+            <returns>A(i0:i1,c(:))</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.GetMatrix(System.Int32[],System.Int32,System.Int32)">
+            <summary>
+            Get a submatrix.
+            </summary>
+            <param name="r">Array of row indices.</param>
+            <param name="j0">Initial column index</param>
+            <param name="j1">Final column index</param>
+            <returns>A(r(:),j0:j1)</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Set(System.Int32,System.Int32,System.Double)">
+            <summary>
+            Set a single element.
+            </summary>
+            <param name="i">Row index.</param>
+            <param name="j">Column index.</param>
+            <param name="s">A(i,j).</param>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.SetMatrix(System.Int32,System.Int32,System.Int32,System.Int32,Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            Set a submatrix.
+            </summary>
+            <param name="i0">Initial row index</param>
+            <param name="i1">Final row index</param>
+            <param name="j0">Initial column index</param>
+            <param name="j1">Final column index</param>
+            <param name="x">A(i0:i1,j0:j1)</param>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.SetMatrix(System.Int32[],System.Int32[],Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            Set a submatrix.
+            </summary>
+            <param name="r">Array of row indices.</param>
+            <param name="c">Array of column indices.</param>
+            <param name="x">A(r(:),c(:))</param>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.SetMatrix(System.Int32[],System.Int32,System.Int32,Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            Set a submatrix.
+            </summary>
+            <param name="r">Array of row indices.</param>
+            <param name="j0">Initial column index</param>
+            <param name="j1">Final column index</param>
+            <param name="x">A(r(:),j0:j1)</param>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.SetMatrix(System.Int32,System.Int32,System.Int32[],Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            Set a submatrix.
+            
+            @param i0
+                       
+            @param i1
+                       
+            @param c
+                       
+            @param X
+                       
+            @exception ArrayIndexOutOfBoundsException
+                           Submatrix indices
+            </summary>
+            <param name="i0">Initial row index</param>
+            <param name="i1">Final row index</param>
+            <param name="c">Array of column indices.</param>
+            <param name="x">A(i0:i1,c(:))</param>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Transpose">
+            <summary>
+            Matrix transpose.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Norm1">
+            <summary>
+            One norm
+            </summary>
+            <returns>maximum column sum.</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.NormInf">
+            <summary>
+            Infinity norm
+            </summary>
+            <returns>maximum row sum.</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Uminus">
+            <summary>
+            Unary minus
+            </summary>
+            <returns>-A</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Plus(Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            C = A + B
+            </summary>
+            <param name="b">another matrix</param>
+            <returns>A + B</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.PlusEquals(Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            A = A + B
+            </summary>
+            <param name="b">another matrix</param>
+            <returns>A + B</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Minus(Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            C = A - B
+            </summary>
+            <param name="b">another matrix</param>
+            <returns>A - B</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.MinusEquals(Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            A = A - B
+            </summary>
+            <param name="b">another matrix</param>
+            <returns>A - B</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.ArrayTimes(Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            Element-by-element multiplication, C = A.*B
+            </summary>
+            <param name="b">another matrix</param>
+            <returns>A.*B</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.ArrayTimesEquals(Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            Element-by-element multiplication in place, A = A.*B
+            </summary>
+            <param name="b">another matrix</param>
+            <returns>A.*B</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.ArrayRightDivide(Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            Element-by-element right division, C = A./B
+            </summary>
+            <param name="b">another matrix</param>
+            <returns>A./B</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.ArrayRightDivideEquals(Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            Element-by-element right division in place, A = A./B
+            </summary>
+            <param name="b">another matrix</param>
+            <returns>A./B</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.ArrayLeftDivide(Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            Element-by-element left division, C = A.\B
+            </summary>
+            <param name="b">another matrix</param>
+            <returns>A.\B</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.ArrayLeftDivideEquals(Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            Element-by-element left division in place, A = A.\B
+            </summary>
+            <param name="b">another matrix</param>
+            <returns>A.\B</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Times(System.Double)">
+            <summary>
+            Multiply a matrix by a scalar, C = s*A
+            </summary>
+            <param name="s">scalar</param>
+            <returns>s*A</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.TimesEquals(System.Double)">
+            <summary>
+            Multiply a matrix by a scalar in place, A = s*A
+            </summary>
+            <param name="s">scalar</param>
+            <returns>replace A by s*A</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Times(Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            Linear algebraic matrix multiplication, A/// B
+            </summary>
+            <param name="b">another matrix</param>
+            <returns>Matrix product, A * B</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.lu">
+            <summary>
+            LU Decomposition
+            </summary>
+            <returns>LUDecomposition</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Solve(Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            Solve A*X = B
+            </summary>
+            <param name="b">right hand side</param>
+            <returns>solution if A is square, least squares solution otherwise</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.SolveTranspose(Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            Solve X*A = B, which is also A'*X' = B'
+            </summary>
+            <param name="b">right hand side</param>
+            <returns>solution if A is square, least squares solution otherwise.</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Inverse">
+            <summary>
+            Matrix inverse or pseudoinverse
+            </summary>
+            <returns>inverse(A) if A is square, pseudoinverse otherwise.</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Det">
+            <summary>
+            Matrix determinant
+            </summary>
+            <returns>determinant</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Trace">
+            <summary>
+            Matrix trace.
+            </summary>
+            <returns>sum of the diagonal elements.</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Random(System.Int32,System.Int32)">
+            <summary>
+            Generate matrix with random elements
+            </summary>
+            <param name="m">Number of rows.</param>
+            <param name="n">Number of colums.</param>
+            <returns>An m-by-n matrix with uniformly distributed random elements.</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Identity(System.Int32,System.Int32)">
+            <summary>
+            Generate identity matrix
+            </summary>
+            <param name="m">Number of rows.</param>
+            <param name="n">Number of colums.</param>
+            <returns>An m-by-n matrix with ones on the diagonal and zeros elsewhere.</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Print(System.Int32,System.Int32)">
+            <summary>
+            Print the matrix to stdout. Line the elements up in columns with a
+            Fortran-like 'Fw.d' style format.
+            </summary>
+            <param name="w">Column width.</param>
+            <param name="d">Number of digits after the decimal.</param>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Print(System.IO.StreamWriter,System.Int32,System.Int32)">
+            <summary>
+            Print the matrix to the output stream. Line the elements up in columns
+            with a Fortran-like 'Fw.d' style format.
+            </summary>
+            <param name="output"> Output stream.</param>
+            <param name="w">Column width.</param>
+            <param name="d">Number of digits after the decimal.</param>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Print(System.Globalization.NumberFormatInfo,System.Int32)">
+            <summary>
+            Print the matrix to stdout. Line the elements up in columns. Use the
+            format object, and right justify within columns of width characters. Note
+            that is the matrix is to be read back in, you probably will want to use a
+            NumberFormatInfo that is set to US Locale.
+            </summary>
+            <param name="format">A Formatting object for individual elements.</param>
+            <param name="width">Field width for each column.</param>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Print(System.IO.StreamWriter,System.Globalization.NumberFormatInfo,System.Int32)">
+            <summary>
+            Print the matrix to the output stream. Line the elements up in columns.
+            Use the format object, and right justify within columns of width
+            characters. Note that is the matrix is to be read back in, you probably
+            will want to use a NumberFormat that is set to US Locale.
+            </summary>
+            <param name="output">the output stream.</param>
+            <param name="format">A formatting object to format the matrix elements</param>
+            <param name="width">Column width.</param>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.Read(System.IO.StreamReader)">
+            <summary>
+            Read a matrix from a stream. The format is the same the print method, so
+            printed matrices can be read back in (provided they were printed using US
+            Locale). Elements are separated by whitespace, all the elements for each
+            row appear on a single line, the last row is followed by a blank line.
+            </summary>
+            <param name="input">the input stream.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.Matrix.CheckMatrixDimensions(Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            Check if size(A) == size(B)
+            </summary>
+            <param name="b"></param>
+        </member>
+        <member name="T:Aima.Core.Search.Framework.IBidirectionalProblem">
+            <summary>
+            <![CDATA[ An interface describing a problem that can be tackled from both directions 
+            at once (i.e InitialState<->Goal).]]>
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Logic.Propositional.Visitors.BasicTraverser">
+            <summary>
+            Super class of Visitors that are "read only" and gather information from an
+            existing parse tree .
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.Inference.Proof.IProof.GetSteps">
+            <summary>
+            
+            </summary>
+            <returns>A list of proof steps that show how an answer was derived.</returns>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.Inference.Proof.IProof.GetAnswerBindings">
+            <summary>
+            
+            </summary>
+            <returns>a Map of bindings for any variables that were in the original query. 
+            Will be an empty Map if no variables existed in the original query.</returns>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.Inference.Proof.IProof.ReplaceAnswerBindings(System.Collections.Generic.IDictionary{Aima.Core.Logic.FOL.Parsing.AST.Variable,Aima.Core.Logic.FOL.Parsing.AST.ITerm})">
+            <summary>
+            
+            </summary>
+            <param name="updatedBindings">allows for the bindings to be renamed. 
+            Note: should not be used for any other reason.</param>
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.Inference.FOLFCAsk">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 9.3, page 332.
+            
+            <code><![CDATA[
+            function FOL-FC-ASK(KB, alpha) returns a substitution or false
+              inputs: KB, the knowledge base, a set of first order definite clauses
+                      alpha, the query, an atomic sentence
+              local variables: new, the new sentences inferred on each iteration
+              
+              repeat until new is empty
+                 new <- {}
+                 for each rule in KB do
+                     (p1 ^ ... ^ pn => q) <- STANDARDIZE-VARAIBLES(rule)
+                     for each theta such that SUBST(theta, p1 ^ ... ^ pn) = SUBST(theta, p'1 ^ ... ^ p'n)
+                                    for some p'1,...,p'n in KB
+                         q' <- SUBST(theta, q)
+                         if q' does not unify with some sentence already in KB or new then
+                              add q' to new
+                              theta <- UNIFY(q', alpha)
+                              if theta is not fail then return theta
+                 add new to KB
+              return false
+            ]]></code>
+            
+            Figure 9.3 A conceptually straightforward, but very inefficient forward-chaining algo-
+            rithm. On each iteration, it adds to KB all the atomic sentences that can be inferred in one
+            step from the implication sentences and the atomic sentences already in KB. The function
+            STANDARDIZE-VARIABLES replaces all variables in its arguments with new ones that have
+            not been used before.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.Inference.IInferenceProcedure.Ask(Aima.Core.Logic.FOL.KB.FOLKnowledgeBase,Aima.Core.Logic.FOL.Parsing.AST.ISentence)">
+            <summary>
+            
+            </summary>
+            <param name="kb">the knowledge base against which the query is to be made.</param>
+            <param name="aQuery">to be answered.</param>
+            <returns>an IInferenceResult.</returns>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.Inference.FOLFCAsk.Ask(Aima.Core.Logic.FOL.KB.FOLKnowledgeBase,Aima.Core.Logic.FOL.Parsing.AST.ISentence)">
+            <summary>
+            <code>
+            function FOL-FC-ASK(KB, alpha) returns a substitution or false
+              inputs: KB, the knowledge base, a set of first order definite clauses
+                      alpha, the query, an atomic sentence
+            </code>
+            </summary>
+            <param name="KB"></param>
+            <param name="query"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Aima.Core.Agent.Impl.DynamicEnvironmentState">
+            <summary>
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Agent.Impl.DynamicEnvironmentState.DescribeType">
+            <summary>
+            </summary>
+            <returns>
+            </returns>
+        </member>
+        <member name="T:Aima.Core.Search.Online.OnlineSearchProblem">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 147.
+            
+            An online search problem must be solved by an agent executing actions, 
+            rather than by pure computation. We assume a deterministic and fully
+            observable environment (Chapter 17 relaxes these assumptions), but we
+            stipulate that the agent knows only the following: <br />
+            <ul>
+            <li>ACTIONS(s), which returns a list of actions allowed in state s;</li>
+            <li>The step-cost function c(s, a, s') - note that this cannot be used
+            until the agent knows that s' is the outcome; and</li>
+            <li>GOAL-TEST(s).</li>
+            </ul>
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Local.GeneticAlgorithm">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 4.8, page 129.
+            
+            <code><![CDATA[
+            function GENETIC-ALGORITHM(population, FITNESS-FN) returns an individual
+              inputs: population, a Set of individuals
+                      FITNESS-FN, a function that measures the fitness of an individual
+                      
+              repeat
+                new_population <- empty Set
+                for i = 1 to SIZE(population) do
+                  x <- RANDOM-SELECTION(population, FITNESS-FN)
+                  y <- RANDOM-SELECTION(population, FITNESS-FN)
+                  child <- REPRODUCE(x, y)
+                  if (small random probability) then child <- MUTATE(child)
+                  add child to new_population
+                population <- new_population
+              until some individual is fit enough, or enough time has elapsed
+              return the best individual in population, according to FITNESS-FN
+            --------------------------------------------------------------------------------
+            function REPRODUCE(x, y) returns an individual
+              inputs: x, y, parent individuals
+              
+              n <- LENGTH(x); c <- random number from 1 to n
+              return APPEND(SUBSTRING(x, 1, c), SUBSTRING(y, c+1, n))
+            ]]></code>
+            
+            Figure 4.8 A genetic algorithm. The algorithm is the same as the one diagrammed
+            in Figure 4.6, with one variation: in this more popular version, each mating of 
+            two parents produces only one offspring, not two.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Informed.AStarSearch">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 93.
+            
+            The most widely known form of best-first search is called A* Search (pronounced
+            "A-star search"). It evaluates nodes by combining g(n), the cost to reach the node,
+            and h(n), the cost to get from the node to the goal:<br />
+              f(n) = g(n) + h(n).<br />
+            Since g(n) gives the path cost from the start node to node n, and h(n) is the
+            estimated cost of the cheapest path from n to the goal, we have<br />
+              f(n) = estimated cost of the cheapest solution through n.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Framework.IStepCostFunction">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 68.
+            
+            The <b>step cost</b> of taking action a in state s to reach state s' 
+            is denoted by c(s, a, s').
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Search.Framework.IStepCostFunction.C(System.Object,Aima.Core.Agent.IAction,System.Object)">
+            <summary>
+            Calculate the step cost of taking action a in state s to reach state s'.
+            </summary>
+            <param name="s">the state from which action a is to be performed.</param>
+            <param name="a">the action to be taken.</param>
+            <param name="sPrime">the state reached by taking the action.</param>
+            <returns>the cost of taking action a in state s to reach state s'.</returns>
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.Inference.FOLTFMResolution">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 347.
+            
+            The algorithmic approach is identical to the propositional case, described
+            in Figure 7.12. 
+            
+            However, this implementation will use the T)wo F)inger M)ethod 
+            for looking for resolvents between clauses, which is very inefficient.
+             
+            see: 
+            http://logic.stanford.edu/classes/cs157/2008/lectures/lecture04.pdf,
+            slide 21 for the propositional case.  
+            In addition, an Answer literal will be used so that queries with Variables 
+            may be answered (see pg. 350 of AIMA3e).
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Learning.Neural.IFunctionApproximator.ProcessInput(Aima.Core.Util.Math.Vector)">
+            <summary>
+            accepts input pattern and processe it returning an output value
+            </summary>
+            <param name="input"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Learning.Neural.IFunctionApproximator.ProcessError(Aima.Core.Util.Math.Vector)">
+            <summary>
+            accept an error and change the parameters to accomodate it
+            </summary>
+            <param name="error"></param>
+        </member>
+        <member name="P:Aima.Core.Environment.CellWorld.CellWorldPosition.X">
+            <summary>
+            Gets X.
+            </summary>
+        </member>
+        <member name="P:Aima.Core.Environment.CellWorld.CellWorldPosition.Y">
+            <summary>
+            Gets Y.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Agent.Impl.AProg.SimpleRule.ORCondition">
+            <summary>
+            Implementation of an OR condition.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Agent.Impl.AProg.SimpleRule.Condition">
+            <summary>
+            Base abstract class for describing conditions.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "T:Aima.Core.Util.Datastructure.LIFOQueue`1" -->
+        <member name="T:Aima.Core.Search.Uninformed.UniformCostSearch">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 3.14, page 84. 
+            <code><![CDATA[
+            function UNIFORM-COST-SEARCH(problem) returns a solution, or failure
+              node <- a node with STATE = problem.INITIAL-STATE, PATH-COST = 0
+              frontier <- a priority queue ordered by PATH-COST, with node as the only element
+              explored <- an empty set
+              loop do
+                 if EMPTY?(frontier) then return failure
+                 node <- POP(frontier) // chooses the lowest-cost node in frontier
+                 if problem.GOAL-TEST(node.STATE) then return SOLUTION(node)
+                 add node.STATE to explored
+                 for each action in problem.ACTIONS(node.STATE) do
+                     child <- CHILD-NODE(problem, node, action)
+                     if child.STATE is not in explored or frontier then
+                        frontier <- INSERT(child, frontier)
+                     else if child.STATE is in frontier with higher PATH-COST then
+                        replace that frontier node with child
+            ]]></code> 
+            Figure 3.14 Uniform-cost search on a graph. The algorithm is identical to the general
+            graph search algorithm in Figure 3.7, except for the use of a priority queue and the addition
+            of an extra check in case a shorter path to a frontier state is discovered. The data structure
+            for frontier needs to support efficient membership testing, so it should combine the capabilities
+            of a priority queue and a hash table.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Framework.CutOffIndicatorAction">
+            <summary>
+            A NoOp action that indicates a CutOff has occurred in a search. Used
+            primarily by DepthLimited and IterativeDeepening search routines. 
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.CSP.CSProblem">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Ed.): Section 6.1, Page 202. A
+            constraint satisfaction problem or CSP consists of three components, X, D,
+            and C:
+            <ul>
+            <li>X is a set of variables, {X1, ... ,Xn}.</li>
+            <li>D is a set of domains, {D1, ... ,Dn}, one for each variable.</li>
+            <li>C is a set of constraints that specify allowable combinations of values.</li>
+            </ul>
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Search.CSP.CSProblem.varIndexHash">
+            <summary>
+            Lookup, which maps a variable to its index in the list of variables.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Search.CSP.CSProblem.cnet">
+            <summary>
+            IConstraint network. Maps variables to those constraints in which they
+            participate.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.CSProblem.#ctor(System.Collections.Generic.IList{Aima.Core.Search.CSP.Variable})">
+            <summary>
+            Creates a new CSP for a fixed set of variables.
+            </summary>
+            <param name="vars"></param>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.CSProblem.GetConstraints(Aima.Core.Search.CSP.Variable)">
+            <summary>
+            Returns all constraints in which the specified variable participates.
+            </summary>
+            <param name="var"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.CSProblem.GetNeighbor(Aima.Core.Search.CSP.Variable,Aima.Core.Search.CSP.IConstraint)">
+            <summary>
+            Returns for binary constraints the other variable from the scope.
+            </summary>
+            <param name="var"></param>
+            <param name="constraint"></param>
+            <returns>a variable or null for non-binary constraints.</returns>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.CSProblem.CopyDomains">
+            <summary>
+            Returns a copy which contains a copy of the domains list and is in all
+            other aspects a flat copy of this.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Aima.Core.Search.Framework.TreeSearch">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 3.7, page 77.
+            <code>
+            function TREE-SEARCH(problem) returns a solution, or failure
+              initialize the frontier using the initial state of the problem
+              loop do
+                if the frontier is empty then return failure
+                choose a leaf node and remove it from the frontier
+                if the node contains a goal state then return the corresponding solution
+                expand the chosen node, adding the resulting nodes to the frontier
+            </code>
+            Figure 3.7 An informal description of the general tree-search algorithm.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Search.Framework.QueueSearch.Search(Aima.Core.Search.Framework.Problem,Aima.Core.Util.Datastructure.IQueue{Aima.Core.Search.Framework.Node})">
+            <summary>
+            </summary>
+            <param name="problem"></param>
+            <param name="localFrontier"></param>
+            <returns>if goal found, the list of actions to the Goal. If already at the goal 
+            you will receive a IList with a single NoOp IAction in it. If fail to find the Goal, 
+            an empty list will be returned to indicate that the search failed.</returns>
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.KB.Data.Clause">
+            <summary>
+            A Clause: A disjunction of literals.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.Inference.FOLModelElimination">
+            <summary>
+            Based on lecture notes from:
+            http://logic.stanford.edu/classes/cs157/2008/lectures/lecture13.pdf
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "T:Aima.Core.Util.Math.LUDecomposition" -->
+        <member name="F:Aima.Core.Util.Math.LUDecomposition.lu">
+            <summary>
+            Array for internal storage of decomposition.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Util.Math.LUDecomposition.m">
+            <summary>
+            Row and column dimensions, and pivot sign.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Util.Math.LUDecomposition.n">
+            <summary>
+            Row and column dimensions, and pivot sign.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Util.Math.LUDecomposition.piv">
+            <summary>
+            Internal storage of pivot vector.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Util.Math.LUDecomposition.#ctor(Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            LU Decomposition, a structure to access L, U and piv.
+            </summary>
+            <param name="a">Rectangular matrix</param>
+        </member>
+        <member name="M:Aima.Core.Util.Math.LUDecomposition.IsNonsingular">
+            <summary>
+            Is the matrix nonsingular?
+            </summary>
+            <returns>true if U, and hence A, is nonsingular.</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Math.LUDecomposition.GetL">
+            <summary>
+            Return lower triangular factor
+            </summary>
+            <returns>L</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Math.LUDecomposition.GetU">
+            <summary>
+            Return upper triangular factor
+            </summary>
+            <returns>U</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Math.LUDecomposition.GetPivot">
+            <summary>
+            Return pivot permutation vector
+            </summary>
+            <returns>piv</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Math.LUDecomposition.GetDoublePivot">
+            <summary>
+            Return pivot permutation vector as a one-dimensional double array
+            </summary>
+            <returns>(double) piv</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Math.LUDecomposition.Det">
+            <summary>
+            Determinant
+            </summary>
+            <returns>det(A)</returns>
+        </member>
+        <member name="M:Aima.Core.Util.Math.LUDecomposition.Solve(Aima.Core.Util.Datastructure.Matrix)">
+            <summary>
+            Solve A*X = B
+            </summary>
+            <param name="b">A Matrix with as many rows as A and any number of columns.</param>
+            <returns>X so that L*U*X = B(piv,:)</returns>
+        </member>
+        <member name="T:Aima.Core.Util.Datastructure.LabeledGraph`2">
+            <summary>
+            Represents a directed labeled graph. Vertices are represented by their unique
+            labels and labeled edges by means of nested hashtables. Variant of class
+            <see cref="T:Aima.Core.Util.Datastructure.Table`3"/> . This version is more dynamic, it requires no
+            initialization and can add new items whenever needed.
+            </summary>
+            <typeparam name="TVertexLabel"></typeparam>
+            <typeparam name="TEdgeLabel"></typeparam>
+        </member>
+        <member name="F:Aima.Core.Util.Datastructure.LabeledGraph`2.globalEdgeLookup">
+            <summary>
+            Lookup for edge label information. Contains an entry for every vertex
+            label.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Util.Datastructure.LabeledGraph`2.vertexLabels">
+            <summary>
+            List of the labels of all vertices within the graph.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.LabeledGraph`2.#ctor">
+            <summary>
+            Creates a new empty graph.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.LabeledGraph`2.AddVertex(`0)">
+            <summary>
+            Adds a new vertex to the graph if it is not already present.
+            </summary>
+            <param name="v"></param>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.LabeledGraph`2.Set(`0,`0,`1)">
+            <summary>
+            Adds a directed labeled edge to the graph. The end points of the edge are
+            specified by vertex labels. New vertices are automatically identified and
+            added to the graph.
+            </summary>
+            <param name="from"></param>
+            <param name="to"></param>
+            <param name="el"></param>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.LabeledGraph`2.CheckForNewVertex(`0)">
+            <summary>
+            Handles new vertices.
+            </summary>
+            <param name="v"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.LabeledGraph`2.Remove(`0,`0)">
+            <summary>
+            Removes an edge from the graph.
+            </summary>
+            <param name="from"></param>
+            <param name="to"></param>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.LabeledGraph`2.Get(`0,`0)">
+            <summary>
+            Returns the label of the edge between the specified vertices and null if
+            there is no edge between them.
+            </summary>
+            <param name="from"></param>
+            <param name="to"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.LabeledGraph`2.GetSuccessors(`0)">
+            <summary>
+            Returns the labels of those vertices which can be obtained by following
+            the edges starting at the specified vertex.
+            </summary>
+            <param name="v"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.LabeledGraph`2.GetVertexLabels">
+            <summary>
+            Returns the labels of all vertices within the graph.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.LabeledGraph`2.IsVertexLabel(`0)">
+            <summary>
+            Checks whether the given label is the label of one of the vertices.
+            </summary>
+            <param name="v"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Util.Datastructure.LabeledGraph`2.Clear">
+            <summary>
+            Removes all vertices and all edges from the graph.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.CSP.Variable">
+            <summary>
+            A variable is a distinguishable object with a name.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.CSP.NotEqualConstraint">
+            <summary>
+            Represents a binary constraint which forbids equal values.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.CSP.IConstraint">
+            <summary>
+            A constraint specifies the allowable combinations of values for a set of
+            variables. Each constraint consists of a pair <![CDATA[<scope, rel>]]>, where scope is a
+            tuple of variables that participate in the constraint and rel is a relation
+            that defines the values that those variables can take on.
+            
+            Note: Implementations of this interface define the different kinds of
+            relations that constraints can represent.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.IConstraint.GetScope">
+            <summary>
+            Returns a tuple of variables that participate in the constraint.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.IConstraint.IsSatisfiedWith(Aima.Core.Search.CSP.Assignment)">
+            <summary>
+            Constrains the values that the variables can take on.
+            </summary>
+            <param name="assignment"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.Inference.Paramodulation">
+             <summary>
+            Artificial Intelligence A Modern Approach (3r Edition): page 354.<para />
+            
+            Paramodulation: For any terms x, y, and z, where z appears somewhere in literal m<sub>i</sub>,
+            and where UNIFY(x,z) = theta,<para />
+            <code>
+                                     l1 OR ... l<sub>k</sub> OR x=y,     m1 OR ... OR m<sub>n</sub>
+                -------------------------------------------------------------------------------------------------------
+                SUB(SUBST(theta,x), SUBST(theta,y), SUBST(theta, l1 OR ... l<sub>k</sub> OR m1 OR ... OR m<sub>n</sub>)
+            </code>
+            Paramodulation yields a complete inference procedure for first-order logic with equality.
+             </summary>
+        </member>
+        <member name="T:Aima.Core.Environment.NQueens.NQueensFitnessFunction">
+            <summary>
+            A class whose purpose is to evaluate the fitness of NQueen individuals
+            and to provide utility methods for translating between an NQueensBoard
+            representation and the String representation used by the GeneticAlgorithm.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "T:Aima.Core.Search.Framework.Problem" -->
+        <member name="P:Aima.Core.Search.Framework.Problem.InitialState">
+            <summary>
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.KB.Data.ReducedLiteral">
+            <summary>
+            <see cref="!:http://logic.stanford.edu/classes/cs157/2008/lectures/lecture13.pdf"/> 
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.KB.Data.Literal">
+             <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 244.
+             
+             A literal is either an atomic sentence (a positive literal) or
+             a negated atomic sentence (a negative literal). 
+             </summary>
+        </member>
+        <member name="M:Aima.Core.Agent.Impl.AProg.ModelBasedReflexAgentProgram.Init">
+            Realizations of this class should implement the init() method so that it
+            calls the setState(), setModel(), and setRules() method.
+        </member>
+        <member name="T:Aima.Core.Environment.Map.MapStepCostFunction">
+            <summary>
+            Implementation of StepCostFunction interface that uses the distance between locations
+            to calculate the cost in addition to a constant cost, so that it may be used
+            in conjunction with a Uniform-cost search.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.MapStepCostFunction.constantCost">
+            <summary>
+            Used by Uniform-cost search to ensure every step is greater than or equal
+            to some small positive constant
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.MapStepCostFunction.C(System.Object,Aima.Core.Agent.IAction,System.Object)">
+            <summary>
+            START-StepCostFunction
+            </summary>
+            <param name="fromCurrentState"></param>
+            <param name="action"></param>
+            <param name="toNextState"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Aima.Core.Environment.Map.MapEnvironment">
+            <summary>
+            Represents the environment a MapAgent can navigate.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Agent.Impl.DynamicState">
+            <summary>
+            The dynamic state.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Agent.IState">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): pg 50.<br />
+            The most effective way to handle partial observability is for the agent to keep track of the
+            part of the world it can't see now. That is, the agent should maintain some sort of internal
+            state that depends on the percept history and thereby reflects at least some of the unobserved
+            aspects of the current state.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Agent.Impl.DynamicState.DescribeType">
+            <summary>
+            The describe type.
+            </summary>
+            <returns>
+            The describe type.
+            </returns>
+        </member>
+        <member name="T:Aima.Core.Search.Uninformed.BidirectionalSearch">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 90.
+            Bidirectional search.
+            
+            Note: Based on the description of this algorithm i.e. 'Bidirectional search
+            is implemented by replacing the goal test with a check to see whether the frontiers
+            of the two searches intersect;', it is possible for the searches to pass each other's frontiers by,
+            in particular if the problem is not fully reversible (i.e. unidirectional links on a graph), and
+            could instead intersect at the explored Set.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Util.Datastructure.FIFOQueue`1">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): pg 80.<br/>
+            First-in, first-out or FIFO queue, which pops the oldest element of the queue;
+            </summary>
+            <typeparam name="TItem"></typeparam>
+        </member>
+        <member name="T:Aima.Core.Search.CSP.MinConflictsStrategy">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Ed.): Figure 6.8, Page 221.
+            
+            <code>
+            function MIN-CONFLICTS(csp, max-steps) returns a solution or failure
+               inputs: csp, a constraint satisfaction problem
+                       max-steps, the number of steps allowed before giving up
+               current = an initial complete assignment for csp
+               for i = 1 to max steps do
+                  if current is a solution for csp then return current
+                  var = a randomly chosen conflicted variable from csp.VARIABLES
+                  value = the value v for var that minimizes CONFLICTS(var, v, current, csp)
+                  set var = value in current
+               return failure
+            </code>
+            
+            Figure 6.8 The MIN-CONFLICTS algorithm for solving CSPs by local search. The
+            initial state may be chosen randomly or by a greedy assignment process that
+            chooses a minimal-conflict value for each variable in turn. The CONFLICTS
+            function counts the number of constraints violated by a particular value,
+            given the rest of the current assignment.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.StandardizeApartIndexicalFactory">
+            <summary>
+            This class ensures unique standardize apart indexicals are created. 
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Environment.Map.DynAttributeNames">
+            <summary>
+            The AIMA framework uses dynamic attributes to make implementations of agents
+            and environments completely independent of each other. The disadvantage of
+            this concept is, that it's error-prone. This set of constants is designed to
+            make information exchange more reliable for map agents. Two kinds of
+            attributes are distinguished. Percept attributes are attached to percepts.
+            They are generated by the environment and read by by the agent.
+            EnvironmentState attributes are attached to the EnvironmentState of the
+            Environment.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.DynAttributeNames.AgentLocation">
+            <summary>
+            Name of a dynamic attribute, which contains the current location of the
+            agent. Expected value type: String.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.DynAttributeNames.PerceptIn">
+            <summary>
+            Name of a dynamic attribute, which tells the agent where it is. Expected
+            value type: String.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Uninformed.DepthFirstSearch">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 85.
+            
+            Depth-first search always expands the deepest node in the current frontier of the search tree.
+            
+            Note: Supports both Tree and Graph based versions by assigning an instance
+            of TreeSearch or GraphSearch to its constructor.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "T:Aima.Core.Search.Online.OnlineDFSAgent" -->
+        <member name="T:Aima.Core.Search.Framework.GraphSearch">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 3.7, page 77. 
+            <code>
+            function GRAPH-SEARCH(problem) returns a solution, or failure
+              initialize the frontier using the initial state of problem
+              initialize the explored set to be empty
+              loop do
+                if the frontier is empty then return failure
+                choose a leaf node and remove it from the frontier
+                if the node contains a goal state then return the corresponding solution
+                Add the node to the explored set
+                expand the chosen node, adding the resulting nodes to the frontier
+                  only if not in the frontier or explored set
+            </code> 
+            Figure 3.7 An informal description of the general graph-search algorithm.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.Inference.Proof.ProofPrinter.PrintProof(Aima.Core.Logic.FOL.Inference.Proof.IProof)">
+            <summary>
+            Utility method for outputting proofs in a formatted textual representation.
+            </summary>
+            <param name="aProof"></param>
+            <returns>a string representation of the Proof.</returns>
+        </member>
+        <member name="M:Aima.Core.Learning.Knowledge.Hypothesis.GetHypothesis">
+            <summary>
+            <code><![CDATA[
+            FORALL v (Classification(v) <=> ((Description1(v) AND Description2(v, Constant1))
+                                            OR
+                                             (Description1(v) AND Description3(v))
+                                            )
+                     )
+            ]]></code>
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia">
+            <summary>
+            Represents a simplified road map of Australia. The initialization method is
+            declared static. So it can also be used to initialize other specialized
+            subclasses of {@link ExtendableMap} with road map data from Australia. The
+            data was extracted from a class developed by Felix Knittel.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Adelaide">
+            <summary>
+            The adelaide.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Albany">
+            <summary>
+            The albany.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.AliceSprings">
+            <summary>
+            The alic e_ springs.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Brisbane">
+            <summary>
+            The brisbane.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.BrokenHill">
+            <summary>
+            The broke n_ hill.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Broome">
+            <summary>
+            The broome.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Cairns">
+            <summary>
+            The cairns.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Camarvon">
+            <summary>
+            The camarvon.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Canberra">
+            <summary>
+            The canberra.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Charleville">
+            <summary>
+            The charleville.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.CooberPedy">
+            <summary>
+            The coobe r_ pedy.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Darwin">
+            <summary>
+            The darwin.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Dubbo">
+            <summary>
+            The dubbo.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Esperance">
+            <summary>
+            The esperance.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Geraldton">
+            <summary>
+            The geraldton.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.HallsCreek">
+            <summary>
+            The hall s_ creek.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Hay">
+            <summary>
+            The hay.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Kalgoorlie">
+            <summary>
+            The kalgoorlie.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Katherine">
+            <summary>
+            The katherine.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.LakesEntrance">
+            <summary>
+            The lake s_ entrance.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Longreach">
+            <summary>
+            The longreach.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Mackay">
+            <summary>
+            The mackay.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Melbourne">
+            <summary>
+            The melbourne.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.MountGambier">
+            <summary>
+            The moun t_ gambier.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.MtIsa">
+            <summary>
+            The m t_ isa.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Newcastle">
+            <summary>
+            The newcastle.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Norseman">
+            <summary>
+            The norseman.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Nyngan">
+            <summary>
+            The nyngan.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Perth">
+            <summary>
+            The perth.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.PortAugusta">
+            <summary>
+            The por t_ augusta.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.PortHedland">
+            <summary>
+            The por t_ hedland.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.PortLincoln">
+            <summary>
+            The por t_ lincoln.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.PortMacquarie">
+            <summary>
+            The por t_ macquarie.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Rockhampton">
+            <summary>
+            The rockhampton.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Sydney">
+            <summary>
+            The sydney.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Tamworth">
+            <summary>
+            The tamworth.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.TennantCreek">
+            <summary>
+            The tennan t_ creek.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Townsville">
+            <summary>
+            The townsville.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.WaggaWagga">
+            <summary>
+            The wagg a_ wagga.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Warnambool">
+            <summary>
+            The warnambool.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.Wyndham">
+            <summary>
+            The wyndham.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia"/> class.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.SimplifiedRoadMapOfAustralia.InitMap(Aima.Core.Environment.Map.ExtendableMap)">
+            <summary>
+            Initializes a map with a simplified road map of Australia.
+            </summary>
+            <param name="map">
+            </param>
+        </member>
+        <member name="T:Aima.Core.Agent.Impl.AProg.SimpleRule.NOTCondition">
+            <summary>
+            Implementation of a NOT condition.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Agent.Impl.AProg.SimpleRule.EQUALCondition">
+            <summary>
+            Implementation of an EQUALity condition.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Agent.Impl.AProg.SimpleReflexAgentProgram">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 2.10, page 49.
+            <code><![CDATA[
+            function SIMPLE-RELEX-AGENT(percept) returns an action
+             persistent: rules, a set of condition-action rules
+              
+              state  <- INTERPRET-INPUT(percept);
+              rule   <- RULE-MATCH(state, rules);
+              action <- rule.ACTION;
+              return action
+            
+            ]]></code>
+            Figure 2.10 A simple reflex agent. It acts according to a rule whose condition matches
+            the current state, as defined by the percept.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Util.Math.Vector.#ctor(System.Int32)">
+            <summary>
+            Vector is modelled as a matrix with a single column;
+            </summary>
+            <param name="size"></param>
+        </member>
+        <member name="T:Aima.Core.Util.Math.MixedRadixNumber">
+            <summary>
+            see: http://demonstrations.wolfram.com/MixedRadixNumberRepresentations/ for useful example.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.DomainRestoreInfo.StoreDomainFor(Aima.Core.Search.CSP.Variable,Aima.Core.Search.CSP.Domain)">
+            <summary>
+            Stores the specified domain for the specified variable if a domain has
+            not yet been stored for the variable.
+            </summary>
+            <param name="var"></param>
+            <param name="domain"></param>
+        </member>
+        <member name="M:Aima.Core.Search.CSP.DomainRestoreInfo.Compactify">
+            <summary>
+            Can be called after all domain information has been collected to reduce
+            storage consumption.
+            </summary>
+            <returns>this object, after removing one hashtable.</returns>
+        </member>
+        <member name="T:Aima.Core.Environment.NQueens.NQueensFunctionFactory">
+            <summary>
+            Provides useful functions for two versions of the n-queens problem. The
+            incremental formulation and the complete-state formulation share the same
+            RESULT function but use different ACTIONS functions.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Environment.NQueens.NQueensFunctionFactory.GetIActionsFunction">
+            <summary>
+            Returns an ACTIONS function for the incremental formulation of the
+            n-queens problem.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Environment.NQueens.NQueensFunctionFactory.GetCActionsFunction">
+            <summary>
+            Returns an ACTIONS function for the complete-state formulation of the
+            n-queens problem.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Environment.NQueens.NQueensFunctionFactory.GetResultFunction">
+            <summary>
+            Returns a RESULT function for the n-queens problem.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Aima.Core.Environment.NQueens.NQueensFunctionFactory.NQIActionsFunction">
+            <summary>
+            Assumes that queens are placed column by column, starting with an empty
+            board, and provides queen placing actions for all non-attacked positions
+            of the first free column.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Environment.NQueens.NQueensFunctionFactory.NQCActionsFunction">
+            <summary>
+            Assumes exactly one queen in each column and provides all possible queen
+            movements in vertical direction as actions.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Environment.NQueens.NQueensFunctionFactory.NQResultFunction">
+            <summary>
+            Supports queen placing, queen removal, and queen movement actions.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Environment.Map.Scenario">
+            <summary>
+            A scenario specifies an environment, the agent's knowledge about the
+            environment, and the agents initial location. It can be used to specify
+            settings for route planning agent applications.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.Scenario.env">
+            <summary>
+            A map-based environment. Note that the contained map must be of type <see cref="T:Aima.Core.Environment.Map.ExtendableMap"/>
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.Scenario.agentMap">
+            <summary>
+            A map reflecting the knowledge of the agent about the environment.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.Map.Scenario.initAgentLoc">
+            <summary>
+            Initial location of the agent.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Environment.Map.Scenario.#ctor(Aima.Core.Environment.Map.MapEnvironment,Aima.Core.Environment.Map.IMap,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Aima.Core.Environment.Map.Scenario"/> class.
+            </summary>
+            <param name="env">
+            a map-based environment. Note that the contained map must be
+            of type <see cref="T:Aima.Core.Environment.Map.ExtendableMap"/>
+            </param>
+            <param name="agentMap">
+            a map reflecting the knowledge of the agent about the
+            environment
+            </param>
+            <param name="agentLoc">
+            initial location of the agent
+            </param>
+        </member>
+        <member name="T:Aima.Core.Agent.IModel">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): pg 50.<br />
+            This knowledge about "how the world works" - whether implemented in simple Boolean circuits
+            or in complete scientific theories - is called a model of the world. An Agent that uses such a
+            model is called a model-based agent.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Framework.ISolutionChecker">
+            <summary>
+            A specialization of the GoalTest interface so that it is possible to check
+            the solution once a Goal has been identified to determine if it is
+            acceptable. This allows you to continue searching for alternative solutions
+            without having to restart the search.
+            
+            However, care needs to be taken when doing this as it does not always make
+            sense to continue with a search once an initial goal is found, for example if
+            using a heuristic targeted at a single goal.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Search.Framework.ISolutionChecker.IsAcceptableSolution(System.Collections.Generic.IList{Aima.Core.Agent.IAction},System.Object)">
+            <summary>
+            This method is only called if GoalTest.isGoalState() returns true.
+            
+            @param actions
+                       
+            
+            @param goal
+                       
+            
+            @return 
+            </summary>
+            <param name="actions">the list of actions to get to the goal state.</param>
+            <param name="goal">the goal the list of actions will reach.</param>
+            <returns>true if the solution is acceptable, false otherwise, which 
+            indicates the search should be continued.</returns>
+        </member>
+        <member name="T:Aima.Core.Search.CSP.MapCSProblem">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Ed.): Figure 6.1, Page 204.
+            The principal states and territories of Australia. Coloring this map can be
+            viewed as a constraint satisfaction problem (CSP). The goal is to assign
+            colors to each region so that no neighboring regions have the same color.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.CSP.AC3Strategy">
+            <summary>
+            
+            Artificial Intelligence A Modern Approach (3rd Ed.): Figure 6.3, Page 209.
+            
+            <code>
+            function AC-3(csp) returns false if an inconsistency is found and true otherwise
+               inputs: csp, a binary CSP with components (X, D, C)
+               local variables: queue, a queue of arcs, initially all the arcs in csp
+               while queue is not empty do
+                  (Xi, Xj) = REMOVE-FIRST(queue)
+                  if REVISE(csp, Xi, Xj) then
+                     if size of Di = 0 then return false
+                        for each Xk in Xi.NEIGHBORS - {Xj} do
+                           add (Xk, Xi) to queue
+               return true
+            
+            function REVISE(csp, Xi, Xj) returns true iff we revise the domain of Xi
+               revised = false
+               for each x in Di do
+                  if no value y in Dj allows (x ,y) to satisfy the constraint between Xi and Xj then
+                     delete x from Di
+                     revised = true
+               return revised
+            </code>
+            
+            Figure 6.3 The arc-consistency algorithm AC-3. After applying AC-3, either
+            every arc is arc-consistent, or some variable has an empty domain, indicating
+            that the CSP cannot be solved. The name "AC-3" was used by the algorithm's
+            inventor (Mackworth, 1977) because it's the third version developed in the
+            paper.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.Inference.FOLBCAsk">
+            <summary>
+            Artificial Intelligence A Modern Approach (2nd Edition): Figure 9.6, page 288.
+            
+            <code><![CDATA[
+            function FOL-BC-ASK(KB, goals, theta) returns a set of substitutions
+              input: KB, a knowledge base
+                     goals, a list of conjuncts forming a query (theta already applied)
+                     theta, the current substitution, initially the empty substitution {}
+              local variables: answers, a set of substitutions, initially empty
+              
+              if goals is empty then return {theta}
+              qDelta <- SUBST(theta, FIRST(goals))
+              for each sentence r in KB where STANDARDIZE-APART(r) = (p1 ^ ... ^ pn => q)
+                     and thetaDelta <- UNIFY(q, qDelta) succeeds
+                  new_goals <- [p1,...,pn|REST(goals)]
+                  answers <- FOL-BC-ASK(KB, new_goals, COMPOSE(thetaDelta, theta)) U answers
+              return answers
+            ]]></code>
+            
+            Figure 9.6 A simple backward-chaining algorithm.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.Inference.FOLBCAsk.Folbcask(Aima.Core.Logic.FOL.KB.FOLKnowledgeBase,Aima.Core.Logic.FOL.Inference.FOLBCAsk.BCAskAnswerHandler,System.Collections.Generic.IList{Aima.Core.Logic.FOL.KB.Data.Literal},System.Collections.Generic.IDictionary{Aima.Core.Logic.FOL.Parsing.AST.Variable,Aima.Core.Logic.FOL.Parsing.AST.ITerm})">
+            <summary>
+            <code>
+            function FOL-BC-ASK(KB, goals, theta) returns a set of substitutions
+              input: KB, a knowledge base
+                     goals, a list of conjuncts forming a query (theta already applied)
+                     theta, the current substitution, initially the empty substitution {}
+            </code>
+            </summary>
+            <param name="KB"></param>
+            <param name="ansHandler"></param>
+            <param name="goals"></param>
+            <param name="theta"></param>
+            <returns></returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "T:Aima.Core.Logic.FOL.Inference.Demodulation" -->
+        <member name="T:Aima.Core.Environment.Vacuum.ReflexVacuumAgent">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 2.8, page 48.
+            <code>
+            function REFLEX-VACUUM-AGENT([location, status]) returns an action
+              if status = Dirty then return Suck
+              else if location = A then return Right
+              else if location = B then return Left
+            </code>
+            Figure 2.8 The agent program for a simple reflex agent in the two-state vacuum environment.
+            This program implements the action function tabulated in Figure 2.3.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Framework.DefaultGoalTest">
+            <summary>
+            Checks whether a given state equals an explicitly specified goal state.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.CSP.ICSPStateListener">
+            <summary>
+            Interface which allows interested clients to register at a solution strategy
+            and follow their progress step by step.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Learning.Neural.LayerSensitivity">
+            <summary>
+            contains sensitivity matrices and related calculations for each layer.
+            Used for backprop learning
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Agent.Impl.AProg.SimpleRule.ANDCondition">
+            <summary>
+            Implementation of an AND condition.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Agent.Impl.NoOpAction">
+            <summary>
+            The no op action.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Agent.Impl.NoOpAction.NoOp">
+            <summary>
+            The no op.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Agent.Impl.NoOpAction.IsNoOp">
+            <summary>
+            The is no op.
+            </summary>
+            <returns>
+            The is no op.
+            </returns>
+        </member>
+        <member name="M:Aima.Core.Agent.Impl.NoOpAction.#ctor">
+            <summary>
+            Prevents a default instance of the <see cref="T:Aima.Core.Agent.Impl.NoOpAction"/> class from being created.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Uninformed.IterativeDeepeningSearch">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 3.18, page 89.
+            
+            <code><![CDATA[
+            function ITERATIVE-DEEPENING-SEARCH(problem) returns a solution, or failure
+              for depth = 0 to infinity  do
+                result <- DEPTH-LIMITED-SEARCH(problem, depth)
+                if result != cutoff then return result
+            ]]></code>
+            Figure 3.18 The iterative deepening search algorithm, which repeatedly
+            applies depth-limited search with increasing limits. It terminates when a
+            solution is found or if the depth- limited search returns failure, meaning
+            that no solution exists.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Framework.PathCostFunction">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 78.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Search.Framework.PathCostFunction.G(Aima.Core.Search.Framework.Node)">
+            <summary>
+            
+            </summary>
+            <param name="n"></param>
+            <returns>the cost, traditionally denoted by g(n), of the path from the
+            initial state to the node, as indicated by the parent pointers.</returns>
+        </member>
+        <member name="T:Aima.Core.Search.CSP.Domain">
+            <summary>
+            A domain Di consists of a set of allowable values {v1, ... , vk} for the
+            corresponding variable Xi and defines a default order on those values. This
+            implementation guarantees, that domains are never changed after they have
+            been created. Domain reduction is implemented by replacement instead of
+            modification. So previous states can easily and safely be restored.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.Inference.InferenceResultPrinter.PrintInferenceResult(Aima.Core.Logic.FOL.Inference.IInferenceResult)">
+            <summary>
+            Utility method for outputting InferenceResults in a formatted textual
+            representation.
+            </summary>
+            <param name="ir">an InferenceResult</param>
+            <returns>a String representation of the InferenceResult.</returns>
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.Inference.FOLOTTERLikeTheoremProver">
+            <summary>
+            Artificial Intelligence A Modern Approach (2nd Edition): Figure 9.14, page 307.
+            
+            <code><![CDATA[
+            procedure OTTER(sos, usable)
+              inputs: sos, a set of support-clauses defining the problem (a global variable)
+              usable, background knowledge potentially relevant to the problem
+              
+              repeat
+                 clause <- the lightest member of sos
+                 move clause from sos to usable
+                 PROCESS(INFER(clause, usable), sos)
+              until sos = [] or a refutation has been found
+            
+            --------------------------------------------------------------------------------
+            
+            function INFER(clause, usable) returns clauses
+              
+              resolve clause with each member of usable
+              return the resulting clauses after applying filter
+              
+            --------------------------------------------------------------------------------
+            
+            procedure PROCESS(clauses, sos)
+            
+              for each clause in clauses do
+                  clause <- SIMPLIFY(clause)
+                  merge identical literals
+                  discard clause if it is a tautology
+                  sos <- [clause | sos]
+                  if clause has no literals then a refutation has been found
+                  if clause has one literal then look for unit refutation
+            ]]></code>
+            
+            Figure 9.14 Sketch of the OTTER theorem prover. Heuristic control is applied in the
+            selection of the "lightest" clause and in the FILTER function that eliminates uninteresting
+            clauses from consideration.
+            TODO: look at implementing theorem below 
+            Note: The original implementation of OTTER has been retired 
+             but its successor, Prover9, can be found at:
+             http:// www.prover9.org/
+             or
+             http://www.cs.unm.edu/~mccune/mace4/
+             Should you wish to play with a mature implementation of a theorem prover :-)
+             For lots of interesting problems to play with, see
+             'The TPTP Problem Library for Automated Theorem Proving':
+             http://www.cs.miami.edu/~tptp/
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.Inference.FOLOTTERLikeTheoremProver.Otter(Aima.Core.Logic.FOL.Inference.FOLOTTERLikeTheoremProver.OTTERAnswerHandler,Aima.Core.Logic.FOL.Inference.FOLOTTERLikeTheoremProver.IndexedClauses,Iesi.Collections.Generic.ISet{Aima.Core.Logic.FOL.KB.Data.Clause},Iesi.Collections.Generic.ISet{Aima.Core.Logic.FOL.KB.Data.Clause})">
+             <summary>
+            <code>
+             procedure OTTER(sos, usable) 
+              inputs: sos, a set of support-clauses defining the problem (a global variable) 
+              usable, background knowledge potentially relevant to the problem
+            </code>
+             </summary>
+             <param name="ansHandler"></param>
+             <param name="idxdClauses"></param>
+             <param name="sos"></param>
+             <param name="usable"></param>
+             <returns></returns>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.Inference.FOLOTTERLikeTheoremProver.Infer(Aima.Core.Logic.FOL.KB.Data.Clause,Iesi.Collections.Generic.ISet{Aima.Core.Logic.FOL.KB.Data.Clause})">
+            <summary>
+            <code> function INFER(clause, usable) returns clauses </code>
+            </summary>
+            <param name="clause"></param>
+            <param name="usable"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Aima.Core.Logic.FOL.Unifier">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 9.1, page 328.
+            
+            <code>
+            function UNIFY(x, y, theta) returns a substitution to make x and y identical
+              inputs: x, a variable, constant, list, or compound
+                      y, a variable, constant, list, or compound
+                      theta, the substitution built up so far (optional, defaults to empty)
+                      
+              if theta = failure then return failure
+              else if x = y the return theta
+              else if VARIABLE?(x) then return UNIVY-VAR(x, y, theta)
+              else if VARIABLE?(y) then return UNIFY-VAR(y, x, theta)
+              else if COMPOUND?(x) and COMPOUND?(y) then
+                  return UNIFY(x.ARGS, y.ARGS, UNIFY(x.OP, y.OP, theta))
+              else if LIST?(x) and LIST?(y) then
+                  return UNIFY(x.REST, y.REST, UNIFY(x.FIRST, y.FIRST, theta))
+              else return failure
+              
+            ---------------------------------------------------------------------------------------------------
+            
+            function UNIFY-VAR(var, x, theta) returns a substitution
+                       
+              if {var/val} E theta then return UNIFY(val, x, theta)
+              else if {x/val} E theta then return UNIFY(var, val, theta)
+              else if OCCUR-CHECK?(var, x) then return failure
+              else return add {var/x} to theta
+            </code>
+            
+            Figure 9.1 The unification algorithm. The algorithm works by comparing the structures
+            of the inputs, elements by element. The substitution theta that is the argument to UNIFY is built
+            up along the way and is used to make sure that later comparisons are consistent with bindings
+            that were established earlier. In a compound expression, such as F(A, B), the OP field picks
+            out the function symbol F and the ARGS field picks out the argument list (A, B).
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.Unifier.Unify(Aima.Core.Logic.FOL.Parsing.AST.IFOLNode,Aima.Core.Logic.FOL.Parsing.AST.IFOLNode,System.Collections.Generic.IDictionary{Aima.Core.Logic.FOL.Parsing.AST.Variable,Aima.Core.Logic.FOL.Parsing.AST.ITerm})">
+            <summary>
+            <code>
+            function UNIFY(x, y, theta) returns a substitution to make x and y identical
+              inputs: x, a variable, constant, list, or compound
+                      y, a variable, constant, list, or compound
+                      theta, the substitution built up so far (optional, defaults to empty)
+            </code>
+            </summary>
+            <param name="x"></param>
+            <param name="y"></param>
+            <param name="theta"></param>
+            <returns><![CDATA[a IDictionary<Variable, ITerm> representing the substitution (i.e. a set
+                    of variable/term pairs) or null which is used to indicate a
+                    failure to unify.]]></returns>
+        </member>
+        <member name="M:Aima.Core.Logic.FOL.Unifier.UnifyVar(Aima.Core.Logic.FOL.Parsing.AST.Variable,Aima.Core.Logic.FOL.Parsing.AST.IFOLNode,System.Collections.Generic.IDictionary{Aima.Core.Logic.FOL.Parsing.AST.Variable,Aima.Core.Logic.FOL.Parsing.AST.ITerm})">
+            <summary>
+            <code>
+            function UNIFY-VAR(var, x, theta) returns a substitution
+              inputs: var, a variable
+                  x, any expression
+                  theta, the substitution built up so far
+            </code>
+            </summary>
+            <param name="var"></param>
+            <param name="x"></param>
+            <param name="theta"></param>
+            <returns></returns>        
+        </member>
+        <member name="T:Aima.Core.Agent.Impl.AProg.SimpleRule.Rule">
+            <summary>
+            A simple implementation of a "condition-action rule".
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Agent.IEnvironmentView">
+            <summary>
+            Allows external applications/logic to view the interaction of Agent(s) with an Environment.
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Agent.IEnvironmentView.Notify(System.String)">
+            <summary>
+            A simple notification message from the Environment, from one of its
+            objects.
+            </summary>
+            <param name="msg">the message received.</param>
+        </member>
+        <member name="M:Aima.Core.Agent.IEnvironmentView.AgentAdded(Aima.Core.Agent.IAgent,Aima.Core.Agent.IEnvironmentState)">
+            <summary>
+            Indicates an Agent has been added to the environment and what it
+            perceives initially. 
+            </summary>
+            <param name="agent">the Agent just added to the Environment.</param>
+            <param name="resultingState">the EnvironmentState that resulted from the Agent being added to the Environment.</param>
+        </member>
+        <member name="M:Aima.Core.Agent.IEnvironmentView.AgentActed(Aima.Core.Agent.IAgent,Aima.Core.Agent.IAction,Aima.Core.Agent.IEnvironmentState)">
+            <summary>
+            Indicates the Environment has changed as a result of an Agent's action. 
+            </summary>
+            <param name="agent">the Agent that performed the Action.</param>
+            <param name="action">the Action the Agent performed.</param>
+            <param name="resultingState">the EnvironmentState that resulted from the Agent's Action on the Environment.</param>
+        </member>
+        <member name="T:Aima.Core.Util.Datastructure.XYLocation">
+            <summary>
+            Note: If looking at a rectangle - the coordinate (x=0, y=0) will be the top left hand corner.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Informed.RecursiveBestFirstSearch">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 3.26, page 99.
+            
+            <code><![CDATA[
+            function RECURSIVE-BEST-FIRST-SEARCH(problem) returns a solution, or failure
+              return RBFS(problem, MAKE-NODE(problem.INITIAL-STATE), infinity)
+              
+            function RBFS(problem, node, f_limit) returns a solution, or failure and a new f-cost limit
+              if problem.GOAL-TEST(node.STATE) then return SOLUTION(node)
+              successors <- []
+              for each action in problem.ACTION(node.STATE) do
+                  add CHILD-NODE(problem, node, action) into successors
+              if successors is empty then return failure, infinity
+              for each s in successors do // update f with value from previous search, if any
+                s.f <- max(s.g + s.h, node.f)
+              repeat
+                best <- the lowest f-value node in successors
+                if best.f > f_limit then return failure, best.f
+                alternative <- the second-lowest f-value among successors
+                result, best.f <- RBFS(problem, best, min(f_limit, alternative))
+                if result != failure then return result
+            ]]></code>
+            Figure 3.26 The algorithm for recursive best-first search.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Informed.GreedyBestFirstSearch">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 92.
+            
+            Greedy best-first search tries to expand the node that is closest to the goal,
+            on the grounds that this is likely to lead to a solution quickly. Thus, it evaluates
+            nodes by using just the heuristic function; that is, f(n) = h(n)
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Informed.GreedyBestFirstEvaluationFunction">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): page 92.
+            
+            Greedy best-first search tries to expand the node that is closest to the goal,
+            on the grounds that this is likely to lead to a solution quickly. Thus, it evaluates
+            nodes by using just the heuristic function; that is, f(n) = h(n)
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Learning.Neural.NNExample.IsCorrect(Aima.Core.Util.Math.Vector)">
+            <summary>
+            compares the index having greatest value in target to indec having
+            greatest value in prediction. Ifidentical, correct
+            </summary>
+            <param name="prediction"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Aima.Core.Learning.Knowledge.CurrentBestLearning">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 19.2, page 771.
+            <code>
+            <![CDATA[
+            function CURRENT-BEST-LEARNING(examples, h) returns a hypothesis or fail
+              if examples is empty then
+                 return h
+              e <- FIRST(examples)
+              if e is consistent with h then
+                 return CURRENT-BEST-LEARNING(REST(examples), h)
+              else if e is a false positive for h then
+                for each h' in specializations of h consistent with examples seen so far do
+                  h'' <- CURRENT-BEST-LEARNING(REST(examples), h')
+                  if h'' != fail then return h''
+              else if e is a false negative for h then
+                for each h' in generalization of h consistent with examples seen so far do
+                  h'' <- CURRENT-BEST-LEARNING(REST(examples), h')
+                  if h'' != fail then return h''
+              return fail
+            ]]>
+            </code>
+            Figure 19.2 The current-best-hypothesis learning algorithm. It searches for a
+            consistent hypothesis that fits all the examples and backtracks when no consistent
+            specialization/generalization can be found. To start the algorithm, any hypothesis
+            can be passed in; it will be specialized or generalized as needed.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Environment.NQueens.AttackingPairsHeuristic">
+            <summary>
+            Estimates the distance to goal by the number of attacking pairs of queens on
+            the board.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Local.HillClimbingSearch">
+            <summary>
+            Artificial Intelligence A Modern Approach (3rd Edition): Figure 4.2, page 122.
+            
+            <code><![CDATA[
+            function HILL-CLIMBING(problem) returns a state that is a local maximum
+                               
+              current <- MAKE-NODE(problem.INITIAL-STATE)
+              loop do
+                neighbor <- a highest-valued successor of current
+                if neighbor.VALUE <= current.VALUE then return current.STATE
+                current <- neighbor
+            ]]></code>
+            Figure 4.2 The hill-climbing search algorithm, which is the most basic local search technique. 
+            At each step the current node is replaced by the best neighbor; in this version, that means 
+            the neighbor with the highest VALUE, but if a heuristic cost estimate h is used, we would find 
+            the neighbor with the lowest h.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Search.Framework.DefaultStepCostFunction">
+            <summary>
+            Returns one for every action.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Learning.Neural.NNConfig">
+            <summary>
+            a holder for config data for neural networks and possibly for other
+            learning systems.
+            </summary>
+        </member>
+        <member name="T:Aima.Core.Environment.NQueens.NQueensBoard">
+            <summary>
+            Represents a quadratic board with a matrix of squares on which queens can be
+            placed (only one per square) and moved.
+            </summary>
+        </member>
+        <member name="F:Aima.Core.Environment.NQueens.NQueensBoard.squares">
+            <summary>
+            X---> increases left to right with zero based index Y increases top to
+            bottom with zero based index | | V
+            </summary>
+        </member>
+        <member name="M:Aima.Core.Environment.NQueens.NQueensBoard.MoveQueenTo(Aima.Core.Util.Datastructure.XYLocation)">
+            <summary>
+            Moves the queen in the specified column (x-value of <paramref name="l"/>) to
+            the specified row (y-value of <paramref name="l"/>). The action assumes a
+            complete-state formulation of the n-queens problem.
+            </summary>
+            <param name="l"></param>
+        </member>
+    </members>
+</doc>

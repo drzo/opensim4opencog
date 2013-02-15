@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{111460F2-A359-4FBE-AD58-9FD11AABCB36}</ProjectGuid>
+    <ProjectGuid>{8094B88D-6B21-43ED-A53B-EC0769EECCEE}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
@@ -25,97 +25,179 @@
     </StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;VISUAL_STUDIO</DefineConstants>
+    <DefineConstants>TRACE;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
     <DocumentationFile>IrcRegionModule.XML</DocumentationFile>
+    <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
-    <Optimize>true</Optimize>
+    <Optimize>True</Optimize>
     <OutputPath>..\..\..\bin\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>3</WarningLevel>
+    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;VISUAL_STUDIO</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
     <DocumentationFile>IrcRegionModule.XML</DocumentationFile>
-    <DebugSymbols>true</DebugSymbols>
+    <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
-    <Optimize>false</Optimize>
+    <Optimize>False</Optimize>
     <OutputPath>..\..\..\bin\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>3</WarningLevel>
+    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=null">
+    <Reference Include="log4net">
+      <Name>log4net</Name>
       <HintPath>..\..\..\bin\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Runtime.Remoting" />
-    <Reference Include="System.Data" />
+    <Reference Include="System">
+      <Name>System</Name>
+    </Reference>
     <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+      <Name>System.Core</Name>
+    </Reference>
+    <Reference Include="System.Configuration">
+      <Name>System.Configuration</Name>
+    </Reference>
+    <Reference Include="System.Runtime.Remoting">
+      <Name>System.Runtime.Remoting</Name>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\main\LibCogbot\Cogbot.Library.csproj">
-      <Project>{408928E9-38D0-49E6-A51D-4E5271A22275}</Project>
       <Name>Cogbot.Library</Name>
+      <Project>{F135D32A-C34A-4961-B8E7-54D03FF721FD}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
-      <Project>{E64505B9-62DE-4AF1-93C6-DDDB42B7D4E7}</Project>
       <Name>MushDLR223</Name>
+      <Project>{6722775C-9948-4668-AB59-41E7EF5EF0CD}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj">
-      <Project>{11394F36-3BC1-42B9-B40A-E3B3DFDCF7E7}</Project>
       <Name>OpenMetaverse</Name>
+      <Project>{332DD7F5-5B7D-40BD-AFC4-0F32E1FC95D5}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverseTypes\OpenMetaverseTypes.csproj">
-      <Project>{BACB9F16-72CD-466D-9923-1C9A24AE3E22}</Project>
       <Name>OpenMetaverseTypes</Name>
+      <Project>{14F32BFD-540A-4D37-958D-63480DE18A47}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IrcBotModule.cs" />
-    <Compile Include="IrcCommand.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="smartirc4net\Consts.cs" />
-    <Compile Include="smartirc4net\EventArgs.cs" />
-    <Compile Include="smartirc4net\Exceptions.cs" />
-    <Compile Include="smartirc4net\Logger.cs" />
-    <Compile Include="smartirc4net\IrcClient\BanInfo.cs" />
-    <Compile Include="smartirc4net\IrcClient\Channel.cs" />
-    <Compile Include="smartirc4net\IrcClient\ChannelInfo.cs" />
-    <Compile Include="smartirc4net\IrcClient\ChannelUser.cs" />
-    <Compile Include="smartirc4net\IrcClient\Delegates.cs" />
-    <Compile Include="smartirc4net\IrcClient\EventArgs.cs" />
-    <Compile Include="smartirc4net\IrcClient\IrcClient.cs" />
-    <Compile Include="smartirc4net\IrcClient\IrcMessageData.cs" />
-    <Compile Include="smartirc4net\IrcClient\IrcUser.cs" />
-    <Compile Include="smartirc4net\IrcClient\NonRfcChannel.cs" />
-    <Compile Include="smartirc4net\IrcClient\NonRfcChannelUser.cs" />
-    <Compile Include="smartirc4net\IrcClient\WhoInfo.cs" />
-    <Compile Include="smartirc4net\IrcCommands\IrcCommands.cs" />
-    <Compile Include="smartirc4net\IrcCommands\Rfc2812.cs" />
-    <Compile Include="smartirc4net\IrcConnection\Delegates.cs" />
-    <Compile Include="smartirc4net\IrcConnection\EventArgs.cs" />
-    <Compile Include="smartirc4net\IrcConnection\IrcConnection.cs" />
-    <Compile Include="smartirc4net\IrcConnection\IrcProperties.cs" />
-    <Compile Include="smartirc4net\IrcConnection\IrcTcpClient.cs" />
+    <Compile Include="IrcBotModule.cs">
+    </Compile>
+    <Compile Include="IrcCommand.cs">
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs">
+    </Compile>
+    <Compile Include="smartirc4net\Consts.cs">
+    </Compile>
+    <Compile Include="smartirc4net\EventArgs.cs">
+    </Compile>
+    <Compile Include="smartirc4net\Exceptions.cs">
+    </Compile>
+    <Compile Include="smartirc4net\Logger.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\BanInfo.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\Channel.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\ChannelInfo.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\ChannelUser.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\Delegates.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\EventArgs.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\IrcClient.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\IrcMessageData.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\IrcUser.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\NonRfcChannel.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\NonRfcChannelUser.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcClient\WhoInfo.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcCommands\IrcCommands.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcCommands\Rfc2812.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcConnection\Delegates.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcConnection\EventArgs.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcConnection\IrcConnection.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcConnection\IrcProperties.cs">
+    </Compile>
+    <Compile Include="smartirc4net\IrcConnection\IrcTcpClient.cs">
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

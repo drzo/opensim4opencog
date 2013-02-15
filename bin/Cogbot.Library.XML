@@ -1,0 +1,1444 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Cogbot.Library</name>
+    </assembly>
+    <members>
+        <member name="T:Cogbot.World.SimUsage">
+            <summary>
+            An Afforance in Secondlife
+            </summary>
+        </member>
+        <member name="M:Cogbot.AListener.GetModuleName">
+            <summary>
+             Name registered in the BotClient.registrationTypes collection
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.WorldObjects.ExecuteLSL(System.String)">
+            <summary>
+            eval (thisClient.WorldSystem.GetScriptHolder "ScriptHolder")
+            eval (thisClient.WorldSystem.ExecuteLSL "llOwnerSay(llGetObjectName());")
+            </summary>
+            <param name="s"></param>
+        </member>
+        <member name="M:Cogbot.WorldObjects.GetInventoryObject(System.String)">
+            <summary>
+            first look in our folder then the the shared folder
+            </summary>
+            <param name="primName"></param>
+            <returns></returns>
+        </member>
+        <member name="F:Cogbot.WorldObjects.AssetRequestType">
+            <summary>
+            Assets that WorldObjects requested
+            </summary>
+        </member>
+        <member name="M:Cogbot.WorldObjects.AvatarAnimationHandler(System.Object,OpenMetaverse.PacketReceivedEventArgs)">
+            <summary>
+            Process incoming avatar animations
+            </summary>
+            <param name="packet"></param>
+            <param name="sim"></param>
+        </member>
+        <member name="M:Cogbot.WorldObjects.ViewerEffectHandler(System.Object,OpenMetaverse.PacketReceivedEventArgs)">
+            <summary>
+            Process an incoming effect
+            </summary>
+        </member>
+        <member name="F:Cogbot.WorldObjects._AllSimulators">
+            <summary>
+            This is all bot simulator references: the Count would be Bots*Regions
+            </summary>
+        </member>
+        <member name="M:Cogbot.WorldObjects.CatchUp(OpenMetaverse.Simulator)">
+             inspector.Show();
+        </member>
+        <member name="M:Cogbot.WorldObjects.GetVector(System.String[],System.Int32@)">
+            <summary>
+            Get a Vector relative to TheSimAvatar
+            </summary>
+            <param name="args"></param>
+            <param name="argsUsed"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.WorldObjects.GetZHeading(OpenMetaverse.Quaternion)">
+            <summary>
+            Convert a Quaternion to a Rotation around a Z-axis
+            2*PI = North
+            1/2*Pi = East
+            PI = South
+            3/2*PI = West
+            </summary>
+            <param name="simRotation">Radians</param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.WorldObjects.SendOnAddSimObject(Cogbot.World.SimObject)">
+            <summary>
+            Triggers the OnNewSimObject event.
+            </summary>
+        </member>
+        <member name="M:Cogbot.WorldObjects.SendOnRemoveSimObject(Cogbot.World.SimObject)">
+            <summary>
+            Triggers the OnRemoveSimObject event.
+            </summary>
+        </member>
+        <member name="M:Cogbot.WorldObjects.SendOnUpdateDataAspect(Cogbot.World.BotMentalAspect,System.String,System.Object,System.Object)">
+            <summary>
+            Triggers the OnUpdateDataAspect event.
+            </summary>
+        </member>
+        <member name="M:Cogbot.WorldObjects.SendOnAddPartSimObject(Cogbot.World.SimObject,System.String,System.Object,System.Object)">
+            <summary>
+            Triggers the OnAddPartSimObject event.
+            </summary>
+        </member>
+        <member name="M:Cogbot.WorldObjects.SendOnRemovePartSimObject(Cogbot.World.SimObject,System.String,System.Object,System.Object)">
+            <summary>
+            Triggers the OnRemovePartSimObject event.
+            </summary>
+        </member>
+        <member name="M:Cogbot.Actions.Command.ShowUsage">
+            <summary>
+            Show commandusage
+            </summary>
+            <returns>CmdResult Failure with a string containing the parameter usage instructions</returns>
+        </member>
+        <member name="P:Cogbot.Actions.Command.ParameterVersions">
+            <summary>
+            Introspective Parameters for calling command from code
+            </summary>
+        </member>
+        <member name="T:Cogbot.Actions.BotSystemCommand">
+            <summary>
+            An interface for commands that do not require a connected grid client
+            such as Login or settings but still targets each bot individually
+            </summary>
+        </member>
+        <member name="T:Cogbot.Actions.RegionMasterCommand">
+            <summary>
+            An interface for commands is only invoked on Region mastering bots
+            Such as terrain uploads and simulator info (10 bots doing the command at once will create problems)
+            Non region master bots are thinner clients and usually not fit for object tracking
+            </summary>
+        </member>
+        <member name="T:Cogbot.Actions.SynchronousCommand">
+            <summary>
+            An interface for commands that have to move thru a single TODO queue
+            </summary>    
+        </member>
+        <member name="T:Cogbot.Actions.AsynchronousCommand">
+            <summary>
+            An interface for commands that are mainly informational
+            </summary>    
+        </member>
+        <member name="T:Cogbot.Actions.BotPersonalCommand">
+            <summary>
+            An interface for commands that DO REQUIRE a connected grid client
+            such as say,jump,movement
+            </summary>    
+        </member>
+        <member name="M:Cogbot.BotClient.XML2Lisp2(System.String,System.String)">
+            <summary>
+            (thisClient.XML2Lisp2 "http://myserver/myservice/?q=" chatstring) 
+            </summary>
+            <param name="URL"></param>
+            <param name="args"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.BotClient.RegisterCommand(System.String,Cogbot.Actions.Command)">
+            <summary>
+            Initialize everything that needs to be initialized once we're logged in.
+            </summary>
+            <param name="login">The status of the login</param>
+            <param name="message">Error message on failure, MOTD on success.</param>
+        </member>
+        <member name="F:Cogbot.BotClient.m_EachSimEvent">
+            <summary>The event subscribers. null if no subcribers</summary>
+        </member>
+        <member name="M:Cogbot.BotClient.OnEachSimEvent(MushDLR223.ScriptEngines.CogbotEvent)">
+            <summary>Raises the EachSimEvent event</summary>
+            <param name="e">An EachSimEventEventArgs object containing the
+            data returned from the data server</param>
+        </member>
+        <member name="F:Cogbot.BotClient.m_EachSimEventLock">
+            <summary>Thread sync lock object</summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "F:Cogbot.BotClient.Running" -->
+        <member name="M:Cogbot.BotClient.#ctor(Cogbot.ClientManager,OpenMetaverse.GridClient)">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:Cogbot.BotClient.UseInventoryItem(System.String,System.String)">
+            <summary>
+            UseInventoryItem("wear","Pink Dress");
+            UseInventoryItem("attach","Torch!");
+            UseInventoryItem("animationStart","Dance Loop");
+            </summary>
+            <param name="usage"></param>
+            <param name="Item"></param>
+        </member>
+        <member name="M:Cogbot.BotClient.XmlTalk(System.String,MushDLR223.ScriptEngines.OutputDelegate)">
+            <summary>
+            Example text: <sapi> <silence msec="100" /> <bookmark mark="anim:hello.csv"/> Hi there </sapi>
+            </summary>
+            <param name="text"></param>
+            <param name="gate"></param>
+        </member>
+        <member name="M:Cogbot.BotClient.InstantMessage(OpenMetaverse.UUID,System.String,OpenMetaverse.UUID)">
+            <summary>
+            Sends instance message via radegast system
+            </summary>
+            <param name="text"></param>
+            <param name="gate"></param>
+        </member>
+        <member name="M:Cogbot.BotClient.Network_OnLogin(System.Object,OpenMetaverse.LoginProgressEventArgs)">
+            <summary>
+            Initialize everything that needs to be initialized once we're logged in.
+            </summary>
+            <param name="login">The status of the login</param>
+            <param name="message">Error message on failure, MOTD on success.</param>
+        </member>
+        <member name="E:Cogbot.BotClient.EachSimEvent">
+            <summary>Triggered when Each Sim Event packet is received,
+            telling us what our avatar is currently wearing
+            <see cref="!:RequestAgentWearables"/> request.</summary>
+        </member>
+        <member name="P:Cogbot.BotClient.InScriptMode">
+            <summary>
+            When the bot needs to be running a script Syncronously
+            </summary>
+        </member>
+        <member name="P:Cogbot.BotClient.Network">
+            <summary>Networking subsystem</summary>
+        </member>
+        <member name="P:Cogbot.BotClient.Settings">
+            <summary>Settings class including constant values and changeable
+            parameters for everything</summary>
+        </member>
+        <member name="P:Cogbot.BotClient.Parcels">
+            <summary>Parcel (subdivided simulator lots) subsystem</summary>
+        </member>
+        <member name="P:Cogbot.BotClient.Self">
+            <summary>Our own avatars subsystem</summary>
+        </member>
+        <member name="P:Cogbot.BotClient.Avatars">
+            <summary>Other avatars subsystem</summary>
+        </member>
+        <member name="P:Cogbot.BotClient.Friends">
+            <summary>Friends list subsystem</summary>
+        </member>
+        <member name="P:Cogbot.BotClient.Grid">
+            <summary>Grid (aka simulator group) subsystem</summary>
+        </member>
+        <member name="P:Cogbot.BotClient.Objects">
+            <summary>Object subsystem</summary>
+        </member>
+        <member name="P:Cogbot.BotClient.Groups">
+            <summary>Group subsystem</summary>
+        </member>
+        <member name="P:Cogbot.BotClient.Assets">
+            <summary>Asset subsystem</summary>
+        </member>
+        <member name="P:Cogbot.BotClient.Estate">
+            <summary>Asset subsystem</summary>
+        </member>
+        <member name="P:Cogbot.BotClient.Appearance">
+            <summary>Appearance subsystem</summary>
+        </member>
+        <member name="P:Cogbot.BotClient.Inventory">
+            <summary>Inventory subsystem</summary>
+        </member>
+        <member name="P:Cogbot.BotClient.Directory">
+            <summary>Directory searches including classifieds, people, land 
+            sales, etc</summary>
+        </member>
+        <member name="P:Cogbot.BotClient.Terrain">
+            <summary>Handles land, wind, and cloud heightmaps</summary>
+        </member>
+        <member name="P:Cogbot.BotClient.Sound">
+            <summary>Handles sound-related networking</summary>
+        </member>
+        <member name="P:Cogbot.BotClient.Throttle">
+            <summary>Throttling total bandwidth usage, or allocating bandwidth
+            for specific data stream types</summary>
+        </member>
+        <member name="M:Cogbot.ScriptEngines.BotScriptInterpreter.LoadFile(System.String,MushDLR223.ScriptEngines.OutputDelegate)">
+            <summary>
+            
+            
+            </summary>
+            <param name="filename"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.ScriptEngines.BotScriptInterpreter.Read(System.String,System.IO.TextReader,MushDLR223.ScriptEngines.OutputDelegate)">
+            <summary>
+            
+            </summary>
+            <param name="context_name"></param>
+            <param name="stringCodeReader"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.ScriptEngines.BotScriptInterpreter.Eof(System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="codeTree"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.ScriptEngines.BotScriptInterpreter.Intern(System.String,System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="varname"></param>
+            <param name="textForm"></param>
+        </member>
+        <member name="M:Cogbot.ScriptEngines.BotScriptInterpreter.Eval(System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="code"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.ScriptEngines.BotScriptInterpreter.Str(System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="code"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.ScriptEngines.BotScriptInterpreter.newInterpreter(System.Object)">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Cogbot.Actions.SystemApplicationCommand">
+            <summary>
+            An interface for commands that do not target any specific bots
+             Such as pathsystem maintainance or application commands
+             The gridClient used though will be GridMaster
+            </summary>
+        </member>
+        <member name="T:Cogbot.Actions.FFITODO">
+            <summary>
+            Some design work must be done to decide how FFI will construct arguments and what results are returned
+            Should be bugged if it is needed
+            Command is still operational via console
+            </summary>
+        </member>
+        <member name="T:Cogbot.Actions.FFIMarker">
+            <summary>
+            Has some FFI state subclass
+            </summary>
+        </member>
+        <member name="T:Cogbot.Actions.BotStatefullCommand">
+            <summary>
+            An interface for commands that are not recreated per call instance
+            </summary>
+        </member>
+        <member name="M:Cogbot.Actions.Communication.ImCommand.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="T:Cogbot.Actions.FFIComplete">
+            <summary>
+            Command is complete enough to be called by the foriegn function interface and from console
+            </summary>
+        </member>
+        <member name="M:Cogbot.World.SimObjectImpl.SimpleMoveTo(OpenMetaverse.Vector3d,System.Double,System.Single,System.Boolean)">
+            <summary>
+            
+            </summary>
+            <param name="finalTarget"></param>
+            <param name="maxDistance"></param>
+            <param name="maxSeconds"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.World.SimObjectImpl.GotoTargetAStar(PathSystem3D.Navigation.SimPosition)">
+            <summary>
+            Used to be 9 now its 4 times
+            </summary>
+            <param name="pos"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.World.SimObjectImpl.GetSizeDistance">
+            <summary>
+             Gets the distance a ISimAvatar may be from ISimObject to use
+            </summary>
+            <returns>1-255</returns>
+        </member>
+        <member name="M:Cogbot.World.SimObjectImpl.LogEvent(MushDLR223.ScriptEngines.CogbotEvent)">
+            <summary>
+            Returns false if the event has gone unsent
+            </summary>
+            <param name="SE"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.World.SimObjectImpl.StartGetTaskInventory">
+            <summary>
+            Retrieve a listing of the items contained in a task (Primitive)
+            </summary>
+            <param name="objectID">The tasks <seealso cref="T:OpenMetaverse.UUID"/></param>
+            <param name="objectLocalID">The tasks simulator local ID</param>
+            <param name="timeoutMS">milliseconds to wait for reply from simulator</param>
+            <returns>A list containing the inventory items inside the task or null
+            if a timeout occurs</returns>
+            <remarks>This request blocks until the response from the simulator arrives 
+            or timeoutMS is exceeded</remarks>
+        </member>
+        <member name="M:Cogbot.World.SimObjectImpl.Equals(Cogbot.World.SimObjectImpl)">
+            <summary>
+            Indicates whether the current object is equal to another object of the same type.
+            </summary>
+            <returns>
+            true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
+            </returns>
+            <param name="other">An object to compare with this object.
+                            </param>
+        </member>
+        <member name="M:Cogbot.World.SimObjectImpl.GetHashCode">
+            <summary>
+            Serves as a hash function for a particular type. 
+            </summary>
+            <returns>
+            A hash code for the current <see cref="T:System.Object"/>.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="P:Cogbot.World.SimObjectImpl.IsTouchDefined">
+            <summary>
+            Right now only sees if TouchName has been defined - need a relable way to see if script is defined.
+            </summary>
+        </member>
+        <member name="P:Cogbot.World.SimObjectImpl.IsSitDefined">
+            <summary>
+            Need a more relable way to see if script is defined.
+            </summary>
+        </member>
+        <member name="F:Cogbot.World.SimObjectImpl.SimObjectAffordanceImpl.scaleOnNeeds">
+            <summary>
+            the bonus or handicap the object has compared to the defination 
+            (more expensive chair might have more effect)
+            </summary>
+        </member>
+        <member name="M:Cogbot.World.SimObjectImpl.SimObjectPathFindingImpl.UpdateCollisions">
+            <summary>
+            Update our collisions and all of childrens
+            </summary>
+        </member>
+        <member name="F:Cogbot.Library.World.MovementDebugForm.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:Cogbot.Library.World.MovementDebugForm.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:Cogbot.Library.World.MovementDebugForm.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:Cogbot.Actions.GridMasterCommand">
+            <summary>
+            An interface for commands is only invoked on Grid mastering bots
+            Such as Directory info requests (10 bots doing the command at once will create problems)   
+            </summary>
+        </member>
+        <member name="M:Cogbot.Actions.Communication.EchoMasterCommand.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="T:Cogbot.Actions.Appearance.AppearanceCommand">
+            <summary>
+            Set avatars current appearance to appearance last stored on simulator
+            </summary>
+        </member>
+        <member name="F:Cogbot.World.SimMesh.UseExtremeDetailSize">
+            <summary>
+            UseExtremeDetailSize is compared to Scale X/Y/Z added together and if greater will try to
+              generate more faces
+            </summary>
+        </member>
+        <member name="M:Cogbot.World.SimMesh.PrimMeshToMesh(THIRDPARTY.PrimMesher.PrimMesh)">
+            <summary>
+            Convert a PrimMesher.PrimMesh to OpenSim.Region.Physics.Meshing.Mesh
+            </summary>
+            <param name="meshIn"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.World.SimMesh.PrimitiveToPrimMesh(OpenMetaverse.Primitive,Cogbot.World.LevelOfDetail,OpenMetaverse.Vector3,OpenMetaverse.Quaternion)">
+            <summary>
+            Convert a Openmetaverse.Primitive to a PrimMesh
+            </summary>
+            <param name="thePrim"></param>
+            <param name="detail"></param>
+            <param name="pos"></param>
+            <param name="rot"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.Actions.Scripting.CreateScriptCommand.EncodeScript(System.String)">
+            <summary>
+            </summary>
+            <param name="body"></param>
+        </member>
+        <member name="M:Cogbot.Actions.Inventory.EmptyTrashCommand.#ctor(Cogbot.BotClient)">
+            <summary>
+            BotClient command to download and display a notecard asset
+            </summary>
+            <param name="testClient"></param>
+        </member>
+        <member name="M:Cogbot.Actions.Inventory.EmptyTrashCommand.ExecuteRequest(MushDLR223.ScriptEngines.CmdRequest)">
+            <summary>
+            Exectute the command
+            </summary>
+            <param name="args"></param>
+            <param name="fromAgentID"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Cogbot.Actions.Groups.GroupMembersCommand">
+            <summary>
+            dumps group members to console
+            </summary>
+        </member>
+        <member name="M:Cogbot.Actions.Inventory.ViewNotecardCommand.#ctor(Cogbot.BotClient)">
+            <summary>
+            BotClient command to download and display a notecard asset
+            </summary>
+            <param name="testClient"></param>
+        </member>
+        <member name="M:Cogbot.Actions.Inventory.ViewNotecardCommand.ExecuteRequest(MushDLR223.ScriptEngines.CmdRequest)">
+            <summary>
+            Exectute the command
+            </summary>
+            <param name="args"></param>
+            <param name="fromAgentID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.ConsoleApp.Main(System.String[])">
+            <summary>
+            ///////////MINAIN COGBOT PROGRAM //////////////////////////
+            </summary>
+            <param name="args"></param>
+        </member>
+        <member name="M:Cogbot.ConsoleApp.SetCogbotCommandLineOptions(System.String[])">
+            <summary>
+            runs in current thread
+            </summary>
+            <param name="args"></param>
+        </member>
+        <member name="M:Cogbot.ConsoleApp.RadegastMain(System.String[])">
+            <summary>
+            The main entry point for the application.
+            </summary>
+        </member>
+        <member name="M:Cogbot.ConsoleApp.RunInThread(System.Threading.ApartmentState,System.Threading.ThreadStart,System.Boolean)">
+            <summary>
+            runs in a STA thread (by creating one)  Does not "join"
+            </summary>
+            <param name="args"></param>        
+        </member>
+        <member name="T:Cogbot.World.SimRegion">
+            <summary>
+            Denotes a Simulator region and can help with bot navigation
+            </summary>
+        </member>
+        <member name="M:Cogbot.World.SimRegion.GlobalPosToRegionHandle(System.Single,System.Single,System.Single@,System.Single@)">
+            <summary>
+            Given an X/Y location in absolute (grid-relative) terms, a region
+            handle is returned along with the local X/Y location in that region
+            </summary>
+            <param name="globalX">The absolute X location, a number such as 
+            255360.35</param>
+            <param name="globalY">The absolute Y location, a number such as
+            255360.35</param>
+            <param name="localX">The sim-local X position of the global X
+            position, a value from 0.0 to 256.0</param>
+            <param name="localY">The sim-local Y position of the global Y
+            position, a value from 0.0 to 256.0</param>
+            <returns>A 64-bit region handle that can be used to teleport to</returns>
+        </member>
+        <member name="M:Cogbot.World.SimRegion.GetUsableLocalPositionOf(OpenMetaverse.Vector3,System.Single)">
+            <summary>
+             The closet usable space to the v3 TODO
+            </summary>
+            <param name="v3"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.World.SimRegion.GetWaypointOf(OpenMetaverse.Vector3)">
+            <summary>
+             The closet usable waypoint to the v3 TODO
+            </summary>
+            <param name="v3"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.World.SimRegion.GetSimPosition">
+            <summary>
+            The middle of the Region
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.World.SimRegion.GetSizeDistance">
+            <summary>
+            The closet usable space to the middle of the Region
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.World.SimRegion.GetLocalLeftPos(PathSystem3D.Navigation.SimPosition,System.Int32,System.Double)">
+            <summary>
+            
+            </summary>
+            <param name="zAngleFromFace"></param>
+            <param name="distance"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.World.SimRegion.GetGlobalLeftPos(PathSystem3D.Navigation.SimPosition,System.Int32,System.Double)">
+            <summary>
+            
+            </summary>
+            <param name="zAngleFromFace"></param>
+            <param name="distance"></param>
+            <returns></returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "P:Cogbot.World.SimRegion.N" -->
+        <member name="P:Cogbot.World.SimRegion.TheSimulator">
+             <summary>
+            Getter gets the best simulator and the setter adds the simulator to the known collection
+             </summary>
+        </member>
+        <member name="M:Cogbot.WorldObjectsModule.GetModuleName">
+            <summary>
+             Name registered in the BotClient.registrationTypes collection
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Cogbot.Actions.Land.AgentLocationsCommand">
+            <summary>
+            Display a list of all agent locations in a specified region
+            </summary>
+        </member>
+        <member name="T:Cogbot.Actions.Groups.ActivateGroupCommand">
+            <summary>
+            Changes Avatars currently active group
+            </summary>
+        </member>
+        <member name="M:Cogbot.Actions.WebUtil.HttpPost.DoHttpPost(System.String,System.Collections.Specialized.NameValueCollection)">
+            <summary>
+            Posts the supplied data to specified url.
+            </summary>
+            <param name="url">The url to post to.</param>
+            <param name="values">The values to post.</param>
+            <returns>a string containing the result of the post.</returns>
+        </member>
+        <member name="M:Cogbot.Actions.WebUtil.HttpPost.EncodeAndAddItem(System.Text.StringBuilder@,System.String,System.String)">
+            <summary>
+            Encodes an item and ads it to the string.
+            </summary>
+            <param name="baseRequest">The previously encoded data.</param>
+            <param name="dataItem">The data to encode.</param>
+            <returns>A string containing the old data and the previously encoded data.</returns>
+        </member>
+        <member name="T:Cogbot.Actions.Groups.GroupRolesCommand">
+            <summary>
+            dumps group roles to console
+            </summary>
+        </member>
+        <member name="T:Cogbot.Actions.Friends.FriendsCommand">
+            <summary>
+            Shows a list of friends
+            </summary>
+        </member>
+        <member name="M:Cogbot.Actions.Friends.FriendsCommand.#ctor(Cogbot.BotClient)">
+            <summary>
+            Constructor for FriendsCommand class
+            </summary>
+            <param name="testClient">A reference to the BotClient object</param>
+        </member>
+        <member name="M:Cogbot.Actions.Friends.FriendsCommand.ExecuteRequest(MushDLR223.ScriptEngines.CmdRequest)">
+            <summary>
+            Get a list of current friends
+            </summary>
+            <param name="args">optional testClient command arguments</param>
+            <param name="fromAgentID">The <seealso cref="T:OpenMetaverse.UUID"/> 
+            of the agent making the request</param>
+            <returns></returns>
+        </member>
+        <member name="T:Cogbot.Actions.Search.SearchLandCommand">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:Cogbot.Actions.Search.SearchLandCommand.#ctor(Cogbot.BotClient)">
+            <summary>
+            Construct a new instance of the SearchLandCommand
+            </summary>
+            <param name="testClient"></param>
+        </member>
+        <member name="M:Cogbot.Actions.Search.SearchLandCommand.ExecuteRequest(MushDLR223.ScriptEngines.CmdRequest)">
+            <summary>
+            
+            </summary>
+            <param name="args"></param>
+            <param name="fromAgentID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.Actions.Search.SearchLandCommand.Directory_DirLand(System.Object,OpenMetaverse.DirLandReplyEventArgs)">
+            <summary>
+            Process the search reply
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="T:OpenMetaverse.AssetCacheWithExtensions">
+            <summary>
+            Class that handles the local asset cache
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.AssetCacheWithExtensions.#ctor(OpenMetaverse.GridClient)">
+            <summary>
+            Default constructor
+            </summary>
+            <param name="client">A reference to the GridClient object</param>
+        </member>
+        <member name="M:OpenMetaverse.AssetCacheWithExtensions.DestroyTimer">
+            <summary>
+            Disposes cleanup timer
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.AssetCacheWithExtensions.SetupTimer">
+            <summary>
+            Only create timer when needed
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.AssetCacheWithExtensions.GetCachedAssetBytes(OpenMetaverse.UUID)">
+            <summary>
+            Return bytes read from the local asset cache, null if it does not exist
+            </summary>
+            <param name="assetID">UUID of the asset we want to get</param>
+            <returns>Raw bytes of the asset, or null on failure</returns>
+        </member>
+        <member name="M:OpenMetaverse.AssetCacheWithExtensions.GetCachedImage(OpenMetaverse.UUID)">
+            <summary>
+            Returns ImageDownload object of the
+            image from the local image cache, null if it does not exist
+            </summary>
+            <param name="imageID">UUID of the image we want to get</param>
+            <returns>ImageDownload object containing the image, or null on failure</returns>
+        </member>
+        <member name="M:OpenMetaverse.AssetCacheWithExtensions.FileName(OpenMetaverse.UUID,OpenMetaverse.AssetType)">
+            <summary>
+            Constructs a file name of the cached asset
+            </summary>
+            <param name="assetID">UUID of the asset</param>
+            <returns>String with the file name of the cahced asset</returns>
+        </member>
+        <member name="M:OpenMetaverse.AssetCacheWithExtensions.StaticFileName(OpenMetaverse.UUID)">
+            <summary>
+            Constructs a file name of the static cached asset
+            </summary>
+            <param name="assetID">UUID of the asset</param>
+            <returns>String with the file name of the static cached asset</returns>
+        </member>
+        <member name="M:OpenMetaverse.AssetCacheWithExtensions.SaveAssetToCache(OpenMetaverse.UUID,System.Byte[])">
+            <summary>
+            Saves an asset to the local cache
+            </summary>
+            <param name="assetID">UUID of the asset</param>
+            <param name="assetData">Raw bytes the asset consists of</param>
+            <returns>Weather the operation was successfull</returns>
+        </member>
+        <member name="M:OpenMetaverse.AssetCacheWithExtensions.AssetFileName(OpenMetaverse.UUID,OpenMetaverse.AssetType)">
+            <summary>
+            Get the file name of the asset stored with gived UUID
+            </summary>
+            <param name="assetID">UUID of the asset</param>
+            <returns>Null if we don't have that UUID cached on disk, file name if found in the cache folder</returns>
+        </member>
+        <member name="M:OpenMetaverse.AssetCacheWithExtensions.HasAsset(OpenMetaverse.UUID)">
+            <summary>
+            Checks if the asset exists in the local cache
+            </summary>
+            <param name="assetID">UUID of the asset</param>
+            <returns>True is the asset is stored in the cache, otherwise false</returns>
+        </member>
+        <member name="M:OpenMetaverse.AssetCacheWithExtensions.Clear">
+            <summary>
+            Wipes out entire cache
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.AssetCacheWithExtensions.Prune">
+            <summary>
+            Brings cache size to the 90% of the max size
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.AssetCacheWithExtensions.BeginPrune">
+            <summary>
+            Asynchronously brings cache size to the 90% of the max size
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.AssetCacheWithExtensions.GetFileSize(System.IO.FileInfo[])">
+            <summary>
+            Adds up file sizes passes in a FileInfo array
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.AssetCacheWithExtensions.Operational">
+            <summary>
+            Checks whether caching is enabled
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.AssetCacheWithExtensions.cleanerTimer_Elapsed(System.Object,System.Timers.ElapsedEventArgs)">
+            <summary>
+            Periodically prune the cache
+            </summary>
+        </member>
+        <member name="M:OpenMetaverse.AssetCacheWithExtensions.NiceFileSize(System.Int64)">
+            <summary>
+            Nicely formats file sizes
+            </summary>
+            <param name="byteCount">Byte size we want to output</param>
+            <returns>String with humanly readable file size</returns>
+        </member>
+        <member name="P:OpenMetaverse.AssetCacheWithExtensions.AutoPruneEnabled">
+            <summary>
+            Allows setting weather to periodicale prune the cache if it grows too big
+            Default is enabled, when caching is enabled
+            </summary>
+        </member>
+        <member name="P:OpenMetaverse.AssetCacheWithExtensions.AutoPruneInterval">
+            <summary>
+            How long (in ms) between cache checks (default is 5 min.) 
+            </summary>
+        </member>
+        <member name="T:OpenMetaverse.AssetCacheWithExtensions.SortFilesByAccesTimeHelper">
+            <summary>
+            Helper class for sorting files by their last accessed time
+            </summary>
+        </member>
+        <member name="M:Cogbot.World.SimAvatarSight.GetKnownObjects">
+            <summary>
+            Returns hopefully at least three objects sorted by distance
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="F:Cogbot.World.SimAvatarImpl._knownTypeUsages">
+            <summary>
+             Action template stubs 
+            </summary>
+        </member>
+        <member name="F:Cogbot.World.SimAvatarImpl.KnownSimObjects">
+            <summary>
+            things the bot cycles through mentally
+            </summary>
+        </member>
+        <member name="M:Cogbot.World.SimAvatarImpl.GetKnownObjects">
+            <summary>
+            Returns hopefully at least three objects sorted by distance
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.World.SimAvatarImpl.ScanNewObjects(System.Int32,System.Double,System.Boolean)">
+            <summary>
+             
+            </summary>
+            <param name="minimum"></param>
+            <param name="sightRange"></param>
+        </member>
+        <member name="M:Cogbot.World.SimAvatarImpl.AddKnowns(System.Collections.Generic.IEnumerable{Cogbot.World.SimObject})">
+            <summary>
+             
+            </summary>
+            <param name="objects"></param>
+        </member>
+        <member name="M:Cogbot.World.SimAvatarImpl.ResetRegion(System.UInt64)">
+            <summary>
+             
+            </summary>
+            <param name="regionHandle"></param>
+        </member>
+        <member name="M:Cogbot.World.SimAvatarImpl.GetSizeDistance">
+            <summary>
+              Avatars approach distance
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.World.SimAvatarImpl.OnAvatarAnimations(System.Collections.Generic.List{OpenMetaverse.Animation})">
+            public UUID CurrentAmin = UUID.Zero;
+            <summary>
+             Nephrael Rae: [on-object-animation '(avatar "Candie Brooks") "TALK"][on-object-animation '(avatar "Candie Brooks") "STAND_1"][on-object-animation '(avatar "Candie Brooks") "e45fbdc9-af8f-9408-f742-fcb8c341d2c8"]
+            </summary>
+            <param name="anims"></param>
+        </member>
+        <member name="P:Cogbot.World.SimAvatarImpl.KnownTypeUsages">
+            <summary>
+             Action template stubs 
+            </summary>
+        </member>
+        <member name="P:Cogbot.World.SimAvatarImpl.IsSitting">
+             public override ISimObject Parent {  get { return this; }   }
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:Cogbot.World.SimAvatarClient.Do(Cogbot.World.SimTypeUsage,Cogbot.World.SimObject)" -->
+        <member name="M:Cogbot.World.SimAvatarClient.Approach(Cogbot.World.SimObject,System.Double)">
+            <summary>
+             
+            </summary>
+            <param name="obj"></param>
+            <param name="maxDistance"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.World.SimAvatarClient.SimpleMoveTo(OpenMetaverse.Vector3d,System.Double,System.Single,System.Boolean)">
+            <summary>
+             
+            </summary>
+            <param name="finalTarget"></param>
+            <param name="maxDistance"></param>
+            <param name="maxSeconds"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.World.SimAvatarClient.SetObjectRotation(OpenMetaverse.Quaternion)">
+            = new Thread(TrackerLoop);
+        </member>
+        <member name="M:Cogbot.World.SimAvatarClient.SitOn(Cogbot.World.SimObject)">
+            <summary>
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </summary>
+            <param name="someObject"></param>
+            <returns></returns>
+        </member>
+        <member name="P:Cogbot.World.SimAvatarClient.CurrentAction">
+            <summary>
+             Current action 
+            </summary>       
+        </member>
+        <member name="P:Cogbot.World.SimAvatarClient.IsSitting">
+             public override ISimObject Parent {  get { return this; }   }
+        </member>
+        <member name="M:Cogbot.ScriptEngines.XmlScriptInterpreter.LoadFile(System.String,MushDLR223.ScriptEngines.OutputDelegate)">
+            <summary>
+            
+            
+            </summary>
+            <param name="filename"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.ScriptEngines.XmlScriptInterpreter.Read(System.String,System.IO.TextReader,MushDLR223.ScriptEngines.OutputDelegate)">
+            <summary>
+            
+            </summary>
+            <param name="context_name"></param>
+            <param name="stringCodeReader"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.ScriptEngines.XmlScriptInterpreter.Eof(System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="codeTree"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.ScriptEngines.XmlScriptInterpreter.Intern(System.String,System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="varname"></param>
+            <param name="textForm"></param>
+        </member>
+        <member name="M:Cogbot.ScriptEngines.XmlScriptInterpreter.Eval(System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="code"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.ScriptEngines.XmlScriptInterpreter.Str(System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="code"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.ScriptEngines.XmlScriptInterpreter.newInterpreter(System.Object)">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.ScriptEngines.XmlScriptInterpreter.XML2Lisp2(System.String,System.String)">
+            <summary>
+            (thisClient.XML2Lisp2 "http://myserver/myservice/?q=" chatstring) 
+            </summary>
+            <param name="URL"></param>
+            <param name="args"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.Actions.System.ShowEffectsCommand.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="M:Cogbot.Actions.Search.FindObjectsCommand.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="M:Cogbot.Actions.Inventory.Shell.ListContentsCommand.PermMaskString(OpenMetaverse.PermissionMask)">
+            <summary>
+            Returns a 3-character summary of the PermissionMask
+            CMT if the mask allows copy, mod and transfer
+            -MT if it disallows copy
+            --T if it only allows transfer
+            --- if it disallows everything
+            </summary>
+            <param name="mask"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Cogbot.Actions.Friends.RemoveFriendCommand">
+            <summary>
+            Shows a list of friends
+            </summary>
+        </member>
+        <member name="M:Cogbot.Actions.Friends.RemoveFriendCommand.#ctor(Cogbot.BotClient)">
+            <summary>
+            Constructor for FriendsCommand class
+            </summary>
+            <param name="testClient">A reference to the BotClient object</param>
+        </member>
+        <member name="M:Cogbot.Actions.Friends.RemoveFriendCommand.ExecuteRequest(MushDLR223.ScriptEngines.CmdRequest)">
+            <summary>
+            Get a list of current friends
+            </summary>
+            <param name="args">optional testClient command arguments</param>
+            <param name="fromAgentID">The <seealso cref="T:OpenMetaverse.UUID"/> 
+            of the agent making the request</param>
+            <returns></returns>
+        </member>
+        <member name="F:Cogbot.World.MovementProceedure.AStar">
+            <summary>
+            Use A* Pathfinding to get to object
+            </summary>
+        </member>
+        <member name="M:Cogbot.Actions.Inventory.EmptyLostAndCommand.#ctor(Cogbot.BotClient)">
+            <summary>
+            BotClient command to download and display a notecard asset
+            </summary>
+            <param name="testClient"></param>
+        </member>
+        <member name="M:Cogbot.Actions.Inventory.EmptyLostAndCommand.ExecuteRequest(MushDLR223.ScriptEngines.CmdRequest)">
+            <summary>
+            Exectute the command
+            </summary>
+            <param name="args"></param>
+            <param name="fromAgentID"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Cogbot.Actions.Friends.AddFriendCommand">
+            <summary>
+            Shows a list of friends
+            </summary>
+        </member>
+        <member name="M:Cogbot.Actions.Friends.AddFriendCommand.#ctor(Cogbot.BotClient)">
+            <summary>
+            Constructor for FriendsCommand class
+            </summary>
+            <param name="testClient">A reference to the BotClient object</param>
+        </member>
+        <member name="M:Cogbot.Actions.Friends.AddFriendCommand.ExecuteRequest(MushDLR223.ScriptEngines.CmdRequest)">
+            <summary>
+            Get a list of current friends
+            </summary>
+            <param name="args">optional testClient command arguments</param>
+            <param name="fromAgentID">The <seealso cref="T:OpenMetaverse.UUID"/> 
+            of the agent making the request</param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.ClientManager.LoginHandler(OpenMetaverse.LoginStatus,System.String)">
+            <summary>
+            Initialize everything that needs to be initialized once we're logged in.
+            </summary>
+            <param name="login">The status of the login</param>
+            <param name="message">Error message on failure, MOTD on success.</param>
+        </member>
+        <member name="M:Cogbot.ClientManager.#ctor(System.Collections.Generic.IEnumerable{Cogbot.LoginDetails},System.Boolean)">
+            <summary>
+            
+            </summary>
+            <param name="accounts"></param>
+        </member>
+        <member name="M:Cogbot.ClientManager.BotClientForAcct(Cogbot.LoginDetails)">
+            <summary>
+            
+            </summary>
+            <param name="account"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.ClientManager.Login(System.String[])">
+            <summary>
+            
+            </summary>
+            <param name="args"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.ClientManager.Run">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:Cogbot.ClientManager.DoCommandAll(System.String,OpenMetaverse.UUID,MushDLR223.ScriptEngines.OutputDelegate)">
+            <summary>
+            
+            </summary>
+            <param name="cmd"></param>
+            <param name="fromAgentID"></param>
+            <param name="imSessionID"></param>
+        </member>
+        <member name="M:Cogbot.ClientManager.Logout(Cogbot.BotClient)">
+            <summary>
+            
+            </summary>
+            <param name="CurrentClient"></param>
+        </member>
+        <member name="M:Cogbot.ClientManager.Quit">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:Cogbot.LoginDetails.ToString">
+            <summary>A randomly generated ID to distinguish between login attempts. This value is only used
+            internally in the library and is never sent over the wire</summary>
+        </member>
+        <member name="M:Cogbot.LoginDetails.GetHashCode">
+            <summary>
+            Serves as a hash function for a particular type. 
+            </summary>
+            <returns>
+            A hash code for the current <see cref="T:System.Object"/>.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="P:Cogbot.LoginDetails.Timeout">
+            <summary>The number of milliseconds to wait before a login is considered
+            failed due to timeout</summary>
+        </member>
+        <member name="P:Cogbot.LoginDetails.MethodName">
+            <summary>The request method</summary>
+            <remarks>login_to_simulator is currently the only supported method</remarks>
+        </member>
+        <member name="P:Cogbot.LoginDetails.Platform">
+            <summary>A string containing the platform information the agent is running on</summary>
+        </member>
+        <member name="P:Cogbot.LoginDetails.MAC">
+            <summary>A string hash of the network cards Mac Address</summary>
+        </member>
+        <member name="P:Cogbot.LoginDetails.ViewerDigest">
+            <summary>Unknown or deprecated</summary>
+        </member>
+        <member name="P:Cogbot.LoginDetails.ID0">
+            <summary>A string hash of the first disk drives ID used to identify this clients uniqueness</summary>
+        </member>
+        <member name="P:Cogbot.LoginDetails.UserAgent">
+            <summary>A string containing the viewers Software, this is not directly sent to the login server but 
+            instead is used to generate the Version string</summary>
+        </member>
+        <member name="P:Cogbot.LoginDetails.Author">
+            <summary>A string representing the software creator. This is not directly sent to the login server but
+            is used by the library to generate the Version information</summary>
+        </member>
+        <member name="P:Cogbot.LoginDetails.AgreeToTos">
+            <summary>If true, this agent agrees to the Terms of Service of the grid its connecting to</summary>
+        </member>
+        <member name="P:Cogbot.LoginDetails.ReadCritical">
+            <summary>Unknown</summary>
+        </member>
+        <member name="P:Cogbot.LoginDetails.Options">
+            <summary>An array of string sent to the login server to enable various options</summary>
+        </member>
+        <member name="P:Cogbot.LoginDetails.FirstName">
+            <summary>The Agents First name</summary>
+        </member>
+        <member name="P:Cogbot.LoginDetails.LastName">
+            <summary>The Agents Last name</summary>
+        </member>
+        <member name="P:Cogbot.LoginDetails.Password">
+            <summary>A md5 hashed password</summary>
+            <remarks>plaintext password will be automatically hashed</remarks>
+        </member>
+        <member name="P:Cogbot.LoginDetails.URI">
+            <summary>The URL of the Login Server</summary>
+        </member>
+        <member name="P:Cogbot.LoginDetails.Version">
+            <summary>The client software version information</summary>
+            <remarks>The official viewer uses: Second Life Release n.n.n.n 
+            where n is replaced with the current version of the viewer</remarks>
+        </member>
+        <member name="P:Cogbot.LoginDetails.Start">
+            <summary>The agents starting location once logged in</summary>
+            <remarks>Either "last", "home", or a string encoded URI 
+            containing the simulator name and x/y/z coordinates e.g: uri:hooper&amp;128&amp;152&amp;17</remarks>
+        </member>
+        <member name="P:Cogbot.LoginDetails.Channel">
+            <summary>A string containing the client software channel information</summary>
+            <example>Second Life Release</example>
+        </member>
+        <member name="T:Cogbot.BotPermissions">
+            <summary>
+             
+            </summary>
+        </member>
+        <member name="T:Cogbot.Library.Properties.Resources">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:Cogbot.Library.Properties.Resources.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:Cogbot.Library.Properties.Resources.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+        <member name="P:Cogbot.Library.Properties.Resources.cogbotAuthor">
+            <summary>
+              Looks up a localized string similar to Daxtron Labs.
+            </summary>
+        </member>
+        <member name="P:Cogbot.Library.Properties.Resources.cogbotTitle">
+            <summary>
+              Looks up a localized string similar to cogbot.
+            </summary>
+        </member>
+        <member name="T:Cogbot.Actions.Inventory.Shell.DeleteFolderCommand">
+            <summary>
+            Inventory Example, Moves a folder to the Trash folder
+            </summary>
+        </member>
+        <member name="M:Cogbot.Actions.Appearance.SetTextureIndexCommand.ExecuteRequest(MushDLR223.ScriptEngines.CmdRequest)">
+            <summary>
+            //settexture 5 8dcd4a48-2d37-4909-9f78-f7a9eb4ef903
+            </summary>
+            <param name="args"></param>
+            <param name="fromAgentID"></param>
+            <param name="WriteLine"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Cogbot.Actions.FFINOUSE">
+            <summary>
+            THe FFI arleady has a better way to call and the command should not be used
+            Command is still operational via console
+            </summary>
+        </member>
+        <member name="F:Cogbot.World.SimTypeSystem.objectTypes">
+             
+             STATIC METHODS
+             
+             
+            
+        </member>
+        <member name="M:Cogbot.Actions.Pathfinder.meshinfo.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="M:Cogbot.Utilities.BotTcpServer.startSocketListener">
+            Configuration config;
+        </member>
+        <member name="M:Cogbot.Actions.Estate.UploadRawTerrainCommand.Cleanup">
+            <summary>
+            Unregister previously subscribed event handlers
+            </summary>
+        </member>
+        <member name="T:Cogbot.Actions.GUICommand">
+            <summary>
+            An interface for commands that require a windowing interface
+            </summary>    
+        </member>
+        <member name="P:Cogbot.Actions.CommandInfo.ParameterVersions">
+            <summary>
+            Introspective Parameters for calling command from code
+            </summary>
+        </member>
+        <member name="T:Cogbot.Actions.Scripting.UploadScriptCommand">
+            <summary>
+            Example of how to put a new script in your inventory
+            </summary>
+        </member>
+        <member name="M:Cogbot.Actions.Scripting.UploadScriptCommand.#ctor(Cogbot.BotClient)">
+            <summary>
+             The default constructor for BotClient commands
+            </summary>
+            <param name="testClient"></param>
+        </member>
+        <member name="M:Cogbot.Actions.Scripting.UploadScriptCommand.ExecuteRequest(MushDLR223.ScriptEngines.CmdRequest)">
+            <summary>
+            The default override for BotClient commands
+            </summary>
+            <param name="args"></param>
+            <param name="fromAgentID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.Actions.Scripting.UploadScriptCommand.EncodeScript(System.String)">
+            <summary>
+            Encodes the script text for uploading
+            </summary>
+            <param name="body"></param>
+        </member>
+        <member name="M:Cogbot.Actions.Movement.FollowCommand.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="F:Cogbot.Actions.SimExport.BackupCommand.MAX_TRANSFERS">
+            <summary>Maximum number of transfer requests to send to the server</summary>
+        </member>
+        <member name="M:Cogbot.Actions.SimExport.BackupCommand.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="M:Cogbot.Actions.SimExport.BackupCommand.BackupFolder(OpenMetaverse.InventoryNode,System.String)">
+            <summary>
+            BackupFolder - recurse through the inventory nodes sending scripts and notecards to the transfer queue
+            </summary>
+            <param name="folder">The current leaf in the inventory tree</param>
+            <param name="sPathSoFar">path so far, in the form @"c:\here" -- this needs to be "clean" for the current filesystem</param>
+        </member>
+        <member name="M:Cogbot.Actions.SimExport.BackupCommand.BoolToNot(System.Boolean)">
+            <summary>
+            returns blank or "not" if false
+            </summary>
+            <param name="b"></param>
+            <returns></returns>
+        </member>
+        <member name="P:Cogbot.Actions.SimExport.BackupCommand.BackgroundBackupRunning">
+            <summary>
+            true if either of the background threads is running
+            </summary>
+        </member>
+        <member name="P:Cogbot.Actions.SimExport.BackupCommand.InventoryWalkerRunning">
+            <summary>
+            true if the thread walking inventory is running
+            </summary>
+        </member>
+        <member name="P:Cogbot.Actions.SimExport.BackupCommand.QueueRunnerRunning">
+            <summary>
+            true if the thread feeding the queue to the server is running
+            </summary>
+        </member>
+        <member name="P:Cogbot.Actions.SimExport.BackupCommand.BackgroundBackupStatus">
+            <summary>
+            returns a string summarizing activity
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Cogbot.Actions.Estate.DownloadTerrainCommand">
+            <summary>
+            Request the raw terrain file from the simulator, save it as a file.
+            
+            Can only be used by the Estate Owner
+            </summary>
+        </member>
+        <member name="F:Cogbot.Actions.Estate.DownloadTerrainCommand.xferTimeout">
+            <summary>
+            Create a Synchronization event object
+            </summary>
+        </member>
+        <member name="F:Cogbot.Actions.Estate.DownloadTerrainCommand.result">
+            <summary>A string we use to report the result of the request with.</summary>
+        </member>
+        <member name="M:Cogbot.Actions.Estate.DownloadTerrainCommand.#ctor(Cogbot.BotClient)">
+            <summary>
+            Download a simulators raw terrain data and save it to a file
+            </summary>
+            <param name="testClient"></param>
+        </member>
+        <member name="M:Cogbot.Actions.Estate.DownloadTerrainCommand.ExecuteRequest(MushDLR223.ScriptEngines.CmdRequest)">
+            <summary>
+            Execute the application
+            </summary>
+            <param name="args">arguments passed to this module</param>
+            <param name="fromAgentID">The ID of the avatar sending the request</param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.Actions.Estate.DownloadTerrainCommand.Assets_XferReceived(System.Object,OpenMetaverse.XferReceivedEventArgs)">
+            <summary>
+            Handle the reply to the OnXferReceived event
+            </summary>
+        </member>
+        <member name="M:Cogbot.Actions.Agent.ProfileCloneCommand.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="T:Cogbot.World.SimTypeUsage">
+            <summary>
+            An Afforance in Secondlife
+            </summary>
+        </member>
+        <member name="F:Cogbot.World.SimTypeUsage.LispScript">
+            if set the client will attempt to run
+            the lisp code that does the animation effects
+        </member>
+        <member name="M:Cogbot.Actions.Movement.RotateCommand.OffsetGobal(System.UInt64,OpenMetaverse.Vector3)">
+            <summary>
+            Offsets a position by the Global position determined by the region handle
+            </summary>
+            <param name="regionHandle"></param>
+            <param name="pos"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Cogbot.Actions.Movement.RotateCommand.ExecuteRequest(MushDLR223.ScriptEngines.CmdRequest)">
+                        textform> rotate
+                        Second Bot: Rotation is at 0
+                        textform> rotate 90
+                        Second Bot: Turned 90             
+        </member>
+        <member name="T:Cogbot.Actions.Land.GridHealthCommand">
+            <summary>
+            Display a list of all agent locations in a specified region
+            </summary>
+        </member>
+        <member name="F:Cogbot.Actions.Land.GridHealthCommand.Regions">
+            <summary>A dictionary of all the regions, indexed by region name</summary>
+        </member>
+        <member name="F:Cogbot.Actions.Land.GridHealthCommand.RegionsByHandle">
+            <summary>A dictionary of all the regions, indexed by region handle</summary>
+        </member>
+        <member name="M:Cogbot.Actions.Land.GridHealthCommand.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+            <filterpriority>2</filterpriority>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>RoboKindAvroQPIDPluginModule</name>
+    </assembly>
+    <members>
+        <member name="M:WorldRoboKindAvroQPIDModule.WorldRoboKindAvroQPIDModuleMain.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+            <filterpriority>2</filterpriority>
+        </member>
+    </members>
+</doc>

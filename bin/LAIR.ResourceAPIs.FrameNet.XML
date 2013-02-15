@@ -1,0 +1,715 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>LAIR.ResourceAPIs.FrameNet</name>
+    </assembly>
+    <members>
+        <member name="T:LAIR.ResourceAPIs.FrameNet.Frame">
+            <summary>
+            Represents a FrameNet frame
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Frame.op_Equality(LAIR.ResourceAPIs.FrameNet.Frame,LAIR.ResourceAPIs.FrameNet.Frame)">
+            <summary>
+            Equality operator
+            </summary>
+            <param name="f1"></param>
+            <param name="f2"></param>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Frame.op_Inequality(LAIR.ResourceAPIs.FrameNet.Frame,LAIR.ResourceAPIs.FrameNet.Frame)">
+            <summary>
+            Inequality operator
+            </summary>
+            <param name="f1"></param>
+            <param name="f2"></param>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Frame.#cctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Frame.GetFrameRelation(System.String)">
+            <summary>
+            Gets a frame relation from it's XML attribute name
+            </summary>
+            <param name="relation">Relation name</param>
+            <returns>Frame relation</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Frame.#ctor(System.String,System.String,System.Int32)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="name">Name of frame</param>
+            <param name="definition">Definition of frame</param>
+            <param name="id">ID of frame</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Frame.GetRelatedFrames(LAIR.ResourceAPIs.FrameNet.Frame.FrameRelation,LAIR.ResourceAPIs.FrameNet.Frame.FrameRelationDirection,System.Boolean)">
+            <summary>
+            Gets a list of related frames
+            </summary>
+            <param name="relation">Type of relation to fetch</param>
+            <param name="relationDirection">Relation direction</param>
+            <param name="recursive">Whether or not to get related frames recursively</param>
+            <returns>Set of frames</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Frame.GetRelatedFrames(LAIR.ResourceAPIs.FrameNet.Frame.FrameRelation,LAIR.ResourceAPIs.FrameNet.Frame.FrameRelationDirection,System.Boolean,LAIR.ResourceAPIs.FrameNet.FrameSet)">
+            <summary>
+            Gets a list of related frames
+            </summary>
+            <param name="relation">Type of relation to fetch</param>
+            <param name="relationDirection">Relation direction</param>
+            <param name="recursive">Whether or not to get related frames recursively</param>
+            <param name="currentFrames">Current set of frames</param>
+            <returns>Set of frames</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Frame.ToString">
+            <summary>
+            Gets the name of this frame
+            </summary>
+            <returns>Name of this frame</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Frame.Equals(System.Object)">
+            <summary>
+            Gets whether this frame equals another
+            </summary>
+            <param name="obj">Object for comparison</param>
+            <returns>True if frames are equal, False otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Frame.GetHashCode">
+            <summary>
+            Gets hashcode for this frame
+            </summary>
+            <returns>Hashcode for this frame</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Frame.GetSuperFrames(LAIR.ResourceAPIs.FrameNet.Frame.FrameRelation)">
+            <summary>
+            Gets super-frames
+            </summary>
+            <param name="relation">Relation to query</param>
+            <returns>Super-frames</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Frame.GetSubFrames(LAIR.ResourceAPIs.FrameNet.Frame.FrameRelation)">
+            <summary>
+            Gets sub-frames
+            </summary>
+            <param name="relation">Relation to query</param>
+            <returns>Sub-frames</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.Frame.FrameElements">
+            <summary>
+            Gets frame elements in this frame
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.Frame.LexicalUnits">
+            <summary>
+            Gets lexical units in this frame
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.Frame.Name">
+            <summary>
+            Gets the name of the frame. Both the ID and Name are unique identifiers.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.Frame.Definition">
+            <summary>
+            Gets the definition
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.Frame.ID">
+            <summary>
+            Gets ID for frame. Both the ID and Name are unique identifiers.
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.FrameNet.Frame.FrameRelation">
+            <summary>
+            Different relations that can hold between two frames
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.FrameNet.Frame.FrameRelationDirection">
+            <summary>
+            Directions for frame relations
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.FrameNet.Frame.FrameRelationDirection.Super">
+            <summary>
+            Super frame
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.FrameNet.Frame.FrameRelationDirection.Sub">
+            <summary>
+            Sub frame
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.FrameNet.Frame.FrameRelationDirection.Both">
+            <summary>
+            Indicate both super- and sub-frames
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.FrameNet.LexicalUnitAnnotationEngine">
+            <summary>
+            Lexical unit annotation engine
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.LexicalUnitAnnotationEngine.#ctor(System.String,LAIR.ResourceAPIs.FrameNet.FrameNetEngine.Version)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="annotationDirectory">Lexical unit annotation directory</param>
+            <param name="version">FrameNet version</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.LexicalUnitAnnotationEngine.GetAttestations(LAIR.ResourceAPIs.FrameNet.Frame,System.Int32)">
+            <summary>
+            Gets annotations for a lexical unit
+            </summary>
+            <param name="frame">Frame for which we're getting annotations</param>
+            <param name="lexicalUnitID">ID of lexical unit for which to get annotations</param>
+            <returns>Annotation information</returns>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.FrameNet.Attestation">
+            <summary>
+            Represents a single attestation for a frame
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Attestation.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Attestation.ToString">
+            <summary>
+            Gets nicely formatted string for current attestation
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.Attestation.FrameElementBindings">
+            <summary>
+            Gets or sets the frame element bindings for this attestation
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.Attestation.Targets">
+            <summary>
+            Gets or sets the targets for this attestation
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.Attestation.Sentence">
+            <summary>
+            Gets or sets the sentence
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.FrameNet.FrameElementSet">
+            <summary>
+            Represents a set of frame elements
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElementSet.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElementSet.Add(LAIR.ResourceAPIs.FrameNet.FrameElement)">
+            <summary>
+            Adds a frame element to this set
+            </summary>
+            <param name="frameElement">Frame element to add</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElementSet.Remove(LAIR.ResourceAPIs.FrameNet.FrameElement)">
+            <summary>
+            Removes a frae element from this set
+            </summary>
+            <param name="frameElement">Frame element to remove</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElementSet.Get(System.Int32)">
+            <summary>
+            Gets a frame element in the set by its ID
+            </summary>
+            <param name="id">ID of FE to get</param>
+            <returns>FE with specified ID</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElementSet.Get(System.String)">
+            <summary>
+            Gets a frame element in the set by its name
+            </summary>
+            <param name="name">Name of frame element to get</param>
+            <returns>FE with specified name</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElementSet.Contains(System.String)">
+            <summary>
+            Checks whether or not this set contains a frame element
+            </summary>
+            <param name="name">Name of frame element to check for</param>
+            <returns>True if frame element is present, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElementSet.Contains(LAIR.ResourceAPIs.FrameNet.FrameElement)">
+            <summary>
+            Checks for a frame element
+            </summary>
+            <param name="frameElement">Frame element to check for</param>
+            <returns>True if frame element is present and false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElementSet.Contains(System.Int32)">
+            <summary>
+            Checks for a frame element
+            </summary>
+            <param name="id">ID of frame element to check for</param>
+            <returns>True if frame element is present and false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElementSet.GetEnumerator">
+            <summary>
+            Gets enumerator over frame elements
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElementSet.ToString">
+            <summary>
+            Gets number of frame elements in set
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.FrameElementSet.Count">
+            <summary>
+            Gets number of frame elements in set
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.FrameNet.LexicalUnitSet">
+            <summary>
+            Represents a set of lexical units
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.LexicalUnitSet.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.FrameNet.FrameSet">
+            <summary>
+            Represents a set of frames
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameSet.#ctor(System.Boolean)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="throwExceptionOnDuplicateAdd">Whether or not to throw exceptions when duplicate frames are added</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameSet.Add(LAIR.ResourceAPIs.FrameNet.Frame)">
+            <summary>
+            Adds a frame to the set
+            </summary>
+            <param name="frame">Frame to add</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameSet.Contains(LAIR.ResourceAPIs.FrameNet.Frame)">
+            <summary>
+            Checks for a frame
+            </summary>
+            <param name="frame">Frame to check for</param>
+            <returns>True if frame is present and false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameSet.Get(System.String)">
+            <summary>
+            Gets a frame by its name
+            </summary>
+            <param name="name">Name of frame to get</param>
+            <returns>Frame</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameSet.GetEnumerator">
+            <summary>
+            Gets enumerator over frames
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameSet.ToArray">
+            <summary>
+            Gets array of frames
+            </summary>
+            <returns>Array of frames</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameSet.ToString">
+            <summary>
+            Gets number of frames in set
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.FrameSet.Count">
+            <summary>
+            Gets number of frames in set
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.FrameNet.AnnotatedSpan">
+            <summary>
+            Represents an annotated span of text
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.AnnotatedSpan.#ctor(System.Int32,System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="start">Start of span</param>
+            <param name="value">Value of span</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.AnnotatedSpan.ToString">
+            <summary>
+            Returns the value of the span
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.AnnotatedSpan.Start">
+            <summary>
+            Gets or sets the start position
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.AnnotatedSpan.End">
+            <summary>
+            Gets the end position
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.AnnotatedSpan.Length">
+            <summary>
+            Gets the length
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.AnnotatedSpan.Value">
+            <summary>
+            Gets or sets the value
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.FrameNet.Lexeme">
+            <summary>
+            Represents a lexeme
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Lexeme.#ctor(System.String,System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="value">Value of lexeme</param>
+            <param name="pos">Part of speech</param>
+            <param name="breakBefore">Whether or not words may be inserted before this lexeme (for multi-word LUs)</param>
+            <param name="head">Whether or not this lexeme is the head of its LU</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Lexeme.Equals(System.Object)">
+            <summary>
+            Checks whether or not this lexeme equals another
+            </summary>
+            <param name="obj"></param>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Lexeme.GetHashCode">
+            <summary>
+            Gets hash code
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.Lexeme.ToString">
+            <summary>
+            Returns value of lexeme
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.Lexeme.POS">
+            <summary>
+            Gets the POS
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.Lexeme.Value">
+            <summary>
+            Gets the value of this lexeme
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.Lexeme.BreakBefore">
+            <summary>
+            Gets whether or not words may be inserted before this lexeme (for multi-word LUs)
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.Lexeme.Head">
+            <summary>
+            Gets whether or not this lexeme is the head of its lexical unit
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.FrameNet.FrameNetEngine">
+            <summary>
+            Provides indexing and retrieval functionality for the FrameNet database
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameNetEngine.#ctor(System.String,LAIR.ResourceAPIs.FrameNet.FrameNetEngine.Version)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="frameNetDirectory">Path to FrameNet distribution directory</param>
+            <param name="version">FrameNet version</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameNetEngine.GetFrame(System.String)">
+            <summary>
+            Gets a frame by name
+            </summary>
+            <param name="name">Name of frame to get</param>
+            <returns>Frame</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameNetEngine.TryGetFrame(System.String,LAIR.ResourceAPIs.FrameNet.Frame@)">
+            <summary>
+            Tries to get a frame by name
+            </summary>
+            <param name="name">Name of frame to get</param>
+            <param name="frame">Frame</param>
+            <returns>Whether the frame was found</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameNetEngine.GetFrameElement(System.String,System.String)">
+            <summary>
+            Gets a frame element
+            </summary>
+            <param name="frameName">Frame for which to get frame element</param>
+            <param name="frameElementName">Name of frame element to get</param>
+            <returns>Frame element</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameNetEngine.GetFrameElement(System.String)">
+            <summary>
+            Gets a frame element
+            </summary>
+            <param name="frameElement">Frame element, in Frame.FrameElement notation</param>
+            <returns>Frame element</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameNetEngine.Contains(System.String)">
+            <summary>
+            Checks whether or not a frame exists in the database
+            </summary>
+            <param name="name">Name of frame to check for</param>
+            <returns>True if frame exists, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameNetEngine.GetAttestationsForFrame(LAIR.ResourceAPIs.FrameNet.Frame)">
+            <summary>
+            Gets all attestations for a frame
+            </summary>
+            <param name="frame">Frame to get attestations for</param>
+            <returns>List of attestations</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameNetEngine.GetAttestationsForFrame(LAIR.ResourceAPIs.FrameNet.Frame,System.String)">
+            <summary>
+            Gets all attestations for a frame
+            </summary>
+            <param name="frame">Frame to get attestations for</param>
+            <param name="pos">Part of speech for attestation</param>
+            <returns>List of attestations</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameNetEngine.GetFramesForLexeme(System.String)">
+            <summary>
+            Gets the set of frames evoked by a lexeme
+            </summary>
+            <param name="lexeme">Lexeme to get frames for</param>
+            <returns>Set of frames</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameNetEngine.GetFramesForLexicalUnit(System.String)">
+            <summary>
+            Gets the set of frames evoked by a lexical unit (includes frames for all contained lexemes)
+            </summary>
+            <param name="lexicalUnit">Lexical unit to get frames for</param>
+            <returns>Set of frames</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameNetEngine.ContainsLexeme(System.String)">
+            <summary>
+            Checks whether or not a lexeme is in FrameNet
+            </summary>
+            <param name="lexeme">Lexeme to check</param>
+            <returns>True if lexeme is contained, false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameNetEngine.ContainsLexicalUnit(System.String)">
+            <summary>
+            Checks whether or not a lexical unit is in FrameNet
+            </summary>
+            <param name="lexicalUnit"></param>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.FrameNetEngine.Frames">
+            <summary>
+            Gets all frames
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.FrameNetEngine.FrameNames">
+            <summary>
+            Gets all frame names
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.FrameNet.FrameNetEngine.Version">
+            <summary>
+            FrameNet version number
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.FrameNet.FrameNetEngine.Version.FrameNet_1_3">
+            <summary>
+            FrameNet 1.3
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.FrameNet.FrameNetEngine.Version.FrameNet_1_5">
+            <summary>
+            FrameNet 1.5
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.FrameNet.LexicalUnit">
+            <summary>
+            Represents a lexical unit
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.LexicalUnit.#ctor(System.Int32,System.String,System.String,System.String,LAIR.Collections.Generic.Set{LAIR.ResourceAPIs.FrameNet.Lexeme})">
+            <summary>
+            Constructor
+            </summary>
+            <param name="id">ID for LU</param>
+            <param name="name">Name of LU</param>
+            <param name="pos">POS of LU</param>
+            <param name="definition">Definition of LU</param>
+            <param name="lexemes">Lexemes on this lexical unit</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.LexicalUnit.ToString">
+            <summary>
+            Gets a concatenation of all lexemes defined on this lexunit
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.LexicalUnit.GetHashCode">
+            <summary>
+            Gets hash code for this lexical unit
+            </summary>
+            <returns>Hash code for this lexical unit</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.LexicalUnit.Equals(System.Object)">
+            <summary>
+            Checks whether or not this lexical unit equals another
+            </summary>
+            <param name="obj"></param>
+            <returns></returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.LexicalUnit.Lexemes">
+            <summary>
+            Gets the lexemes on this lexical unit
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.LexicalUnit.ID">
+            <summary>
+            Gets the ID
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.LexicalUnit.Name">
+            <summary>
+            Gets the name
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.LexicalUnit.POS">
+            <summary>
+            Gets the POS
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.LexicalUnit.Definition">
+            <summary>
+            Gets the definition
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.FrameNet.FrameElement">
+            <summary>
+            Represents a frame element within FrameNet
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElement.#ctor(System.Int32,System.String,System.String,LAIR.ResourceAPIs.FrameNet.Frame)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="id">ID of FE</param>
+            <param name="name">Name of FE</param>
+            <param name="definition">Definition of FE</param>
+            <param name="frame">Frame that contains this frame element</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElement.Equals(System.Object)">
+            <summary>
+            Equals override
+            </summary>
+            <param name="obj">Object to compare this one to</param>
+            <returns>True if object is a FE with the same ID, False otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElement.ToString">
+            <summary>
+            Gets the name of the frame element in Frame.FrameElement notation
+            </summary>
+            <returns>Name of this FE</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElement.GetHashCode">
+            <summary>
+            GetHashCode override
+            </summary>
+            <returns>Hashcode for this FE</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElement.AddSubFrameElement(LAIR.ResourceAPIs.FrameNet.FrameElement,LAIR.ResourceAPIs.FrameNet.Frame.FrameRelation)">
+            <summary>
+            Adds a frame element to the sub-FE collection for a relation
+            </summary>
+            <param name="frameElement">Frame element to add</param>
+            <param name="relation">Relation between current and given frame element</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElement.AddSuperFrameElement(LAIR.ResourceAPIs.FrameNet.FrameElement,LAIR.ResourceAPIs.FrameNet.Frame.FrameRelation)">
+            <summary>
+            Adds a frame element to the super-FE collection for a relation
+            </summary>
+            <param name="frameElement">Frame element to add</param>
+            <param name="relation">Relation between current and given frame element</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElement.GetRelatedFrameElements(LAIR.ResourceAPIs.FrameNet.Frame.FrameRelation,LAIR.ResourceAPIs.FrameNet.Frame.FrameRelationDirection,System.Boolean)">
+            <summary>
+            Gets a list of related frame element
+            </summary>
+            <param name="relation">Type of relation to fetch</param>
+            <param name="relationDirection">Relation direction</param>
+            <param name="recursive">Whether or not to recursively get related frame elements</param>        
+            <returns>List of FEs</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElement.GetRelatedFrameElements(LAIR.ResourceAPIs.FrameNet.Frame.FrameRelation,LAIR.ResourceAPIs.FrameNet.Frame.FrameRelationDirection,System.Boolean,LAIR.ResourceAPIs.FrameNet.FrameElementSet)">
+            <summary>
+            Gets list of related frame elements
+            </summary>
+            <param name="relation">Type of relation to fetch</param>
+            <param name="relationDirection">Relation direction</param>
+            <param name="recursive">Whether or not to recursively get related frame elements</param>
+            <param name="currentFEs">Current list of related FEs</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.FrameNet.FrameElement.GetShortestPathTo(LAIR.ResourceAPIs.FrameNet.FrameElement,LAIR.Collections.Generic.Set{LAIR.ResourceAPIs.FrameNet.Frame.FrameRelation},LAIR.ResourceAPIs.FrameNet.Frame.FrameRelationDirection,System.Int32,System.Collections.Generic.List{LAIR.ResourceAPIs.FrameNet.FrameElement}@,System.Collections.Generic.List{LAIR.ResourceAPIs.FrameNet.Frame.FrameRelation}@)">
+            <summary>
+            Gets the shortest network path from the current frame element to another frame element
+            </summary>
+            <param name="destinationFrameElement">Destination frame element</param>
+            <param name="searchRelations">Relations to search</param>
+            <param name="searchDirection">Relation direction to search</param>
+            <param name="maxDepth">Maximum depth to search within the network (i.e., maximum distance destination frame element can be from the current one)</param>
+            <param name="frameElementPath">Path from this frame element to the destination frame element, or null for no path</param>
+            <param name="relationPath">Relation path between this frame element and the destination frame element, or null for no path</param>
+            <returns>True if path exists, false otherwise</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.FrameElement.Frame">
+            <summary>
+            Gets the frame that contains this frame element
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.FrameElement.FrameElementSearchBackPointer">
+            <summary>
+            After calling GetShortestPathTo, this will point back towards the frame element from which the search originated.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.FrameElement.FrameRelationSearchBackPointer">
+            <summary>
+            After calling GetShortestPathTo, this will contain the relation between this frame element and the one returned 
+            by FrameElementSearchBackPointer.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.FrameElement.ID">
+            <summary>
+            Gets the ID
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.FrameElement.Name">
+            <summary>
+            Gets the name
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.FrameNet.FrameElement.Definition">
+            <summary>
+            Gets the definition
+            </summary>
+        </member>
+    </members>
+</doc>
