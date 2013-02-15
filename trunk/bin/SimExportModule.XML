@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SimExportModule</name>
+    </assembly>
+    <members>
+        <member name="F:SimExportModule.ExportCommand.terrainXferTimeout">
+            <summary>
+            Create a Synchronization event object
+            </summary>
+        </member>
+        <member name="M:SimExportModule.ExportCommand.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="M:SimExportModule.ExportCommand.RestoreFromDisk(System.String)">
+            <summary>
+            Loads in inventory cache file into the inventory structure. Note only valid to call after login has been successful.
+            </summary>
+            <param name="filename">Name of the cache file to load</param>
+            <returns>The number of inventory items sucessfully reconstructed into the inventory node tree</returns>
+        </member>
+        <member name="M:SimExportModule.ExportCommand.SaveToDisk(System.String,System.Object)">
+            <summary>
+            Saves the current inventory structure to a cache file
+            </summary>
+            <param name="filename">Name of the cache file to save to</param>
+        </member>
+        <member name="E:SimExportModule.ExportCommand.ListenForRelay">
+            <summary>
+            (string eMessage, UUID sourceId)
+            </summary>
+        </member>
+        <member name="M:SimExportModule.ImportCommand.KillTaskObject(OpenMetaverse.UUID,System.Boolean@)">
+            <summary>
+            Return false when the object is still in the world
+            </summary>
+            <param name="objID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:SimExportModule.ImportCommand.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="F:SimExportModule.ImportCommand.TaskFileInfo.OldTaskHolder">
+            <summary>
+            Prim it was inside
+            </summary>
+        </member>
+        <member name="F:SimExportModule.ImportCommand.TaskFileInfo.RezzedID">
+            <summary>
+            When we rezed it - therefore the LLSD File
+            </summary>
+        </member>
+        <member name="F:SimExportModule.ImportCommand.TaskFileInfo.AssetUUID">
+            <summary>
+            AssetUUID (found in TaskInv)
+            </summary>
+        </member>
+        <member name="F:SimExportModule.ImportCommand.TaskFileInfo.TaskItemID">
+            <summary>
+            ItemID (folder Item in TaskInv)
+            </summary>
+        </member>
+        <member name="M:SimExportModule.ImportCommand.UserOrGroupMapping.CreatePerson(System.String)">
+            <summary>
+            For now it just returns our name
+            </summary>
+            <param name="name"></param>
+            <returns></returns>
+        </member>
+        <member name="T:SimExportModule.TarArchiveWriter">
+            <summary>
+            Produces a tar archive in tar v7 format
+            </summary>
+        </member>
+        <member name="M:SimExportModule.TarArchiveWriter.AddDir(System.String)">
+            <summary>
+            Add a directory to the tar archive.  We can only handle one path level right now!
+            </summary>
+            <param name="dirName"></param>
+        </member>
+        <member name="M:SimExportModule.TarArchiveWriter.AddFile(System.String,System.String)">
+            <summary>
+            Add a file to the tar archive
+            </summary>
+            <param name="filePath"></param>
+            <param name="data"></param>
+        </member>
+        <member name="M:SimExportModule.TarArchiveWriter.AddFile(System.String,System.Byte[])">
+            <summary>
+            Add a file to the tar archive
+            </summary>
+            <param name="filePath"></param>
+            <param name="data"></param>
+        </member>
+        <member name="M:SimExportModule.TarArchiveWriter.WriteTar(System.IO.Stream)">
+            <summary>
+            Write the raw tar archive data to a stream.  The stream will be closed on completion.
+            </summary>
+            <param name="s">Stream to which to write the data</param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

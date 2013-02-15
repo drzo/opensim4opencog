@@ -1,0 +1,175 @@
+mt:evilfinder
+
+;% a litle backtracking test, inspired by "evilfinder" by Michal Zalewski
+;% <lcamtuf@coredump.cx>.  The numbers are taken from the evilfinder program.
+;%
+;;% Query: evil(<your number>, <max number of steps>, ActionsDone)
+;%
+;% It tries to make the supplied number into one of the evil(...) numbers by
+;% adding or subtracting one or more of the "significant" numbers
+;% evil_num(...).  It returns a list of actions done.
+
+
+;% the "evil numbers" that are the targets of the search
+nop.
+
+justevil(666,'the number of the beast').
+justevil(1790,'the year US patent system was established').
+justevil(1889,'the year Adolf Hitler was born').
+justevilx(1976,'the year George Harrison performed the lumberjack song with Monty Python - if you have seen it, you should understand').
+
+;% The numbers that can be used for adding to and subtracting from the original
+;% number
+evil_num(1,'the number of unity').
+evil_num(3,'the symbol of fulfillment').
+evil_num(7,'the sacred number of Illuminati').
+evil_num(11,'the symbol of judgment and disorder').
+evil_num(17,'the symbol of domination').
+evil_num(18,'the symbol of bondage').
+evil_num(21,'the symbol of the greater sin').
+evil_num(23,'the symbol of death').
+evil_num(25,'the symbol of approval for the sin').
+evil_num(38,'the symbol of slavery').
+evil_num(39,'the symbol of disease').
+evil_num(200,'the symbol of greed').
+evil_num(600,'the symbol of war').
+evil_num(111,'the only triplet that can ever be prime').
+evil_num(6,'the smallest perfect number').
+evil_num(1983,'the year Microsoft introduced Windows 1.0').
+evil_num(140,'the smallest harmonic divisor number').
+evil_num(911,'the date of WTC attacks').
+evil_num(1954,'the year when first FORTRAN computer program was executed').
+evil_num(1968,'the year Martin Luther King was shot to death').
+evil_num(1926,'the year "Playboy" publisher, Hugh Hefner, was born').
+evil_num(1912,'the year Titanic went for its first and last voyage').
+evil_num(1865,'the year Lincoln was shot').
+evil_num(1934,'the year Shirley Temple starred in her first movie').
+evil_num(1904,'the year Oppenheimer, the man who created the atomic bomb, was born').
+evil_num(1778,'the year Oliver Pollock invented "$", the symbol of exploitation, suffering and injustice').
+evil_num(1945,'the year a worldwide conspiracy known as the United Nations was founded').
+evil_num(1936,'the year Bruno Hauptmann, baby killer, was executed').
+evil_num(1887,'the year Erwin Schrodinger, known for hatred to all furry animals and heresy, was born').
+evil_num(1927,'the year Fidel Castro was born').
+evil_num(1939,'the year WW II started').
+evil_num(1969,'the year of Woodstock').
+evil_num(1977,'the year Elvis left the planet').
+evil_num(1964,'the year Beatles with "Can`t buy me love" topped the charts in a very mysterious way').
+evil_num(1531,'the year Richard Roose was conveniently boiled to death for trying to poison an archbishop').
+evil_num(1958,'the year Nabokov`s "Lolita" got published').
+evil_num(1951,'the year the Rosenbergs were sentenced to death for spying by the US').
+evil_num(79,'the year Vesuvius erupted').
+evil_num(64,'the year of the Great Fire of Rome').
+evil_num(166,'the year Roman Empire was devastated by a plague').
+evil_num(445,'the year Attila the Hun attacked western Europe').
+evil_num(1609,'the year Gallileo, inspired by the Satan himself, came up with his ridiculous theory').
+evil_num(1789,'the year of French Revolution, a bloody farce engineered by the Illuminati').
+evil_num(1929,'the year Bingo was invented, taking many lives in years to come').
+evil_num(1952,'the year killer fog haunted London').
+evil_num(1776,'the year masonry founded Phi Beta Kappa').
+evil_num(1876,'the year first crematorium in the United States opened').
+evil_num(1954,'the year Elvis recorded his debut single, putting the end to all morality and good taste').
+evil_num(1930,'the year synthetic rubber was first produced, endangering the concept of intercourse for the purpose of procreation').
+evil_num(1970,'the year IBM announced S/370').
+evil_num(1957,'the year DEC was founded').
+evil_num(1899,'the year "Scrabble" was invented to promote violence and anger').
+evil_num(1934,'the year first laundromat opened in Texas, giving birth to darkest, twisted urban fears').
+evil_num(1792,'the year guillotine was first used').
+evil_num(1895,'the year Rudolph Hess was born').
+evil_num(1957,'the year Ford introduced the Edsel').
+evil_num(1966,'the year "Star Trek" premiered').
+evil_num(1986,'the year of the Chernobyl "incident"').
+evil_num(1686,'the year Newton published wildly misunderstood "Principia"').
+evil_num(1937,'the year Saddam Hussein twins were born').
+evil_num(1945,'the year Mussolini was executed for the first time').
+evil_num(1808,'the year Turri constructed the first typewriter, giving birth to bad publicity').
+evil_num(1945,'the year Hitler faked his suicide').
+evil_num(1945,'the year Hiroshima and Nagasaki were nuked to make the world a better place').
+evil_num(1181,'the year UFO was first observed in China and Japan').
+evil_num(1950,'the year Steve Wozniak, who gave mankind another "apple", was born').
+evil_num(1834,'the year Vesuvius erupted').
+evil_num(1986,'the year a postman in Okhlahoma gone postal, killing 14').
+evil_num(1947,'the year Aleister Crowley paid a longer visit to hell').
+evil_num(1815,'the year first commercial cheese factory was established').
+evil_num(1288,'the year it was made legal for women to propose to men').
+evil_num(69,'the year of the destruction of Jerusalem').
+evil_num(69,'the symbol of perversion and pleasue in sin').
+evil_num(1666,'the year of the Great London Fire').
+evil_num(1948,'the year World Health Organization was formed to defend the world from democracy').
+evil_num(1875,'the year first newspaper cartoon strip was published').
+evil_num(1995,'the year O J Simpson was acquitted for double murder').
+evil_num(1967,'the year Che Guevara was executed in Bolivia').
+evil_num(1912,'the year Theodore Roosevelt was shot').
+evil_num(1979,'the year Voluntary Euthanasia Society published how-to-do-it suicide guide').
+
+;% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+;% our backtraking search engine
+;% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+;% initial step
+evil(X,1,[add,Num,L1,Y,qed,Y,L2]) :- evil_num(Num,L1), Y is X+Num, justevil(Y,L2).
+evil(X,1,[subtract,Num,L1,Y,qed,Y,L2]) :- evil_num(Num,L1), Y is X-Num, justevil(Y,L2).
+evil(X,Q,[qed,X,L2]):-justevil(X,L2).
+
+;% subsequent steps
+
+;% do nothing
+evil(X,Dst,L) :- 
+    Dstmin1 is Dst - 1, Dstmin1>0, evil(X,Dstmin1,L).
+
+;% add a number
+evil(X,Dst,[add,Num,L,Y|Ls]) :- evil_num(Num,L), Y is X+Num,
+    Dstmin1 is Dst - 1, Dstmin1>0, evil(Y,Dstmin1,Ls).
+
+;% subtract a number
+evil(X,Dst,[subtract,Num,L,Y|Ls]) :- evil_num(Num,L), Y is X-Num,
+    Dstmin1 is Dst - 1, Dstmin1>0, evil(Y,Dstmin1,Ls).
+
+;% %%%%%%%%%%%%%%%%%%%%%%%%%%%
+;% Logic Prover
+;%   asks for a chain of reasons, and reports them
+;%   otherwise admit defeat
+;% %%%%%%%%%%%%%%%%%%%%%%%%%%
+
+;% prover
+ prove(X):-evil(X,3,PROOF),explain([beginwith,X|PROOF]),!.
+ prove(X):-respond('No connection to Evil can be found yet!').
+
+;% %%%%%%%%%%%%%%%%%%%%%%%%%% 
+;% explain: print out each step of the proof
+;% %%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ explain([]):- script_event('sayit','The connection is made!').
+  explain([beginwith,NUM|Rest]):-
+                                        script_event('clearMsg',''),
+                                        script_event('addMsg','Beginning with'),
+                                        script_event('addMsg',NUM),
+                                        script_event('sayMsg','op:'),!, explain(Rest).
+
+ explain([add,NUM,REASON,RESULT|Rest]):-
+                                        script_event('clearMsg',''),
+                                        script_event('addMsg','if you add to that'),
+                                        script_event('addMsg',NUM),
+                                        script_event('addMsg',REASON),
+                                        script_event('addMsg','you get'),
+                                        script_event('addMsg',RESULT),
+                                        script_event('sayMsg','op:'),!, explain(Rest).
+                                          
+ explain([subtract,NUM,REASON,RESULT|Rest]):-!,
+                                          script_event('clearMsg',''),
+                                          script_event('addMsg','if you subtract from that'),
+                                          script_event('addMsg',NUM),
+                                          script_event('addMsg',REASON),
+                                          script_event('addMsg','you get'),
+                                          script_event('addMsg',RESULT),
+                                          script_event('sayMsg','op:'),!, explain(Rest).
+                                          
+ explain(['qed',NUM,REASON|Rest]):-!,script_event('clearMsg',''),
+                                          script_event('addMsg','Now Obviously:'),
+                                          script_event('addMsg',NUM),
+                                          script_event('addMsg','equals'),
+                                          script_event('addMsg',REASON),
+                                          script_event('sayMsg','op:'),!, explain(Rest).
+ explain([Step|Rest]):-script_event('sayit',Step),!,explain(Rest).
+ 
+ explain2(L):-script_event('sayit',L).
+ 
