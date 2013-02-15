@@ -123,7 +123,10 @@ namespace LogicalParticleFilter1
         public readonly string CreationTrace;
         private SIProlog()
         {
-            if (Environment.MachineName == "ENKI") GlobalSharedSettings.RdfSavedInPDB = true;
+            if (GlobalSharedSettings.IsDougsMachine)
+            {
+                GlobalSharedSettings.RdfSavedInPDB = true;
+            }
             this.CreationTrace = LockInfo.CreationTrace();
             lock (GlobalKBGraph)
             {
@@ -135,7 +138,12 @@ namespace LogicalParticleFilter1
             CurrentProlog = this;
             RegisterObject("siprolog", this);
             MushDLR223.ScriptEngines.ScriptManager.AddInterpreter(new SIPrologScriptInterpreter());
-            DLRConsole.TransparentCallers.Add(GetType());
+            var tc = DLRConsole.TransparentCallers;
+            lock (tc)
+            {
+                tc.Add(GetType());
+                tc.Add(typeof(GlobalSharedSettings));                
+            }
             DLRConsole.SetIgnoreSender("KEYVALUELISTSIPROLOG", true);
             defineBuiltIns();
             if (rdfDefSync == null) defineRDFExtensions();
@@ -1299,11 +1307,14 @@ namespace LogicalParticleFilter1
                     localRules.Add(r);
                 }
             }
-
             if (trace) { Console.Write("Debug: in rule selection. thisTerm = "); thisTerm.print(Console.Write); Console.Write("\n"); }
             //for (var i = 0; i < db.rules.Count; i++)
             lock (localRules)
             {
+                if (localRules.Count == 0)
+                {
+                    Warn("No predicates for the mask: " + thisTerm + " in " + dbIn.ToString());
+                }
                 int i = -1;
                 foreach (Rule rule in localRules)
                 {

@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>CycWorldModule</name>
+    </assembly>
+    <members>
+        <member name="F:CycWorldModule.CycBrowser.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:CycWorldModule.CycBrowser.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:CycWorldModule.CycBrowser.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="M:CycWorldModule.DotCYC.SimCyclifier.FindOrCreateCycFort(System.DateTime)">
+            <summary>
+             (MilliSecondFn 34 (SecondFn 59 (MinuteFn 12 (HourFn 18 (DayFn 14 (MonthFn February (YearFn 1966))))))
+            </summary>
+            <param name="dateTime"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CycWorldModule.DotCYC.CycInterpreter.LoadFile(System.String,MushDLR223.ScriptEngines.OutputDelegate)">
+            <summary>
+            
+            
+            </summary>
+            <param name="filename"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CycWorldModule.DotCYC.CycInterpreter.Read(System.String,System.IO.TextReader,MushDLR223.ScriptEngines.OutputDelegate)">
+            <summary>
+            
+            </summary>
+            <param name="context_name"></param>
+            <param name="stringCodeReader"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CycWorldModule.DotCYC.CycInterpreter.Eof(System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="codeTree"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CycWorldModule.DotCYC.CycInterpreter.Intern(System.String,System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="varname"></param>
+            <param name="textForm"></param>
+        </member>
+        <member name="M:CycWorldModule.DotCYC.CycInterpreter.Eval(System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="code"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CycWorldModule.DotCYC.CycInterpreter.Str(System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="code"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CycWorldModule.DotCYC.CycInterpreter.MakeInterp(System.Object)">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

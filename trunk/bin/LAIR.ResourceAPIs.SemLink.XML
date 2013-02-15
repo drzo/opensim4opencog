@@ -1,0 +1,247 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>LAIR.ResourceAPIs.SemLink</name>
+    </assembly>
+    <members>
+        <member name="T:LAIR.ResourceAPIs.SemLink.SemLinkEngine">
+            <summary>
+            Provides mapping information contained in the SemLink annotation project.
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.#ctor(System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="dataDirectory">Path to the SemLink data directory</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.GetVerbNetRolesForPropBank(System.String)">
+            <summary>
+            Gets VerbNet roles for a PropBank role
+            </summary>
+            <param name="propBankRole">PropBank role, in Verb.RoleSet.Role notation</param>
+            <returns>VerbNet roles</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.GetVerbNetRolesForPropBank(System.String,System.Int32,System.Int32)">
+            <summary>
+            Gets VerbNet roles for a PropBank role
+            </summary>
+            <param name="verb">PropBank verb</param>
+            <param name="roleSet">PropBank role set</param>
+            <param name="role">PropBank role</param>
+            <returns>VerbNet roles</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.GetVerbNetRolesForFrameNet(System.String)">
+            <summary>
+            Gets VerbNet roles for a FrameNet frame element
+            </summary>
+            <param name="frameElement">Frame element, in Frame.FrameElement notation</param>
+            <returns>VerbNet roles</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.GetVerbNetRolesForFrameNet(System.String,System.String)">
+            <summary>
+            Gets VerbNet roles for a FrameNet frame element
+            </summary>
+            <param name="frame">FrameNet frame</param>
+            <param name="frameElement">FrameNet frame element</param>
+            <returns>VerbNet roles</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.GetVerbClassesForPropBankVerb(System.String)">
+            <summary>
+            Gets all VerbNet classes for a PropBank verb
+            </summary>
+            <param name="verb">Verb to get classes for</param>
+            <returns>Verb class IDs</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.GetVerbClassesForFrameNetFrame(System.String)">
+            <summary>
+            Gets all VerbNet classes for a FrameNet frame
+            </summary>
+            <param name="frame">Frame to get classes for</param>
+            <returns>Verb class IDs</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.AddVerbNetRoleForPropBank(System.String,System.String)">
+            <summary>
+            Adds a mapping from PropBank to VerbNet
+            </summary>
+            <param name="propBankRole">PropBank role</param>
+            <param name="verbNetRole">VerbNet role to add to PropBank role</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.AddVerbNetRoleForFrameNet(System.String,System.String)">
+            <summary>
+            Adds a mapping from FrameNet to VerbNet
+            </summary>
+            <param name="frameElement">Frame element</param>
+            <param name="verbNetRole">VerbNet role to add to frame element</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.RemoveVerbNetRoleForPropBank(System.String,System.String)">
+            <summary>
+            Removes a mapping from PropBank to VerbNet
+            </summary>
+            <param name="propBankRole">PropBank role</param>
+            <param name="verbNetRole">VerbNet role to remove from PropBank role</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.RemoveVerbNetRoleForFrameElement(System.String,System.String)">
+            <summary>
+            Removes a mapping from FrameNet to VerbNet
+            </summary>
+            <param name="frameElement">Frame element</param>
+            <param name="verbNetRole">VerbNet role to remove from frame element</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.GetVerbNetRoles(System.Boolean,System.Boolean)">
+            <summary>
+            Gets all VerbNet roles
+            </summary>
+            <param name="includePropBankVerbNet">Whether or not to include VerbNet roles from the PropBank-VerbNet mapping</param>
+            <param name="includeFrameNetVerbNet">Whether or not to include VerbNet roles from the FrameNet-VerbNet mapping</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.GetPropBankRolesForVerbNet(System.String,System.String,LAIR.ResourceAPIs.SemLink.SemLinkEngine.VerbNetExtension)">
+            <summary>
+            Gets PropBank roles for a VerbNet role
+            </summary>
+            <param name="verbNetClass">VerbNet class</param>
+            <param name="verbNetRole">VerbNet role</param>
+            <param name="verbNetExtension">Extension to apply</param>
+            <returns>PropBank roles</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.GetPropBankRolesForVerbNet(System.String,LAIR.ResourceAPIs.SemLink.SemLinkEngine.VerbNetExtension)">
+            <summary>
+            Gets PropBank roles for a VerbNet role
+            </summary>
+            <param name="verbNetRole">VerbNet role, in Class.Role notation</param>
+            <param name="verbNetExtension">Extension to apply</param>
+            <returns>PropBank roles</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.GetPropBankRolesForFrameNet(System.String,LAIR.ResourceAPIs.SemLink.SemLinkEngine.VerbNetExtension)">
+            <summary>
+            Gets PropBank roles for a FrameNet frame element
+            </summary>
+            <param name="frameElement">Frame element, in Frame.FrameElement notation</param>
+            <param name="verbNetToPropBankExtension">Extension to use when mapping VerbNet roles to PropBank</param>
+            <returns>PropBank roles</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.GetPropBankRolesForFrameNet(System.String,System.String,LAIR.ResourceAPIs.SemLink.SemLinkEngine.VerbNetExtension)">
+            <summary>
+            Gets PropBank roles for a FrameNet frame element
+            </summary>
+            <param name="frame">FrameNet frame</param>
+            <param name="frameElement">FrameNet frame element</param>
+            <param name="verbNetToPropBankExtension">Extension to use when mapping VerbNet roles to PropBank</param>
+            <returns>PropBank roles</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.ContainsPropBankVerb(System.String)">
+            <summary>
+            Checks whether this SemLink contains a PropBank verb
+            </summary>
+            <param name="verb">Verb to check for</param>
+            <returns>True if verb is present and false otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.GetFrameElementsForVerbNet(System.String,System.String,LAIR.ResourceAPIs.SemLink.SemLinkEngine.VerbNetExtension)">
+            <summary>
+            Gets frame elements for a VerbNet role
+            </summary>
+            <param name="verbNetClass">VerbNet class to get frame elements for</param>
+            <param name="verbNetRole">VerbNet role to get frame elements for</param>
+            <param name="verbNetExtension">Extension to apply</param>
+            <returns>Frame elements</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.GetFrameElementsForVerbNet(System.String,LAIR.ResourceAPIs.SemLink.SemLinkEngine.VerbNetExtension)">
+            <summary>
+            Gets frame elements for a VerbNet role
+            </summary>
+            <param name="verbNetRole">VerbNet role, in Class.Role notation</param>
+            <param name="verbNetExtension">Extension to apply</param>
+            <returns>Frame elements</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.GetFrameElementsForPropBank(System.String,LAIR.ResourceAPIs.SemLink.SemLinkEngine.VerbNetExtension)">
+            <summary>
+            Gets frame elements for a PropBank role
+            </summary>
+            <param name="propBankRole">PropBank role, in Verb.RoleSet.Role notation</param>
+            <param name="verbNetToFrameNetExtension">Extension to use when mapping VerbNet roles to FrameNet</param>
+            <returns>Frame elements</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.GetFrameElementsForPropBank(System.String,System.Int32,System.Int32,LAIR.ResourceAPIs.SemLink.SemLinkEngine.VerbNetExtension)">
+            <summary>
+            Gets frame elements for a PropBank role
+            </summary>
+            <param name="verb">PropBank verb</param>
+            <param name="roleSet">PropBank role set</param>
+            <param name="role">PropBank role</param>
+            <param name="verbNetToFrameNetExtension">Extension to use when mapping VerbNet roles to FrameNet</param>
+            <returns>Frame elements</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.SavePropBankVerbNetLinking(System.String)">
+            <summary>
+            Saves the PropBank-to-VerbNet mapping to file
+            </summary>
+            <param name="path">Path to file</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.SemLink.SemLinkEngine.SaveFrameNetVerbNetLinking(System.String)">
+            <summary>
+            Saves the FrameNet-to-VerbNet mapping to file
+            </summary>
+            <param name="path">Path to file</param>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.SemLink.SemLinkEngine.PropBankRoles">
+            <summary>
+            Gets all PropBank roles, in Verb.RoleSet.Role notation
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.SemLink.SemLinkEngine.FrameElements">
+            <summary>
+            Gets all frame elements, in Frame.FrameElement notation
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.SemLink.SemLinkEngine.PropBankVerbs">
+            <summary>
+            Gets PropBank verbs defined in SemLink
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.SemLink.SemLinkEngine.FrameNetFrames">
+            <summary>
+            Gets FrameNet frames defined in SemLink
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.SemLink.SemLinkEngine.PropBankVerbNetLinkingPath">
+            <summary>
+            Gets the path to the PropBank-VerbNet linking file
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.SemLink.SemLinkEngine.FrameNetVerbNetLinkingPath">
+            <summary>
+            Gets the path to the FrameNet-VerbNet linking file
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.SemLink.SemLinkEngine.VerbNetExtension">
+            <summary>
+            Ways of extending the SemLink mapping when VerbNet classes are involved. This is motivated by the following
+            example:  the PropBank predicate spend.2 maps to the VerbNet class 66.1; however, SemLink maps VerbNet classes
+            66 and 66.1 to a FrameNet frame. Thus, if we're interested in mapping spend.2 to FrameNet via VerbNet class
+            66, we need to do some extra work. If we apply the SuperClass extension to the VerbNet-FrameNet mapping, the 
+            result is that we will search super-classes of 66.1 for a FrameNet mapping, giving us the desired result that 
+            PropBank predicate spend.2 maps to FrameNet frame Exhaust_resource (via 66) and Frugality (via 66.1).
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.SemLink.SemLinkEngine.VerbNetExtension.None">
+            <summary>
+            No extension
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.SemLink.SemLinkEngine.VerbNetExtension.SuperClass">
+            <summary>
+            Use super-classes of encountered VerbNet classes
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.SemLink.SemLinkEngine.VerbNetExtension.SubClass">
+            <summary>
+            Use sub-classes of encountered VerbNet classes
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.SemLink.SemLinkEngine.VerbNetExtension.SuperAndSubClass">
+            <summary>
+            Combination of sub- and super-class extensions
+            </summary>
+        </member>
+    </members>
+</doc>

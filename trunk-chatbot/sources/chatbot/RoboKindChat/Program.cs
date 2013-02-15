@@ -3,8 +3,8 @@ using System.IO;
 using AltAIMLbot;
 using LAIR.ResourceAPIs.WordNet;
 using LogicalParticleFilter1;
-using RoboKindAvroQPID;
 using RTParser;
+using RoboKindAvroQPID;
 using ThreadPoolUtil;
 
 namespace RoboKindChat
@@ -33,7 +33,7 @@ namespace RoboKindChat
             if (Array.Find(args, (i) => i.Equals("--nobot")) != null)
             {
                 if (GlobalSharedSettings.IsRdfServer) GlobalSharedSettings.RdfSavedInPDB = true;
-                var prologEngine =  SIProlog.CurrentProlog;
+                var prologEngine = SIProlog.CurrentProlog;
                 var altBot = new AltBot();
                 Servitor theServitor = altBot.servitor;
                 var p = new ServitorEndpoint(altBot, theServitor, prologEngine);
@@ -47,12 +47,24 @@ namespace RoboKindChat
                         });
                 p.StartServer();
                 wait.WaitOne();
-                if (SIProlog.ReplRunning == null)
+                bool replOnThisThread = true;
+                if (replOnThisThread && SIProlog.ReplRunning != null)
+                {
+                    replOnThisThread = false;
+                }
+                if (!replOnThisThread && SIProlog.ReplRunning == null)
                 {
                     SIProlog.ReplRunning = ThreadPool.WaitableQueueUserWorkItem((o) => prologEngine.RunREPL());
                 }
                 prologEngine.askQuery("executeSharp(robot,writeToFileLog(sharp),X)", null);
-                SIProlog.ReplRunning.WaitOne();
+                if (replOnThisThread)
+                {
+                    prologEngine.RunREPL();
+                }
+                else
+                {
+                    SIProlog.ReplRunning.WaitOne();
+                }
                 return;
             }
             try

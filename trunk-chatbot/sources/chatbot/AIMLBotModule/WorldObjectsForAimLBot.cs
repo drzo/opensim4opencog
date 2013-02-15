@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 #if (COGBOT_LIBOMV || USE_STHREADS)
+using RTParser;
+using RTParser.Variables;
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;
@@ -20,11 +22,10 @@ using Cogbot.World;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
-using RTParser;
 using Cogbot;
 using Cogbot.Utilities;
-using RTParser.Utils;
-using RTParser.Variables;
+using AltAIMLbot.Utils;
+//using AltAIMLbot.Variables;
 using Exception=System.Exception;
 using Math=System.Math;
 using String=System.String;
@@ -32,8 +33,8 @@ using PathSystem3D.Navigation;
 using SUnifiable=System.String;
 using User=AltAIMLbot.User;
 using DataUnifiable = System.String;
-using DataUnifiableYYY = RTParser.Unifiable;
-using Bot = RTParser.AltBot;
+//using DataUnifiableYYY = AltAIMLbot.Unifiable;
+//using Bot = AltAIMLbot.AltBot;
 
 namespace AIMLBotModule
 {

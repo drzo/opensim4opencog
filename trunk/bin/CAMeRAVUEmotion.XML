@@ -1,0 +1,898 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>CAMeRAVUEmotion</name>
+    </assembly>
+    <members>
+        <member name="T:CAMeRAVUEmotion.HumanAgent">
+            <summary>
+            The class that is to be used for users, as opposed to AI.
+            </summary>
+        </member>
+        <member name="T:CAMeRAVUEmotion.Agent">
+            <summary> 
+            Agents are AI participants in the simulation, and their reactions are calculated through the Model class
+            They can be given "personalities" through variables upon their creation, and can receive settings through their public functions.
+            </summary>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.AddAmbition(System.Int32,System.Single)">
+            <summary>
+            Adds an Ambition to an Agent.
+            </summary>
+            <param name="state"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.AddMoralAmbition(System.Int32,System.Single)">
+            <summary>
+            Adds a Moral Ambition to an Agent.
+            </summary>
+            <param name="state"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetAmbition(System.Int32)">
+            <summary>
+            Gets an ambition from an Agent.
+            </summary>
+            <param name="state"></param>
+            <returns>The Agent's Ambition for that state, or 0 if no ambition exists.</returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetMoralAmbition(System.Int32)">
+            <summary>
+            Gets a moral ambition from an Agent.
+            </summary>
+            <param name="state"></param>
+            <returns>The Agent's Ambition for that state, or 0 if no ambition exists.</returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetFeatureBelief(System.Int32,System.Int32,System.Int32,System.Single)">
+            <summary>
+            Sets an Agent's belief that another Agent's feature facilitates a state.
+            </summary>
+            <param name="feature"></param>
+            <param name="state"></param>
+            <param name="targetAgent"></param>
+            <param name="value"></param>
+            
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetFeatureBelief(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Gets an Agent's belief that another Agent's feature facilitates a state.
+            </summary>
+            <param name="feature"></param>
+            <param name="state"></param>
+            <param name="targetAgent"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetStateFacStateBelief(System.Int32,System.Int32,System.Single)">
+            <summary>
+            Sets an Agent's belief that a state facilitates another state.
+            </summary>
+            <param name="state1"></param>
+            <param name="state2"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetStateFacStateBelief(System.Int32,System.Int32)">
+            <summary>
+            Gets an Agent's belief that a state facilitates another state.
+            </summary>
+            <param name="state1"></param>
+            <param name="state2"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.AddStateFacStateBelief(System.Int32,System.Int32,System.Single)">
+            <summary>
+            
+            </summary>
+            <param name="state1"></param>
+            <param name="state2"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.AddStateFacStateBelief(CAMeRAVUEmotion.StateStateBelief)">
+            <summary>
+            
+            </summary>
+            <param name="ssb"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetStateLikelihood(System.Int32)">
+            <summary>
+            Returns the Agent's belief that a state is likely.
+            </summary>
+            <param name="state"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetStateLikelihood(System.Int32,System.Single)">
+            <summary>
+            Sets the Agent's belief that a state is likely.
+            </summary>
+            <param name="state"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetActionStateBelief(System.Int32,System.Int32,System.Single)">
+            <summary>
+            Sets the Agent's belief that an action facilitates a state
+            </summary>
+            <param name="action"></param>
+            <param name="state"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetActionStateBelief(System.Int32,System.Int32)">
+            <summary>
+            Gets the Agent's belief that an action facilitates a state
+            </summary>
+            <param name="action"></param>
+            <param name="state"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetActionMoralPrincipleBelief(System.Int32,System.Int32,System.Single)">
+            <summary>
+            Sets the Agent's belief that an action facilitates a moral principle
+            </summary>
+            <param name="action"></param>
+            <param name="state"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetActionMoralPrincipleBelief(System.Int32,System.Int32)">
+            <summary>
+            Gets the Agent's belief that an action facilitates a moral principle
+            </summary>
+            <param name="action"></param>
+            <param name="state"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetFeatureEmotionBelief(System.Int32,System.Int32,System.Single)">
+            <summary>
+            Sets the Agent's belief that a feature leads to an emotion. See the AgentFeatures and AgentEmotions classes for their indices.
+            </summary>
+            <param name="feature"></param>
+            <param name="emotion"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetFeatureEmotionBelief(System.Int32,System.Int32)">
+            <summary>
+            Gets the Agent's belief that a feature leads to an emotion. See the AgentFeatures and AgentEmotions classes for their indices.
+            </summary>
+            <param name="feature"></param>
+            <param name="emotion"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.AddAction(CAMeRAVUEmotion.AgentAction)">
+            <summary>
+            Adds an action to the Agent. Currently is not to be used directly.
+            </summary>
+            <param name="toAdd"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.RemoveAction(CAMeRAVUEmotion.AgentAction)">
+            <summary>
+            Removes an action from the Agent. Currently is not to be used directly.
+            </summary>
+            <param name="toRemove"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetDesired(System.Int32,System.Single)">
+            <summary>
+            Sets the Agent's desired emotional level for a specific emotion.
+            </summary>
+            <param name="emotion"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetDesired(CAMeRAVUEmotion.AgentEmotions)">
+            <summary>
+            Sets the Agent's desired emotional level for all emotions.
+            </summary>
+            <param name="e"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetDesired(System.Int32)">
+            <summary>
+            Gets an Agent's desired emotional level for a specific emotion.
+            </summary>
+            <param name="emotion"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetEmotion(System.Int32)">
+            <summary>
+            Gets an Agent's emotional level for a specific emotion.
+            </summary>
+            <param name="emotion"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetEmotion(System.Int32,System.Single)">
+            <summary>
+            Sets an Agent's desired emotional level for a specific emotion.
+            </summary>
+            <param name="emotion"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetEmotions(CAMeRAVUEmotion.AgentEmotions)">
+            <summary>
+            Gets an Agent's desired emotional level for all emotions.
+            </summary>
+            <param name="e"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetAnger(System.Int32,System.Single)">
+            <summary>
+            Sets the Agent's anger towards another Agent.
+            </summary>
+            <param name="AgentID"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetAnger(System.Int32)">
+            <summary>
+            Gets the Agent's anger towards another Agent.
+            </summary>
+            <param name="AgentID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetDesignedBias(System.Int32,System.Int32,System.Single)">
+            <summary>
+            Sets the Agents designed bias towards the features of another Agent.
+            </summary>
+            <param name="AgentID"></param>
+            <param name="feature"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetDesignedBias(System.Int32,System.Int32)">
+            <summary>
+            Gets the Agents designed bias towards the features of another Agent.
+            </summary>
+            <param name="AgentID"></param>
+            <param name="feature"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetStateBelief(System.Int32,System.Single)">
+            <summary>
+            Sets the Agents belief in a state.
+            </summary>
+            <param name="state"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetStateBelieved(System.Int32,System.Single)">
+            <summary>
+            
+            </summary>
+            <param name="state"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetStateBelief(System.Int32)">
+            <summary>
+            Gets the Agents belief in a state.
+            </summary>
+            <param name="state"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetStateBelieved(System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="state"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetAgentResponsibleBelief(System.Int32,System.Int32,System.Single)">
+            <summary>
+            Sets the Agent's belief that another Agent is responsible for a state.
+            </summary>
+            <param name="agentID"></param>
+            <param name="state"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetAgentResponsibleBelief(System.Int32,System.Int32)">
+            <summary>
+            Gets the Agent's belief that another Agent is responsible for a state.
+            </summary>
+            <param name="agentID"></param>
+            <param name="state"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.AddAgentResponsibleBelief(System.Int32,System.Int32,System.Single)">
+            <summary>
+            
+            </summary>
+            <param name="agentID"></param>
+            <param name="state"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.AddAgentResponsibleBelief(CAMeRAVUEmotion.AgentStateBelief)">
+            <summary>
+            
+            </summary>
+            <param name="asb"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetPraiseworthy(System.Int32,System.Single)">
+            <summary>
+            Sets an Agent's praise of another agent.
+            </summary>
+            <param name="AgentID"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetPraiseworthy(System.Int32)">
+            <summary>
+            Gets an Agent's praise of another agent.
+            </summary>
+            <param name="AgentID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetPerceivedFeature(System.Int32,System.Int32,System.Single)">
+            <summary>
+            Sets the Agent's perceived features of another Agent. This is done automatically when an agent is set to perceive another Agent.
+            </summary>
+            <param name="AgentID"></param>
+            <param name="feature"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetPerceivedFeature(System.Int32,System.Int32)">
+            <summary>
+            Gets the Agent's perceived features of another Agent.
+            </summary>
+            <param name="AgentID"></param>
+            <param name="feature"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetPerceivedFeatures(System.Int32)">
+            <summary>
+            Sets the Agent's perceived features of another Agent.
+            </summary>
+            <param name="AgentID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetPerceivedFeatures(System.Int32,CAMeRAVUEmotion.AgentFeatures)">
+            <summary>
+            Sets the Agent's perceived features of another Agent. This is done automatically when an agent is set to perceive another Agent.
+            </summary>
+            <param name="AgentID"></param>
+            <param name="features"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetAttention(System.Int32,System.Int32,System.Single)">
+            <summary>
+            Sets the Agent's attention level to another agent's features.
+            </summary>
+            <param name="AgentID"></param>
+            <param name="feature"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetAttention(System.Int32,System.Int32)">
+            <summary>
+            Gets the Agent's attention level to another agent's features.
+            </summary>
+            <param name="AgentID"></param>
+            <param name="feature"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetExpectedUtilityFeature(System.Int32,System.Int32,System.Int32,System.Single)">
+            <summary>
+            
+            </summary>
+            <param name="state"></param>
+            <param name="agentID"></param>
+            <param name="feature"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetExpectedUtilityFeature(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="state"></param>
+            <param name="agentID"></param>
+            <param name="feature"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetExpectedUtilityAction(System.Int32,System.Int32,System.Int32,System.Single)">
+            <summary>
+            
+            </summary>
+            <param name="state"></param>
+            <param name="agentID"></param>
+            <param name="action"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetExpectedUtilityAction(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="state"></param>
+            <param name="agentID"></param>
+            <param name="action"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetMoralityAction(System.Int32,System.Int32,System.Int32,System.Single)">
+            <summary>
+            
+            </summary>
+            <param name="moralprinciple"></param>
+            <param name="agentID"></param>
+            <param name="action"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetMoralityAction(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="moralprinciple"></param>
+            <param name="agentID"></param>
+            <param name="action"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetGEUFeature(System.Int32,System.Int32,System.Single)">
+            <summary>
+            
+            </summary>
+            <param name="agentID"></param>
+            <param name="feature"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetGEUFeature(System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="agentID"></param>
+            <param name="feature"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetGEUFeatures(System.Int32,CAMeRAVUEmotion.AgentFeatures)">
+            <summary>
+            
+            </summary>
+            <param name="agentID"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetGEUFeatures(System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="agentID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetRelFeatures(System.Int32,CAMeRAVUEmotion.AgentFeatures)">
+            <summary>
+            
+            </summary>
+            <param name="agentID"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetRelFeature(System.Int32,System.Int32,System.Single)">
+            <summary>
+            
+            </summary>
+            <param name="agentID"></param>
+            <param name="feature"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetRelFeatures(System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="agentID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetRelFeature(System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="agentID"></param>
+            <param name="feature"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetGEUAction(System.Int32,System.Int32,System.Single)">
+            <summary>
+            
+            </summary>
+            <param name="agentID"></param>
+            <param name="actionID"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetGEUAction(System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="agentID"></param>
+            <param name="actionID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetGMoralityAction(System.Int32,System.Int32,System.Single)">
+            <summary>
+            
+            </summary>
+            <param name="agentID"></param>
+            <param name="actionID"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetGMoralityAction(System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="agentID"></param>
+            <param name="actionID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetAT(System.Int32,System.Int32,System.Single)">
+            <summary>
+            
+            </summary>
+            <param name="agentID"></param>
+            <param name="actionID"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetAT(System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="agentID"></param>
+            <param name="actionID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetGNAT(System.Int32,System.Single)">
+            <summary>
+            
+            </summary>
+            <param name="AgentID"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetGNAT(System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="AgentID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetGPAT(System.Int32,System.Single)">
+            <summary>
+            
+            </summary>
+            <param name="AgentID"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetGPAT(System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="AgentID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetExpectedSatisfaction(System.Int32,System.Int32,System.Single)">
+            <summary>
+            
+            </summary>
+            <param name="agentID"></param>
+            <param name="actionID"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetExpectedSatisfaction(System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="agentID"></param>
+            <param name="actionID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetFeature(System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="feature"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.AddAgent(System.Int32)">
+            <summary>
+            Adds an Agent to this Agent's perception list. Agents will only consider performing actions towards perceived agents.
+            </summary>
+            <param name="toPerceive"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.RemoveAgent(System.Int32)">
+            <summary>
+            Removes an Agent from this Agent's perception list. Agents will only consider performing actions towards perceived agents.
+            </summary>
+            <param name="toForget"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetRelations(System.Int32,CAMeRAVUEmotion.AgentRelations)">
+            <summary>
+            Sets the relational values towards another Agent.
+            </summary>
+            <param name="agentID"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.SetRelation(System.Int32,System.Int32,System.Single)">
+            <summary>
+             Sets the relational values towards another Agent.
+            </summary>
+            <param name="agentID"></param>
+            <param name="relationType"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetRelations(System.Int32)">
+            <summary>
+            Gets the relational values towards another Agent.
+            </summary>
+            <param name="agentID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.GetRelation(System.Int32,System.Int32)">
+            <summary>
+            Gets the relational values towards another Agent.
+            </summary>
+            <param name="agentID"></param>
+            <param name="relationType"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.#ctor(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Creates a new agent with the indicated parameter values.
+            </summary>
+            <param name="good"></param>
+            <param name="bad"></param>
+            <param name="beautiful"></param>
+            <param name="ugly"></param>
+            <param name="realistic"></param>
+            <param name="unrealistic"></param>
+            <param name="aid"></param>
+            <param name="obstacle"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.#ctor">
+            <summary>
+            Creates a new agent with all personality parameters at 0.
+            </summary>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.PerceiveAction(CAMeRAVUEmotion.Agent,CAMeRAVUEmotion.AgentAction)">
+            <summary>
+            This function is called by the Model when an action is received.
+            </summary>
+            <param name="sender"></param>
+            <param name="performed"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.Perform">
+            <summary>
+            This function is called every tick by the Model. Any Agents that have actions queued will perform these.
+            This means all Agents will wait until the current cycle has completed, before performing their actions.
+            </summary>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Agent.ManualPerform(CAMeRAVUEmotion.AgentAction,CAMeRAVUEmotion.Agent)">
+            <summary>
+            Allows end-users to manually start an action, for instance to kick-start the Model.
+            This can also be used to have AI Agents perform actions based on data from outside of the Model.
+            </summary>
+            <param name="toPerform">The action that is to be performed.</param>
+            <param name="target">The Agent who is to be the target of the action.</param>
+        </member>
+        <member name="P:CAMeRAVUEmotion.Agent.PossibleResponses">
+            <summary>
+            The list of possible responses (in ActionID's) available to an agent, based on the action that he has received.
+            Note that this only contains valid data when an Agent has received an action.
+            
+            The HumanAgent class can access this during the InputRequest callback, to allow users or the program itself to determine the course of action.
+            </summary>
+        </member>
+        <member name="F:CAMeRAVUEmotion.HumanAgent.input">
+            <summary>
+            InputRequest input is called when the HumanAgent has been on the receiving end of an AgentAction
+            </summary>
+        </member>
+        <member name="T:CAMeRAVUEmotion.HumanAgent.InputRequest">
+            <summary>
+            This delegate is implemented in the input member.
+            
+            += the input member with functons that adhere to the "int ...()" format
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:CAMeRAVUEmotion.AgentFeatures">
+            <summary>
+            Features of Agents
+            </summary>
+        </member>
+        <member name="T:CAMeRAVUEmotion.AgentEmotions">
+            <summary>
+            Emotions of Agents
+            </summary>
+        </member>
+        <member name="T:CAMeRAVUEmotion.AgentRelations">
+            <summary>
+            Relationships between Agents
+            </summary>
+        </member>
+        <member name="T:CAMeRAVUEmotion.FeatureStateBelief">
+            <summary>
+            Links a Feature of a specific Agent and a State, to a Value
+            </summary>
+        </member>
+        <member name="T:CAMeRAVUEmotion.StateStateBelief">
+            <summary>
+            Links two States, to a Value
+            </summary>
+        </member>
+        <member name="T:CAMeRAVUEmotion.AgentStateBelief">
+            <summary>
+            Links an Agent and a State, to a Value
+            </summary>
+        </member>
+        <member name="T:CAMeRAVUEmotion.ActionStateBelief">
+            <summary>
+            Links an Action and a State, to a Value
+            </summary>
+        </member>
+        <member name="T:CAMeRAVUEmotion.ActionMoralPrincipleBelief">
+            <summary>
+            Links an Action and a MoralPrinciple, to a Value
+            </summary>
+        </member>
+        <member name="T:CAMeRAVUEmotion.ExpectedUtility">
+            <summary>
+            Links a Feature of a specific Agent and a State, to a Value
+            </summary>
+        </member>
+        <member name="T:CAMeRAVUEmotion.Morality">
+            <summary>
+            Links a Feature of a specific Agent and a MoralPrinciple, to a Value
+            </summary>
+        </member>
+        <member name="T:CAMeRAVUEmotion.Model">
+            <summary>
+            The Model class represents all calculations that are not subject to change between different simulations.
+            </summary>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Model.RegisterAgent(CAMeRAVUEmotion.Agent)">
+            <summary>
+            Registers an Agent with the Model. This Agent will then be updated.
+            </summary>
+            <param name="toAdd"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Model.UnregisterAgent(CAMeRAVUEmotion.Agent)">
+            <summary>
+            Unregisters an Agent with the Model. This Agent will no longer be updated.
+            </summary>
+            <param name="toRemove"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Model.GetAgentByID(System.Int32)">
+            <summary>
+            Returns an Agent instance via their index.
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Model.Stop">
+            <summary>
+            Stops the Model's update sequence.
+            </summary>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Model.Run">
+            <summary>
+            Runs the Model until a HumanAgent has received an action. The Model will enter a waiting state until that is resolved.
+            Use the HumanAgent's InputRequest delegate to receive this callback.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Model.Start">
+            <summary>
+            Starts a new thread which loops the Run() function until stopped.
+            </summary>
+        </member>
+        <member name="P:CAMeRAVUEmotion.Model.Stalled">
+            <summary>
+            This variable is set to true when the model exhausts its action-reaction chain
+            </summary>
+        </member>
+        <member name="T:CAMeRAVUEmotion.Global">
+            <summary>
+            This class provides access to global properties such as States and Actions.
+            </summary>
+        </member>
+        <member name="F:CAMeRAVUEmotion.Global.actionBroadcast">
+            <summary>
+            This listener is fired when an action is performed. This is to be used to listen for actions globally, without requiring the user to be on the receiving end.
+            Useful for updating states.
+            </summary>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Global.GetActionByID(System.Int32)">
+            <summary>
+            This function allows end-users to get AgentAction instances via their ID's.
+            These ID's are stored, for instance, in the Agent.PossibleResponses list which is used when a HumanAgent must select a response.
+            </summary>
+            <param name="globalID"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Global.AddState(System.Boolean)">
+            <summary>
+            This function can be called to register a new state.
+            </summary>
+            <returns>A value that can be stored to indicate a specific state. Store these in a variable, and use that variable to access the state.</returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Global.GetState(System.Int32)">
+            <summary>
+            Gets the value of a state.
+            </summary>
+            <param name="stateIndex">The index, returned by AddState at an earlier time, that indicates a state.</param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Global.SetState(System.Int32,System.Boolean)">
+            <summary>
+            Gets the value of a state.
+            </summary>
+            <param name="stateIndex">The index, returned by AddState at an earlier time, that indicates a state.</param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Global.AddMoralPrinciple(System.Boolean)">
+            <summary>
+            This function can be called to register a new moral principle.
+            </summary>
+            <returns>A value that can be stored to indicate a specific moral principle. Store these in a variable, and use that variable to access the moral principle.</returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Global.GetMoralPrinciple(System.Int32)">
+            <summary>
+            Gets the value of a moral principle.
+            </summary>
+            <param name="stateIndex">The index, returned by AddMoralPrinciple at an earlier time, that indicates a moral principle.</param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Global.SetMoralPrinciple(System.Int32,System.Boolean)">
+            <summary>
+            Sets the value of a moral principle.
+            </summary>
+            <param name="moralPrincipleIndex">The index, returned by AddMoralPrinciple at an earlier time, that indicates a moral principle.</param>
+            <param name="value"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Global.SortDescending(System.Single,System.Single)">
+            <summary>
+            A function that can be used to sort descending with the List class's Sort function.
+            </summary>
+            <param name="x"></param>
+            <param name="y"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Global.SortAscending(System.Single,System.Single)">
+            <summary>
+            A function that can be used to sort ascending with the List class's Sort function.
+            </summary>
+            <param name="x"></param>
+            <param name="y"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Global.Broadcast(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            This function is called by Agents when they perform an action, and will trigged the actionBroadcast to fire.
+            </summary>
+            <param name="sender"></param>
+            <param name="action"></param>
+            <param name="target"></param>
+        </member>
+        <member name="P:CAMeRAVUEmotion.Global.StateCount">
+            <summary>
+            The current number of states in the simulation.
+            </summary>
+        </member>
+        <member name="P:CAMeRAVUEmotion.Global.MoralPrincipleCount">
+            <summary>
+            The current number of moral principles in the simulation.
+            </summary>
+        </member>
+        <member name="T:CAMeRAVUEmotion.Global.ActionListener">
+            <summary>
+            This delegate is implemented in the actionBroadcast member.
+            
+            += the actionBroadcast member with functons that adhere to the "void ...(int, int, int)" format
+            </summary>
+            <param name="sender"></param>
+            <param name="action"></param>
+            <param name="target"></param>
+        </member>
+        <member name="T:CAMeRAVUEmotion.AgentAction">
+            <summary>
+            A class representing the actions agents (both human and AI) can undertake during the simulation.
+            </summary>
+        </member>
+        <member name="M:CAMeRAVUEmotion.AgentAction.AddResponse(System.Int32)">
+            <summary>
+            Added responses will be available when this action is received by an Agent.
+            </summary>
+            <param name="toAdd"></param>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Program.RequestingInput">
+            <summary>
+            This function is called when the HumanAgent a1's input member is fired (which happens when it receives an action from another agent)
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:CAMeRAVUEmotion.Program.GlobalActionReceived(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            This function is called when any agent performs any action.
+            </summary>
+            <param name="sender"></param>
+            <param name="action"></param>
+            <param name="target"></param>
+        </member>
+    </members>
+</doc>

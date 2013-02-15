@@ -1,0 +1,170 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>CogbotRadegastPluginModule</name>
+    </assembly>
+    <members>
+        <member name="T:Cogbot.Actions.Groups.GroupInfoCommand">
+            <summary>
+            Shows group info Dialog using Radegast UI
+            </summary>
+        </member>
+        <member name="F:Radegast.frmTeleport.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:Radegast.frmTeleport.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:Radegast.frmTeleport.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="F:METAbolt.FindEvents.components">
+            <summary> 
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:METAbolt.FindEvents.Dispose(System.Boolean)">
+            <summary> 
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:METAbolt.FindEvents.InitializeComponent">
+            <summary> 
+            Required method for Designer support - do not modify 
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="F:METAbolt.FindPlaces.components">
+            <summary> 
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:METAbolt.FindPlaces.Dispose(System.Boolean)">
+            <summary> 
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:METAbolt.FindPlaces.InitializeComponent">
+            <summary> 
+            Required method for Designer support - do not modify 
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="F:METAbolt.FindGroups.components">
+            <summary> 
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:METAbolt.FindGroups.Dispose(System.Boolean)">
+            <summary> 
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:METAbolt.FindGroups.InitializeComponent">
+            <summary> 
+            Required method for Designer support - do not modify 
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="F:METAbolt.SearchConsole.components">
+            <summary> 
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:METAbolt.SearchConsole.Dispose(System.Boolean)">
+            <summary> 
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:METAbolt.SearchConsole.InitializeComponent">
+            <summary> 
+            Required method for Designer support - do not modify 
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="F:METAbolt.FindPeopleConsole.components">
+            <summary> 
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:METAbolt.FindPeopleConsole.Dispose(System.Boolean)">
+            <summary> 
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:METAbolt.FindPeopleConsole.InitializeComponent">
+            <summary> 
+            Required method for Designer support - do not modify 
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="M:CogbotRadegastPluginModule.MemberInfoControl.OnValueChanged(System.Object)">
+            <summary>
+            Triggers the ValueChanged event.
+            </summary>
+        </member>
+        <member name="F:CogbotRadegastPluginModule.CogbotTabWindow.components">
+            <summary> 
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:CogbotRadegastPluginModule.CogbotTabWindow.Dispose(System.Boolean)">
+            <summary> 
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:CogbotRadegastPluginModule.CogbotTabWindow.InitializeComponent">
+            <summary> 
+            Required method for Designer support - do not modify 
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="F:CogbotRadegastPluginModule.SimObjectsConsole.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:CogbotRadegastPluginModule.SimObjectsConsole.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:CogbotRadegastPluginModule.SimObjectsConsole.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:CogbotRadegastPluginModule.Properties.Resources">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:CogbotRadegastPluginModule.Properties.Resources.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:CogbotRadegastPluginModule.Properties.Resources.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+    </members>
+</doc>

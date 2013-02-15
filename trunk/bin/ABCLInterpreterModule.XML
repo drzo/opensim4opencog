@@ -1,0 +1,726 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ABCLInterpreterModule</name>
+    </assembly>
+    <members>
+        <member name="T:ABCLScriptEngine.UI.Paths.MiscDirs">
+            <summary>
+            Misc Paths. Customize here.
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.Paths.MiscDirs.ConceptNet">
+            <summary>
+            MIT's ConceptNet 2.1 directory.
+            default: "...MyDocuments) + @"\Python Projects\conceptnet2.1"
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.Paths.MiscDirs.montylingua">
+            <summary>
+            MIT's MontyLingua directory.
+            default: "...MyDocuments) + @"\Python Projects\conceptnet2.1\montylingua"
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.Paths.MiscDirs.vs_Projects">
+            <summary>
+            Visual Studio\Projects Folder.
+            default: "..MyDocuments) + @"\Visual Studio 2008\Projects"
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.Paths.MiscDirs.#ctor">
+            <summary>
+            Misc Paths.
+            </summary>
+        </member>
+        <member name="T:ABCLScriptEngine.UI.Paths.Python24Dirs">
+            <summary>
+            Python 2.4 Paths. Customize here.
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.Paths.Python24Dirs.Python24_Lib">
+            <summary>
+            Folder to Python library modules.
+            default: "C:\Python24\Lib"
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.Paths.Python24Dirs.Python24_Lib_lib_tk">
+            <summary>
+            Folder to Tkinter library modules.
+            default: "C:\Python24\Lib\lib-tk"
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.Paths.Python24Dirs.Python24_libs">
+            <summary>
+            default: "C:\Python24\libs"
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.Paths.Python24Dirs.Python24_DLLs">
+            <summary>
+            default: "C:\Python24\DLLs"
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.Paths.Python24Dirs.Python24_Tools">
+            <summary>
+            Some useful programs written in Python.
+            default: "C:\Python24\Tools"
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.Paths.Python24Dirs.Python24_Tools_Scripts">
+            <summary>
+            Some useful programs written in Python.
+            default: "C:\Python24\Tools\Scripts"
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.Paths.Python24Dirs.#ctor">
+            <summary>
+            Python 2.4 Paths
+            </summary>
+        </member>
+        <member name="T:ABCLScriptEngine.UI.Paths.Python25Dirs">
+            <summary>
+            Python 2.5 Paths. Customize here.
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.Paths.Python25Dirs.Python25_Lib">
+            <summary>
+            Folder to Python library modules.
+            default: "C:\Python25\Lib"
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.Paths.Python25Dirs.Python25_Lib_lib_tk">
+            <summary>
+            Folder to Tkinter library modules.
+            default: "C:\Python25\Lib\lib-tk"
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.Paths.Python25Dirs.Python25_libs">
+            <summary>
+            default: "C:\Python25\libs"
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.Paths.Python25Dirs.Python25_DLLs">
+            <summary>
+            default: "C:\Python25\DLLs"
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.Paths.Python25Dirs.Python25_Tools">
+            <summary>
+            Some useful programs written in Python.
+            default: "C:\Python25\Tools"
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.Paths.Python25Dirs.Python25_Tools_Scripts">
+            <summary>
+            Some useful programs written in Python.
+            default: "C:\Python25\Tools\Scripts"
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.Paths.Python25Dirs.#ctor">
+            <summary>
+            Python 2.5 Paths
+            </summary>
+        </member>
+        <member name="T:ABCLScriptEngine.UI.Paths.IronPythonDirs">
+            <summary>
+            IronPython Paths. Customize here.
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.Paths.IronPythonDirs.Runtime">
+            <summary>
+            Current Assembly.Location
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.Paths.IronPythonDirs.IronPython_Tutorial">
+            <summary>
+            IronPython Tutorial scripts.
+            default: "...MyDocuments) + @"\Visual Studio 2008\Projects\IronPython-2.0B2\Tutorial"
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.Paths.IronPythonDirs.#cctor">
+            <summary>
+            IronPython Paths
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IPEStreamWrapper.IPEngineResponse(System.String)">
+            <summary>
+            Method that allows capture of IronPython output
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IPEStreamWrapper.IPEngineResponseO(System.Object)">
+            <summary>
+            Method that allows capture of IronPython output
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="T:ABCLScriptEngine.LispInterpModule">
+            <summary>
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.LispInterpModule.#ctor(Cogbot.BotClient)">
+            <summary>
+            </summary>
+            <param name="parent"></param>
+        </member>
+        <member name="M:ABCLScriptEngine.LispInterpModule.removeSetting(System.String)">
+            <summary>
+            Removes the named setting from this class
+            </summary>
+            <param name="name">The name of the setting to remove</param>
+        </member>
+        <member name="M:ABCLScriptEngine.LispInterpModule.containsSettingCalled(System.String)">
+            <summary>
+            </summary>
+            <param name="name"></param>
+            <returns></returns>
+            <exception cref="T:System.NotImplementedException"></exception>
+        </member>
+        <member name="M:ABCLScriptEngine.LispInterpModule.GetModuleName">
+            <summary>
+             Name registered in the BotClient.registrationTypes collection
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:ABCLScriptEngine.LispInterpModule.StartupListener">
+            <summary>
+            </summary>
+            <exception cref="T:System.NotImplementedException"></exception>
+        </member>
+        <member name="M:ABCLScriptEngine.LispInterpModule.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="M:ABCLScriptEngine.LispInterpModule.GetGroup(System.String)">
+            <summary>
+            </summary>
+            <param name="name"></param>
+            <returns></returns>
+            <exception cref="T:System.NotImplementedException"></exception>
+        </member>
+        <member name="P:ABCLScriptEngine.LispInterpModule.NameSpace">
+            <summary>
+            </summary>
+            <exception cref="T:System.NotImplementedException"></exception>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.WinformREPLTextBox.prompt">
+            <summary>
+            Default prompt text.
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.WinformREPLTextBox.commandHistory">
+            <summary>
+            Used for storing commands.
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.WinformREPLTextBox.components">
+            <summary> 
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.WinformREPLTextBox.defStmtBuilder">
+            <summary>
+            Holds temporary defFunc lines.
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.WinformREPLTextBox.scMisc">
+            <summary>
+            StringCollection of all MiscDirs
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.WinformREPLTextBox.scPython24">
+            <summary>
+            StringCollection of all Python24Dirs
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.WinformREPLTextBox.scIronPython">
+            <summary>
+            StringCollection of all IronPythonDirs
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.WinformREPLTextBox.intellisense">
+            <summary>
+            Intellisense ToolTip.
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.WinformREPLTextBox.IsRawInput">
+            <summary>
+            True if currently processing raw_text()
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.WinformREPLTextBox.rawprompt">
+            <summary>
+            Hold raw_input prompt by user
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.Dispose(System.Boolean)">
+            <summary> 
+            Clean up any resources being used.
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.WndProc(System.Windows.Forms.Message@)">
+            <summary>
+            Overridden to protect against deletion of contents
+            cutting the text and deleting it from the context menu
+            </summary>
+            <param name="m"></param>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.InitializeComponent">
+            <summary> 
+            Required method for Designer support - do not modify 
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.printPrompt">
+            <summary>
+            Sends the prompt to the IronTextBox
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.printLine">
+            <summary>
+            Sends a newline character to the IronTextBox
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.GetTextAtPrompt">
+            <summary>
+            Returns currentline's text string
+            </summary>
+            <returns>Returns currentline's text string</returns>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.AddcommandHistory(System.String)">
+            <summary>
+            Add a command to IronTextBox command history.
+            </summary>
+            <param name="currentCommand">IronTextBox command line</param>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.IsTerminatorKey(System.Windows.Forms.Keys)">
+            <summary>
+            Returns true if Keys.Enter
+            </summary>
+            <param name="key">Keys</param>
+            <returns>Returns true if Keys.Enter</returns>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.IsTerminatorKey(System.Char)">
+            <summary>
+            Returns true if (char)13 '\r'
+            </summary>
+            <param name="keyChar">char of keypressed</param>
+            <returns>Returns true if (char)13 '\r'</returns>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.GetCurrentLine">
+            <summary>
+            Returns the current line, including prompt.
+            </summary>
+            <returns>Returns the current line, including prompt.</returns>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.ReplaceTextAtPrompt(System.String)">
+            <summary>
+            Replaces the text at the current prompt.
+            </summary>
+            <param name="text">new text to replace old text.</param>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.IsCaretAtCurrentLine">
+            <summary>
+            Returns true if caret is positioned on the currentline.
+            </summary>
+            <returns>Returns true if caret is positioned on the currentline.</returns>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.AddText(System.String)">
+            <summary>
+            Adds text to the IronTextBox
+            </summary>
+            <param name="text">text to be added</param>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.StringCollecttostring(System.Collections.Specialized.StringCollection)">
+            <summary>
+            Returns a string retrieved from a StringCollection.
+            </summary>
+            <param name="inCol">StringCollection to be searched.</param>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.MoveCaretToEndOfText">
+            <summary>
+            Move caret to the end of the current text.
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.IsCaretJustBeforePrompt">
+            <summary>
+            Returns true is the caret is just before the current prompt.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.GetCurrentCaretColumnPosition">
+            <summary>
+            Returns the column position. Useful for selections.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.IsCaretAtWritablePosition">
+            <summary>
+            Is the caret at a writable position.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.SetPromptText(System.String)">
+            <summary>
+            Sets the text of the prompt.  Default is ">>>"
+            </summary>
+            <param name="val">string of new prompt</param>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.GetCommandHistory">
+            <summary>
+            Returns the string array of the command history. 
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.WriteText(System.String)">
+            <summary>
+            Adds text to the IronTextBox.
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.consoleTextBox_KeyPress(System.Object,System.Windows.Forms.KeyPressEventArgs)">
+            <summary>
+            Handle KeyPress events here.
+            </summary>
+            <param name="sender">object</param>
+            <param name="e">KeyPressEventArgs</param>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.CreateIndentstring(System.Int32)">
+            <summary>
+            Build a string of returning spaces for indenting
+            </summary>
+            <param name="indentsize"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.ConsoleControl_KeyDown(System.Object,System.Windows.Forms.KeyEventArgs)">
+            <summary>
+            KeyEvent control for staying inside the currentline and autocomplete features
+            </summary>
+            <param name="sender">object</param>
+            <param name="e">KeyEventArgs</param>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.WinformREPLTextBox.input">
+            <summary>
+            Stores input commands from IronTextBox
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.WinformREPLTextBox.output">
+            <summary>
+            Stores output generated from IronPython
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.WinformREPLTextBox.scollection">
+            <summary>
+            Commands and strings from IronTextBox.AddText() gets stored here
+            Status: Currently not used 3/12/06 11:16am
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.WinformREPLTextBox.GetStringCollectValue(System.Collections.Specialized.StringCollection,System.Int32)">
+            <summary>
+            Returns a string retrieved from a StringCollection.
+            </summary>
+            <param name="inCol">StringCollection to be searched.</param>
+            <param name="index">index of StringCollection to retrieve.</param>
+        </member>
+        <member name="P:ABCLScriptEngine.UI.WinformREPLTextBox.Prompt">
+            <summary>
+            Gets and sets the IronTextBox prompt.
+            </summary>
+        </member>
+        <member name="T:ABCLScriptEngine.UI.IronTextBoxControl">
+            <summary>
+            Summary description for IronTextBoxControl.
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.IronTextBoxControl.engine">
+            <summary>
+            Main IronPython ScriptEngine
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.IronTextBoxControl.scope">
+            <summary>
+            Main IronPython ScriptScope
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.IronTextBoxControl.consoleTextBox">
+            <summary>
+            The IronTextBox member.
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.IronTextBoxControl.components">
+            <summary> 
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.GetCommandHistory">
+            <summary>
+            Returns the string array of the command history.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.#ctor(MushDLR223.ScriptEngines.ScriptInterpreter)">
+            <summary>
+            IronTextBoxControl
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.DoIPExecuteFile(System.String)">
+            <summary>
+            Executes the Python file within the IronTextBox environment.
+            A nice way to quickly get a Python module in CLI to test or use.
+            </summary>
+            <param name="pyfile">Python file (.py)</param>
+            <returns>object</returns>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.DoIPExecute(System.String)">
+            <summary>
+            Executes the code in SourceCodeKind.SingleStatement to fire the command event
+            Use DoIPEvaluate if you do not wish to fire the command event
+            </summary>
+            <param name="pycode">python statement</param>
+            <returns>object</returns>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.DoIPEvaluate(System.String)">
+            <summary>
+            Executes the code in SourceCodeKind.Expression not to fire the command event
+            Use DoIPExecute if you do wish to fire the command event
+            </summary>
+            <param name="pycode">Python expression</param>
+            <returns>object</returns>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.irontextboxControl_CommandEntered(System.Object,ABCLScriptEngine.UI.CommandEnteredEventArgs)">
+            <summary>
+            irontextboxControl_CommandEntered
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.GetHelpText">
+            <summary>
+            Displays information about IronTextBox and user's IronPython version.
+            </summary>
+            <returns>Returns string information about IronTextBox and user's IronPython version.</returns>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.InitializeComponent">
+            <summary> 
+            Required method for Designer support - do not modify 
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.Dispose(System.Boolean)">
+            <summary> 
+            Clean up any resources being used.
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.FireCommandEntered(System.String)">
+            <summary>
+            Run the command.
+            </summary>
+            <param name="command">Command line string.</param>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.OnCommandEntered(System.String)">
+            <summary>
+            Creates new EventCommandEntered event.
+            </summary>
+            <param name="command">Command line string.</param>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.Clear">
+            <summary>
+            Clear the current text in the IronTextBox.
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.WriteText(System.String,System.Object[])">
+            <summary>
+            Send text to the IronTextBox.
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.SimEnter">
+            <summary>
+            Simulate the Enter KeyPress event.
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.WalkPythonFile(System.String)">
+            <summary>
+            Opens a Python files and reads line by line into IronTextBox.
+            </summary>
+            <param name="fullpathfilename">fullpathfilename</param>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.WalkPythonFile">
+            <summary>
+            Opens a FolderBrowserDialog to load a Python file to read it line by line into IronTextBox.
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.Runfile">
+            <summary>
+            Run a .Py file.  Calls OpenFileDialog to PythonEngine.RunFile.
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.RewritePyFiletoSB(System.Text.StringBuilder@)">
+            <summary>
+            Opens a Python file and reads line by line into a StringBuilder.
+            </summary>
+            <param name="sbCode">out StringBuilder</param>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.IsSingleCommentLine(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="line"></param>
+            <returns>true if line begins with #, or begins with """ and endwith """</returns>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.Convert_StringCollectiontoArrayList(System.Collections.Specialized.StringCollection)">
+            <summary>
+            Returns aa ArrayList from a StringCollection  
+            </summary>
+            <param name="StringColin">Incoming StringCollection.</param>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.IronTextBoxControl.ImportPaths(System.String)">
+            <summary>
+            ImportPaths
+            </summary>
+            <param name="arg"></param>
+        </member>
+        <member name="E:ABCLScriptEngine.UI.IronTextBoxControl.CommandEntered">
+            <summary>
+            The CommandEntered event
+            </summary>
+        </member>
+        <member name="P:ABCLScriptEngine.UI.IronTextBoxControl.defBuilder">
+            <summary>
+            Adds def lines one by one.
+            </summary>
+        </member>
+        <member name="P:ABCLScriptEngine.UI.IronTextBoxControl.ConsoleTextForeColor">
+            <summary>
+            Gets and sets console text ForeColor. 
+            </summary>
+        </member>
+        <member name="P:ABCLScriptEngine.UI.IronTextBoxControl.ConsoleTextBackColor">
+            <summary>
+            Gets and sets console text BackColor. 
+            </summary>
+        </member>
+        <member name="P:ABCLScriptEngine.UI.IronTextBoxControl.ConsoleTextFont">
+            <summary>
+            Gets and sets console Font. 
+            </summary>
+        </member>
+        <member name="P:ABCLScriptEngine.UI.IronTextBoxControl.Prompt">
+            <summary>
+            Gets and sets string to be used for the Prompt.
+            </summary>
+        </member>
+        <member name="T:ABCLScriptEngine.UI.Utils.Converts">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.Utils.Converts.MessageBoxIronPy(System.Object)">
+            <summary>
+            Custom MessageBox call. Excepts some random objects from IronPython and converts to string.
+            </summary>
+            <param name="inobject">Output object from IronPython.</param>
+        </member>
+        <member name="T:ABCLScriptEngine.UI.CommandEnteredEventArgs">
+            <summary>
+            Command argument class.
+            </summary>
+        </member>
+        <member name="F:ABCLScriptEngine.UI.TextWindow.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.TextWindow.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:ABCLScriptEngine.UI.TextWindow.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.CSThrowError.execute(org.armedbear.lisp.LispObject[])">
+            <summary>
+            
+            </summary>
+            <param name="args"></param>
+        </member>
+        <member name="M:ABCLScriptEngine.LateSymbolPrimitive.execute(org.armedbear.lisp.LispObject[])">
+            <summary>
+            
+            </summary>
+            <param name="args"></param>
+        </member>
+        <member name="M:ABCLScriptEngine.CSPrimitive.execute(org.armedbear.lisp.LispObject[])">
+            <summary>
+            
+            </summary>
+            <param name="args"></param>
+        </member>
+        <member name="M:ABCLScriptEngine.ABCLInterpreter.findSymbol(System.Object,System.String)">
+            <summary>
+            (ON-CHAT (@ "My Bot") (@ "hi"))
+            </summary>
+            <param name="s"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ABCLScriptEngine.SuspendableTextReader.SupendIt(System.Boolean)">
+            <summary>
+            
+            </summary>
+            <param name="?"></param>
+        </member>
+        <member name="M:ABCLScriptEngine.SuspendableTextReader.Close">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:ABCLScriptEngine.SuspendableTextReader.Peek">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:ABCLScriptEngine.SuspendableTextReader.Read">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:ABCLScriptEngine.SuspendableTextReader.Read(System.Char[],System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="buffer"></param>
+            <param name="index"></param>
+            <param name="count"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ABCLScriptEngine.SuspendableTextReader.ReadBlock(System.Char[],System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="buffer"></param>
+            <param name="index"></param>
+            <param name="count"></param>
+            <returns></returns>
+        </member>
+        <member name="M:ABCLScriptEngine.SuspendableTextReader.ReadLine">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:ABCLScriptEngine.SuspendableTextReader.ReadToEnd">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

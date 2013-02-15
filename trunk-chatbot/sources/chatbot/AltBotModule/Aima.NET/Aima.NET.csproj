@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{93C4E25A-DA6B-4011-80F3-7E1A086A95F6}</ProjectGuid>
+    <ProjectGuid>{E2616D71-9B30-4798-825C-26FE98D4090F}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
@@ -25,402 +25,802 @@
     </StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;VISUAL_STUDIO</DefineConstants>
+    <DefineConstants>TRACE;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
     <DocumentationFile>Aima.NET.XML</DocumentationFile>
+    <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
-    <Optimize>true</Optimize>
+    <Optimize>True</Optimize>
     <OutputPath>..\..\..\..\bin\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>3</WarningLevel>
+    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;VISUAL_STUDIO</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
     <DocumentationFile>Aima.NET.XML</DocumentationFile>
-    <DebugSymbols>true</DebugSymbols>
+    <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
-    <Optimize>false</Optimize>
+    <Optimize>False</Optimize>
     <OutputPath>..\..\..\..\bin\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>3</WarningLevel>
+    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Drawing" />
+    <Reference Include="System">
+      <Name>System</Name>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Name>System.Xml</Name>
+    </Reference>
+    <Reference Include="System.Web">
+      <Name>System.Web</Name>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <Name>System.Windows.Forms</Name>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <Name>System.Drawing</Name>
+    </Reference>
     <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+      <Name>System.Core</Name>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GenericSets\src\Iesi.Collections.Generic\Iesi.Collections.Generic.csproj">
-      <Project>{4B2E2493-97E6-4906-A585-A48B3A1FDAA5}</Project>
       <Name>Iesi.Collections.Generic</Name>
+      <Project>{61116BC6-32EE-49A0-A251-BE02FA6AAB80}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Core\Agent\IAction.cs" />
-    <Compile Include="Core\Agent\IAgent.cs" />
-    <Compile Include="Core\Agent\IAgentProgram.cs" />
-    <Compile Include="Core\Agent\IEnvironment.cs" />
-    <Compile Include="Core\Agent\IEnvironmentObject.cs" />
-    <Compile Include="Core\Agent\IEnvironmentState.cs" />
-    <Compile Include="Core\Agent\IEnvironmentView.cs" />
-    <Compile Include="Core\Agent\IModel.cs" />
-    <Compile Include="Core\Agent\INotifyEnvironmentViews.cs" />
-    <Compile Include="Core\Agent\IPercept.cs" />
-    <Compile Include="Core\Agent\IState.cs" />
-    <Compile Include="Core\Agent\Impl\AbstractAgent.cs" />
-    <Compile Include="Core\Agent\Impl\AbstractEnvironment.cs" />
-    <Compile Include="Core\Agent\Impl\DynamicAction.cs" />
-    <Compile Include="Core\Agent\Impl\DynamicEnvironmentState.cs" />
-    <Compile Include="Core\Agent\Impl\DynamicPercept.cs" />
-    <Compile Include="Core\Agent\Impl\DynamicState.cs" />
-    <Compile Include="Core\Agent\Impl\NoOpAction.cs" />
-    <Compile Include="Core\Agent\Impl\ObjectWithDynamicAttributes.cs" />
-    <Compile Include="Core\Agent\Impl\AProg\ModelBasedReflexAgentProgram.cs" />
-    <Compile Include="Core\Agent\Impl\AProg\SimpleReflexAgentProgram.cs" />
-    <Compile Include="Core\Agent\Impl\AProg\TableDrivenAgentProgram.cs" />
-    <Compile Include="Core\Agent\Impl\AProg\SimpleRule\ANDCondition.cs" />
-    <Compile Include="Core\Agent\Impl\AProg\SimpleRule\Condition.cs" />
-    <Compile Include="Core\Agent\Impl\AProg\SimpleRule\EQUALCondition.cs" />
-    <Compile Include="Core\Agent\Impl\AProg\SimpleRule\NOTCondition.cs" />
-    <Compile Include="Core\Agent\Impl\AProg\SimpleRule\ORCondition.cs" />
-    <Compile Include="Core\Agent\Impl\AProg\SimpleRule\Rule.cs" />
-    <Compile Include="Core\Environment\CellWorld\Cell.cs" />
-    <Compile Include="Core\Environment\CellWorld\CellWorld.cs" />
-    <Compile Include="Core\Environment\CellWorld\CellWorldPosition.cs" />
-    <Compile Include="Core\Environment\EightPuzzle\EightPuzzleBoard.cs" />
-    <Compile Include="Core\Environment\EightPuzzle\EightPuzzleFunctionFactory.cs" />
-    <Compile Include="Core\Environment\EightPuzzle\EightPuzzleGoalTest.cs" />
-    <Compile Include="Core\Environment\EightPuzzle\ManhattanHeuristicFunction.cs" />
-    <Compile Include="Core\Environment\EightPuzzle\MisplacedTilleHeuristicFunction.cs" />
-    <Compile Include="Core\Environment\Map\AdaptableHeuristicFunction.cs" />
-    <Compile Include="Core\Environment\Map\BidirectionalMapProblem.cs" />
-    <Compile Include="Core\Environment\Map\DynAttributeNames.cs" />
-    <Compile Include="Core\Environment\Map\ExtendableMap.cs" />
-    <Compile Include="Core\Environment\Map\IMap.cs" />
-    <Compile Include="Core\Environment\Map\MapAgent.cs" />
-    <Compile Include="Core\Environment\Map\MapEnvironment.cs" />
-    <Compile Include="Core\Environment\Map\MapEnvironmentState.cs" />
-    <Compile Include="Core\Environment\Map\MapFunctionFactory.cs" />
-    <Compile Include="Core\Environment\Map\MapStepCostFunction.cs" />
-    <Compile Include="Core\Environment\Map\MoveToAction.cs" />
-    <Compile Include="Core\Environment\Map\Scenario.cs" />
-    <Compile Include="Core\Environment\Map\SimplifiedRoadMapOfAustralia.cs" />
-    <Compile Include="Core\Environment\Map\SimplifiedRoadMapOfPartOfRomania.cs" />
-    <Compile Include="Core\Environment\Map\StraightLineDistanceHeuristicFunction.cs" />
-    <Compile Include="Core\Environment\NQueens\AttackingPairsHeuristic.cs" />
-    <Compile Include="Core\Environment\NQueens\NQueensBoard.cs" />
-    <Compile Include="Core\Environment\NQueens\NQueensFitnessFunction.cs" />
-    <Compile Include="Core\Environment\NQueens\NQueensFunctionFactory.cs" />
-    <Compile Include="Core\Environment\NQueens\NQueensGoalTest.cs" />
-    <Compile Include="Core\Environment\NQueens\QueenAction.cs" />
-    <Compile Include="Core\Environment\TicTacToe\TicTacToe.cs" />
-    <Compile Include="Core\Environment\TicTacToe\TicTacToeBoard.cs" />
-    <Compile Include="Core\Environment\Vacuum\ModelBasedReflexVacuumAgent.cs" />
-    <Compile Include="Core\Environment\Vacuum\ReflexVacuumAgent.cs" />
-    <Compile Include="Core\Environment\Vacuum\SimpleReflexVacuumAgent.cs" />
-    <Compile Include="Core\Environment\Vacuum\TableDrivenVacuumAgent.cs" />
-    <Compile Include="Core\Environment\Vacuum\VacuumEnvironment.cs" />
-    <Compile Include="Core\Environment\Vacuum\VacuumEnvironmentState.cs" />
-    <Compile Include="Core\Environment\Vacuum\VacuumEnvPercept.cs" />
-    <Compile Include="Core\Environment\XYEnv\Wall.cs" />
-    <Compile Include="Core\Environment\XYEnv\XYEnvironment.cs" />
-    <Compile Include="Core\Learning\Data\DataResource.cs" />
-    <Compile Include="Core\Learning\Framework\DataSet.cs" />
-    <Compile Include="Core\Learning\Framework\DataSetFactory.cs" />
-    <Compile Include="Core\Learning\Framework\DataSetSpecification.cs" />
-    <Compile Include="Core\Learning\Framework\Example.cs" />
-    <Compile Include="Core\Learning\Framework\IAttribute.cs" />
-    <Compile Include="Core\Learning\Framework\IAttributeSpecification.cs" />
-    <Compile Include="Core\Learning\Framework\ILearner.cs" />
-    <Compile Include="Core\Learning\Framework\NumericAttribute.cs" />
-    <Compile Include="Core\Learning\Framework\NumericAttributeSpecification.cs" />
-    <Compile Include="Core\Learning\Framework\StringAttribute.cs" />
-    <Compile Include="Core\Learning\Framework\StringAttributeSpecification.cs" />
-    <Compile Include="Core\Learning\Inductive\ConstantDecisionTree.cs" />
-    <Compile Include="Core\Learning\Inductive\DecisionList.cs" />
-    <Compile Include="Core\Learning\Inductive\DecisionTree.cs" />
-    <Compile Include="Core\Learning\Inductive\DLTest.cs" />
-    <Compile Include="Core\Learning\Inductive\DLTestFactory.cs" />
-    <Compile Include="Core\Learning\Knowledge\CurrentBestLearning.cs" />
-    <Compile Include="Core\Learning\Knowledge\FOLDataSetDomain.cs" />
-    <Compile Include="Core\Learning\Knowledge\FOLExample.cs" />
-    <Compile Include="Core\Learning\Knowledge\Hypothesis.cs" />
-    <Compile Include="Core\Learning\Learners\AdaBoostLearner.cs" />
-    <Compile Include="Core\Learning\Learners\CurrentBestLearner.cs" />
-    <Compile Include="Core\Learning\Learners\DecisionListLearner.cs" />
-    <Compile Include="Core\Learning\Learners\DecisionTreeLearner.cs" />
-    <Compile Include="Core\Learning\Learners\MajorityLearner.cs" />
-    <Compile Include="Core\Learning\Learners\StumpLearner.cs" />
-    <Compile Include="Core\Learning\Neural\BackPropLearning.cs" />
-    <Compile Include="Core\Learning\Neural\FeedForwardNeuralNetwork.cs" />
-    <Compile Include="Core\Learning\Neural\HardLimitActivationFunction.cs" />
-    <Compile Include="Core\Learning\Neural\IActivationFunction.cs" />
-    <Compile Include="Core\Learning\Neural\IFunctionApproximator.cs" />
-    <Compile Include="Core\Learning\Neural\INNTrainingScheme.cs" />
-    <Compile Include="Core\Learning\Neural\INumerizer.cs" />
-    <Compile Include="Core\Learning\Neural\IrisDataSetNumerizer.cs" />
-    <Compile Include="Core\Learning\Neural\IrisNNDataSet.cs" />
-    <Compile Include="Core\Learning\Neural\Layer.cs" />
-    <Compile Include="Core\Learning\Neural\LayerSensitivity.cs" />
-    <Compile Include="Core\Learning\Neural\LogSigActivationFunction.cs" />
-    <Compile Include="Core\Learning\Neural\NNConfig.cs" />
-    <Compile Include="Core\Learning\Neural\NNDataSet.cs" />
-    <Compile Include="Core\Learning\Neural\NNExample.cs" />
-    <Compile Include="Core\Learning\Neural\Perceptron.cs" />
-    <Compile Include="Core\Learning\Neural\PureLinearActivationFunction.cs" />
-    <Compile Include="Core\Learning\Neural\RabbitEyeDataSet.cs" />
-    <Compile Include="Core\Learning\Reinforcement\MDPAgent.cs" />
-    <Compile Include="Core\Learning\Reinforcement\PassiveADPAgent.cs" />
-    <Compile Include="Core\Learning\Reinforcement\PassiveTDAgent.cs" />
-    <Compile Include="Core\Learning\Reinforcement\QLearningAgent.cs" />
-    <Compile Include="Core\Learning\Reinforcement\QTable.cs" />
-    <Compile Include="Core\Logic\Common\IParseTreeNode.cs" />
-    <Compile Include="Core\Logic\Common\IVisitor.cs" />
-    <Compile Include="Core\Logic\Common\Lexer.cs" />
-    <Compile Include="Core\Logic\Common\LogicTokenTypes.cs" />
-    <Compile Include="Core\Logic\Common\Parser.cs" />
-    <Compile Include="Core\Logic\Common\Token.cs" />
-    <Compile Include="Core\Logic\FOL\CNFConverter.cs" />
-    <Compile Include="Core\Logic\FOL\Connectors.cs" />
-    <Compile Include="Core\Logic\FOL\IStandardizeApartIndexical.cs" />
-    <Compile Include="Core\Logic\FOL\PredicateCollector.cs" />
-    <Compile Include="Core\Logic\FOL\Quantifiers.cs" />
-    <Compile Include="Core\Logic\FOL\StandardizeApart.cs" />
-    <Compile Include="Core\Logic\FOL\StandardizeApartIndexicalFactory.cs" />
-    <Compile Include="Core\Logic\FOL\StandardizeApartInPlace.cs" />
-    <Compile Include="Core\Logic\FOL\StandardizeApartResult.cs" />
-    <Compile Include="Core\Logic\FOL\SubstVisitor.cs" />
-    <Compile Include="Core\Logic\FOL\SubsumptionElimination.cs" />
-    <Compile Include="Core\Logic\FOL\Unifier.cs" />
-    <Compile Include="Core\Logic\FOL\VariableCollector.cs" />
-    <Compile Include="Core\Logic\FOL\Domain\DomainFactory.cs" />
-    <Compile Include="Core\Logic\FOL\Domain\FOLDomain.cs" />
-    <Compile Include="Core\Logic\FOL\Domain\FOLDomainAnswerLiteralAddedEventArgs.cs" />
-    <Compile Include="Core\Logic\FOL\Domain\FOLDomainSkolemConstantAddedEventArgs.cs" />
-    <Compile Include="Core\Logic\FOL\Domain\FOLDomainSkolemFunctionAddedEventArgs.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\AbstractModulation.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Demodulation.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\FOLBCAsk.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\FOLFCAsk.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\FOLModelElimination.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\FOLOTTERLikeTheoremProver.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\FOLTFMResolution.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\IInferenceProcedure.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\IInferenceResult.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\InferenceResultPrinter.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Paramodulation.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\OTTER\IClauseFilter.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\OTTER\IClauseSimplifier.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\OTTER\ILightestClauseHeuristic.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\OTTER\DefaultImpl\DefaultClauseFilter.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\OTTER\DefaultImpl\DefaultClauseSimplifier.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\OTTER\DefaultImpl\DefaultLightestClauseHeuristic.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\AbstractProofStep.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\IProof.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\IProofStep.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofFinal.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofPrinter.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepBwChGoal.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepChainCancellation.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepChainContrapositive.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepChainDropped.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepChainFromClause.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepChainReduction.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepClauseBinaryResolvent.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepClauseClausifySentence.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepClauseDemodulation.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepClauseFactor.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepClauseParamodulation.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepFoChAlreadyAFact.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepFoChAssertFact.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepGoal.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepPremise.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepRenaming.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Trace\IFOLModelEliminationTracer.cs" />
-    <Compile Include="Core\Logic\FOL\Inference\Trace\IFOLTFMResolutionTracer.cs" />
-    <Compile Include="Core\Logic\FOL\KB\FOLKnowledgeBase.cs" />
-    <Compile Include="Core\Logic\FOL\KB\FOLKnowledgeBaseFactory.cs" />
-    <Compile Include="Core\Logic\FOL\KB\Data\Chain.cs" />
-    <Compile Include="Core\Logic\FOL\KB\Data\Clause.cs" />
-    <Compile Include="Core\Logic\FOL\KB\Data\CNF.cs" />
-    <Compile Include="Core\Logic\FOL\KB\Data\Literal.cs" />
-    <Compile Include="Core\Logic\FOL\KB\Data\ReducedLiteral.cs" />
-    <Compile Include="Core\Logic\FOL\Parsing\AbstractFOLVisitor.cs" />
-    <Compile Include="Core\Logic\FOL\Parsing\FOLLexer.cs" />
-    <Compile Include="Core\Logic\FOL\Parsing\FOLParser.cs" />
-    <Compile Include="Core\Logic\FOL\Parsing\IFOLVisitor.cs" />
-    <Compile Include="Core\Logic\FOL\Parsing\AST\ConnectedSentence.cs" />
-    <Compile Include="Core\Logic\FOL\Parsing\AST\Constant.cs" />
-    <Compile Include="Core\Logic\FOL\Parsing\AST\Function.cs" />
-    <Compile Include="Core\Logic\FOL\Parsing\AST\IAtomicSentence.cs" />
-    <Compile Include="Core\Logic\FOL\Parsing\AST\IFOLNode.cs" />
-    <Compile Include="Core\Logic\FOL\Parsing\AST\ISentence.cs" />
-    <Compile Include="Core\Logic\FOL\Parsing\AST\ITerm.cs" />
-    <Compile Include="Core\Logic\FOL\Parsing\AST\NotSentence.cs" />
-    <Compile Include="Core\Logic\FOL\Parsing\AST\Predicate.cs" />
-    <Compile Include="Core\Logic\FOL\Parsing\AST\QuantifiedSentence.cs" />
-    <Compile Include="Core\Logic\FOL\Parsing\AST\TermEquality.cs" />
-    <Compile Include="Core\Logic\FOL\Parsing\AST\Variable.cs" />
-    <Compile Include="Core\Logic\Propositional\Algorithms\DPLL.cs" />
-    <Compile Include="Core\Logic\Propositional\Algorithms\KnowledgeBase.cs" />
-    <Compile Include="Core\Logic\Propositional\Algorithms\LogicUtils.cs" />
-    <Compile Include="Core\Logic\Propositional\Algorithms\Model.cs" />
-    <Compile Include="Core\Logic\Propositional\Algorithms\PLFCEntails.cs" />
-    <Compile Include="Core\Logic\Propositional\Algorithms\PLResolution.cs" />
-    <Compile Include="Core\Logic\Propositional\Algorithms\TTEntails.cs" />
-    <Compile Include="Core\Logic\Propositional\Algorithms\WalkSAT.cs" />
-    <Compile Include="Core\Logic\Propositional\Parsing\AbstractPLVisitor.cs" />
-    <Compile Include="Core\Logic\Propositional\Parsing\IPLVisitor.cs" />
-    <Compile Include="Core\Logic\Propositional\Parsing\PELexer.cs" />
-    <Compile Include="Core\Logic\Propositional\Parsing\PEParser.cs" />
-    <Compile Include="Core\Logic\Propositional\Parsing\AST\AtomicSentence.cs" />
-    <Compile Include="Core\Logic\Propositional\Parsing\AST\BinarySentence.cs" />
-    <Compile Include="Core\Logic\Propositional\Parsing\AST\ComplexSentence.cs" />
-    <Compile Include="Core\Logic\Propositional\Parsing\AST\FalseSentence.cs" />
-    <Compile Include="Core\Logic\Propositional\Parsing\AST\MultiSentence.cs" />
-    <Compile Include="Core\Logic\Propositional\Parsing\AST\Sentence.cs" />
-    <Compile Include="Core\Logic\Propositional\Parsing\AST\Symbol.cs" />
-    <Compile Include="Core\Logic\Propositional\Parsing\AST\TrueSentence.cs" />
-    <Compile Include="Core\Logic\Propositional\Parsing\AST\UnarySentence.cs" />
-    <Compile Include="Core\Logic\Propositional\Visitors\AndDetector.cs" />
-    <Compile Include="Core\Logic\Propositional\Visitors\BasicTraverser.cs" />
-    <Compile Include="Core\Logic\Propositional\Visitors\CNFClauseGatherer.cs" />
-    <Compile Include="Core\Logic\Propositional\Visitors\CNFTransformer.cs" />
-    <Compile Include="Core\Logic\Propositional\Visitors\NegativeSymbolCollector.cs" />
-    <Compile Include="Core\Logic\Propositional\Visitors\PositiveSymbolCollector.cs" />
-    <Compile Include="Core\Logic\Propositional\Visitors\SymbolClassifier.cs" />
-    <Compile Include="Core\Logic\Propositional\Visitors\SymbolCollector.cs" />
-    <Compile Include="Core\Probability\BayesNet.cs" />
-    <Compile Include="Core\Probability\BayesNetNode.cs" />
-    <Compile Include="Core\Probability\DotNetRandomizer.cs" />
-    <Compile Include="Core\Probability\EnumerateJointAsk.cs" />
-    <Compile Include="Core\Probability\EnumerationAsk.cs" />
-    <Compile Include="Core\Probability\IRandomizer.cs" />
-    <Compile Include="Core\Probability\ProbabilityDistribution.cs" />
-    <Compile Include="Core\Probability\Query.cs" />
-    <Compile Include="Core\Probability\RandomVariable.cs" />
-    <Compile Include="Core\Probability\Decision\IMDPSource.cs" />
-    <Compile Include="Core\Probability\Decision\MDP.cs" />
-    <Compile Include="Core\Probability\Decision\MDPFactory.cs" />
-    <Compile Include="Core\Probability\Decision\MDPPerception.cs" />
-    <Compile Include="Core\Probability\Decision\MDPPolicy.cs" />
-    <Compile Include="Core\Probability\Decision\MDPRewardFunction.cs" />
-    <Compile Include="Core\Probability\Decision\MDPTransition.cs" />
-    <Compile Include="Core\Probability\Decision\MDPTransitionModel.cs" />
-    <Compile Include="Core\Probability\Decision\MDPUtilityFunction.cs" />
-    <Compile Include="Core\Probability\Reasoning\FixedLagSmoothing.cs" />
-    <Compile Include="Core\Probability\Reasoning\HiddenMarkovModel.cs" />
-    <Compile Include="Core\Probability\Reasoning\HMMAgent.cs" />
-    <Compile Include="Core\Probability\Reasoning\HmmConstants.cs" />
-    <Compile Include="Core\Probability\Reasoning\HMMFactory.cs" />
-    <Compile Include="Core\Probability\Reasoning\Particle.cs" />
-    <Compile Include="Core\Probability\Reasoning\ParticleSet.cs" />
-    <Compile Include="Core\Probability\Reasoning\SensorModel.cs" />
-    <Compile Include="Core\Probability\Reasoning\TransitionModel.cs" />
-    <Compile Include="Core\Search\Adversarial\AlphaBeta.cs" />
-    <Compile Include="Core\Search\Adversarial\Game.cs" />
-    <Compile Include="Core\Search\Adversarial\GameAgent.cs" />
-    <Compile Include="Core\Search\Adversarial\GameState.cs" />
-    <Compile Include="Core\Search\CSP\AC3Strategy.cs" />
-    <Compile Include="Core\Search\CSP\Assignment.cs" />
-    <Compile Include="Core\Search\CSP\BacktrackingStrategy.cs" />
-    <Compile Include="Core\Search\CSP\CSProblem.cs" />
-    <Compile Include="Core\Search\CSP\Domain.cs" />
-    <Compile Include="Core\Search\CSP\DomainRestoreInfo.cs" />
-    <Compile Include="Core\Search\CSP\IConstraint.cs" />
-    <Compile Include="Core\Search\CSP\ICSPStateListener.cs" />
-    <Compile Include="Core\Search\CSP\ImprovedBacktrackingStrategy.cs" />
-    <Compile Include="Core\Search\CSP\MapCSProblem.cs" />
-    <Compile Include="Core\Search\CSP\MinConflictsStrategy.cs" />
-    <Compile Include="Core\Search\CSP\NotEqualConstraint.cs" />
-    <Compile Include="Core\Search\CSP\SolutionStrategy.cs" />
-    <Compile Include="Core\Search\CSP\Variable.cs" />
-    <Compile Include="Core\Search\Framework\CutOffIndicatorAction.cs" />
-    <Compile Include="Core\Search\Framework\DefaultGoalTest.cs" />
-    <Compile Include="Core\Search\Framework\DefaultStepCostFunction.cs" />
-    <Compile Include="Core\Search\Framework\GraphSearch.cs" />
-    <Compile Include="Core\Search\Framework\IActionsFunction.cs" />
-    <Compile Include="Core\Search\Framework\IBidirectionalProblem.cs" />
-    <Compile Include="Core\Search\Framework\IEvaluationFunction.cs" />
-    <Compile Include="Core\Search\Framework\IGoalTest.cs" />
-    <Compile Include="Core\Search\Framework\IHeuristicFunction.cs" />
-    <Compile Include="Core\Search\Framework\IPerceptToStateFunction.cs" />
-    <Compile Include="Core\Search\Framework\IResultFunction.cs" />
-    <Compile Include="Core\Search\Framework\ISearch.cs" />
-    <Compile Include="Core\Search\Framework\ISolutionChecker.cs" />
-    <Compile Include="Core\Search\Framework\IStepCostFunction.cs" />
-    <Compile Include="Core\Search\Framework\Metrics.cs" />
-    <Compile Include="Core\Search\Framework\Node.cs" />
-    <Compile Include="Core\Search\Framework\NodeExpander.cs" />
-    <Compile Include="Core\Search\Framework\PathCostFunction.cs" />
-    <Compile Include="Core\Search\Framework\PrioritySearch.cs" />
-    <Compile Include="Core\Search\Framework\Problem.cs" />
-    <Compile Include="Core\Search\Framework\QueueSearch.cs" />
-    <Compile Include="Core\Search\Framework\SearchAgent.cs" />
-    <Compile Include="Core\Search\Framework\SearchUtils.cs" />
-    <Compile Include="Core\Search\Framework\SimpleProblemSolvingAgent.cs" />
-    <Compile Include="Core\Search\Framework\TreeSearch.cs" />
-    <Compile Include="Core\Search\Informed\AStarEvaluationFunction.cs" />
-    <Compile Include="Core\Search\Informed\AStarSearch.cs" />
-    <Compile Include="Core\Search\Informed\BestFirstSearch.cs" />
-    <Compile Include="Core\Search\Informed\GreedyBestFirstEvaluationFunction.cs" />
-    <Compile Include="Core\Search\Informed\GreedyBestFirstSearch.cs" />
-    <Compile Include="Core\Search\Informed\RecursiveBestFirstSearch.cs" />
-    <Compile Include="Core\Search\Local\GeneticAlgorithm.cs" />
-    <Compile Include="Core\Search\Local\HillClimbingSearch.cs" />
-    <Compile Include="Core\Search\Local\IFitnessFunction.cs" />
-    <Compile Include="Core\Search\Local\Scheduler.cs" />
-    <Compile Include="Core\Search\Local\SimulatedAnnealingSearch.cs" />
-    <Compile Include="Core\Search\Online\LRTAStarAgent.cs" />
-    <Compile Include="Core\Search\Online\OnlineDFSAgent.cs" />
-    <Compile Include="Core\Search\Online\OnlineSearchProblem.cs" />
-    <Compile Include="Core\Search\Online\StateAction.cs" />
-    <Compile Include="Core\Search\Uninformed\BidirectionalSearch.cs" />
-    <Compile Include="Core\Search\Uninformed\BreadthFirstSearch.cs" />
-    <Compile Include="Core\Search\Uninformed\DepthFirstSearch.cs" />
-    <Compile Include="Core\Search\Uninformed\DepthLimitedSearch.cs" />
-    <Compile Include="Core\Search\Uninformed\IterativeDeepeningSearch.cs" />
-    <Compile Include="Core\Search\Uninformed\UniformCostSearch.cs" />
-    <Compile Include="Core\Util\CancelableThread.cs" />
-    <Compile Include="Core\Util\Converter.cs" />
-    <Compile Include="Core\Util\FrequencyCounter.cs" />
-    <Compile Include="Core\Util\Util.cs" />
-    <Compile Include="Core\Util\Datastructure\FIFOQueue.cs" />
-    <Compile Include="Core\Util\Datastructure\IQueue.cs" />
-    <Compile Include="Core\Util\Datastructure\LabeledGraph.cs" />
-    <Compile Include="Core\Util\Datastructure\LIFOQueue.cs" />
-    <Compile Include="Core\Util\Datastructure\Pair.cs" />
-    <Compile Include="Core\Util\Datastructure\Point2D.cs" />
-    <Compile Include="Core\Util\Datastructure\PriorityQueue.cs" />
-    <Compile Include="Core\Util\Datastructure\Table.cs" />
-    <Compile Include="Core\Util\Datastructure\Triplet.cs" />
-    <Compile Include="Core\Util\Datastructure\XyLocation.cs" />
-    <Compile Include="Core\Util\Math\LUDecomposition.cs" />
-    <Compile Include="Core\Util\Math\Matrix.cs" />
-    <Compile Include="Core\Util\Math\MixedRadixNumber.cs" />
-    <Compile Include="Core\Util\Math\Vector.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Core\Agent\IAction.cs">
+    </Compile>
+    <Compile Include="Core\Agent\IAgent.cs">
+    </Compile>
+    <Compile Include="Core\Agent\IAgentProgram.cs">
+    </Compile>
+    <Compile Include="Core\Agent\IEnvironment.cs">
+    </Compile>
+    <Compile Include="Core\Agent\IEnvironmentObject.cs">
+    </Compile>
+    <Compile Include="Core\Agent\IEnvironmentState.cs">
+    </Compile>
+    <Compile Include="Core\Agent\IEnvironmentView.cs">
+    </Compile>
+    <Compile Include="Core\Agent\IModel.cs">
+    </Compile>
+    <Compile Include="Core\Agent\INotifyEnvironmentViews.cs">
+    </Compile>
+    <Compile Include="Core\Agent\IPercept.cs">
+    </Compile>
+    <Compile Include="Core\Agent\IState.cs">
+    </Compile>
+    <Compile Include="Core\Agent\Impl\AbstractAgent.cs">
+    </Compile>
+    <Compile Include="Core\Agent\Impl\AbstractEnvironment.cs">
+    </Compile>
+    <Compile Include="Core\Agent\Impl\DynamicAction.cs">
+    </Compile>
+    <Compile Include="Core\Agent\Impl\DynamicEnvironmentState.cs">
+    </Compile>
+    <Compile Include="Core\Agent\Impl\DynamicPercept.cs">
+    </Compile>
+    <Compile Include="Core\Agent\Impl\DynamicState.cs">
+    </Compile>
+    <Compile Include="Core\Agent\Impl\NoOpAction.cs">
+    </Compile>
+    <Compile Include="Core\Agent\Impl\ObjectWithDynamicAttributes.cs">
+    </Compile>
+    <Compile Include="Core\Agent\Impl\AProg\ModelBasedReflexAgentProgram.cs">
+    </Compile>
+    <Compile Include="Core\Agent\Impl\AProg\SimpleReflexAgentProgram.cs">
+    </Compile>
+    <Compile Include="Core\Agent\Impl\AProg\TableDrivenAgentProgram.cs">
+    </Compile>
+    <Compile Include="Core\Agent\Impl\AProg\SimpleRule\ANDCondition.cs">
+    </Compile>
+    <Compile Include="Core\Agent\Impl\AProg\SimpleRule\Condition.cs">
+    </Compile>
+    <Compile Include="Core\Agent\Impl\AProg\SimpleRule\EQUALCondition.cs">
+    </Compile>
+    <Compile Include="Core\Agent\Impl\AProg\SimpleRule\NOTCondition.cs">
+    </Compile>
+    <Compile Include="Core\Agent\Impl\AProg\SimpleRule\ORCondition.cs">
+    </Compile>
+    <Compile Include="Core\Agent\Impl\AProg\SimpleRule\Rule.cs">
+    </Compile>
+    <Compile Include="Core\Environment\CellWorld\Cell.cs">
+    </Compile>
+    <Compile Include="Core\Environment\CellWorld\CellWorld.cs">
+    </Compile>
+    <Compile Include="Core\Environment\CellWorld\CellWorldPosition.cs">
+    </Compile>
+    <Compile Include="Core\Environment\EightPuzzle\EightPuzzleBoard.cs">
+    </Compile>
+    <Compile Include="Core\Environment\EightPuzzle\EightPuzzleFunctionFactory.cs">
+    </Compile>
+    <Compile Include="Core\Environment\EightPuzzle\EightPuzzleGoalTest.cs">
+    </Compile>
+    <Compile Include="Core\Environment\EightPuzzle\ManhattanHeuristicFunction.cs">
+    </Compile>
+    <Compile Include="Core\Environment\EightPuzzle\MisplacedTilleHeuristicFunction.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Map\AdaptableHeuristicFunction.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Map\BidirectionalMapProblem.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Map\DynAttributeNames.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Map\ExtendableMap.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Map\IMap.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Map\MapAgent.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Map\MapEnvironment.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Map\MapEnvironmentState.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Map\MapFunctionFactory.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Map\MapStepCostFunction.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Map\MoveToAction.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Map\Scenario.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Map\SimplifiedRoadMapOfAustralia.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Map\SimplifiedRoadMapOfPartOfRomania.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Map\StraightLineDistanceHeuristicFunction.cs">
+    </Compile>
+    <Compile Include="Core\Environment\NQueens\AttackingPairsHeuristic.cs">
+    </Compile>
+    <Compile Include="Core\Environment\NQueens\NQueensBoard.cs">
+    </Compile>
+    <Compile Include="Core\Environment\NQueens\NQueensFitnessFunction.cs">
+    </Compile>
+    <Compile Include="Core\Environment\NQueens\NQueensFunctionFactory.cs">
+    </Compile>
+    <Compile Include="Core\Environment\NQueens\NQueensGoalTest.cs">
+    </Compile>
+    <Compile Include="Core\Environment\NQueens\QueenAction.cs">
+    </Compile>
+    <Compile Include="Core\Environment\TicTacToe\TicTacToe.cs">
+    </Compile>
+    <Compile Include="Core\Environment\TicTacToe\TicTacToeBoard.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Vacuum\ModelBasedReflexVacuumAgent.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Vacuum\ReflexVacuumAgent.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Vacuum\SimpleReflexVacuumAgent.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Vacuum\TableDrivenVacuumAgent.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Vacuum\VacuumEnvironment.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Vacuum\VacuumEnvironmentState.cs">
+    </Compile>
+    <Compile Include="Core\Environment\Vacuum\VacuumEnvPercept.cs">
+    </Compile>
+    <Compile Include="Core\Environment\XYEnv\Wall.cs">
+    </Compile>
+    <Compile Include="Core\Environment\XYEnv\XYEnvironment.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Data\DataResource.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Framework\DataSet.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Framework\DataSetFactory.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Framework\DataSetSpecification.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Framework\Example.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Framework\IAttribute.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Framework\IAttributeSpecification.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Framework\ILearner.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Framework\NumericAttribute.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Framework\NumericAttributeSpecification.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Framework\StringAttribute.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Framework\StringAttributeSpecification.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Inductive\ConstantDecisionTree.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Inductive\DecisionList.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Inductive\DecisionTree.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Inductive\DLTest.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Inductive\DLTestFactory.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Knowledge\CurrentBestLearning.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Knowledge\FOLDataSetDomain.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Knowledge\FOLExample.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Knowledge\Hypothesis.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Learners\AdaBoostLearner.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Learners\CurrentBestLearner.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Learners\DecisionListLearner.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Learners\DecisionTreeLearner.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Learners\MajorityLearner.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Learners\StumpLearner.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\BackPropLearning.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\FeedForwardNeuralNetwork.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\HardLimitActivationFunction.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\IActivationFunction.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\IFunctionApproximator.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\INNTrainingScheme.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\INumerizer.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\IrisDataSetNumerizer.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\IrisNNDataSet.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\Layer.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\LayerSensitivity.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\LogSigActivationFunction.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\NNConfig.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\NNDataSet.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\NNExample.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\Perceptron.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\PureLinearActivationFunction.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Neural\RabbitEyeDataSet.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Reinforcement\MDPAgent.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Reinforcement\PassiveADPAgent.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Reinforcement\PassiveTDAgent.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Reinforcement\QLearningAgent.cs">
+    </Compile>
+    <Compile Include="Core\Learning\Reinforcement\QTable.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Common\IParseTreeNode.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Common\IVisitor.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Common\Lexer.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Common\LogicTokenTypes.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Common\Parser.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Common\Token.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\CNFConverter.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Connectors.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\IStandardizeApartIndexical.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\PredicateCollector.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Quantifiers.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\StandardizeApart.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\StandardizeApartIndexicalFactory.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\StandardizeApartInPlace.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\StandardizeApartResult.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\SubstVisitor.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\SubsumptionElimination.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Unifier.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\VariableCollector.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Domain\DomainFactory.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Domain\FOLDomain.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Domain\FOLDomainAnswerLiteralAddedEventArgs.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Domain\FOLDomainSkolemConstantAddedEventArgs.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Domain\FOLDomainSkolemFunctionAddedEventArgs.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\AbstractModulation.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Demodulation.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\FOLBCAsk.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\FOLFCAsk.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\FOLModelElimination.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\FOLOTTERLikeTheoremProver.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\FOLTFMResolution.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\IInferenceProcedure.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\IInferenceResult.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\InferenceResultPrinter.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Paramodulation.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\OTTER\IClauseFilter.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\OTTER\IClauseSimplifier.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\OTTER\ILightestClauseHeuristic.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\OTTER\DefaultImpl\DefaultClauseFilter.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\OTTER\DefaultImpl\DefaultClauseSimplifier.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\OTTER\DefaultImpl\DefaultLightestClauseHeuristic.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\AbstractProofStep.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\IProof.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\IProofStep.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofFinal.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofPrinter.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepBwChGoal.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepChainCancellation.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepChainContrapositive.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepChainDropped.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepChainFromClause.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepChainReduction.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepClauseBinaryResolvent.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepClauseClausifySentence.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepClauseDemodulation.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepClauseFactor.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepClauseParamodulation.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepFoChAlreadyAFact.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepFoChAssertFact.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepGoal.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepPremise.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Proof\ProofStepRenaming.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Trace\IFOLModelEliminationTracer.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Inference\Trace\IFOLTFMResolutionTracer.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\KB\FOLKnowledgeBase.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\KB\FOLKnowledgeBaseFactory.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\KB\Data\Chain.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\KB\Data\Clause.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\KB\Data\CNF.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\KB\Data\Literal.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\KB\Data\ReducedLiteral.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Parsing\AbstractFOLVisitor.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Parsing\FOLLexer.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Parsing\FOLParser.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Parsing\IFOLVisitor.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Parsing\AST\ConnectedSentence.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Parsing\AST\Constant.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Parsing\AST\Function.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Parsing\AST\IAtomicSentence.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Parsing\AST\IFOLNode.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Parsing\AST\ISentence.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Parsing\AST\ITerm.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Parsing\AST\NotSentence.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Parsing\AST\Predicate.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Parsing\AST\QuantifiedSentence.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Parsing\AST\TermEquality.cs">
+    </Compile>
+    <Compile Include="Core\Logic\FOL\Parsing\AST\Variable.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Algorithms\DPLL.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Algorithms\KnowledgeBase.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Algorithms\LogicUtils.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Algorithms\Model.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Algorithms\PLFCEntails.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Algorithms\PLResolution.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Algorithms\TTEntails.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Algorithms\WalkSAT.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Parsing\AbstractPLVisitor.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Parsing\IPLVisitor.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Parsing\PELexer.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Parsing\PEParser.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Parsing\AST\AtomicSentence.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Parsing\AST\BinarySentence.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Parsing\AST\ComplexSentence.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Parsing\AST\FalseSentence.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Parsing\AST\MultiSentence.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Parsing\AST\Sentence.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Parsing\AST\Symbol.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Parsing\AST\TrueSentence.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Parsing\AST\UnarySentence.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Visitors\AndDetector.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Visitors\BasicTraverser.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Visitors\CNFClauseGatherer.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Visitors\CNFTransformer.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Visitors\NegativeSymbolCollector.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Visitors\PositiveSymbolCollector.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Visitors\SymbolClassifier.cs">
+    </Compile>
+    <Compile Include="Core\Logic\Propositional\Visitors\SymbolCollector.cs">
+    </Compile>
+    <Compile Include="Core\Probability\BayesNet.cs">
+    </Compile>
+    <Compile Include="Core\Probability\BayesNetNode.cs">
+    </Compile>
+    <Compile Include="Core\Probability\DotNetRandomizer.cs">
+    </Compile>
+    <Compile Include="Core\Probability\EnumerateJointAsk.cs">
+    </Compile>
+    <Compile Include="Core\Probability\EnumerationAsk.cs">
+    </Compile>
+    <Compile Include="Core\Probability\IRandomizer.cs">
+    </Compile>
+    <Compile Include="Core\Probability\ProbabilityDistribution.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Query.cs">
+    </Compile>
+    <Compile Include="Core\Probability\RandomVariable.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Decision\IMDPSource.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Decision\MDP.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Decision\MDPFactory.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Decision\MDPPerception.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Decision\MDPPolicy.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Decision\MDPRewardFunction.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Decision\MDPTransition.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Decision\MDPTransitionModel.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Decision\MDPUtilityFunction.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Reasoning\FixedLagSmoothing.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Reasoning\HiddenMarkovModel.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Reasoning\HMMAgent.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Reasoning\HmmConstants.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Reasoning\HMMFactory.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Reasoning\Particle.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Reasoning\ParticleSet.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Reasoning\SensorModel.cs">
+    </Compile>
+    <Compile Include="Core\Probability\Reasoning\TransitionModel.cs">
+    </Compile>
+    <Compile Include="Core\Search\Adversarial\AlphaBeta.cs">
+    </Compile>
+    <Compile Include="Core\Search\Adversarial\Game.cs">
+    </Compile>
+    <Compile Include="Core\Search\Adversarial\GameAgent.cs">
+    </Compile>
+    <Compile Include="Core\Search\Adversarial\GameState.cs">
+    </Compile>
+    <Compile Include="Core\Search\CSP\AC3Strategy.cs">
+    </Compile>
+    <Compile Include="Core\Search\CSP\Assignment.cs">
+    </Compile>
+    <Compile Include="Core\Search\CSP\BacktrackingStrategy.cs">
+    </Compile>
+    <Compile Include="Core\Search\CSP\CSProblem.cs">
+    </Compile>
+    <Compile Include="Core\Search\CSP\Domain.cs">
+    </Compile>
+    <Compile Include="Core\Search\CSP\DomainRestoreInfo.cs">
+    </Compile>
+    <Compile Include="Core\Search\CSP\IConstraint.cs">
+    </Compile>
+    <Compile Include="Core\Search\CSP\ICSPStateListener.cs">
+    </Compile>
+    <Compile Include="Core\Search\CSP\ImprovedBacktrackingStrategy.cs">
+    </Compile>
+    <Compile Include="Core\Search\CSP\MapCSProblem.cs">
+    </Compile>
+    <Compile Include="Core\Search\CSP\MinConflictsStrategy.cs">
+    </Compile>
+    <Compile Include="Core\Search\CSP\NotEqualConstraint.cs">
+    </Compile>
+    <Compile Include="Core\Search\CSP\SolutionStrategy.cs">
+    </Compile>
+    <Compile Include="Core\Search\CSP\Variable.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\CutOffIndicatorAction.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\DefaultGoalTest.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\DefaultStepCostFunction.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\GraphSearch.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\IActionsFunction.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\IBidirectionalProblem.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\IEvaluationFunction.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\IGoalTest.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\IHeuristicFunction.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\IPerceptToStateFunction.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\IResultFunction.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\ISearch.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\ISolutionChecker.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\IStepCostFunction.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\Metrics.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\Node.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\NodeExpander.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\PathCostFunction.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\PrioritySearch.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\Problem.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\QueueSearch.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\SearchAgent.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\SearchUtils.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\SimpleProblemSolvingAgent.cs">
+    </Compile>
+    <Compile Include="Core\Search\Framework\TreeSearch.cs">
+    </Compile>
+    <Compile Include="Core\Search\Informed\AStarEvaluationFunction.cs">
+    </Compile>
+    <Compile Include="Core\Search\Informed\AStarSearch.cs">
+    </Compile>
+    <Compile Include="Core\Search\Informed\BestFirstSearch.cs">
+    </Compile>
+    <Compile Include="Core\Search\Informed\GreedyBestFirstEvaluationFunction.cs">
+    </Compile>
+    <Compile Include="Core\Search\Informed\GreedyBestFirstSearch.cs">
+    </Compile>
+    <Compile Include="Core\Search\Informed\RecursiveBestFirstSearch.cs">
+    </Compile>
+    <Compile Include="Core\Search\Local\GeneticAlgorithm.cs">
+    </Compile>
+    <Compile Include="Core\Search\Local\HillClimbingSearch.cs">
+    </Compile>
+    <Compile Include="Core\Search\Local\IFitnessFunction.cs">
+    </Compile>
+    <Compile Include="Core\Search\Local\Scheduler.cs">
+    </Compile>
+    <Compile Include="Core\Search\Local\SimulatedAnnealingSearch.cs">
+    </Compile>
+    <Compile Include="Core\Search\Online\LRTAStarAgent.cs">
+    </Compile>
+    <Compile Include="Core\Search\Online\OnlineDFSAgent.cs">
+    </Compile>
+    <Compile Include="Core\Search\Online\OnlineSearchProblem.cs">
+    </Compile>
+    <Compile Include="Core\Search\Online\StateAction.cs">
+    </Compile>
+    <Compile Include="Core\Search\Uninformed\BidirectionalSearch.cs">
+    </Compile>
+    <Compile Include="Core\Search\Uninformed\BreadthFirstSearch.cs">
+    </Compile>
+    <Compile Include="Core\Search\Uninformed\DepthFirstSearch.cs">
+    </Compile>
+    <Compile Include="Core\Search\Uninformed\DepthLimitedSearch.cs">
+    </Compile>
+    <Compile Include="Core\Search\Uninformed\IterativeDeepeningSearch.cs">
+    </Compile>
+    <Compile Include="Core\Search\Uninformed\UniformCostSearch.cs">
+    </Compile>
+    <Compile Include="Core\Util\CancelableThread.cs">
+    </Compile>
+    <Compile Include="Core\Util\Converter.cs">
+    </Compile>
+    <Compile Include="Core\Util\FrequencyCounter.cs">
+    </Compile>
+    <Compile Include="Core\Util\Util.cs">
+    </Compile>
+    <Compile Include="Core\Util\Datastructure\FIFOQueue.cs">
+    </Compile>
+    <Compile Include="Core\Util\Datastructure\IQueue.cs">
+    </Compile>
+    <Compile Include="Core\Util\Datastructure\LabeledGraph.cs">
+    </Compile>
+    <Compile Include="Core\Util\Datastructure\LIFOQueue.cs">
+    </Compile>
+    <Compile Include="Core\Util\Datastructure\Pair.cs">
+    </Compile>
+    <Compile Include="Core\Util\Datastructure\Point2D.cs">
+    </Compile>
+    <Compile Include="Core\Util\Datastructure\PriorityQueue.cs">
+    </Compile>
+    <Compile Include="Core\Util\Datastructure\Table.cs">
+    </Compile>
+    <Compile Include="Core\Util\Datastructure\Triplet.cs">
+    </Compile>
+    <Compile Include="Core\Util\Datastructure\XyLocation.cs">
+    </Compile>
+    <Compile Include="Core\Util\Math\LUDecomposition.cs">
+    </Compile>
+    <Compile Include="Core\Util\Math\Matrix.cs">
+    </Compile>
+    <Compile Include="Core\Util\Math\MixedRadixNumber.cs">
+    </Compile>
+    <Compile Include="Core\Util\Math\Vector.cs">
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs">
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

@@ -1,0 +1,1153 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>LogicalParticleFilter1</name>
+    </assembly>
+    <members>
+        <member name="M:LogicalParticleFilter1.SIPrologScriptInterpreter.Eof(System.Object)">
+            <param name="codeTree"></param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIPrologScriptInterpreter.newInterpreter(System.Object)">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:LogicalParticleFilter1.SIProlog">
+            <summary>
+             A plain old super simple prolog interpreter
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.EnsureBaseURIMapped(VDS.RDF.IGraph,VDS.RDF.INamespaceMapper)">
+            <summary>
+            Must lock (nm) and probably graph or it may throw a InvalidOperationException
+            </summary>
+            <param name="graph"></param>
+            <param name="nm"></param>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.insertKB(System.String,System.String)">
+            <summary>
+            Replaces KB with a fresh rule set
+            </summary>
+            <param name="ruleSet"></param>
+            <param name="startMT"></param>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.appendKB(LogicalParticleFilter1.SIProlog.RuleList,LogicalParticleFilter1.SIProlog.PNode)">
+             <summary>
+             Appends KB with rule set
+             </summary>
+             <param name="ruleSet"></param>
+             <param name="focus"></param>
+            
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.loadKB(System.String,System.String)">
+            <summary>
+            loads a file (clear and overwrite)
+            </summary>
+            <param name="filename"></param>
+            <param name="startMT"></param>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.loadKEFile(System.String)">
+            <summary>
+            Appends KB with a file
+            </summary>
+            <param name="filename"></param>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.loadKEFile(System.String,System.String)">
+            <summary>
+            Appends KB with a file
+            </summary>
+            <param name="startMT"></param>
+            <param name="filename"></param>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.loadKEText(System.String,System.String)">
+            <summary>
+            Replaces KBs (use loadKEText(string startMT, string ruleSet, false)) intead
+            </summary>
+            <param name="startMT"></param>
+            <param name="ruleSet"></param>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.askQuery(LogicalParticleFilter1.SIProlog.PartListImpl,System.String,System.Boolean,LogicalParticleFilter1.SIProlog.reportDelegate)">
+            <summary>
+            If the reportFunction retrns false no more solutions will called
+               if returns true.. will call the RETRY part
+            </summary>
+            <param name="qlist"></param>
+            <param name="queryMT"></param>
+            <param name="followGenlMt"></param>
+            <param name="reportFunction"></param>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.ourEvalO(System.String)">
+             <summary>
+               Evaluates and expression or statement and returns the result.
+             </summary>
+             <remarks>
+               Evaluates the input string as a C# expression or
+               statement and returns the value.   
+            
+               This method will throw an exception if there is a syntax error,
+               of if the provided input is not an expression but a statement.
+             </remarks>        
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.Part.SameClause(LogicalParticleFilter1.SIProlog.Part,System.Collections.Generic.IDictionary{System.String,System.String})">
+            <summary>
+            Prolog Structure compare '=='/2
+            </summary>
+            <param name="term"></param>
+            <param name="varlist"></param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.Part.Equals(LogicalParticleFilter1.SIProlog.Part)">
+            <summary>
+            Like Prolog '=='/2, but it requires variables to have the same identity
+            </summary>
+            <param name="obj"></param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.Part.ToString">
+            <summary>
+            Returns a string representation probably not readable with PartPart(..);
+            but makes sense to humans:
+             Atoms: name
+             Variables: varname
+            </summary>
+        </member>
+        <member name="P:LogicalParticleFilter1.SIProlog.Part.StringReadable">
+            <summary>
+            Returns a string representation readable with PartPart(..);
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "P:LogicalParticleFilter1.SIProlog.Part.vname" -->
+        <member name="M:LogicalParticleFilter1.SIProlog.IAtomic.AsValuedNode">
+            <summary>
+            Tries if possible to return a IValuedNJode
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.Atom.FromSource(System.String)">
+            <summary>
+            Reads the string that came in from the prolog reader and
+             then detects what rdf/sparql expresions 
+            </summary>
+            <param name="s"></param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.Atom.Equals(LogicalParticleFilter1.SIProlog.Part)">
+            <summary>
+            Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>.
+            </summary>
+            <returns>
+            true if the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>; otherwise, false.
+            </returns>
+            <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:System.Object"/>. 
+                            </param><exception cref="T:System.NullReferenceException">The <paramref name="obj"/> parameter is null.
+                            </exception><filterpriority>2</filterpriority>
+        </member>
+        <member name="T:LogicalParticleFilter1.SIProlog.GraphWithDef">
+            <summary>
+            i been serializing my apps semantic state to prolog.. 
+            then was going to convert to RDF
+            secretly i hoped i could just convert "prolog2RDF" 
+            but it has been much harder than anticipated..   
+            but seems converting to N3 is much easier!.
+             but i still have to have "semantic state".  
+            i'll get a chance to see some crossover when i convert the N3 to RDF  (you guys say it is easy!)
+             then hrrm i suppose I'll get to see how closely prolog->n3->rdf   
+            looks the original planned prolog->n3
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.GraphWithDef.MakeQNameOrUri(System.String,System.String)">
+            <summary>
+            Generic Helper Function which Resolves Uri References against a Base Uri
+            </summary>
+            <param name="uriref">Uri Reference to resolve</param>
+            <param name="baseUri">Base Uri to resolve against</param>
+            <returns>Resolved Uri as a String</returns>
+            <exception cref="T:VDS.RDF.Parsing.RdfParseException">RDF Parse Exception if the Uri cannot be resolved for a know reason</exception>
+            <exception cref="T:System.UriFormatException">Uri Format Exception if one/both of the URIs is malformed</exception>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.PredicateProperty.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.RDFArgSpec.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.PNode.CompareTo(System.Object)">
+            <summary>
+            IComparable.CompareTo implementation.
+            </summary>
+        </member>
+        <member name="T:LogicalParticleFilter1.SIProlog.reportDelegate">
+            <summary>
+            return true to call Retry (default) or false to return immediately
+            </summary>
+            <param name="env"></param>
+            <returns></returns>
+        </member>
+        <member name="P:LogicalParticleFilter1.SIProlog.Term.vname">
+            <summary>
+            If the entire term is a var
+            </summary>
+        </member>
+        <member name="T:LogicalParticleFilter1.SIProlog.RdfRules">
+            <summary>
+            RdfRules is basically a set of triples that are destined to be used in some graph
+            </summary>
+        </member>
+        <member name="P:LogicalParticleFilter1.SIProlog.RdfRules._aInfo">
+            <summary>
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.RuleList.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="M:LogicalParticleFilter1.SIProlog.PDB.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="T:Sipro.Utils.JSON">
+             <summary>
+             This class encodes and decodes JSON strings.
+             Spec. details, see http://www.json.org/
+            
+             JSON uses Arrays and Objects. These correspond here to the datatypes ArrayList and Hashtable.
+             All numbers are parsed to doubles.
+             </summary>
+        </member>
+        <member name="M:Sipro.Utils.JSON.JsonDecode(System.String)">
+            <summary>
+            Parses the string json into a value
+            </summary>
+            <param name="json">A JSON string.</param>
+            <returns>An ArrayList, a Hashtable, a double, a string, null, true, or false</returns>
+        </member>
+        <member name="M:Sipro.Utils.JSON.JsonDecode(System.String,System.Boolean@)">
+            <summary>
+            Parses the string json into a value; and fills 'success' with the successfullness of the parse.
+            </summary>
+            <param name="json">A JSON string.</param>
+            <param name="success">Successful parse?</param>
+            <returns>An ArrayList, a Hashtable, a double, a string, null, true, or false</returns>
+        </member>
+        <member name="M:Sipro.Utils.JSON.JsonEncode(System.Object)">
+            <summary>
+            Converts a Hashtable / ArrayList object into a JSON string
+            </summary>
+            <param name="json">A Hashtable / ArrayList</param>
+            <returns>A JSON encoded string, or null if object 'json' is not serializable</returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LevenshteinDistance.Compute(System.String,System.String)">
+            <summary>
+            Compute the distance between two strings.
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.LevenshteinDistance.EditDistance``1(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``0})">
+            <SUMMARY>Computes the Levenshtein Edit Distance between two enumerables.</SUMMARY>
+            <TYPEPARAM name="T">The type of the items in the enumerables.</TYPEPARAM>
+            <PARAM name="x">The first enumerable.</PARAM>
+            <PARAM name="y">The second enumerable.</PARAM>
+            <RETURNS>The edit distance.</RETURNS>
+        </member>
+        <member name="F:LogicalParticleFilter1.ContentBackingStore.RdfServerURI">
+            <summary>
+            When the KB is dirty
+            mt.Repository URI is what we'd compile from
+            </summary>
+        </member>
+        <member name="F:LogicalParticleFilter1.ContentBackingStore.RdfMemory">
+            <summary>
+            When the KB is dirty
+            mt.RDFStore.Triples is what we'd compile from
+            </summary>
+        </member>
+        <member name="F:LogicalParticleFilter1.ContentBackingStore.Prolog">
+            <summary>
+            When the KB is dirty
+            mt.pdb.rules  Prolog rule list is what we'd compile from
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.PFEndpoint.ProcessQueryRequest(System.Net.HttpListenerContext)">
+            <summary>
+            Processes Query requests
+            </summary>
+            <param name="context">HTTP Context</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.PFEndpoint.ProcessQueryResults(System.Net.HttpListenerContext,System.Object)">
+            <summary>
+            Internal Helper function which returns the Results back to the Client in one of their accepted formats
+            </summary>
+            <param name="context">Context of the HTTP Request</param>
+            <param name="result">Results of the Sparql Query</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.PFEndpoint.ProcessUpdateRequest(System.Net.HttpListenerContext)">
+            <summary>
+            Processes Update requests
+            </summary>
+            <param name="context">HTTP Context</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.PFEndpoint.HandleQueryErrors(System.Net.HttpListenerContext,System.String,System.String,System.Exception)">
+            <summary>
+            Handles errors in processing SPARQL Query Requests
+            </summary>
+            <param name="context">Context of the HTTP Request</param>
+            <param name="title">Error title</param>
+            <param name="query">Sparql Query</param>
+            <param name="ex">Error</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.PFEndpoint.HandleQueryErrors(System.Net.HttpListenerContext,System.String,System.String,System.Exception,System.Int32)">
+            <summary>
+            Handles errors in processing SPARQL Query Requests
+            </summary>
+            <param name="context">Context of the HTTP Request</param>
+            <param name="title">Error title</param>
+            <param name="query">Sparql Query</param>
+            <param name="ex">Error</param>
+            <param name="statusCode">HTTP Status Code to return</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.PFEndpoint.HandleUpdateErrors(System.Net.HttpListenerContext,System.String,System.String,System.Exception)">
+            <summary>
+            Handles errors in processing SPARQL Update Requests
+            </summary>
+            <param name="context">Context of the HTTP Request</param>
+            <param name="title">Error title</param>
+            <param name="update">SPARQL Update</param>
+            <param name="ex">Error</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.PFEndpoint.HandleUpdateErrors(System.Net.HttpListenerContext,System.String,System.String,System.Exception,System.Int32)">
+            <summary>
+            Handles errors in processing SPARQL Update Requests
+            </summary>
+            <param name="context">Context of the HTTP Request</param>
+            <param name="title">Error title</param>
+            <param name="update">SPARQL Update</param>
+            <param name="ex">Error</param>
+            <param name="statusCode">HTTP Status code to return</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.PFEndpoint.ShowQueryForm(System.Net.HttpListenerContext)">
+            <summary>
+            Generates a SPARQL Query Form
+            </summary>
+            <param name="context">HTTP Context</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.PFEndpoint.ShowUpdateForm(System.Net.HttpListenerContext)">
+            <summary>
+            Generates a SPARQL Update Form
+            </summary>
+            <param name="context">HTTP Context</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.PFEndpoint.LocalHandleQueryErrors(System.Net.HttpListenerContext,VDS.RDF.Web.Configuration.Server.SparqlServerConfiguration,System.String,System.String,System.Exception,System.Int32)">
+            <summary>
+            Handles errors in processing SPARQL Query Requests
+            </summary>
+            <param name="context">Context of the HTTP Request</param>
+            <param name="config">Handler Configuration</param>
+            <param name="title">Error title</param>
+            <param name="query">Sparql Query</param>
+            <param name="ex">Error</param>
+            <param name="statusCode">HTTP Status Code to return</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.PFEndpoint.LocalHandleUpdateErrors(System.Net.HttpListenerContext,VDS.RDF.Web.Configuration.Server.SparqlServerConfiguration,System.String,System.String,System.Exception,System.Int32)">
+            <summary>
+            Handles errors in processing SPARQL Update Requests
+            </summary>
+            <param name="context">Context of the HTTP Request</param>
+            <param name="config">Handler Configuration</param>
+            <param name="title">Error title</param>
+            <param name="update">SPARQL Update</param>
+            <param name="ex">Error</param>
+            <param name="statusCode">HTTP Status Code to return</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.GOAPSolver.getBTXMLFragment(System.String)">
+            <summary>
+            Returns an BTXML code fragment with the action/modules as subbehaviors
+            </summary>
+            <param name="outerTag">The outer tag to wrap the call in (selector/sequence/...)</param>
+            <returns></returns>        
+            
+        </member>
+        <member name="M:LogicalParticleFilter1.GOAPSolver.getBTXMLBehaviorCode(System.String,System.String)">
+            <summary>
+            Returns an BTXML behavior definition with the action/modules as subbehaviors
+            </summary>
+            <param name="behaviorID">Name of the behavior to create</param>
+            <param name="outerTag">The outer tag to wrap the call in (selector/sequence/...)</param>
+            <returns></returns>        
+            
+        </member>
+        <member name="M:LogicalParticleFilter1.GOAPSolver.FindBest(System.Collections.Generic.List{LogicalParticleFilter1.GoapState},System.Collections.Generic.Dictionary{System.String,System.Double},System.Boolean)">
+            <summary>
+            Finds the state with the lowest value in fScores
+            </summary>
+            <param name="set">A list of CemaStates</param>
+            <param name="fScores">A dictionary of CemaStates and their fScores</param>
+            <param name="randomBest">Given equal value choices return one at random versus the first found</param>
+            <returns>Lowest cost state</returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.CemaSolver.getBTXMLFragment(System.String)">
+            <summary>
+            Returns an BTXML code fragment with the action/modules as subbehaviors
+            </summary>
+            <param name="outerTag">The outer tag to wrap the call in (selector/sequence/...)</param>
+            <returns></returns>        
+            
+        </member>
+        <member name="M:LogicalParticleFilter1.CemaSolver.getBTXMLBehaviorCode(System.String,System.String)">
+            <summary>
+            Returns an BTXML behavior definition with the action/modules as subbehaviors
+            </summary>
+            <param name="behaviorID">Name of the behavior to create</param>
+            <param name="outerTag">The outer tag to wrap the call in (selector/sequence/...)</param>
+            <returns></returns>        
+            
+        </member>
+        <member name="M:LogicalParticleFilter1.CemaSolver.FindBest(System.Collections.Generic.List{LogicalParticleFilter1.CemaState},System.Collections.Generic.Dictionary{System.String,System.Double},System.Boolean)">
+            <summary>
+            Finds the state with the lowest value in fScores
+            </summary>
+            <param name="set">A list of CemaStates</param>
+            <param name="fScores">A dictionary of CemaStates and their fScores</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.KeyCase.Equals(System.String,System.String)">
+            <summary>
+            Determines whether the specified objects are equal.
+            </summary>
+            <returns>
+            true if the specified objects are equal; otherwise, false.
+            </returns>
+            <param name="x">The first object of type <paramref name="T"/> to compare.
+                            </param><param name="y">The second object of type <paramref name="T"/> to compare.
+                            </param>
+        </member>
+        <member name="M:LogicalParticleFilter1.KeyCase.GetHashCode(System.String)">
+            <summary>
+            Returns a hash code for the specified object.
+            </summary>
+            <returns>
+            A hash code for the specified object.
+            </returns>
+            <param name="obj">The <see cref="T:System.Object"/> for which a hash code is to be returned.
+                            </param><exception cref="T:System.ArgumentNullException">The type of <paramref name="obj"/> is a reference type and <paramref name="obj"/> is null.
+                            </exception>
+        </member>
+        <member name="T:LogicalParticleFilter1.LiveCallTripleCollection">
+            <summary>
+             An implemntation of a live triple store that calls into prolog code
+            </summary>
+            <remarks>
+            <para>
+             replacement for TreeIndexedTripleCollection
+            </para>
+            </remarks>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.#ctor(LogicalParticleFilter1.SIProlog)">
+            <summary>
+            Creates a new Live Call triple collection
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.#ctor(VDS.Common.MultiDictionaryMode,LogicalParticleFilter1.SIProlog)">
+            <summary>
+            Creates a new Live Call triple collection
+            </summary>
+            <param name="compoundIndexMode">Mode to use for compound indexes</param>
+            <param name="prolog">SIProlog instance</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.Index(VDS.RDF.Triple)">
+            <summary>
+            Indexes a Triple
+            </summary>
+            <param name="t">Triple</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.IndexSimple(VDS.RDF.INode,VDS.RDF.Triple,VDS.Common.MultiDictionary{VDS.RDF.INode,System.Collections.Generic.List{VDS.RDF.Triple}})">
+            <summary>
+            Helper for indexing triples
+            </summary>
+            <param name="n">Node to index by</param>
+            <param name="t">Triple</param>
+            <param name="index">Index to insert into</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.IndexCompound(VDS.RDF.Triple,VDS.Common.MultiDictionary{VDS.RDF.Triple,System.Collections.Generic.List{VDS.RDF.Triple}})">
+            <summary>
+            Helper for indexing triples
+            </summary>
+            <param name="t">Triple to index by</param>
+            <param name="index">Index to insert into</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.Unindex(VDS.RDF.Triple)">
+            <summary>
+            Unindexes a triple
+            </summary>
+            <param name="t">Triple</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.UnindexSimple(VDS.RDF.INode,VDS.RDF.Triple,VDS.Common.MultiDictionary{VDS.RDF.INode,System.Collections.Generic.List{VDS.RDF.Triple}})">
+            <summary>
+            Helper for unindexing triples
+            </summary>
+            <param name="n">Node to index by</param>
+            <param name="t">Triple</param>
+            <param name="index">Index to remove from</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.UnindexCompound(VDS.RDF.Triple,VDS.Common.MultiDictionary{VDS.RDF.Triple,System.Collections.Generic.List{VDS.RDF.Triple}})">
+            <summary>
+            Helper for unindexing triples
+            </summary>
+            <param name="t">Triple</param>
+            <param name="index">Index to remove from</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.Add(VDS.RDF.Triple)">
+            <summary>
+            Adds a Triple to the collection
+            </summary>
+            <param name="t">Triple</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.Contains(VDS.RDF.Triple)">
+            <summary>
+            Checks whether the collection contains a given Triple
+            </summary>
+            <param name="t">Triple</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.Delete(VDS.RDF.Triple)">
+            <summary>
+            Deletes a triple from the collection
+            </summary>
+            <param name="t">Triple</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.WithObject(VDS.RDF.INode)">
+            <summary>
+            Gets all the triples with a given object
+            </summary>
+            <param name="obj">Object</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.WithPredicate(VDS.RDF.INode)">
+            <summary>
+            Gets all the triples with a given predicate
+            </summary>
+            <param name="pred">Predicate</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.WithSubject(VDS.RDF.INode)">
+            <summary>
+            Gets all the triples with a given subject
+            </summary>
+            <param name="subj">Subject</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.WithPredicateObject(VDS.RDF.INode,VDS.RDF.INode)">
+            <summary>
+            Gets all the triples with a given predicate and object
+            </summary>
+            <param name="pred">Predicate</param>
+            <param name="obj">Object</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.WithSubjectObject(VDS.RDF.INode,VDS.RDF.INode)">
+            <summary>
+            Gets all the triples with a given subject and object
+            </summary>
+            <param name="subj">Subject</param>
+            <param name="obj">Object</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.WithSubjectPredicate(VDS.RDF.INode,VDS.RDF.INode)">
+            <summary>
+            Gets all the triples with a given subject and predicate
+            </summary>
+            <param name="subj">Subject</param>
+            <param name="pred">Predicate</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.Dispose">
+            <summary>
+            Disposes of the collection
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallTripleCollection.GetEnumerator">
+            <summary>
+            Gets the enumerator for the collection
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:LogicalParticleFilter1.LiveCallTripleCollection.Count">
+            <summary>
+            Gets the count of triples in the collection
+            </summary>
+        </member>
+        <member name="P:LogicalParticleFilter1.LiveCallTripleCollection.Item(VDS.RDF.Triple)">
+            <summary>
+            Gets the specific instance of a Triple in the collection
+            </summary>
+            <param name="t">Triple</param>
+            <returns></returns>
+        </member>
+        <member name="P:LogicalParticleFilter1.LiveCallTripleCollection.ObjectNodes">
+            <summary>
+            Gets the Object Nodes
+            </summary>
+        </member>
+        <member name="P:LogicalParticleFilter1.LiveCallTripleCollection.PredicateNodes">
+            <summary>
+            Gets the Predicate Nodes
+            </summary>
+        </member>
+        <member name="P:LogicalParticleFilter1.LiveCallTripleCollection.SubjectNodes">
+            <summary>
+            Gets the Subject Nodes
+            </summary>
+        </member>
+        <member name="T:LogicalParticleFilter1.LiveCallGraph">
+            <summary>
+            A Thread Safe version of the <see cref="T:VDS.RDF.Graph">Graph</see> class
+            </summary>
+            <threadsafety instance="true">Should be safe for almost any concurrent read and write access scenario, internally managed using a <see cref="T:System.Threading.ReaderWriterLockSlim">ReaderWriterLockSlim</see>.  If you encounter any sort of Threading/Concurrency issue please report to the <a href="mailto:dotnetrdf-bugs@lists.sourceforge.net">dotNetRDF Bugs Mailing List</a></threadsafety>
+            <remarks>Performance will be marginally worse than a normal <see cref="T:VDS.RDF.Graph">Graph</see> but in multi-threaded scenarios this will likely be offset by the benefits of multi-threading.</remarks>
+        </member>
+        <member name="F:LogicalParticleFilter1.LiveCallGraph._lockManager">
+            <summary>
+            Locking Manager for the Graph
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.EnterWriteLock">
+            <summary>
+            Enters the write lock
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.ExitWriteLock">
+            <summary>
+            Exists the write lock
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.EnterReadLock">
+            <summary>
+            Enters the read lock
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.ExitReadLock">
+            <summary>
+            Exists the read lock
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.#ctor">
+            <summary>
+            Creates a new Thread Safe Graph
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.#ctor(System.Boolean)">
+            <summary>
+            Creates a new instance of a Graph with an optionally empty Namespace Map
+            </summary>
+            <param name="emptyNamespaceMap">Whether the Namespace Map should be empty</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.#ctor(VDS.RDF.BaseTripleCollection)">
+            <summary>
+            Creates a new Thread Safe graph using the given Triple Collection
+            </summary>
+            <param name="tripleCollection">Triple Collection</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.#ctor(VDS.RDF.BaseTripleCollection,System.Boolean,System.Boolean)">
+            <summary>
+            Creates a new instance of a Graph using the given Triple Collection and an optionally empty Namespace Map
+            </summary>
+            <param name="tripleCollection">Triple Collection</param>
+            <param name="emptyNamespaceMap">Whether the Namespace Map should be empty</param>
+            <param name="isolatedNS">Whether the Namespace is unshared</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.#ctor(VDS.RDF.BaseTripleCollection,VDS.RDF.NamespaceMapper)">
+            <summary>
+            Creates a new instance of a Graph using the given Triple Collection and an optionally empty Namespace Map
+            </summary>
+            <param name="tripleCollection">Triple Collection</param>
+            <param name="ns">The Namespace Map should be empty</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.ResolveQName(System.String)">
+            <summary>
+            Helper function for Resolving QNames to URIs
+            </summary>
+            <param name="qname">QName to resolve to a Uri</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.Merge(VDS.RDF.IGraph)">
+            <summary>
+            Merges another Graph into the current Graph
+            </summary>
+            <param name="g">Graph to Merge into this Graph</param>
+            <remarks>The Graph on which you invoke this method will preserve its Blank Node IDs while the Blank Nodes from the Graph being merged in will be given new IDs as required in the scope of this Graph.</remarks>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.Merge(VDS.RDF.IGraph,System.Boolean)">
+            <summary>
+            Merges another Graph into the current Graph
+            </summary>
+            <param name="g">Graph to Merge into this Graph</param>
+            <param name="keepOriginalGraphUri">Indicates that the Merge should preserve the Graph URIs of Nodes so they refer to the Graph they originated in</param>
+            <remarks>
+            <para>
+            The Graph on which you invoke this method will preserve its Blank Node IDs while the Blank Nodes from the Graph being merged in will be given new IDs as required in the scope of this Graph.
+            </para>
+            <para>
+            The Graph will raise the <see cref="E:VDS.RDF.BaseGraph.MergeRequested">MergeRequested</see> event before the Merge operation which gives any event handlers the oppurtunity to cancel this event.  When the Merge operation is completed the <see cref="!:Merged">Merged</see> event is raised
+            </para>
+            </remarks>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.ContainsTriple(VDS.RDF.Triple)">
+            <summary>
+            Gets whether a given Triple exists in this Graph
+            </summary>
+            <param name="t">Triple to test</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.Clear">
+            <summary>
+            Clears all Triples from the Graph
+            </summary>
+            <remarks>
+            <para>
+            The Graph will raise the <see cref="E:VDS.RDF.BaseGraph.ClearRequested">ClearRequested</see> event at the start of the Clear operation which allows for aborting the operation if the operation is cancelled by an event handler.  On completing the Clear the <see cref="E:VDS.RDF.BaseGraph.Cleared">Cleared</see> event will be raised.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.Assert(VDS.RDF.Triple)">
+            <summary>
+            Asserts a Triple in the Graph
+            </summary>
+            <param name="t">The Triple to add to the Graph</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.Assert(System.Collections.Generic.IEnumerable{VDS.RDF.Triple})">
+            <summary>
+            Asserts a List of Triples in the graph
+            </summary>
+            <param name="ts">List of Triples in the form of an IEnumerable</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.Retract(VDS.RDF.Triple)">
+            <summary>
+            Retracts a Triple from the Graph
+            </summary>
+            <param name="t">Triple to Retract</param>
+            <remarks>Current implementation may have some defunct Nodes left in the Graph as only the Triple is retracted</remarks>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.Retract(System.Collections.Generic.IEnumerable{VDS.RDF.Triple})">
+            <summary>
+            Retracts a enumeration of Triples from the graph
+            </summary>
+            <param name="ts">Enumeration of Triples to retract</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetNextBlankNodeID">
+            <summary>
+            Creates a new Blank Node ID and returns it
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.Dispose">
+            <summary>
+            Disposes of a Graph
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetBlankNode(System.String)">
+            <summary>
+            Returns the Blank Node with the given Identifier
+            </summary>
+            <param name="nodeId">The Identifier of the Blank Node to select</param>
+            <returns>Either the Blank Node or null if no Node with the given Identifier exists</returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetLiteralNode(System.String)">
+            <summary>
+            Returns the LiteralNode with the given Value if it exists
+            </summary>
+            <param name="literal">The literal value of the Node to select</param>
+            <returns>Either the LiteralNode Or null if no Node with the given Value exists</returns>
+            <remarks>The LiteralNode in the Graph must have no Language or DataType set</remarks>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetLiteralNode(System.String,System.String)">
+            <summary>
+            Returns the LiteralNode with the given Value in the given Language if it exists
+            </summary>
+            <param name="literal">The literal value of the Node to select</param>
+            <param name="langspec">The Language Specifier for the Node to select</param>
+            <returns>Either the LiteralNode Or null if no Node with the given Value and Language Specifier exists</returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetLiteralNode(System.String,System.Uri)">
+            <summary>
+            Returns the LiteralNode with the given Value and given Data Type if it exists
+            </summary>
+            <param name="literal">The literal value of the Node to select</param>
+            <param name="datatype">The Uri for the Data Type of the Literal to select</param>
+            <returns>Either the LiteralNode Or null if no Node with the given Value and Data Type exists</returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetUriNode(System.String)">
+            <summary>
+            Returns the UriNode with the given QName if it exists
+            </summary>
+            <param name="qname">The QName of the Node to select</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.CreateUriNode(System.Uri)">
+            <summary>
+            Creates a new URI Node with the given URI
+            </summary>
+            <param name="uri">URI for the Node</param>
+            <returns></returns>
+            <remarks>
+            Generally we expect to be passed an absolute URI, while relative URIs are permitted the behaviour is less well defined.  If there is a Base URI defined for the Graph then relative URIs will be automatically resolved against that Base, if the Base URI is not defined then relative URIs will be left as is.  In this case issues may occur when trying to serialize the data or when accurate round tripping is required.
+            </remarks>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.CreateUriNode(System.String)">
+            <summary>
+            Creates a new URI Node with the given QName
+            </summary>
+            <param name="qname">QName for the Node</param>
+            <returns></returns>
+            <remarks>Internally the Graph will resolve the QName to a full URI, throws an RDF Exception when this is not possible</remarks>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.CreateBlankNode">
+            <summary>
+            Creates a Blank Node
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.CreateBlankNode(System.String)">
+            <summary>
+            Creates a Blank Node with the given ID
+            </summary>
+            <param name="nodeId">Node ID</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.CreateGraphLiteralNode">
+            <summary>
+            Creates a Graph Literal Node
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.CreateGraphLiteralNode(VDS.RDF.IGraph)">
+            <summary>
+            Creates a Graph Literal Node with the given sub-graph
+            </summary>
+            <param name="subgraph">Sub-graph</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.CreateLiteralNode(System.String,System.Uri)">
+            <summary>
+            Creates a Literal Node with the given Datatype
+            </summary>
+            <param name="literal">Value</param>
+            <param name="datatype">Datatype URI</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.CreateLiteralNode(System.String)">
+            <summary>
+            Creates a Literal Node
+            </summary>
+            <param name="literal">Value</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.CreateLiteralNode(System.String,System.String)">
+            <summary>
+            Creates a Literal Node with the given Language
+            </summary>
+            <param name="literal">Value</param>
+            <param name="langspec">Language</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.CreateVariableNode(System.String)">
+            <summary>
+            Creates a Variable Node
+            </summary>
+            <param name="varname">Variable Name</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetUriNode(System.Uri)">
+            <summary>
+            Returns the UriNode with the given Uri if it exists
+            </summary>
+            <param name="uri">The Uri of the Node to select</param>
+            <returns>Either the UriNode Or null if no Node with the given Uri exists</returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetTriples(VDS.RDF.INode)">
+            <summary>
+            Gets all the Triples involving the given Node
+            </summary>
+            <param name="n">The Node to find Triples involving</param>
+            <returns>Zero/More Triples</returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetTriples(System.Uri)">
+            <summary>
+            Gets all the Triples involving the given Uri
+            </summary>
+            <param name="uri">The Uri to find Triples involving</param>
+            <returns>Zero/More Triples</returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetTriplesWithObject(VDS.RDF.INode)">
+            <summary>
+            Gets all the Triples with the given Node as the Object
+            </summary>
+            <param name="n">The Node to find Triples with it as the Object</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetTriplesWithObject(System.Uri)">
+            <summary>
+            Gets all the Triples with the given Uri as the Object
+            </summary>
+            <param name="u">The Uri to find Triples with it as the Object</param>
+            <returns>Zero/More Triples</returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetTriplesWithPredicate(VDS.RDF.INode)">
+            <summary>
+            Gets all the Triples with the given Node as the Predicate
+            </summary>
+            <param name="n">The Node to find Triples with it as the Predicate</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetTriplesWithPredicate(System.Uri)">
+            <summary>
+            Gets all the Triples with the given Uri as the Predicate
+            </summary>
+            <param name="u">The Uri to find Triples with it as the Predicate</param>
+            <returns>Zero/More Triples</returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetTriplesWithSubject(VDS.RDF.INode)">
+            <summary>
+            Gets all the Triples with the given Node as the Subject
+            </summary>
+            <param name="n">The Node to find Triples with it as the Subject</param>
+            <returns>Zero/More Triples</returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetTriplesWithSubject(System.Uri)">
+            <summary>
+            Gets all the Triples with the given Uri as the Subject
+            </summary>
+            <param name="u">The Uri to find Triples with it as the Subject</param>
+            <returns>Zero/More Triples</returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetTriplesWithSubjectPredicate(VDS.RDF.INode,VDS.RDF.INode)">
+            <summary>
+            Selects all Triples with the given Subject and Predicate
+            </summary>
+            <param name="subj">Subject</param>
+            <param name="pred">Predicate</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetTriplesWithSubjectObject(VDS.RDF.INode,VDS.RDF.INode)">
+            <summary>
+            Selects all Triples with the given Subject and Object
+            </summary>
+            <param name="subj">Subject</param>
+            <param name="obj">Object</param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.LiveCallGraph.GetTriplesWithPredicateObject(VDS.RDF.INode,VDS.RDF.INode)">
+            <summary>
+            Selects all Triples with the given Predicate and Object
+            </summary>
+            <param name="pred">Predicate</param>
+            <param name="obj">Object</param>
+            <returns></returns>
+        </member>
+        <member name="P:LogicalParticleFilter1.LiveCallGraph.Nodes">
+            <summary>
+            Gets the Nodes of the Graph
+            </summary>
+        </member>
+        <member name="T:LogicalParticleFilter1.DecisionTree">
+            <summary>
+            Class that implements a decision tree using the ID3 algorithm
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.DecisionTree.countTotalPositives0(System.Data.DataTable)">
+            <summary>
+            Returns the total number of positive samples in a table of samples 
+            </summary>
+            <param name="samples"> DataTable with samples </param>
+            <returns>number of positive samples</returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.DecisionTree.getCalculatedEntropy(System.Int32,System.Int32)">
+            <summary>
+            Calculate the entropy given the following formula 
+            -p+log2p+ - p-log2p-
+            Where  p+ is the proportion of positive values 
+                   P- is the ratio of negative 
+            	  
+            </summary>
+            <param name="positives">Number of positive values ​​</param>
+            <param name="negatives"> quantity negative values </param>
+            <returns>Returns the value of Entropy</returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.DecisionTree.getValuesToAttribute0(System.Data.DataTable,LogicalParticleFilter1.TreeAttribute,System.String,System.Int32@,System.Int32@)">
+            <summary>
+            Sample table scans checking an attribute and if the result is positive or negative
+            </summary>
+            <param name="samples">DataTable with samples</param>
+            <param name="attribute"> attribute to be searched </param>
+            <param name="value"> value allowed for the attribute </param>
+            <param name="positives"> nro will contain all the attributes with the value determined with positive results </param>
+            <param name="negatives">nro will contain all the attributes with the value determined with negative</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.DecisionTree.gain(System.Data.DataTable,LogicalParticleFilter1.TreeAttribute)">
+            <summary>
+            Calculate the gain of an attribute
+            </summary>
+            <param name="attribute">Attribute to be calculated </param>
+            <returns> Gain attribute </returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.DecisionTree.getBestAttribute(System.Data.DataTable,LogicalParticleFilter1.TreeAttributeCollection)">
+             <summary>
+            Returns the best attribute.
+             </summary>
+             <param name="attributes"> A vector with attributes </param>
+             <returns>Returns which has higher gain </returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.DecisionTree.allSamplesArePositive(System.Data.DataTable,System.String)">
+            <summary>
+            Returns true if all are positive examples of sampling 
+            </summary>
+            <param name="samples"> DataTable with samples </param>
+            <param name="targetAttribute"> attribute (column) of the table which will be checked </param>
+            <returns> all examples are positive sampling </returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.DecisionTree.allSamplesAreNegative(System.Data.DataTable,System.String)">
+            <summary>
+            Returns true if all are negative examples sampling 
+            </summary>
+            <param name="samples"> DataTable with samples </param>
+            <param name="targetAttribute"> attribute (column) of the table which will be checked </param>
+            <returns>> all examples of sampling are negative </returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.DecisionTree.getDistinctValues(System.Data.DataTable,System.String)">
+            <summary>
+             Returns a list of all the distinct values ​​from a table sampling
+            </summary>
+            <param name="samples"> DataTable with samples </param>
+            <param name="targetAttribute">attribute (column) of the table which will be checked </param>
+            <returns>An ArrayList with distinct values </returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.DecisionTree.getMostCommonValue(System.Data.DataTable,System.String)">
+            <summary>
+            Returns the most common value within a sampling 
+            </summary>
+            <param name="samples"> DataTable with samples </param>
+            <param name="targetAttribute"> attribute (column) of the table which will be checked </param>
+            <returns>Returns the object with highest incidence within the table of samples </returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:LogicalParticleFilter1.DecisionTree.internalMountTree(System.Data.DataTable,System.String,LogicalParticleFilter1.TreeAttributeCollection)" -->
+        <!-- Badly formed XML comment ignored for member "M:LogicalParticleFilter1.DecisionTree.mountTree(System.Data.DataTable,System.String,LogicalParticleFilter1.TreeAttributeCollection)" -->
+        <member name="T:LogicalParticleFilter1.DecisionTreeImplementation">
+            <summary>
+            Class that exemplifies the use of ID3 
+            </summary>
+        </member>
+        <member name="T:LogicalParticleFilter1.TreeNode">
+            <summary>
+            Class that represent the decision tree mounted; 
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.TreeNode.#ctor(LogicalParticleFilter1.TreeAttribute)">
+            <summary>
+            Initializes a new instance of the TreeNode 
+            </summary>
+            <param name="attribute">attribute to which the node is connected </param>
+        </member>
+        <member name="M:LogicalParticleFilter1.TreeNode.AddTreeNode(LogicalParticleFilter1.TreeNode,System.String,System.String)">
+            <summary>
+            Adds a child TreeNode TreeNode in this branch by name indicated ValueName
+            </summary>
+            <param name="treeNode">TreeNode child to be added </param>
+            <param name="ValueName">name branch where the TreeNode is created </param>
+        </member>
+        <member name="M:LogicalParticleFilter1.TreeNode.GetChildAt(System.Int32)">
+            <summary>
+            Returns the child node of a node 
+            </summary>
+            <param name="index">Index child node </param>
+            <returns> An object of class representing TreeNode node</returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.TreeNode.GetChildByBranchName(System.String)">
+            <summary>
+            Returns the child of a node with the name of the branch that leads to him 
+            </summary>
+            <param name="branchName">branch name </param>
+            <returns> The node </returns>
+        </member>
+        <member name="P:LogicalParticleFilter1.TreeNode.ChildrenCount">
+            <summary>
+            Returns the total number of child nodes 
+            </summary>
+        </member>
+        <member name="P:LogicalParticleFilter1.TreeNode.Attribute">
+            <summary>
+            Attribute that is connected to Node
+            </summary>
+        </member>
+        <member name="T:LogicalParticleFilter1.TreeAttribute">
+            <summary>
+            Class that represents an attribute used in the class of decision
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.TreeAttribute.#ctor(System.String,LogicalParticleFilter1.PossibleValueCollection)">
+            <summary>
+            Initializes a new instance of a class Attribute 
+            </summary>
+            <param name="name">Indicates the attribute name</param>
+            <param name="values">indicates the possible values ​​for the attribute</param>
+        </member>
+        <member name="M:LogicalParticleFilter1.TreeAttribute.isValidValue(System.String)">
+            <summary>
+            Indicates whether a value is allowed for this attribute
+            </summary>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.TreeAttribute.indexValue(System.String)">
+            <summary>
+            Returns the index of a value
+            </summary>
+            <param name="value">Value to be returned</param>
+            <returns>The index value on which the value position is </returns>
+        </member>
+        <member name="M:LogicalParticleFilter1.TreeAttribute.ToString">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:LogicalParticleFilter1.TreeAttribute.AttributeName">
+            <summary>
+            Indicates the attribute name
+            </summary>
+        </member>
+        <member name="P:LogicalParticleFilter1.TreeAttribute.PossibleValues">
+            <summary>
+            Returns an array of attribute values 
+            </summary>
+        </member>
+        <member name="M:LogicalParticleFilter1.OutcomeTreeAttribute.#ctor(System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="Label"></param>
+        </member>
+    </members>
+</doc>

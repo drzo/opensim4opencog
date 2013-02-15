@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{CCC9DF95-F061-4879-BF4A-D1B80185037D}</ProjectGuid>
+    <ProjectGuid>{15448121-EB7F-427B-99EE-F7E309603B48}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -28,7 +28,7 @@
     <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;VISUAL_STUDIO</DefineConstants>
+    <DefineConstants>TRACE;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
     <DocumentationFile>SimExportModule.XML</DocumentationFile>
     <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
@@ -48,7 +48,7 @@
     <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;VISUAL_STUDIO</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
     <DocumentationFile>SimExportModule.XML</DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
@@ -79,27 +79,27 @@
   <ItemGroup>
     <ProjectReference Include="..\..\main\LibCogbot\Cogbot.Library.csproj">
       <Name>Cogbot.Library</Name>
-      <Project>{9CEE5AC9-4875-4459-AF0C-23E51A56A35D}</Project>
+      <Project>{F135D32A-C34A-4961-B8E7-54D03FF721FD}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
       <Name>MushDLR223</Name>
-      <Project>{E64505B9-62DE-4AF1-93C6-DDDB42B7D4E7}</Project>
+      <Project>{6722775C-9948-4668-AB59-41E7EF5EF0CD}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj">
       <Name>OpenMetaverse</Name>
-      <Project>{D4178AE9-DEC2-4753-89BC-60A5880C4C49}</Project>
+      <Project>{332DD7F5-5B7D-40BD-AFC4-0F32E1FC95D5}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj">
       <Name>OpenMetaverse.StructuredData</Name>
-      <Project>{BC12E17A-3230-4CCB-8780-DE068A4AB2E1}</Project>
+      <Project>{50739D29-CC0B-417C-B808-17DEE1055C6A}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverseTypes\OpenMetaverseTypes.csproj">
       <Name>OpenMetaverseTypes</Name>
-      <Project>{B0FB4A9B-2F3F-4F57-8627-869A12A1D7E7}</Project>
+      <Project>{14F32BFD-540A-4D37-958D-63480DE18A47}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>

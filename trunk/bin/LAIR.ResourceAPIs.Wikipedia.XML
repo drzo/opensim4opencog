@@ -1,0 +1,1469 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>LAIR.ResourceAPIs.Wikipedia</name>
+    </assembly>
+    <members>
+        <member name="T:LAIR.ResourceAPIs.Wikipedia.Section">
+            <summary>
+            Section class.  Represents a section on a Wikipedia page
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.Section._name">
+            <summary>
+            Name of this section
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.Section._lines">
+            <summary>
+            Collection of lines that make up this section
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.Section._subSections">
+            <summary>
+            List of subsections within this section
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.Section._parentSection">
+            <summary>
+            Parent section for this section
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.Section._sectionStart">
+            <summary>
+            Starting line number of this section within its parent section
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.Section._sectionEnd">
+            <summary>
+            Ending line number of this section within its parent section
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.Section._wikiLinks">
+            <summary>
+            List of Wiki links in this section and all subsections
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.Section._containingPage">
+            <summary>
+            Page that contains this section
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.Section.IDRE">
+            <summary>
+            RE for section IDs
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.#cctor">
+            <summary>
+            Static constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.GetLines(System.String)">
+            <summary>
+            Split the page up into lines
+            </summary>
+            <param name="wikiText">Text to split</param>
+            <returns>List of lines</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.GetSectionEnd(System.Collections.Generic.List{System.String},System.Int32)">
+            <summary>
+            Finds the end of a section.
+            </summary>
+            <param name="lines">Lines to search</param>
+            <param name="start">Where to start search. This must be a valid section line (e.g., ==Section X==)</param>
+            <returns>Number of last line in the section</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.GetNextSectionStart(System.Collections.Generic.List{System.String},System.Int32)">
+            <summary>
+            Gets the line number within a list of lines of the next section start
+            </summary>
+            <param name="lines">List of lines to search</param>
+            <param name="start">Where to start search</param>
+            <returns>Line number of section start</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.ExtractSections(System.Collections.Generic.List{System.String},LAIR.ResourceAPIs.Wikipedia.Section,LAIR.ResourceAPIs.Wikipedia.Page)">
+            <summary>
+            Extract a section and its subsections (and their subsections, etc.) from a list of lines
+            </summary>
+            <param name="lines">Lines to extract from</param>
+            <param name="parent">Parent section for top-level sections</param>
+            <param name="containingPage">Page that contains these sections</param>
+            <returns>List of Section instances</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.ExtractSections(System.Collections.Generic.List{System.String},LAIR.ResourceAPIs.Wikipedia.Section,LAIR.ResourceAPIs.Wikipedia.Page,System.String)">
+            <summary>
+            Extract a section and its subsections (and their subsections, etc.) from a list of lines
+            </summary>
+            <param name="lines">Lines to extract from</param>
+            <param name="parent">Parent section for top-level sections</param>
+            <param name="containingPage">Page that contains these sections</param>
+            <param name="sectionLayout">Layout of sections, as produced by Section.Layout.</param>
+            <returns>List of Section instances</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.ExtractLines(System.Collections.Generic.List{System.String},System.Int32,System.Int32)">
+            <summary>
+            Extract a subset of lines from this section
+            </summary>
+            <param name="lines"></param>
+            <param name="startLine"></param>
+            <param name="endLine"></param>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.op_Equality(LAIR.ResourceAPIs.Wikipedia.Section,LAIR.ResourceAPIs.Wikipedia.Section)">
+            <summary>
+            Equality operator
+            </summary>
+            <param name="s1"></param>
+            <param name="s2"></param>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.op_Inequality(LAIR.ResourceAPIs.Wikipedia.Section,LAIR.ResourceAPIs.Wikipedia.Section)">
+            <summary>
+            Inequality operator
+            </summary>
+            <param name="s1"></param>
+            <param name="s2"></param>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.#ctor(System.String,System.Collections.Generic.List{System.String},LAIR.ResourceAPIs.Wikipedia.Section,LAIR.ResourceAPIs.Wikipedia.Page)">
+            <summary>
+            Constructor for marked up section
+            </summary>
+            <param name="name">Name of section</param>
+            <param name="wikiTextLines">List of lines for the page</param>
+            <param name="parentSection">Parent section</param>
+            <param name="containingPage">Page that contains this section</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.#ctor(System.String,System.String,LAIR.ResourceAPIs.Wikipedia.Section,LAIR.ResourceAPIs.Wikipedia.Page)">
+            <summary>
+            Constructor for marked up section
+            </summary>
+            <param name="name">Name of section</param>
+            <param name="wikiText">Text for Wiki page</param>
+            <param name="parentSection">Parent section</param>
+            <param name="containingPage">Page that contains this section</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.#ctor(System.Collections.Generic.List{System.String},System.String,LAIR.ResourceAPIs.Wikipedia.Section,LAIR.ResourceAPIs.Wikipedia.Page)">
+            <summary>
+            Constructor for non-marked up section
+            </summary>
+            <param name="lines">Lines to create section from</param>
+            <param name="sectionDef">Section definition XML</param>
+            <param name="parentSection">Parent section</param>
+            <param name="containingPage">Page that contains this section</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.#ctor(System.String,System.Collections.Generic.List{System.String},LAIR.ResourceAPIs.Wikipedia.Section,LAIR.ResourceAPIs.Wikipedia.Page,System.Int32,System.Int32)">
+            <summary>
+            Constructor for non-marked up section
+            </summary>
+            <param name="name">Name of section</param>
+            <param name="lines">Lines in section</param>
+            <param name="parentSection">Parent section</param>
+            <param name="containingPage">Containing page</param>
+            <param name="start">Start of section within containing page</param>
+            <param name="end">End of section within containing page</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.SetLineInfo(System.Int32)">
+            <summary>
+            Sets the line information for this section and all subsections
+            </summary>
+            <param name="start"></param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.FindStart(LAIR.ResourceAPIs.Wikipedia.Section)">
+            <summary>
+            Finds index where a section starts within this section
+            </summary>
+            <param name="s">Section to find within this section</param>
+            <returns>Starting line of `s' within this section</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.GetSection(System.Int32[])">
+            <summary>
+            Gets a section at a specific index
+            </summary>
+            <param name="indexes"></param>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.AddLink(LAIR.ResourceAPIs.Wikipedia.WikiLink)">
+            <summary>
+            Adds a link to this section
+            </summary>
+            <param name="wl"></param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.RemoveMarkup">
+            <summary>
+            Removes markup from lines in this section and all subsections
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.GetLayout(System.Boolean,System.Boolean)">
+            <summary>
+            Gets the layout of the section
+            </summary>
+            <param name="includeText">Whether or not to include the text of the section in the layout</param>
+            <param name="includeNonContentSections">Whether or not to include non-content sections in the layout</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.Equals(System.Object)">
+            <summary>
+            Gets whether or not two sections are equivalent
+            </summary>
+            <param name="obj"></param>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Section.GetHashCode">
+            <summary>
+            Gets hash code for this section
+            </summary>
+            <returns>Hash code for this section</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Section.Name">
+            <summary>
+            Gets or sets the name of this section
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Section.Lines">
+            <summary>
+            Gets or sets the collection of lines that make up this section
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Section.Depth">
+            <summary>
+            Gets the depth of this section within the section hierarchy
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Section.SubSections">
+            <summary>
+            Gets or sets the list of subsections within this section
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Section.ParentSection">
+            <summary>
+            Gets or sets the parent section for this section
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Section.SectionStart">
+            <summary>
+            Gets or sets the starting line number of this section within its parent section
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Section.SectionEnd">
+            <summary>
+            Gets or sets the ending line number of this section within its parent section
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Section.WikiLinks">
+            <summary>
+            Gets or sets the list of Wiki links in this section and all subsections
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Section.ContainingPage">
+            <summary>
+            Gets or sets the page that contains this section
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Section.ID">
+            <summary>
+            Gets the ID for this section. E.g., 1.3.2 for the second subsection in the third subsection of the first section on a page.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Section.Text">
+            <summary>
+            Gets the text of this section
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Section.NonContentSections">
+            <summary>
+            Gets or sets the list of non-content sections
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.Wikipedia.Properties.Resources">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Properties.Resources.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Properties.Resources.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Properties.Resources.stopwords">
+             <summary>
+               Looks up a localized string similar to a
+            abaft
+            aboard
+            about
+            above
+            according
+            across
+            afore
+            aforesaid
+            after
+            afterwards
+            again
+            against
+            agin
+            ago
+            aint
+            albeit
+            all
+            almost
+            alone
+            along
+            alongside
+            already
+            also
+            although
+            always
+            am
+            amid
+            amidst
+            among
+            amongst
+            an
+            and
+            anent
+            another
+            any
+            anybody
+            anyhow
+            anyone
+            anything
+            anyway
+            anywhere
+            apart
+            are
+            aren&apos;t
+            around
+            as
+            aslant
+            astride
+            at
+            athwart
+            av
+            away
+            b
+            back
+            bar
+            barring
+            be
+            became
+            because
+            become
+            becomes
+            becoming
+            been
+            before
+            beforehand
+            behind
+            being
+            below
+            beneath
+            beside
+            besides
+            best
+            better
+            between
+            betwixt
+            beyond
+            both
+            but
+            by
+            c
+            c [rest of string was truncated]&quot;;.
+             </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.Wikipedia.ConnectionSetupForm">
+            <summary>
+            Connection setup form
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.ConnectionSetupForm.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.ConnectionSetupForm.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.ConnectionSetupForm.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.ConnectionSetupForm.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.ConnectionSetupForm.Server">
+            <summary>
+            Gets or sets the server
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.ConnectionSetupForm.Port">
+            <summary>
+            Gets or sets the port
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.ConnectionSetupForm.MainDatabase">
+            <summary>
+            Gets or sets the database name
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.ConnectionSetupForm.MirrorDatabase">
+            <summary>
+            Gets or sets the mirror database name
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.ConnectionSetupForm.User">
+            <summary>
+            Gets or sets the user
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.ConnectionSetupForm.Password">
+            <summary>
+            Gets or sets the password
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.Wikipedia.WikiDB">
+            <summary>
+            Provides access to the MySQL database containing Wikipedia
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB._pageCache">
+            <summary>
+            Page cache
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB._maxCacheSize">
+            <summary>
+            Max cache size (in pages)
+            </summary>        
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.#cctor">
+            <summary>
+            Static constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.NamespaceValue(LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace)">
+            <summary>
+            Gets the integer value associated with a namespace
+            </summary>
+            <param name="ns">Namespace to get integer value for</param>
+            <returns>Integer value associated with a namespace</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.GetURLFromPageTitle(System.String)">
+            <summary>
+            Gets a page URL from its title
+            </summary>
+            <param name="title">Title of page</param>
+            <returns>URL of page</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.MySQLEscape(System.String)">
+            <summary>
+            Escapes double-quotes and backslashes
+            </summary>
+            <param name="s"></param>
+            <returns></returns>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB._connection">
+            <summary>
+            Connection to DB
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB._DB">
+            <summary>
+            Name of DB
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB._server">
+            <summary>
+            Name of server
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB._user">
+            <summary>
+            Authorized user
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB._password">
+            <summary>
+            Authorized password
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.#ctor(System.String,System.String,System.String,System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="server">Server hosting database</param>
+            <param name="database">Name of database</param>
+            <param name="user">Authorized user</param>
+            <param name="password">Authorized password</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.Connect">
+            <summary>
+            Connect to the MySQL database containing the Wikipedia data
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.Disconnect">
+            <summary>
+            Disconnects from database
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.SubmitQuery(System.String)">
+            <summary>
+            Submit a query to a database
+            </summary>
+            <param name="query">MySQL query to submit</param>
+            <returns>Reader for results</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.ExecuteNonQuery(System.String)">
+            <summary>
+            Execute a non-query command on a database
+            </summary>
+            <param name="command">Command to submit</param>
+            <returns>Number of rows affected</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.LookupPage(LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.String,System.Boolean)">
+            <summary>
+            Look up a page in the database
+            </summary>
+            <param name="ns">Namespace to look up</param>
+            <param name="title">Title of page to look up</param>
+            <param name="followRedirection">Whether or not to follow redirection</param>
+            <returns>Page instance</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.LookupLinkedPages(LAIR.ResourceAPIs.Wikipedia.Page)">
+            <summary>
+            Look up a list of linked pages for a particular page
+            </summary>
+            <param name="p">Page to look up linked page for</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.GetPageRange(LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Gets a range of pages
+            </summary>
+            <param name="ns">Namespace to get pages from</param>
+            <param name="startPage">Start page</param>
+            <param name="numPages">Number of pages to get</param>
+            <param name="followRedirection">Whether or not to follow redirection</param>
+            <returns>List of page objects</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.GetTitleRange(LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Gets a range of titles from the database
+            </summary>
+            <param name="ns">Namespace to get titles from</param>
+            <param name="startPage">Page to start at</param>
+            <param name="numPages">Number of pages to get titles from</param>
+            <param name="includeRedirects">Whether or not to include titles from redirect pages</param>
+            <returns>List of titles</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.GetTitlesContaining(LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.String)">
+            <summary>
+            Gets a list of page titles that contain a word. This function is _extremely_ inefficient and incomplete because 
+            the default Wikipedia database schema does not provide specialized indexes for this task. 
+            You are recommended to build a special cross-reference table, inherit this class, and override this method.
+            </summary>
+            <param name="ns">Namespace to get titles from</param>
+            <param name="s">String to match within page titles (must match casing in database _exactly_)</param>
+            <returns>List of page titles</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.PageExists(LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.String)">
+            <summary>
+            Gets whether or not a page exists in the DB
+            </summary>
+            <param name="ns">Namespace to check</param>
+            <param name="title">Title to check</param>
+            <returns>True if page exists, False otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.IsRedirect(LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.String)">
+            <summary>
+            Gets whether or not a page is a redirect page
+            </summary>
+            <param name="ns">Namespace to search</param>
+            <param name="title">Title to look for</param>
+            <returns>True if the page is a redirect page, False otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.CheckConnection(System.Boolean)">
+            <summary>
+            Checks the current connection and optionally reconnects
+            </summary>
+            <param name="autoReconnect">Whether or not to reconnect a bad connection</param>
+            <returns>True if connection state is okay or reconnected, False otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.CachePage(LAIR.ResourceAPIs.Wikipedia.Page)">
+            <summary>
+            Adds a page to the page cache
+            </summary>
+            <param name="p">Page to add</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.CheckCacheSize">
+            <summary>
+            Checks the size of the page cache
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.ClearPageCache">
+            <summary>
+            Clears the page cache
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiDB.AreCoreferentialTitles(System.String,System.String)">
+            <summary>
+            Checks whether two titles are coreferential (i.e., they refer to the same page or to pages that
+            redirect to the same page.
+            </summary>
+            <param name="title1">First title</param>
+            <param name="title2">Second title</param>
+            <returns>True if titles are coreferential, False otherwise</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiDB.PageCache">
+            <summary>
+            Page cache
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiDB.MaxCacheSize">
+            <summary>
+            Max cache size (in pages)
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiDB.DB">
+            <summary>
+            Gets or sets the name of the database
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiDB.Server">
+            <summary>
+            Gets or sets the name of the server
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiDB.User">
+            <summary>
+            Gets or sets the name of the user authorized on the server
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiDB.Password">
+            <summary>
+            Gets or sets the password for the user
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiDB.Connected">
+            <summary>
+            Gets whether or not the connection is open
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace">
+            <summary>
+            Namespace enumeration from MediaWiki 1.8.2 (includes/Defines.php)
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace.Main">
+            <summary>
+            Main pages
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace.Talk">
+            <summary>
+            Talk pages
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace.User">
+            <summary>
+            User pages
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace.UserTalk">
+            <summary>
+            User talk pages
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace.Project">
+            <summary>
+            Project pages
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace.ProjectTalk">
+            <summary>
+            Project talk pages
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace.Image">
+            <summary>
+            Image pages
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace.ImageTalk">
+            <summary>
+            Image talk pages
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace.MediaWiki">
+            <summary>
+            MediaWiki pages
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace.MediaWikiTalk">
+            <summary>
+            MediaWiki talk pages
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace.Template">
+            <summary>
+            Template pages
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace.TemplateTalk">
+            <summary>
+            Template talk pages
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace.Help">
+            <summary>
+            Help pages
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace.HelpTalk">
+            <summary>
+            Help talk pages
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace.Category">
+            <summary>
+            Category pages
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace.CategoryTalk">
+            <summary>
+            Category talk pages
+            </summary>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace.Undef">
+            <summary>
+            Undefined namespace
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.Wikipedia.FastMirror">
+            <summary>
+            Class for reading/writing the FastMirror database. The FastMirror database is a transformation
+            of the standard MediaWiki database schema to one that is more efficiently read and written.
+            Page text is stored without markup and with sections, wiki-links, and term frequencies already 
+            extracted and stored as fields in a table. The schemas:
+              CustomTables/page_index.sql
+              CustomTables/title_index.sql
+            The first schema is for pages. The second table indexes words against the page titles that contain
+            them - this provides quick keyword searching.
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.FastMirror.#ctor(System.String,System.String,System.String,System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="server">Server for mirror DB</param>
+            <param name="database">Name of mirror DB</param>
+            <param name="user">Authorized user</param>
+            <param name="password">Authorized password</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.FastMirror.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="mainServer">Server for main Wikipedia DB</param>
+            <param name="mainDatabase">Name of main Wikipedia DB</param>
+            <param name="mainUser">Authorized user</param>
+            <param name="mainPassword">Authorized password</param>
+            <param name="mirrorServer">Server for mirror DB</param>
+            <param name="mirrorDatabase">Name of mirror DB</param>
+            <param name="mirrorUser">Authorized user</param>
+            <param name="mirrorPassword">Authorized password</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.FastMirror.Connect">
+            <summary>
+            Connects to the mirror and main DBs
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.FastMirror.Disconnect">
+            <summary>
+            Disconnects from the mirror and main DBs
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.FastMirror.LookupPage(LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.String,System.Boolean)">
+            <summary>
+            Looks up a page in the database (recovers sections)
+            </summary>
+            <param name="ns">Namespace to look page up in</param>
+            <param name="title">Title of page to look up</param>
+            <param name="followRedirection">Whether or not to look up destination of redirect pages</param>
+            <returns>Page instance</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.FastMirror.LookupPage(LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Looks up page in database
+            </summary>
+            <param name="ns">Namespace to look page up in</param>
+            <param name="title">Title of page to look up</param>
+            <param name="followRedirection">Whether or not to look up destination of redirect pages</param>
+            <param name="recoverSections">Whether or not to recover the section structure of the page</param>
+            <param name="readLinks">Read link information</param>
+            <param name="readTFTable">Read term frequency table</param>
+            <returns>Page instance</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.FastMirror.WriteTitleIndex(System.Int32,System.Int32,System.Int32,LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.Boolean)">
+            <summary>
+            Writes the titleindex table
+            </summary>
+            <param name="startID">Where to start writing</param>
+            <param name="numPages">Total number of pages to write</param>
+            <param name="blockSize">Number of pages to read at a time</param>
+            <param name="ns">Namespace to read/write from/to</param> 
+            <param name="includeRedirects">Whether or not to include redirect pages in the write indexing operation</param>
+            <returns>Last title written</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.FastMirror.WriteTitleIndex(LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.Collections.Generic.List{System.String})">
+            <summary>
+            Writes the titleindex table
+            </summary>
+            <param name="ns">Namespace to read/write from/to</param>        
+            <param name="titles">List of titles to write</param>
+            <returns>Last title written</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.FastMirror.WritePageIndex(System.Int32,System.Int32,System.Int32,LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.Boolean)">
+            <summary>
+            Write page index table
+            </summary>
+            <param name="startID">Where to start writing</param>
+            <param name="numPages">Total number of pages to write</param>
+            <param name="blockSize">Number of pages to read at a time</param>
+            <param name="ns">Namespace to read/write from/to</param> 
+            <param name="includeRedirects">Whether or not to include redirect pages</param>
+            <returns>Last title written</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.FastMirror.WritePageIndex(LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.Collections.Generic.List{System.String})">
+            <summary>
+            Write page index table
+            </summary>
+            <param name="ns">Namespace to read/write pages from/to</param>
+            <param name="titles">List of page titles to write</param>
+            <returns>Last title written</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.FastMirror.WritePage(LAIR.ResourceAPIs.Wikipedia.Page)">
+            <summary>
+            Writes a page to the mirror DB
+            </summary>
+            <param name="p">Page to write</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.FastMirror.DumpToLemur(System.Int32,System.Int32,System.Int32,LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.String,System.Boolean)">
+            <summary>
+            Dumps a range of pages to a file
+            </summary>
+            <param name="startID">Where to start dumping</param>
+            <param name="numPages">Total number of pages to dump</param>
+            <param name="blockSize">Number of pages to read at a time</param>
+            <param name="ns">Namespace to read/write from/to</param>        
+            <param name="dumpDir">Directory to save dump files in</param>
+            <param name="includeRedirects">Whether or not to dump redirect pages</param>
+            <returns>Last title dumped</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.FastMirror.GetTitleRange(LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Gets a range of titles from the DB
+            </summary>
+            <param name="ns">Namespace to search</param>
+            <param name="startPage">Page to start at</param>
+            <param name="numPages">Number of titles</param>
+            <param name="includeRedirects">Whether or not to include redirects</param>
+            <returns>List of titles</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.FastMirror.GetTitlesContaining(LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.String)">
+            <summary>
+            Get titles containing a word
+            </summary>
+            <param name="ns">Namespace to search</param>
+            <param name="s">Word to look for</param>
+            <returns>List of page titles (strings) containing word</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.FastMirror.IsRedirect(LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.String)">
+            <summary>
+            Gets whether or not a page is a redirect page
+            </summary>
+            <param name="ns">Namespace to search</param>
+            <param name="title">Title to search</param>
+            <returns>True if page is a redirect page, False otherwise</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.FastMirror.StopWriting">
+            <summary>
+            Gets or sets whether or not to stop writing
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.FastMirror.LastIDWritten">
+            <summary>
+            Gets the last ID written
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.FastMirror.LastTitleWritten">
+            <summary>
+            Gets the last title written
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.FastMirror.MainDB">
+            <summary>
+            Get the main DB
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.Wikipedia.Page">
+            <summary>
+            Represents a Wikipedia page
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Page.GetSectionLayout(System.Boolean,System.Boolean)">
+            <summary>
+            Gets the section layout for this page
+            </summary>
+            <param name="includeSectionText">Whether or not to include section text</param>
+            <param name="includeNonContentSections">Whether or not to include non-content sections</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Page.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Page.#ctor(System.String,LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.Int32)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="title">Title of page</param>
+            <param name="ns">Namespace of this page</param>
+            <param name="ID">ID for this page</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Page.#ctor(System.String,LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.Int32,System.String,LAIR.ResourceAPIs.Wikipedia.WikiDB,System.Boolean)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="title">Title of page</param>
+            <param name="ns">Namespace of this page</param>
+            <param name="ID">ID for this page</param>
+            <param name="wikiText">Wiki text for page</param>
+            <param name="database">Database containing this page</param>
+            <param name="followRedirection">Whether or not to follow redirection</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Page.#ctor(System.String,LAIR.ResourceAPIs.Wikipedia.WikiDB.Namespace,System.Int32,System.Collections.Generic.List{System.String},System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="title">Title of page</param>
+            <param name="ns">Namespace of this page</param>
+            <param name="ID">ID for this page</param>
+            <param name="lines">Lines contained in this page</param>
+            <param name="sectionLayout">Layout of sections (see section class for documentation)</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Page.GetHashCode">
+            <summary>
+            Gets hash code for this page
+            </summary>
+            <returns>Hash code for this page</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Page.Equals(System.Object)">
+            <summary>
+            Equality check
+            </summary>
+            <param name="obj">Page to check</param>
+            <returns>True if pages are equal, False otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Page.op_Equality(LAIR.ResourceAPIs.Wikipedia.Page,LAIR.ResourceAPIs.Wikipedia.Page)">
+            <summary>
+            Equality operator
+            </summary>
+            <param name="p1"></param>
+            <param name="p2"></param>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Page.op_Inequality(LAIR.ResourceAPIs.Wikipedia.Page,LAIR.ResourceAPIs.Wikipedia.Page)">
+            <summary>
+            Inequality operator
+            </summary>
+            <param name="p1"></param>
+            <param name="p2"></param>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Page.Similarity(LAIR.ResourceAPIs.Wikipedia.Page)">
+            <summary>
+            Gets the similarity between this page and another page
+            </summary>
+            <param name="p">Page to compare this one to</param>
+            <returns>Similarity in [0, 1]</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Page.GetSection(System.String)">
+            <summary>
+            Gets a section from this page
+            </summary>
+            <param name="sectionID">One-based identifier of the form 1.3.2</param>
+            <returns>Section from this page</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Page.CompareTo(System.Object)">
+            <summary>
+            Compare this page to another object
+            </summary>
+            <param name="obj">Object to compare page to</param>
+            <returns>-1 if this lt obj, 1 if this gt obj, 0 otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Page.RemoveMarkup">
+            <summary>
+            Removes markup from this page
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Page.SetLineInfo">
+            <summary>
+            Sets the line information for this page (all sections)
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Page.SectionsRecovered">
+            <summary>
+            Gets whether or not the sections have been recovered for this page
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Page.ID">
+            <summary>
+            Gets or sets the ID for this page
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Page.Title">
+            <summary>
+            Gets or sets the title for this page
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Page.URL">
+            <summary>
+            Gets the URL for this page
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Page.Sections">
+            <summary>
+            Gets or sets the sections in this page
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Page.WikiLinks">
+            <summary>
+            Gets or sets the list of internally linked pages
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Page.Lines">
+            <summary>
+            Gets or sets the collection of lines in this page
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Page.IsRedirect">
+            <summary>
+            Gets whether or not this page is a redirect page
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Page.RedirectsTo">
+            <summary>
+            Gets or sets the redirect page for this page
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Page.TermFrequencies">
+            <summary>
+            Gets or sets the term frequency table for this page
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Page.Namespace">
+            <summary>
+            Gets or sets the namespace for this page
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Page.Weight">
+            <summary>
+            Gets or sets the weight of this page
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Page.PageInsertValues">
+            <summary>
+            Get Page table insert values
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Page.LinksInsertValues">
+            <summary>
+            Gets values for link table
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Page.TermFreqsValues">
+            <summary>
+            Gets values for TF table
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Page.LemurDump">
+            <summary>
+            Gets dump to be indexed/searched with the Lemur IR engine
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.Page.Text">
+            <summary>
+            Gets the plain text of this page
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.Wikipedia.WikiLink">
+            <summary>
+            Wiki link class
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiLink.GetWikiLinks(System.Collections.Generic.List{System.String},LAIR.ResourceAPIs.Wikipedia.Section)">
+            <summary>
+            Gets WikiLinks from a section
+            </summary>
+            <param name="lines"></param>
+            <param name="source"></param>
+            <returns>List of links for section</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiLink.RemoveDuplicateLinks(System.Collections.Generic.List{LAIR.ResourceAPIs.Wikipedia.WikiLink})">
+            <summary>
+            Remove duplicate links from a list of links
+            </summary>
+            <param name="links"></param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiLink.#ctor(System.String,System.String,System.String,System.String,LAIR.ResourceAPIs.Wikipedia.Section)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="rawLink">Raw text for link</param>
+            <param name="pageTitle">Title of page being linked to</param>
+            <param name="pageSection">Section of page being linked to</param>
+            <param name="displayText">Display text for link</param>
+            <param name="sourceSection">Section of source page that contains this link</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiLink.LookupDestPage(LAIR.ResourceAPIs.Wikipedia.WikiDB)">
+            <summary>
+            Look up this link
+            </summary>
+            <param name="database">Database to look up link destination in</param>
+            <returns>True if destination page was found, False otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiLink.Equals(System.Object)">
+            <summary>
+            Equality check
+            </summary>
+            <param name="obj">Object to compare to</param>
+            <returns>True if obj equals this WikiLink, False otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiLink.GetHashCode">
+            <summary>
+            Gets hash code for this Wiki link
+            </summary>
+            <returns>Hash code for this Wiki link</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiLink.CompareTo(System.Object)">
+            <summary>
+            CompareTo function
+            </summary>
+            <param name="obj">Object to compare this WikiLink to</param>
+            <returns>1 if this gt obj, -1 if this lt obj, and 0 o.w.</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiLink.op_Equality(LAIR.ResourceAPIs.Wikipedia.WikiLink,LAIR.ResourceAPIs.Wikipedia.WikiLink)">
+            <summary>
+            Equality operator
+            </summary>
+            <param name="wl1">Operand 1</param>
+            <param name="wl2">Operand 2</param>
+            <returns>True if links are equal, False otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiLink.op_Inequality(LAIR.ResourceAPIs.Wikipedia.WikiLink,LAIR.ResourceAPIs.Wikipedia.WikiLink)">
+            <summary>
+            Inequality operator
+            </summary>
+            <param name="wl1">Operant 1</param>
+            <param name="wl2">Operand 2</param>
+            <returns>True if links are equal, False otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiLink.ToString">
+            <summary>
+            ToString override
+            </summary>
+            <returns>Display text of link</returns>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiLink.RawLink">
+            <summary>
+            Gets or sets the raw link (with markup) for this Wiki link
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiLink.DestPageTitle">
+            <summary>
+            Gets or sets the title of the page being linked to
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiLink.DestPageSection">
+            <summary>
+            Gets or sets the section of the page being linked to
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiLink.DestPageURL">
+            <summary>
+            Gets the URL for destination page
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiLink.DisplayText">
+            <summary>
+            Gets or sets the display text for this Wiki link
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiLink.SourcePage">
+            <summary>
+            Gets or sets the source page
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiLink.SourceSection">
+            <summary>
+            Gets or sets the source section for this link
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiLink.DestPage">
+            <summary>
+            Gets or sets the page this link points to
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiLink.DestPageNamespace">
+            <summary>
+            Gets or sets the namespace this link points to
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiLink.Weight">
+            <summary>
+            Gets or sets the weight of this link
+            </summary>
+        </member>
+        <member name="P:LAIR.ResourceAPIs.Wikipedia.WikiLink.RedirectPage">
+            <summary>
+            Gets the redirect page for this link
+            </summary>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.Wikipedia.WikiLink.ReverseSorter">
+            <summary>
+            Reverse sorter for WikiLink class
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiLink.ReverseSorter.Compare(LAIR.ResourceAPIs.Wikipedia.WikiLink,LAIR.ResourceAPIs.Wikipedia.WikiLink)">
+            <summary>
+            Compares two WikiLink objects
+            </summary>
+            <param name="x">First WikiLink</param>
+            <param name="y">Second WikiLink</param>
+            <returns></returns>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.Wikipedia.WikiMarkup">
+            <summary>
+            WikiMarkup class, based on documentation at http://en.wikipedia.org/wiki/Help:Editing_tips_and_tricks
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.#cctor">
+            <summary>
+            Static constructor
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetSubsectionRE">
+            <summary>
+            Gets new instance of Subsection Regex. Subsections look like this:
+              == Subsection ==
+              === Subsubsection ===
+            Group "Name" holds the section name
+            Group "SectionStart" holds the section start (== and === from above)
+            </summary>
+            <returns>Regex matching subsection markup</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetSubsectionReplacement(System.Text.RegularExpressions.Match)">
+            <summary>
+            Gets the replacement string for matched subsection markup
+            </summary>
+            <param name="m">Match instance</param>
+            <returns>Replacement string for matched subsection markup</returns>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.SubsectionReplacementME">
+            <summary>
+            Match evaluator for subsection replacement
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetWikiLinkRE">
+            <summary>
+            Gets new instance of Wiki link Regex. Wiki links are links to internal
+            Wikipedia pages. They have a few different forms (see documentation linked to 
+            in class description.
+            Group "LinkDest" contains the destination page title
+            Group "Section" contains the destination page section
+            Group "DisplayText" contains the text to be displayed for the link
+            </summary>
+            <returns>Regex matching Wiki link markup</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetWikiLinkPattern">
+            <summary>
+            Gets the pattern string for wiki links
+            </summary>
+            <returns>Pattern string for wiki links</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetWikiLinkReplacement(System.Text.RegularExpressions.Match)">
+            <summary>
+            Gets the replacement text for a matched Wiki link
+            </summary>
+            <param name="m"></param>
+            <returns></returns>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.WikiLinkReplacementME">
+            <summary>
+            MatchEvaluator for Wiki links
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetEmphasisRE">
+            <summary>
+            Gets new instance of emphasis Regex. 
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetEmphasisReplacement(System.Text.RegularExpressions.Match)">
+            <summary>
+            Gets replacement string for emphasized markup
+            </summary>
+            <param name="m">Match for markup</param>
+            <returns>Replacement string</returns>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.EmphasisReplacementME">
+            <summary>
+            MatchEvaluator for emphasis replacement
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetHTTPLinkRE">
+            <summary>
+            Gets a new HTTP link RE
+            </summary>
+            <returns>New HTTP link RE</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetHTTPLinkReplacement(System.Text.RegularExpressions.Match)">
+            <summary>
+            Gets replacement text for http links
+            </summary>
+            <param name="m">Match to get replacement text for</param>
+            <returns>Replacement text for http links</returns>
+        </member>
+        <member name="F:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.HTTPLinkME">
+            <summary>
+            MatchEvaluator for HTTP links
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetTemplateRE">
+            <summary>
+            Gets a new instance of template Regex
+            </summary>
+            <returns>New instance of template Regex</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetHTMLCommentRE">
+            <summary>
+            Gets a RE for HTML comments
+            </summary>
+            <returns>RE for HTML comments</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetHTMLRE">
+            <summary>
+            Gets a new instance of the HTML regex
+            </summary>
+            <returns>New instance of the HTML regex</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetImageRE">
+            <summary>
+            Gets new instance of image RE
+            </summary>
+            <returns>New instance of image RE</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetListRE">
+            <summary>
+            Gets a new list RE
+            </summary>
+            <returns>List RE</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetReferenceRE">
+            <summary>
+            Gets a RE for references
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetInterLangLinkRE">
+            <summary>
+            Gets a RE for interlanguage links
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetCategoryLinkRE">
+            <summary>
+            Gets a RE for category links
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.GetTableRE">
+            <summary>
+            Gets a RE for tables
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.ProcessMarkup(System.String)">
+            <summary>
+            Remove markup from Wiki text
+            </summary>
+            <param name="s">String to remove markup from</param>
+            <returns>String without markup</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.ProcessMarkup(System.Collections.Generic.List{System.String})">
+            <summary>
+            Remove markup from a list of lines
+            </summary>
+            <param name="lines">Lines to remove markup from</param>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.TrimPunctuation(System.String)">
+            <summary>
+            Trims leading and trailing punctuation from a string
+            </summary>
+            <param name="s">String to trim</param>
+            <returns>`s', without leading and trailing punctuation</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.RemoveIrrelevantMarkup(System.String)">
+            <summary>
+            Removes irrelevant markup from Wiki text
+            </summary>
+            <param name="s">String to process</param>
+            <returns>String, sans markup</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.IsStopWord(System.String)">
+            <summary>
+            Check if a word is a stop word (case-insensitive)
+            </summary>
+            <param name="word">Word to check</param>
+            <returns>True if word is stop word, False otherwise</returns>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.WikiMarkup.IsStopWord(System.String,System.Boolean)">
+            <summary>
+            Check if a word is a stop word
+            </summary>
+            <param name="word"></param>
+            <param name="caseSensitive"></param>
+            <returns></returns>
+        </member>
+        <member name="T:LAIR.ResourceAPIs.Wikipedia.Header">
+            <summary>
+            Header class, for information prior to the first section in the page
+            </summary>
+        </member>
+        <member name="M:LAIR.ResourceAPIs.Wikipedia.Header.#ctor(System.Collections.Generic.List{System.String},LAIR.ResourceAPIs.Wikipedia.Page)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="headerLines">Lines for the header</param>
+            <param name="containingPage">Page that contains this header</param>
+        </member>
+    </members>
+</doc>

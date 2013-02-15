@@ -1,0 +1,164 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Cogbot.LAIR</name>
+    </assembly>
+    <members>
+        <member name="T:TestApplication.TestFormPennBank">
+            <summary>
+            Test application form
+            </summary>
+        </member>
+        <member name="F:TestApplication.TestFormPennBank.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:TestApplication.TestFormPennBank.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:TestApplication.TestFormPennBank.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="M:TestApplication.TestFormPennBank.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:TestApplication.TestFormPennBank.AppendOutput(System.String,System.Boolean)">
+            <summary>
+            Appends a string to the output box
+            </summary>
+            <param name="s"></param>
+        </member>
+        <member name="M:TestApplication.TestFormPennBank.AppendOutput(LAIR.ResourceAPIs.PennBank.TreeBank.TreeBankNode)">
+            <summary>
+            Appends a TreeBank node to the output list
+            </summary>
+            <param name="n"></param>
+        </member>
+        <member name="M:TestApplication.TestFormPennBank.ClearList">
+            <summary>
+            Clears item list
+            </summary>
+        </member>
+        <member name="M:TestApplication.TestFormPennBank.SetEnabled(System.Boolean)">
+            <summary>
+            Sets form enabled/disabled
+            </summary>
+            <param name="enabled">Whether or not form should be enabled</param>
+        </member>
+        <member name="F:TestApplication.TestFormWordNet.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:TestApplication.TestFormWordNet.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:TestApplication.TestFormWordNet.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="M:TestApplication.Program.Main">
+            <summary>
+            The main entry point for the application.
+            </summary>
+        </member>
+        <member name="T:TestApplication.TestFormFrameNet">
+            <summary>
+            Form for the test application
+            </summary>
+        </member>
+        <member name="M:TestApplication.TestFormFrameNet.#ctor">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:TestApplication.TestFormFrameNet.AddItem(System.String)">
+            <summary>
+            Adds item to output
+            </summary>
+            <param name="s">Item to add</param>
+        </member>
+        <member name="M:TestApplication.TestFormFrameNet.ResetOutput">
+            <summary>
+            Resets the output list
+            </summary>
+        </member>
+        <member name="M:TestApplication.TestFormFrameNet.frame1_SelectedIndexChanged(System.Object,System.EventArgs)">
+            <summary>
+            Updates FE list for frame 1
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:TestApplication.TestFormFrameNet.frame2_SelectedIndexChanged(System.Object,System.EventArgs)">
+            <summary>
+            Updates FE list for frame 2
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="F:TestApplication.TestFormFrameNet.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:TestApplication.TestFormFrameNet.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:TestApplication.TestFormFrameNet.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="P:TestApplication.TestFormFrameNet.SelectedRelations">
+            <summary>
+            Gets selected frame relations, using all relations if none are selected.
+            </summary>
+        </member>
+        <member name="P:TestApplication.TestFormFrameNet.SelectedRelationDirection">
+            <summary>
+            Gets selected frame relation direction
+            </summary>
+        </member>
+        <member name="T:TestApplication.TestFormFrameNet.AddItemDelegate">
+            <summary>
+            Delegate to add items from a different thread
+            </summary>
+            <param name="item"></param>
+        </member>
+        <member name="T:Cogbot.LAIR.Properties.Resources">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:Cogbot.LAIR.Properties.Resources.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:Cogbot.LAIR.Properties.Resources.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+    </members>
+</doc>

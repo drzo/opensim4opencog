@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>TheSimiansModule</name>
+    </assembly>
+    <members>
+        <member name="F:TheSimiansModule.SimThinkerDebug.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:TheSimiansModule.SimThinkerDebug.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:TheSimiansModule.SimThinkerDebug.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="F:TheSimiansModule.SimParrotActor.AspectEnjoyment">
+            <summary>
+             which will be skewed with how much one bot like a Mental Aspect
+            notice this also stores object types that pleases the bot as well as people
+             (so how much one bot likes another avatar is stored here as well)
+            </summary> 
+        </member>
+        <member name="F:TheSimiansModule.SimParrotActor.Assumptions">
+            <summary>
+             Assumptions about stubs
+            </summary>
+        </member>
+        <member name="F:TheSimiansModule.SimParrotActor.MaxThinkAboutDistance">
+            <summary>
+             When seeking out objects for use
+             the whole region at least - this is different than the sight distance
+            </summary>
+        </member>
+        <member name="F:TheSimiansModule.SimParrotActor.MaxSupportedZChange">
+            <summary>
+             When seeking out objects for use -  
+             this is only limited due to the pathfinder demo for the moment
+            </summary>
+        </member>
+        <member name="M:TheSimiansModule.SimParrotActor.CompareTwo(Cogbot.World.BotMentalAspect,Cogbot.World.BotMentalAspect)">
+            <summary>
+              TODO Real Eval routine
+            </summary>
+            <param name="mostInteresting"></param>
+            <param name="cAspect"></param>
+            <returns></returns>
+        </member>
+        <member name="F:TheSimiansModule.ParrotAction.AspectEnjoyment">
+            <summary>
+             which will be skewed with how much one bot like a Mental Aspect
+            notice this also stores object types that pleases the bot as well as people
+             (so how much one bot likes another avatar is stored here as well)
+            </summary> 
+        </member>
+        <member name="F:TheSimiansModule.ParrotAction.Assumptions">
+            <summary>
+             Assumptions about stubs
+            </summary>
+        </member>
+        <member name="F:TheSimiansModule.ParrotAction.MaxThinkAboutDistance">
+            <summary>
+             When seeking out objects for use
+             the whole region at least - this is different than the sight distance
+            </summary>
+        </member>
+        <member name="F:TheSimiansModule.ParrotAction.MaxSupportedZChange">
+            <summary>
+             When seeking out objects for use -  
+             this is only limited due to the pathfinder demo for the moment
+            </summary>
+        </member>
+        <member name="M:TheSimiansModule.ParrotAction.CompareTwo(Cogbot.World.BotMentalAspect,Cogbot.World.BotMentalAspect)">
+            <summary>
+              TODO Real Eval routine
+            </summary>
+            <param name="mostInteresting"></param>
+            <param name="cAspect"></param>
+            <returns></returns>
+        </member>
+        <member name="F:TheSimiansModule.SimThinker.AspectEnjoyment">
+            <summary>
+             which will be skewed with how much one bot like a Mental Aspect
+            notice this also stores object types that pleases the bot as well as people
+             (so how much one bot likes another avatar is stored here as well)
+            </summary> 
+        </member>
+        <member name="F:TheSimiansModule.SimThinker.Assumptions">
+            <summary>
+             Assumptions about stubs
+            </summary>
+        </member>
+        <member name="F:TheSimiansModule.SimThinker.MaxThinkAboutDistance">
+            <summary>
+             When seeking out objects for use
+             the whole region at least - this is different than the sight distance
+            </summary>
+        </member>
+        <member name="F:TheSimiansModule.SimThinker.MaxSupportedZChange">
+            <summary>
+             When seeking out objects for use -  
+             this is only limited due to the pathfinder demo for the moment
+            </summary>
+        </member>
+        <member name="M:TheSimiansModule.SimThinker.CompareTwo(Cogbot.World.BotMentalAspect,Cogbot.World.BotMentalAspect)">
+            <summary>
+              TODO Real Eval routine
+            </summary>
+            <param name="mostInteresting"></param>
+            <param name="cAspect"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

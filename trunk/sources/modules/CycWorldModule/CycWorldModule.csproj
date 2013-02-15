@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{4AE36C45-4069-449F-8BB0-EA05295B4FCE}</ProjectGuid>
+    <ProjectGuid>{7F9BCA3B-16E7-4B4E-A39B-07070297A162}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
@@ -25,7 +25,8 @@
     </StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -38,100 +39,132 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;VISUAL_STUDIO</DefineConstants>
+    <DefineConstants>TRACE;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
     <DocumentationFile>CycWorldModule.XML</DocumentationFile>
+    <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
-    <Optimize>true</Optimize>
+    <Optimize>True</Optimize>
     <OutputPath>..\..\..\bin\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>3</WarningLevel>
+    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;VISUAL_STUDIO</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
     <DocumentationFile>CycWorldModule.XML</DocumentationFile>
-    <DebugSymbols>true</DebugSymbols>
+    <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
-    <Optimize>false</Optimize>
+    <Optimize>False</Optimize>
     <OutputPath>..\..\..\bin\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>3</WarningLevel>
+    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System" />
-    <Reference Include="OpenCyc, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\bin\OpenCyc.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.Runtime, Version=7.1.4532.2, Culture=neutral, PublicKeyToken=13235d27fcbfff58">
-      <HintPath>..\..\..\bin\IKVM.Runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Core, Version=7.1.4532.2, Culture=neutral, PublicKeyToken=13235d27fcbfff58">
-      <HintPath>..\..\..\bin\IKVM.OpenJDK.Core.dll</HintPath>
-    </Reference>
     <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+      <Name>System.Core</Name>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <Name>System.Drawing</Name>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <Name>System.Windows.Forms</Name>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Name>System.Xml</Name>
     </Reference>
     <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+      <Name>System.Xml.Linq</Name>
+    </Reference>
+    <Reference Include="System">
+      <Name>System</Name>
+    </Reference>
+    <Reference Include="OpenCyc.dll">
+      <Name>OpenCyc.dll</Name>
+      <HintPath>..\..\..\bin\OpenCyc.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.Runtime.dll">
+      <Name>IKVM.Runtime.dll</Name>
+      <HintPath>..\..\..\bin\IKVM.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Core.dll">
+      <Name>IKVM.OpenJDK.Core.dll</Name>
+      <HintPath>..\..\..\bin\IKVM.OpenJDK.Core.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\main\LibCogbot\Cogbot.Library.csproj">
-      <Project>{408928E9-38D0-49E6-A51D-4E5271A22275}</Project>
       <Name>Cogbot.Library</Name>
+      <Project>{F135D32A-C34A-4961-B8E7-54D03FF721FD}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\main\PathSystem3D\PathSystem3D.csproj">
-      <Project>{8F87C059-2FE6-4FBD-A1E6-F041FFC5D440}</Project>
       <Name>PathSystem3D</Name>
+      <Project>{DF764CAA-BB27-4D9C-B1D7-2BB3D2BFDF03}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj">
-      <Project>{11394F36-3BC1-42B9-B40A-E3B3DFDCF7E7}</Project>
       <Name>OpenMetaverse</Name>
+      <Project>{332DD7F5-5B7D-40BD-AFC4-0F32E1FC95D5}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverseTypes\OpenMetaverseTypes.csproj">
-      <Project>{BACB9F16-72CD-466D-9923-1C9A24AE3E22}</Project>
       <Name>OpenMetaverseTypes</Name>
+      <Project>{14F32BFD-540A-4D37-958D-63480DE18A47}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj">
-      <Project>{9BE6AA68-6B9C-4DEA-8C27-717A8886C6BC}</Project>
       <Name>OpenMetaverse.StructuredData</Name>
+      <Project>{50739D29-CC0B-417C-B808-17DEE1055C6A}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse.Utilities\OpenMetaverse.Utilities.csproj">
-      <Project>{D4F61083-AAFA-409E-AE95-007EF0A2019D}</Project>
       <Name>OpenMetaverse.Utilities</Name>
+      <Project>{F59FCA55-A4D6-44CC-9BD2-98E35C5616AF}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\Radegast\Radegast.csproj">
-      <Project>{ADFCB2BF-459F-4F0D-BE35-94F99BB017C8}</Project>
       <Name>Radegast</Name>
+      <Project>{34F32EB2-AEDF-4406-818D-D5DA02E538F9}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\DotLisp\DotLisp.csproj">
-      <Project>{A7161761-6942-4A09-910D-332BE93F283D}</Project>
       <Name>DotLisp</Name>
+      <Project>{0CBE2DF2-0D62-4FB1-A797-BA0B635010B0}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
-      <Project>{E64505B9-62DE-4AF1-93C6-DDDB42B7D4E7}</Project>
       <Name>MushDLR223</Name>
+      <Project>{6722775C-9948-4668-AB59-41E7EF5EF0CD}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -141,16 +174,23 @@
     <Compile Include="CycBrowser.Designer.cs">
       <DependentUpon>CycBrowser.cs</DependentUpon>
     </Compile>
-    <Compile Include="CycShowCommand.cs" />
-    <Compile Include="CycWorldModule.cs" />
-    <Compile Include="DotCYC\CycConnectionForm.cs" />
+    <Compile Include="CycShowCommand.cs">
+    </Compile>
+    <Compile Include="CycWorldModule.cs">
+    </Compile>
+    <Compile Include="DotCYC\CycConnectionForm.cs">
+    </Compile>
     <Compile Include="DotCYC\CycConnectionForm.Designer.cs">
       <DependentUpon>CycConnectionForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="DotCYC\CycInterpreter.cs" />
-    <Compile Include="DotCYC\CycTypeInfo.cs" />
-    <Compile Include="DotCYC\SimCyclifier.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="DotCYC\CycInterpreter.cs">
+    </Compile>
+    <Compile Include="DotCYC\CycTypeInfo.cs">
+    </Compile>
+    <Compile Include="DotCYC\SimCyclifier.cs">
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs">
+    </Compile>
     <EmbeddedResource Include="CycBrowser.resx">
       <DependentUpon>CycBrowser.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -161,20 +201,20 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
       <Visible>False</Visible>
-      <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.0">
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
       <Visible>False</Visible>
-      <ProductName>.NET Framework 3.0 %28x86%29</ProductName>
-      <Install>false</Install>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
     </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5">
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
       <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5</ProductName>
-      <Install>false</Install>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />

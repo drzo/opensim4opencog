@@ -2,28 +2,20 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ReferencePath>d:\dev\chatbot-programsharp-merge\bin\</ReferencePath>
+    <Platform Condition=" '$(Platform)' == '' ">System.Collections.Hashtable+ValueCollection</Platform>
+    <ReferencePath>D:\dev\Cogbot2012-10-01\bin\</ReferencePath>
     <LastOpenVersion>9.0.21022</LastOpenVersion>
-    <ProjectView>ShowAllFiles</ProjectView>
+    <ProjectView>ProjectFiles</ProjectView>
     <ProjectTrust>0</ProjectTrust>
-    <PublishUrlHistory>
-    </PublishUrlHistory>
-    <InstallUrlHistory>
-    </InstallUrlHistory>
-    <SupportUrlHistory>
-    </SupportUrlHistory>
-    <UpdateUrlHistory>
-    </UpdateUrlHistory>
-    <BootstrapperUrlHistory>
-    </BootstrapperUrlHistory>
+    <PublishUrlHistory />
+    <InstallUrlHistory />
+    <SupportUrlHistory />
+    <UpdateUrlHistory />
+    <BootstrapperUrlHistory />
+    <ErrorReportUrlHistory />
     <FallbackCulture>en-US</FallbackCulture>
     <VerifyUploadedFiles>false</VerifyUploadedFiles>
-    <ErrorReportUrlHistory />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <StartWorkingDirectory>D:\dev\chatbot-programsharp-merge\bin\</StartWorkingDirectory>
-    <StartArguments>--botname nephrael rae</StartArguments>
-  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
 </Project>

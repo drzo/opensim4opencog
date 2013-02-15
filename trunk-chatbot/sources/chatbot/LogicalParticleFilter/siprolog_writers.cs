@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Data;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
@@ -47,6 +48,10 @@ namespace LogicalParticleFilter1
 
             DLRConsole.DebugLevel = 6;
             string write = DLRConsole.SafeFormat(format, args);
+            if (!write.ToUpper().Contains("WARN"))
+            {
+                write += " WARN";
+            }
             TextWriter WarnWriter = WebLinksWriter.WarnWriter;
             if (WarnWriter != null)
             {
@@ -60,7 +65,11 @@ namespace LogicalParticleFilter1
                 {
                 }
             }
-            DLRConsole.DebugWriteLine("{0}", write);
+            if (!GlobalSharedSettings.Trace(write))
+            {
+                DLRConsole.DebugWriteLine("{0}", write);
+            }
+
         }
         public static void Warn(object arg0)
         {
@@ -526,7 +535,9 @@ function validateBrowserForm()
             }
         }
         [ThreadStatic]
-        private static int tl_StructToStringDepth = 4;
+        private static int tl_StructToStringDepth = 3;
+        [ThreadStatic]
+        public static List<object> tl_LoopingOn;
 
         public static string serverWithPort
         {
@@ -603,7 +614,7 @@ function validateBrowserForm()
             int before = tl_StructToStringDepth;
             try
             {
-                return StructToString1(t, 3);
+                return StructToStringSetup(t, before);
             }
             finally
             {
@@ -611,53 +622,68 @@ function validateBrowserForm()
             }
         }
 
-        public static string ToString(this IEnumerable t)
+        public static string ToString_Unused(this IEnumerable t)
         {
-            int before = tl_StructToStringDepth;
-            try
-            {
-                return StructToString1(t, 3);
-            }
-            finally
-            {
-                tl_StructToStringDepth = before;
-            }
+            return StructToString(t);
         }
 
         private static bool HasElements(ICollection props)
         {
             return props != null && props.Count > 0;
         }
-        public static string StructToString1(object t, int depth)
+        const BindingFlags fpub = BindingFlags.Public | BindingFlags.Instance;
+        const BindingFlags fpriv = BindingFlags.NonPublic | BindingFlags.Instance;
+
+        public static string StructToStringSetup(object t, int depth)
         {
-            if (t == null) return "NULL";
+            if (ReferenceEquals(t, null)) return "NULL";
+            if (tl_LoopingOn == null) tl_LoopingOn = new List<object>();
+            var s = StructToStringC(t, false, true, true);
+            var type = t.GetType();
+            if (!type.IsValueType) tl_LoopingOn.Remove(t);
+            return s;
+        }
+
+        public static string StructToStringC(object t, bool loopCheck, bool mayCallToString, bool mayDescendMembers)
+        {
+            if (ReferenceEquals(t, null)) return "NULL";
             Type structType = t.GetType();
             if (t is String || t is IComparable<string>)
                 return "\"" + t.ToString().Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
             if (t is IConvertible || t is String || t is Uri || t is Stream || t is IComparable<string>) return "" + t;
-            if (tl_StructToStringDepth > depth)
+            bool vt = structType.IsValueType;
+
+            int idx = -1;
+
+            if (!vt)
             {
-                tl_StructToStringDepth = depth;
+                idx = tl_LoopingOn.LastIndexOf(t);
             }
-            else
+            tl_StructToStringDepth--;
+            if (tl_StructToStringDepth < 0)
             {
-                depth = tl_StructToStringDepth;
+                return TypeIdx(structType, t, idx, mayCallToString);
             }
-            if (structType.IsValueType) depth++;
-            if (depth < 0) return "^";// +t;
-            StringBuilder result = new StringBuilder();
             if (t is IEnumerable)
             {
+                StructToStringE((IEnumerable)t, structType, idx, loopCheck, mayCallToString, mayDescendMembers);
+            }
+            return StructToStringS(t, structType, idx, loopCheck, mayCallToString, mayDescendMembers);
+        }
+        public static string StructToStringE(IEnumerable t, Type structType, int idx, bool loopCheck, bool mayCallToString, bool mayDescendMembers)
+        {
+            if (t is IEnumerable)
+            {
+                StringBuilder result = new StringBuilder();
                 IEnumerable ic = t as IEnumerable;
                 int max = 100;
                 int fnd = 0;
-                bool printSomething = true;               
+                bool printSomething = true;
                 foreach (var i in ic)
                 {
                     if (printSomething)
                     {
-                        result.Append(fnd + ": " + StructToString1(i, depth - 1) + " ");
-                        tl_StructToStringDepth = depth;
+                        result.Append(fnd + ": " + StructToString1(t, i, mayCallToString, mayDescendMembers) + " ");
                     }
                     fnd++;
                     max--;
@@ -669,28 +695,22 @@ function validateBrowserForm()
                 }
                 if (fnd == 0)
                 {
-                    return "{COL=" + structType + " Count=0]";
+                    return "{COL=" + ShortTypeName(structType) + " Count=0]";
                 }
-                return "{COL=" + structType + " Count=" + fnd + " [" + result.ToString().TrimEnd() + "]}";
+                return "{COL=" + ShortTypeName(structType) + " Count=" + fnd + " [" + result.ToString().TrimEnd() + "]}";
             }
-            const BindingFlags fpub = BindingFlags.Public | BindingFlags.Instance;
-            const BindingFlags fpriv = BindingFlags.NonPublic | BindingFlags.Instance;
-            MethodInfo toString = structType.GetMethod("ToString",
-                                                       BindingFlags.DeclaredOnly | BindingFlags.Instance |
-                                                       BindingFlags.Public, null, new Type[0], new ParameterModifier[0]);
-            if (toString == null)
+            return null;
+        }
+        public static string StructToStringS(object t, Type structType, int idx, bool loopCheck, bool mayCallToString, bool mayDescendMembers)
+        {
+            MethodInfo toString = GetToStringIfDeclared(structType, 1);
+            if (toString != null && mayCallToString && idx < 0)
             {
-                var bt = structType.BaseType;
-                if (bt != null && bt != typeof (object))
-                {
-                    toString = bt.GetMethod("ToString",
-                                           BindingFlags.DeclaredOnly | BindingFlags.Instance |
-                                           BindingFlags.Public, null, new Type[0], new ParameterModifier[0]);
-                }
+                return CallToStringNoLoop(t);
             }
-            if (toString != null)
+            if (!mayDescendMembers)
             {
-                return t.ToString();
+                return CallToStringNoLoopIdxPermiting(t, structType, idx, mayCallToString);
             }
             FieldInfo[] fields = structType.GetFields(fpub);
             PropertyInfo[] props = structType.GetProperties(fpub);
@@ -705,18 +725,19 @@ function validateBrowserForm()
             }
             bool needSimpleToString = true;
 
+            StringBuilder result = new StringBuilder();
             HashSet<string> unneeded = new HashSet<string>();
             //if (HasElements(fields))
             {
                 foreach (PropertyInfo prop in props)
                 {
                     if (prop.GetIndexParameters().Length != 0) continue;
+                    if (!prop.CanRead) continue;
                     needSimpleToString = false;
                     string propname = prop.Name;
                     if (propname == "AToString") continue;
-                    unneeded.Add(propname.Trim('m', '_').ToUpper());
-                    result.Append("{" + propname + ": " + StructToString1(prop.GetValue(t, null), depth - 1) + "}");
-                    tl_StructToStringDepth = depth;
+                    unneeded.Add(NormalPropName(propname));
+                    result.Append("{" + propname + ": " + StructToString1(t, prop.GetValue(t, null), mayCallToString, mayDescendMembers) + "}");
                 }
             }
             //if (needSimpleToString)
@@ -724,23 +745,189 @@ function validateBrowserForm()
                 foreach (FieldInfo prop in fields)
                 {
                     string propname = prop.Name;
-                    if (unneeded.Contains(propname.Trim('m', '_').ToUpper())) continue;
+                    if (unneeded.Contains(NormalPropName(propname))) continue;
                     needSimpleToString = false;
-                    result.Append("{" + propname + ": " + StructToString1(prop.GetValue(t), depth - 1) + "}");
-                    tl_StructToStringDepth = depth;
+                    result.Append("{" + propname + ": " + StructToString1(t, prop.GetValue(t), mayCallToString, mayDescendMembers) + "}");
                 }
             }
 
             if (needSimpleToString)
             {
-                return "" + t;
+                return CallToStringNoLoopIdxPermiting(t, structType, idx, mayCallToString);
             }
 
             return result.ToString().TrimEnd();
         }
 
+        private static string NormalPropName(string propname)
+        {
+            return propname.TrimStart('m', '_').TrimEnd('_', '0').ToUpper();
+        }
+
+        private static string CallToStringNoLoopIdxPermiting(object t, Type structType, int idx, bool mayCallToString)
+        {
+            if (idx >= 0)
+            {
+                return TypeIdx(structType, t, idx, mayCallToString);
+            }
+            return CallToStringNoLoop(t);
+        }
+
+        private static MethodInfo GetToStringIfDeclared(Type structType, int maxDepth)
+        {
+            MethodInfo toString = structType.GetMethod("ToString",
+                                                       BindingFlags.DeclaredOnly | BindingFlags.Instance |
+                                                       BindingFlags.Public, null, new Type[0], new ParameterModifier[0]);
+            if (toString == null && maxDepth > 0)
+            {
+                var bt = structType.BaseType;
+                if (bt != null && bt != typeof (object))
+                {
+                    return GetToStringIfDeclared(structType, maxDepth - 1);
+                }
+            }
+            return toString;
+        }
+
+        private static string CallToStringNoLoop(object t)
+        {
+            Type structType = t.GetType();
+            if (t is String || t is IComparable<string>)
+                return "\"" + t.ToString().Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+            if (t is IConvertible || t is String || t is Uri || t is Stream || t is IComparable<string>) return "" + t;
+            if (t is IEnumerable)
+            {
+                return StructToStringE((IEnumerable)t, structType, -1, true, false, false);   
+            }
+            try
+            {
+                tl_LoopingOn.Insert(0, t);
+                return "" + t;
+            }
+            finally
+            {
+                tl_LoopingOn.Remove(t);
+            }
+        }
+        private static string StructToString1(object outer, object t, bool mayCallToString, bool mayDescendMembers)
+        {
+            try
+            {
+                tl_LoopingOn.Insert(0, outer);
+                return StructToStringC(t, true, mayCallToString, mayDescendMembers);
+            }
+            finally
+            {
+                tl_LoopingOn.Remove(outer);
+            }
+        }
+
+        private static string TypeIdx(Type structType, object t, int idx, bool mayCallToString)        
+        {
+            if (idx < 1)
+            {
+                if (mayCallToString)
+                {
+                    tl_StructToStringDepth = -1;
+                    return CallToStringNoLoop(t);
+                }
+            }
+            return ("^" + ShortTypeName(structType) + "=" + idx + "^").Replace(".", "");
+        }
+
+        public static string ShortTypeName(this Type[] ts)
+        {
+            if (ts == null || ts.Length == 0) return "";
+            if (ts.Length==1) return ts[0].ShortTypeName();
+            var stn = new StringWriter();
+            bool needcomma = false;
+            foreach (var t in ts)
+            {
+                if (needcomma) stn.Write(",");
+                stn.Write(t.ShortTypeName());
+                needcomma = true;
+            }
+            return stn.ToString();
+        }
+        public static string ShortTypeName(this Type type)
+        {
+            if (type == null) return "UNK";
+            if (type.IsArray && type.HasElementType)
+            {
+                return ShortTypeName(type.GetElementType()) + "[]";
+            }
+            if (type.IsByRef)
+            {
+                return ShortTypeName(type) + "&";
+            }
+            if (type.IsByRef)
+            {
+                return ShortTypeName(type.GetElementType()) + "&";
+            }
+            if (type.IsPointer)
+            {
+                return ShortTypeName(type.GetElementType()) + "*";
+            }
+            if (type.IsGenericParameter)
+            {
+                Type[] gt = type.GetGenericParameterConstraints();
+                return "<" + (type.FullName ?? type.Name) + ":" + gt.ShortTypeName() + ">";
+            }
+            string stn = type.Name;
+            if (string.IsNullOrEmpty(stn)) return type.FullName;
+            if (type.IsGenericType)
+            {
+                return stn.Split('`')[0] + "<" + type.GetGenericArguments().ShortTypeName() + ">";
+            }
+            return stn;
+        }
+
+        public static Type GetParameterType(ParameterInfo paramInfo)
+        {
+            Type paramType = paramInfo.ParameterType;
+            return paramType.IsByRef ? paramType.GetElementType() : paramType;
+        }
+
+        public static bool IsByRef(ParameterInfo paramInfo)
+        {
+            Type paramType = paramInfo.ParameterType;
+            return paramType.IsByRef;
+        }
+
+        public static bool IsOptionalParam(ParameterInfo info)
+        {
+            if ((info.Attributes & ParameterAttributes.Optional) != 0)
+            {
+                return true;
+            }
+            if ((info.Attributes & ParameterAttributes.HasDefault) != 0)
+            {
+                return true;
+            }
+            return info.IsOptional || (info.Name != null && info.Name.ToLower().StartsWith("optional"));
+        }
+
         public static bool RdfSavedInPDB = true;
         public static bool TODO1Completed = false;
+
+        public static bool Trace(string write)
+        {
+            if (!IsDougsMachine) return false;
+            var oldDL = DLRConsole.DebugLevel;
+            DLRConsole.DebugLevel = 9;
+            try
+            {
+                DLRConsole.DebugWriteLine("{0}", write);
+                DLRConsole.SystemFlush();
+            }
+            finally
+            {
+                DLRConsole.DebugLevel = oldDL;
+            }
+            if (DLRConsole.IsCallerNoDebug) return true;
+            return true;
+        }
+
     }
     public partial class SIProlog
     {

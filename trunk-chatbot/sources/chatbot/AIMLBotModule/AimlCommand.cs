@@ -3,6 +3,7 @@ using System.Collections;
 using System.Reflection;
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using AltAIMLParser;
+using RTParser;
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;
@@ -15,11 +16,10 @@ using Cogbot.Actions;
 using Cogbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser;
+using AltAIMLbot;
 using Cogbot.World;
 using OpenMetaverse;
 using AIMLbot;
-using Bot = RTParser.AltBot;
 
 namespace AIMLBotModule
 {

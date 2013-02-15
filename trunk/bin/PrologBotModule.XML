@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PrologBotModule</name>
+    </assembly>
+    <members>
+        <member name="T:PrologScriptEngine.SwiPrologModule">
+            <summary>
+            </summary>
+        </member>
+        <member name="M:PrologScriptEngine.SwiPrologModule.#ctor(Cogbot.BotClient)">
+            <summary>
+            </summary>
+            <param name="parent"></param>
+        </member>
+        <member name="M:PrologScriptEngine.SwiPrologModule.removeSetting(System.String)">
+            <summary>
+            Removes the named setting from this class
+            </summary>
+            <param name="name">The name of the setting to remove</param>
+        </member>
+        <member name="M:PrologScriptEngine.SwiPrologModule.containsSettingCalled(System.String)">
+            <summary>
+            </summary>
+            <param name="name"></param>
+            <returns></returns>
+            <exception cref="T:System.NotImplementedException"></exception>
+        </member>
+        <member name="M:PrologScriptEngine.SwiPrologModule.GetModuleName">
+            <summary>
+             Name registered in the BotClient.registrationTypes collection
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:PrologScriptEngine.SwiPrologModule.StartupListener">
+            <summary>
+            </summary>
+            <exception cref="T:System.NotImplementedException"></exception>
+        </member>
+        <member name="M:PrologScriptEngine.SwiPrologModule.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="M:PrologScriptEngine.SwiPrologModule.GetGroup(MushDLR223.ScriptEngines.ICollectionRequester,System.String)">
+            <summary>
+            </summary>
+            <param name="name"></param>
+            <returns></returns>
+            <exception cref="T:System.NotImplementedException"></exception>
+        </member>
+        <member name="P:PrologScriptEngine.SwiPrologModule.NameSpace">
+            <summary>
+            </summary>
+            <exception cref="T:System.NotImplementedException"></exception>
+        </member>
+        <member name="F:PrologScriptEngine.PrologScriptInterpreter.prologClient">
+            <summary>
+            </summary>
+        </member>
+        <member name="M:PrologScriptEngine.PrologScriptInterpreter.InternType(System.Type)">
+            <summary>
+            </summary>
+            <param name="type"></param>
+            <exception cref="T:System.NotImplementedException"></exception>
+        </member>
+        <member name="M:PrologScriptEngine.PrologScriptInterpreter.LoadFile(System.String,MushDLR223.ScriptEngines.OutputDelegate)">
+            <summary>
+            
+            
+            </summary>
+            <param name="filename"></param>
+            <returns></returns>
+        </member>
+        <member name="M:PrologScriptEngine.PrologScriptInterpreter.Read(System.String,System.IO.TextReader,MushDLR223.ScriptEngines.OutputDelegate)">
+            <summary>
+            
+            </summary>
+            <param name="context_name"></param>
+            <param name="stringCodeReader"></param>
+            <returns></returns>
+        </member>
+        <member name="M:PrologScriptEngine.PrologScriptInterpreter.Eof(System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="codeTree"></param>
+            <returns></returns>
+        </member>
+        <member name="M:PrologScriptEngine.PrologScriptInterpreter.Intern(System.String,System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="varname"></param>
+            <param name="textForm"></param>
+        </member>
+        <member name="M:PrologScriptEngine.PrologScriptInterpreter.Eval(System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="code"></param>
+            <returns></returns>
+        </member>
+        <member name="M:PrologScriptEngine.PrologScriptInterpreter.Str(System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="code"></param>
+            <returns></returns>
+        </member>
+        <member name="M:PrologScriptEngine.PrologScriptInterpreter.newInterpreter(System.Object)">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

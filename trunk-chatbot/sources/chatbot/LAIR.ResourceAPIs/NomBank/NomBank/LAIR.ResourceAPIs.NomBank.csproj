@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{D0691910-3050-4236-B3A8-DB447BF2B792}</ProjectGuid>
+    <ProjectGuid>{232D50C8-C3B7-4D17-BFC3-9F8F377ECFBB}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
@@ -25,104 +25,181 @@
     </StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;VISUAL_STUDIO</DefineConstants>
+    <DefineConstants>TRACE;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
     <DocumentationFile>LAIR.ResourceAPIs.NomBank.XML</DocumentationFile>
+    <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
-    <Optimize>true</Optimize>
+    <Optimize>True</Optimize>
     <OutputPath>..\..\..\..\..\bin\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>3</WarningLevel>
+    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;VISUAL_STUDIO</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
     <DocumentationFile>LAIR.ResourceAPIs.NomBank.XML</DocumentationFile>
-    <DebugSymbols>true</DebugSymbols>
+    <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
-    <Optimize>false</Optimize>
+    <Optimize>False</Optimize>
     <OutputPath>..\..\..\..\..\bin\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>3</WarningLevel>
+    <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Data" />
-    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\..\..\bin\log4net.dll</HintPath>
-    </Reference>
-    <Reference Include="MySql.Data, Version=6.0.4.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d">
-      <HintPath>..\..\..\..\..\bin\MySql.Data.dll</HintPath>
-    </Reference>
-    <Reference Include="LAIR.Collections, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\..\..\bin\LAIR.Collections.dll</HintPath>
-    </Reference>
-    <Reference Include="LAIR.Extensions, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\..\..\bin\LAIR.Extensions.dll</HintPath>
-    </Reference>
-    <Reference Include="LAIR.GraphViz, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\..\..\bin\LAIR.GraphViz.dll</HintPath>
-    </Reference>
-    <Reference Include="LAIR.IO, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\..\..\bin\LAIR.IO.dll</HintPath>
-    </Reference>
-    <Reference Include="LAIR.MachineLearning, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\..\..\bin\LAIR.MachineLearning.dll</HintPath>
-    </Reference>
-    <Reference Include="LAIR.XML, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\..\..\..\bin\LAIR.XML.dll</HintPath>
+    <Reference Include="System">
+      <Name>System</Name>
     </Reference>
     <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+      <Name>System.Core</Name>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Name>System.Xml</Name>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
     </Reference>
     <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+      <Name>System.Data.DataSetExtensions</Name>
+    </Reference>
+    <Reference Include="log4net.dll">
+      <Name>log4net.dll</Name>
+      <HintPath>..\..\..\..\..\bin\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Data.dll">
+      <Name>MySql.Data.dll</Name>
+      <HintPath>..\..\..\..\..\bin\MySql.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="LAIR.Collections">
+      <Name>LAIR.Collections</Name>
+      <HintPath>..\..\..\..\..\bin\LAIR.Collections.dll</HintPath>
+    </Reference>
+    <Reference Include="LAIR.Extensions">
+      <Name>LAIR.Extensions</Name>
+      <HintPath>..\..\..\..\..\bin\LAIR.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="LAIR.GraphViz">
+      <Name>LAIR.GraphViz</Name>
+      <HintPath>..\..\..\..\..\bin\LAIR.GraphViz.dll</HintPath>
+    </Reference>
+    <Reference Include="LAIR.IO">
+      <Name>LAIR.IO</Name>
+      <HintPath>..\..\..\..\..\bin\LAIR.IO.dll</HintPath>
+    </Reference>
+    <Reference Include="LAIR.MachineLearning">
+      <Name>LAIR.MachineLearning</Name>
+      <HintPath>..\..\..\..\..\bin\LAIR.MachineLearning.dll</HintPath>
+    </Reference>
+    <Reference Include="LAIR.XML">
+      <Name>LAIR.XML</Name>
+      <HintPath>..\..\..\..\..\bin\LAIR.XML.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\PennBank\PennBank\LAIR.ResourceAPIs.PennBank.csproj">
-      <Project>{613157F4-3F7C-4758-A28B-D0A089426F6B}</Project>
       <Name>LAIR.ResourceAPIs.PennBank</Name>
+      <Project>{0F68E877-00B6-426E-B8E4-805EAD00E83B}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\LAIR.CommonPort\LAIR.CommonPort.csproj">
-      <Project>{DD695CEB-D5D6-40A9-98AD-84E3FC255957}</Project>
       <Name>LAIR.CommonPort</Name>
+      <Project>{A7C0C77E-7777-4A30-B47E-5D3A2476B8CD}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Frame.cs" />
-    <Compile Include="NomBankEngine.cs" />
-    <Compile Include="NomBankLabeledNodeCollection.cs" />
-    <Compile Include="NomBankNode.cs" />
-    <Compile Include="NomBankNodeLabel.cs" />
-    <Compile Include="NomBankParseTreeInstanceProvider.cs" />
-    <Compile Include="NomBankPredicateTreeInstanceProvider.cs" />
-    <Compile Include="Nominalization.cs" />
-    <Compile Include="NounInfo.cs" />
-    <Compile Include="Role.cs" />
-    <Compile Include="RoleSet.cs" />
-    <Compile Include="NomLex\AtomicFeatureValue.cs" />
-    <Compile Include="NomLex\FeatureValue.cs" />
-    <Compile Include="NomLex\FeatureValueList.cs" />
-    <Compile Include="NomLex\NomLexEngine.cs" />
-    <Compile Include="NomLex\NomLexEntry.cs" />
-    <Compile Include="NomLex\StringFeatureValue.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Frame.cs">
+    </Compile>
+    <Compile Include="NomBankEngine.cs">
+    </Compile>
+    <Compile Include="NomBankLabeledNodeCollection.cs">
+    </Compile>
+    <Compile Include="NomBankNode.cs">
+    </Compile>
+    <Compile Include="NomBankNodeLabel.cs">
+    </Compile>
+    <Compile Include="NomBankParseTreeInstanceProvider.cs">
+    </Compile>
+    <Compile Include="NomBankPredicateTreeInstanceProvider.cs">
+    </Compile>
+    <Compile Include="Nominalization.cs">
+    </Compile>
+    <Compile Include="NounInfo.cs">
+    </Compile>
+    <Compile Include="Role.cs">
+    </Compile>
+    <Compile Include="RoleSet.cs">
+    </Compile>
+    <Compile Include="NomLex\AtomicFeatureValue.cs">
+    </Compile>
+    <Compile Include="NomLex\FeatureValue.cs">
+    </Compile>
+    <Compile Include="NomLex\FeatureValueList.cs">
+    </Compile>
+    <Compile Include="NomLex\NomLexEngine.cs">
+    </Compile>
+    <Compile Include="NomLex\NomLexEntry.cs">
+    </Compile>
+    <Compile Include="NomLex\StringFeatureValue.cs">
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs">
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

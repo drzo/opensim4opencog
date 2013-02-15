@@ -1,0 +1,98 @@
+﻿<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{9C644BBF-27DF-4168-B099-B20AA3188DAA}</ProjectGuid>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputType>Library</OutputType>
+    <NoStandardLibraries>false</NoStandardLibraries>
+    <AssemblyName>ClassLibrary</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <RootNamespace>AvroMain</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\lib\main\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=3.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\lib\main\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CodeGen\AvroRuntimeException.cs" />
+    <Compile Include="CodeGen\CodeGen.cs" />
+    <Compile Include="CodeGen\CodeGenException.cs" />
+    <Compile Include="CodeGen\CodeGenUtil.cs" />
+    <Compile Include="Generic\DatumReader.cs" />
+    <Compile Include="Generic\DatumWriter.cs" />
+    <Compile Include="Generic\GenericEnum.cs" />
+    <Compile Include="Generic\GenericFixed.cs" />
+    <Compile Include="Generic\GenericReader.cs" />
+    <Compile Include="Generic\GenericRecord.cs" />
+    <Compile Include="Generic\GenericWriter.cs" />
+    <Compile Include="IO\BinaryDecoder.cs" />
+    <Compile Include="IO\BinaryEncoder.cs" />
+    <Compile Include="IO\Decoder.cs" />
+    <Compile Include="IO\Encoder.cs" />
+    <Compile Include="IO\Resolver.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Settings.Designer.cs" />
+    <Compile Include="Protocol\Message.cs" />
+    <Compile Include="Protocol\Protocol.cs" />
+    <Compile Include="Protocol\ProtocolParseException.cs" />
+    <Compile Include="Schema\ArraySchema.cs" />
+    <Compile Include="Schema\AvroException.cs" />
+    <Compile Include="Schema\AvroTypeException.cs" />
+    <Compile Include="Schema\EnumSchema.cs" />
+    <Compile Include="Schema\Field.cs" />
+    <Compile Include="Schema\FixedSchema.cs" />
+    <Compile Include="Schema\JsonHelper.cs" />
+    <Compile Include="Schema\MapSchema.cs" />
+    <Compile Include="Schema\NamedSchema.cs" />
+    <Compile Include="Schema\PrimitiveSchema.cs" />
+    <Compile Include="Schema\Property.cs" />
+    <Compile Include="Schema\RecordSchema.cs" />
+    <Compile Include="Schema\Schema.cs" />
+    <Compile Include="Schema\SchemaName.cs" />
+    <Compile Include="Schema\SchemaNormalization.cs" />
+    <Compile Include="Schema\SchemaParseException.cs" />
+    <Compile Include="Schema\UnionSchema.cs" />
+    <Compile Include="Schema\UnnamedSchema.cs" />
+    <Compile Include="Specific\ObjectCreator.cs" />
+    <Compile Include="Specific\SpecificFixed.cs" />
+    <Compile Include="Specific\SpecificReader.cs" />
+    <Compile Include="Specific\SpecificRecord.cs" />
+    <Compile Include="Specific\SpecificWriter.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <ProjectExtensions>
+    <VisualStudio AllowExistingFolder="true" />
+  </ProjectExtensions>
+</Project>
