@@ -1716,7 +1716,7 @@ namespace AltAIMLbot
             }
 
             // DMILES: for KHC, a local way we can switch back and forth
-            OutputDelegate TRACE = Console.WriteLine;
+            OutputDelegate TRACE = DEVNULL;
 
             // process the node
             string tagName = node.LocalName.ToLower();
@@ -1728,6 +1728,10 @@ namespace AltAIMLbot
                 return pt;
             }
             AIMLTagHandler tagHandler = GetTagHandler(node, query, request, result, user, false);
+            if (tagHandler.IsTraced)
+            {
+                TRACE = Console.WriteLine;
+            }
             if (object.Equals(null, tagHandler))
             {
                 string debug = node.OuterXml;

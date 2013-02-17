@@ -604,6 +604,10 @@ namespace AltAIMLbot.Utils
         /// </summary>
         public virtual Unifiable CompleteAimlProcess()
         {
+            if (request != null && result != null)
+            {
+                request.CurrentResult = result;
+            }
             if (finalResult.IsValid) return finalResult.Value;
             if (RecurseResultValid) return RecurseResult;
 

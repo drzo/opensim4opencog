@@ -1627,6 +1627,8 @@ namespace AltAIMLbot
     public class EasyLogger
     {
         public OutputDelegate writeAsWell;
+        [ThreadStatic]
+        private static string lastWritten = null;
         public EasyLogger(OutputDelegate od)
         {
             writeAsWell = od;
@@ -1634,6 +1636,19 @@ namespace AltAIMLbot
 
         public void Warn(string f, params object[] a)
         {
+            string message = DLRConsole.SafeFormat(f, a);
+            if (lastWritten != null)
+            {
+                if (lastWritten.Contains(message) || message.Contains(lastWritten))
+                {
+                    return;
+                }
+            }
+            lastWritten = message;
+            if (!message.ToUpper().Contains("WARN"))
+            {
+                f = f + " WARNING";
+            }
             writeAsWell(f, a);
         }
     }

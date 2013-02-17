@@ -13,7 +13,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// The version element does not have any content. 
     /// </summary>
-    public class botsetting : Utils.AIMLTagHandler
+    public class botsetting : bot
     {
         /// <summary>
         /// Ctor
@@ -36,7 +36,7 @@ namespace AltAIMLbot.AIMLTagHandlers
         }
 
         private string SettingToGrab;
-        protected override string ProcessChange()
+        protected override Unifiable ComputeInnerOrNull()
         {
             return this.bot.GlobalSettings.grabSetting(SettingToGrab);
         }

@@ -125,10 +125,34 @@ namespace AltAIMLbot.AIMLTagHandlers
         }
         protected int maxTrueConditions = 1;
         protected int currentTrueConditions = 0;
+
+        protected Unifiable ProcessChangeU0Childs()
+        {
+            if (RecurseResultValid)
+            {
+                return RecurseResult;
+            }
+            int maxConditions = GetAttribValue<int>(templateNode, "count", 1);
+            maxTrueConditions = maxConditions;
+            var nodes = SelectNodes(templateNode.ChildNodes);
+            currentTrueConditions = 0;
+            var vv = OutputFromNodes(nodes, (node) => (currentTrueConditions++ < maxTrueConditions));
+            if (!IsNullOrEmpty(vv))
+            {
+                RecurseResult = vv;
+                return vv;
+            }
+            return vv;
+        }
+
         protected override Unifiable ProcessChangeU()
         {
-            if (this.TemplateNodeName == "condition")
+        //    if (this.TemplateNodeName == "condition")
             {
+                if (!templateNode.HasChildNodesNonText())
+                {
+                    return ProcessChangeU0Childs();
+                }
                 // heuristically work out the type of condition being processed
                 string name = GetAttribValue("name,var", null);
                 string conditionValue = GetAttribValue("value", null);

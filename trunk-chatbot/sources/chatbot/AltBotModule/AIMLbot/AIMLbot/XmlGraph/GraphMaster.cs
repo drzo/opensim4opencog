@@ -1734,7 +1734,7 @@ namespace AltAIMLbot.Utils
         }
 
         public static bool DeferingSaves = false;
-        public static bool AlwaysReload = true;
+        public static bool AlwaysReload = false;
 
         public bool useChatDB = true;
         internal Node _root;
