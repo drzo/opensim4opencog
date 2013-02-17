@@ -1,14 +1,131 @@
 <?xml version="1.0"?>
 <doc>
     <assembly>
-        <name>RoboKindAvroQPIDPluginModule</name>
+        <name>RoboKindAvroQPIDLibrary</name>
     </assembly>
     <members>
-        <member name="M:WorldRoboKindAvroQPIDModule.WorldRoboKindAvroQPIDModuleMain.Dispose">
+        <member name="F:RoboKindAvroQPID.RoboKindConnectorQPID.TIMEOUT">
+            <summary> Holds the default test timeout for broker communications before tests give up. </summary>
+        </member>
+        <member name="M:RoboKindAvroQPID.RoboKindConnectorQPID.CreateQListener(System.String,System.String,Apache.Qpid.Messaging.MessageReceivedDelegate)">
             <summary>
-            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            Set up a queue to listen for reports on.
             </summary>
-            <filterpriority>2</filterpriority>
+        </member>
+        <member name="M:RoboKindAvroQPID.RoboKindConnectorQPID.CreateListener(System.String,System.String,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,Apache.Qpid.Messaging.MessageReceivedDelegate)">
+            <summary>
+            Set up a queue to listen for reports on.
+            </summary>
+        </member>
+        <member name="F:RoboKindAvroQPID.RoboKindConnectorQPID.connection">
+            <summary> Holds the connection to listen on. </summary>
+        </member>
+        <member name="F:RoboKindAvroQPID.RoboKindConnectorQPID.channel">
+            <summary> Holds the channel for all test messages.</summary>
+        </member>
+        <member name="F:RoboKindAvroQPID.RoboKindConnectorQPID.Publishers">
+            <summary> Holds the producer to send test messages on. </summary>
+        </member>
+        <member name="M:RoboKindAvroQPID.RoboKindConnectorQPID.#ctor(System.String)">
+            <summary>
+            Creates a topic publisher that will send the specifed number of messages and expect the specifed number of report back from test
+            subscribers.
+            </summary>
+            
+            <param name="connectionUri">The broker URL.</param>
+        </member>
+        <member name="M:RoboKindAvroQPID.RoboKindConnectorQPID.SendBytesMessage(System.String,System.Byte[])">
+            <summary>
+            Sends the test messages and waits for all subscribers to reply with a report.
+            </summary>
+        </member>
+        <member name="M:RoboKindAvroQPID.RoboKindConnectorQPID.CreateTextMessage(System.String)">
+            <summary>
+            Sends the test messages and waits for all subscribers to reply with a report.
+            </summary>
+        </member>
+        <member name="M:RoboKindAvroQPID.RoboKindConnectorQPID.SendTextMessage(System.String,System.String)">
+            <summary>
+            Sends the test messages and waits for all subscribers to reply with a report.
+            </summary>
+        </member>
+        <member name="M:RoboKindAvroQPID.RoboKindConnectorQPID.Main0(System.String[])">
+            <summary>
+            Start a test subscriber. The broker URL must be specified as the first command line argument.
+            </summary>
+            
+            <param name="argv">The command line arguments, broker URL first.</param>
+        </member>
+        <member name="M:RoboKindAvroQPID.RoboKindConnectorQPID.Shutdown">
+            <summary> Stops the message consumers and closes the connection. </summary>
+        </member>
+        <member name="F:RoboKindAvroQPID.RoboKindConnectorQPID.shutdownReceivedEvt">
+            <summary> A monitor used to wait for shutdown. </summary>
+        </member>
+        <member name="F:RoboKindAvroQPID.RoboKindConnectorQPID.init">
+            <summary> Holds a flag to indicate that a timer has begun on the first message. Reset when report is sent. </summary> */
+        </member>
+        <member name="F:RoboKindAvroQPID.RoboKindConnectorQPID.count">
+            <summary> Holds the count of messages received by this listener. </summary> */
+        </member>
+        <member name="M:RoboKindAvroQPID.RoboKindConnectorQPID.Main0L(System.String[])">
+            <summary> Creates a topic listener using the specified broker URL. </summary>
+            
+            <param name="connectionUri">The broker URL to listen on.</param>
+        </member>
+        <member name="M:RoboKindAvroQPID.RoboKindConnectorQPID.OnMessage(Apache.Qpid.Messaging.IMessage)">
+            <summary> 
+            Handles all message received by this listener. Test messages are counted, report messages result in a report being sent and
+            shutdown messages result in this listener being terminated.
+            </summary>
+            
+            <param name="message">The received message.</param>
+        </member>
+        <member name="M:RoboKindAvroQPID.RoboKindConnectorQPID.IsShutdown(Apache.Qpid.Messaging.IMessage)">
+            <summary> Checks a message to see if it is a shutdown control message. </summary>
+            
+            <param name="m">The message to check.</param>
+            
+            <returns><tt>true</tt> if it is a shutdown control message, <tt>false</tt> otherwise.</returns>
+        </member>
+        <member name="M:RoboKindAvroQPID.RoboKindConnectorQPID.IsForCogbot(Apache.Qpid.Messaging.IMessage)">
+            <summary> Checks a message to see if it is a report request control message. </summary>
+            
+            <param name="m">The message to check.</param>
+            
+            <returns><tt>true</tt> if it is a report request control message, <tt>false</tt> otherwise.</returns>
+        </member>
+        <member name="M:RoboKindAvroQPID.RoboKindConnectorQPID.CheckTextField(Apache.Qpid.Messaging.IMessage,System.String,System.String)">
+            <summary> Checks whether or not a text field on a message has the specified value. </summary>
+            
+            <param name="m">The message to check.</param>
+            <param name="fieldName">The name of the field to check.</param>
+            <param name="value">The expected value of the field to compare with.</param>
+            
+            <returns> <tt>true</tt>If the specified field has the specified value, <tt>fals</tt> otherwise. </returns>
+        </member>
+        <member name="M:RoboKindAvroQPID.RoboKindConnectorQPID.SendReport">
+            <summary> Sends the report message to the response location. </summary>
+        </member>
+        <member name="E:RoboKindAvroQPID.RoboKindConnectorQPID.OnAvroMessage">
+            <summary>
+            Fired when a message is received from the broker by the consumer
+            </summary>
+        </member>
+        <member name="F:RoboKindAvroQPID.RoboKindEventModule.COGBOT_CONTROL_ROUTING_KEY">
+            <summary> Holds the routing key for cogbot management messages. </summary>
+        </member>
+        <member name="F:RoboKindAvroQPID.RoboKindEventModule.COGBOT_CONTROL_QUEUE_KEY">
+            <summary> Holds the main queue for cogbot management messages. </summary>
+        </member>
+        <member name="F:RoboKindAvroQPID.RoboKindEventModule.COGBOT_CONTROL_EXCHANGE_KEY">
+            <summary> Holds the main queue for cogbot management messages. </summary>
+        </member>
+        <member name="F:RoboKindAvroQPID.RoboKindEventModule.COGBOT_EVENT_ROUTING_KEY">
+            <summary> Holds the routing key for events. </summary>
+        </member>
+        <member name="F:RoboKindAvroQPID.RoboKindEventModule.ROBOKIND_RESPONSE_ROUTING_KEY">
+            <summary> Holds the routing key for the queue to send reports to. </summary>
         </member>
     </members>
 </doc>
