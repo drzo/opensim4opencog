@@ -3,7 +3,6 @@ using System.Collections;
 using System.Reflection;
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using AltAIMLParser;
-using RTParser;
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;

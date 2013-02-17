@@ -453,8 +453,8 @@ namespace Cogbot
                     break;
                 case InstantMessageDialog.GodLikeRequestTeleport:
                     break;
-                case InstantMessageDialog.CurrentlyUnused:
-                    break;
+              //  case InstantMessageDialog.CurrentlyUnused:
+                //    break;
                 case InstantMessageDialog.GotoUrl:
                     break;
                 case InstantMessageDialog.Session911Start:
