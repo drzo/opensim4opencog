@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>RoboKindChat</RootNamespace>
     <AssemblyName>RoboKindChat</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -31,6 +31,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -89,7 +90,7 @@
       <Name>RoboKindAvroQPID</Name>
     </ProjectReference>
     <ProjectReference Include="..\AltBotModule\AIMLbot\AIMLbot\AltAIMLbot.csproj">
-      <Project>{B797836E-9464-470F-A214-BBB8BDED9D1C}</Project>
+      <Project>{8D262460-544F-41B4-8580-533FA1D18249}</Project>
       <Name>AltAIMLbot</Name>
     </ProjectReference>
     <ProjectReference Include="..\LAIR.ResourceAPIs\WordNet\WordNet\LAIR.ResourceAPIs.WordNet.csproj">
@@ -121,6 +122,9 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

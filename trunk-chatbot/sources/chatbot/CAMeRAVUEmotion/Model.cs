@@ -138,7 +138,7 @@ namespace CAMeRAVUEmotion
         /// Use the HumanAgent's InputRequest delegate to receive this callback.
         /// </summary>
         /// <returns></returns>
-        static bool Run()
+        static void Run()
         {
             //////////////////////////////
             //START ROUGH IMPLEMENTATION//
@@ -1146,10 +1146,10 @@ namespace CAMeRAVUEmotion
                 if (a.Perform())
                     stalled = false;
 
-            if (shouldStop)
+          /*  if (shouldStop)
                 return false;
 
-            return true;
+            return true;*/
         }
 
         static bool runningThread = false;
@@ -1180,7 +1180,11 @@ namespace CAMeRAVUEmotion
 
         static void RunModel()
         {
-            while (Run());
+            while (!shouldStop)
+            {
+                ThreadPoolUtil.Thread.Sleep(10000);
+                Step();
+            }            
         }
 
         public static void Step()

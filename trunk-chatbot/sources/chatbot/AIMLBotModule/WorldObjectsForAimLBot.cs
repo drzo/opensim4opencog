@@ -3,9 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-#if (COGBOT_LIBOMV || USE_STHREADS)
-using RTParser;
-using RTParser.Variables;
+#if (COGBOT_LIBOMV || USE_STHREADS || true)
+using AltAIMLbot.Variables;
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;
@@ -1179,8 +1178,7 @@ namespace AIMLBotModule
                 MyBot.updateRTP2Sevitor(myUser);
                 MyBot.servitor.curBot.sayProcessor = new sayProcessorDelegate(TalkActive);
                 MyBot.servitor.curBot.personaProcessor = new systemPersonaDelegate(PersonaActive);
-                RequestResult requestResult;
-                string answer = MyBot.servitor.respondToChat(input, myUser, true, RequestKind.ChatRealTime, out requestResult);
+                string answer = MyBot.servitor.respondToChat(input, myUser, true, RequestKind.ChatRealTime);
                 SUnifiable result = answer;
                 if (result == null)
                 {

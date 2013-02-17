@@ -4,14 +4,14 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{7F9BCA3B-16E7-4B4E-A39B-07070297A162}</ProjectGuid>
+    <ProjectGuid>{416F7BB4-1AA4-4EC3-A0FC-3B60D9260644}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
     </ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
-    <AssemblyName>CycWorldModule</AssemblyName>
+    <AssemblyName>FashionBotModule</AssemblyName>
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
@@ -20,7 +20,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>
     </AppDesignerFolder>
-    <RootNamespace>CycWorldModule</RootNamespace>
+    <RootNamespace>FashionBotModule</RootNamespace>
     <StartupObject>
     </StartupObject>
     <FileUpgradeFlags>
@@ -51,7 +51,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile>CycWorldModule.XML</DocumentationFile>
+    <DocumentationFile>FashionBotModule.XML</DocumentationFile>
     <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
@@ -72,7 +72,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile>CycWorldModule.XML</DocumentationFile>
+    <DocumentationFile>FashionBotModule.XML</DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
@@ -87,9 +87,6 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System.Core">
-      <Name>System.Core</Name>
-    </Reference>
     <Reference Include="System.Drawing">
       <Name>System.Drawing</Name>
     </Reference>
@@ -99,32 +96,19 @@
     <Reference Include="System.Data">
       <Name>System.Data</Name>
     </Reference>
-    <Reference Include="System.Xml">
-      <Name>System.Xml</Name>
-    </Reference>
-    <Reference Include="System.Xml.Linq">
-      <Name>System.Xml.Linq</Name>
-    </Reference>
     <Reference Include="System">
       <Name>System</Name>
-    </Reference>
-    <Reference Include="OpenCyc.dll">
-      <Name>OpenCyc.dll</Name>
-      <HintPath>..\..\..\bin\OpenCyc.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.Runtime.dll">
-      <Name>IKVM.Runtime.dll</Name>
-      <HintPath>..\..\..\bin\IKVM.Runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Core.dll">
-      <Name>IKVM.OpenJDK.Core.dll</Name>
-      <HintPath>..\..\..\bin\IKVM.OpenJDK.Core.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\main\LibCogbot\Cogbot.Library.csproj">
       <Name>Cogbot.Library</Name>
       <Project>{F135D32A-C34A-4961-B8E7-54D03FF721FD}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
+      <Name>MushDLR223</Name>
+      <Project>{6722775C-9948-4668-AB59-41E7EF5EF0CD}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\main\PathSystem3D\PathSystem3D.csproj">
@@ -142,64 +126,12 @@
       <Project>{14F32BFD-540A-4D37-958D-63480DE18A47}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
-    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj">
-      <Name>OpenMetaverse.StructuredData</Name>
-      <Project>{50739D29-CC0B-417C-B808-17DEE1055C6A}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse.Utilities\OpenMetaverse.Utilities.csproj">
-      <Name>OpenMetaverse.Utilities</Name>
-      <Project>{F59FCA55-A4D6-44CC-9BD2-98E35C5616AF}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\external\Radegast\Radegast.csproj">
-      <Name>Radegast</Name>
-      <Project>{34F32EB2-AEDF-4406-818D-D5DA02E538F9}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\external\DotLisp\DotLisp.csproj">
-      <Name>DotLisp</Name>
-      <Project>{0CBE2DF2-0D62-4FB1-A797-BA0B635010B0}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
-      <Name>MushDLR223</Name>
-      <Project>{6722775C-9948-4668-AB59-41E7EF5EF0CD}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CycBrowser.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="CycBrowser.Designer.cs">
-      <DependentUpon>CycBrowser.cs</DependentUpon>
-    </Compile>
-    <Compile Include="CycShowCommand.cs">
-    </Compile>
-    <Compile Include="CycWorldModule.cs">
-    </Compile>
-    <Compile Include="DotCYC\CycConnectionForm.cs">
-    </Compile>
-    <Compile Include="DotCYC\CycConnectionForm.Designer.cs">
-      <DependentUpon>CycConnectionForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DotCYC\CycInterpreter.cs">
-    </Compile>
-    <Compile Include="DotCYC\CycTypeInfo.cs">
-    </Compile>
-    <Compile Include="DotCYC\SimCyclifier.cs">
+    <Compile Include="FashionBotModuleMain.cs">
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
     </Compile>
-    <EmbeddedResource Include="CycBrowser.resx">
-      <DependentUpon>CycBrowser.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DotCYC\CycConnectionForm.resx">
-      <DependentUpon>CycConnectionForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

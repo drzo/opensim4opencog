@@ -21,6 +21,11 @@ using Cogbot.World;
 using OpenMetaverse;
 using AIMLbot;
 
+namespace AltAIMLParser
+{
+    
+}
+
 namespace AIMLBotModule
 {
     public class AimlCommand : Cogbot.Actions.Command, BotStatefullCommand, BotSystemCommand
