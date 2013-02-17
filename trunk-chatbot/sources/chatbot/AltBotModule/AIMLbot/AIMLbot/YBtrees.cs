@@ -17,7 +17,7 @@ using AltAIMLParser;
 using MiniSatCS;
 using System.Reflection;
 using MushDLR223.Virtualization;
-using RTParser;
+using AltAIMLbot;
 using VDS.RDF.Parsing;
 using LogicalParticleFilter1;
 using LAIR.ResourceAPIs.WordNet;
@@ -86,6 +86,15 @@ namespace AltAIMLbot
             return it;
         }
 
+        static public string AttributeValueOfDefault(this XmlNode baze, string attrib, string def)
+        {
+            if (baze.Attributes != null)
+            {
+                if (baze.Attributes[attrib] != null)
+                    return baze.Attributes[attrib].Value;
+            }
+            return def;
+        }
 
         static public string AttributesV(this XmlNode baze, string attrib)
         {

@@ -1,9 +1,10 @@
 
 
 using System;
+using AltAIMLbot;
 using AltAIMLbot.Utils;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     [Serializable]
     public class StringAppendableUnifiableImpl : StringUnifiable, UnifiableList

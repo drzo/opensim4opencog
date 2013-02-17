@@ -1,9 +1,11 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 #if (COGBOT_LIBOMV || USE_STHREADS)
+using AltAIMLbot.Database;
+using AltAIMLbot.Normalize;
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;
@@ -23,14 +25,10 @@ using Lucene.Net.Store;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using RTParser.Database;
-using RTParser.Normalize;
-using RTParser.Utils;
-
 using DataUnifiable = System.String;
-using DataUnifiableYYY = RTParser.Unifiable;
+using DataUnifiableYYY = AltAIMLbot.Unifiable;
 
-namespace RTParser.Variables
+namespace AltAIMLbot.Variables
 {
     public delegate ISettingsDictionaryT<DataUnifiable> ParentProvider();
     public interface ISettingsDictionary : ISettingsDictionaryT<DataUnifiable>{}

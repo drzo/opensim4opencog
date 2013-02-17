@@ -8,8 +8,6 @@ using System.Windows.Forms;
 using AltAIMLbot;
 using DcBus;
 using MushDLR223.Utilities;
-using RTParser;
-
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
@@ -97,6 +95,7 @@ namespace AltAIMLbot
                 {
                     try
                     {
+                        myBot.myServitor.WaitUntilCompletedGlobals();
                         //Thread.Sleep(30000); // half a minute
                         Thread.Sleep(500); // half a second
                         if (Cron.SuspendCrons) continue;

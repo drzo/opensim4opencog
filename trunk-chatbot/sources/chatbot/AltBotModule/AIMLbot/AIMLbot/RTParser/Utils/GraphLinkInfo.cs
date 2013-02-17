@@ -2,7 +2,7 @@ using System;
 using System.Xml;
 using MushDLR223.Utilities;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     [Serializable]
     public abstract class GraphLinkInfo : IXmlLineInfo, IHasFilename

@@ -1,11 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The topicstar element tells the AIML interpreter that it should substitute the contents of 
@@ -28,7 +24,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public topicstar(RTParser.AltBot bot,
+        public topicstar(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,

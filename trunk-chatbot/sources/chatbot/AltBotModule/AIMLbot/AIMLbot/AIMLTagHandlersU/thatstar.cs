@@ -1,12 +1,8 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
+using AltAIMLbot.Normalize;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The thatstar element tells the AIML interpreter that it should substitute the contents of a 
@@ -32,7 +28,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public thatstar(RTParser.AltBot bot,
+        public thatstar(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -46,7 +42,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if(templateNode.ParentNode.Name=="srai")
             {
-                var vv = RTParser.Normalize.ApplySubstitutions.Substitute(this.Proc.Person2Substitutions, unifiable);
+                var vv = ApplySubstitutions.Substitute(Proc.Person2Substitutions, unifiable);
                 return vv;
             }
             return unifiable;

@@ -1,7 +1,7 @@
 using System;
 using java.lang;
-using RTParser;
-using RTParser.Utils;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
 
 namespace AltAIMLbot.Utils
 {

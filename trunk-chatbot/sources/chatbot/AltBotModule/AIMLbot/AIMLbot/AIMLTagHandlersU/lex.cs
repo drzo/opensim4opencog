@@ -1,26 +1,15 @@
-using System;
-using System.Runtime;
-using System.Text;
+﻿using System;
 using System.Xml;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-//using System.Linq;
-using System.Text.RegularExpressions;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser;
-using RTParser.Utils;
 
-namespace RTParser.AIMLTagHandlers
+//using System.Linq;
+
+namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class lex : RTParser.Utils.AIMLTagHandlerU
+    public class lex : UnifibleTagHandler
     {
 
-        public lex(RTParser.AltBot bot,
+        public lex(AltBot bot,
                 User user,
                 SubQuery query,
                 Request request,
@@ -31,10 +20,15 @@ namespace RTParser.AIMLTagHandlers
         }
 
 
-
-        protected override Unifiable ProcessChangeU()
+        public override float CanUnify(Unifiable with)
         {
-            if (this.templateNode.Name.ToLower() == "lex")
+            throw new NotImplementedException();
+        }
+
+
+        protected override Unifiable ComputeInnerOrNull()
+        {
+            if (templateNode.Name.ToLower() == "lex")
             {
                 // Simply push the filled in tag contents onto the stack
                 try

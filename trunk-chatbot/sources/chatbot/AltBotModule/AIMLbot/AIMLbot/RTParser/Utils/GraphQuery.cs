@@ -8,10 +8,10 @@ using AltAIMLbot.Utils;
 using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using MasterRequest = AltAIMLParser.Request;
+using MasterRequest = AltAIMLbot.Utils.Request;
 
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     public class GraphQuery : QuerySettings
     {

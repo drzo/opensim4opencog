@@ -1,12 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The sr element is a shortcut for: 
@@ -15,7 +10,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The atomic sr does not have any content. 
     /// </summary>
-    public class sr : RTParser.Utils.AIMLTagHandlerU
+    public class sr : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -26,7 +21,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public sr(RTParser.AltBot bot,
+        public sr(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -39,7 +34,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChangeU()
         {
-            if (this.templateNode.Name.ToLower() == "sr")
+            if (templateNode.Name.ToLower() == "sr")
             {
                 Unifiable starContent = GetStarContent();
                 bool starFailed = IsNull(starContent);

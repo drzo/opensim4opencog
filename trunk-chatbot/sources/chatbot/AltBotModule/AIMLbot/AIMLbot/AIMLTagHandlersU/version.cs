@@ -1,11 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The version element tells the AIML interpreter that it should substitute the version number
@@ -13,7 +9,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The version element does not have any content. 
     /// </summary>
-    public class version : RTParser.Utils.AIMLTagHandlerU
+    public class version : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -24,7 +20,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public version(RTParser.AltBot bot,
+        public version(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -38,7 +34,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (CheckNode("version,getversion"))
             {
-                return this.Proc.GlobalSettings.grabSetting("version");
+                return Proc.GlobalSettings.grabSetting("version");
             }
             return Unifiable.Empty;
         }

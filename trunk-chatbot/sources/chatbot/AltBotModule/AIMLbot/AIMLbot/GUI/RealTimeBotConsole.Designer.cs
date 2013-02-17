@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-namespace RTParser.GUI
+namespace AltAIMLbot.GUI
 {
     partial class AIMLPadEditor 
     {

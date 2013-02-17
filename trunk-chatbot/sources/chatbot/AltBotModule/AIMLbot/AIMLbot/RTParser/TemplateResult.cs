@@ -4,9 +4,8 @@ using AIMLbot;
 using AltAIMLbot;
 using AltAIMLbot.Utils;
 using AltAIMLParser;
-using RTParser.Utils;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     internal class TemplateResult : ChatSignal
     {

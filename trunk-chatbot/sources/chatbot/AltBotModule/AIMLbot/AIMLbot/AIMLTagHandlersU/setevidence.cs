@@ -1,26 +1,15 @@
-using System;
-using System.Runtime;
-using System.Text;
+﻿using System;
 using System.Xml;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-//using System.Linq;
-using System.Text.RegularExpressions;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser;
-using RTParser.Utils;
 
-namespace RTParser.AIMLTagHandlers
+//using System.Linq;
+
+namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class setevidence : RTParser.Utils.AIMLTagHandlerU
+    public class setevidence : AIMLTagHandlerU
     {
 
-        public setevidence(RTParser.AltBot bot,
+        public setevidence(AltBot bot,
                 User user,
                 SubQuery query,
                 Request request,
@@ -34,12 +23,12 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChangeU()
         {
-            if (this.templateNode.Name.ToLower() == "setevidence")
+            if (templateNode.Name.ToLower() == "setevidence")
             {
                 try
 
                 {
-                    var varMSM = this.botActionMSM;
+                    var varMSM = botActionMSM;
                     string name = GetAttribValue("evidence", null);
                     string cur_prob_str = GetAttribValue("prob", "0.1");
                     double cur_prob = double.Parse(cur_prob_str);

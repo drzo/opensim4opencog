@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using LogicalParticleFilter1;
 using MushDLR223.Utilities;
-using RTParser;
+using AltAIMLbot;
 using VDS.RDF;
 using VDS.RDF.Parsing;
 #if (COGBOT_LIBOMV || USE_STHREADS)

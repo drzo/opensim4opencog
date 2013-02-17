@@ -16,14 +16,13 @@ using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using RTParser;
-using RTParser.AIMLTagHandlers;
-using RTParser.Database;
-using RTParser.Utils;
-using RTParser.Variables;
-using MasterRequest = AltAIMLParser.Request;
+using AltAIMLbot.AIMLTagHandlers;
+using AltAIMLbot.Database;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
+using MasterRequest = AltAIMLbot.Utils.Request;
 using DataUnifiable = System.String;
-using DataUnifiableYYY = RTParser.Unifiable;
+using DataUnifiableYYY = AltAIMLbot.Unifiable;
 
 namespace AltAIMLbot
 {
@@ -210,49 +209,50 @@ namespace AltAIMLbot
 
         public GraphMaster HeardYouSayGraph
         {
-            get { return FindGraphLocally("heardyousaygraph") ?? rbot.DefaultStartGraph; }
-            set
+            get { return FindGraphLocallyOrNull("heardyousay") ?? rbot.DefaultHeardYouSayGraph; }
+            set { SetGraphLocally("heardyousay", value, () => HeardYouSayGraph); }
+        }
+
+        private void SetGraphLocally(string heardyousay, GraphMaster value, Func<GraphMaster> test)
+        {
+            string gn = value.ScriptingName;
+            if (!heardyousay.EndsWith("graph")) heardyousay += "graph";
+            if (!Predicates.containsLocalCalled(heardyousay))
+                Predicates.addSetting(heardyousay, gn);
+            else Predicates.updateSetting(heardyousay, gn);
+            if (test != null)
             {
-                if (!Predicates.containsLocalCalled("heardyousaygraph"))
-                    Predicates.addSetting("heardyousaygraph", value.ScriptingName);
-                else Predicates.updateSetting("heardyousaygraph", value.ScriptingName);
-                GraphMaster lg = HeardYouSayGraph;
+                var lg = test();
                 if (lg != value)
                 {
-                    bot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
+                    rbot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
                 }
             }
         }
 
-        private GraphMaster FindGraphLocally(string varname)
+        private GraphMaster FindGraphLocallyOrNull(string varname)
         {
-            //Predicates.IsTraced = false;
+            if (!varname.EndsWith("graph")) varname += "graph";
             var v = Predicates.grabSetting(varname);
             if (Unifiable.IsMissing(v)) return null;
-            if (Unifiable.IsNullOrEmpty(v)) return null;
+            if (Unifiable.IsIncomplete(v)||Unifiable.IsNullOrEmpty(v))
+            {
+                rbot.writeToLog("Bad value found in " + varname);
+                return null;
+            }
             GraphMaster _Graph = rbot.GetGraph(v, null);
             if (_Graph != null)
             {
                 return _Graph;
             }
-            bot.writeToLog("ERROR CANT FIND " + varname);
+            rbot.writeToLog("ERROR CANT FIND " + varname);
             return _Graph;
         }
 
         public GraphMaster HeardSelfSayGraph
         {
-            get { return FindGraphLocally("heardselfsay") ?? rbot.DefaultHeardSelfSayGraph; }
-            set
-            {
-                if (!Predicates.containsLocalCalled("heardselfsay"))
-                    Predicates.addSetting("heardselfsay", value.ScriptingName);
-                else Predicates.updateSetting("heardselfsay", value.ScriptingName);
-                GraphMaster lg = HeardSelfSayGraph;
-                if (lg != value)
-                {
-                    bot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
-                }
-            }
+            get { return FindGraphLocallyOrNull("heardselfsay") ?? rbot.DefaultHeardSelfSayGraph; }
+            set { SetGraphLocally("heardselfsay", value, () => HeardSelfSayGraph); }
         }
 
         /// <summary>
@@ -263,21 +263,11 @@ namespace AltAIMLbot
         {
             get
             {
-                GraphMaster v = FindGraphLocally("startgraph") ?? rbot.DefaultStartGraph;
+                GraphMaster v = FindGraphLocallyOrNull("startgraph") ?? rbot.DefaultStartGraph;
                 if (v.Size == 0) v = rbot.DefaultStartGraph;
                 return v;
             }
-            set
-            {
-                if (!Predicates.containsLocalCalled("startgraph"))
-                    Predicates.addSetting("startgraph", value.ScriptingName);
-                else Predicates.updateSetting("startgraph", value.ScriptingName);
-                GraphMaster lg = StartGraph;
-                if (lg != value)
-                {
-                    bot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
-                }
-            }
+            set { SetGraphLocally("startgraph", value, () => StartGraph); }
         }
 
         public object TemplatesLock
@@ -590,6 +580,8 @@ namespace AltAIMLbot
                 string predMtName = parserToCamelCase + "Predicates";
                 this.Predicates = dict ?? bot.MakeSettingsDictionary(predMtName);
                 this.Predicates.IsTraced = qsbase.IsTraced;
+                bot.RegisterDictionary(userID, dict);
+                bot.RegisterDictionary(fullname, dict);
                 //this.Predicates.AddPrefix("user.", () => this);      
                 if (isUser)
                 {

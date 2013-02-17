@@ -1,14 +1,9 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
+using AltAIMLbot.Normalize;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser.AIMLTagHandlers;
-using RTParser.Utils;
-using RTParser.Variables;
+using AltAIMLbot.Variables;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The atomic version of the person element is a shortcut for: 
@@ -42,12 +37,12 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public substitute(RTParser.AltBot bot,
-                        User user,
-                        SubQuery query,
-                        Request request,
-                        Result result,
-                        XmlNode templateNode)
+        public substitute(AltBot bot,
+                          User user,
+                          SubQuery query,
+                          Request request,
+                          Result result,
+                          XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
         }
@@ -59,18 +54,18 @@ namespace RTParser.AIMLTagHandlers
             if (!IsNullOrEmpty(templateNodeInnerText))
             {
                 // non atomic version of the node
-                return RTParser.Normalize.ApplySubstitutions.Substitute(GetDictionary(), templateNodeInnerText);
+                return ApplySubstitutions.Substitute(GetDictionary(), templateNodeInnerText);
             }
             else
             {
                 //Need an atomic version
                 // atomic version of the node
-                XmlNode starNode = AIMLTagHandler.getNode("<star/>");
-                star recursiveStar = new star(this.bot, this.user, this.query, this.request, this.result, starNode);
-                this.templateNode.InnerText = recursiveStar.Transform();
-                if (this.templateNode.InnerText.Length > 0)
+                XmlNode starNode = getNode("<star/>");
+                star recursiveStar = new star(Proc, user, query, request, result, starNode);
+                templateNode.InnerText = recursiveStar.Transform();
+                if (templateNode.InnerText.Length > 0)
                 {
-                    return this.ProcessChange();
+                    return ProcessChangeU();
                 }
                 else
                 {
@@ -89,7 +84,7 @@ namespace RTParser.AIMLTagHandlers
 
         private string GetSubstutionName()
         {
-            return GetAttribValue("dict,substitutions,subst,use,file", () => TemplateNodeName);
+            return GetAttribValue("dict,substitutions,subst,use,file", templateNode.Name);
         }
 
         /// <summary>
@@ -112,16 +107,12 @@ namespace RTParser.AIMLTagHandlers
 
         #endregion
     }
-}
 
-
-namespace RTParser.Utils
-{
     abstract public class AIMLDictSubstFormatingTagHandler : AIMLFormatingTagHandler
     {
         protected override bool ExpandingSearchWillYieldNoExtras { get { return true; } }
         protected ParentProvider Provider;
-        public AIMLDictSubstFormatingTagHandler(RTParser.AltBot bot,
+        public AIMLDictSubstFormatingTagHandler(AltBot bot,
                                                 User user,
                                                 SubQuery query,
                                                 Request request,
@@ -144,7 +135,7 @@ namespace RTParser.Utils
             if (!IsNullOrEmpty(text))
             {
                 // non atomic version of the node
-                return RTParser.Normalize.ApplySubstitutions.Substitute(GetDictionary(), text);
+                return ApplySubstitutions.Substitute(GetDictionary(), text);
             }
             return Unifiable.Empty;
         }

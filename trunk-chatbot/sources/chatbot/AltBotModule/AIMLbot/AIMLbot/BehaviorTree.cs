@@ -17,7 +17,7 @@ using AltAIMLParser;
 using MiniSatCS;
 using System.Reflection;
 using MushDLR223.Utilities;
-using RTParser;
+using AltAIMLbot;
 using LogicalParticleFilter1;
 using BTXmlNode = System.Xml.XmlNode;
 

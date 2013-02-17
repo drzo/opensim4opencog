@@ -1,11 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The lowercase element tells the AIML interpreter to render the contents of the element 
@@ -15,7 +11,7 @@ namespace RTParser.AIMLTagHandlers
     /// If no character in this Unifiable has a different lowercase version, based on the Unicode 
     /// standard, then the original Unifiable is returned. 
     /// </summary>
-    public class lowercase : RTParser.Utils.AIMLFormatingTagHandler
+    public class lowercase : AIMLFormatingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -26,7 +22,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public lowercase(RTParser.AltBot bot,
+        public lowercase(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -40,7 +36,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (CheckNode("lowercase"))
             {
-                return templateNodeInnerText.ToValue(query).ToLower(this.Proc.Locale);
+                return templateNodeInnerText.ToValue(query).ToLower(Proc.Locale);
             }
             return Unifiable.Empty;
         }

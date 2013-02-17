@@ -1,24 +1,25 @@
-#if !(__MonoCS__)
+// #define USEVSAHOST
+
 using System;
 using System.Collections.Generic;
-#if USEVSAHOST
-using Evaluator;
-#endif
+using System.IO;
 using System.Reflection;
 using System.Xml;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 using Microsoft.JScript;
 using Microsoft.JScript.Vsa;
 
-namespace RTParser.AIMLTagHandlers
+#if USEVSAHOST
+using Evaluator;
+#endif
+
+namespace AltAIMLbot.AIMLTagHandlers
 {
 
     /// <summary>
     /// NOT IMPLEMENTED FOR SECURITY REASONS
     /// </summary>
-    public class javascript : RTParser.Utils.AIMLTagHandlerU
+    public class javascript : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -29,7 +30,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public javascript(RTParser.AltBot bot,
+        public javascript(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -82,7 +83,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 if (saveForNexTime)
                 {
-                    this.templateNodeInnerText = innerText;
+                    templateNodeInnerText = innerText;
                 }
                 return innerText;
             }
@@ -116,7 +117,7 @@ namespace RTParser.AIMLTagHandlers
                                                                    "System.Xml",
                                                                };
 #if !(_MonoCS__)		
-        public static readonly Microsoft.JScript.Vsa.VsaEngine Engine;
+        public static readonly VsaEngine Engine;
 #endif
 
         static javascript()
@@ -135,7 +136,7 @@ namespace RTParser.AIMLTagHandlers
 
                     if (assembly.GlobalAssemblyCache)
                     {
-                        codeBase = System.IO.Path.GetFileName(assembly.Location);
+                        codeBase = Path.GetFileName(assembly.Location);
                     }
                     else
                     {
@@ -176,7 +177,7 @@ namespace RTParser.AIMLTagHandlers
             try
             {
                 With.JScriptWith(this, Engine);
-                return Microsoft.JScript.Eval.JScriptEvaluate(src, "unsafe", engine);
+                return Eval.JScriptEvaluate(src, "unsafe", engine);
             }
             finally
             {
@@ -243,4 +244,3 @@ namespace RTParser.AIMLTagHandlers
 #endif
     }
 }
-#endif

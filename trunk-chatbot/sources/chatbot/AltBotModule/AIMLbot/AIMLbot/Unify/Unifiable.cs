@@ -6,16 +6,16 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
 using System.Xml;
+using AltAIMLbot;
+using AltAIMLbot.Database;
 using AltAIMLbot.Utils;
 using MushDLR223.Virtualization;
-using RTParser.Database;
-using RTParser.Utils;
-using UPath = RTParser.Unifiable;
+using UPath = AltAIMLbot.Unifiable;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
-using IndexTargetList = System.Collections.Generic.ICollection<RTParser.IndexTarget>;
-using IndexTargetListImpl = System.Collections.Generic.HashSet<RTParser.IndexTarget>;
+using IndexTargetList = System.Collections.Generic.ICollection<AltAIMLbot.IndexTarget>;
+using IndexTargetListImpl = System.Collections.Generic.HashSet<AltAIMLbot.IndexTarget>;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     sealed public class UnifiableSerializationSurrogate : ISerializationSurrogate
     {
@@ -94,7 +94,7 @@ namespace RTParser
     }
 
     [Serializable]
-    public abstract class Unifiable : BaseUnifiable, IConvertible, IComparable<Unifiable>, Indexable, IndexTarget, IDeserializationCallback
+    public abstract class Unifiable : BaseUnifiable, IConvertible, IComparable<Unifiable>, Indexable, IndexTarget, IDeserializationCallback, IComparable<string>
     {
         #region UFlags enum
 
@@ -143,7 +143,11 @@ namespace RTParser
 
         public static readonly Unifiable[] DontStore = new Unifiable[0];
         public static readonly string[] DontStoreString = new string[0];
-        public static readonly SpecialStringUnifiable Empty = CreateSpecial("$EMPTY", "");
+        public static SpecialStringUnifiable Empty
+        {
+            get { return EmptyRef; }
+        }
+        public static readonly SpecialStringUnifiable EmptyRef = CreateSpecial("$EMPTY", "");
         public static readonly Unifiable FAIL_NIL = CreateSpecial("$FAIL_NIL", "NIL");
         public static readonly Unifiable TRUE_T = CreateSpecial("$TRUE_T", "T");
         public static readonly Unifiable INCOMPLETE = CreateSpecial("$INCOMPLETE", null);
@@ -591,7 +595,7 @@ namespace RTParser
         public static Unifiable MakeUnifiableFromString(string value, bool useTrimmingRules)
         {
             if (value == null) return null;
-            if (value == "") return Empty;
+            if (value == "") return EmptyRef;
             Unifiable u;
             if (true)
                 lock (internedUnifiables)
@@ -620,7 +624,7 @@ namespace RTParser
                         u = MakeCorrectUnifiable(value);
                         internedUnifiables[key] = u;
                         // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                        if ((internedUnifiables.Count%10000) == 0)
+                        if (false && (internedUnifiables.Count%10000) == 0)
                             // ReSharper restore ConditionIsAlwaysTrueOrFalse
                         {
                             writeToLog("DEBUG9 internedUnifiables.Count=" + internedUnifiables.Count);
@@ -938,7 +942,7 @@ namespace RTParser
             }
             if (true.Equals(p)) return TRUE_T;
             if (false.Equals(p)) return FAIL_NIL;
-            ///throw new NotImplementedException();
+            throw new NotImplementedException();
             return MakeUnifiableFromString(p.ToString());
         }
 
@@ -951,6 +955,12 @@ namespace RTParser
         }
 
         public abstract void OfferNode(XmlNode node, string inner);
+
+        public int CompareTo(string other)
+        {
+            if (other == null) return 1;
+            return -other.CompareTo(AsString());
+        }
 
         public override string ToString()
         {
@@ -1195,6 +1205,11 @@ namespace RTParser
         }
 
         public abstract double Strictness { get; }
+
+        public string ScriptingName
+        {
+            get { return ToVMString(this); }
+        }
 
         public static string DescribeUnifiable(Object value)
         {
@@ -1529,6 +1544,83 @@ namespace RTParser
         }
 
         #endregion
+
+    }
+
+    public class UnifiableExtensionMethods
+    {
+        public static bool IsEMPTY(Object unifiable)
+        {
+            return StaticAIMLUtils.IsEMPTY(unifiable);
+        }
+
+
+        public static bool IsMissing(Object unifiable)
+        {
+            return StaticAIMLUtils.IsMissing(unifiable);
+        }
+
+        public static bool IsNull(Object unifiable)
+        {
+            return StaticAIMLUtils.IsNull(unifiable);
+        }
+        public static bool IsValue(Unifiable unifiable)
+        {
+            return StaticAIMLUtils.IsValue(unifiable);
+        }
+        public static bool IsTrue(Unifiable unifiable)
+        {
+            return StaticAIMLUtils.IsTrue(unifiable);
+        }
+        public static bool IsFalse(Unifiable unifiable)
+        {
+            return StaticAIMLUtils.IsFalse(unifiable);
+        }
+        public static bool IsNullOrEmpty(Object unifiable)
+        {
+            return StaticAIMLUtils.IsNullOrEmpty(unifiable);
+        }
+        public static bool IsIncomplete(Object unifiable)
+        {
+            return StaticAIMLUtils.IsIncomplete(unifiable);
+        }
+        public static string ToLower(string unifiable)
+        {
+            return StaticAIMLUtils.ToLower(unifiable);
+        }
+        public static string ToUpper(string unifiable)
+        {
+            return StaticAIMLUtils.ToUpper(unifiable);
+        }
+        public static string Trim(string unifiable)
+        {
+            return StaticAIMLUtils.Trim(unifiable);
+        }
+
+        public static bool IsUnknown(object unifiable)
+        {
+            return StaticAIMLUtils.IsUnknown(unifiable);
+        }
+
+        public static string InnerXmlText(XmlNode node)
+        {
+            return StaticAIMLUtils.InnerXmlText(node);
+        }
+
+        internal static bool IsTrueOrYes(string str)
+        {
+            return StaticAIMLUtils.IsTrueOrYes(str);
+        }
+
+        public static bool IsFalseOrNo(string str)
+        {
+            return StaticAIMLUtils.IsFalseOrNo(str);
+        }
+        public static bool IsSomething(Unifiable fullPath)
+        {
+            Unifiable s;
+            return TextPatternUtils.IsSomething(fullPath, out s) && s != null;
+        }
     }
 
     [Serializable]

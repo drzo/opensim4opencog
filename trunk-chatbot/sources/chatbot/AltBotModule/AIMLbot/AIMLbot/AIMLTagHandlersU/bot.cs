@@ -1,15 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using System.IO;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser.Database;
-using RTParser.Utils;
-using RTParser.Variables;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// An element called bot, which may be considered a restricted version of get, is used to 
@@ -33,7 +25,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public bot(RTParser.AltBot bot,
+        public bot(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -45,7 +37,7 @@ namespace RTParser.AIMLTagHandlers
         /*
         //public StreamWriter chatTrace;
 
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (RecurseResultValid) return RecurseResult;
             Unifiable defaultVal = GetAttribValue("default", Unifiable.Empty);

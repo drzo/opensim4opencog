@@ -1,7 +1,7 @@
 using System;
 using System.Xml;
 
-namespace RTParser.Database
+namespace AltAIMLbot.Database
 {
     public interface ITripleStore
     {

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using AltAIMLbot;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     public class ConversationLog
     {

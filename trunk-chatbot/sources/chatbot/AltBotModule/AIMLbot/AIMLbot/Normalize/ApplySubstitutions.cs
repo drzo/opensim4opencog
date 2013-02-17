@@ -2,11 +2,11 @@ using System;
 using System.Text;
 using System.Text.RegularExpressions;
 using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser.Variables;
 
-namespace RTParser.Normalize
+namespace AltAIMLbot.Normalize
 {
     /// <summary>
     /// Checks the text for any matches in the bot's substitutions dictionary and makes
@@ -14,11 +14,11 @@ namespace RTParser.Normalize
     /// </summary>
     public class ApplySubstitutions : TextTransformer
     {
-        public ApplySubstitutions(RTParser.AltBot bot, Unifiable inputString)
+        public ApplySubstitutions(AltBot bot, Unifiable inputString)
             : base(bot, null, inputString)
         { }
 
-        public ApplySubstitutions(RTParser.AltBot bot)
+        public ApplySubstitutions(AltBot bot)
             : base(bot)
         { }
 
@@ -159,7 +159,7 @@ namespace RTParser.Normalize
             return "\\b" + makeRegexSafe(fromValueTrim) + "\\b";
         }
 
-        public static string SubstituteRecurse(RTParser.AltBot bot, SettingsDictionary dictionary, string target)
+        public static string SubstituteRecurse(AltBot bot, SettingsDictionary dictionary, string target)
         {
             string result = Unifiable.ToVMString(target);
             String prev = "";

@@ -3,7 +3,7 @@ using AltAIMLbot;
 using AltAIMLbot.Utils;
 using AltAIMLParser;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     public abstract class AIMLFormatingTagHandler : AIMLTagHandlerU
     {

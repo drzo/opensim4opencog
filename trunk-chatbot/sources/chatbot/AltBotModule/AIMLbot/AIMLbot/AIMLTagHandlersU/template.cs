@@ -1,17 +1,12 @@
-using System;
-using System.Xml;
-using System.Text;
-using AltAIMLbot;
+﻿using System.Xml;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// IMPLEMENTED FOR COMPLETENESS REASONS
     /// </summary>
-    public class template : RTParser.Utils.AIMLTagHandlerU
+    public class template : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -22,7 +17,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public template(RTParser.AltBot bot,
+        public template(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -68,7 +63,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     return FAIL;
                 }
-                if (IsSilentTag(this.templateNode))
+                if (IsSilentTag(templateNode))
                 {
                     return templateResult;
                 }

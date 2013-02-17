@@ -686,7 +686,7 @@ namespace AltAIMLbot
 		/// Usage: Stemmer file-name
 		/// </summary>
 		[STAThread]
-		public static void  Main(System.String[] args)
+		public static void  MainPS(System.String[] args)
 		{
 			AltPorterStemmer s = new AltPorterStemmer();
 			

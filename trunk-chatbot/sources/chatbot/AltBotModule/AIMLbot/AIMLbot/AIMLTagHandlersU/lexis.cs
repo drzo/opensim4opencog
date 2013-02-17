@@ -1,17 +1,14 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Xml;
-using System.Text;
-using System.Collections.Generic;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser.Utils;
-// For Wordnet access
-using LAIR.ResourceAPIs.WordNet;
 using LAIR.Collections.Generic;
+using LAIR.ResourceAPIs.WordNet;
 
-namespace RTParser.AIMLTagHandlers
+// For Wordnet access
+
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// IMPLEMENTED FOR COMPLETENESS REASONS
@@ -27,7 +24,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public lexis(RTParser.AltBot bot,
+        public lexis(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -168,11 +165,11 @@ namespace RTParser.AIMLTagHandlers
             return AND_FALSE;
         }
 
-        protected override Unifiable ProcessChangeU()
+        protected override Unifiable ComputeInnerOrNull()
         {
             var v1 = ComputeInner();
             var v2 = templateNodeInnerText;
-            return v2;
+            return v1 ?? v2;
         }
     }
 }

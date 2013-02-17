@@ -10,8 +10,10 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
 using AIMLbot;
+using AltAIMLbot.Database;
 using AltAIMLbot.Utils;
 using AltAIMLParser;
+using AltAIMLbot.Variables;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -20,19 +22,15 @@ using org.opencyc.api;
 #if USE_SWIPROLOG
 using PrologScriptEngine;
 #endif
-using RTParser.AIMLTagHandlers;
-using RTParser.Database;
-using RTParser.Utils;
-using RTParser.Variables;
-using RTParser.Web;
+using AltAIMLbot.AIMLTagHandlers;
+using AltAIMLbot.Web;
 using Console = System.Console;
-using UPath = RTParser.Unifiable;
-using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
+using UPath = AltAIMLbot.Unifiable;
+using UList = System.Collections.Generic.List<AltAIMLbot.Utils.TemplateInfo>;
 using AltAIMLbot;
-using Gender = RTParser.Utils.Gender;
-using MasterRequest = AltAIMLParser.Request;
+using MasterRequest = AltAIMLbot.Utils.Request;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     /// <summary>
     /// Return a Response object
@@ -444,7 +442,7 @@ namespace RTParser
             //User specific code (ALTBOT USER->RTPUSER  )
             //var curUser = servitor.curUserLast;
             //CopyUserDataToFrom(activeUser, curUser);
-            servitor.curUser = activeUser; 
+            servitor.curUser = (MasterUser) activeUser; 
         }
 
         static public void CopyUserDataToFrom(User activeUser, User curUser)
@@ -518,7 +516,7 @@ namespace RTParser
             updateRTP2Sevitor();
             //var curUser = servitor.curUser;
             //CopyUserDataFromTo(activeUser, curUser);
-            servitor.curUser = activeUser;
+            servitor.curUser = (MasterUser) activeUser;
         }
 
         static public void CopyUserDataFromTo(User activeUser, User curUser) {
@@ -1426,10 +1424,7 @@ The AIMLbot program.
 
 
         public static Dictionary<string, GraphMaster> GraphsByName = new Dictionary<string, GraphMaster>();
-        public Dictionary<string, GraphMaster> LocalGraphsByName
-        {
-            get { return Graphs; }
-        }
+        public Dictionary<string, GraphMaster> LocalGraphsByName = new Dictionary<string, GraphMaster>();
 
         public static CycDatabase TheCycS;
         public CycDatabase TheCyc
@@ -1452,30 +1447,25 @@ The AIMLbot program.
 
         public GraphMaster GetUserGraph(string graphPath)
         {
-            graphPath = "default";
-            graphPath = GraphMaster.DeAliasGraphName(graphPath);
-            if (false && !graphPath.Contains("_to_"))
+            var changed = ToGraphPathName(graphPath, BotID);
+            if (changed != graphPath)
             {
-                graphPath = ToLower(StaticXMLUtils.ConsolidSpaces(Trim(graphPath + "_to_" + this.NamePath)));
+                writeToLog("ERROR GetUserGraph " + graphPath + " -> " + changed);
+                graphPath = changed;
             }
-            GraphMaster g;
             lock (GraphsByName)
             {
+                GraphMaster g;
                 if (LocalGraphsByName.TryGetValue(graphPath, out g))
                 {
                     return g;
                 }
-                g = GraphsByName[graphPath] = GraphMaster.FindOrCreate(graphPath, this);
-                //GraphMaster dtob = Utils.GraphMaster.FindOrCreate("default_to_" + this.NamePath);
-                //g.AddGenlMT(dtob, writeToLog);
-                //ㄴdtob.AddGenlMT(Utils.GraphMaster.FindOrCreate("default"), writeToLog);
             }
-            return g;
+            return FindGraph(graphPath, null);
         }
 
         static public GraphMaster FindGlobalGraph(string graphPath)
         {
-            graphPath = GraphMaster.DeAliasGraphName(graphPath);
             GraphMaster g;
             lock (GraphsByName) GraphsByName.TryGetValue(graphPath, out g);
             return g;
@@ -1484,17 +1474,16 @@ The AIMLbot program.
         public GraphMaster GetGraph(string graphPath, GraphMaster current)
         {
             GraphMaster g = FindGraph(graphPath, current);
-            if (g != null) return g;
+            if (g != null) return g;            
             if (graphPath == null)
             {
                 if (current == null)
                 {
-                    throw new NullReferenceException("graphPath=" + graphPath);
+                    writeToLog("ERROR GetGraph Null");
                 }
                 return current;
             }
 
-            graphPath = GraphMaster.DeAliasGraphName(graphPath);
             string lower = graphPath.ToLower();
             int graphPathLength = graphPath.IndexOf(".");
             if (graphPathLength > 0)
@@ -1514,18 +1503,20 @@ The AIMLbot program.
                 }
                 if (!GraphsByName.TryGetValue(graphPath, out g))
                 {
-                    g = GraphsByName[graphPath] = GraphMaster.FindOrCreate(graphPath, this);
+                    g = LocalGraphsByName[graphPath] = GraphMaster.FindOrCreate(graphPath);
                 }
             }
             return g;
         }
 
         public GraphMaster FindGraph(string graphPath, GraphMaster current)
-        {
-            if (string.IsNullOrEmpty(graphPath) || graphPath == "*") return current;
-            graphPath = GraphMaster.DeAliasGraphName(graphPath);
-            if (graphPath == null)
+        {            
+            if (graphPath == null || (",current,*,,".Contains("," + graphPath.ToLower() + ",")))
             {
+                if (current == null)
+                {
+                    writeToLog("ERROR GetGraph Null");
+                }
                 return current;
             }
 
@@ -1539,17 +1530,30 @@ The AIMLbot program.
                 return FindGraph(left, vg);
             }
 
-            string orig = graphPath;
-            graphPath = ToScriptableName(graphPath);
-
-            if (graphPath == "current" || graphPath == "")
+            graphPath = ToGraphPathName(graphPath, NamePath);
+            if (true)
             {
-                return current;
+                if (_g != null && graphPath == "default")
+                {
+                    return DefaultStartGraph;
+                }
+                if (_g != null && graphPath == "*")
+                {
+                    return DefaultStartGraph;
+                }
+                if (_h != null && graphPath == "heardselfsay")
+                {
+                    return DefaultHeardSelfSayGraph;
+                }
+                if (TheUserListenerGraph != null && graphPath == "heardyousay")
+                {
+                    return DefaultHeardYouSayGraph;
+                }
             }
-
             if (graphPath == "parent" || graphPath == "parallel")
             {
                 if (current == null) return null;
+                if (current.CannotHaveParallel) return current;
                 return current.Parallel;
             }
 
@@ -1566,6 +1570,38 @@ The AIMLbot program.
                 }
             }
             return g;
+        }
+
+        public static string ToGraphPathName(string graphPath0, string botname)
+        {
+            var graphPath = HelperForMerge.RemoveEnd(graphPath0);
+            if (string.IsNullOrEmpty(graphPath) || graphPath == "*" || graphPath == "current")
+            {
+                return null;
+            }
+            graphPath = ToScriptableName(graphPath);
+            if (botname != null)
+            {
+                var sbotname = ToScriptableName(botname);
+                if (botname == graphPath || botname == graphPath)
+                {
+                    return "default";
+                }
+            }
+            if (graphPath == "default" || graphPath == "base" || graphPath == "*" || graphPath == "start" ||
+                graphPath == "root")
+            {
+                return "default";
+            }
+            if (graphPath == "heardselfsay" || graphPath == "heardself")
+            {
+                return "heardselfsay";
+            }
+            if (graphPath == "heardyousay" || graphPath == "heardyou")
+            {
+                return "listener";
+            }
+            return graphPath;
         }
 
         public static string ToScriptableName(string path)
@@ -1944,7 +1980,7 @@ The AIMLbot program.
         }
 
         private List<string> _RuntimeDirectories;
-        ICollectionRequester _objr;
+        ICollectionRequester _objr = new ChatProgram.ACollectionRequester();
         private readonly List<Action> PostObjectRequesterSet = new List<Action>();
         //private AltBot TheAltBot;
 
@@ -2062,7 +2098,40 @@ The AIMLbot program.
             }
         }
 
-        private void RegisterSubstitutions(string named, SettingsDictionary dict0)
+        public void RegisterDictionary(ISettingsDictionary dict)
+        {
+            RegisterDictionary(dict.NameSpace, dict);
+        }
+        public void RegisterDictionary(string named, ISettingsDictionary dict)
+        {
+            named = named.ToLower().Trim().Replace("  ", " ");
+            string key = named.Replace(" ", "_");
+            RegisterDictionary(named, dict, true);
+        }
+
+        public void RegisterDictionary(string key, ISettingsDictionary dict, bool always)
+        {
+            Action needsExit = LockInfo.MonitorTryEnter("RegisterDictionary " + key, AllDictionaries, MaxWaitTryEnter);
+            try
+            {
+                var path = key.Split(new[] { '.' });
+                if (always || !AllDictionaries.ContainsKey(key)) AllDictionaries[key] = dict;
+                if (path.Length > 1)
+                {
+                    if (path[0] == "bot" || path[0] == "users" || path[0] == "char" || path[0] == "nl")
+                    {
+                        string join = string.Join(".", path, 1, path.Length - 1);
+                        RegisterDictionary(join, dict, false);
+                    }
+                }
+            }
+            finally
+            {
+                needsExit();
+            }
+        }
+
+        private void RegisterSubstitutions(string named, ISettingsDictionary dict0)
         {
             SettingsDictionaryReal dict = SettingsDictionaryReal.ToSettingsDictionary(dict0);
             dict.IsTraced = false;

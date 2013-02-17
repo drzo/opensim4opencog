@@ -3,7 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-#if (COGBOT_LIBOMV || USE_STHREADS)
+#if (COGBOT_LIBOMV || USE_STHREADS || true)
+using System.Linq;
+using AltAIMLbot.AIMLTagHandlers;
+using AltAIMLbot.Database;
+using AltAIMLbot.Normalize;
+using AltAIMLbot.Variables;
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;
@@ -21,23 +26,18 @@ using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using RTParser.AIMLTagHandlers;
-using RTParser.Database;
-using RTParser.Normalize;
-using RTParser.Utils;
-using RTParser.Variables;
-using UPath = RTParser.Unifiable;
-using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
-using PatternInfo = RTParser.Unifiable;
-using ThatInfo = RTParser.Unifiable;
-using TopicInfo = RTParser.Unifiable;
-using GuardInfo = RTParser.Unifiable;
+using UPath = AltAIMLbot.Unifiable;
+using UList = System.Collections.Generic.List<AltAIMLbot.Utils.TemplateInfo>;
+using PatternInfo = AltAIMLbot.Unifiable;
+using ThatInfo = AltAIMLbot.Unifiable;
+using TopicInfo = AltAIMLbot.Unifiable;
+using GuardInfo = AltAIMLbot.Unifiable;
 //using MatchState=RTParser.Utils.MatchState;
-using ResponseInfo = RTParser.Unifiable;
-using MasterRequest = AltAIMLParser.Request;
+using ResponseInfo = AltAIMLbot.Unifiable;
+using MasterRequest = AltAIMLbot.Utils.Request;
 
 
-namespace RTParser
+namespace AltAIMLbot
 {
     interface IChatterBot
     {
@@ -165,10 +165,12 @@ namespace RTParser
         /// </summary>
         public int Size
         {
-            get { return SizeC + DefaultStartGraph.Size + DefaultHeardSelfSayGraph.Size; }
+            get { return DefaultStartGraph.Size + DefaultHeardSelfSayGraph.Size; }
         }
 
-        ///private static GraphMaster TheListenerGraph;
+        private GraphMaster _g;
+        private GraphMaster _h;
+        private static GraphMaster TheUserListenerGraph;
 
         /// <summary>
         /// The "brain" of the Proccessor
@@ -177,13 +179,15 @@ namespace RTParser
         {
             get
             {
-                if (Graphmaster != null) return Graphmaster;
+                if (_g != null) return _g;
+                var NamePath = this.NamePath;
+                NamePath = "default";
                 if (String.IsNullOrEmpty(NamePath))
                 {
-                    writeToLog("No graphmapster!");
+                    writeToLog("ERROR NoName = No graphmapster!");
                     return null;
                 }
-                return GetGraph(NamePath, Graphmaster);
+                return GetGraph(NamePath, _g);
             }
         }
         public GraphMaster DefaultEventGraph
@@ -193,8 +197,23 @@ namespace RTParser
                 return DefaultStartGraph;
             }
         }
+        public GraphMaster DefaultHeardYouSayGraph
+        {
+            get
+            {
+                if (TheUserListenerGraph != null) return TheUserListenerGraph;
+                return GraphMaster.FindOrCreate("heardyousay");
+            }
+        }
+        public GraphMaster DefaultHeardSelfSayGraph
+        {
+            get
+            {
+                if (_h != null) return _h;
+                return GraphMaster.FindOrCreate("heardselfsay");
+            }
+        }
 
-        public GraphMaster DefaultHeardSelfSayGraph;
 
         /// <summary>
         /// The Markovian "brain" of the Proccessor for generation
@@ -458,8 +477,7 @@ namespace RTParser
                 Logger.Warn("Servitor code should not be calling this!");
                 User curUser = parentResultIn.Requester;
                 string input = request.ChatInput.OrignalRawText.ToString();
-                RequestResult requestResult;
-                string answer = servitor.respondToChat(input, curUser, isToplevel, requestType, out requestResult);
+                string answer = servitor.respondToChat(input, curUser, isToplevel, requestType);
                 Result result = request.CreateResult(request);
                 result.SetOutput = answer;
                 return result;
@@ -717,7 +735,7 @@ namespace RTParser
                 Utterance utterance = request.ChatInput;// Utterance.GetParsedSentences(request, isTraced, writeToLog);
 
                 bool printedSQs = false;
-                G = G ?? DefaultStartGraph;
+                G = G ?? request.Graph ?? DefaultStartGraph;
 
                 // grab the templates for the various sentences from the graphmaster
                 request.IsTraced = isTraced;
@@ -747,8 +765,9 @@ namespace RTParser
                             request.Requester.Predicates.updateSetting("question", english);
                         }
                     }
-                    List<string> paths = gatherPaths(user, sentence, user.getPreStates(), user.getPostStates(),
-                                 request.LoaderA);
+                    List<string> paths = gatherPaths(G.ScriptingName, user, sentence,
+                                                     user.getPreStates(), user.getPostStates(),
+                                                     request.LoaderA);
                     SortPaths(paths, G.getPathScore);
                     foreach (var path in paths)
                     {
@@ -1255,7 +1274,7 @@ namespace RTParser
         {
             string requestName = StaticAIMLUtils.ToTemplateXML(templateNode);
             AltBot request0Proccessor = this;
-            GuardInfo sGuard = null;
+            Unifiable sGuard = null;
             Request request = null;
             User user = BotAsUser;
 
@@ -1438,7 +1457,7 @@ namespace RTParser
 
             if (!StaticAIMLUtils.checkEndsAsSentence(sentenceIn))
             {
-                sentenceIn += ".";
+                return sentenceIn;// += ".";
             }
 
             return sentenceIn;
@@ -1503,7 +1522,7 @@ namespace RTParser
                 if (loadcount == 0)
                 {
                     writeToLog(
-                        " **** WARNING: No Markovian Brain Training nor N-Gram file found for '{0}' . **** ", name);
+                        " **** VVARNING: No Markovian Brain Training nor N-Gram file found for '{0}' . **** ", name);
                 }
             }
 

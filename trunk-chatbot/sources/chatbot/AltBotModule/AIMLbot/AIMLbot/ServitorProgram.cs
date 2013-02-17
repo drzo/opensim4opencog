@@ -5,7 +5,6 @@ using AltAIMLParser;
 using AltAIMLbot;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
-using RTParser;
 
 namespace AltAIMLbot
 {
@@ -13,7 +12,7 @@ namespace AltAIMLbot
     {
         private ICollectionRequester colreq = new ACollectionRequester();
 
-        private class ACollectionRequester : ICollectionRequester
+        public class ACollectionRequester : ICollectionRequester
         {
             public object RequesterID
             {
@@ -50,7 +49,7 @@ namespace AltAIMLbot
         public string servitorbin = "";
         //public string userID = "consoleUser";
         public string PathToWordNet = null;
-        private RTParser.AltBot MyBot;
+        private AltAIMLbot.AltBot MyBot;
         User curUser;
 
         public void sayConsole(string message)
@@ -175,8 +174,7 @@ namespace AltAIMLbot
 
         public string respondToChat(string input)
         {
-            RequestResult requestAcceptInput;
-            return servitor.respondToChat(input, curUser, true, RequestKind.ChatRealTime, out requestAcceptInput);
+            return servitor.respondToChat(input, curUser, true, RequestKind.ChatRealTime);
         }
 
         public void Terminate()

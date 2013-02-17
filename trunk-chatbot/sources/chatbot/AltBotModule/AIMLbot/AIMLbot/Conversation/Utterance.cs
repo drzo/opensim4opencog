@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using AltAIMLParser;
 using AltAIMLbot;
+using AltAIMLbot.Utils;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser.Database;
-using RTParser.Normalize;
-using RTParser.Utils;
+using AltAIMLbot.Database;
+using AltAIMLbot.Normalize;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     public class Utterance
     {

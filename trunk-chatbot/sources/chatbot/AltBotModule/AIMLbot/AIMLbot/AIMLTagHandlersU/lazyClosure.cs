@@ -1,15 +1,13 @@
 using System;
 using System.Text;
 using System.Xml;
-using AltAIMLbot;
+using AltAIMLbot.Normalize;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
+using AltAIMLbot.Variables;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser.Utils;
-using RTParser.Variables;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     internal class lazyClosure : AIMLTagHandlerU
     {
@@ -22,7 +20,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public lazyClosure(RTParser.AltBot bot,
+        public lazyClosure(AltBot bot,
                            User user,
                            SubQuery query,
                            Request request,
@@ -82,9 +80,7 @@ namespace RTParser.AIMLTagHandlers
                     deleteLink = true;
                     name = removeTo;
                 }
-
-                GraphMaster FROM = request.Graph;
-                if (from != null) FROM = request.GetGraph(from);
+                GraphMaster FROM = request.GetGraph(from);
                 GraphMaster TO = request.GetGraph(name);
                 if (FROM != null && TO != null)
                 {
@@ -157,8 +153,8 @@ namespace RTParser.AIMLTagHandlers
                 {
                     return RecurseResult;
                 }
-                Func<Unifiable, Unifiable> Format = (v) => RTParser.Normalize.ApplySubstitutions.Substitute(sd, templateNodeInnerText);
-                if (isRecursive && !ReadOnly)
+                Func<Unifiable, Unifiable> Format = (v) => ApplySubstitutions.Substitute(sd, templateNodeInnerText);
+                if (base.isRecursive && !ReadOnly)
                 {
                     RecurseResult = Format(TransformAtomically(null, true));
                     return finalResult.Value;

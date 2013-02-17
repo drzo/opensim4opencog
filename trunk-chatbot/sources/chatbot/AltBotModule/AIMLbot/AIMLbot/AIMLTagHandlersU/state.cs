@@ -1,26 +1,15 @@
-using System;
-using System.Runtime;
-using System.Text;
+﻿using System;
 using System.Xml;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-//using System.Linq;
-using System.Text.RegularExpressions;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser;
-using RTParser.Utils;
 
-namespace RTParser.AIMLTagHandlers
+//using System.Linq;
+
+namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class state : RTParser.Utils.AIMLTagHandlerU
+    public class state : AIMLTagHandlerU
     {
 
-        public state(RTParser.AltBot bot,
+        public state(AltBot bot,
                 User user,
                 SubQuery query,
                 Request request,
@@ -36,7 +25,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 try
                 {
-                    var varMSM = this.botActionMSM;
+                    var varMSM = botActionMSM;
                     string payload = templateNodeInnerText.ToValue(query);
                     string payload3 = InnerXmlText(templateNode);
                     string prevLastDefMachine = varMSM.lastDefMachine;

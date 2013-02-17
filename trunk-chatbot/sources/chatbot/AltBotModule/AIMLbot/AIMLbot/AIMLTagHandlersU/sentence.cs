@@ -1,12 +1,12 @@
 using System;
+using System.Linq;
 using System.Xml;
 using System.Text;
 using System.Text.RegularExpressions;
 using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The sentence element tells the AIML interpreter to render the contents of the element 
@@ -18,7 +18,7 @@ namespace RTParser.AIMLTagHandlers
     /// If no character in this Unifiable has a different uppercase version, based on the Unicode 
     /// standard, then the original Unifiable is returned. 
     /// </summary>
-    public class sentence : RTParser.Utils.AIMLFormatingTagHandler
+    public class sentence : AIMLFormatingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -29,7 +29,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public sentence(RTParser.AltBot bot,
+        public sentence(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,

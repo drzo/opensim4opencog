@@ -1,11 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The atomic version of the gender element is a shortcut for:
@@ -28,7 +24,7 @@ namespace RTParser.AIMLTagHandlers
     /// fact that most AIML has been written in English. However, the decision about whether to 
     /// transform gender of other words is left up to the implementation.
     /// </summary>
-    public class gender : RTParser.Utils.AIMLDictSubstFormatingTagHandler
+    public class gender : AIMLDictSubstFormatingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -39,7 +35,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public gender(RTParser.AltBot bot,
+        public gender(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,

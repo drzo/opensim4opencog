@@ -1,36 +1,16 @@
-using System;
-using System.Runtime;
-using System.Text;
+﻿using System;
 using System.Xml;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-//using System.Linq;
-using System.Text.RegularExpressions;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser;
-using RTParser.Utils;
-using Lucene.Net.Store;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Standard;
-using Lucene.Net.Index;
-using Lucene.Net.Documents;
-using Lucene.Net.Search;
-using Lucene.Net.QueryParsers;
-using MushDLR223.ScriptEngines;
-using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 
-namespace RTParser.AIMLTagHandlers
+//using System.Linq;
+
+namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class dbload : RTParser.Utils.AIMLTagHandlerU
+    public class dbload : AIMLTagHandlerU
     {
 
-        public dbload(RTParser.AltBot bot,
+        public dbload(AltBot bot,
                 User user,
                 SubQuery query,
                 Request request,

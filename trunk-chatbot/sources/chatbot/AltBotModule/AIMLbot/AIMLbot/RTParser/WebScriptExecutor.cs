@@ -3,12 +3,12 @@ using System.Threading;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using AltAIMLbot.Utils;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser.Utils;
 using AltAIMLbot;
 
-namespace RTParser.Web
+namespace AltAIMLbot.Web
 {
     public class WebScriptExecutor : ScriptExecutorGetter, ScriptExecutor
     {

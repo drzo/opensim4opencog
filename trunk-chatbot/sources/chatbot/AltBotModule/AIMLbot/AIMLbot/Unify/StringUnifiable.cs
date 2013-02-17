@@ -3,14 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Xml;
+using AltAIMLbot;
+using AltAIMLbot.Database;
 using AltAIMLbot.Utils;
-using RTParser.Database;
-using RTParser.Utils;
+using MushDLR223.Utilities;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
-using IndexTargetList = System.Collections.Generic.ICollection<RTParser.IndexTarget>;
-using IndexTargetListImpl = System.Collections.Generic.HashSet<RTParser.IndexTarget>;
+using IndexTargetList = System.Collections.Generic.ICollection<AltAIMLbot.IndexTarget>;
+using IndexTargetListImpl = System.Collections.Generic.HashSet<AltAIMLbot.IndexTarget>;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     [Serializable]
     public class StringUnifiable : Unifiable
@@ -127,6 +128,14 @@ namespace RTParser
             if (str == "*" || str == "_") return true;
             if (IsLazy)
             {
+                AIMLTagHandlerU tagHandler = GetTagHandler(query);
+                IUnifibleTagHandler utagHandler = tagHandler as IUnifibleTagHandler;
+                if (utagHandler != null)
+                {
+                    
+                    return tagHandler.CallCanUnify(word) == UNIFY_TRUE;
+                }
+                valueCache = tagHandler;
                 var toString = ToValue(query);
                 if (toString == null)
                 {
@@ -1340,8 +1349,8 @@ namespace RTParser
                         writeToLog("UnifyLazy: SUCCEED T1 " + ov + " in " + query);
                         return true;
                     }
-                AIMLTagHandlerU tagHandlerU = GetTagHandler(query);
-                if (tagHandlerU.CallCanUnify(ov) == UNIFY_TRUE)
+                AIMLTagHandlerU tagHandler = GetTagHandler(query);
+                if (tagHandler.CallCanUnify(ov) == UNIFY_TRUE)
                 {
                     writeToLog("UnifyLazy: SUCCEED" + ov + " in " + query);
                     return true;
@@ -1350,7 +1359,7 @@ namespace RTParser
                 {
                     return false;
                 }
-                Unifiable outputSentence = tagHandlerU.CompleteAimlProcess();
+                Unifiable outputSentence = tagHandler.CompleteAimlProcess();
                 if (ov.CanUnify(outputSentence, query))
                 {
                     return true;
@@ -1382,15 +1391,15 @@ namespace RTParser
         }
 
         //private SubQuery savedSQ;
-        //AIMLTagHandler savedTagHandler;
+        //AIMLTagHandlerU savedTagHandler;
         //public XmlNode node;
         public AIMLTagHandlerU GetTagHandler(SubQuery subquery)
         {
             if (valueCache is AIMLTagHandlerU)
             {
-                AIMLTagHandlerU tagHandlerU = (AIMLTagHandlerU) valueCache;
-                tagHandlerU.ResetValues(false);
-                return tagHandlerU;
+                AIMLTagHandlerU tagHandler = (AIMLTagHandlerU) valueCache;
+                tagHandler.ResetValues(false);
+                return tagHandler;
             }
             XmlNode getNode1 = GetNode();
             return subquery.GetTagHandler(getNode1);
@@ -1472,17 +1481,19 @@ namespace RTParser
             {
                 //todo 
                 if (query == null) return AsString();
-                AIMLTagHandlerU tagHandlerU = GetTagHandler(query);
-                ThreadStart undo = tagHandlerU.EnterUnify();
+                AIMLTagHandlerU tagHandler = GetTagHandler(query);
+                ThreadStart undo = tagHandler.EnterUnify();
                 try
                 {
-                    Unifiable outputSentence = tagHandlerU.CompleteAimlProcess();
+                    Unifiable outputSentence = tagHandler.CompleteAimlProcess();
                     if (!IsNullOrEmpty(outputSentence))
                     {
                         valueCache = outputSentence.AsString();
                         return (string) valueCache;
                     }
                     writeToLog("Failed Eval " + str);
+                    tagHandler.IsTraced = true;
+                    outputSentence = tagHandler.CompleteAimlProcess();
                 }
                 finally
                 {

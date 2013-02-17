@@ -5,15 +5,15 @@ using System.Threading;
 using System.Xml;
 using AltAIMLParser;
 using MushDLR223.ScriptEngines;
-using RTParser;
-using RTParser.Database;
-using RTParser.Utils;
-using RTParser.Variables;
-using UPath = RTParser.Unifiable;
-using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
+using AltAIMLbot;
+using AltAIMLbot.Database;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
+using UPath = AltAIMLbot.Unifiable;
+using UList = System.Collections.Generic.List<AltAIMLbot.Utils.TemplateInfo>;
 //using List<Unifiable> = System.Collections.Generic.List<string>;
 using DataUnifiable = System.String;
-using DataUnifiableYYY = RTParser.Unifiable;
+using DataUnifiableYYY = AltAIMLbot.Unifiable;
 
 namespace AltAIMLbot.Utils
 {
@@ -107,7 +107,15 @@ namespace AltAIMLbot.Utils
         {
             s = s.ToLower();
             if (s == "input") s = "pattern";
-            return Stars[s.ToLower()];
+            List<string> dict;
+            lock (Stars)
+            {
+                if (!Stars.TryGetValue(s, out dict))
+                {
+                    dict = Stars[s] = new List<string>();
+                }
+            }
+            return dict;
         }
 
         /*
@@ -128,17 +136,17 @@ namespace AltAIMLbot.Utils
 
         public
             //static 
-            Dictionary<string, RTParser.Utils.AIMLTagHandlerU> TagHandlers;
+            Dictionary<string, AltAIMLbot.Utils.AIMLTagHandlerU> TagHandlers;
 
         private AltBot ov_TargetBot;
         public TemplateInfo CurrentTemplate;
-        public RTParser.Utils.AIMLTagHandlerU LastTagHandlerU;
+        public AltAIMLbot.Utils.AIMLTagHandlerU LastTagHandlerU;
         public Node Pattern;
         public string prefix;
         public Request Request;
         public Result Result;
         public GraphQuery TopLevel;
-        public RTParser.Utils.AIMLTagHandlerU CurrentTagHandlerU;
+        public AltAIMLbot.Utils.AIMLTagHandlerU CurrentTagHandlerU;
         public XmlNode CurrentNode;
 
         public override bool Equals(object obj)
@@ -277,7 +285,7 @@ namespace AltAIMLbot.Utils
         public int GetDictValue;
         public int SetDictValue;
 
-        public bool IsSourceRequest(RTParser.Utils.AIMLTagHandlerU node, out string src)
+        public bool IsSourceRequest(AltAIMLbot.Utils.AIMLTagHandlerU node, out string src)
         {
             src = null;
             return false;
@@ -496,7 +504,7 @@ namespace AltAIMLbot.Utils
             {
                 if (TagHandlers != null)
                 {
-                    foreach (KeyValuePair<string, RTParser.Utils.AIMLTagHandlerU> aimlTagHandler in TagHandlers)
+                    foreach (KeyValuePair<string, AltAIMLbot.Utils.AIMLTagHandlerU> aimlTagHandler in TagHandlers)
                     {
                         aimlTagHandler.Value.Dispose();
                     }
@@ -577,16 +585,16 @@ namespace AltAIMLbot.Utils
             }
         }
 
-        public RTParser.Utils.AIMLTagHandlerU GetTagHandler(XmlNode node)
+        public AltAIMLbot.Utils.AIMLTagHandlerU GetTagHandler(XmlNode node)
         {
             lock (TagHandlerLock)
             {
                 string str = node.OuterXml;
                 str = TextPatternUtils.CleanWhitepaces(str).ToLower();
-                RTParser.Utils.AIMLTagHandlerU handlerU;
+                AltAIMLbot.Utils.AIMLTagHandlerU handlerU;
                 if (TagHandlers == null)
                 {
-                    TagHandlers = new Dictionary<string, RTParser.Utils.AIMLTagHandlerU>();
+                    TagHandlers = new Dictionary<string, AltAIMLbot.Utils.AIMLTagHandlerU>();
                 }
                 else if (TagHandlers.TryGetValue(str, out handlerU))
                 {

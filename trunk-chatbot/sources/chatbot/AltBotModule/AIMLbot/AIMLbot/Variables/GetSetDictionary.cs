@@ -2,9 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using MushDLR223.ScriptEngines;
-using RTParser.Variables;
+using AltAIMLbot.Variables;
 
-namespace RTParser.Variables
+namespace AltAIMLbot.Variables
 {
     internal class GetSetDictionary<T> : ISettingsDictionaryT<T>
     {

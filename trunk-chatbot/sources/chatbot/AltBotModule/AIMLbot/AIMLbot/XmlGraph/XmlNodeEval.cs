@@ -3,7 +3,7 @@ using System.Xml;
 using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     public delegate IEnumerable<XmlNode> XmlNodeEval(XmlNode src, Request request, OutputDelegate outputDelegate);
 }

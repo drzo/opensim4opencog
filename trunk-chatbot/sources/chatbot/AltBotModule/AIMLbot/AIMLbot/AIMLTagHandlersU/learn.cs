@@ -1,21 +1,16 @@
 using System;
 using System.Xml;
-using System.Text;
-using System.IO;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 using MushDLR223.Utilities;
-using RTParser.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The learn element instructs the AIML interpreter to retrieve a resource specified by a URI, 
     /// and to Process its AIML object contents.
     /// supports network HTTP and web service based AIML learning (as well as local filesystem)
     /// </summary>
-    public class learn : RTParser.Utils.LoadingTagHandler
+    public class learn : LoadingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -26,7 +21,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public learn(RTParser.AltBot bot,
+        public learn(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -37,21 +32,23 @@ namespace RTParser.AIMLTagHandlers
 
         }
 
-        protected override Unifiable ProcessChangeU()
+        protected override Unifiable PreProcessChange()
         {
-            IsStarted = true;
-            isRecursive = true;
+            IsLoadReady = true;
             var recursiveResult = Unifiable.CreateAppendable();
-
-            if (templateNode.HasChildNodes)
+            string cmd = templateNode.LocalName;
+            if (HelperForMerge.HasChildNodesNonText(templateNode))
             {
+                ProcessInnerXmlAsLoad = true;
 
-                XmlNode attach = StaticXMLUtils.CopyNode("aiml", templateNode, false);
+                XmlNode attach = CopyNode("aiml", templateNode, false);
+                // remove children (our goal was to simpley copy attributes
                 attach.RemoveAll();
                 // recursively check
+                
                 foreach (XmlNode childNode in templateNode.ChildNodes)
                 {
-                    XmlNode evalChild = EvalChild(childNode);
+                    XmlNode evalChild = EvalChild(cmd, childNode);
                     attach.AppendChild(evalChild);
                 }
                 templateNode = attach;
@@ -59,9 +56,9 @@ namespace RTParser.AIMLTagHandlers
             return recursiveResult;
         }
 
-        private XmlNode EvalChild(XmlNode templateNode)
+        private XmlNode EvalChild(string parentName, XmlNode templateNode)
         {
-            XmlNode attach = templateNode.CloneNodeV(false);// //AIMLLoader.CopyNode(templateNode, false);
+            XmlNode attach = templateNode.CloneNode(false);// //AIMLLoader.CopyNode(templateNode, false);
             LineInfoElementImpl.unsetReadonly(attach);
             if (templateNode.HasChildNodes)
             {
@@ -70,18 +67,18 @@ namespace RTParser.AIMLTagHandlers
                 {
                     if (childNode.LocalName == "eval")
                     {
-                        AppendEvalation(attach, childNode);
+                        AppendEvalation(parentName, attach, childNode);
                     }
                     else
                     {
-                        attach.AppendChild(EvalChild(childNode));
+                        attach.AppendChild(EvalChild(childNode.LocalName, childNode));
                     }
                 }
             }
             return attach;
         }
 
-        void AppendEvalation(XmlNode attach, XmlNode childNode)
+        void AppendEvalation(string origParentName, XmlNode attach, XmlNode childNode)
         {
             {
                 {
@@ -104,7 +101,7 @@ namespace RTParser.AIMLTagHandlers
                         foreach (XmlNode child in readNode.ChildNodes)
                         {
                             LineInfoElementImpl.unsetReadonly(child);
-                            attach.AppendChild(child.CloneNodeV(true));
+                            attach.AppendChild(child.CloneNode(true));
                         }
                     }
                 }
@@ -113,9 +110,23 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
         {
-            if (CheckNode("learn,load,graph"))
+            if (CheckNode("learn,load,graph,aiml"))
             {
-               // LoaderOptions loaderOptions = loaderOptions0;// ?? LoaderOptions.GetDefault(request);
+                if (templateNode.Name == "aiml")
+                {
+                    if (ProcessInnerXmlAsLoad)
+                    {
+                        return LoadAimlDoc(templateNode);
+                    }
+                }
+                else
+                {
+                    if (ProcessInnerXmlAsLoad)
+                    {
+                        return LoadAimlDoc(templateNode);
+                    }
+                }
+                // LoaderOptions loaderOptions = loaderOptions0;// ?? LoaderOptions.GetDefault(request);
                 
                 //recurse here? 
                 bool outRecurse;                
@@ -201,6 +212,11 @@ namespace RTParser.AIMLTagHandlers
                 } 
             }
             return Unifiable.Empty;
+        }
+
+        private Unifiable LoadAimlDoc(XmlNode xmlNode)
+        {
+            throw new NotImplementedException();
         }
     }
 }

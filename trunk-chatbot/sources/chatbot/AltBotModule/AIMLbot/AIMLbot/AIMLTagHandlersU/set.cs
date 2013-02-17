@@ -1,11 +1,9 @@
 using System.Xml;
-using AltAIMLbot;
+using AltAIMLbot.Database;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser.Database;
-using RTParser.Variables;
+using AltAIMLbot.Variables;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The set element instructs the AIML interpreter to set the value of a predicate to the result 
@@ -24,7 +22,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// A set element may contain any AIML template elements.
     /// </summary>
-    public class set : RTParser.Utils.AIMLTagHandlerU
+    public class set : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -35,7 +33,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public set(RTParser.AltBot bot,
+        public set(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -87,7 +85,7 @@ namespace RTParser.AIMLTagHandlers
                         value = strV;
                     }
                 }
-                string setReturn = GetAttribValue(templateNode, "set-return",
+                string setReturn = GetAttribValue<string>(templateNode, "set-return",
                                                   () =>((string) Proc.GetRelationMetaProps().GetMeta(name, "set-return")),
                                                   ReduceStarAttribute<string>);
                 if (value == null)

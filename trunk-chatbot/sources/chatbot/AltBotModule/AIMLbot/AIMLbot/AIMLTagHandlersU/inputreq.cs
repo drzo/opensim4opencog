@@ -1,11 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
    /// <summary>
    ///  Returns to original text that <pattern> key'd from
@@ -21,7 +17,7 @@ namespace RTParser.AIMLTagHandlers
    ///      <template><srai>INPUTREQTEST1<srai/></template>
    ///  </category>
    /// </summary>
-    public class inputreq : RTParser.Utils.AIMLTagHandlerU
+    public class inputreq : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -32,7 +28,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public inputreq(RTParser.AltBot bot,
+        public inputreq(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,

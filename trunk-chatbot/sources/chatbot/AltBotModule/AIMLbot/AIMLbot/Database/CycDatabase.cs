@@ -10,14 +10,12 @@ using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using org.opencyc.api;
 using org.opencyc.cycobject;
-using RTParser;
-using RTParser.Utils;
 
-namespace RTParser.Database
+namespace AltAIMLbot.Database
 {
     abstract public class CycTagHandler:AIMLTagHandlerU
     {
-        protected CycTagHandler(RTParser.AltBot bot,
+        protected CycTagHandler(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,

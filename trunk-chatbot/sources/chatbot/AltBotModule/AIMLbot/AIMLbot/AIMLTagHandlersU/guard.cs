@@ -1,11 +1,8 @@
-using System;
-using System.Text;
 using System.Xml;
-using AltAIMLbot;
+using AltAIMLbot.Database;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The template-side guard element indicates guard an AIML interpreter should substitute the 
@@ -25,7 +22,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The template-side guard element does not have any content. 
     /// </summary>
-    public class guard : RTParser.Database.CycTagHandler
+    public class guard : CycTagHandler
     {
         /// <summary>
         /// Ctor
@@ -36,7 +33,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public guard(RTParser.AltBot bot,
+        public guard(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -49,13 +46,13 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChangeU()
         {
-            if (this.templateNode.Name.ToLower() == "guard")
+            if (templateNode.Name.ToLower() == "guard")
             {
                 string language = GetAttribValue("lang", "cycl");
                 templateNodeInnerText = Recurse();
                 if (!IsNullOrEmpty(templateNodeInnerText))
                 {
-                    Unifiable res = this.Proc.SystemExecute(templateNodeInnerText, language, request);
+                    Unifiable res = Proc.SystemExecute(templateNodeInnerText, language, request);
                     if (!Unifiable.IsNullOrEmpty(res)) return res;
                 }
             }

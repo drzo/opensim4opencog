@@ -7,11 +7,8 @@ using AltAIMLbot;
 using AltAIMLbot.Utils;
 using AltAIMLParser;
 using MushDLR223.Virtualization;
-using RTParser.Utils;
-using CustomTagAttribute=RTParser.Utils.CustomTagAttribute;
-using TagHandler=RTParser.Utils.TagHandler;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     /// <summary>
     /// Encapsulates an AIML Custom Tag Proccessor.

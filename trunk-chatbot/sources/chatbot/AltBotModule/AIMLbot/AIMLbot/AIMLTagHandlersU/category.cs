@@ -1,12 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// An element called bot, which may be considered a restricted version of get, is used to 
@@ -19,7 +14,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The bot element does not have any content. 
     /// </summary>
-    public class category : RTParser.Utils.LoadingTagHandler
+    public class category : LoadingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -30,7 +25,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public category(RTParser.AltBot bot,
+        public category(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -42,7 +37,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
         {
-            if (this.templateNode.Name.ToLower() == "category")
+            if (templateNode.Name.ToLower() == "category")
             {
                 var loader = request.Loader ?? Proc.Loader;
                 loader.processCategory(templateNode,

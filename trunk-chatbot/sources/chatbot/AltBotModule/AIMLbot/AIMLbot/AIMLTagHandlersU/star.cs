@@ -1,13 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Xml;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The star element indicates that an AIML interpreter should substitute the value "captured" 
@@ -35,7 +31,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public star(RTParser.AltBot bot,
+        public star(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -47,7 +43,7 @@ namespace RTParser.AIMLTagHandlers
         }
     }
 
-    public class StarTagHandler : RTParser.Utils.UnifibleTagHandler
+    public class StarTagHandler : UnifibleTagHandler
     {
         protected override bool ExpandingSearchWillYieldNoExtras { get { return true; } }
         protected virtual IList<string> GetStarDict()
@@ -56,6 +52,17 @@ namespace RTParser.AIMLTagHandlers
         }
 
         protected int DefaultIndex { get; set; }
+
+        override protected Unifiable Recurse()
+        {
+            var vorNull = ComputeInnerOrNull();
+            if (!Unifiable.IsNull(vorNull))
+            {
+                return vorNull;
+            }
+            writeToLogWarn("Why is a star in Recurse?");
+            return base.Recurse();
+        }
 
         protected Func<IList<string>> StarDict;
         internal const float STAR_TRUE = 0;
@@ -70,7 +77,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public StarTagHandler(RTParser.AltBot bot,
+        public StarTagHandler(AltBot bot,
                                       User user,
                                       SubQuery query,
                                       Request request,
@@ -125,14 +132,14 @@ namespace RTParser.AIMLTagHandlers
         /// The method that does the actual Processing of the text.
         /// </summary>
         /// <returns>The resulting Processed text</returns>
-        protected override Unifiable ProcessChangeU()
+        protected override Unifiable ComputeInnerOrNull()
         {
-            IList<string> stars = GetStarDict();
+            var stars = GetStarDict();
 
             int starsCount = stars.Count;
             string value = GetAttribValue("index", "" + DefaultIndex);
 
-            string starName = this.templateNode.Name.ToLower();
+            string starName = templateNode.Name.ToLower();
             if (CheckNode("star,thatstar,inputstar,topicstar"))
             {
                 if (starsCount > 0)

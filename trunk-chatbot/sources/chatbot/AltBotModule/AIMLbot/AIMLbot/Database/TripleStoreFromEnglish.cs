@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Xml;
 using AltAIMLbot;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser.Utils;
-using RTParser.Variables;
 
-namespace RTParser.Database
+namespace AltAIMLbot.Database
 {
     public class TripleStoreFromEnglish : ITripleStore, IEntityFilter
     {

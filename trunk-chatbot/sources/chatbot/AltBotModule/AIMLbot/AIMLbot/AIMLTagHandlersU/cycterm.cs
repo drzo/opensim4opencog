@@ -1,17 +1,13 @@
-using System;
-using System.Collections.Generic;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
-using AltAIMLbot.Utils;
 using AltAIMLParser;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// &lt;cycterm&gt; translates an English word/phrase into a Cyc symbol 
     /// </summary>
-    public class cycterm : RTParser.Utils.AIMLTagHandlerU
+    public class cycterm : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -22,7 +18,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public cycterm(RTParser.AltBot bot,
+        public cycterm(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,

@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using AltAIMLbot.Utils;
-using RTParser.Utils;
 
-namespace RTParser
+namespace AltAIMLbot
 {
 
     public class DictionaryOverride<T>

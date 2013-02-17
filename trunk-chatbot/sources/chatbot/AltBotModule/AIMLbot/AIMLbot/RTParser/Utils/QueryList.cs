@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.Xml;
 using AltAIMLbot.Utils;
 using AltAIMLParser;
-using GraphQuery = RTParser.Utils.QueryList;
+using GraphQuery = AltAIMLbot.Utils.QueryList;
 using MushDLR223.Utilities;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     public partial class QueryList : QuerySettings
     {

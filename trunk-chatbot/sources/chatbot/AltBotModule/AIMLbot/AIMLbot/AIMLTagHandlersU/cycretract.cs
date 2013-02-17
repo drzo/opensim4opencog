@@ -1,17 +1,13 @@
 using System;
-using System.Collections.Generic;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// &lt;cycretract&gt; simple way to retract a CycL statement
     /// </summary>
-    public class cycretract : RTParser.Utils.AIMLTagHandlerU
+    public class cycretract : AIMLTagHandlerU
     {
         public cycretract(){}
         /// <summary>
@@ -23,7 +19,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public cycretract(RTParser.AltBot bot,
+        public cycretract(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -38,11 +34,11 @@ namespace RTParser.AIMLTagHandlers
         }
         protected override Unifiable ProcessChangeU()
         {
-            if (this.templateNode.Name.ToLower() == "cycretract")
+            if (templateNode.Name.ToLower() == "cycretract")
             {                
                 if (!IsNullOrEmpty(templateNodeInnerText))
                 {
-                    return this.Proc.TheCyc.EvalSubL(String.Format("(cyc-unassert `{0})", Recurse()), null);
+                    return Proc.TheCyc.EvalSubL(String.Format("(cyc-unassert `{0})", Recurse()), null);
                 }
             }
             return Unifiable.Empty;

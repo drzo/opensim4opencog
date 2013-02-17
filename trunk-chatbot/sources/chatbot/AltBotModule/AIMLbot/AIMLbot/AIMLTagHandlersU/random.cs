@@ -1,19 +1,16 @@
 using System;
-using System.Xml;
-using System.Text;
 using System.Collections.Generic;
-using AltAIMLbot;
+using System.Xml;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The random element instructs the AIML interpreter to return exactly one of its contained li 
     /// elements randomly. The random element must contain one or more li elements of type 
     /// defaultListItem, and cannot contain any other elements.
     /// </summary>
-    public class random : RTParser.Utils.AIMLTagHandlerU
+    public class random : AIMLTagHandlerU
     {
         static Random r = new Random();
         /// <summary>
@@ -25,7 +22,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public random(RTParser.AltBot bot,
+        public random(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -33,7 +30,7 @@ namespace RTParser.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
-            this.isRecursive = false;
+            isRecursive = false;
         }
 
 
@@ -50,7 +47,7 @@ namespace RTParser.AIMLTagHandlers
             if (CheckNode("random"))
             {
                 Unifiable appendable = Unifiable.CreateAppendable();
-                if (this.templateNode.HasChildNodes)
+                if (templateNode.HasChildNodes)
                 {
                     // only grab <li> nodes
                     List<XmlNode> listNodes = new List<XmlNode>();

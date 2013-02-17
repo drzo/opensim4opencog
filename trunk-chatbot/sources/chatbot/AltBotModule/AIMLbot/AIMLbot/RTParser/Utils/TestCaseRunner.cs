@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Xml;
-using AltAIMLbot;
 using AltAIMLParser;
+using AltAIMLbot;
+using AltAIMLbot.Utils;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     internal class TestCaseRunner : XmlNodeEvaluatorImpl
     {

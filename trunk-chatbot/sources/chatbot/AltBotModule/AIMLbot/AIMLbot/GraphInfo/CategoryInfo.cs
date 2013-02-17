@@ -4,19 +4,19 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using AltAIMLbot.Utils;
 using MushDLR223.Utilities;
-using PatternInfo = RTParser.Unifiable;
-using ThatInfo = RTParser.Unifiable;
-using TopicInfo = RTParser.Unifiable;
-using GuardInfo = RTParser.Unifiable;
-using ResponseInfo = RTParser.Unifiable;
+using PatternInfo = AltAIMLbot.Unifiable;
+using ThatInfo = AltAIMLbot.Unifiable;
+using TopicInfo = AltAIMLbot.Unifiable;
+using GuardInfo = AltAIMLbot.Unifiable;
+using ResponseInfo = AltAIMLbot.Unifiable;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     [Serializable]
     abstract public class CategoryInfoImpl1 : GraphLinkInfo, IAIMLInfo, IComparable<TemplateInfo>, CategoryInfo
     {
-        public abstract GuardInfo Guard { get; set; }
-        public abstract ResponseInfo Response { get; set; }
+        public abstract Unifiable Guard { get; set; }
+        public abstract Unifiable Response { get; set; }
         string _graph;
         private GraphMaster _graphCache = null;
         public GraphMaster InGraph
@@ -34,11 +34,11 @@ namespace RTParser.Utils
             }
         }
 
-        public PatternInfo Pattern { get; set; }
+        public Unifiable Pattern { get; set; }
         public List<ConversationCondition> Preconds { get; set; }
         public TemplateInfo Template { get { return (TemplateInfo)this; } }
-        public ThatInfo That { get; set; }
-        public TopicInfo Topic { get; set; }
+        public Unifiable That { get; set; }
+        public Unifiable Topic { get; set; }
       
         //private TemplateInfo ParentCategory;
 
@@ -47,7 +47,7 @@ namespace RTParser.Utils
         abstract public bool IsDisabledOutput { get; set; }
         abstract public bool IsSearchDisabled { get; set; }
 
-        protected CategoryInfoImpl1(PatternInfo pattern, XmlNode cateNode, LoaderOptions options)
+        protected CategoryInfoImpl1(Unifiable pattern, XmlNode cateNode, LoaderOptions options)
             : base(cateNode)
         {
             Pattern = pattern;
@@ -280,15 +280,15 @@ namespace RTParser.Utils
             //  TemplateInfos.Add(templateInfo);
         }
 
-        public static CategoryInfo GetCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename, XmlNode templateNode,
-            ResponseInfo template, GuardInfo guard, TopicInfo topicInfo, Node patternNode, ThatInfo thatInfo, IEnumerable<ConversationCondition> conds)
+        public static CategoryInfo GetCategoryInfo(Unifiable info, XmlNode node, LoaderOptions filename, XmlNode templateNode,
+            Unifiable template, Unifiable guard, Unifiable topicInfo, Node patternNode, Unifiable thatInfo, IEnumerable<ConversationCondition> conds)
         {
             return filename.CtxGraph.FindCategoryInfo(info, node, filename, templateNode, template, guard, topicInfo,
                                                       patternNode, thatInfo, conds);
         }
 
-        public static CategoryInfo MakeCategoryInfo(PatternInfo info, XmlNode cateNode, LoaderOptions filename,
-            XmlNode templateNode, ResponseInfo template, GuardInfo guard, TopicInfo topicInfo, Node patternNode, ThatInfo thatInfo, IEnumerable<ConversationCondition> conds)
+        public static CategoryInfo MakeCategoryInfo(Unifiable info, XmlNode cateNode, LoaderOptions filename,
+            XmlNode templateNode, Unifiable template, Unifiable guard, Unifiable topicInfo, Node patternNode, Unifiable thatInfo, IEnumerable<ConversationCondition> conds)
         {
             if (NoInfo) return null;
             var vv = new TemplateInfoImpl(info, cateNode, templateNode, filename, template, guard, topicInfo, patternNode,
@@ -321,7 +321,7 @@ namespace RTParser.Utils
             Preconds.Add(info);
         }
 
-        public void AddPrecondition(ThatInfo info)
+        public void AddPrecondition(Unifiable info)
         {
             if (info == null)
             {
@@ -330,8 +330,8 @@ namespace RTParser.Utils
             AddPrecondition(new ConversationCondition(info.PatternNode));
         }
 
-        public void SetCategoryTag(Unifiable generatedPath, PatternInfo patternInfo, CategoryInfo category,
-                                   XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo)
+        public void SetCategoryTag(Unifiable generatedPath, Unifiable patternInfo, CategoryInfo category,
+                                   XmlNode outerNode, XmlNode templateNode, Unifiable guard, Unifiable thatInfo)
         {
 #if false
             var node = this.RootNode;
@@ -472,9 +472,9 @@ namespace RTParser.Utils
 
     public interface CategoryInfo : IAIMLInfo, IndexTarget
     {
-        TopicInfo Topic { get; }
-        PatternInfo Pattern { get; }
-        ThatInfo That { get; set; }
+        Unifiable Topic { get; }
+        Unifiable Pattern { get; }
+        Unifiable That { get; set; }
 
         List<ConversationCondition> Preconds { get; }
 
@@ -490,11 +490,11 @@ namespace RTParser.Utils
         bool IsTraced { get; set; }
         Node GraphmasterNode { get; set; }
         string Filename { get; }
-        ResponseInfo Response { get; set; }
+        Unifiable Response { get; set; }
 
         //  void SetCategoryTag(Unifiable categoryPath, PatternInfo patternInfo, CategoryInfo categoryInfo, XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo);
         bool Matches(string match);
-        void AddPrecondition(ThatInfo node);
+        void AddPrecondition(Unifiable node);
         void AddPrecondition(ConversationCondition node);
         void AddTemplate(TemplateInfo newTemplateInfo);
     }

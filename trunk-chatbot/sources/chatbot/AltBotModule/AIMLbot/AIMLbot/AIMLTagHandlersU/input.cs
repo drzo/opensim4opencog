@@ -1,11 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The input element tells the AIML interpreter that it should substitute the contents of a 
@@ -25,7 +21,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The input element does not have any content. 
     /// </summary>
-    public class input : RTParser.Utils.AIMLConstraintTagHandler
+    public class input : AIMLConstraintTagHandler
     {
         /// <summary>
         /// Ctor
@@ -36,7 +32,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public input(RTParser.AltBot bot,
+        public input(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -46,7 +42,7 @@ namespace RTParser.AIMLTagHandlers
         {
         }
 
-        public input(RTParser.AltBot bot,
+        public input(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -68,7 +64,7 @@ namespace RTParser.AIMLTagHandlers
                     {
                         //if (at1.Length > 0)
                         {
-                            return CheckValue(GetIndexes(at1, request.Responder, this.user.getInputSentence,
+                            return CheckValue(GetIndexes(at1, request.Responder, user.getInputSentence,
                                               (str, args) => localError(at1, str)));
                         }
                     }

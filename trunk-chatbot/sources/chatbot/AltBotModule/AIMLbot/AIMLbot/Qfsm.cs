@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using AltAIMLParser;
 using AltAIMLbot.Utils;
-using RTParser;
+using AltAIMLbot;
 
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs

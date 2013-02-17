@@ -1,4 +1,4 @@
-﻿namespace RTParser.Database
+﻿namespace AltAIMLbot.Database
 {
     class WikiAnswersFactoidEngine : WebGetFactiodEngine
     {

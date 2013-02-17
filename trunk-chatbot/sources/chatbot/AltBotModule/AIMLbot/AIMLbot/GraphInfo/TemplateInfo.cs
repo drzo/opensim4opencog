@@ -4,16 +4,16 @@ using System.Xml;
 using AltAIMLbot.Utils;
 using AltAIMLParser;
 using MushDLR223.Utilities;
-using RTParser.AIMLTagHandlers;
-using PatternInfo = RTParser.Unifiable;
-using ThatInfo = RTParser.Unifiable;
-using TopicInfo = RTParser.Unifiable;
-using GuardInfo = RTParser.Unifiable;
-using ResponseInfo = RTParser.Unifiable;
+using AltAIMLbot.AIMLTagHandlers;
+using PatternInfo = AltAIMLbot.Unifiable;
+using ThatInfo = AltAIMLbot.Unifiable;
+using TopicInfo = AltAIMLbot.Unifiable;
+using GuardInfo = AltAIMLbot.Unifiable;
+using ResponseInfo = AltAIMLbot.Unifiable;
 
 
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     [Serializable]
     public sealed class TemplateInfoImpl : CategoryInfoImpl1, TemplateInfo
@@ -62,14 +62,14 @@ namespace RTParser.Utils
         public CategoryInfo CategoryInfo { get { return this; } }
         //public Node GraphmasterNode;
         private Unifiable _guard;
-        public override GuardInfo Guard
+        public override Unifiable Guard
         {
             get { return _guard; }
             set { _guard = value; }
         }
         
         private Unifiable _response;
-        public override ResponseInfo Response
+        public override Unifiable Response
         {
             get { return _response; }
             set { _response = value; }
@@ -161,9 +161,9 @@ namespace RTParser.Utils
         }
         public bool IsHighlyUsefull { get; set; }
 
-        public TemplateInfoImpl(PatternInfo pattern, XmlNode cateNode, XmlNode templateNode,
-            LoaderOptions options, ResponseInfo responseInfo,
-            GuardInfo guard, TopicInfo topicInfo, Node patternNode, ThatInfo thatInfo)
+        public TemplateInfoImpl(Unifiable pattern, XmlNode cateNode, XmlNode templateNode,
+            LoaderOptions options, Unifiable responseInfo,
+            Unifiable guard, Unifiable topicInfo, Node patternNode, Unifiable thatInfo)
             : base(pattern, cateNode, options)
         {
             if (templateNode == null || responseInfo.FullPath == Unifiable.Empty)
@@ -328,7 +328,7 @@ namespace RTParser.Utils
 
         //public override Unifiable FullPath { get; set; }
 
-        public static TemplateInfo GetTemplateInfo(XmlNode template, GuardInfo guard, ThatInfo thatInfo, Node node,
+        public static TemplateInfo GetTemplateInfo(XmlNode template, Unifiable guard, Unifiable thatInfo, Node node,
                                                    CategoryInfo category, GraphMaster graphMaster)
         {
             bool prev = NoInfo;
@@ -336,7 +336,7 @@ namespace RTParser.Utils
             {
                 NoInfo = false;
                 //return new TemplateInfo(template, guard, node, category);
-                ResponseInfo responseInfo = graphMaster.FindResponse(template, template.OuterXml);
+                Unifiable responseInfo = graphMaster.FindResponse(template, template.OuterXml);
                 category.GraphmasterNode = node;
                 //category.Graph = node;
                 if (thatInfo != null) category.That = thatInfo;
@@ -573,7 +573,7 @@ namespace RTParser.Utils
         bool IsSilent { get; }
         XmlNode ClonedOutput { get; }
         CategoryInfo CategoryInfo { get; }
-        GuardInfo Guard { get; set; }
+        Unifiable Guard { get; set; }
         SubQuery Query { get; set; }
         string TemplateKey { get; set; }
         GraphMaster InGraph { get; set; }

@@ -1,11 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The version element tells the AIML interpreter that it should substitute the version number
@@ -13,7 +9,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The version element does not have any content. 
     /// </summary>
-    public class recursiveVerbatum : RTParser.Utils.AIMLTagHandlerU
+    public class recursiveVerbatum : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -24,7 +20,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public recursiveVerbatum(XmlNode show, RTParser.AltBot bot,
+        public recursiveVerbatum(XmlNode show, AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -34,7 +30,7 @@ namespace RTParser.AIMLTagHandlers
         {
             data = show;
             //RecurseResult = data;
-            isRecursive = isRecurse;
+            this.isRecursive = isRecurse;
         }
 
         readonly XmlNode data;

@@ -1,15 +1,13 @@
-using System;
 using System.Xml;
-using AltAIMLbot;
+using AltAIMLbot.Database;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// &lt;cycsystem&gt; executes a CycL statement and returns the result 
     /// </summary>
-    public class cycsystem : RTParser.Database.CycTagHandler
+    public class cycsystem : CycTagHandler
     {
         /// <summary>
         /// Ctor
@@ -20,7 +18,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public cycsystem(RTParser.AltBot bot,
+        public cycsystem(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -36,12 +34,12 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChangeU()
         {
-            if (this.templateNode.Name.ToLower() == "cycsystem")
+            if (templateNode.Name.ToLower() == "cycsystem")
             {
                 Unifiable filter = base.GetAttribValue("filter", null);
                 if (!IsNullOrEmpty(templateNodeInnerText))
                 {
-                    if (WhenTrue(this.TheCyc.EvalSubL(Recurse(), filter)))
+                    if (WhenTrue(TheCyc.EvalSubL(Recurse(), filter)))
                     {
                         base.Succeed();
                         return templateNodeInnerText;

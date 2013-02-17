@@ -6,24 +6,24 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Xml;
+using AltAIMLbot.Normalize;
 using AltAIMLbot.Utils;
 using AltAIMLParser;
+using AltAIMLbot.Variables;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using RTParser.AIMLTagHandlers;
-using RTParser.Normalize;
-using RTParser.Variables;
-using UPath = RTParser.Unifiable;
+using AltAIMLbot.AIMLTagHandlers;
+using UPath = AltAIMLbot.Unifiable;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 //using CategoryInfo = RTParser.Utils.TemplateInfo;
-using PatternInfo = RTParser.Unifiable;
-using ThatInfo = RTParser.Unifiable;
-using TopicInfo = RTParser.Unifiable;
-using GuardInfo = RTParser.Unifiable;
-using ResponseInfo = RTParser.Unifiable;
+using PatternInfo = AltAIMLbot.Unifiable;
+using ThatInfo = AltAIMLbot.Unifiable;
+using TopicInfo = AltAIMLbot.Unifiable;
+using GuardInfo = AltAIMLbot.Unifiable;
+using ResponseInfo = AltAIMLbot.Unifiable;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     /// <summary>
     /// A utility class for loading AIML files from disk into the graphmaster structure that 
@@ -78,10 +78,10 @@ namespace RTParser.Utils
 
         #endregion
 
-        private AIMLLoader newLoader = null;
+        public AIMLLoaderS SLoader = null;
         public AIMLLoaderU(AltBot bot)
         {
-            newLoader = new AIMLLoader(bot);
+            SLoader = new AIMLLoaderS(bot);
         }
 
         /// <summary>
@@ -91,7 +91,8 @@ namespace RTParser.Utils
         public AIMLLoaderU(AltBot bot, Request request)
         {
             this.LoaderRequest00 = request;
-            newLoader = new AIMLLoader(bot);
+            SLoader = new AIMLLoaderS(bot);
+            SLoader.loadOpts = request.LoadOptions;
             //XmlNodeEvaluators.Add(this);
         }
 
@@ -788,7 +789,7 @@ namespace RTParser.Utils
             {
                 Console.WriteLine("Check: loadAIMLFromXML enter(3)");
 
-                newLoader.loadAIMLFromXML(currentNode, loadOpts.CurrentFilename);
+                SLoader.loadAIMLFromXML(currentNode, loadOpts.CurrentFilename);
                 return 1;
             }
 
@@ -992,7 +993,7 @@ namespace RTParser.Utils
             // find the name of the topic or set to default "*"
             Unifiable thatPattten = GetAttribValue(thatNode, "pattern,value,name", Unifiable.STAR);
             // process all the category nodes
-            ThatInfo newThatInfo = path.CtxGraph.FindThat(thatNode, thatPattten);
+            Unifiable newThatInfo = path.CtxGraph.FindThat(thatNode, thatPattten);
             foreach (XmlNode cateNode in thatNode.ChildNodes)
             {
                 // getting stacked up inside
@@ -1170,7 +1171,7 @@ namespace RTParser.Utils
             {
                 if (loaderOpts.SearchForGuard) guardnode = FindNode("guard", outerNode, null);
             }
-            GuardInfo guard = guardnode == null ? null : loaderOpts.CtxGraph.GetGuardInfo(guardnode);
+            Unifiable guard = guardnode == null ? null : loaderOpts.CtxGraph.GetGuardInfo(guardnode);
             string errors = "";
             XmlNode TemplateOverwrite = StaticAIMLUtils.TheTemplateOverwrite;
             bool unusableCategory = false;
@@ -1235,9 +1236,9 @@ namespace RTParser.Utils
 
             Func<Unifiable, bool, Unifiable> normalizerT = (inputText, isUserInput) => Trim(NormalizeU(inputText, isUserInput));
             Unifiable categoryPath = generatePath(patternText, that, cond, topicName, false, normalizerT).ToUpper();
-            PatternInfo patternInfo = loaderOpts.CtxGraph.FindPattern(patternNode, patternText);//PatternInfo.GetPattern(loaderOpts, patternNode, categoryPath);
-            TopicInfo topicInfo = loaderOpts.CtxGraph.FindTopic(topicName);
-            ThatInfo thatInfo = loaderOpts.CtxGraph.FindThat(thatNodeOrNull, that);
+            Unifiable patternInfo = loaderOpts.CtxGraph.FindPattern(patternNode, patternText);//PatternInfo.GetPattern(loaderOpts, patternNode, categoryPath);
+            Unifiable topicInfo = loaderOpts.CtxGraph.FindTopic(topicName);
+            Unifiable thatInfo = loaderOpts.CtxGraph.FindThat(thatNodeOrNull, that);
             var templateNodeFindable = StaticAIMLUtils.TheTemplateOverwrite;
 
             if (templateNode != null)

@@ -9,25 +9,27 @@ using System.Xml;
 using System.Web;
 using System.IO;
 using AltAIMLParser;
+using AltAIMLbot.Normalize;
 using LAIR.ResourceAPIs.WordNet;
 using LAIR.Collections.Generic;
 using MushDLR223.Utilities;
+using AltAIMLbot.Utils;
 using RaptorDB;
 using System.Linq;
-using RTParser;
-using RTParser.Normalize;
+using AltAIMLbot;
+using AltAIMLbot.Normalize;
 using Unifiable = System.String;
-using UPath = RTParser.Unifiable;
-using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
+using UPath = AltAIMLbot.Unifiable;
+using UList = System.Collections.Generic.List<AltAIMLbot.Utils.TemplateInfo>;
 //using CategoryInfo = RTParser.Utils.TemplateInfo;
 //using StringAppendableUnifiable = System.Text.StringBuilder;
-using PatternInfo = RTParser.Unifiable;
-using ThatInfo = RTParser.Unifiable;
-using TopicInfo = RTParser.Unifiable;
-using GuardInfo = RTParser.Unifiable;
-using ResponseInfo = RTParser.Unifiable;
+using PatternInfo = AltAIMLbot.Unifiable;
+using ThatInfo = AltAIMLbot.Unifiable;
+using TopicInfo = AltAIMLbot.Unifiable;
+using GuardInfo = AltAIMLbot.Unifiable;
+using ResponseInfo = AltAIMLbot.Unifiable;
 using SNode = AltAIMLbot.Utils.Node;
-using TemplateInfo = RTParser.Utils.TemplateInfo;
+using TemplateInfo = AltAIMLbot.Utils.TemplateInfo;
 using MushDLR223.Virtualization;
 
 namespace AltAIMLbot.Utils
@@ -51,7 +53,7 @@ namespace AltAIMLbot.Utils
         }
 
 #endif
-        public RTParser.Utils.GraphMaster Graph
+        public AltAIMLbot.Utils.GraphMaster Graph
         {
             get { throw new NotImplementedException(); }
         }
@@ -94,12 +96,13 @@ namespace AltAIMLbot.Utils
             throw new NotImplementedException();
         }
 
-        public Node addPathNodeChilds(Unifiable unifiable, RTParser.Utils.NodeAdder adder)
+        public Node addPathNodeChilds(Unifiable unifiable, AltAIMLbot.Utils.NodeAdder adder)
         {
             throw new NotImplementedException();
         }
 
-        public List<RTParser.Utils.CategoryInfo> addTerminal(XmlNode node, XmlNode cateNode, Unifiable unifiable, Unifiable info, Unifiable thatInfo, RTParser.Utils.LoaderOptions options, Unifiable patternInfo, List<RTParser.Utils.ConversationCondition> conditions, out bool removal)
+        public List<AltAIMLbot.Utils.CategoryInfo> addTerminal(XmlNode node, XmlNode cateNode, Unifiable unifiable, Unifiable info, Unifiable thatInfo, 
+            AltAIMLbot.Utils.LoaderOptions options, Unifiable patternInfo, List<AltAIMLbot.Utils.ConversationCondition> conditions, out bool removal)
         {
             throw new NotImplementedException();
         }
@@ -193,9 +196,9 @@ namespace AltAIMLbot.Utils
                 {
                     string absPath = GetPath();
                     var cl = new List<Node>();
-                    foreach (Unifiable key in ChildKeys)
+                    foreach (var key in ChildKeys)
                     {
-                        cl.Add(ChildNode(key));
+                        cl.Add(ChildNode((string)key));
                     }
                     return cl;
                 }
@@ -1345,8 +1348,24 @@ namespace AltAIMLbot.Utils
             return v;
         }
 
+        /// <summary>
+        /// isInvalidRegex allows us to skip generating an exception when the regex is a known bad
+        ///   this is not supposed to be complete.. just some cases
+        /// </summary>
+        /// <param name="wnWord"></param>
+        /// <returns></returns>
+        static bool isInvalidRegex(string wnWord)
+        {
+            if (wnWord == null || wnWord == "*")
+            {
+                return true;
+            }
+            return false;
+        }
+
         static bool matchesWildSense(string sense, string queryWord,Request request)
         {
+            if (sense == queryWord) return true;
             // always clip off the first "*";
             sense = sense.Substring(1);
             if (sense.Length == 0) return false;
@@ -1376,13 +1395,23 @@ namespace AltAIMLbot.Utils
             Console.WriteLine("MWS:{0},{1},{2},{3} [{4}]", wnWord, wnRelation, wnPos, negation, queryWord);
 
             // Can you find a match inside (using regex while we're here)?
-            var matcher = new Regex(wnWord);
-            if (matcher.IsMatch(queryWord))
+            if (!isInvalidRegex(wnWord))
             {
-                Console.WriteLine("MWS:Regex Match");
-                return (true ^ negation);
-            }
+                try
+                {
+                    var matcher = new Regex(wnWord);
+                    if (matcher.IsMatch(queryWord))
+                    {
+                        Console.WriteLine("MWS:Regex Match");
+                        return (true ^ negation);
+                    }
 
+                }
+                catch (Exception e)
+                {
+                    contextBot.writeToLog("ERROR: " + e);
+                }
+            }
             // bot settings check
 
             if (wnPos == "bot")
@@ -1735,7 +1764,7 @@ namespace AltAIMLbot.Utils
             var p = Parent;
             if (p == null)
             {
-                return (_ToPath = new[] { word });
+                return (_ToPath = new[] {(Unifiable) word});
             }
             var sb = new List<Unifiable> { word };
             var pword = p.word;
@@ -1778,6 +1807,7 @@ namespace AltAIMLbot.Utils
         //using RaptorDB for persistent local key-value dictionary like storage
         //http://www.codeproject.com/Articles/190504/RaptorDB
         //http://www.codeproject.com/Articles/316816/RaptorDB-The-Key-Value-Store-V2
+        public static bool AppendGraphmasterNameToDirectory = false;
 
         public RaptorDB.KeyStoreString[] templatedb = null;
         public RaptorDB.KeyStoreString[] childdb = null;
@@ -1799,6 +1829,9 @@ namespace AltAIMLbot.Utils
         public string _dbdir = "";
         public static object mylock = new object ();
         public bool allLoaded = false;
+        public bool expectedOpen = false;
+
+        public GraphMaster Graph;
 
         public ExternDB()
         {
@@ -1843,6 +1876,14 @@ namespace AltAIMLbot.Utils
 
         public void OpenAll()
         {
+            lock (mylock)
+            {
+                if (expectedOpen)
+                {
+                    return;
+                }
+                expectedOpen = true;
+            }
             if (Servitor.DebugLevelExternalDb > 0) Console.WriteLine("OpenAll()");
             string dbdirectory = _dbdir;
             dbdirectory = HostSystem.FileSystemPath(dbdirectory);
@@ -2026,15 +2067,31 @@ namespace AltAIMLbot.Utils
                 reftime = lastWriteTimeUtc.ToString();
             }
             //loadeddb.Set(filename, filename);
-            Console.WriteLine("\nrememberLoaded:{0} ==> {1}",filename,reftime);
-            loadeddb.Set(filename,reftime);
+            Console.WriteLine("\nrememberLoaded: {0} ==> {1}", filename, reftime);
+            loadeddb.Set(filename, reftime);
         }
-        public bool wasLoaded(string filename)
+        public void forgetLoaded(string filename)
         {
             bool isMt = IsMt(filename);
             bool isVf = IsVf(filename);
             string orig = filename;
             if (!isMt && !isVf) filename = HostSystem.FileSystemPath(filename);
+            string reftime = "never";
+            Console.WriteLine("\nforgetLoaded: {0} ==> {1}", filename, reftime);
+            loadeddb.Set(filename, reftime);
+        }
+        public bool wasLoaded(string filename)
+        {
+            if (GraphMaster.DeferingSaves) return false;
+
+            bool isMt = IsMt(filename);
+            bool isVf = IsVf(filename);
+            string orig = filename;
+            if (!isMt && !isVf)
+            {
+                // convert to actual file
+                filename = HostSystem.FileSystemPath(filename);
+            }
             string lf = "";
             string reftime = "indefinite";
             if (!isMt && !isVf && File.Exists(filename))
@@ -2044,7 +2101,8 @@ namespace AltAIMLbot.Utils
             }
             bool ret = loadeddb.Get(filename, out lf);
             //return (filename == lf);
-            Console.WriteLine("\nwasLoaded:{0}  {1}<=>{2}", filename, reftime,lf);
+            if (string.IsNullOrEmpty(lf)) lf = null;
+            Console.WriteLine("\nwasLoaded:{0} {1}<=>{2}", filename, reftime, lf ?? "Unknown");
             return (reftime == lf);
         }
 
@@ -2252,6 +2310,11 @@ namespace AltAIMLbot.Utils
         public void saveNode(string absPath, Node myNode)
         {
             //Console.WriteLine("Check: saveNode({0})", absPath);
+            if (Graph != null)
+            {
+                Graph.Size++;
+            }
+            if (GraphMaster.DeferingSaves) return;
             saveNode(absPath, myNode, false);
         }
 

@@ -1,12 +1,6 @@
-using System;
-using System.Threading;
-using System.Xml;
-using System.Text;
-using System.IO;
-using RTParser.Utils;
-using AIMLbot;
+
 #if false
-namespace RTParser.AIMLTagHandlers
+namespace RTParser.AIMLTagHandlerUs
 {
     /// <summary>
     /// The srai element instructs the AIML interpreter to pass the result of Processing the contents 
@@ -17,7 +11,7 @@ namespace RTParser.AIMLTagHandlers
     /// As with all AIML elements, nested forms should be parsed from inside out, so embedded srais are 
     /// perfectly acceptable. 
     /// </summary>
-    public class srai_legacy : RTParser.Utils.AIMLTagHandler
+    public class srai_legacy : RTParser.Utils.AIMLTagHandlerU
     {
         RTParser.AltBot mybot;
         /// <summary>
@@ -75,7 +69,7 @@ namespace RTParser.AIMLTagHandlers
         }
 
         static int depth = 0;
-        protected override Unifiable ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             try
             {

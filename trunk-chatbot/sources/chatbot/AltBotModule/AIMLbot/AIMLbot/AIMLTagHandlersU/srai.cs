@@ -1,17 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Xml;
-using System.Text;
-using System.IO;
 using AIMLbot;
-using AltAIMLbot;
-using AltAIMLbot.Utils;
 using AltAIMLParser;
+using AltAIMLbot.Utils;
 using MushDLR223.ScriptEngines;
-using RTParser.Utils;
+using MasterRequest = AltAIMLbot.Utils.Request;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The srai element instructs the AIML interpreter to pass the result of Processing the contents 
@@ -22,10 +18,10 @@ namespace RTParser.AIMLTagHandlers
     /// As with all AIML elements, nested forms should be parsed from inside out, so embedded srais are 
     /// perfectly acceptable. 
     /// </summary>
-    public class srai : RTParser.Utils.AIMLTagHandlerU
+    public class srai : AIMLTagHandlerU
     {
         public static bool UseSraiLimiters = false;
-        RTParser.AltBot mybot;
+        AltBot mybot;
         /// <summary>
         /// Ctor
         /// </summary>
@@ -35,7 +31,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public srai(RTParser.AltBot bot,
+        public srai(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -116,7 +112,7 @@ namespace RTParser.AIMLTagHandlers
                     if (!IsNullOrEmpty(vv))
                     {
                         RecurseResult = vv;
-                        templateNode.InnerXml = MushDLR223.Utilities.StaticXMLUtils.XmlValueSettable(vv);
+                        templateNode.InnerXml = XmlValueSettable(vv);
                         return vv;
                     }
                     if (!IsNull(vv))
@@ -127,7 +123,7 @@ namespace RTParser.AIMLTagHandlers
                             return vv;
                         }
                         RecurseResult = vv;
-                        templateNode.InnerXml = MushDLR223.Utilities.StaticXMLUtils.XmlValueSettable(vv);
+                        templateNode.InnerXml = XmlValueSettable(vv);
                         return vv;
                     }
                     return vv;
@@ -168,14 +164,14 @@ namespace RTParser.AIMLTagHandlers
                 {
                     return RecurseResult;
                 }
-                writeToLogWarn("srai.CompleteProcess() == NULL!");
+                writeToLogWarn("srai.CompleteProcessU() == NULL!");
                 return sraiResult;
             }
             return sraiResult;
-            // return base.CompleteProcess();
+            // return base.CompleteProcessU();
         }
 
-        public override Unifiable TransformU()
+        public override string Transform()
         {
             if (RecurseResultValid) return RecurseResult;
             var vv = ProcessChange0();
@@ -183,7 +179,7 @@ namespace RTParser.AIMLTagHandlers
         }/*
         public override Unifiable RecurseProcess()
         {
-            return ProcessChange();
+            return ProcessChangeU();
         }
         */
         protected Unifiable ProcessChange0()
@@ -202,9 +198,27 @@ namespace RTParser.AIMLTagHandlers
                         KnowsCanProcess = true;
                         string toUpper = MakeMatchable(templateNodeInnerValue);
                         var rp = request.ParentRequest;
-                        if (rp != null && !rp.CanProcess(toUpper)) return null;
+                        if (rp != null && !rp.CanProcess(toUpper))
+                        {
+                            writeToLogWarn("SRAI intends to return null");
+                            return null;
+                        }
                     }
-                    if (false &&  IsNull(templateNodeInnerValue))
+                    return ProcessChangeSraiPre(templateNodeInnerValue);
+                }
+                finally
+                {
+                    Proc.chatTrace = chatTraced;
+                }
+            }
+            return Unifiable.Empty;
+        }
+
+        protected Unifiable ProcessChangeSraiPre(Unifiable templateNodeInnerValue)
+        {
+            {try
+                {
+                   {if (false &&  IsNull(templateNodeInnerValue))
                     {
                         templateNodeInnerValue = Recurse();
                     }
@@ -223,7 +237,7 @@ namespace RTParser.AIMLTagHandlers
                         }
                     }
                     templateNodeInnerValue = AltBot.CleanupCyc(templateNodeInnerValue);
-                    var vv = ProcessChangeSrai(request, query, templateNodeInnerValue, templateNode, initialString, writeToLog);
+                    var vv = ProcessChangeSrai(templateNodeInnerValue);
                     if (!Unifiable.IsNullOrEmpty(vv))
                     {
                         return vv;
@@ -240,14 +254,18 @@ namespace RTParser.AIMLTagHandlers
                         }
                         return vv; // Empty
                     }
-                    if (ProcessChange12) return null;
+                    if (ProcessChange12)
+                    {
+                        writeToLogWarn("ProcessChange12 cant get result");
+                        return null;
+                    }
                     if (Unifiable.IsNull(vv))
                     {
                         vv = GetTemplateNodeInnerText();
                         return FAIL;
                     }
                     return vv;
-                }
+                }}
                 catch (ChatSignal ex)
                 {
                     throw;
@@ -257,30 +275,34 @@ namespace RTParser.AIMLTagHandlers
                     writeToLog("ERROR: " + e);
                     throw;
                 }
-                finally
-                {
-                    Proc.chatTrace = chatTraced;
-                }
             }
-            return Unifiable.Empty;
         }
 
-        static internal Unifiable ProcessChangeSrai(Request request, SubQuery query,
+        private Unifiable ProcessChangeSrai(Unifiable templateNodeInnerValue)
+        {
+#if false
+            var vv = ProcessChangeSrai(request, query, templateNodeInnerValue, templateNode, initialString, writeToLog);
+            return vv;
+        }
+
+
+        internal Unifiable ProcessChangeSrai(Request request, SubQuery query,
             Unifiable templateNodeInnerValue, XmlNode templateNode, string initialString, OutputDelegate writeToLog)
         {
+#endif
             if (IsNullOrEmpty(templateNodeInnerValue))
             {
-                writeToLog("ERROR BAD REQUEST " + request);
+                writeToLogWarn("ERROR BAD REQUEST " + request);
                 return templateNodeInnerValue;
             }
-            var salientRequest = Request.GetOriginalSalientRequest(request);
+            var salientRequest = MasterRequest.GetOriginalSalientRequest(request);
             try
             {
                 Unifiable prevResult;
                 var CurrentTemplate = query.CurrentTemplate;
                 if (!salientRequest.EnterSalientSRAI(templateNodeInnerValue, out prevResult))
                 {
-                    writeToLog("ERROR EnterSailentSRAI: " + prevResult);
+                    writeToLogWarn("ERROR EnterSailentSRAI: " + prevResult);
                     if (true)
                     {
                         var disable = CurrentTemplate;
@@ -305,9 +327,11 @@ namespace RTParser.AIMLTagHandlers
                     }
                 }
                 Unifiable subResultOutput = null;
+#if false
                 writeToLog = writeToLog ?? DEVNULL;
                 AltBot mybot = request.TargetBot;
                 User user = request.Requester;
+#endif
                 var thisrequest = request;
                 var thisresult = request.CurrentResult;
                 /*
@@ -354,7 +378,7 @@ namespace RTParser.AIMLTagHandlers
                     try
                     {
                         Request subRequest = request.CreateSubRequest(templateNodeInnerValue, null,
-                                                                      request.RequestType | RequestKind.SraiTag);
+                                                                      RequestKind.TagHandler | RequestKind.SraiTag);
 
 
                         string requestGraphSrai = request.SraiGraph;
@@ -372,6 +396,7 @@ namespace RTParser.AIMLTagHandlers
                         {
                             showDebug = false;
                         }
+                        if (base.IsTraced) showDebug = true;
 
                         if (showDebug)
                             writeToLog(prefix + " CALLING '" + subRequestrawInput + "'");
@@ -399,9 +424,9 @@ namespace RTParser.AIMLTagHandlers
                             return Unifiable.INCOMPLETE;
                             throw new InvalidCastException("loop STDCATCHALL STDCATCHALL");
                         }
-                        AIMLbot.MasterResult subResult;
+                        MasterResult subResult;
                         string subQueryRawOutputText;
-                        subResult = GetSubResult(prefix, request, user, mybot, subRequest, showDebug,
+                        subResult = GetSubResult(prefix, request, user, mybot, (MasterRequest) subRequest, showDebug,
                                                  out subResultOutput,
                                                  out subQueryRawOutputText, writeToLog);
 
@@ -414,7 +439,7 @@ namespace RTParser.AIMLTagHandlers
                             {
                                 writeToLog(prefix + "MISSING RETURN " + whyComplete);
                             }
-                            subResult = (MasterResult)mybot.ChatFor1Result(subRequest, subResult, request.RequestType | RequestKind.SraiTag);
+                            subResult = (MasterResult)mybot.ChatFor1Result(subRequest, subResult, RequestKind.TagHandler | RequestKind.SraiTag);
                             subResultOutput = subResult.Output;
                             subResultOutputTrace = Unifiable.DescribeUnifiable(subResultOutput);
                             //subQueryRawOutput = subResult.RawOutput.Trim();
@@ -503,7 +528,7 @@ namespace RTParser.AIMLTagHandlers
             mybot.writeChatTrace("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n",
                                  subRequestrawInput, depth, subResult.GraphMasterPaths);
             mybot.writeChatTrace("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth,
-                                 AIMLLoaderU.TextAndSourceInfo(templateNode));
+                                 TextAndSourceInfo(templateNode));
 
             mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:MISSING({1})\" ;\n", depth, depth);
         }
@@ -527,10 +552,8 @@ namespace RTParser.AIMLTagHandlers
                 user.SuspendAddResultToUser = true;
                 if (prevRequest.IsTraced) subRequest.IsTraced = !showDebug;
                 subRequest.IsTraced = true;
-                subResult =
-                    (MasterResult)
-                    mybot.ChatWithToplevelResults(subRequest, subResult, false,
-                                                  subRequest.RequestType | RequestKind.SraiTag);
+                subResult = (MasterResult) mybot.ChatWithToplevelResults(subRequest, subResult, false,
+                                                                         RequestKind.TagHandler | RequestKind.SraiTag);
                 subResultOutput = subResult.RawOutput;
                 int resultCount = subResult.OutputSentences.Count;
                 if (AltBot.BE_COMPLETE_NOT_FAST && resultCount == 0)
@@ -539,9 +562,7 @@ namespace RTParser.AIMLTagHandlers
                     if (UseSraiLimiters) originalSalientRequest.ResetSRAIResults(sraiMark);
                     if (Unifiable.IsNullOrEmpty(subResultOutput))
                     {
-                        subResult =
-                            (MasterResult)
-                            mybot.ChatFor1Result(subRequest, subResult, subRequest.RequestType | RequestKind.SraiTag);
+                        subResult = (MasterResult)mybot.ChatFor1Result(subRequest, subResult, RequestKind.TagHandler | RequestKind.SraiTag); 
                         subResultOutput = subResult.Output;
                         if (!IsNullOrEmpty(subResultOutput))
                         {

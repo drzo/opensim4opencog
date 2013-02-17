@@ -1,13 +1,13 @@
 using System;
 using System.Xml;
 using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 using MushDLR223.Utilities;
-using RTParser.Variables;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 
 //using StringAppendableUnifiable = System.Text.StringBuilder;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     public abstract partial class AIMLTagHandlerU
     {
@@ -34,7 +34,7 @@ namespace RTParser.Utils
             {
                 ss = s + " -FROM- " + templateNode.OuterXml;
             }
-            if (!s.Replace(" /","/").Contains(initialString))
+            if (!s.Replace(" /", "/").Contains(initialString.Replace(" /", "/")))
             {
                 return "-WAS- '" + initialString + "' -NOW- " + ss;
             }

@@ -5,10 +5,13 @@ using System.Text;
 using System.IO;
 using AIMLbot;
 using AltAIMLParser;
+using AltAIMLbot.Utils;
 using DcBus;
 using System.Runtime.Serialization.Formatters.Binary;
 
 #if (COGBOT_LIBOMV || USE_STHREADS)
+using MushDLR223.Utilities;
+using MushDLR223.Virtualization;
 using ThreadPoolUtil;
 using ThreadPoolUtil;
 using ThreadStart = System.Threading.ThreadStart;
@@ -24,7 +27,9 @@ using Aima.Core.Logic.Propositional.Algorithms;
 using Aima.Core.Logic.Propositional.Parsing;
 using Aima.Core.Logic.Propositional.Parsing.AST;
 using LAIR.ResourceAPIs.WordNet;
-using RTParser;
+using AltAIMLbot;
+using MushDLR223.Utilities;
+using MushDLR223.Virtualization;
 using VDS.RDF.Parsing;
 using LogicalParticleFilter1;
 using CAMeRAVUEmotion;
@@ -71,12 +76,12 @@ namespace AltAIMLbot
         public  AltBot curBot;
 
         public bool NeedsLoad = true;
-        public User curUser
+        public MasterUser curUser
         {
             get
             {
                 if (_curUser != null) return _curUser;
-                return curBot.LastUser;
+                return (MasterUser)curBot.LastUser;
             }
             set
             {
@@ -160,7 +165,7 @@ namespace AltAIMLbot
         public Scheduler myScheduler = null;
         public InvertedIndex myIndex = null;
 
-        public string _rapStoreDirectory;
+        private string _rapStoreDirectoryStem;
         public int _rapStoreSlices;
         public int _rapStoreTrunkLevel;
         public static Servitor LastServitor;
@@ -190,20 +195,20 @@ namespace AltAIMLbot
         {
             get
             {
-                if (curBot != null) return curBot.rapStoreDirectoryStem;                
-                return _rapStoreDirectory;
+                if (curBot != null) return curBot.rapStoreDirectoryStem;
+                return _rapStoreDirectoryStem;
             }
             set
             {
                 if (string.IsNullOrEmpty(value))
                 {
-                    Console.WriteLine("setting Servitor rapStoreDirectory Empty");
+                    Console.WriteLine("Error! setting Servitor rapStoreDirectory Empty");
                 }
                 if (curBot != null)
                 {
                     curBot.rapStoreDirectoryStem = value;
                 }
-                _rapStoreDirectory = value;
+                _rapStoreDirectoryStem = value;
             }
         }
         public int rapStoreSlices
@@ -547,8 +552,12 @@ namespace AltAIMLbot
 
             }
         }
-
         public void Start(sayProcessorDelegate outputDelegate)
+        {
+            DoWithServitorLock(() => Start0(outputDelegate));
+        }
+
+        public void Start0(sayProcessorDelegate outputDelegate)
         {
             if (!NeedsStarted) return;
             NeedsStarted = false;
@@ -614,15 +623,35 @@ namespace AltAIMLbot
         }
 
         private bool LoadCompleteOnce = false;
-        private object LoadCompleteLock = new object();
+        public object ServitorStartStopLoadLock = new object();
         public bool NeedsStarted = true;
-        private User _curUser;
+        private MasterUser _curUser;
 
+        private void LogException(Exception e)
+        {
+            if (!GlobalSharedSettings.Trace("ERROR " + e))
+            {
+                Console.WriteLine("{0}\n{1}", e.Message, e.StackTrace);
+            }
+        }
+
+        public void DoWithServitorLock(Action withLock)
+        {
+            lock (ServitorStartStopLoadLock)
+            {
+                WaitUntilCompletedGlobals();
+                withLock();
+            }
+        }
 
         public void loadComplete()
         {
+            DoWithServitorLock(loadComplete0);
+        }
+        private void loadComplete0()
+        {
             curBot.isAcceptingUserInput = true;
-            lock (LoadCompleteLock)
+            lock (ServitorStartStopLoadLock)
             {
                 if (LoadCompleteOnce) return;
                 LoadCompleteOnce = true;
@@ -659,7 +688,7 @@ namespace AltAIMLbot
             {
                 if ((personDefined == false) && (lastAIMLInstance.Length == 0))
                 {
-                    //myBot.loadAIMLFromFiles();
+                    curBot.LoadPersonality();
                 }
             }
 
@@ -686,7 +715,7 @@ namespace AltAIMLbot
                 if (!curBot.myBehaviors.definedBehavior("startup"))
                     Console.WriteLine("startup not in definedBehavior");
             }
-
+            curBot.StampRaptstoreValid(true);
             myServitorEndpoint.StartServer();
             curBot.loadChanging = false;
             curBot.RunOnBotCreatedHooks();
@@ -701,31 +730,24 @@ namespace AltAIMLbot
 
         internal string respondToChat(string input, User user)
         {
-            RequestResult requestResult;
-            return respondToChat(input, user, true, RequestKind.ChatRealTime, out requestResult);
+            return respondToChat(input, user, true, RequestKind.ChatRealTime);
         }
 
-        public string respondToChat(string input, User curUser, bool isToplevel, RequestKind requestType, out RequestResult requestResult)
+        public string respondToChat(string input, User curUser, bool isToplevel, RequestKind requestType)
         {
             bool doHaviours = tmBehaveEnabled;
             if (string.IsNullOrEmpty(input))
             {
-                requestResult = new RequestResult(curUser, input, curBot.BotAsUser, curUser.That);
-                requestResult.chatOutputillBeInBackground = false;
-                requestResult.Error = "input was blank";
                 return input;
             }
             input = input.TrimStart();
             if (input.StartsWith("@"))
             {
-                curBot.AcceptInput(Console.WriteLine, input, curUser, isToplevel, requestType, out requestResult);
+                curBot.AcceptInput(Console.WriteLine, input, curUser, isToplevel, requestType);
                 return "@rem " + input;
             }
             if (input.StartsWith("<"))
             {
-                requestResult = new RequestResult(curUser, input, curBot.BotAsUser, curUser.That);
-                requestResult.chatOutputillBeInBackground = false;
-                requestResult.OutputText = "loaded some aiml";
                 AltBot.tl_aimlResult = new AltBot.AimlResult();
                 RunStatus rs = curBot.myBehaviors.runBTXML(input);
                 AltBot.AimlResult altBottl_aimlResult = AltBot.tl_aimlResult;
@@ -752,8 +774,6 @@ namespace AltAIMLbot
                 myScheduler.SleepAllTasks(30000);
                 curBot.isPerformingOutput = true;
 
-                requestResult = new RequestResult(curUser, input, curBot.BotAsUser, curUser.That);
-                requestResult.chatOutputillBeInBackground = true;
                 return "";
             }
             // Try the event first
@@ -787,14 +807,12 @@ namespace AltAIMLbot
                         curBot.myBehaviors.logText("ONCHAT IMMED RETURN:" + chatOutput);
                         MaybeUpdateBotJustSaidLastOutput(isToplevel, requestType, curUser, chatOutput, true, false,
                                                          false);
-                        requestResult = new RequestResult(curUser, input, curBot.BotAsUser, curUser.That);
-                        requestResult.OutputText = chatOutput;
-                        requestResult.chatOutputillBeInBackground = false;
                         return chatOutput;
                     }
                 }
-                catch
+                catch (Exception e)
                 {
+                    LogException(e);
                     curBot.isPerformingOutput = true;
                 }
             }
@@ -824,28 +842,23 @@ namespace AltAIMLbot
                         curBot.myBehaviors.logText("CHATROOT IMMED RETURN:" + chatOutput);
                         MaybeUpdateBotJustSaidLastOutput(isToplevel, requestType, curUser, chatOutput, true, false,
                                                          false);
-                        requestResult = new RequestResult(curUser, input, curBot.BotAsUser, curUser.That);
-                        requestResult.OutputText = chatOutput;
-                        requestResult.chatOutputillBeInBackground = false;
                         return chatOutput;
                     }
                 }
-                catch
+                catch(Exception e)
                 {
+                    LogException(e);
                     curBot.isPerformingOutput = true;
                 }
             }
             // else just do it (no other behavior is defined)
-            return respondToChatThruString(input, curUser, isToplevel, requestType, out requestResult);
+            return respondToChatThruString(input, curUser, isToplevel, requestType);
         }
-        public string respondToChatThruString(string input, User curUser, bool isToplevel, RequestKind requestType, out RequestResult requestResult)
+        public string respondToChatThruString(string input, User curUser, bool isToplevel, RequestKind requestType)
         {
 
             MaybeUpdateUserJustSaidLastInput(isToplevel, requestType, curUser, input, false);
             Request r = new Request(input, curUser, curUser.That, curBot, isToplevel, requestType);
-            requestResult = new RequestResult(curUser, input, curBot.BotAsUser, curUser.That);
-            requestResult.request = r;
-
             curBot.isPerformingOutput = false;
             try
             {
@@ -861,12 +874,10 @@ namespace AltAIMLbot
                     if (string.IsNullOrEmpty(outputS))
                     {
                         curBot.Logger.Warn("cant get an output for " + r);
-                        requestResult.Error = "No output to regular aiml search";
                         return "....";
                     } 
                     output = (Unifiable)outputS;
                 }
-                requestResult.OutputText = outputS;
                 if (traceServitor)
                 {
                     Console.WriteLine("SERVITOR: respondToChat({0})={1}", input, output);
@@ -880,8 +891,8 @@ namespace AltAIMLbot
             }
             catch(Exception e)
             {
+                LogException(e);
                 curBot.isPerformingOutput = true;
-                requestResult.Error = "" + e;
                 return "...";
             }
 
@@ -892,6 +903,7 @@ namespace AltAIMLbot
         {
             if (Request.IsToplevelRealtimeChat(isToplevel, requestType))
             {
+                curBot.updateRTP2Sevitor(curUser);
                 if (!respondingDoneFromQueue)
                 {
                     curUser.JustSaid = input;
@@ -904,6 +916,14 @@ namespace AltAIMLbot
         public void MaybeUpdateBotJustSaidLastOutput(bool isToplevel, RequestKind requestType, User curUser, string answer,
             bool respondingDoneFromQueue, bool asumeUserHeard, bool sayItPhysically)
         {
+            if (!isToplevel)
+            {
+                curBot.isPerformingOutput = false;
+            }
+            else
+            {
+                curBot.isPerformingOutput = true;
+            }
             if (Request.IsToplevelRealtimeChat(isToplevel, requestType))
             {
                 if (!respondingDoneFromQueue)
@@ -912,83 +932,94 @@ namespace AltAIMLbot
                 }
                 if (asumeUserHeard)
                 {
-                    curUser.That = answer;
-                    curUser.Predicates.updateSetting("that", answer);
+                    if (!isToplevel)
+                    {
+
+                    }
+                    else
+                    {
+                        curUser.That = answer;
+                        curUser.Predicates.updateSetting("that", answer);
+                    }
                 }
                 if (sayItPhysically)
                 {
                     sayResponse(answer);
+                    // Mark the output time
+                    curBot.myBehaviors.keepTime("lastchatoutput", RunStatus.Success);
+                    curBot.myBehaviors.activationTime("lastchatoutput", RunStatus.Success);
                 }
                 curBot.lastBehaviorChatOutput = answer;
                 prologEngine.postListPredToMt("lastoutput", answer, "lastoutputMt");
             }
         }
-        /*
-        public string respondToChat(string input,string UserID)
+
+        public string respondToChat(string input, string UserID, bool isToplevel, RequestKind requestType)
         {
             try
             {
-                prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
-                var u = new MasterUser(UserID, curBot);
-                Request r = new Request(input, u, curBot);
+                var curUser = curBot.FindOrCreateUser(UserID);
+                MaybeUpdateUserJustSaidLastInput(isToplevel, requestType, curUser, input, false);
+                Request r = new Request(input, curUser, curUser.That, curBot, isToplevel, requestType);
                 Result res = curBot.Chat(r);
                 if (traceServitor)
                 {
                     Console.WriteLine("SERVITOR: respondToChat({0},{2})={1}", input, res.Output, UserID);
                 }
-                prologEngine.postListPredToMt("lastoutput", res.Output, "lastoutputMt");
-                return res.Output;
+                string chatOutput = res.Output;
+                MaybeUpdateBotJustSaidLastOutput(isToplevel, requestType, curUser, chatOutput, false, false, false);
+                return chatOutput;
             }
-            catch
-            { return "..."; }
-
+            catch (Exception e)
+            {
+                LogException(e);
+                return "...";
+            }
         }
 
-        public void reactToChat(string input)
+        public void reactToChat(string input, bool isToplevel, RequestKind requestType)
         {
             try
             {
-                prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
-                Request r = new Request(input, curUser, curBot);
+                MaybeUpdateUserJustSaidLastInput(isToplevel, requestType, curUser, input, false);
+                Request r = new Request(input, curUser, curUser.That, curBot, isToplevel, requestType);
                 Result res = curBot.Chat(r);
                 if (traceServitor)
                 {
                     Console.WriteLine("SERVITOR: reactToChat({0})={1}", input, res.Output);
                 }
-                sayResponse(res.Output);
-                prologEngine.postListPredToMt("lastoutput", res.Output, "lastoutputMt");
-                // Mark the output time
-                curBot.myBehaviors.keepTime("lastchatoutput", RunStatus.Success);
-                curBot.myBehaviors.activationTime("lastchatoutput", RunStatus.Success);
+                string chatOutput = res.Output;
+                MaybeUpdateBotJustSaidLastOutput(isToplevel, requestType, curUser, chatOutput, false, true, true);
             }
-            catch
-            { }
-
+            catch (Exception e)
+            {
+                LogException(e);
+                curBot.isPerformingOutput = true;
+            }
         }
-        public void reactToChat(string input, string UserID)
+
+        public void reactToChat(string input, string UserID, bool isToplevel, RequestKind requestType)
         {
             try
             {
-                prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
-                var u = new MasterUser(UserID, curBot);
-                Request r = new Request(input, u, curBot);
+                var curUser = curBot.FindOrCreateUser(UserID);
+                MaybeUpdateUserJustSaidLastInput(isToplevel, requestType, curUser, input, false);
+                Request r = new Request(input, curUser, curUser.That, curBot, isToplevel, requestType);
                 Result res = curBot.Chat(r);
                 if (traceServitor)
                 {
                     Console.WriteLine("SERVITOR: reactToChat({0},{2})={1}", input, res.Output, UserID);
                 }
-                prologEngine.postListPredToMt("lastoutput", res.Output, "lastoutputMt");
-                sayResponse(res.Output);
-                // Mark the output time
-                curBot.myBehaviors.keepTime("lastchatoutput", RunStatus.Success);
-                curBot.myBehaviors.activationTime("lastchatoutput", RunStatus.Success);
-
+                string chatOutput = res.Output;
+                MaybeUpdateBotJustSaidLastOutput(isToplevel, requestType, curUser, chatOutput, false, true, true);
             }
-            catch
-            { }
-
+            catch (Exception e)
+            {
+                LogException(e);
+                curBot.isPerformingOutput = true;
+            }
         }
-        */
+       
         public void Main(string[] args)
         {
             Start(new sayProcessorDelegate(sayResponse));
@@ -1020,7 +1051,11 @@ namespace AltAIMLbot
         }
 
 
-        public  void startCronEngine()
+        public void startCronEngine()
+        {
+            DoWithServitorLock(startCronEngine0);
+        }
+        private void startCronEngine0()
         {
             try
             {
@@ -1035,7 +1070,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("{0}\n{1}", e.Message, e.StackTrace);
+                LogException(e);
             }
         }
         #region FSM
@@ -1054,17 +1089,19 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("{0}\n{1}", e.Message, e.StackTrace);
+                LogException(e);
             }
 
         }
 
         public void memFSMThread()
         {
+            WaitUntilLoadCompleted();
             int interval = 1000;
             int tickrate = interval;
             while (true)
             {
+                WaitUntilCompletedGlobals();
                 Thread.Sleep(interval);
                 if (!tmFSMEnabled) continue;
                 try
@@ -1103,17 +1140,19 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("{0}\n{1}", e.Message, e.StackTrace);
+                LogException(e);
             }
 
         }
 
         public  void memBehaviorThread()
         {
+            WaitUntilLoadCompleted();
             int interval = 1000;
             int tickrate = interval;
             while (true)
             {
+                WaitUntilCompletedGlobals();
                 Thread.Sleep(interval);
                 if (!tmBehaveEnabled) continue;
                 try
@@ -1184,7 +1223,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("{0}\n{1}", e.Message, e.StackTrace);
+                LogException(e);
             }
         }
 
@@ -1196,6 +1235,7 @@ namespace AltAIMLbot
 
         public  bool checkNewPersonality()
         {
+            WaitUntilLoadCompleted();
             bool loadedCore = false;
             //return loadedCore; // KHC DEBUG MONOBOT
 
@@ -1205,6 +1245,7 @@ namespace AltAIMLbot
                 {
                     try
                     {
+                        WaitUntilCompletedGlobals();
                         string curAIMLClass = getBBHash("aimlclassdir");
                         string curAIMLInstance = getBBHash("aimlinstancedir");
                         if (!(lastAIMLInstance.Contains(curAIMLInstance)))
@@ -1252,6 +1293,7 @@ namespace AltAIMLbot
 
         public  void memTalkThread()
         {
+            WaitUntilLoadCompleted();
             int interval = 200;
             int lastuutid = 0;
             int uutid = 0;
@@ -1264,6 +1306,7 @@ namespace AltAIMLbot
 
             while (true)
             {
+                WaitUntilCompletedGlobals();
                 User LastCurUser = null;
                 try
                 {
@@ -1301,7 +1344,7 @@ namespace AltAIMLbot
                         if (!curBot.isAcceptingUserInput) { continue; }
                         try
                         {
-                            User curUser = this.curUser;
+                            var curUser = this.curUser;
                             LastCurUser = curUser;
 
                             lastuutid = uutid;
@@ -1356,7 +1399,7 @@ namespace AltAIMLbot
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine("{0}\n{1}", e.Message, e.StackTrace);
+                            LogException(e);
                         }
 
 
@@ -1364,13 +1407,26 @@ namespace AltAIMLbot
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("{0}\n{1}", e.Message, e.StackTrace);
+                    LogException(e);
                 }
             }
         }
 
+        public void WaitUntilLoadCompleted()
+        {
+            lock (ServitorStartStopLoadLock)
+            {
+                return;
+            }
+        }
+        public void WaitUntilCompletedGlobals()
+        {
+            WaitUntilLoadCompleted();
+        }
+
         public  void updateTime()
         {
+            WaitUntilCompletedGlobals();
             setBBHash("userdate", DateTime.Now.Date.ToString());
             setBBHash("useryear", DateTime.Now.Year.ToString());
             setBBHash("usermonth", DateTime.Now.Month.ToString());
@@ -1442,26 +1498,7 @@ namespace AltAIMLbot
             Thread.Sleep(10);
             if (skiploadingAimlFiles)
             {
-                throw new NotSupportedException(path);
-                Console.WriteLine(" - WARNING: SERVITOR SKIPLOADING: {0}", path);
-                return;
-            }
-            if (curBot != null)
-            {
-                curBot.loadAIMLFromFile(path);
-            }
-            else
-            {
-                Console.WriteLine(" - WARNING: SERVITOR NO BOT TO LOAD: {0}", path);
-            }
-        }
-        public void loadAIMLFromFiles(string path)
-        {
-            Thread.Sleep(10);
-            if (skiploadingAimlFiles)
-            {
-                throw new NotSupportedException(path);
-                Console.WriteLine(" - WARNING: SERVITOR SKIPLOADING: {0}", path);
+                Warn(" - WARNING: SERVITOR SKIPLOADING: {0}", path);
                 return;
             }
             if (curBot != null)
@@ -1470,7 +1507,34 @@ namespace AltAIMLbot
             }
             else
             {
-                Console.WriteLine(" - WARNING: SERVITOR NO BOT TO LOAD: {0}", path);
+                Warn(" - WARNING: SERVITOR NO BOT TO LOAD: {0}", path);
+            }
+        }
+        public void loadAIMLFromFiles(string path)
+        {
+            Thread.Sleep(10);
+            if (skiploadingAimlFiles)
+            {
+                Warn(" - WARNING: SERVITOR SKIPLOADING: {0}", path);
+                return;
+            }
+            if (curBot != null)
+            {
+                curBot.loadAIMLFromFiles(path);
+            }
+            else
+            {
+                Warn(" - WARNING: SERVITOR NO BOT TO LOAD: {0}", path);
+            }
+        }
+
+        private static void Warn(string fmt, params object[] args)
+        {
+            string bad = DLRConsole.SafeFormat(fmt,args);
+            Console.WriteLine(bad);
+            if (GlobalSharedSettings.IsDougsMachine)
+            {
+                throw new NotSupportedException(bad);
             }
         }
 
@@ -1484,7 +1548,7 @@ namespace AltAIMLbot
             Console.WriteLine("START SERVITOR BINARY SAVE:{0}", path);
             if (savedServitor)
             {
-                Console.WriteLine(" - WARNING: PREVIOUS SAVE TO:{0}", path);
+                Warn(" - WARNING: PREVIOUS SAVE TO:{0}", path);
             }
             // check to delete an existing version of the file
             FileInfo fi = new FileInfo(path);
@@ -1503,7 +1567,7 @@ namespace AltAIMLbot
             Console.WriteLine("START SERVITOR BINARY SAVE:{0}", path);
             if (savedServitor)
             {
-                Console.WriteLine(" - WARNING: PREVIOUS SAVE TO:{0}", path);
+                Warn(" - WARNING: PREVIOUS SAVE TO:{0}", path);
             }
             // check to delete an existing version of the file
             FileInfo fi = new FileInfo(path);
@@ -1557,12 +1621,12 @@ namespace AltAIMLbot
             string btxStore = Path.Combine(official, "bstore");
             Directory.CreateDirectory(btxStore);
             bool needBtx = true;
-            foreach (string fileName in Directory.GetFiles(btxStore, "*.btx"))
+            foreach (string fileName in HostSystem.GetFiles(btxStore, "*.btx"))
             {
                 needBtx = false;
                 break;
             }
-            foreach (string fileName in Directory.GetFiles(official, "*.aiml"))
+            foreach (string fileName in HostSystem.GetFiles(official, "*.aiml"))
             {
                 System.IO.File.SetLastWriteTimeUtc(fileName, DateTime.UtcNow);
                 if (!needBtx) break;

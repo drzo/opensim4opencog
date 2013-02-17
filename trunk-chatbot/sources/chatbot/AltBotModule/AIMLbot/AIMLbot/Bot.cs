@@ -10,9 +10,12 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Reflection;
 using System.Net.Mail;
 using AIMLbot;
-using AltAIMLbot;
+using AltAIMLbot.AIMLTagHandlers;
+using AltAIMLbot.Database;
+using AltAIMLbot.Normalize;
 using AltAIMLbot.Utils;
 using AltAIMLParser;
+using AltAIMLbot.Variables;
 using DcBus;
 using Aima.Core.Logic.Propositional.Algorithms;
 using Aima.Core.Logic.Propositional.Parsing;
@@ -22,16 +25,8 @@ using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using org.opencyc.api;
-using RTParser;
-using RTParser.AIMLTagHandlers;
-using RTParser.Database;
-using RTParser.Normalize;
-using RTParser.Utils;
-using RTParser.Variables;
-using AIMLLoader=AltAIMLbot.Utils.AIMLLoader;
-using AIMLTagHandler=AltAIMLbot.Utils.AIMLTagHandler;
-using bot=AltAIMLbot.AIMLTagHandlers.bot;
-using CustomTagAttribute=AltAIMLbot.Utils.CustomTagAttribute;
+using AIMLTagHandler = AltAIMLbot.Utils.AIMLTagHandler;
+using CustomTagAttribute = AltAIMLbot.Utils.CustomTagAttribute;
 using Gender=AltAIMLbot.Utils.Gender;
 using MatchState=AltAIMLbot.Utils.MatchState;
 using Node=AltAIMLbot.Utils.Node;
@@ -40,6 +35,7 @@ using TagHandler=AltAIMLbot.Utils.TagHandler;
 using verbatum=AltAIMLbot.AIMLTagHandlers.verbatum;
 using LogicalParticleFilter1;
 using Action=System.Action;
+using AIMLLoader = AltAIMLbot.Utils.AIMLLoaderS;
 
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
@@ -60,7 +56,7 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 **************************************************************************************************/
 
-namespace RTParser
+namespace AltAIMLbot
 {
     [Serializable]
     public partial class AltBot
@@ -72,7 +68,7 @@ namespace RTParser
         /// </summary>
         //public RChem myChemistry = new RChem(myConst.MEMHOST, true);
         //public Qchem realChem = new Qchem(myConst.MEMHOST);
-        
+
         /// <summary>
         /// @TODO @WORKAROUND Currently adding some padding around Template expanded tags
         /// </summary>
@@ -95,52 +91,45 @@ namespace RTParser
                 if (servitor.IsBackgroundDisabled) return true;
                 return false;
             }
-            set
-            {
-                _blockCron = value;
-            }
+            set { _blockCron = value; }
         }
+
         public bool loadChanging = true;
         public RandomMemory myRandMem = new RandomMemory();
 
-        [NonSerialized] 
-        public readonly SIProlog prologEngine = SIProlog.CurrentProlog;
+        [NonSerialized] public readonly SIProlog prologEngine = SIProlog.CurrentProlog;
 
-        static public object BotInitLock  = new object();
-        static public object WordNetEngineLock
+        public static object BotInitLock = new object();
+
+        public static object WordNetEngineLock
         {
             get { return BotInitLock; }
         }
-        static private WordNetEngine _wordNetEngine;
+
+        private static WordNetEngine _wordNetEngine;
+
         public WordNetEngine wordNetEngine
         {
-            get
-            {
-                lock (WordNetEngineLock) return _wordNetEngine;
-            }
+            get { lock (WordNetEngineLock) return _wordNetEngine; }
             set
             {
-                LockInfo.CheckLocked(WordNetEngineLock);                
+                LockInfo.CheckLocked(WordNetEngineLock);
                 _wordNetEngine = _wordNetEngine ?? value;
             }
         }
 
-        [NonSerialized ]
-        public KnowledgeBase myKB = new KnowledgeBase();
-        [NonSerialized]
-        public KnowledgeBase myBaseKB = new KnowledgeBase();
-        [NonSerialized]
-        public WalkSAT myWalkSAT = new WalkSAT();
-        [NonSerialized]
-        public Model myModel = null;
-        [NonSerialized]
-        public Model myActiveModel = null;
+        [NonSerialized] public KnowledgeBase myKB = new KnowledgeBase();
+        [NonSerialized] public KnowledgeBase myBaseKB = new KnowledgeBase();
+        [NonSerialized] public WalkSAT myWalkSAT = new WalkSAT();
+        [NonSerialized] public Model myModel = null;
+        [NonSerialized] public Model myActiveModel = null;
         public string myPositiveSATModleString = null;
 
         public object guestEvalObject = null;
         public Queue<string> outputQueue = new Queue<string>();
 
         private Servitor _myServitor;
+
         public Servitor myServitor
         {
             get
@@ -199,20 +188,20 @@ namespace RTParser
         /// </summary>
         private Dictionary<string, Assembly> LateBindingAssemblies = new Dictionary<string, Assembly>();
 
-        public void RegisterDictionary(string named, ISettingsDictionary dict)
+        public void RegisterDictionaryNoSpaces(string named, ISettingsDictionary dict)
         {
             named = named.ToLower().Trim().Replace("  ", " ");
             string key = named.Replace(" ", "_");
             RegisterDictionary(named, dict, true);
         }
 
-        public void RegisterDictionary(string key, ISettingsDictionary dict, bool always)
+        public void RegisterDictionaryAddP(string key, ISettingsDictionary dict, bool always)
         {
             SettingsDictionaryReal.AddPseudonym(dict, key);
             Action needsExit = LockInfo.MonitorTryEnter("RegisterDictionary " + key, AllDictionaries, MaxWaitTryEnter);
             try
             {
-                var path = key.Split(new[] { '.' });
+                var path = key.Split(new[] {'.'});
                 if (always || !AllDictionaries.ContainsKey(key))
                 {
                     AllDictionaries[key] = dict;
@@ -231,15 +220,16 @@ namespace RTParser
                 needsExit();
             }
         }
+
         /// <summary>
         /// An List<> containing the tokens used to split the input into sentences during the 
         /// normalization process
         /// </summary>
-        static public IEnumerable<string> Splitters
+        public static IEnumerable<string> Splitters
         {
             get
             {
-                lock(Splitters0)
+                lock (Splitters0)
                 {
                     if (Splitters0.Count > 0) return Splitters0.ToArray();
                 }
@@ -252,6 +242,7 @@ namespace RTParser
             }
 
         }
+
         public static List<string> Splitters0 = new List<string>();
 
         /// <summary>
@@ -261,28 +252,32 @@ namespace RTParser
 
         public string PersonalizePathLogged(string path)
         {
-            var pp =  PersonalizePath(path);
+            var pp = PersonalizePath(path);
             writeDebugLine("Personalized path: " + path + "->" + pp);
             return pp;
         }
+
         public string PersonalizePath(string path)
         {
             if (String.IsNullOrEmpty(path)) return path;
             if (BotUserID == null)
             {
-                Console.Error.WriteLine("Cant pertsonalize path");
+                Console.WriteLine("Error Cant pertsonalize path");
             }
             if (path.Contains(BotUserID)) return path;
             if (path.Contains(BotID)) return path;
             if (path.Contains(NamePath)) return path;
+            if (path.Contains(PersonalReadWriteDirectory)) return path;
             string orig = path;
             path = path.Replace("\\", "/");
             path = path.Replace("//", "/");
             while (path.StartsWith("./")) path = path.Substring(2);
             while (path.StartsWith("aiml/")) path = path.Substring(5);
-            return HostSystem.FileSystemPath(HostSystem.Combine(PersonalAiml, path));
+            return HostSystem.FileSystemPath(HostSystem.Combine(PersonalReadWriteDirectory ?? PersonalAiml, path));
         }
+
         private string _rapStoreDirectory;
+
         public string rapStoreDirectoryStem
         {
             get
@@ -313,8 +308,103 @@ namespace RTParser
                 _rapStoreDirectory = value;
             }
         }
+
         public int rapStoreSlices = 0;
         public int rapStoreTrunkLevel = 0;
+
+        public string CalcRapStoreDirectoryStem()
+        {
+            var rapStoreDirectoryStem = _rapStoreDirectory ?? "./rapstore";
+            if (Graphmaster.IsMicrosoftCLR())
+            {
+                rapStoreDirectoryStem = rapStoreDirectoryStem.TrimEnd("/\\".ToCharArray());
+            }
+            else
+            {
+                rapStoreDirectoryStem = rapStoreDirectoryStem.TrimEnd(Path.DirectorySeparatorChar);
+            }
+            rapStoreDirectoryStem = PersonalizePath(rapStoreDirectoryStem);
+            if (rapStoreDirectoryStem != _rapStoreDirectory && _UseRapstoreDB)
+            {
+                Console.WriteLine("Setting rapstore directory stem to " + rapStoreDirectoryStem);
+                _rapStoreDirectory = rapStoreDirectoryStem;
+            }
+            return rapStoreDirectoryStem;
+        }
+
+        public void StampRaptstoreValid(bool validOrNot)
+        {
+            lock (ExternDB.mylock)
+            {
+                if (UseRapstoreDB)
+                {
+                    string rapStoreDirectoryStem = Graphmaster.CalcRapStoreDirectory();
+                    string stampFile = Path.Combine(rapStoreDirectoryStem, "valid.txt");
+                    var fi = new FileInfo(stampFile);
+                    if (validOrNot == fi.Exists) return;
+                    if (validOrNot)
+                    {
+                        File.WriteAllText(stampFile, "" + DateTime.Now);
+                    }
+                    else
+                    {
+                        File.Delete(stampFile);
+                    }
+                }
+            }
+        }
+
+        public bool GetRaptstoreValid()
+        {
+            lock (ExternDB.mylock)
+            {
+                if (_UseRapstoreDB)
+                {
+                    if (!this.HavePersonalPath)
+                    {
+                        Console.WriteLine(
+                            "Error No personal directory.. so maybe should not check the rapstore base directory yet");
+                    }
+                    string rapStoreDirectoryNonStem = Graphmaster.CalcRapStoreDirectory();
+                    if (!Directory.Exists(rapStoreDirectoryNonStem))
+                    {
+                        return false;
+                    }
+                    string stampFile = Path.Combine(rapStoreDirectoryNonStem, "valid.txt");
+                    var fi = new FileInfo(stampFile);
+                    return fi.Exists;
+                }
+                return false;
+            }
+        }
+
+
+
+        public void DeleteInvalidRaptstore()
+        {
+            lock (ExternDB.mylock)
+            {
+                if (UseRapstoreDB)
+                {
+                    string rapStoreDirectoryNonStem = Graphmaster.CalcRapStoreDirectory();
+                    Logger.Warn("deleting " + rapStoreDirectoryNonStem);
+                    if (Directory.Exists(rapStoreDirectoryNonStem))
+                    {
+                        Directory.Delete(rapStoreDirectoryNonStem, true);
+                    }
+                    else
+                    {
+                        if (PersonalReadWriteDirectory == null)
+                        {
+                            Logger.Warn("ERRROR! I dont know my personal path!");
+                            return;
+                        }
+                    }
+                    Directory.CreateDirectory(rapStoreDirectoryNonStem);
+
+                }
+            }
+        }
 
         /// <summary>
         /// How big to let the log buffer get before writing to disk
@@ -342,7 +432,7 @@ namespace RTParser
             get { return _isPerformingOutput; }
             set
             {
-                if (value == false  && outputQueue.Count > 0)
+                if (value == false && outputQueue.Count > 0)
                 {
                     if (_isPerformingOutput == true)
                     {
@@ -355,7 +445,7 @@ namespace RTParser
         }
 
         public bool _isPerformingOutput = false;
-    
+
         public object loglock = new object();
 
         /// <summary>
@@ -378,12 +468,9 @@ namespace RTParser
         private string NotAcceptingUserInputMessage
         {
 
-            get
-            {
-                return this.GlobalSettings.grabSetting("notacceptinguserinputmessage");
-            }
+            get { return this.GlobalSettings.grabSetting("notacceptinguserinputmessage"); }
         }
-      
+
         /// <summary>
         /// The maximum amount of time a request should take (in milliseconds)
         /// </summary>
@@ -406,10 +493,7 @@ namespace RTParser
         /// </summary>
         public string TimeOutMessage
         {
-            get
-            {
-                return this.GlobalSettings.grabSetting("timeoutmessage");
-            }
+            get { return this.GlobalSettings.grabSetting("timeoutmessage"); }
         }
 
         /// <summary>
@@ -417,22 +501,16 @@ namespace RTParser
         /// </summary>
         public CultureInfo Locale
         {
-            get
-            {
-                return new CultureInfo(this.GlobalSettings.grabSetting("culture"));
-            }
+            get { return new CultureInfo(this.GlobalSettings.grabSetting("culture")); }
         }
-         
+
 
         /// <summary>
         /// Will match all the illegal characters that might be inputted by the user
         /// </summary>
         public Regex Strippers
         {
-            get
-            {
-                return new Regex(this.GlobalSettings.grabSetting("stripperregex"),RegexOptions.IgnorePatternWhitespace);
-            }
+            get { return new Regex(this.GlobalSettings.grabSetting("stripperregex"), RegexOptions.IgnorePatternWhitespace); }
         }
 
         /// <summary>
@@ -440,10 +518,7 @@ namespace RTParser
         /// </summary>
         public string AdminEmail
         {
-            get
-            {
-                return this.GlobalSettings.grabSetting("adminemail");
-            }
+            get { return this.GlobalSettings.grabSetting("adminemail"); }
             set
             {
                 if (value.Length > 0)
@@ -532,7 +607,7 @@ namespace RTParser
                 switch (sex)
                 {
                     case -1:
-                        result=Gender.Unknown;
+                        result = Gender.Unknown;
                         break;
                     case 0:
                         result = Gender.Female;
@@ -547,6 +622,7 @@ namespace RTParser
                 return result;
             }
         }
+
         /// <summary>
         /// The directory to look in for the various XML configuration files
         /// </summary>
@@ -572,13 +648,19 @@ namespace RTParser
         /// <summary>
         /// The default "brain" of the bot (also "*")
         /// </summary>
-        public GraphMaster Graphmaster;
+        public GraphMaster Graphmaster
+        {
+            get { return DefaultStartGraph; }
+        }
 
         /// <summary>
         /// The named "brains" of the bot
         /// default graphmaster should be listed under "*"
         /// </summary>
-        public Dictionary<string, GraphMaster> Graphs;
+        public Dictionary<string, GraphMaster> Graphs
+        {
+            get { return LocalGraphsByName; }
+        }
 
         private string _PathToUserFiles;
 
@@ -594,7 +676,7 @@ namespace RTParser
                     _PathToUserFiles = dir;
                     return HostSystem.ToRelativePath(dir, RuntimeDirectory);
                 }
-                foreach (string s in new[] { PersonalAiml, PathToAIML, PathToConfigFiles, RuntimeDirectory })
+                foreach (string s in new[] {PersonalAiml, PathToAIML, PathToConfigFiles, RuntimeDirectory})
                 {
                     if (s == null) continue;
                     string exists = HostSystem.Combine(s, "users");
@@ -614,6 +696,31 @@ namespace RTParser
 
         private string _PathToBotPersonalFiles;
 
+        protected string PersonalReadWriteDirectory
+        {
+            get { return _PathToBotPersonalFiles; }
+            set
+            {
+                lock (_RuntimeDirectories)
+                {
+                    if (_PathToBotPersonalFiles != null)
+                    {
+                        _RuntimeDirectories.Remove(_PathToBotPersonalFiles);
+                    }
+                    _PathToBotPersonalFiles = value;
+                    if (value != null)
+                    {
+                        _RuntimeDirectories.Remove(value);
+                        _RuntimeDirectories.Insert(0, value);
+                        if (value.Contains("shared_aiml"))
+                        {
+                            Console.WriteLine("WARN - using shared aiml as personal aiml");
+                        }
+                    }
+                }
+            }
+        }
+
         protected string PersonalAiml
         {
             get { return _PathToBotPersonalFiles; }
@@ -621,12 +728,27 @@ namespace RTParser
             {
                 lock (_RuntimeDirectories)
                 {
-                    if (_PathToBotPersonalFiles != null) _RuntimeDirectories.Remove(_PathToBotPersonalFiles);
+                    if (_PathToBotPersonalFiles != null)
+                    {
+                        _RuntimeDirectories.Remove(_PathToBotPersonalFiles);
+                    }
                     _PathToBotPersonalFiles = value;
-                    _RuntimeDirectories.Remove(value);
-                    _RuntimeDirectories.Insert(0, value);
+                    if (value != null)
+                    {
+                        _RuntimeDirectories.Remove(value);
+                        _RuntimeDirectories.Insert(0, value);
+                        if (value.Contains("shared_aiml"))
+                        {
+                            Console.WriteLine("WARN - using shared aiml as personal aiml");
+                        }
+                    }
                 }
             }
+        }
+
+        protected bool HavePersonalPath
+        {
+            get { return !string.IsNullOrEmpty(_PathToBotPersonalFiles); }
         }
 
         /// <summary>
@@ -653,6 +775,7 @@ namespace RTParser
         }
 
         internal bool _UseRapstoreDB = true;
+
         public bool UseRapstoreDB
         {
             get
@@ -661,13 +784,14 @@ namespace RTParser
                 {
                     if (_rapStoreDirectory == null)
                     {
-                        Console.WriteLine("Check: this.bot.rapStoreDirectory == null");
+                        Console.WriteLine("WARN Check: this.bot.rapStoreDirectory == null");
                     }
                 }
                 return _UseRapstoreDB;
             }
             set { _UseRapstoreDB = value; }
         }
+
         public bool UseRapstore(string graphName)
         {
             if (!UseRapstoreDB) return false;
@@ -717,35 +841,24 @@ namespace RTParser
             loadGlobalBotSettings();
             string botname = GlobalSettings.grabSetting("name");
             SetName(botname);
-            AIMLLoader loader = new AIMLLoader(this);
-            loader.loadAIML(PathToAIML);
+            loadAIMLFromFiles(PathToAIML);
         }
-    
+
         /// <summary>
         /// Loads AIML from .aiml at dirPath files into the graphmaster "brain" of the bot
         /// </summary>
         public void loadAIMLFromFiles(string dirPath)
         {
-            AIMLLoader loader = new AIMLLoader(this);
-            loader.loadAIML(dirPath );
+            var loader = new AIMLLoaderU(this, GetBotRequest("loadAIMLFromFiles: " + dirPath));
+            loader.LoaderRequest00.Graph = this.Graphmaster;
+            loader.SLoader.loadAIMLURI(dirPath);
         }
 
         public void loadAIMLFromFile(string filePath)
         {
-            AIMLLoader loader = new AIMLLoader(this);
-            loader.loadAIMLFile(filePath);
+            loadAIMLFromFiles(filePath);
         }
 
-        /// <summary>
-        /// Allows the bot to load a new XML version of some AIML
-        /// </summary>
-        /// <param name="newAIML">The XML document containing the AIML</param>
-        /// <param name="filename">The originator of the XML document</param>
-        public void loadAIMLFromXML_Unused(XmlDocument newAIML, string filename)
-        {
-            AIMLLoader loader = new AIMLLoader(this);
-            loader.loadAIMLFromXML(newAIML, filename);
-        }
         /// <summary>
         /// Allows the bot to load a new XML version of some AIML
         /// </summary>
@@ -754,9 +867,11 @@ namespace RTParser
         public void loadAIMLFromXML(XmlNode newAIML, string filename)
         {
             Console.WriteLine("Check:loadAIMLFromXML(0)");
-            AIMLLoader loader = new AIMLLoader(this);
-            loader.loadAIMLFromXML(newAIML, filename);
+            var loader = new AIMLLoaderU(this, GetBotRequest("loadAIMLFromFiles: " + filename));
+            loader.LoaderRequest00.Graph = this.Graphmaster;
+            loader.SLoader.loadAIMLFromXML(newAIML, filename);
         }
+
         public void logText(string msg)
         {
 
@@ -769,7 +884,8 @@ namespace RTParser
                     Console.WriteLine(msg);
                 }
                 catch
-                { }
+                {
+                }
             }
         }
 
@@ -801,7 +917,7 @@ namespace RTParser
             CycAccess v = TheCyc.GetCycAccess;
             SettingsDictionaryReal.WarnOnNull = false;
             this.RelationMetaProps = MakeSettingsDictionary("RelationMetaPropsMt");
-            RegisterDictionary("chat.relationprops",RelationMetaProps);
+            RegisterDictionary("chat.relationprops", RelationMetaProps);
             SettingsDictionaryReal.WarnOnNull = true;
             this.GenderSubstitutions = MakeSubstsDictionary("substituions.gender");
             this.Person2Substitutions = MakeSubstsDictionary("substituions.person2");
@@ -837,12 +953,12 @@ namespace RTParser
             this.HeardPredicates["iamHeardPredicates"] = "True";
             this.HeardPredicates["iamHeardPredicatesLocally"] = "True";
             this.CustomTags = new Dictionary<string, TagHandler>();
-            this.Graphs = new Dictionary<string, GraphMaster>();
-            this.Graphmaster = new GraphMaster("base", this);
+            //this.Graphs = new Dictionary<string, GraphMaster>();
+            //this.Graphmaster = new GraphMaster("base", this);
             Graphmaster.AddName("*");
             Graphmaster.AddName("default");
             Graphmaster.AddName("base");
-            this.DefaultHeardSelfSayGraph = new GraphMaster("heardselfsay", this);
+            //this._h= new GraphMaster("heardselfsay", this);
             this.setupDictionaries();
             GlobalSettings.IsTraced = true;
         }
@@ -853,21 +969,43 @@ namespace RTParser
                 "_", "");
             return fn2;
         }
+
         public SettingsDictionaryReal MakeSettingsDictionary(string named)
         {
-            if (named.ToUpper().EndsWith("MT")) named = named.Substring(0, named.Length - 2);
-            named = ToMtCase(named);
+            named = named.Trim();
+            named = MakeMtName(named);
             string mtName = "chat" + named + "Mt";
-            KeyValueListSIProlog v = new KeyValueListSIProlog(() => prologEngine,
-                                                              mtName, "chatVar");
-            var dict = new SettingsDictionaryReal(mtName, this,
-                                              (KeyValueList) v ?? new KeyValueListCSharp(null, new Dictionary<string, string>()));
+            KeyValueListSIProlog v = new KeyValueListSIProlog(() => prologEngine, mtName, "chatVar");
+            var dict = new SettingsDictionaryReal(mtName, this, (KeyValueList) v);
             dict.bbPrefix = "user";
+            if (mtName != named)
+            {
+                RegisterDictionary(named, dict);
+            }
             return dict;
         }
+
+        private static string MakeMtName(string named)
+        {
+            int len = named.Length;
+            if (len > 2)
+            {
+                string toUpper = named.ToUpper();
+
+                string suffix = toUpper.Substring(named.Length - 2);
+                if (suffix == "KB" || suffix == "MT" || suffix == "DB")
+                    named = named.Substring(0, named.Length - 2);
+            }
+            named = ToMtCase(named);
+            return named;
+        }
+
         public SettingsDictionaryReal MakeSubstsDictionary(string named)
         {
-            return new SettingsDictionaryReal(named, this, new KeyValueListCSharp(new List<string>(), new Dictionary<string, string>())) { IsSubsts = true, TrimKeys = false };           
+            return new SettingsDictionaryReal(named, this,
+                                              new KeyValueListCSharp(new List<string>(),
+                                                                     new Dictionary<string, string>()))
+                       {IsSubsts = true, TrimKeys = false};
         }
 
         /// <summary>
@@ -877,7 +1015,7 @@ namespace RTParser
         {
             // try a safe default setting for the settings xml file
             string path = Path.Combine(Environment.CurrentDirectory, Path.Combine("config", "Settings.xml"));
-            this.loadSettings(path);          
+            this.loadSettings(path);
         }
 
         /// <summary>
@@ -901,7 +1039,7 @@ namespace RTParser
             if (!this.GlobalSettings.containsSettingCalled("botmaster"))
             {
                 this.GlobalSettings.addSetting("botmaster", "Unknown");
-            } 
+            }
             if (!this.GlobalSettings.containsSettingCalled("master"))
             {
                 this.GlobalSettings.addSetting("botmaster", "Unknown");
@@ -1001,7 +1139,8 @@ namespace RTParser
             }
             if (!this.GlobalSettings.containsSettingCalled("notacceptinguserinputmessage"))
             {
-                this.GlobalSettings.addSetting("notacceptinguserinputmessage", "This bot is currently set to not accept user input.");
+                this.GlobalSettings.addSetting("notacceptinguserinputmessage",
+                                               "This bot is currently set to not accept user input.");
             }
             if (!this.GlobalSettings.containsSettingCalled("stripperregex"))
             {
@@ -1011,14 +1150,20 @@ namespace RTParser
             this.GlobalSettings.bbPrefix = "bot";
 
             // Load the dictionaries for this Bot from the various configuration files
-            this.Person2Substitutions.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("person2substitutionsfile")));
-            this.PersonSubstitutions.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("personsubstitutionsfile")));
-            this.GenderSubstitutions.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("gendersubstitutionsfile")));
-            this.DefaultPredicates.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("defaultpredicates")));
-            this.InputSubstitutions.loadSettings(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("substitutionsfile")));
+            this.Person2Substitutions.loadSettings(Path.Combine(this.PathToConfigFiles,
+                                                                this.GlobalSettings.grabSetting(
+                                                                    "person2substitutionsfile")));
+            this.PersonSubstitutions.loadSettings(Path.Combine(this.PathToConfigFiles,
+                                                               this.GlobalSettings.grabSetting("personsubstitutionsfile")));
+            this.GenderSubstitutions.loadSettings(Path.Combine(this.PathToConfigFiles,
+                                                               this.GlobalSettings.grabSetting("gendersubstitutionsfile")));
+            this.DefaultPredicates.loadSettings(Path.Combine(this.PathToConfigFiles,
+                                                             this.GlobalSettings.grabSetting("defaultpredicates")));
+            this.InputSubstitutions.loadSettings(Path.Combine(this.PathToConfigFiles,
+                                                              this.GlobalSettings.grabSetting("substitutionsfile")));
 
             // Grab the splitters for this bot
-            this.loadSplitters(Path.Combine(this.PathToConfigFiles,this.GlobalSettings.grabSetting("splittersfile")));
+            this.loadSplitters(Path.Combine(this.PathToConfigFiles, this.GlobalSettings.grabSetting("splittersfile")));
         }
 
         /// <summary>
@@ -1029,6 +1174,7 @@ namespace RTParser
         {
             lock (Splitters0) loadSplitters_ul(pathToSplitters);
         }
+
         private void loadSplitters_ul(string pathToSplitters)
         {
             if (pathToSplitters == null) return;
@@ -1066,14 +1212,15 @@ namespace RTParser
                 Splitters.Add(";");
             }
         }
-       // #endregion
+
+        // #endregion
 
         #region Logging methods
 
         /// <summary>
         /// The last message to be entered into the log (for testing purposes)
         /// </summary>
-       // public string LastLogMessage=string.Empty;
+        // public string LastLogMessage=string.Empty;
 
         /// <summary>
         /// Writes a (timestamped) message to the bot's log.
@@ -1090,7 +1237,7 @@ namespace RTParser
         {
             if (!isPerformingOutput)
             {
-                if(outputQueue.Count > 0)
+                if (outputQueue.Count > 0)
                 {
                     myBehaviors.logText("BOT OUTPUT GOING TO NOT COME OUT:" + outputQueue.Count);
                 }
@@ -1124,7 +1271,7 @@ namespace RTParser
 
         }
 
-        Regex SentRegex = new Regex(@"(\S.+?[.!?,\)])(?=\s+|$)");
+        private Regex SentRegex = new Regex(@"(\S.+?[.!?,\)])(?=\s+|$)");
 
         public void postOutput(string msg)
         {
@@ -1148,10 +1295,11 @@ namespace RTParser
                     outputQueue.Enqueue(s);
                     myBehaviors.logText("BOT postOutput:" + s);
 
-                } 
+                }
 
             }
         }
+
         public void sendOutput(string msg)
         {
             // posts and processes
@@ -1185,35 +1333,36 @@ namespace RTParser
             return outmsg;
         }
 
-       public void loadCrons()
-       {
-          lock (ExternDB.mylock)
+        public void loadCrons()
+        {
+            lock (ExternDB.mylock)
             {
 
                 if (UseRapstoreDB)
                 {
                     var GM = Graphmaster ?? GetGraph("default");
                     var chatDB = GM.ensureEdb();
- 
+
                     chatDB.loadCronList(myCron);
                     GM.Close();
                 }
-           }
-       }
-       public void saveCrons()
-       {
-           lock (ExternDB.mylock)
-           {
+            }
+        }
 
-               if (UseRapstoreDB)
-               {
-                   var GM = Graphmaster;
-                   var chatDB = GM.ensureEdb();                   
-                   chatDB.saveCronList(myCron);
-                   GM.Close();
-               }
-           }
-       }
+        public void saveCrons()
+        {
+            lock (ExternDB.mylock)
+            {
+
+                if (UseRapstoreDB)
+                {
+                    var GM = Graphmaster;
+                    var chatDB = GM.ensureEdb();
+                    chatDB.saveCronList(myCron);
+                    GM.Close();
+                }
+            }
+        }
 
 
         /// <summary>
@@ -1231,8 +1380,9 @@ namespace RTParser
 
         public AltAIMLbot.Result Chat(Request request)
         {
-            return Chat(request, "*");
+            return Chat(request, request.CurrentGraphName);
         }
+
         /// <summary>
         /// Given a request containing user input, produces a result from the bot.
         /// Sensitive to request.user.Qstate
@@ -1242,7 +1392,7 @@ namespace RTParser
         public Result Chat(Request request, string graphID)
         {
             GraphMaster ourGraphMaster = this.GetGraph(graphID) ?? Graphmaster;
-            request.CurrentGraph = ourGraphMaster;
+            request.Graph = ourGraphMaster;
             graphID = ourGraphMaster.ScriptingName;
 
             User user = request.user;
@@ -1258,7 +1408,7 @@ namespace RTParser
                     myBehaviors.activationTime("lastchatinput", RunStatus.Success);
 
                     // Normalize the input
-                    AIMLLoader loader = new AIMLLoader(this);
+                    AIMLLoaderS loader = new AIMLLoaderS(this);
                     SplitIntoSentences splitter = new SplitIntoSentences(null, request.rawInput);
                     string[] rawSentences = splitter.Transform();
 
@@ -1275,12 +1425,13 @@ namespace RTParser
                         foreach (string sentence in rawSentences)
                         {
                             result.InputSentences.Add(sentence);
-                            List<string> paths = gatherPaths(user, sentence, user.getPreStates(), user.getPostStates(),
+                            List<string> paths = gatherPaths(request.CurrentGraphName, user, sentence,
+                                                             user.getPreStates(), user.getPostStates(),
                                                              loader);
                             SortPaths(paths, ourGraphMaster.getPathScore);
                             foreach (var path in paths)
                             {
-                                result.GraphMasterPaths.Add(path);                                
+                                result.GraphMasterPaths.Add(path);
                             }
                         }
                     }
@@ -1305,7 +1456,8 @@ namespace RTParser
                             foreach (string nstate in user.Qstate.Keys)
                             {
                                 var states = new[] {nstate};
-                                List<string> paths = gatherPaths(user, sentence, states, states, loader);                                
+                                List<string> paths = gatherPaths(request.CurrentGraphName, user, sentence, states,
+                                                                 states, loader);
                                 SortPaths(paths, ourGraphMaster.getPathScore);
 
                                 string path = paths[0];
@@ -1343,15 +1495,20 @@ namespace RTParser
                     {
                         AltAIMLbot.Utils.SubQuery query = new SubQuery(path, result, request);
 
-                        var queryTemplate = ourGraphMaster.evaluate(path, query, request, MatchState.Pattern, new StringBuilder());
+                        var queryTemplate = ourGraphMaster.evaluate(path, query, request, MatchState.Pattern,
+                                                                    new StringBuilder());
                         if (string.IsNullOrEmpty(queryTemplate))
                         {
                             myBehaviors.SkipLog = false;
-                            ourGraphMaster.evaluate(path, query, request, MatchState.Pattern, new StringBuilder());
+                            if (LogicalParticleFilter1.GlobalSharedSettings.Trace("failed to find response to " + path))
+                            {
+                                ourGraphMaster.evaluate(path, query, request, MatchState.Pattern, new StringBuilder());
+                            }
                             //myBehaviors.SkipLog = true;
                             myBehaviors.logText("failed to find response to " + path);
                             continue;
-                        } else
+                        }
+                        else
                         {
                             myBehaviors.SkipLog = true;
                         }
@@ -1360,7 +1517,7 @@ namespace RTParser
                         //query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                         Console.WriteLine("DEBUG: TemplatePath = " + query.TemplatePath);
                         Console.WriteLine("DEBUG: Template = " + query.Template);
-                        
+
                         myBehaviors.logText("CHAT QueryPath:" + path);
                         myBehaviors.logText("CHAT TemplatePath:" + query.TemplatePath);
                         myBehaviors.logText("CHAT Template:\n" + query.Template);
@@ -1380,6 +1537,7 @@ namespace RTParser
                     if (result.SubQueries.Count == 0)
                     {
                         Console.WriteLine("DEBUG: MISSING SubQueries");
+                        LogicalParticleFilter1.GlobalSharedSettings.Trace("failed to find response to " + request);
                     }
                     // process the templates into appropriate output
                     foreach (SubQuery query in result.SubQueries)
@@ -1427,7 +1585,9 @@ namespace RTParser
                                 {
                                     this.phoneHome(e.Message, request);
                                 }
-                                this.writeToLog("WARNING! A problem was encountered when trying to process the input: " + request.rawInput + " with the template: \"" + query.Template + "\"");
+                                this.writeToLog(
+                                    "WARNING! A problem was encountered when trying to process the input: " +
+                                    request.rawInput + " with the template: \"" + query.Template + "\"");
                                 Console.WriteLine("ERR:" + e.Message);
                                 Console.WriteLine("ERR:" + e.StackTrace);
                             }
@@ -1447,7 +1607,7 @@ namespace RTParser
                 result.Duration = DateTime.Now - request.StartedOn;
                 if (!saveResult)
                 {
- //                   Console.WriteLine("*** CHATOUTPUT1(" + result.Output+")");
+                    //                   Console.WriteLine("*** CHATOUTPUT1(" + result.Output+")");
 
                     return result;
                 }
@@ -1463,7 +1623,7 @@ namespace RTParser
         {
             paths.Sort((s1, s2) =>
                            {
-                               var diff =  func(s1).CompareTo(func(s2));
+                               var diff = func(s1).CompareTo(func(s2));
                                if (diff != 0) return diff;
                                diff = s1.Length.CompareTo(s2.Length);
                                if (diff != 0) return diff;
@@ -1471,7 +1631,10 @@ namespace RTParser
                            });
         }
 
-        private static List<string> gatherPaths(User user, string sentence,IEnumerable<string> usergetPreStates, IEnumerable<string> usergetPostStates, AIMLLoader loader)
+        private static List<string> gatherPaths(string graphName, User user, string sentence,
+                                                IEnumerable<string> usergetPreStates,
+                                                IEnumerable<string> usergetPostStates,
+                                                AIMLLoader loader)
         {
             List<string> normalizedPaths = new List<string>();
             int maxThats = 2;
@@ -1485,7 +1648,8 @@ namespace RTParser
                     {
                         foreach (var poststates in usergetPostStates)
                         {
-                            string path = loader.generatePath(sentence, that, topic, prestates, poststates, true);
+                            string path = loader.generatePath(graphName, sentence, that, topic, prestates, poststates,
+                                                              true);
                             if (!normalizedPaths.Contains(path))
                             {
                                 normalizedPaths.Add(path);
@@ -1524,11 +1688,12 @@ namespace RTParser
                                           requestType | RequestKind.TemplateExpander);
             AltAIMLbot.Result result = new MasterResult(request.user, this, request);
             AltAIMLbot.Utils.SubQuery query = new SubQuery("evalTemplateNode SubQuery", result, request);
-            
- 
+
+
             string outputSentence = this.processNode(templateNode, query, request, result, request.user, true);
-            return outputSentence;       
+            return outputSentence;
         }
+
         /// <summary>
         /// Recursively evaluates the template nodes returned from the bot
         /// </summary>
@@ -1538,145 +1703,169 @@ namespace RTParser
         /// <param name="result">the result to be sent to the user</param>
         /// <param name="user">the user who originated the request</param>
         /// <returns>the output string</returns>
-        public string processNode(XmlNode node, SubQuery query, Request request, AltAIMLbot.Result result, AltAIMLbot.User user, bool allowProcess)
+        public string processNode(XmlNode node, SubQuery query, Request request, AltAIMLbot.Result result,
+                                  AltAIMLbot.User user, bool allowProcess)
         {
             // check for timeout (to avoid infinite loops)
             if (request.MayTimeOut && request.StartedOn.AddMilliseconds(request.bot.TimeOut) < DateTime.Now)
             {
-                request.bot.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" + request.rawInput + "\" processing template: \""+query.Template+"\"");
+                request.bot.writeToLog("WARNING! Request timeout. User: " + request.user.UserID + " raw input: \"" +
+                                       request.rawInput + "\" processing template: \"" + query.Template + "\"");
                 request.hasTimedOut = true;
                 return string.Empty;
             }
-                        
+
+            // DMILES: for KHC, a local way we can switch back and forth
+            OutputDelegate TRACE = Console.WriteLine;
+
             // process the node
             string tagName = node.LocalName.ToLower();
             myBehaviors.logNode("AIML", node);
 
             if (tagName == "template" || tagName == "li")
             {
-                string pt = GetOutputSentence(null, node, query, request, result, user, allowProcess);
+                string pt = GetOutputSentence(node.OuterXml, node, query, request, result, user, allowProcess);
                 return pt;
             }
-            else
+            AIMLTagHandler tagHandler = GetTagHandler(node, query, request, result, user, false);
+            if (object.Equals(null, tagHandler))
             {
-
-                AIMLTagHandler tagHandler = GetTagHandler(node, query, request, result, user, false);
-                if (object.Equals(null, tagHandler))
+                string debug = node.OuterXml;
+                if (node.NodeType == XmlNodeType.Text) return node.InnerText;
+                if (node.NodeType == XmlNodeType.Whitespace) return node.InnerText;
+                if (node.NodeType == XmlNodeType.Comment) return " , ";
+                TRACE(" -- Result0 {0} : {1}", tagName, node.InnerText);
+                return node.InnerText;
+            }
+            string resultNodeInnerXML;
+            if (tagHandler.SelfProcessing)
+            {
+                resultNodeInnerXML = tagHandler.Transform();
+            }
+            else if (tagHandler.isRecursive)
+            {
+                if (node.HasChildNodesNonText())
                 {
-                    string debug = node.OuterXml;
-                    if (node.NodeType == XmlNodeType.Text) return node.InnerText;
-                    if (node.NodeType == XmlNodeType.Whitespace) return node.InnerText;
-                    if (node.NodeType == XmlNodeType.Comment) return " , ";
-                    Console.WriteLine(" -- Result0 {0} : {1}", tagName, node.InnerText);
-                    return node.InnerText;
+                    // recursively check
+                    foreach (XmlNode childNode in node.ChildNodes)
+                    {
+                        // expand only elements?
+                        if (childNode.NodeType == XmlNodeType.Element)
+                        {
+                            string debug = childNode.OuterXml;
+                            string debug1 = childNode.InnerXml;
+                            string debug2 = childNode.InnerText;
+                            try
+                            {
+                                string value = this.processNode(childNode, query, request, result, user,
+                                                                allowProcess);
+                                if (value == null)
+                                {
+                                    value = String.Empty;
+                                }
+                                if (!allowProcess)
+                                {
+                                    continue;
+                                }
+                                if (value.Contains("<"))
+                                {
+                                    childNode.InnerXml = value;
+                                }
+                                else
+                                {
+                                    childNode.InnerXml = value;
+                                }
+                                string debug3 = childNode.OuterXml;
+                                if (false &&
+                                    (!MustSame(debug2, childNode.InnerText) ||
+                                     !MustSame(debug1, childNode.InnerXml) ||
+                                     !MustSame(debug, childNode.OuterXml)))
+                                {
+                                    TRACE("AIML processNodeChild changed {0} -> {1}", debug, debug3);
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                TRACE("AIML processNode ERR {0}: {1} {2}", tagName, e, tagHandler);
+                                TRACE("AIML processNode OuterXML: {0}", debug);
+                                childNode.InnerXml = childNode.InnerText;
+                            }
+                        }
+                    }
+                    // we should have filled in the inner text by now
+                    resultNodeInnerXML = tagHandler.Transform();
+                    //string resultNodeInnerXML = node.InnerXml;
+                    TRACE(" -- Result1 {0} : '{1}' {2}", tagName, resultNodeInnerXML, tagHandler);
                 }
                 else
                 {
-                    if (tagHandler.isRecursive)
+                    // this is for "recursive" taghandlers with no children!
+
+                    // tagHandler.isRecursive && !node.HasChildNodes
+                    if (tagHandler.IsStillStarAtomically)
                     {
-                        if (node.HasChildNodes)
-                        {
-                            // recursively check
-                            foreach (XmlNode childNode in node.ChildNodes)
-                            {
-                                if (childNode.NodeType == XmlNodeType.Element)
-                                {
-                                    string debug = childNode.OuterXml;
-                                    string debug1 = childNode.InnerXml;
-                                    string debug2 = childNode.InnerText;
-                                    try
-                                    {
-                                        string value = this.processNode(childNode, query, request, result, user, allowProcess);
-                                        if (value == null)
-                                        {
-                                            value = String.Empty;
-                                        }
-                                        if (!allowProcess)
-                                        {
-                                            continue;
-                                        }                                        
-                                        if (value.Contains("<"))
-                                        {
-                                            childNode.InnerXml = value;
-                                        }
-                                        else
-                                        {
-                                            childNode.InnerXml = value;
-                                        }
-                                        string debug3 = childNode.OuterXml;
-                                        if (false && (!MustSame(debug2, childNode.InnerText) || !MustSame(debug1, childNode.InnerXml) || !MustSame(debug, childNode.OuterXml)))
-                                        {
-                                            Console.WriteLine("AIML processNodeChild changed {0} -> {1}", debug, debug3);
-                                        }
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        Console.WriteLine("AIML processNode ERR {0}: {1}", tagName, e.Message);
-                                        Console.WriteLine("AIML processNode OuterXML: {0}", debug);
-                                        childNode.InnerXml = childNode.InnerText;
-                                    }
-                                }
-                            }
-                            // we should have filled in the inner text by now
-                            string resultNodeInnerXML = tagHandler.Transform();
+                        string debug = node.OuterXml;
+                        // atomic tag?!
+                        var TemplateNodeInnerText0 = tagHandler.GetStarContent();
+                        node.InnerXml = TemplateNodeInnerText0;
+                        resultNodeInnerXML = tagHandler.Transform();
+                        TRACE(" -- Result1b-IsStillStarAtomically {0} : '{1}' {2}", tagName, resultNodeInnerXML,
+                              tagHandler);
 
-                            //string resultNodeInnerXML = node.InnerXml;
-                            Console.WriteLine(" -- Result1 {0} : {1}", tagName, resultNodeInnerXML);
-                            return resultNodeInnerXML;
-
-                        }
-                        else
-                        {
-                            // tagHandler.isRecursive && !node.HasChildNodes
-                            if (tagHandler.IsStillStarAtomically)
-                            {
-                                string debug = node.OuterXml;
-                                // atomic tag?!
-                                var TemplateNodeInnerText0 = tagHandler.GetStarContent();
-                                node.InnerXml = TemplateNodeInnerText0;
-                            }
-                            string resultNodeInnerXML = tagHandler.Transform();
-                            Console.WriteLine(" -- Result1b {0} : {1}", tagName, resultNodeInnerXML);
-                            return resultNodeInnerXML;
-
-                        }
                     }
-                    //else
                     else
                     {
-                        string resultNodeInnerXML = tagHandler.Transform();
-
-                        //Console.WriteLine(" -- Result1 {0} : {1}", tagName, resultNodeInnerXML);
-                        if (resultNodeInnerXML == null)
-                        {
-                            return string.Empty;
-                        }
-                        if (resultNodeInnerXML.Trim() == "")
-                        {
-                            return string.Empty;
-                        }
-                        if (tagHandler.isVerbatum)
-                        {
-                            return resultNodeInnerXML;
-                        }
-                        if (!StaticXMLUtils.ContainsXml(resultNodeInnerXML))
-                        {
-                            return resultNodeInnerXML;
-                        }
-                        string recursiveResult = GetOutputSentence(resultNodeInnerXML, null, query, request, result, user, allowProcess);
-                        Console.WriteLine(" -- Result2 {0} : {1}", tagName, recursiveResult.ToString());
-                        if (tagName=="random")
-                        {
-                            
-                        }
-                        return recursiveResult;
+                        resultNodeInnerXML = tagHandler.Transform();
+                        TRACE(" -- Result1b-NoChildrenRecursive {0} : '{1}' {2}", tagName, resultNodeInnerXML,
+                              tagHandler);
                     }
                 }
             }
-            Console.WriteLine(" -- Result3 default exit {0} : {1}", tagName, node.OuterXml);
-            return string.Empty;
+            else
+            {
+                resultNodeInnerXML = tagHandler.Transform();
+                TRACE(" -- Result1b-NonRecursive {0} : '{1}' {2}", tagName, resultNodeInnerXML,
+                      tagHandler);
+            }
 
+
+
+            bool isVerbatum = tagHandler.isVerbatum;
+
+            //Console.WriteLine(" -- Result1 {0} : {1}", tagName, resultNodeInnerXML);
+            if (resultNodeInnerXML == null)
+            {
+                if (isVerbatum)
+                {
+                    TRACE(" -- WARN VERBATUM NULL {0} : {1}", tagName, tagHandler);
+                    return null;
+                }
+                return string.Empty;
+            }
+            if (resultNodeInnerXML.Trim() == "")
+            {
+                if (isVerbatum)
+                {
+                    TRACE(" -- WARN returning Empty {0} : '{1}' {2}", tagName, resultNodeInnerXML, tagHandler);
+                    return resultNodeInnerXML;
+                }
+                return string.Empty;
+            }
+            if (isVerbatum)
+            {
+                return resultNodeInnerXML;
+            }
+            if (!StaticXMLUtils.ContainsXml(resultNodeInnerXML))
+            {
+                return resultNodeInnerXML;
+            }
+            string recursiveResult = GetOutputSentence(resultNodeInnerXML, null, query, request, result, user,
+                                                       allowProcess);
+            TRACE(" -- Result2 {0} : {1}", recursiveResult, tagHandler);
+            return recursiveResult;
         }
+
+
 
         bool MustSame(string s1, string s2)
         {
@@ -1824,7 +2013,7 @@ namespace RTParser
                         return new AltAIMLbot.AIMLTagHandlers.star(this, user, query, request, result, node);
                         
                     case "system":
-                        return new RTParser.AIMLTagHandlers.system(this, user, query, request, result, node);
+                        return new system(this, user, query, request, result, node);
                         
                     case "that":
                         return new AltAIMLbot.AIMLTagHandlers.that(this, user, query, request, result, node);
@@ -1927,7 +2116,8 @@ namespace RTParser
                         
                     case "template":
                     case "li":
-                        return new AltAIMLbot.AIMLTagHandlers.format(this, user, query, request, result, node, null);
+                        return new AltAIMLbot.AIMLTagHandlers.format(this, user, query, request, result, node,
+                                                                     (Func<string, string>) null, null);
 
                     case "#whitespace":
                     case "#text":
@@ -2024,7 +2214,9 @@ namespace RTParser
             {
                 TagHandler customTagHandler = (TagHandler)this.CustomTags[node.Name.ToLower()];
 
-                AIMLTagHandler newCustomTag = customTagHandler.Instantiate(this.LateBindingAssemblies);
+                AIMLTagHandler newCustomTag = customTagHandler.Instantiate(LateBindingAssemblies, user,
+                                                                                       query,
+                                                                                       request, result, node, this);
                 if(object.Equals(null,newCustomTag))
                 {
                     return null;
@@ -2108,8 +2300,8 @@ namespace RTParser
             //this.Graphmaster = (GraphMaster)bf.Deserialize(loadFile);
             this.myCron = (Cron)bf.Deserialize(loadFile);
             this.myRandMem = (RandomMemory)bf.Deserialize(loadFile);
-            this.Graphs = (Dictionary<string, GraphMaster>)bf.Deserialize(loadFile);
-            this.Graphmaster = this.Graphs["*"];
+            this.LocalGraphsByName = (Dictionary<string, GraphMaster>)bf.Deserialize(loadFile);
+            this.Graphmaster._root = this.Graphs["*"].root;
             //this.myBehaviors = (BehaviorSet)bf.Deserialize(loadFile);
 
             loadFile.Close();
@@ -2647,6 +2839,8 @@ The AltAIMLbot program.
         {
                prologEngine.RegisterObject(named, obj);
         }
+
+        public bool LoadFromStreamLoader { get; set; }
     }
 }
 

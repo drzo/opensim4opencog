@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Xml;
 using AIMLbot;
 using AltAIMLParser;
-using MasterRequest = AltAIMLParser.Request;
+using MasterRequest = AltAIMLbot.Utils.Request;
 
 
 //using CategoryInfo = RTParser.Utils.TemplateInfo;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     public class LoaderOptions
     {
@@ -25,6 +25,64 @@ namespace RTParser.Utils
         public AltBot RProcessor;
         public bool NeedsLoaderLock;
         private bool _searchForGuard = false;
+        internal string graphName = "*";
+        internal string topicName = "*";
+        internal string stateNamePre = "*";
+        internal string stateNamePost = "*";
+        internal string currentThat = "*";
+        public void withAttributes(XmlNode node, ref string defaultElement, Action action)
+        {
+            string preTopic = topicName;
+            string preRef = defaultElement;
+            string preStateNamePre = stateNamePre;
+            string preStateNamePost = stateNamePost;
+            string preThat = currentThat;
+            string preGraph = graphName;
+            foreach (XmlAttribute Attrib in node.Attributes)
+            {
+                if (Attrib.Name == "name")
+                {
+                    defaultElement = node.Attributes["name"].Value;
+                }
+                if (Attrib.Name == "state")
+                {
+                    stateNamePre = node.Attributes["state"].Value;
+                }
+                if (Attrib.Name == "topic")
+                {
+                    topicName = node.Attributes["topic"].Value;
+                }
+                if (Attrib.Name == "graph")
+                {
+                    graphName = node.Attributes["graph"].Value;
+                }
+                if (Attrib.Name == "that")
+                {
+                    currentThat = node.Attributes["that"].Value;
+                }
+                if (Attrib.Name == "prestate")
+                {
+                    stateNamePre = node.Attributes["prestate"].Value;
+                }
+                if (Attrib.Name == "poststate")
+                {
+                    stateNamePost = node.Attributes["poststate"].Value;
+                }
+            }
+            try
+            {
+                action();
+            }
+            finally
+            {
+                topicName = preTopic;
+                stateNamePre = preStateNamePre;
+                stateNamePost = preStateNamePost;
+                graphName = preGraph;
+                currentThat = preThat;
+                defaultElement = preRef;
+            }
+        }
 
         public bool RemovePreviousTemplatesFromNodes
         {

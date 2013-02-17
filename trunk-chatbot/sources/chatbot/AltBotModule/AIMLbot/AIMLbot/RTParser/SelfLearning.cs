@@ -7,20 +7,20 @@ using System.Threading;
 using System.Xml;
 using AltAIMLbot;
 using AltAIMLParser;
+using AltAIMLbot.Database;
+using AltAIMLbot.Normalize;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using RTParser.AIMLTagHandlers;
-using RTParser.Database;
-using RTParser.Normalize;
-using RTParser.Utils;
-using RTParser.Variables;
-using UPath = RTParser.Unifiable;
-using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
+using AltAIMLbot.AIMLTagHandlers;
+using UPath = AltAIMLbot.Unifiable;
+using UList = System.Collections.Generic.List<AltAIMLbot.Utils.TemplateInfo>;
 
 
-namespace RTParser
+namespace AltAIMLbot
 {
     public partial class AltBot
     {

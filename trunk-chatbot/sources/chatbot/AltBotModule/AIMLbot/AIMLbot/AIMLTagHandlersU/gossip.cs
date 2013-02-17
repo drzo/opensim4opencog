@@ -1,11 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The gossip element instructs the AIML interpreter to capture the result of Processing the 
@@ -15,7 +11,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The gossip element does not have any attributes. It may contain any AIML template elements.
     /// </summary>
-    public class gossip : RTParser.Utils.AIMLFormatingTagHandler
+    public class gossip : AIMLFormatingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -26,7 +22,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public gossip(RTParser.AltBot bot,
+        public gossip(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -50,7 +46,7 @@ namespace RTParser.AIMLTagHandlers
                 if (!IsNullOrEmpty(templateNodeInnerText))
                 {
                     Unifiable intext = Unifiable.DescribeUnifiable(templateNodeInnerText);
-                    writeToLog(SafeFormat("GOSSIP from user: {0}, '{1}'", this.user.UserID, intext));
+                    writeToLog(SafeFormat("GOSSIP from user: {0}, '{1}'", user.UserID, intext));
                     return intext;
                 }
             }

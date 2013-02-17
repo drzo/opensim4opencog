@@ -1,6 +1,6 @@
 using System;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     internal class JoinedTextBuffer
     {

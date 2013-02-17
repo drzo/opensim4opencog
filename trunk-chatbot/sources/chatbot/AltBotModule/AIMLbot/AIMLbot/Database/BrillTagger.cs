@@ -41,7 +41,7 @@ using System.Collections.Specialized;
 // Brill assumes Penn Treebank Formatting of the incoming text. My Format is close enough.
 // It also assumes one sentence at a time, which is what I provide.
 
-namespace RTParser.Database.NLP
+namespace AltAIMLbot.Database.NLP
 {
 #if VBLIKE
     public static class ebString

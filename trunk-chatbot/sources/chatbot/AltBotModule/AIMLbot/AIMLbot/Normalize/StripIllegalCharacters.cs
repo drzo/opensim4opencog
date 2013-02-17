@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using System.Text;
 using AltAIMLbot.Utils;
 
-namespace RTParser.Normalize
+namespace AltAIMLbot.Normalize
 {
     /// <summary>
     /// Strips any illegal characters found within the input Unifiable. Illegal characters are referenced from
@@ -11,10 +11,10 @@ namespace RTParser.Normalize
     /// </summary>
     public class StripIllegalCharacters : TextTransformer
     {
-        public StripIllegalCharacters(RTParser.AltBot bot, Unifiable inputString) : base(bot, null, inputString)
+        public StripIllegalCharacters(AltBot bot, Unifiable inputString) : base(bot, null, inputString)
         { }
 
-        public StripIllegalCharacters(RTParser.AltBot bot)
+        public StripIllegalCharacters(AltBot bot)
             : base(bot) 
         { }
         protected override string ProcessChange()

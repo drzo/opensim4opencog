@@ -7,14 +7,12 @@ using System.Threading;
 using System.Windows.Forms;
 using AltAIMLParser;
 using AltAIMLbot;
+using AltAIMLbot.Variables;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
 using Exception=System.Exception;
 using String=System.String;
-using RTParser.Variables;
-
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
@@ -22,7 +20,7 @@ using ThreadPool = ThreadPoolUtil.ThreadPool;
 using Monitor = ThreadPoolUtil.Monitor;
 #endif
 
-namespace RTParser.GUI
+namespace AltAIMLbot.GUI
 {
     public sealed partial class AIMLPadEditor : Form
     {
@@ -85,13 +83,13 @@ namespace RTParser.GUI
         }
 
 
-        private RTParser.AltBot robot;
+        private AltBot robot;
         private readonly string _tabname;
         private Thread TodoThread;
         private object ExecuteCommandLock = new object();
         private User user;
 
-        public AIMLPadEditor(string name, RTParser.AltBot bc)
+        public AIMLPadEditor(string name, AltBot bc)
         {
             robot = bc;
             _tabname = name;
@@ -164,9 +162,8 @@ namespace RTParser.GUI
                 submitButton.Enabled = false;
                 TodoThread = new Thread(() =>
                                             {
-                                                RequestResult requestAcceptInput;
                                                 robot.AcceptInput(WriteLine, text, user, true,
-                                                                  RequestKind.CommandAndChatProcessor, out requestAcceptInput);
+                                                                  RequestKind.CommandAndChatProcessor);
                                                 if (InvokeRequired)
                                                 {
                                                     Invoke(new ThreadStart(() =>

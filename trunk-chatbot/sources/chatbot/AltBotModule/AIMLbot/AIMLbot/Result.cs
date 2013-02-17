@@ -6,11 +6,10 @@ using AltAIMLbot.Utils;
 using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser;
-using RTParser.Utils;
-using RTParser.Variables;
-using UPath = RTParser.Unifiable;
-using MasterRequest = AltAIMLParser.Request;
+using AltAIMLbot;
+using AltAIMLbot.Variables;
+using UPath = AltAIMLbot.Unifiable;
+using MasterRequest = AltAIMLbot.Utils.Request;
 
 namespace AltAIMLbot
 {
@@ -95,9 +94,9 @@ namespace AltAIMLbot
             get { return (Result) this; }
         }
 
-        private RTParser.Utterance _chatOutput;
+        private AltAIMLbot.Utterance _chatOutput;
 
-        public RTParser.Utterance ChatOutput
+        public AltAIMLbot.Utterance ChatOutput
         {
             get
             {
@@ -193,7 +192,7 @@ namespace AltAIMLbot
             //this.Requester = user;
             altResponder = targetUser;
             request.TargetBot = bot;
-            ChatOutput = new RTParser.Utterance(bot.EnsureEnglish, user, altResponder, null, MaxPrintResults)
+            ChatOutput = new AltAIMLbot.Utterance(bot.EnsureEnglish, user, altResponder, null, MaxPrintResults)
                              {InResponse = ChatInput};
             //OutputSentences = ChatOutput.SemanticSentences;
             writeToLog = writeToLog ?? user.WriteToUserTrace;
@@ -508,7 +507,7 @@ namespace AltAIMLbot
         }
 
         public string _normalizedOutput;
-        public readonly RTParser.Utterance ChatInput;
+        public readonly AltAIMLbot.Utterance ChatInput;
         private SubQuery _CurrentQuery;
         private string matchable;
         private int OutputPings;

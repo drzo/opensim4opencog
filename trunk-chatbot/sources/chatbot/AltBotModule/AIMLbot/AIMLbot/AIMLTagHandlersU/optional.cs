@@ -1,12 +1,8 @@
-using System;
+﻿using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// IMPLEMENTED FOR COMPLETENESS REASONS
@@ -22,7 +18,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public optional(RTParser.AltBot bot,
+        public optional(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -67,6 +63,11 @@ namespace RTParser.AIMLTagHandlers
                 }
             }
             return bestValue;
+        }
+
+        protected override Unifiable ComputeInnerOrNull()
+        {
+            return AsOneOf();
         }
     }
 }

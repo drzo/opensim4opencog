@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using AltAIMLParser;
 using AltAIMLbot;
-using RTParser;
-using RTParser.Variables;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 
 namespace AIMLbot
 {/*
@@ -70,7 +70,7 @@ namespace AIMLbot
 
     public sealed class MasterResult : Result
     {
-        public MasterResult(User user, RTParser.AltBot bot, Request request)
+        public MasterResult(User user, AltAIMLbot.AltBot bot, Request request)
             : base(user, bot, request)
         {
         }
@@ -78,17 +78,6 @@ namespace AIMLbot
         public MasterResult(string rawInput, User user, AltBot bot, Request parent, User targetUser)
             : base(rawInput, user, bot, parent, targetUser)
         {
-        }
-    }
-
-    namespace Utils
-    {
-        public class AIMLLoader : RTParser.Utils.AIMLLoaderU
-        {
-            public AIMLLoader(AltBot bot)
-                : base(bot, bot == null ? null : bot.GetBotRequest("-AIMLLoader-"))
-            {
-            }
         }
     }
 

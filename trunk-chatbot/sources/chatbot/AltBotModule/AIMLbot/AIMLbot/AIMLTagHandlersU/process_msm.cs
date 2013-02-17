@@ -1,28 +1,17 @@
-using System;
-using System.Runtime;
-using System.Text;
+﻿using System.Collections;
 using System.Xml;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-//using System.Linq;
-using System.Text.RegularExpressions;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics;
 using AIMLbot;
-using AltAIMLbot;
-using AltAIMLbot.Utils;
 using AltAIMLParser;
-using RTParser;
-using RTParser.Utils;
-using MasterRequest = AltAIMLParser.Request;
+using AltAIMLbot.Utils;
 
-namespace RTParser.AIMLTagHandlers
+//using System.Linq;
+
+namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class process_msm : RTParser.Utils.AIMLTagHandlerU
+    public class process_msm : AIMLTagHandlerU
     {
 
-        public process_msm(RTParser.AltBot bot,
+        public process_msm(AltBot bot,
                 User user,
                 SubQuery query,
                 Request request,
@@ -34,7 +23,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChangeU()
         {
-            if (this.templateNode.Name.ToLower() == "Processmsm")
+            if (templateNode.Name.ToLower() == "Processmsm")
             {
                 string machine = GetAttribValue("name", null);
                 string line = templateNodeInnerText.ToValue(query);
@@ -54,13 +43,13 @@ namespace RTParser.AIMLTagHandlers
                 string line = templateNodeInnerText.ToValue(query);
                 AltBot.writeDebugLine("\n\n >>>>>>>>>>>>>>>>>>>>>> PROCESSMSM : |{0}|<<<<<<<<<<<<<<<<<<<<", line);
                 //varMSM.lastDefMachine = machine;
-                var varMSM = this.botActionMSM;
+                var varMSM = botActionMSM;
 
                 varMSM.addMachine(machine);
                 // set topic to "collectevidencepatterns"
                 //Proc.AddAiml("<set name='topic'>collectevidencepatters</set>");
                 //this.user.Predicates.updateSetting("topic", "collectevidencepatters");
-                this.user.TopicSetting = "CEP";
+                user.TopicSetting = "CEP";
 
                 // Clear the evidence and next state
                 varMSM.clearEvidence();
@@ -72,7 +61,7 @@ namespace RTParser.AIMLTagHandlers
                 // Process the input text
 
                 //string evidenceReply = Proc.ChatString(line, this.user.UserID);
-                string evidenceReply = subChat(line, this.user.TopicSetting, request, true);
+                string evidenceReply = subChat(line, user.TopicSetting, request, true);
 
                 AltBot.writeDebugLine("MSM: WithEvidence {0} ", varMSM.ToString());
 
@@ -107,7 +96,7 @@ namespace RTParser.AIMLTagHandlers
                             string responseTopicUp = ToUpper(responseTopic);
                             //string topicSet = "<set name='topic'>"+responseTopic+"</set>";
                             //this.user.Predicates.updateSetting("topic", responseTopic);
-                            this.user.TopicSetting = responseTopicUp;
+                            user.TopicSetting = responseTopicUp;
                             //Proc.AddAiml(topicSet);
                             string actionReply = "";
                             //actionReply = Proc.ChatString(line, this.user.UserID);
@@ -140,7 +129,7 @@ namespace RTParser.AIMLTagHandlers
             //----------------------
             // snarf from "srai"
             Unifiable tempTopic = topic;
-            MasterRequest subRequest = request.CreateSubRequest(line, null, RequestKind.FSM | RequestKind.TagHandler | RequestKind.SubProcess);
+            Request subRequest = request.CreateSubRequest(line, null, RequestKind.TagHandler);
             //String gn = GetAttribValue("graph", null);
             string gn = "msm";
             if (gn != null) subRequest.Graph = request.GetGraph(gn);
@@ -161,7 +150,7 @@ namespace RTParser.AIMLTagHandlers
                 var newresult = request.CreateResult(subRequest);
                 //subRequest.CurrentResult = newresult;
                 user.SuspendAddResultToUser = true;
-                subResult = (Result) this.Proc.ChatWithRequest(subRequest);
+                subResult = (Result) Proc.ChatWithRequest(subRequest);
                 // subResult = this.Proc.Chat(subRequest, request.Graph);
             }
             finally

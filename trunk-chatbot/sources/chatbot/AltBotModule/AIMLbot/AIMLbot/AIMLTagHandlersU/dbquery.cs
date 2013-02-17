@@ -1,40 +1,19 @@
-using System;
-using System.Runtime;
-using System.Text;
-using System.Xml;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-//using System.Linq;
-using System.Text.RegularExpressions;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics;
-using AltAIMLbot;
+﻿using System.Xml;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser;
-using RTParser.Utils;
-using Lucene.Net.Store;
-using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Standard;
-using Lucene.Net.Index;
-using Lucene.Net.Documents;
-using Lucene.Net.Search;
-using Lucene.Net.QueryParsers;
-using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using MushDLR223.Virtualization;
 
-namespace RTParser.AIMLTagHandlers
+//using System.Linq;
+
+namespace AltAIMLbot.AIMLTagHandlers
 {
 
     /// <summary>
     /// 
     /// </summary>
-    public class dbquery : RTParser.Utils.AIMLTagHandlerU
+    public class dbquery : AIMLTagHandlerU
     {
 
-        public dbquery(RTParser.AltBot bot,
+        public dbquery(AltBot bot,
                 User user,
                 SubQuery query,
                 Request request,
@@ -84,7 +63,7 @@ namespace RTParser.AIMLTagHandlers
                     float reliability;
                     Unifiable converseMemo = TargetBot.LuceneIndexer.AskQuery(
                         searchTerm1,
-                        this.writeToLog,
+                        writeToLog,
                         () =>
                         {
                             if (string.IsNullOrEmpty(failPrefix)) return null;
@@ -92,7 +71,7 @@ namespace RTParser.AIMLTagHandlers
                             string sariCallStr = failPrefix + " " + (string)templateNodeInnerValue;
                             return callSRAI(sariCallStr);
                         },
-                        this.templateNode,
+                        templateNode,
                         threshold,
                         true, // use Wordnet
                         expandOnNoHits, out reliability);
@@ -145,7 +124,7 @@ namespace RTParser.AIMLTagHandlers
                 }
                 float reliability;
                 string failPrefix = GetAttribValue(templateNode, "failprefix", "").ToLower();
-                Unifiable converseMemo = TargetBot.LuceneIndexer.AskQuery(searchTerm1, this.writeToLog,
+                Unifiable converseMemo = TargetBot.LuceneIndexer.AskQuery(searchTerm1, writeToLog,
                                                                           () =>
                                                                               {
                                                                                   //on <dbquery> failure, use a <srai> fallback
@@ -153,7 +132,7 @@ namespace RTParser.AIMLTagHandlers
                                                                                   return callSRAI(sariCallStr);
 
                                                                               },
-                                                                             this.templateNode, 
+                                                                             templateNode, 
                                                                              threshold, 
                                                                              true, // use Wordnet
                                                                              expandOnNoHits, out reliability);
@@ -177,7 +156,7 @@ namespace RTParser.AIMLTagHandlers
             //Proc.writeToLog("DBQUERY: " + s, p);
             //bool tempB = Proc.IsLogging;
             //Proc.IsLogging = true;
-            // base.user.rbot.writeToLog("DBQUERY: " + s, p);
+            // base.user.bot.writeToLog("DBQUERY: " + s, p);
             //Proc.IsLogging = tempB;
             DLRConsole.DebugWriteLine("DBQUERY: " + s, p);
 

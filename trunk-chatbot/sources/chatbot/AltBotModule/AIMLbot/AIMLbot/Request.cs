@@ -5,55 +5,17 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using AIMLbot;
-using AltAIMLbot;
+using AltAIMLParser;
 using AltAIMLbot.Utils;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser;
-using RTParser.AIMLTagHandlers;
-using RTParser.Utils;
-using RTParser.Variables;
-using MasterRequest = AltAIMLParser.Request;
+using AltAIMLbot.AIMLTagHandlers;
+using AltAIMLbot.Variables;
+using MasterRequest = AltAIMLbot.Utils.Request;
 
 
-namespace AltAIMLParser
+namespace AltAIMLbot.Utils
 {
-
-    [Flags]
-    public enum RequestKind
-    {
-        NaturalLang = 1,
-        EventLang = 2,
-        CommentLang = 4,
-        Realtime = 8,
-        ForString = 16,
-        Process = 32,
-        TagHandler = 64,
-        InnerDialog = 128,
-        TemplateExpander = 256,
-        ForLoader = 512,
-        SubProcess = 1024,
-        BackgroundThread = 2048,
-        MTalk = 4096,
-        FSM = 8192,
-        BTX = 16384,
-
-        AIMLLoader = Process | ForLoader,
-        ChatRealTime = NaturalLang | Realtime,
-        ChatForString = NaturalLang | ForString,
-        InnerSelfTalk = ChatForString | InnerDialog,
-        EventProcessor = Process | EventLang,
-        BotPropertyEval = CommentLang | Process,
-        PushPopTag = NaturalLang | TagHandler,
-        SraiTag = NaturalLang | TagHandler | SubProcess,
-        BehaviourChat = ChatRealTime | BackgroundThread | BTX,
-        MTalkThread = ChatRealTime | BackgroundThread | MTalk,
-        StateMachineProcess = TemplateExpander | FSM | Process,
-        BehaviourProcess = TemplateExpander | BTX | Realtime | Process,
-        EvalAIMLHandler = ForString | EventLang | Process | SubProcess,
-        CommandAndChatProcessor = EvalAIMLHandler | ChatRealTime | BackgroundThread | Process | ForString | EventLang | Process | SubProcess,
-    }
-
     /// <summary>
     /// Encapsulates all sorts of information about a request to the Proccessor for processing
     /// </summary>
@@ -113,7 +75,7 @@ namespace AltAIMLParser
                 }
             }
         }
-        public GraphMaster CurrentGraph;
+
         public int RequestDepth { get; set; }
         private int _MaxCanEvalResult = -1;
         public int MaxCanEvalResult
@@ -253,7 +215,7 @@ namespace AltAIMLParser
         /// <summary>
         /// The raw input from the user
         /// </summary>
-        public RTParser.Utterance ChatInput { get; set; }
+        public AltAIMLbot.Utterance ChatInput { get; set; }
 
         public Request ParentRequest { get; set; }
 
@@ -757,18 +719,18 @@ namespace AltAIMLParser
         {
             get
             {
-               // if (_aimlloader == null) _aimlloader = new AIMLLoader(TargetBot);
+                // if (_aimlloader == null) _aimlloader = new AIMLLoader(TargetBot);
                 //return _aimlloader;
                 return ULoader;
             }
 
         }
-        private AIMLLoader _aimlloader = null;
-        public AIMLLoader LoaderA
+        private AIMLLoaderS _aimlloader = null;
+        public AIMLLoaderS LoaderA
         {
             get
             {
-                if (_aimlloader == null) _aimlloader = new AIMLLoader(TargetBot);
+                if (_aimlloader == null) _aimlloader = new AIMLLoaderS(TargetBot);
                 return _aimlloader;
             }
         }
@@ -825,6 +787,11 @@ namespace AltAIMLParser
                 LoadOptions.CtxGraph = value;
                 Graph0 = value;
             }
+        }
+
+        public string CurrentGraphName
+        {
+            get { return Graph.ScriptingName; }
         }
 
         private void ListenerTest(GraphMaster master)
@@ -1921,6 +1888,8 @@ namespace AltAIMLParser
             set;
         }
 
+        public AIMLTagHandlerU LastHandler;
+
         #endregion
 
         public static bool IsToplevelRealtimeChat(bool isToplevel, RequestKind requestType)
@@ -1928,6 +1897,45 @@ namespace AltAIMLParser
             return isToplevel && requestType.ContainsAll(RequestKind.NaturalLang | RequestKind.Realtime) &&
                    !requestType.ContainsAny(RequestKind.TagHandler | RequestKind.BackgroundThread);
         }
+    }
+}
+
+namespace AltAIMLParser
+{
+
+    [Flags]
+    public enum RequestKind
+    {
+        NaturalLang = 1,
+        EventLang = 2,
+        CommentLang = 4,
+        Realtime = 8,
+        ForString = 16,
+        Process = 32,
+        TagHandler = 64,
+        InnerDialog = 128,
+        TemplateExpander = 256,
+        ForLoader = 512,
+        SubProcess = 1024,
+        BackgroundThread = 2048,
+        MTalk = 4096,
+        FSM = 8192,
+        BTX = 16384,
+
+        AIMLLoader = Process | ForLoader,
+        ChatRealTime = NaturalLang | Realtime,
+        ChatForString = NaturalLang | ForString,
+        InnerSelfTalk = ChatForString | InnerDialog,
+        EventProcessor = Process | EventLang,
+        BotPropertyEval = CommentLang | Process,
+        PushPopTag = NaturalLang | TagHandler,
+        SraiTag = NaturalLang | TagHandler | SubProcess,
+        BehaviourChat = ChatRealTime | BackgroundThread | BTX,
+        MTalkThread = ChatRealTime | BackgroundThread | MTalk,
+        StateMachineProcess = TemplateExpander | FSM | Process,
+        BehaviourProcess = TemplateExpander | BTX | Realtime | Process,
+        EvalAIMLHandler = ForString | EventLang | Process | SubProcess,
+        CommandAndChatProcessor = EvalAIMLHandler | ChatRealTime | BackgroundThread | Process | ForString | EventLang | Process | SubProcess,
     }
 
     public delegate Exception ExceptionFactoryMethod(string f,params object[] arg);
@@ -1964,7 +1972,7 @@ namespace AltAIMLParser
     }
 }
 
-namespace RTParser
+namespace AltAIMLbot
 {
     public class CommitQueue
     {

@@ -2,12 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using AltAIMLbot.Variables;
 using java.lang;
-using RTParser.Variables;
 using Exception=System.Exception;
 using String=System.String;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     public class NamedAction
     {

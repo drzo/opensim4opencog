@@ -12,6 +12,8 @@ using System.Xml;
 using AIMLbot;
 using AltAIMLbot;
 using AltAIMLParser;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -20,16 +22,14 @@ using org.opencyc.api;
 #if USE_SWIPROLOG
 using PrologScriptEngine;
 #endif
-using RTParser.AIMLTagHandlers;
-using RTParser.Database;
-using RTParser.Utils;
-using RTParser.Variables;
-using RTParser.Web;
+using AltAIMLbot.AIMLTagHandlers;
+using AltAIMLbot.Database;
+using AltAIMLbot.Web;
 using Console=System.Console;
-using UPath = RTParser.Unifiable;
-using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
+using UPath = AltAIMLbot.Unifiable;
+using UList = System.Collections.Generic.List<AltAIMLbot.Utils.TemplateInfo>;
 
-namespace RTParser
+namespace AltAIMLbot
 {
 
     /// <summary>

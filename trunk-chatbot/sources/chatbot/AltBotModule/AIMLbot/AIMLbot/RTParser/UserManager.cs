@@ -6,10 +6,10 @@ using AltAIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using RTParser.Utils;
-using RTParser.Variables;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     public partial class AltBot
     {

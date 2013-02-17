@@ -3,20 +3,19 @@ using System.Collections.Generic;
 using System.Web;
 using System.Xml;
 using AltAIMLbot;
+using AltAIMLbot.AIMLTagHandlers;
 using AltAIMLbot.Utils;
 using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser.AIMLTagHandlers;
-using RTParser.Utils;
-using PatternInfo = RTParser.Unifiable;
-using ThatInfo = RTParser.Unifiable;
-using TopicInfo = RTParser.Unifiable;
-using GuardInfo = RTParser.Unifiable;
-using ResponseInfo = RTParser.Unifiable;
+using PatternInfo = AltAIMLbot.Unifiable;
+using ThatInfo = AltAIMLbot.Unifiable;
+using TopicInfo = AltAIMLbot.Unifiable;
+using GuardInfo = AltAIMLbot.Unifiable;
+using ResponseInfo = AltAIMLbot.Unifiable;
 using AIMLbot;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     /// <summary>
     /// Encapsulates an AIML Tag Proccessor.
@@ -454,7 +453,7 @@ namespace RTParser
         /// <returns></returns>
         public AIMLTagHandlerU proccessResponse(SubQuery query,
                                      Request request, Result result,
-                                     XmlNode templateNode, GuardInfo sGuard,
+                                     XmlNode templateNode, Unifiable sGuard,
                                      out bool createdOutput, out bool templateSucceeded,
                                      AIMLTagHandlerU parentHandlerU, TemplateInfo templateInfo,
                                      bool copyChild, bool copyParent)
@@ -494,7 +493,7 @@ namespace RTParser
         }
 
         private AIMLTagHandlerU proccessTemplate(SubQuery query, Request request, Result result,
-                                                XmlNode templateNode, GuardInfo sGuard,
+                                                XmlNode templateNode, Unifiable sGuard,
                                                 out bool createdOutput, out bool templateSucceeded,
                                                 AIMLTagHandlerU parentHandlerU, TemplateInfo templateInfo,
                                                 bool copyChild, bool copyParent)
@@ -553,7 +552,7 @@ namespace RTParser
         }
 
         public AIMLTagHandlerU proccessResponse000(SubQuery query, Request request, Result result,
-                                                XmlNode sOutput, GuardInfo sGuard,
+                                                XmlNode sOutput, Unifiable sGuard,
                                                 out bool createdOutput, out bool templateSucceeded,
                                                 AIMLTagHandlerU parentHandlerU, TemplateInfo templateInfo,
                                                 bool copyChild, bool copyParent)

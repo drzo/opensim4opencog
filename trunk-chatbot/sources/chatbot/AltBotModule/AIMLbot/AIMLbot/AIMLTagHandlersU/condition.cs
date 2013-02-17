@@ -1,16 +1,7 @@
-using System;
-using System.Collections;
 using System.Xml;
-using System.Text;
-using System.Text.RegularExpressions;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser.Utils;
-using RTParser.Variables;
-using System.Collections.Generic;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The condition element instructs the AIML interpreter to return specified contents depending 
@@ -98,7 +89,7 @@ namespace RTParser.AIMLTagHandlers
     /// AIML predicate, and a required attribute value, which contains a simple pattern expression. The 
     /// element may contain any AIML template elements. 
     /// </summary>
-    public class condition : RTParser.Utils.AIMLTagHandlerU
+    public class condition : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -109,7 +100,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public condition(RTParser.AltBot bot,
+        public condition(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -117,7 +108,7 @@ namespace RTParser.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
-            this.isRecursive = false;
+            isRecursive = false;
         }
         protected int maxTrueConditions = 1;
         protected int currentTrueConditions = 0;
@@ -128,7 +119,7 @@ namespace RTParser.AIMLTagHandlers
                 return RecurseResult;
             }
             int maxConditions = GetAttribValue<int>(templateNode, "count", 1);
-            this.maxTrueConditions = maxConditions;
+            maxTrueConditions = maxConditions;
             var nodes = SelectNodes(templateNode.ChildNodes);
             currentTrueConditions = 0;
             var vv = OutputFromNodes(nodes, (node) => (currentTrueConditions++ < maxTrueConditions));

@@ -1,12 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser.Utils;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// An element called bot, which may be considered a restricted version of get, is used to 
@@ -19,7 +14,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The bot element does not have any content. 
     /// </summary>
-    public class aiml : RTParser.Utils.LoadingTagHandler
+    public class aiml : LoadingTagHandler
     {
         /// <summary>
         /// Ctor
@@ -30,7 +25,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public aiml(RTParser.AltBot bot,
+        public aiml(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -43,7 +38,7 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
         {
-            if (this.templateNode.Name.ToLower() == "aiml")
+            if (templateNode.Name.ToLower() == "aiml")
             {
                 // Process each of these child "settings"? nodes
                 request.Loader.loadAIMLNode(templateNode, loaderOptions, request);

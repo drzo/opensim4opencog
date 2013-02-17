@@ -1,17 +1,13 @@
-using System;
-using System.Collections.Generic;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
+using AltAIMLbot.Database;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// &lt;cycphrase&gt; translates a Cyc symbol into an English word/phrase
     /// </summary>
-    public class cycphrase : RTParser.Database.CycTagHandler
+    public class cycphrase : CycTagHandler
     {
         /// <summary>                    s
         /// Ctor
@@ -22,7 +18,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public cycphrase(RTParser.AltBot bot,
+        public cycphrase(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,

@@ -1,16 +1,12 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// NOT IMPLEMENTED FOR SECURITY REASONS
     /// </summary>
-    public class system : RTParser.Utils.AIMLTagHandlerU
+    public class system : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -21,7 +17,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public system(RTParser.AltBot bot,
+        public system(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -37,7 +33,7 @@ namespace RTParser.AIMLTagHandlers
             if (!finalResult.IsValid)
             {
                 var v = Recurse();
-                var r  = this.Proc.SystemExecute(v, GetAttribValue("lang", "bot"), request);
+                var r  = Proc.SystemExecute(v, GetAttribValue("lang", "bot"), request);
                 if (Unifiable.IsFalse(r))
                 {
                     //finalResult = r;

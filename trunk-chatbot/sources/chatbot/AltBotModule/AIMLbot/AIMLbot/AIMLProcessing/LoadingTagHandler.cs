@@ -1,9 +1,8 @@
 using System.Xml;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
+using AltAIMLbot;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     public abstract class LoadingTagHandler : AIMLTagHandlerU
     {
@@ -26,11 +25,22 @@ namespace RTParser.Utils
         {
             isRecursive = false;
         }
-
-        protected override Unifiable ProcessChangeU()
+        public bool IsLoadReady;
+        protected bool ProcessInnerXmlAsLoad = false;
+        
+        protected virtual Unifiable PreProcessChange()
         {
-            IsStarted = true;
-            isRecursive = true;
+            return ProcessChangeU();
+        }
+
+        sealed protected override Unifiable ProcessChangeU()
+        {
+            if (IsLoadReady)
+            {
+                writeToLogWarn("LoadIsReady AGAIN?!");
+            }
+            IsLoadReady = true;
+
             StringAppendableUnifiableImpl recursiveResult = Unifiable.CreateAppendable();
             if (templateNode.HasChildNodes)
             {
@@ -49,11 +59,11 @@ namespace RTParser.Utils
             return recursiveResult;
         }
 
-        public override Unifiable CompleteProcessU()
+        sealed public override Unifiable CompleteProcessU()
         {
-            if (!IsStarted)
+            if (!IsLoadReady)
             {
-                ProcessChangeU();
+                PreProcessChange();
             }
             LoaderOptions saveOpts = request.LoadOptions;
             LoaderOptions loaderOptions = saveOpts;
@@ -75,19 +85,19 @@ namespace RTParser.Utils
             }
             int newSize = GM.Size;
             int change = newSize - size;
-            string ch = "@echo Loaded " + GM + " was " + size;
+            string ch = "Loaded " + change + " into " + GM + " was " + size;
             if (RecurseResult == (string) null)
             {
-                return ch;
+                return Succeed(ch);
             }
-            return ch + " " + RecurseResult;
+            return Succeed(ch + " " + RecurseResult);
         }
 
         protected abstract Unifiable ProcessLoad(LoaderOptions loaderOptions);
 
         public override Unifiable CheckValue(Unifiable value)
         {
-            if (ReferenceEquals(value, Unifiable.Empty)) return value;
+            if (ReferenceEquals(value, Unifiable.EmptyRef)) return value;
             if (value == null)
             {
                 writeToLogWarn("ChackValue NULL");

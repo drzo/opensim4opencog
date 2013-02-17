@@ -15,17 +15,17 @@ using AIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using RTParser.AIMLTagHandlers;
-using RTParser.Database;
-using RTParser.Normalize;
-using RTParser.Utils;
-using RTParser.Variables;
-using RTParser.Web;
-using UPath = RTParser.Unifiable;
-using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
+using AltAIMLbot.AIMLTagHandlers;
+using AltAIMLbot.Database;
+using AltAIMLbot.Normalize;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
+using AltAIMLbot.Web;
+using UPath = AltAIMLbot.Unifiable;
+using UList = System.Collections.Generic.List<AltAIMLbot.Utils.TemplateInfo>;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 
-namespace RTParser
+namespace AltAIMLbot
 {
     //public delegate object SystemExecHandler(string cmd, Request user);
 

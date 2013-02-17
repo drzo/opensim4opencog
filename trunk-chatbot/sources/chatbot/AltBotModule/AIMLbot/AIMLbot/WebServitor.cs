@@ -462,6 +462,7 @@ namespace AltAIMLbot
                 string state1 = "*";
                 string pattern = "*";
                 string that = "*";
+                string graphName = "*";
                 string state2 = "*";
                 string topic = "*";
                 string template = "<template>ok</template>";
@@ -487,8 +488,8 @@ namespace AltAIMLbot
                       {
 
                         WebLinksWriter.tl_AsHTML = false;
-                        AIMLLoader loader = new AIMLLoader(ourServitor.curBot);
-                        string categoryPath = loader.generatePath(pattern, that, topic, state1, state2, false);
+                        AIMLLoaderU loader = new AIMLLoaderU(ourServitor.curBot);
+                        string categoryPath = loader.SLoader.generatePath(graphName, pattern, that, topic, state1, state2, false);
                         Console.WriteLine("WEBPOST CREATE:{0} --> {1}:{2}", categoryPath, template, vfilename);
                         string gn = ourServitor.curBot.Graphmaster.ScriptingName;
                          

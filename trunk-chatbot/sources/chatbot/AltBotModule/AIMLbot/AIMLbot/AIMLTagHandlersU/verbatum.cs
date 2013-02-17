@@ -1,11 +1,8 @@
 using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The version element tells the AIML interpreter that it should substitute the version number
@@ -13,7 +10,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The version element does not have any content. 
     /// </summary>
-    public class verbatum : RTParser.Utils.AIMLTagHandlerU
+    public class verbatum : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -24,7 +21,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public verbatum(String show, RTParser.AltBot bot,
+        public verbatum(String show, AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -35,6 +32,12 @@ namespace RTParser.AIMLTagHandlers
             data = show;
             RecurseResult = data;
             isRecursive = false;
+            SelfProcessing = true;
+        }
+
+        public override bool isVerbatum
+        {
+            get { return true; }
         }
 
         protected override bool ExpandingSearchWillYieldNoExtras { get { return true; } }
@@ -51,17 +54,21 @@ namespace RTParser.AIMLTagHandlers
             if (RecurseResultValid) return RecurseResult;
             return data;
         }
-        public override Unifiable TransformU()
+        public override string Transform()
         {
             RecurseResult = data;
             return data;
         }
         public override float CanUnify(Unifiable with)
         {
-            writeToLogWarn("CANUNIFY: " + with);
+            writeToLogWarn("VERBATUM CANUNIFY: " + with);
+            IsTraced = true;
             return base.CanUnify(with);
         }
-
+        public override Unifiable CompleteAimlProcess()
+        {
+            return data;
+        }
         public override Unifiable RecurseResult
         {
             get { return data; }

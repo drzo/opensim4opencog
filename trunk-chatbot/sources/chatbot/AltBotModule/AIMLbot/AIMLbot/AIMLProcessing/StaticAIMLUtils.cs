@@ -8,15 +8,15 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
 using AltAIMLbot;
+using AltAIMLbot.Database;
+using AltAIMLbot.Normalize;
 using AltAIMLbot.Utils;
 using AltAIMLParser;
+using AltAIMLbot.Variables;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser.Database;
-using RTParser.Normalize;
-using RTParser.Variables;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     [Serializable]
     public class StaticAIMLUtils : TextPatternUtils

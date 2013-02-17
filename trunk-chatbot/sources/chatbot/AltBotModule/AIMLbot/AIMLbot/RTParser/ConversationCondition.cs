@@ -7,9 +7,9 @@ using AltAIMLbot;
 using AltAIMLbot.Utils;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser.AIMLTagHandlers;
+using AltAIMLbot.AIMLTagHandlers;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     [Serializable]
     public class ConversationCondition

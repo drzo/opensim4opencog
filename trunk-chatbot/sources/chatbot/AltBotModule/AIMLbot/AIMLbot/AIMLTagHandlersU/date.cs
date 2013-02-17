@@ -1,11 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The date element tells the AIML interpreter that it should substitute the system local 
@@ -13,7 +9,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The date element does not have any content. 
     /// </summary>
-    public class date : RTParser.Utils.AIMLTagHandlerU
+    public class date : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -24,7 +20,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public date(RTParser.AltBot bot,
+        public date(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -36,9 +32,9 @@ namespace RTParser.AIMLTagHandlers
         protected override bool ExpandingSearchWillYieldNoExtras { get { return true; } }
         protected override Unifiable ProcessChangeU()
         {
-            if (this.templateNode.Name.ToLower() == "date")
+            if (templateNode.Name.ToLower() == "date")
             {
-                return AltBot.Now.ToString(this.Proc.Locale);
+                return AltBot.Now.ToString(Proc.Locale);
             }
             return Unifiable.Empty;
         }

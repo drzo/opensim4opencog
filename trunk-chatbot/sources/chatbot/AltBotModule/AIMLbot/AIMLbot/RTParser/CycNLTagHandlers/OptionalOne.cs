@@ -1,12 +1,10 @@
-using System;
+﻿using System;
 using System.Xml;
 using System.Text;
 using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser.Utils;
 
-namespace RTParser.CycNLTagHandlers
+namespace AltAIMLbot.CycNLTagHandlers
 {
     /// <summary>
     /// IMPLEMENTED FOR COMPLETENESS REASONS
@@ -22,7 +20,7 @@ namespace RTParser.CycNLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be processed</param>
-        public OptionalOne(RTParser.AltBot bot,
+        public OptionalOne(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -64,5 +62,9 @@ namespace RTParser.CycNLTagHandlers
             return OR_FALSE;
         }
 
+        protected override Unifiable ComputeInnerOrNull()
+        {
+            return AsOneOf();
+        }
     }
 }

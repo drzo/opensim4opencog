@@ -2,11 +2,11 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Xml;
-using AltAIMLbot.Utils;
+using AltAIMLbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     [Serializable]
     public class TextPatternUtils : StaticXMLUtils
@@ -41,7 +41,7 @@ namespace RTParser.Utils
         static public bool checkEndsAsSentence(string sentence)
         {
             sentence = Trim(sentence);
-
+            if (sentence.Length <= 1) return false;
             if ("!?.".Contains(sentence.Substring(sentence.Length - 1))) return true;
             foreach (Unifiable splitter in AltBot.Splitters)
             {
@@ -151,7 +151,7 @@ namespace RTParser.Utils
                 {
                     return true;
                 }
-                if (ReferenceEquals(name, Unifiable.Empty))
+                if (ReferenceEquals(name, Unifiable.EmptyRef))
                 {
                     return false;
                 }
@@ -188,7 +188,7 @@ namespace RTParser.Utils
 
         public static bool IsMissing(Object name)
         {
-            if (ReferenceEquals(name, Unifiable.MISSING) || ReferenceEquals(name, null))
+            if (ReferenceEquals(name, Unifiable.MISSING) || name == null)
             {
                 return true;
             }
@@ -198,14 +198,14 @@ namespace RTParser.Utils
             }
             if ((name is string))
             {
-                string sname = ToUpper(((string) name));
+                string sname = ToUpper(((string)name));
                 return sname == "OM" || sname == "$MISSING";
             }
             if (!(name is Unifiable))
             {
                 return false;
             }
-            var name2 = ((Unifiable) name).SpecialName;
+            var name2 = ((Unifiable)name).SpecialName;
             if (IsNull(name2)) return false;
             return IsIncomplete(name2);
         }
@@ -246,7 +246,7 @@ namespace RTParser.Utils
                 {
                     return false;
                 }
-                if (ReferenceEquals(name, Unifiable.Empty))
+                if (ReferenceEquals(name, Unifiable.EmptyRef))
                 {
                     return true;
                 }
@@ -258,7 +258,9 @@ namespace RTParser.Utils
                 {
                     return true;
                 }
-                return false;
+                string ss = (string)(Unifiable)name;// as string;
+                if (ss == null || ss.Length > 0) return false;
+                return true;
             }
             return false;
         }
@@ -456,7 +458,7 @@ namespace RTParser.Utils
             return s;
         }
 
-        public static bool ContansNoInfo(Unifiable cond)
+        protected static bool ContansNoInfo(Unifiable cond)
         {
             return cond == null || cond == Unifiable.STAR || cond == Unifiable.Empty;
         }
@@ -493,7 +495,7 @@ namespace RTParser.Utils
             return normalizedPattern;
         }
 
-        public static string NoWilds(string pattern)
+        protected static string NoWilds(string pattern)
         {
             pattern = Trim(pattern);
             int pl = pattern.Length;
@@ -533,7 +535,7 @@ namespace RTParser.Utils
         public static bool IsSomething(Unifiable s, out Unifiable something)
         {
             something = s;
-            if (IsNullOrEmpty(s) || IsIncomplete(s))
+            if (IsNullOrEmpty(s) || IsIncomplete(s) || IsMissing(s))
             {
                 return false;
             }

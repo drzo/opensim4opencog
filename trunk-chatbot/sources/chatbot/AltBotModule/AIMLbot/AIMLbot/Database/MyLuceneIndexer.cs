@@ -7,6 +7,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.XPath;
 using AltAIMLParser;
+using AltAIMLbot.Utils;
 using LAIR.Collections.Generic;
 using LAIR.ResourceAPIs.WordNet;
 using Lucene.Net.Analysis;
@@ -19,10 +20,9 @@ using Lucene.Net.Store;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using RTParser.Utils;
-using RTParser.Variables;
+using AltAIMLbot.Variables;
 
-namespace RTParser.Database
+namespace AltAIMLbot.Database
 {
     /// <summary>
     /// Delegate to the Wordnet data expander (walks up the Undisambiguated Hyponyms)

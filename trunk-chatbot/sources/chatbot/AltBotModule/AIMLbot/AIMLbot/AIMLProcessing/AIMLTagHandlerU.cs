@@ -5,16 +5,16 @@ using System.Diagnostics;
 using System.Threading;
 using System.Xml;
 using AltAIMLbot;
+using AltAIMLbot.AIMLTagHandlers;
+using AltAIMLbot.Database;
 using AltAIMLbot.Utils;
 using AltAIMLParser;
+using AltAIMLbot.Variables;
 using MushDLR223.Utilities;
-using RTParser.AIMLTagHandlers;
-using RTParser.Database;
-using RTParser.Variables;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 using MushDLR223.ScriptEngines;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
     /// <summary>
     /// The template for all classes that handle the AIML tags found within template nodes of a
@@ -24,7 +24,8 @@ namespace RTParser.Utils
     {
         sealed protected override string ProcessChange()
         {
-            return ProcessChangeU();
+            var u = CompleteAimlProcess();
+            return u;
         }
        
         public bool IsStarted;
@@ -601,7 +602,7 @@ namespace RTParser.Utils
         /// By calling this and not just CompleteProcess() 
         /// You've ensure we have a proper calling context
         /// </summary>
-        public Unifiable CompleteAimlProcess()
+        public virtual Unifiable CompleteAimlProcess()
         {
             if (finalResult.IsValid) return finalResult.Value;
             if (RecurseResultValid) return RecurseResult;
@@ -708,10 +709,11 @@ namespace RTParser.Utils
             return GET_FAIL();
         }
 
-        public Unifiable Succeed(string p)
+        public Unifiable Succeed(object p0)
         {
             Succeed();
             if (true) return think.THINKYTAG;
+            string p = p0.ToString();
             return "<!-- SUCCEED: " + p.Replace("<!--", "<#-").Replace("-->", "-#>") + "-->";
         }
 
@@ -1314,7 +1316,7 @@ namespace RTParser.Utils
             return value;
         }
 
-        protected Unifiable Recurse()
+        virtual protected Unifiable Recurse()
         {
             bool _wasRecurseResultValid = innerResult.IsValid;
             try
@@ -2137,6 +2139,7 @@ namespace RTParser.Utils
         {
             return new int[] { QueryHasSuceededN, QueryHasFailedN };
         }
+
     }
 
     public interface IAIMLTransaction

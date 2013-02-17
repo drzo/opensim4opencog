@@ -14,23 +14,22 @@ using System.Xml;
 using AIMLbot;
 using AltAIMLbot;
 using AltAIMLParser;
+using AltAIMLbot.GUI;
 using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
+using AltAIMLbot.Web;
 using LAIR.ResourceAPIs.WordNet;
 using LogicalParticleFilter1;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using org.opencyc.api;
-using RTParser.AIMLTagHandlers;
-using RTParser.Database;
-using RTParser.GUI;
-using RTParser.Utils;
-using RTParser.Variables;
-using RTParser.Web;
+using AltAIMLbot.AIMLTagHandlers;
+using AltAIMLbot.Database;
 using Console=System.Console;
-using UPath = RTParser.Unifiable;
-using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
-using MasterRequest = AltAIMLParser.Request;
+using UPath = AltAIMLbot.Unifiable;
+using UList = System.Collections.Generic.List<AltAIMLbot.Utils.TemplateInfo>;
+using MasterRequest = AltAIMLbot.Utils.Request;
 using Mono.CSharp;
 using Action=System.Action;
 using Attribute=System.Attribute;
@@ -42,7 +41,7 @@ using ThreadPool = ThreadPoolUtil.ThreadPool;
 using Monitor = ThreadPoolUtil.Monitor;
 #endif
 
-namespace RTParser
+namespace AltAIMLbot
 {
     /// <summary>
     /// </summary>
@@ -99,6 +98,12 @@ namespace RTParser
             return s;
         }
 
+
+        static void writeToLogWarn(string unifiable, params object[] objs)
+        {
+            writeDebugLine("WARNING: " + unifiable, objs);
+        }
+
         /// <summary>
         /// Writes a (timestamped) message to the Processor's log.
         /// 
@@ -111,6 +116,16 @@ namespace RTParser
         {
             message = SafeFormat(message, args);
             if (String.IsNullOrEmpty(message)) return;
+            string stup = DLRConsole.SafeFormat(message, args).ToUpper();
+            if (!stup.StartsWith("WARNING"))
+            {
+                if (stup.ContainsAny("warn", "= null", "error", "bad") > -1)
+                {
+                    writeToLogWarn("BAD " + message, args);
+                }
+                return;
+            }
+
             if (lastMessage == message)
             {
                 return;
@@ -405,13 +420,12 @@ namespace RTParser
                 {
                     Environment.Exit(Environment.ExitCode);
                 }
-                RequestResult requestAcceptInput;
-                myBot.AcceptInput(writeLine, input, myUser, true, RequestKind.ChatRealTime, out requestAcceptInput);
+                myBot.AcceptInput(writeLine, input, myUser, true, RequestKind.ChatRealTime);
 
             }
         }
 
-        public void AcceptInput(OutputDelegate writeLine, string input, User myUser, bool isToplevel, RequestKind kind, out RequestResult acceptInputResult)
+        public void AcceptInput(OutputDelegate writeLine, string input, User myUser, bool isToplevel, RequestKind kind)
         {
             AltBot myBot = this;
             if (_botAsUser == null)
@@ -432,8 +446,6 @@ namespace RTParser
                         writeLine("{0}: {1}", myName, BotAsAUser.JustSaid);
                     }
                     writeLine("-----------------------------------------------------------------");
-                    acceptInputResult = new RequestResult(myUser, input, BotAsUser, myUser.That);
-                    acceptInputResult.chatOutputillBeInBackground = true;
                     return;
                 }
                 try
@@ -454,12 +466,12 @@ namespace RTParser
                     {
                         // See what the servitor says
                         updateRTP2Sevitor(myUser);
-                        writeLine(myName + "> " + servitor.respondToChat(input, myUser, isToplevel, kind, out acceptInputResult));
+                        writeLine(myName + "> " + servitor.respondToChat(input, myUser, isToplevel, kind));
                         updateServitor2RTP(myUser);
                     }
                     else
                     {
-                        throw servitor.curBot.RaiseError("Should not be here?!");
+                      //  throw servitor.curBot.RaiseError("Should not be here?!");
                         if (!input.StartsWith("@"))
                         {
                             //      string userJustSaid = input;
@@ -677,7 +689,7 @@ namespace RTParser
             return _Evaluator;
         }
 
-        [ThreadStaticAttribute] public static Request currentRequest;
+        [ThreadStatic] public static Request currentRequest;
         private object CSharpExec(string cmd, Request requestornull)
         {
             currentRequest = requestornull;
@@ -742,36 +754,6 @@ namespace RTParser
             if (retval != null) return retval;
             return "False";
         }
-    }
-
-    public class RequestResult:IDisposable
-    {
-        public Result result;
-        public Request request;
-        public User Speaker, Hearer;
-        public string Input, That;
-        public bool chatOutputillBeInBackground;
-
-        public RequestResult(User curUser, string input, User targetUser, string that)
-        {
-            Speaker = curUser;
-            this.Input = input;
-            Hearer = targetUser;
-            That = that;
-        }
-
-        public string Error;
-
-        public string OutputText;
-
-        #region IDisposable Members
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
     }
 
     public partial class AltBotCommands //: AltBot

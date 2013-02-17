@@ -4,10 +4,10 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using AltAIMLParser;
-using RTParser;
-using RTParser.Utils;
+using AltAIMLbot.Utils;
+using AltAIMLbot;
 
-namespace RTParser.Database
+namespace AltAIMLbot.Database
 {
     public class GoogleTranslator
     {

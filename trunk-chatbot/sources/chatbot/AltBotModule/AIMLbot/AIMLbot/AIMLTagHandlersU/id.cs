@@ -1,11 +1,7 @@
-using System;
 using System.Xml;
-using System.Text;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The id element tells the AIML interpreter that it should substitute the user ID. 
@@ -14,7 +10,7 @@ namespace RTParser.AIMLTagHandlers
     /// 
     /// The id element does not have any content.
     /// </summary>
-    public class id : RTParser.Utils.AIMLTagHandlerU
+    public class id : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -25,7 +21,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public id(RTParser.AltBot bot,
+        public id(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -39,7 +35,7 @@ namespace RTParser.AIMLTagHandlers
         {
             if (CheckNode("id,get_ip"))
             {
-                return this.user.UserID;
+                return user.UserID;
             }
             return Unifiable.Empty;
         }

@@ -1,6 +1,6 @@
 using System;
 
-namespace RTParser.Variables
+namespace AltAIMLbot.Variables
 {
     //public delegate void SetUnifiable(Unifiable unifiable);
 

@@ -1,14 +1,8 @@
 using System;
 using System.Xml;
-using System.Text;
-using System.Text.RegularExpressions;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser.Database;
-using RTParser.Variables;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The cyccondition element instructs the AIML interpreter to return specified contents depending 
@@ -96,7 +90,7 @@ namespace RTParser.AIMLTagHandlers
     /// AIML predicate, and a required attribute value, which contains a simple pattern expression. The 
     /// element may contain any AIML template elements. 
     /// </summary>
-    public class cyccondition : RTParser.Utils.AIMLTagHandlerU
+    public class cyccondition : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -107,7 +101,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public cyccondition(RTParser.AltBot bot,
+        public cyccondition(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -115,7 +109,7 @@ namespace RTParser.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
-            this.isRecursive = false;
+            isRecursive = false;
         }
 
         protected override Unifiable ProcessChangeU()
@@ -124,7 +118,7 @@ namespace RTParser.AIMLTagHandlers
         }
         protected override string InnerSource()
         {
-            if (this.templateNode.Name.ToLower() == "condition")
+            if (templateNode.Name.ToLower() == "condition")
             {
                 // heuristically work out the type of condition being Processed
                 int tncount = AttributesCount(templateNode, "name,value");
@@ -134,7 +128,7 @@ namespace RTParser.AIMLTagHandlers
                     Unifiable value = GetAttribValue("value", null);
                     if ((name != null) & (value != null))
                     {
-                        Unifiable actualValue = this.query.grabSetting(name);
+                        Unifiable actualValue = query.grabSetting(name);
                         if (IsPredMatch(value, actualValue, query))
                         {
                             Succeed();
@@ -146,11 +140,11 @@ namespace RTParser.AIMLTagHandlers
                 }
                 else if (tncount == 1) // single predicate
                 {
-                    if (this.templateNode.Attributes[0].Name == "name")
+                    if (templateNode.Attributes[0].Name == "name")
                     {
                         string name = GetAttribValue("name", String.Empty);
 
-                        foreach (XmlNode childLINode in this.templateNode.ChildNodes)
+                        foreach (XmlNode childLINode in templateNode.ChildNodes)
                         {
                             int cac = AttributesCount(childLINode, "name,value");
                             if (childLINode.Name.ToLower() == "li")
@@ -161,7 +155,7 @@ namespace RTParser.AIMLTagHandlers
                                     {
                                         bool succeed;
                                         Unifiable actualValue = GetActualValue(childLINode, name, childLINode.Name, out succeed, query); ;
-                                        Unifiable value = GetAttribValue(childLINode, "value", NullUnifyFunct, ReduceStarAttribute<Unifiable>);
+                                        Unifiable value = GetAttribValue<Unifiable>(childLINode, "value", NullUnifyFunct, ReduceStarAttribute<Unifiable>);
                                         if (IsPredMatch(value, actualValue, query))
                                         {
                                             Succeed();
@@ -180,7 +174,7 @@ namespace RTParser.AIMLTagHandlers
                 }
                 else if (tncount == 0) // multi-predicate
                 {
-                    foreach (XmlNode childLINode in this.templateNode.ChildNodes)
+                    foreach (XmlNode childLINode in templateNode.ChildNodes)
                     {
                         if (childLINode.Name.ToLower() == "li")
                         {
@@ -188,7 +182,7 @@ namespace RTParser.AIMLTagHandlers
 
                             if (cac == 2)
                             {
-                                string name = GetAttribValue(childLINode, "name", NullStringFunct, ReduceStarAttribute<string>);
+                                string name = GetAttribValue<string>(childLINode, "name", NullStringFunct, ReduceStarAttribute<string>);
                                 Unifiable value = GetAttribValue(childLINode, "value", NullUnifyFunct, ReduceStarAttribute);
                                 if ((name.Length > 0) & (!IsNullOrEmpty(value)))
                                 {
@@ -203,8 +197,8 @@ namespace RTParser.AIMLTagHandlers
                             }
                             if (cac == 1)
                             {
-                                string name = GetAttribValue(childLINode, "name", NullStringFunct, ReduceStarAttribute<string>);
-                                if ((name.Length > 0) && this.query.containsSettingCalled(name))
+                                string name = GetAttribValue<string>(childLINode, "name", NullStringFunct, ReduceStarAttribute<string>);
+                                if ((name.Length > 0) && query.containsSettingCalled(name))
                                 {
                                     Succeed();
                                     return Unifiable.InnerXmlText(childLINode);

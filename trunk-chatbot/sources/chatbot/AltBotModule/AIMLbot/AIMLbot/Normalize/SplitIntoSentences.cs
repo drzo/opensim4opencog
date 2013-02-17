@@ -1,11 +1,11 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
-using RTParser.Utils;
-using RTParser.Variables;
+using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 using SPLITTER = System.Func<string[]>;
 using Unifiable = System.String;
-namespace RTParser.Normalize
+namespace AltAIMLbot.Normalize
 {
     /// <summary>
     /// Splits the raw input into its constituent sentences. Split using the tokens found in 

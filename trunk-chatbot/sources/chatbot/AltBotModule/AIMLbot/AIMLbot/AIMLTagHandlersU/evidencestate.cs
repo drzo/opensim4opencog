@@ -1,26 +1,15 @@
-using System;
-using System.Runtime;
-using System.Text;
+﻿using System;
 using System.Xml;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-//using System.Linq;
-using System.Text.RegularExpressions;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using RTParser;
-using RTParser.Utils;
 
-namespace RTParser.AIMLTagHandlers
+//using System.Linq;
+
+namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class evidencestate : RTParser.Utils.AIMLTagHandlerU
+    public class evidencestate : AIMLTagHandlerU
     {
 
-        public evidencestate(RTParser.AltBot bot,
+        public evidencestate(AltBot bot,
                 User user,
                 SubQuery query,
                 Request request,
@@ -34,11 +23,11 @@ namespace RTParser.AIMLTagHandlers
 
         protected override Unifiable ProcessChangeU()
         {
-            if (this.templateNode.Name.ToLower() == "evidencestate")
+            if (templateNode.Name.ToLower() == "evidencestate")
             {
                 try
                 {
-                    var varMSM = this.botActionMSM;
+                    var varMSM = botActionMSM;
                     string payload = templateNodeInnerText.ToValue(query);
 
                     string myMachine = GetAttribValue("machine", varMSM.lastDefMachine);

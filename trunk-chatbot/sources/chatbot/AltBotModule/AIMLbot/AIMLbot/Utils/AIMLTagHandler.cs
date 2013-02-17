@@ -4,9 +4,9 @@ using System.Xml;
 using AltAIMLbot.AIMLTagHandlers;
 using AltAIMLParser;
 using MushDLR223.Utilities;
-using RTParser;
-using RTParser.Variables;
-using TextPatternUtils = RTParser.Utils.TextPatternUtils;
+using AltAIMLbot;
+using AltAIMLbot.Variables;
+using TextPatternUtils = AltAIMLbot.Utils.TextPatternUtils;
 
 namespace AltAIMLbot.Utils 
 {
@@ -14,8 +14,10 @@ namespace AltAIMLbot.Utils
     /// The template for all classes that handle the AIML tags found within template nodes of a
     /// category.
     /// </summary>
-    abstract public class AIMLTagHandler : TextTransformer
-    { 
+    abstract public partial class AIMLTagHandler : TextTransformer
+    {
+        public bool IsTraced { get; set; }
+
         /// <summary>
         /// Ctor
         /// </summary>
@@ -189,7 +191,7 @@ namespace AltAIMLbot.Utils
 
         public virtual bool isVerbatum
         {
-            get { return false; }
+            get { return SelfProcessing || isFormatter; }
         }
         public override bool isFormatter
         {
@@ -278,5 +280,7 @@ namespace AltAIMLbot.Utils
         {
             return TransformU();
         }
+
+        public bool SelfProcessing { get; set; }
     }
 }

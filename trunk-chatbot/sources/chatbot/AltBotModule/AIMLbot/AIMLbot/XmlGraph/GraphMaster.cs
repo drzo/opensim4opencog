@@ -15,20 +15,20 @@ using AltAIMLParser;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
-using RTParser.AIMLTagHandlers;
-using UPath = RTParser.Unifiable;
-using PatternInfo = RTParser.Unifiable;
-using ThatInfo = RTParser.Unifiable;
-using TopicInfo = RTParser.Unifiable;
-using GuardInfo = RTParser.Unifiable;
-using ResponseInfo = RTParser.Unifiable;
+using AltAIMLbot.AIMLTagHandlers;
+using UPath = AltAIMLbot.Unifiable;
+using PatternInfo = AltAIMLbot.Unifiable;
+using ThatInfo = AltAIMLbot.Unifiable;
+using TopicInfo = AltAIMLbot.Unifiable;
+using GuardInfo = AltAIMLbot.Unifiable;
+using ResponseInfo = AltAIMLbot.Unifiable;
 using System.Threading;
 using System.Text;
 using UNode = AltAIMLbot.Utils.Node;
 
 //using StringAppendableUnifiable = System.Text.StringBuilder;
 
-namespace RTParser.Utils
+namespace AltAIMLbot.Utils
 {
 
     public interface ParentChild
@@ -45,7 +45,12 @@ namespace RTParser.Utils
     {
         private static string _STAR_PATH;
 
-        public ExternDB chatDB = null;
+        static private ExternDB _chatDB;
+        public ExternDB chatDB
+        {
+            get { return _chatDB; }
+        }
+
         /// <summary>
         /// Should tags that make no output be placed in parallel Graphmaster
         /// </summary>
@@ -220,6 +225,7 @@ namespace RTParser.Utils
             }
             else
             {
+                CannotHaveParallel = true;
                 // CanMaxOutStage1 = false;
                 if (gn.Contains("parallel") || gn.Contains("parent"))
                 {
@@ -240,7 +246,7 @@ namespace RTParser.Utils
                 }
                 if (CannotHaveParallel)
                 {
-                    writeToLog("CantHaveParallels!");
+                    writeToLog("ERROR CantHaveParallels!");
                     return this;
                 }
                 if (_parallel == null)
@@ -564,6 +570,7 @@ namespace RTParser.Utils
                                    XmlNode categoryNode, XmlNode templateNode, Unifiable guard, Unifiable topicInfo, Unifiable thatInfo,
                                    List<ConversationCondition> additionalRules, out bool wouldBeRemoval, LoaderOptions loaderOptions)
         {
+            throw new NullReferenceException("in addCategoryTag0 with " + generatedPath);
             if (SilentTagsInPutParallel && !StaticAIMLUtils.IsEmptyTemplate(templateNode) && StaticAIMLUtils.IsSilentTag(templateNode))
             {
                 GraphMaster parallel1 = makeParallel();
@@ -1377,6 +1384,7 @@ namespace RTParser.Utils
 
         public bool AddFileLoaded(string filename)
         {
+            ensureEdb().rememberLoaded(filename);
             FileInfo fi = new FileInfo(filename);
             string fullName = fi.FullName;
             DateTime dt;
@@ -1401,6 +1409,7 @@ namespace RTParser.Utils
 
         public bool RemoveFileLoaded(string filename)
         {
+            ensureEdb().forgetLoaded(filename);
             FileInfo fi = new FileInfo(filename);
             string fullName = fi.FullName;
             if (FileCategories != null)
@@ -1435,6 +1444,7 @@ namespace RTParser.Utils
 
         public bool IsFileLoaded(string filename)
         {
+            if (wasloaded(filename)) return true;
             FileInfo fi = new FileInfo(filename);
             string fullName = fi.FullName;
             DateTime dt;
@@ -1648,16 +1658,44 @@ namespace RTParser.Utils
 
         public ParentChild ParentObject { get; set; }
 
-        public static GraphMaster FindOrCreate(string dgn, AltBot theBot)
+        public static GraphMaster OnlyOneGM = null;//new GraphMaster("default");
+        public static GraphMaster FindOrCreate(string dgn0)
         {
-            dgn = DeAliasGraphName(dgn);
+            var nggn0 = dgn0.RemoveEnd("graph");
+            if (nggn0 != null && dgn0 != nggn0)
+            {
+                AltBot.RaiseErrorStatic(new InvalidOperationException(dgn0 + " ending with graph!"));
+                dgn0 = nggn0;
+            }
+
+            var dgn = AltBot.ToGraphPathName(dgn0, null); 
+
+            bool uoo = OnlyOneGM != null;
             var gbn = AltBot.GraphsByName;
+            lock (gbn)
+            {
+                GraphMaster v;
+                if (gbn.TryGetValue(dgn, out v))
+                {
+                    return v;
+                }
+            } 
+            if (dgn.Contains("_"))
+            {
+                uoo = true;
+            }
+            if (dgn.StartsWith("default_to_"))
+            {
+                dgn = dgn.Substring("default_to_".Length);
+            }
+            if (uoo && OnlyOneGM != null) return OnlyOneGM;
             lock (gbn)
             {
                 GraphMaster v;
                 if (!gbn.TryGetValue(dgn, out v))
                 {
-                    v = gbn[dgn] = new GraphMaster(dgn, theBot);
+                    AltBot.writeDebugLine("CREATE GRAPHMASTER = " + dgn0);
+                    v = gbn[dgn] = new GraphMaster(dgn0, AltBot.ConsoleRobot);
                 }
                 return v;
             }
@@ -1694,8 +1732,12 @@ namespace RTParser.Utils
                 }
             }
         }
+
+        public static bool DeferingSaves = false;
+        public static bool AlwaysReload = true;
+
         public bool useChatDB = true;
-        private Node _root;
+        internal Node _root;
 
         public string evaluate(string path, SubQuery query, Request request, MatchState state, StringBuilder builder)
         {
@@ -1733,60 +1775,46 @@ namespace RTParser.Utils
         }
         public bool wasloaded(string filename)
         {
+            if (AlwaysReload) return false;
             lock (ExternDB.mylock)
             {
-
-                if (chatDB == null)
-                {
-
-                    string rapStoreDirectory = "";
-                    if (IsMicrosoftCLR())
-                    {
-                        rapStoreDirectory = theBot.rapStoreDirectoryStem.TrimEnd("/\\".ToCharArray()) + "_" + graphName + "/";
-                    }
-                    else
-                    {
-                        rapStoreDirectory = theBot.rapStoreDirectoryStem.TrimEnd(Path.DirectorySeparatorChar) + "_" + graphName + Path.DirectorySeparatorChar;
-                    }
-
-                    chatDB = new ExternDB(rapStoreDirectory);
-                    chatDB.bot = this.theBot;
-                    chatDB._dbdir = rapStoreDirectory;
-                    if (theBot.rapStoreSlices > 0) chatDB.slices = theBot.rapStoreSlices;
-                    if (theBot.rapStoreTrunkLevel > 0) chatDB.trunkLevel = theBot.rapStoreTrunkLevel;
-                    //chatDB.OpenAll();
-                }
-                return chatDB.wasLoaded(filename);
-
+                return ensureEdb().wasLoaded(filename);
             }
 
         }
+
+        public string CalcRapStoreDirectory()
+        {
+            string rapStoreDirectory = theBot.CalcRapStoreDirectoryStem() +
+                                       (ExternDB.AppendGraphmasterNameToDirectory ? ("_" + graphName) : "") +
+                                       Path.DirectorySeparatorChar;
+            return HostSystem.FileSystemDirectory(theBot.PersonalizePathLogged(rapStoreDirectory));
+        }
+
         public ExternDB ensureEdb()
         {
             lock (ExternDB.mylock)
             {
+                var chatDB = _chatDB;
                 if (chatDB == null)
                 {
 
-                    string rapStoreDirectory = "";
-                    if (IsMicrosoftCLR())
-                    {
-                        rapStoreDirectory = theBot.rapStoreDirectoryStem.TrimEnd("/\\".ToCharArray()) + "_" + graphName + "/";
-                    }
-                    else
-                    {
-                        rapStoreDirectory = theBot.rapStoreDirectoryStem.TrimEnd(Path.DirectorySeparatorChar) + "_" + graphName + Path.DirectorySeparatorChar;
-                    }
+                    string rapStoreDirectory = CalcRapStoreDirectory();
 
-                    chatDB = new ExternDB(rapStoreDirectory);
+                    _chatDB = chatDB = new ExternDB(rapStoreDirectory);
                     chatDB.bot = this.theBot;
+                    chatDB.Graph = this;
                     chatDB._dbdir = rapStoreDirectory;
                     if (theBot.rapStoreSlices > 0) chatDB.slices = theBot.rapStoreSlices;
                     if (theBot.rapStoreTrunkLevel > 0) chatDB.trunkLevel = theBot.rapStoreTrunkLevel;
                     if (!chatDB.allLoaded) chatDB.OpenAll();
                 }
+                if (chatDB.Graph != this)
+                {
+                    chatDB.Graph = this;
+                }
+                return chatDB;
             }
-            return chatDB;
         }
 
         public double getPathScore(string path)
@@ -1999,6 +2027,7 @@ writer.WriteLine("");
         }
         public void addCategory(string path, string template, string filename, double score, double scale)
         {
+            AltBot.SingleInstance.Logger.Warn("in TODO code");
             root.addCategory(path, template, filename, score, scale);
         }
 
@@ -2021,10 +2050,13 @@ writer.WriteLine("");
         {
             lock (ExternDB.mylock)
             {
-                if (chatDB != null)
+                if (_chatDB != null)
                 {
-                    chatDB.Close();
-                    chatDB = null;
+                    _chatDB.Close();
+                    _chatDB = null;
+                }
+                if (!DeferingSaves)
+                {
                     _root = null;
                 }
             }

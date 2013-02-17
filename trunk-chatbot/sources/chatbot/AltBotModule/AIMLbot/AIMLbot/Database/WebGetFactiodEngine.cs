@@ -3,11 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
 using AltAIMLParser;
+using AltAIMLbot.Utils;
 using MushDLR223.ScriptEngines;
-using RTParser.Utils;
 using MushDLR223.Utilities;
 
-namespace RTParser.Database
+namespace AltAIMLbot.Database
 {
     abstract public class WebGetFactiodEngine : IEnglishFactiodEngine, IDocSearch
     {

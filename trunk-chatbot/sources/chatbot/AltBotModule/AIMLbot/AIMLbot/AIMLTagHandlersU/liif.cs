@@ -1,14 +1,9 @@
-using System;
+﻿using System;
 using System.Xml;
-using System.Text;
-using System.Text.RegularExpressions;
-using AltAIMLbot;
 using AltAIMLbot.Utils;
-using AltAIMLParser;
-using MushDLR223.Utilities;
-using RTParser.Variables;
+using AltAIMLbot.Variables;
 
-namespace RTParser.AIMLTagHandlers
+namespace AltAIMLbot.AIMLTagHandlers
 {
     /// <summary>
     /// The condition element instructs the AIML interpreter to return specified contents depending 
@@ -96,7 +91,7 @@ namespace RTParser.AIMLTagHandlers
     /// AIML predicate, and a required attribute value, which contains a simple pattern expression. The 
     /// element may contain any AIML template elements. 
     /// </summary>
-    public class liif : RTParser.Utils.AIMLTagHandlerU
+    public class liif : AIMLTagHandlerU
     {
         /// <summary>
         /// Ctor
@@ -107,7 +102,7 @@ namespace RTParser.AIMLTagHandlers
         /// <param name="request">The request inputted into the system</param>
         /// <param name="result">The result to be passed to the user</param>
         /// <param name="templateNode">The node to be Processed</param>
-        public liif(RTParser.AltBot bot,
+        public liif(AltBot bot,
                         User user,
                         SubQuery query,
                         Request request,
@@ -115,7 +110,7 @@ namespace RTParser.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
-            this.isRecursive = false;
+            isRecursive = false;
         }
 
         protected override Unifiable ProcessChangeU()

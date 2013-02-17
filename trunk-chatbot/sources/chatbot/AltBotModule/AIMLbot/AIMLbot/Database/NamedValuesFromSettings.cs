@@ -6,13 +6,11 @@ using System.Xml;
 using AltAIMLbot;
 using AltAIMLbot.Utils;
 using AltAIMLParser;
+using AltAIMLbot.Variables;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser;
-using RTParser.Utils;
-using RTParser.Variables;
 
-namespace RTParser.Database
+namespace AltAIMLbot.Database
 {
     public class NamedValuesFromSettings: CommonStaticUtils
     {
