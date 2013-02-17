@@ -118,7 +118,7 @@ namespace AltAIMLbot
                         break;
                     case "condition":
                     case "options": //cml
-                        tagHandlerU = new condition(targetBot, user, query, request, result, node);
+                        tagHandlerU = new condition_aima(targetBot, user, query, request, result, node);
                         break;
                     case "li":
                         if (liText)

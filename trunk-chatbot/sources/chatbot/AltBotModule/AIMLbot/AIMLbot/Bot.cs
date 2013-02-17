@@ -1953,7 +1953,7 @@ namespace AltAIMLbot
                         return new AltAIMLbot.AIMLTagHandlers.bot(this, user, query, request, result, node);
                         
                     case "condition":
-                        return new AltAIMLbot.AIMLTagHandlers.condition(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.condition_aima(this, user, query, request, result, node);
                         
                     case "date":
                         return new AltAIMLbot.AIMLTagHandlers.date(this, user, query, request, result, node);
