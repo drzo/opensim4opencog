@@ -682,7 +682,7 @@ namespace AltAIMLbot
                 ret = eventTable.TryGetValue(evnt, out result);
             }
             bool ret2 = false;
-            List<Action> resultsTodo;
+            List<Func<RunStatus>> resultsTodo;
             lock (eventClosures)
             {
                 ret2 = eventClosures.TryGetValue(evnt, out resultsTodo);
@@ -702,16 +702,16 @@ namespace AltAIMLbot
 
         public bool runEventTODOs(string evnt)
         {
-            List<Action> resultsTodo;
+            List<Func<RunStatus>> resultsTodo;
             lock (eventClosures)
             {
                 if (!eventClosures.TryGetValue(evnt, out resultsTodo)) return false;
             }
-            List<Action> realydo = null;
+            List<Func<RunStatus>> realydo = null;
             lock (resultsTodo)
             {
                 if (resultsTodo.Count == 0) return false;
-                realydo = new List<Action>(resultsTodo);
+                realydo = new List<Func<RunStatus>>(resultsTodo);
             }
             foreach (var action in realydo)
             {
