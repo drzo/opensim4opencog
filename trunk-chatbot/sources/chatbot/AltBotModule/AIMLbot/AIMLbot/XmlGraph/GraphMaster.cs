@@ -184,14 +184,15 @@ namespace AltAIMLbot.Utils
 
         private AltBot theBot = null;
         public GraphMaster(string gn, AltBot _bot)
-            : this(gn, null, false)
+            : this(gn, null, _bot, false)
         {
+            graphName = gn;
             theBot = _bot;
         }
-        private GraphMaster(string gn, GraphMaster child, bool isParallel)
+        private GraphMaster(string gn, GraphMaster child, AltBot _bot, bool isParallel)
         //: base(bot)
         {
-            theBot = child.theBot;
+            theBot = _bot;
             AltBot.GraphsByName[gn] = this;
             IsParallel = isParallel;
             SilentTagsInPutParallel = DefaultSilentTagsInPutParallel;
@@ -505,7 +506,7 @@ namespace AltAIMLbot.Utils
                 writeToLog("CantHaveParallels!");
                 return this;
             }
-            GraphMaster p = new GraphMaster("" + graphName + ".parallel" + (parallel0 == 0 ? "" : "" + parallel0), this, true);
+            GraphMaster p = new GraphMaster("" + graphName + ".parallel" + (parallel0 == 0 ? "" : "" + parallel0), this, theBot, true);
             p.Srai = graphName;
             parallel0++;
             p.UnTraced = true;
