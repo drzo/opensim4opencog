@@ -1,0 +1,262 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{9B54427A-E42F-4F47-8EF5-89D68ADF1C43}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ApplicationIcon>
+    </ApplicationIcon>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>CogbotRadegastPluginModule</AssemblyName>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>
+    </AppDesignerFolder>
+    <RootNamespace>CogbotRadegastPluginModule</RootNamespace>
+    <StartupObject>
+    </StartupObject>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
+    <DocumentationFile>CogbotRadegastPluginModule.XML</DocumentationFile>
+    <DebugSymbols>False</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>True</Optimize>
+    <OutputPath>..\..\..\bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>3</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
+    <DocumentationFile>CogbotRadegastPluginModule.XML</DocumentationFile>
+    <DebugSymbols>True</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>False</Optimize>
+    <OutputPath>..\..\..\bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>3</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Drawing">
+      <Name>System.Drawing</Name>
+    </Reference>
+    <Reference Include="System.Core">
+      <Name>System.Core</Name>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <Name>System.Windows.Forms</Name>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
+    </Reference>
+    <Reference Include="System">
+      <Name>System</Name>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\main\LibCogbot\Cogbot.Library.csproj">
+      <Name>Cogbot.Library</Name>
+      <Project>{12C31C87-C971-48FE-807F-CE79D13E1FFC}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\main\PathSystem3D\PathSystem3D.csproj">
+      <Name>PathSystem3D</Name>
+      <Project>{BE48CC1C-0E6C-4E1B-9DC5-B041F81DFF12}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
+      <Name>MushDLR223</Name>
+      <Project>{AB85D1A2-53C7-4170-BD03-353F1FF3837E}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj">
+      <Name>OpenMetaverse</Name>
+      <Project>{562FEEC8-D298-44E4-A2D4-84CD402D8212}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj">
+      <Name>OpenMetaverse.StructuredData</Name>
+      <Project>{A953DC4B-5320-4CB3-8685-CCB5FE571EF1}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverseTypes\OpenMetaverseTypes.csproj">
+      <Name>OpenMetaverseTypes</Name>
+      <Project>{440608A5-BEAD-40CD-ACB8-C3DFFE00667F}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\Radegast\Radegast.csproj">
+      <Name>Radegast</Name>
+      <Project>{ED5DF208-5112-479C-AF67-8322A678A661}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\DotLisp\DotLisp.csproj">
+      <Name>DotLisp</Name>
+      <Project>{9BF7BFB1-5B0A-4AB5-AC30-7781D86FC5A1}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AspectContextAction.cs">
+    </Compile>
+    <Compile Include="CogbotContextMenuListener.cs">
+    </Compile>
+    <Compile Include="CogbotNotificationListener.cs">
+    </Compile>
+    <Compile Include="CogbotRadegastInterpreter.cs">
+    </Compile>
+    <Compile Include="CogbotRadegastPlugin.cs">
+    </Compile>
+    <Compile Include="CogbotTabWindow.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CogbotTabWindow.Designer.cs">
+      <DependentUpon>CogbotTabWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CommandContextAction.cs">
+    </Compile>
+    <Compile Include="MemberInfoControl.cs">
+    </Compile>
+    <Compile Include="SimObjectListViewItem.cs">
+    </Compile>
+    <Compile Include="SimObjectsConsole.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SimObjectsConsole.Designer.cs">
+      <DependentUpon>SimObjectsConsole.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SimUsageContextAction.cs">
+    </Compile>
+    <Compile Include="Commands\GroupInfoCommand.cs">
+    </Compile>
+    <Compile Include="Commands\PayCommand.cs">
+    </Compile>
+    <Compile Include="Commands\PointAtCommand.cs">
+    </Compile>
+    <Compile Include="Commands\PrimWorkshopCommand.cs">
+    </Compile>
+    <Compile Include="Commands\ProfileCommand.cs">
+    </Compile>
+    <Compile Include="Commands\RadegastCommand.cs">
+    </Compile>
+    <Compile Include="Commands\ShowImageCommand.cs">
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs">
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+    </Compile>
+    <Compile Include="Search\FindEvents.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Search\FindEvents.Designer.cs">
+      <DependentUpon>FindEvents.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Search\FindGroups.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Search\FindGroups.Designer.cs">
+      <DependentUpon>FindGroups.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Search\FindPeopleConsole.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Search\FindPeopleConsole.Designer.cs">
+      <DependentUpon>FindPeopleConsole.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Search\FindPlaces.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Search\FindPlaces.Designer.cs">
+      <DependentUpon>FindPlaces.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Search\ListViewItemComparer.cs">
+    </Compile>
+    <Compile Include="Search\RegionSearchResultItem.cs">
+    </Compile>
+    <Compile Include="Search\SearchConsole.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Search\SearchConsole.Designer.cs">
+      <DependentUpon>SearchConsole.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Search\Teleport.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Search\Teleport.Designer.cs">
+      <DependentUpon>Teleport.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="CogbotTabWindow.resx">
+      <DependentUpon>CogbotTabWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SimObjectsConsole.resx">
+      <DependentUpon>SimObjectsConsole.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Search\FindEvents.resx">
+      <DependentUpon>FindEvents.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Search\FindGroups.resx">
+      <DependentUpon>FindGroups.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Search\FindPeopleConsole.resx">
+      <DependentUpon>FindPeopleConsole.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Search\FindPlaces.resx">
+      <DependentUpon>FindPlaces.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Search\SearchConsole.resx">
+      <DependentUpon>SearchConsole.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Search\Teleport.resx">
+      <DependentUpon>Teleport.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>

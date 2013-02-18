@@ -4,14 +4,14 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{543AE1E9-40C6-4C70-B336-490C6DB4E09C}</ProjectGuid>
+    <ProjectGuid>{9BF7BFB1-5B0A-4AB5-AC30-7781D86FC5A1}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
     </ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
-    <AssemblyName>PrologBotModule</AssemblyName>
+    <AssemblyName>DotLisp</AssemblyName>
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
@@ -20,28 +20,14 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>
     </AppDesignerFolder>
-    <RootNamespace>PrologBotModule</RootNamespace>
+    <RootNamespace>DotLisp</RootNamespace>
     <StartupObject>
     </StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
     <OldToolsVersion>3.5</OldToolsVersion>
-    <UpgradeBackupLocation />
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -51,7 +37,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile>PrologBotModule.XML</DocumentationFile>
+    <DocumentationFile>DotLisp.XML</DocumentationFile>
     <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
@@ -63,7 +49,6 @@
     <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -72,7 +57,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile>PrologBotModule.XML</DocumentationFile>
+    <DocumentationFile>DotLisp.XML</DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
@@ -84,77 +69,80 @@
     <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System">
       <Name>System</Name>
     </Reference>
-    <Reference Include="System.Core">
-      <Name>System.Core</Name>
-    </Reference>
     <Reference Include="System.Data">
       <Name>System.Data</Name>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <Name>System.Data.DataSetExtensions</Name>
-    </Reference>
-    <Reference Include="System.Deployment">
-      <Name>System.Deployment</Name>
-    </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
-    </Reference>
-    <Reference Include="System.Windows.Forms">
-      <Name>System.Windows.Forms</Name>
     </Reference>
     <Reference Include="System.Xml">
       <Name>System.Xml</Name>
     </Reference>
+    <Reference Include="System.Windows.Forms">
+      <Name>System.Windows.Forms</Name>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\main\LibCogbot\Cogbot.Library.csproj">
-      <Name>Cogbot.Library</Name>
-      <Project>{F135D32A-C34A-4961-B8E7-54D03FF721FD}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
-      <Name>MushDLR223</Name>
-      <Project>{6722775C-9948-4668-AB59-41E7EF5EF0CD}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\main\swicli\Swicli.Library\Swicli.Library.csproj">
-      <Name>Swicli.Library</Name>
-      <Project>{CE0D4A63-1045-4943-91FF-7D9411E5156E}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PrologScriptInterpreter.cs">
+    <Compile Include="AssemblyInfo.cs">
     </Compile>
-    <Compile Include="SwipCommand.cs">
+    <Compile Include="BacktraceException.cs">
     </Compile>
-    <Compile Include="SwiPrologModule.cs">
+    <Compile Include="Closure.cs">
     </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs">
+    <Compile Include="CLSConstructor.cs">
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
-      <Visible>False</Visible>
-      <ProductName>Windows Installer 3.1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
+    <Compile Include="CLSEvent.cs">
+    </Compile>
+    <Compile Include="CLSField.cs">
+    </Compile>
+    <Compile Include="CLSLateBoundMember.cs">
+    </Compile>
+    <Compile Include="CLSMember.cs">
+    </Compile>
+    <Compile Include="CLSMethod.cs">
+    </Compile>
+    <Compile Include="CLSProperty.cs">
+    </Compile>
+    <Compile Include="CLSSymbols.cs">
+    </Compile>
+    <Compile Include="Cons.cs">
+    </Compile>
+    <Compile Include="DynamicEnvironment.cs">
+    </Compile>
+    <Compile Include="Environment.cs">
+    </Compile>
+    <Compile Include="Expressions.cs">
+    </Compile>
+    <Compile Include="FnEnumerator.cs">
+    </Compile>
+    <Compile Include="Function.cs">
+    </Compile>
+    <Compile Include="GenericFunction.cs">
+    </Compile>
+    <Compile Include="Interpreter.cs">
+    </Compile>
+    <Compile Include="Keyword.cs">
+    </Compile>
+    <Compile Include="LocalVariable.cs">
+    </Compile>
+    <Compile Include="Macro.cs">
+    </Compile>
+    <Compile Include="Param.cs">
+    </Compile>
+    <Compile Include="Primitives.cs">
+    </Compile>
+    <Compile Include="Reader.cs">
+    </Compile>
+    <Compile Include="Record.cs">
+    </Compile>
+    <Compile Include="Symbol.cs">
+    </Compile>
+    <Compile Include="Util.cs">
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

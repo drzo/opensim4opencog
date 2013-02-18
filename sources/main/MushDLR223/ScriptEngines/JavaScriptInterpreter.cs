@@ -265,7 +265,7 @@ namespace EvaluatorNS
                 string rootMoniker = string.Format("{0}://{1}", rootHostName, Guid.NewGuid().ToString());
                 _host = new VsaScriptingHost(VsaScriptingLanguages.JScript, "Evaluator", rootMoniker,
                                              _evaluatorType.Namespace, true);
-                Engine = (VsaEngine) _host.Engine;
+                Engine = (VsaEngine)(object)_host.Engine;
                 globalScope = Engine.GetGlobalScope();
                 thisGlobalObj = Microsoft.JScript.Eval.JScriptEvaluate("this;", Engine) as GlobalScope;
                 hosts.Add(_host);
@@ -612,7 +612,7 @@ namespace EvaluatorNS
             _globalItemLookupTable = new Hashtable();
             _language = language;
             // create an engine aligned to the language specified (currently only JScript and VBScript are supported)
-            _engine = this.CreateLanguageSpecificEngine(language);
+            _engine = ((object)this.CreateLanguageSpecificEngine(language)) as IVsaEngine;
             _engine.RootMoniker = rootMoniker;
             SetEngine(_engine);
             SetUpEngine(name, rootMoniker, rootNamespace, generateDebugInfo);           
@@ -751,9 +751,9 @@ namespace EvaluatorNS
         /// </summary>
         /// <param name="language">The language that the engine should support</param>
         /// <returns></returns>
-        protected IVsaEngine CreateLanguageSpecificEngine(VsaScriptingLanguages language)
+        protected VsaEngine CreateLanguageSpecificEngine(VsaScriptingLanguages language)
         {
-            IVsaEngine engine = null;
+            VsaEngine engine = null;
 
             switch (language)
             {

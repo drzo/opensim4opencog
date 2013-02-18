@@ -1,0 +1,240 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{DF764CAA-BB27-4D9C-B1D7-2BB3D2BFDF03}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ApplicationIcon>
+    </ApplicationIcon>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>PathSystem3D</AssemblyName>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>
+    </AppDesignerFolder>
+    <RootNamespace>PathSystem3D</RootNamespace>
+    <StartupObject>
+    </StartupObject>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
+    <DocumentationFile>PathSystem3D.XML</DocumentationFile>
+    <DebugSymbols>False</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>True</Optimize>
+    <OutputPath>..\..\..\bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>3</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
+    <DocumentationFile>PathSystem3D.XML</DocumentationFile>
+    <DebugSymbols>True</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>False</Optimize>
+    <OutputPath>..\..\..\bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>3</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System">
+      <Name>System</Name>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <Name>System.Drawing</Name>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <Name>System.Windows.Forms</Name>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Name>System.Xml</Name>
+    </Reference>
+    <Reference Include="System.Web">
+      <Name>System.Web</Name>
+    </Reference>
+    <Reference Include="HttpServer">
+      <Name>HttpServer</Name>
+      <HintPath>..\..\..\bin\HttpServer.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverseTypes\OpenMetaverseTypes.csproj">
+      <Name>OpenMetaverseTypes</Name>
+      <Project>{440608A5-BEAD-40CD-ACB8-C3DFFE00667F}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj">
+      <Name>OpenMetaverse</Name>
+      <Project>{562FEEC8-D298-44E4-A2D4-84CD402D8212}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\MushDLR223\MushDLR223.csproj">
+      <Name>MushDLR223</Name>
+      <Project>{AB85D1A2-53C7-4170-BD03-353F1FF3837E}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Navigation\Debug\APropos.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Navigation\Debug\APropos.Designer.cs">
+      <DependentUpon>APropos.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Navigation\Debug\DisplayImage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Navigation\Debug\DisplayImage.Designer.cs">
+      <DependentUpon>DisplayImage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Navigation\Debug\FlickerFreePanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Navigation\Debug\GraphFormer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Navigation\Debug\PanelPathFinder.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Navigation\Debug\PathFinderDemo.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Navigation\Debug\PathFinderDemo.Designer.cs">
+      <DependentUpon>PathFinderDemo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Navigation\Debug\WaypointProperties.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Navigation\Debug\WaypointProperties.Designer.cs">
+      <DependentUpon>WaypointProperties.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Mesher\Box3Fill.cs">
+    </Compile>
+    <Compile Include="Mesher\HelperTypes.cs">
+    </Compile>
+    <Compile Include="Mesher\IMesher.cs">
+    </Compile>
+    <Compile Include="Mesher\IPrimMesh.cs">
+    </Compile>
+    <Compile Include="Mesher\Mesh.cs">
+    </Compile>
+    <Compile Include="Mesher\MeshedObject.cs">
+    </Compile>
+    <Compile Include="Mesher\PhysicsVector.cs">
+    </Compile>
+    <Compile Include="Mesher\PrimitiveBaseShape.cs">
+    </Compile>
+    <Compile Include="Mesher\PrimMesher.cs">
+    </Compile>
+    <Compile Include="Mesher\RuntimeMesh.cs">
+    </Compile>
+    <Compile Include="Mesher\SculptMesh.cs">
+    </Compile>
+    <Compile Include="Mesher\VertexIndexer.cs">
+    </Compile>
+    <Compile Include="Navigation\AuthorAttribute.cs">
+    </Compile>
+    <Compile Include="Navigation\CollisionIndex.cs">
+    </Compile>
+    <Compile Include="Navigation\CollisionPlane.cs">
+    </Compile>
+    <Compile Include="Navigation\HighResolutionTime.cs">
+    </Compile>
+    <Compile Include="Navigation\IPathFinder.cs">
+    </Compile>
+    <Compile Include="Navigation\PathFinder.cs">
+    </Compile>
+    <Compile Include="Navigation\PathFinderFast.cs">
+    </Compile>
+    <Compile Include="Navigation\PathFinderFasting.cs">
+    </Compile>
+    <Compile Include="Navigation\PathSystem3D.cs">
+    </Compile>
+    <Compile Include="Navigation\Piilot.cs">
+    </Compile>
+    <Compile Include="Navigation\PriorityQueueB.cs">
+    </Compile>
+    <Compile Include="Navigation\SimGlobalRoutes.cs">
+    </Compile>
+    <Compile Include="Navigation\SimHeading.cs">
+    </Compile>
+    <Compile Include="Navigation\SimMovement.cs">
+    </Compile>
+    <Compile Include="Navigation\SimMover.cs">
+    </Compile>
+    <Compile Include="Navigation\SimOffsetPosition.cs">
+    </Compile>
+    <Compile Include="Navigation\SimPathStore.cs">
+    </Compile>
+    <Compile Include="Navigation\SimPosition.cs">
+    </Compile>
+    <Compile Include="Navigation\SimRoute.cs">
+    </Compile>
+    <Compile Include="Navigation\SimWaypoint.cs">
+    </Compile>
+    <EmbeddedResource Include="Navigation\Debug\APropos.resx">
+      <DependentUpon>APropos.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Navigation\Debug\DisplayImage.resx">
+      <DependentUpon>DisplayImage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Navigation\Debug\FlickerFreePanel.resx">
+      <DependentUpon>FlickerFreePanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Navigation\Debug\GraphFormer.resx">
+      <DependentUpon>GraphFormer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Navigation\Debug\PanelPathFinder.resx">
+      <DependentUpon>PanelPathFinder.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Navigation\Debug\PathFinderDemo.resx">
+      <DependentUpon>PathFinderDemo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Navigation\Debug\WaypointProperties.resx">
+      <DependentUpon>WaypointProperties.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>

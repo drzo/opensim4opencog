@@ -1,0 +1,700 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{F135D32A-C34A-4961-B8E7-54D03FF721FD}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ApplicationIcon>
+    </ApplicationIcon>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>Cogbot.Library</AssemblyName>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>
+    </AppDesignerFolder>
+    <RootNamespace>Cogbot.Library</RootNamespace>
+    <StartupObject>
+    </StartupObject>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
+    <DocumentationFile>Cogbot.Library.XML</DocumentationFile>
+    <DebugSymbols>False</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>True</Optimize>
+    <OutputPath>..\..\..\bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>3</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
+    <DocumentationFile>Cogbot.Library.XML</DocumentationFile>
+    <DebugSymbols>True</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>False</Optimize>
+    <OutputPath>..\..\..\bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>3</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="log4net.dll">
+      <Name>log4net.dll</Name>
+      <HintPath>..\..\..\bin\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="System">
+      <Name>System</Name>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <Name>System.Drawing</Name>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <Name>System.Windows.Forms</Name>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Name>System.Xml</Name>
+    </Reference>
+    <Reference Include="System.Web">
+      <Name>System.Web</Name>
+    </Reference>
+    <Reference Include="System.Core">
+      <Name>System.Core</Name>
+    </Reference>
+    <Reference Include="CommandLine.dll">
+      <Name>CommandLine.dll</Name>
+      <HintPath>..\..\..\bin\CommandLine.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PathSystem3D\PathSystem3D.csproj">
+      <Name>PathSystem3D</Name>
+      <Project>{BE48CC1C-0E6C-4E1B-9DC5-B041F81DFF12}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj">
+      <Name>OpenMetaverse</Name>
+      <Project>{562FEEC8-D298-44E4-A2D4-84CD402D8212}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverseTypes\OpenMetaverseTypes.csproj">
+      <Name>OpenMetaverseTypes</Name>
+      <Project>{440608A5-BEAD-40CD-ACB8-C3DFFE00667F}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse.Utilities\OpenMetaverse.Utilities.csproj">
+      <Name>OpenMetaverse.Utilities</Name>
+      <Project>{1191FA59-5904-42E0-8D43-F34E81B0E3C0}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj">
+      <Name>OpenMetaverse.StructuredData</Name>
+      <Project>{A953DC4B-5320-4CB3-8685-CCB5FE571EF1}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\DotLisp\DotLisp.csproj">
+      <Name>DotLisp</Name>
+      <Project>{9BF7BFB1-5B0A-4AB5-AC30-7781D86FC5A1}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\Radegast\Radegast.csproj">
+      <Name>Radegast</Name>
+      <Project>{ED5DF208-5112-479C-AF67-8322A678A661}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\MushDLR223\MushDLR223.csproj">
+      <Name>MushDLR223</Name>
+      <Project>{AB85D1A2-53C7-4170-BD03-353F1FF3837E}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BotClient.cs">
+    </Compile>
+    <Compile Include="BotConnection.cs">
+    </Compile>
+    <Compile Include="BotEventSystem.cs">
+    </Compile>
+    <Compile Include="BotInventoryEval.cs">
+    </Compile>
+    <Compile Include="BotPermissions.cs">
+    </Compile>
+    <Compile Include="BotScripting.cs">
+    </Compile>
+    <Compile Include="BotTcpServer.cs">
+    </Compile>
+    <Compile Include="ClientManager.cs">
+    </Compile>
+    <Compile Include="CogbotGUI.cs">
+    </Compile>
+    <Compile Include="ConsoleApp.cs">
+    </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="World\MovementDebugForm.resx">
+      <DependentUpon>MovementDebugForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <Compile Include="Actions\CmdRequest.cs">
+    </Compile>
+    <Compile Include="Actions\Command.cs">
+    </Compile>
+    <Compile Include="Actions\Agent\ProfileCloneCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Agent\WhoCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Appearance\AnimInfoCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Appearance\AppearanceCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Appearance\AttachmentsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Appearance\AvatarInfoCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Appearance\CloneCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Appearance\DumpOutfitCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Appearance\PlayCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Appearance\ReplaceOutfitCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Appearance\SetTextureIndexCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Appearance\WearCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Communication\EchoMasterCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Communication\IMCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Communication\LureCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Communication\MeCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Communication\MuteCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Communication\SayCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Communication\ShoutCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Communication\WhisperCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Directory\SearchClassifiedsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Directory\SearchEventsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Directory\SearchGroupsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Directory\SearchLandCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Directory\SearchPeopleCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Directory\SearchPlacesCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Directory\ShowEventDetailsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Estate\DownloadTerrainCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Estate\UploadRawTerrainCommand.cs">
+    </Compile>
+    <Compile Include="Actions\External\HttpGet.cs">
+    </Compile>
+    <Compile Include="Actions\External\HttpPost.cs">
+    </Compile>
+    <Compile Include="Actions\External\JarExec.cs">
+    </Compile>
+    <Compile Include="Actions\External\ShellExec.cs">
+    </Compile>
+    <Compile Include="Actions\Friends\AddFriendCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Friends\FriendsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Friends\MapFriendCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Friends\RemoveFriendCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Groups\ActivateGroupCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Groups\GroupMembersCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Groups\GroupRolesCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Groups\GroupsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Groups\InviteGroupCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Groups\JoinGroupCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Groups\LeaveGroupCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\BackupCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\ChangeDirectoryCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\CopyCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\CreateNotecardCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\DeleteFolderCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\DownloadCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\EmptyLostAndFound.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\EmptyTrashCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\GiveItemCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\InventoryCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\InventoryLintCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\listcontentscommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\PwdCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\RezItemCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\TakeCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\TaskRunningCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\TreeCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\UploadImageCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\ViewNotecardCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Inventory\XferCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Land\AgentLocationsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Land\FindSimCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Land\GridLayerCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Land\GridMapCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Land\ParcelDetailsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Land\ParcelInfoCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Land\ParcelPrimOwnersCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Land\ParcelSelectObjectsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Land\ReturnObjectsOwnedCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Land\WindCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Money\balancecommand.cs">
+    </Compile>
+    <Compile Include="Actions\Money\BuyCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Money\GiveAllCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Money\PayCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Money\SaleInfoCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\AutoPilotCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\BackCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\CrouchCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\FlyCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\FlyToCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\FollowCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\ForwardCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\GoHome.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\GotoCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\GotoLandmark.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\JumpCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\LeftCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\LindenFollowCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\LocationCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\MoveToCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\RightCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\RotateCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\SetHome.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\SitCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\StandCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\StopMovingCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\TeleportCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\TurnToCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Movement\WaitUntilPosition.cs">
+    </Compile>
+    <Compile Include="Actions\Pathfinder\AStarGoto.cs">
+    </Compile>
+    <Compile Include="Actions\Pathfinder\AStarPath.cs">
+    </Compile>
+    <Compile Include="Actions\Pathfinder\BlockPathCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Pathfinder\MapImagePaths.cs">
+    </Compile>
+    <Compile Include="Actions\Pathfinder\MeshInfo.cs">
+    </Compile>
+    <Compile Include="Actions\Pathfinder\PathfinderDebugCommands.cs">
+    </Compile>
+    <Compile Include="Actions\Pathfinder\RemeshPrim.cs">
+    </Compile>
+    <Compile Include="Actions\Pathfinder\SimHeightInfo.cs">
+    </Compile>
+    <Compile Include="Actions\Pathfinder\UnmeshPrim.cs">
+    </Compile>
+    <Compile Include="Actions\Pathfinder\WalkToCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\AttachCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\ChangePermsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\DeedObjectsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\DeRezCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\DescribeCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\DetachCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\DownloadTextureCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\DropCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\ExportParticlesCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\FindObjectsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\FindTextureCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\LinksetCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\LowerSimCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\MovePrimCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\ObjectInventoryCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\OrphanCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\PrimCountCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\PrimInfoCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\PrimRegexCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\RotatePrimCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\SelectCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\SelectObjectCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\SetPermsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\TexturesCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\TouchCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Prims\WearPrimCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Scripting\CreateScriptCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Scripting\DownloadScriptCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Scripting\Eval.cs">
+    </Compile>
+    <Compile Include="Actions\Scripting\EvalSys.cs">
+    </Compile>
+    <Compile Include="Actions\Scripting\EvalWith.cs">
+    </Compile>
+    <Compile Include="Actions\Scripting\LoadCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Scripting\ScriptCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Scripting\UploadScriptCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Stats\DilationCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Stats\EventInfoCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Stats\RegionInfoCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Stats\StatsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Stats\UptimeCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\AtCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\BotActionCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\BotPermsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\BotVarCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\ConnectionsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\DebugCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\GridHealthCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\HelpCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\LogFilterCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\LoginCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\LogoutCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\MD5Command.cs">
+    </Compile>
+    <Compile Include="Actions\System\OpenSimsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\PacketLogCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\ParamHelpCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\QuietlyCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\QuitCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\RepeatCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\SaveUUIDsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\SetBotCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\SetMasterKeyCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\ShowEffectsCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\SimCatchUp.cs">
+    </Compile>
+    <Compile Include="Actions\System\SleepCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\StopCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\SysVarCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\ThreadCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\ToBotCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\UUIDTypeCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\WaitEventCommand.cs">
+    </Compile>
+    <Compile Include="Actions\System\WaitForLoginCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Voice\ParcelVoiceInfo.cs">
+    </Compile>
+    <Compile Include="Actions\Voice\VoiceAcountCommand.cs">
+    </Compile>
+    <Compile Include="Actions\Voice\VoiceTestCommand.cs">
+    </Compile>
+    <Compile Include="Listeners\Listener.cs">
+    </Compile>
+    <Compile Include="Listeners\AllEvents.cs">
+    </Compile>
+    <Compile Include="Listeners\DebugAllEvents.cs">
+    </Compile>
+    <Compile Include="Listeners\EventPipelines.cs">
+    </Compile>
+    <Compile Include="Listeners\LispEventProducer.cs">
+    </Compile>
+    <Compile Include="Listeners\DefaultWorldGroupProvider.cs">
+    </Compile>
+    <Compile Include="Listeners\WorldAssets.cs">
+    </Compile>
+    <Compile Include="Listeners\WorldBuilding.cs">
+    </Compile>
+    <Compile Include="Listeners\WorldCallbacks.cs">
+    </Compile>
+    <Compile Include="Listeners\WorldCommandParsing.cs">
+    </Compile>
+    <Compile Include="Listeners\WorldEffects.cs">
+    </Compile>
+    <Compile Include="Listeners\WorldObjectData.cs">
+    </Compile>
+    <Compile Include="Listeners\WorldObjects.cs">
+    </Compile>
+    <Compile Include="Listeners\WorldObjectScripting.cs">
+    </Compile>
+    <Compile Include="Listeners\WorldObjectsModule.cs">
+    </Compile>
+    <Compile Include="Listeners\WorldPathSystem.cs">
+    </Compile>
+    <Compile Include="Listeners\WorldPeople.cs">
+    </Compile>
+    <Compile Include="Listeners\WorldPosition.cs">
+    </Compile>
+    <Compile Include="Listeners\WorldRegionMastering.cs">
+    </Compile>
+    <Compile Include="Listeners\WorldSound.cs">
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs">
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="Properties\Settings.cs">
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <DependentUpon>Settings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ScriptEngines\BotScriptInterpreter.cs">
+    </Compile>
+    <Compile Include="ScriptEngines\ScriptEventListener.cs">
+    </Compile>
+    <Compile Include="ScriptEngines\XMLInterpreter.cs">
+    </Compile>
+    <Compile Include="ScriptEngines\XmlScriptInterpreter.cs">
+    </Compile>
+    <Compile Include="World\FirstOrderTerm.cs">
+    </Compile>
+    <Compile Include="World\MovementDebugForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="World\MovementDebugForm.Designer.cs">
+      <DependentUpon>MovementDebugForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="World\SimAvatar.cs">
+    </Compile>
+    <Compile Include="World\SimAvatarClient.cs">
+    </Compile>
+    <Compile Include="World\SimAvatarMovement.cs">
+    </Compile>
+    <Compile Include="World\SimGeneric.cs">
+    </Compile>
+    <Compile Include="World\SimGroup.cs">
+    </Compile>
+    <Compile Include="World\SimImageUtils.cs">
+    </Compile>
+    <Compile Include="World\SimMentalAspect.cs">
+    </Compile>
+    <Compile Include="World\SimMesh.cs">
+    </Compile>
+    <Compile Include="World\SimObject.cs">
+    </Compile>
+    <Compile Include="World\SimRegion.cs">
+    </Compile>
+    <Compile Include="World\SimTypeSystem.cs">
+    </Compile>
+    <Compile Include="World\SimUsage.cs">
+    </Compile>
+    <Compile Include="World\Asset\AssetCacheWithExtensions.cs">
+    </Compile>
+    <Compile Include="World\Asset\AssetThread.cs">
+    </Compile>
+    <Compile Include="World\Asset\SimAnimation.cs">
+    </Compile>
+    <Compile Include="World\Asset\SimAsset.cs">
+    </Compile>
+    <Compile Include="World\Asset\SimAssetStore.cs">
+    </Compile>
+    <Compile Include="World\Asset\SimBodypart.cs">
+    </Compile>
+    <Compile Include="World\Asset\SimCallingCard.cs">
+    </Compile>
+    <Compile Include="World\Asset\SimClothing.cs">
+    </Compile>
+    <Compile Include="World\Asset\SimGesture.cs">
+    </Compile>
+    <Compile Include="World\Asset\SimLandmark.cs">
+    </Compile>
+    <Compile Include="World\Asset\SimNotecard.cs">
+    </Compile>
+    <Compile Include="World\Asset\SimScript.cs">
+    </Compile>
+    <Compile Include="World\Asset\SimSound.cs">
+    </Compile>
+    <Compile Include="World\Asset\SimTexture.cs">
+    </Compile>
+    <Compile Include="World\Usage\BotAction.cs">
+    </Compile>
+    <Compile Include="World\Usage\BotObjectAction.cs">
+    </Compile>
+    <Compile Include="World\Usage\BotSocialAction.cs">
+    </Compile>
+    <Compile Include="World\Usage\CommandAction.cs">
+    </Compile>
+    <Compile Include="World\Usage\EffectBeamInfo.cs">
+    </Compile>
+    <Compile Include="World\Usage\FlyToAction.cs">
+    </Compile>
+    <Compile Include="World\Usage\FollowerAction.cs">
+    </Compile>
+    <Compile Include="World\Usage\LispCodeAction.cs">
+    </Compile>
+    <Compile Include="World\Usage\MoveToLocation.cs">
+    </Compile>
+    <Compile Include="World\Usage\SimObjectUsage.cs">
+    </Compile>
+    <Compile Include="World\Usage\SimTypeUsage.cs">
+    </Compile>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>
