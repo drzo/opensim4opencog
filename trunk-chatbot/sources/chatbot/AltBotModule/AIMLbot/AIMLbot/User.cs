@@ -1133,6 +1133,7 @@ namespace AltAIMLbot
 
         public bool IsNamed(string lname)
         {
+            if (string.IsNullOrEmpty(lname)) return this == bot.ExemplarUser;
             lname = lname.ToLower();
             return UserName.ToLower() == lname || UserID.ToLower() == lname;
         }
