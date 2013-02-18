@@ -1503,7 +1503,7 @@ The AIMLbot program.
                 }
                 if (!GraphsByName.TryGetValue(graphPath, out g))
                 {
-                    g = LocalGraphsByName[graphPath] = GraphMaster.FindOrCreate(graphPath);
+                    g = LocalGraphsByName[graphPath] = GraphMaster.FindOrCreate(graphPath, this);
                 }
             }
             return g;

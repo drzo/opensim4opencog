@@ -5,8 +5,11 @@ using System.Text;
 using System.Diagnostics;
 
 using System.IO;
+using System.Threading;
+using Iesi.Collections.Generic;
 using LogicalParticleFilter1;
 using MushDLR223.Utilities;
+using ikvm.lang;
 
 namespace AltAIMLbot
 {
@@ -179,11 +182,60 @@ namespace AltAIMLbot
 
         internal void ActivateBehaviorTask(string name, bool waitUntilComplete)
         {
+            if (!waitUntilComplete)
+            {
+                ActivateBehaviorTask(name);
+                return;
+            }
             TaskItem task = FindTask(name);
             string status = taskStatus(name);
-           
+                var are = new ManualResetEvent(false);
+            Func<RunStatus> Unblock = () =>
+                                          {
+                                              are.Set();
+                                              return RunStatus.Success;
+                                          };
+            if (task == null || status == null || status == "unknown")
+            {
+                string tempEvent = "waitUntil" + name + "Complete";
+                myBehaviors.CreateEvent(tempEvent, Unblock);
+                if (status == "sleeping")
+                {
+                    AwakenTask(name);
+                    return;
+                }
+                // start up a new one
+                if (!myBehaviors.definedBehavior(name))
+                {
+                    return;
+                }
+                IEnumerator<RunStatus> iterator = myBehaviors.getBehaviorEnumerator(name);
+                iterator = new ListOfIters(new List<IEnumerator<RunStatus>>
+                                               {
+                                                   iterator,
+                                                   new OneRunStatus()
+                                                       {
+                                                           Once = Unblock
+                                                       }
+                                               });
 
+
+                if ((singular == false) || (active.Count == 0))
+                {
+                    active.Append(new TaskItem(iterator, this, name));
+                }
+                else
+                {
+                    //Put in background if we are single minded
+                    sleeping.Append(new TaskItem(iterator, this, name));
+
+                }
+
+                are.WaitOne();
+                return;
+            }
         }
+
         public void ActivateBehaviorTask(string name)
         {
             // if its already running or sleeping 

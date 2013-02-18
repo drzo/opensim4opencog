@@ -191,6 +191,7 @@ namespace AltAIMLbot.Utils
         private GraphMaster(string gn, GraphMaster child, bool isParallel)
         //: base(bot)
         {
+            theBot = child.theBot;
             AltBot.GraphsByName[gn] = this;
             IsParallel = isParallel;
             SilentTagsInPutParallel = DefaultSilentTagsInPutParallel;
@@ -1659,7 +1660,7 @@ namespace AltAIMLbot.Utils
         public ParentChild ParentObject { get; set; }
 
         public static GraphMaster OnlyOneGM = null;//new GraphMaster("default");
-        public static GraphMaster FindOrCreate(string dgn0)
+        public static GraphMaster FindOrCreate(string dgn0, AltBot robot)
         {
             var nggn0 = dgn0.RemoveEnd("graph");
             if (nggn0 != null && dgn0 != nggn0)
@@ -1695,7 +1696,7 @@ namespace AltAIMLbot.Utils
                 if (!gbn.TryGetValue(dgn, out v))
                 {
                     AltBot.writeDebugLine("CREATE GRAPHMASTER = " + dgn0);
-                    v = gbn[dgn] = new GraphMaster(dgn0, AltBot.ConsoleRobot);
+                    v = gbn[dgn] = new GraphMaster(dgn0, robot ?? AltBot.ConsoleRobot);
                 }
                 return v;
             }

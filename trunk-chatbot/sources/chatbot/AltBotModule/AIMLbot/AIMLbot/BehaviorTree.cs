@@ -303,7 +303,7 @@ namespace AltAIMLbot
     /// BehaviorSet: Dictionary of Behaviors with begin/finish times and event handlers
     /// </summary>
 
-    [Serializable ]
+    [Serializable]
     public class BehaviorSet
     {
         //public Hashtable behaveTrees;
@@ -312,9 +312,13 @@ namespace AltAIMLbot
         public CIDictionary<string, Int32> entryTime = new CIDictionary<string, Int32>(KeyCase.DefaultFN);
         public CIDictionary<string, Int32> execTime = new CIDictionary<string, Int32>(KeyCase.DefaultFN);
         public CIDictionary<string, string> eventTable = new CIDictionary<string, string>(KeyCase.DefaultFN);
+
+        public CIDictionary<string, List<Func<RunStatus>>> eventClosures =
+            new CIDictionary<string, List<Func<RunStatus>>>(KeyCase.DefaultFN);
+
         public ValenceSet VSoup;
         public Stack handlerStack;
-        public string persistantDirectory=null;
+        public string persistantDirectory = null;
         public CIDictionary<string, bool> invisiblePatterns;
         public bool waitingForChat = false;
 
@@ -329,10 +333,10 @@ namespace AltAIMLbot
                     tree.bot = _bot;
             }
         }
-        [NonSerialized ]
-        private AltBot _bot;
 
-        
+        [NonSerialized] private AltBot _bot;
+
+
         public BehaviorSet(AltBot bot)
         {
             _bot = bot;
@@ -343,8 +347,8 @@ namespace AltAIMLbot
             handlerStack = new Stack();
             invisiblePatterns = new CIDictionary<string, bool>(KeyCase.DefaultFN);
         }
-       
-        
+
+
         public void preSerial()
         {
             foreach (BehaviorTree t in GetTreeList())
@@ -365,16 +369,18 @@ namespace AltAIMLbot
 
         public void persistAllToFiles()
         {
-            lock (behaveTrees) foreach (string k in GetBTKeyNames())
-            {
-                persistToFile(k);
-            }
+            lock (behaveTrees)
+                foreach (string k in GetBTKeyNames())
+                {
+                    persistToFile(k);
+                }
         }
 
         public string behaviorDiskName(string behaviorName)
         {
-            return String.Format("{0}{1}{2}.BTX", persistantDirectory,Path.DirectorySeparatorChar , behaviorName);
+            return String.Format("{0}{1}{2}.BTX", persistantDirectory, Path.DirectorySeparatorChar, behaviorName);
         }
+
         public void persistToFile(string treeName)
         {
             if (persistantDirectory == null) return;
@@ -462,8 +468,8 @@ namespace AltAIMLbot
             if (bot == null) return;
             try
             {
-                    // Update on first entry
-                if ((R==null) || (R == RunStatus.Success))
+                // Update on first entry
+                if ((R == null) || (R == RunStatus.Success))
                 {
                     if (!bot.myBehaviors.entryTime.ContainsKey(nodeID))
                     {
@@ -475,13 +481,13 @@ namespace AltAIMLbot
                     // Remove the ID on any failure
                     bot.myBehaviors.entryTime.Remove(nodeID);
                 }
-              }
+            }
             catch (Exception e)
             {
                 Console.WriteLine("ERR:" + e.Message);
                 Console.WriteLine("ERR:" + e.StackTrace);
             }
-       }
+        }
 
         public Int32 timeRunning(string nodeID)
         {
@@ -499,10 +505,10 @@ namespace AltAIMLbot
             {
                 if ((R == null) || (R == RunStatus.Success))
                 {
-                    if ((bot.myBehaviors.execTime.Count==0)||
+                    if ((bot.myBehaviors.execTime.Count == 0) ||
                         (!bot.myBehaviors.execTime.ContainsKey(nodeID)))
                     {
-                        bot.myBehaviors.execTime.Add(nodeID,Environment.TickCount);
+                        bot.myBehaviors.execTime.Add(nodeID, Environment.TickCount);
                     }
                     bot.myBehaviors.execTime[nodeID] = Environment.TickCount;
                 }
@@ -513,7 +519,7 @@ namespace AltAIMLbot
                 Console.WriteLine("ERR:" + e.Message);
                 Console.WriteLine("ERR:" + e.StackTrace);
             }
-    }
+        }
 
         public Int32 lastRunning(string nodeID)
         {
@@ -527,20 +533,21 @@ namespace AltAIMLbot
 
         public void satisfyDrive0(string driveName)
         {
-            activationTime(driveName, RunStatus.Success); 
+            activationTime(driveName, RunStatus.Success);
         }
 
         public void satisfyDrive(string driveName)
         {
-            VSoup.adjust(driveName, 1.0); 
+            VSoup.adjust(driveName, 1.0);
         }
 
         public RunStatus runBTXML(string BTXML)
         {
             RunStatus result = RunStatus.Failure;
             BehaviorTree newTree = new BehaviorTree(bot);
-            string treeName = "temptree123" +newTree.rgen.Next();
-            newTree.defineBehavior(treeName, string.Format("<behavior id='{0}'><subaiml>{1}</subaiml></behavior>", treeName, BTXML));
+            string treeName = "temptree123" + newTree.rgen.Next();
+            newTree.defineBehavior(treeName,
+                                   string.Format("<behavior id='{0}'><subaiml>{1}</subaiml></behavior>", treeName, BTXML));
             //result = newTree.runBehaviorTree(this.bot);
             foreach (RunStatus myChildResult in newTree.runBehaviorTree(this.bot))
             {
@@ -549,7 +556,7 @@ namespace AltAIMLbot
                 //yield return RunStatus.Running;
                 Thread.Sleep(100);
             }
-           
+
             return result;
         }
 
@@ -564,7 +571,7 @@ namespace AltAIMLbot
             foreach (XmlNode childNode in BTXML.ChildNodes)
             {
                 //RunStatus childResult = newTree.processNode(childNode);
-                RunStatus childResult = RunStatus .Failure ;
+                RunStatus childResult = RunStatus.Failure;
                 foreach (RunStatus myChildResult in newTree.processNode(childNode))
                 {
                     childResult = myChildResult;
@@ -589,7 +596,7 @@ namespace AltAIMLbot
                     }
                 }
             }
-            return RunStatus.Success;           
+            return RunStatus.Success;
             return result;
         }
 
@@ -599,6 +606,7 @@ namespace AltAIMLbot
             if (pattern.Length == 0) return;
             invisiblePatterns.Add(pattern, true);
         }
+
         public void makeVisible(string pattern)
         {
             if (invisiblePatterns.ContainsKey(pattern))
@@ -606,12 +614,13 @@ namespace AltAIMLbot
                 invisiblePatterns.Remove(pattern);
             }
         }
+
         public bool visibleBehavior(string behaviorName)
         {
-            
+
             foreach (string pattern in invisiblePatterns.Keys)
             {
-                if (Regex.IsMatch(behaviorName,pattern )) return false;
+                if (Regex.IsMatch(behaviorName, pattern)) return false;
             }
             return true;
         }
@@ -623,6 +632,7 @@ namespace AltAIMLbot
                 return definedBehavior_unlocked(behaviorName);
             }
         }
+
         private bool definedBehavior_unlocked(string behaviorName)
         {
             if (!visibleBehavior(behaviorName)) return false;
@@ -633,7 +643,7 @@ namespace AltAIMLbot
             {
                 //Console.WriteLine("definedBehavior( {0} -> {1})",behaviorName, diskName);
                 if (!File.Exists(diskName))
-                    return false;                
+                    return false;
                 readText = File.ReadAllText(diskName);
             }
             if (!string.IsNullOrEmpty(readText)) defineBehavior(behaviorName, readText);
@@ -644,10 +654,11 @@ namespace AltAIMLbot
         {
             BehaviorTree newTree = new BehaviorTree(bot);
             newTree.bot = bot;
-            newTree.ProcessStateAiml((BTXmlNode)xnode);
+            newTree.ProcessStateAiml((BTXmlNode) xnode);
         }
 
         #region EventHandlers
+
         //public Queue<string> eventQueue = new Queue<string>();
         public SemiStringStackQueue eventQueue = new SemiStringStackQueue();
 
@@ -659,21 +670,62 @@ namespace AltAIMLbot
 
         public void deleteEventHandler(string evnt, string val)
         {
-            lock (eventTable)
-                eventTable.Remove(evnt);
+            lock (eventTable) eventTable.Remove(evnt);
+            lock (eventClosures) eventClosures.Remove(evnt);
         }
-        public  bool hasEventHandler(string evnt, out string result)
+
+        public bool hasEventHandler(string evnt, out string result)
         {
             bool ret = false;
             lock (eventTable)
             {
                 ret = eventTable.TryGetValue(evnt, out result);
             }
-            if (ret) 
-                Console.WriteLine("   hasEventHandler({0}) ={1}", evnt, true);                
+            bool ret2 = false;
+            List<Action> resultsTodo;
+            lock (eventClosures)
+            {
+                ret2 = eventClosures.TryGetValue(evnt, out resultsTodo);
+            }
+            if (ret)
+                Console.WriteLine("   hasEventHandler({0}) ={1}", evnt, true);
+
+            if (ret2)
+            {
+                Console.WriteLine("   eventClosures({0}) ={1}", evnt, resultsTodo.Count);
+                ret = false;
+            }
             if (definedBehavior(evnt))
                 Console.WriteLine("   definedBehavior({0}) ={1}", evnt, true);
             return ret;
+        }
+
+        public bool runEventTODOs(string evnt)
+        {
+            List<Action> resultsTodo;
+            lock (eventClosures)
+            {
+                if (!eventClosures.TryGetValue(evnt, out resultsTodo)) return false;
+            }
+            List<Action> realydo = null;
+            lock (resultsTodo)
+            {
+                if (resultsTodo.Count == 0) return false;
+                realydo = new List<Action>(resultsTodo);
+            }
+            foreach (var action in realydo)
+            {
+                try
+                {
+                    action();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("ERRORS " + e);
+                    throw e;
+                }
+            }
+            return true;
         }
 
         public void runEventHandler0(string evnt)
@@ -745,7 +797,7 @@ namespace AltAIMLbot
             // Restore the last one
             if (handlerStack.Count > 0)
             {
-                eventTable = (CIDictionary<string, string>)handlerStack.Pop();
+                eventTable = (CIDictionary<string, string>) handlerStack.Pop();
             }
         }
 
@@ -771,6 +823,7 @@ namespace AltAIMLbot
                 }
             }
         }
+
         public void processOneEventQueue()
         {
             string ourEvent = "";
@@ -780,7 +833,7 @@ namespace AltAIMLbot
                 {
                     ourEvent = eventQueue.Dequeue();
                     Console.WriteLine(" *** processOneEventQueue : {0}", ourEvent);
-                    logText(String.Format("EVENTQUEUE: {0}", eventQueue.ToString ()));
+                    logText(String.Format("EVENTQUEUE: {0}", eventQueue.ToString()));
                     logText(String.Format(" *** processOneEventQueue : {0}", ourEvent));
                     runEventHandler(ourEvent);
                 }
@@ -792,8 +845,9 @@ namespace AltAIMLbot
                 }
             }
 
- 
+
         }
+
         public void logText(string msg)
         {
             if (bot == null) return;
@@ -810,6 +864,7 @@ namespace AltAIMLbot
                 }
             }
         }
+
         public void logNode(string msg, XmlNode myNode)
         {
             if (bot == null) return;
@@ -833,10 +888,12 @@ namespace AltAIMLbot
                     System.IO.File.AppendAllText(miniLog, tag);
                 }
                 catch
-                { }
+                {
+                }
             }
 
         }
+
         public string getIndent(XmlNode node)
         {
             if (node.ParentNode == null)
@@ -846,8 +903,11 @@ namespace AltAIMLbot
             }
             return "  " + getIndent(node.ParentNode);
         }
+
         #endregion
+
         #region bStack
+
         /// <summary>
         /// A general stack to remember things to activate later
         /// </summary>
@@ -861,15 +921,17 @@ namespace AltAIMLbot
             if (behaviorStack.Contains(evnt)) return;
             behaviorStack.Push(evnt);
         }
+
         public void removeFromStack(string evnt)
         {
             // only one instance of an entry can be on the stack at a time
             if (!behaviorStack.Contains(evnt)) return;
             behaviorStack.RemoveAny(evnt);
         }
+
         public bool behaviorStackActive()
         {
-            return (behaviorStack.Count>0);
+            return (behaviorStack.Count > 0);
         }
 
         public void processRandomEventStack()
@@ -891,6 +953,7 @@ namespace AltAIMLbot
                 }
             }
         }
+
         public void processOneEventStack()
         {
             string ourEvent = "";
@@ -909,7 +972,8 @@ namespace AltAIMLbot
                     Console.WriteLine("ERR:" + e.StackTrace);
                 }
             }
-        } 
+        }
+
         #endregion
 
 
@@ -917,6 +981,8 @@ namespace AltAIMLbot
         {
             string resultName;
             bot = deBot;
+
+            runEventTODOs(behaviorName);
 
             if (hasEventHandler(behaviorName, out resultName))
             {
@@ -948,12 +1014,13 @@ namespace AltAIMLbot
                 return RunStatus.Failure;
             }
             else
-            { 
-                
+            {
+
                 Console.WriteLine(" ERR: runBotBehavior did not find Tree '{0}' ", behaviorName);
                 return RunStatus.Failure;
             }
         }
+
         public IEnumerator<RunStatus> getBehaviorEnumerator(string name)
         {
 
@@ -981,23 +1048,23 @@ namespace AltAIMLbot
             // otherwise run them all
             if (behaveTrees.ContainsKey("root"))
             {
-                    try
+                try
+                {
+                    BehaviorTree curTree = GetTreeByName("root");
+                    if (curTree == null)
                     {
-                        BehaviorTree curTree = GetTreeByName("root");
-                        if (curTree == null)
-                        {
-                            Console.WriteLine("WARN: Tree '{0}' is null", "null");
+                        Console.WriteLine("WARN: Tree '{0}' is null", "null");
 
-                            return;
-                        }
-                        curTree.runBehaviorTree(deBot);
+                        return;
                     }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine("ERR: SourceTree = root");
-                        Console.WriteLine("ERR:" + e.Message);
-                        Console.WriteLine("ERR:" + e.StackTrace);
-                    }
+                    curTree.runBehaviorTree(deBot);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("ERR: SourceTree = root");
+                    Console.WriteLine("ERR:" + e.Message);
+                    Console.WriteLine("ERR:" + e.StackTrace);
+                }
 
             }
             else
@@ -1027,13 +1094,14 @@ namespace AltAIMLbot
                 catch (Exception e)
                 {
                     Console.WriteLine("ERR: runBotBehaviors");
-                Console.WriteLine("ERR:" + e.Message);
-                Console.WriteLine("ERR:" + e.StackTrace);
+                    Console.WriteLine("ERR:" + e.Message);
+                    Console.WriteLine("ERR:" + e.StackTrace);
                 }
 
             }
 
         }
+
         private IEnumerable<BehaviorTree> GetTreeList()
         {
             var list = new List<BehaviorTree>();
@@ -1059,7 +1127,21 @@ namespace AltAIMLbot
             }
             return list;
         }
+
+        public void CreateEvent(string tempEvent, Func<RunStatus> action)
+        {
+            List<Func<RunStatus>> list;
+            lock (eventClosures)
+            {
+                if (!eventClosures.TryGetValue(tempEvent, out list))
+                {
+                    list = eventClosures[tempEvent] = new List<Func<RunStatus>>();
+                }
+            }
+            list.Add(action);
+        }
     }
+
     [Serializable]
     public class BehaviorTree0 
     {

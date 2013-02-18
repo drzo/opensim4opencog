@@ -202,7 +202,7 @@ namespace AltAIMLbot
             get
             {
                 if (TheUserListenerGraph != null) return TheUserListenerGraph;
-                return GraphMaster.FindOrCreate("heardyousay");
+                return GraphMaster.FindOrCreate("heardyousay", this);
             }
         }
         public GraphMaster DefaultHeardSelfSayGraph
@@ -210,7 +210,7 @@ namespace AltAIMLbot
             get
             {
                 if (_h != null) return _h;
-                return GraphMaster.FindOrCreate("heardselfsay");
+                return GraphMaster.FindOrCreate("heardselfsay", this);
             }
         }
 

@@ -53,6 +53,108 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 namespace AltAIMLbot
 {
+    public class ListOfIters : IEnumerator<RunStatus>
+    {
+        public List<IEnumerator<RunStatus>> Iters;
+        private IEnumerator<RunStatus> curIter = null;
+
+        public ListOfIters(List<IEnumerator<RunStatus>> list)
+        {
+            this.Iters = list;
+            if (Iters.Count > 0)
+            {
+                curIter = Iters[0];
+                Iters.RemoveAt(0);
+            }
+        }
+
+        #region IEnumerator<RunStatus> Members
+
+        public RunStatus Current
+        {
+            get { return curIter.Current;  }
+        }
+
+        #endregion
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+           
+        }
+
+        #endregion
+
+        #region IEnumerator Members
+
+        object IEnumerator.Current
+        {
+            get { return Current; }
+        }
+
+        public bool MoveNext()
+        {
+           if (curIter==null)
+           {
+               if (Iters.Count == 0) return false;
+               curIter = Iters[0];
+               Iters.RemoveAt(0);
+           }
+           if (!curIter.MoveNext())
+           {
+               return MoveNext();
+           }
+           return true;
+        }
+
+        public void Reset()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+    }
+    public class OneRunStatus : IEnumerator<RunStatus>
+    {
+        public Func<RunStatus> Once;
+        private bool beenCalled = false;
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool MoveNext()
+        {
+            if (beenCalled) return false;
+            beenCalled = true;
+            result = Once();
+            return true;
+
+        }
+
+        public void Reset()
+        {
+            beenCalled = false;
+        }
+
+        public RunStatus Current
+        {
+            get
+            {
+                if (!beenCalled) throw new InvalidOperationException("must first call MoveNExt()");
+                return result;
+            }
+        }
+
+        object IEnumerator.Current
+        {
+            get { return Current; }
+        }
+
+        public RunStatus result { get; set; }
+    }
+
     public class BTXmlDocument : XmlDocument
     {
         public override XmlElement CreateElement(string prefix, string localname, string nsURI)
