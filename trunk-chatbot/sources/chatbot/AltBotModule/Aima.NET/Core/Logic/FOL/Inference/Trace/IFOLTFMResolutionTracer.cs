@@ -10,15 +10,15 @@ namespace Aima.Core.Logic.FOL.Inference.Trace
 
     public interface IFOLTFMResolutionTracer
     {
-        void StepStartWhile(ISet<Clause> clauses, int totalNoClauses,
+        void StepStartWhile(Iesi.Collections.Generic.ISet<Clause> clauses, int totalNoClauses,
                 int totalNoNewCandidateClauses);
 
         void StepOuterFor(Clause i);
 
         void StepInnerFor(Clause i, Clause j);
 
-        void StepResolved(Clause iFactor, Clause jFactor, ISet<Clause> resolvents);
+        void StepResolved(Clause iFactor, Clause jFactor, Iesi.Collections.Generic.ISet<Clause> resolvents);
 
-        void StepFinished(ISet<Clause> clauses, IInferenceResult result);
+        void StepFinished(Iesi.Collections.Generic.ISet<Clause> clauses, IInferenceResult result);
     }
 }

@@ -10,7 +10,7 @@ namespace Aima.Core.Logic.FOL.Inference.OTTER.DefaultImpl
 
     public class DefaultClauseFilter : IClauseFilter 
     {
-        public ISet<Clause> Filter(ISet<Clause> clauses) 
+        public ISet<Clause> Filter(Iesi.Collections.Generic.ISet<Clause> clauses) 
         {
             return clauses;
         }

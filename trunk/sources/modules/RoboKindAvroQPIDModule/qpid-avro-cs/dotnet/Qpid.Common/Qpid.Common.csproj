@@ -38,7 +38,7 @@
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -54,6 +54,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -224,20 +225,6 @@
     <Compile Include="Protocol\AMQConstant.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Qpid.Buffer\Qpid.Buffer.csproj">
-      <Project>{44384DF2-B0A4-4580-BDBC-EE4BAA87D995}</Project>
-      <Name>Qpid.Buffer</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Qpid.Codec\Qpid.Codec.csproj">
-      <Project>{22D0D0C2-77AF-4DE3-B456-7FF3893F9F88}</Project>
-      <Name>Qpid.Codec</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Qpid.Messaging\Qpid.Messaging.csproj">
-      <Project>{6688F826-C58E-4C1B-AA1F-22AFAB4B7D07}</Project>
-      <Name>Qpid.Messaging</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="stylesheets\csharp.xsl" />
     <Content Include="stylesheets\framing.xsl" />
     <Content Include="stylesheets\java.xsl" />
@@ -264,6 +251,20 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Qpid.Buffer\Qpid.Buffer.csproj">
+      <Project>{44384DF2-B0A4-4580-BDBC-EE4BAA87D995}</Project>
+      <Name>Qpid.Buffer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Qpid.Codec\Qpid.Codec.csproj">
+      <Project>{22D0D0C2-77AF-4DE3-B456-7FF3893F9F88}</Project>
+      <Name>Qpid.Codec</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Qpid.Messaging\Qpid.Messaging.csproj">
+      <Project>{6688F826-C58E-4C1B-AA1F-22AFAB4B7D07}</Project>
+      <Name>Qpid.Messaging</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

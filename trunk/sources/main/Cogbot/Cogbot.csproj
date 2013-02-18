@@ -1,0 +1,250 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{9194BB9B-5256-4C61-A4EF-DD04B2AAA3B7}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ApplicationIcon>../install/icons/cogbot.ico</ApplicationIcon>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>Cogbot</AssemblyName>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>
+    </AppDesignerFolder>
+    <RootNamespace>Cogbot</RootNamespace>
+    <StartupObject>
+    </StartupObject>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>False</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>True</Optimize>
+    <OutputPath>..\..\..\bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>3</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;ROBOKIND;VISUAL_STUDIO</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>True</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>False</Optimize>
+    <OutputPath>..\..\..\bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>3</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="MySql.Data.dll">
+      <Name>MySql.Data.dll</Name>
+      <HintPath>..\..\..\bin\MySql.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="DotLisp.dll">
+      <Name>DotLisp.dll</Name>
+      <HintPath>..\..\..\bin\DotLisp.dll</HintPath>
+    </Reference>
+    <Reference Include="fmodex-dotnet.dll">
+      <Name>fmodex-dotnet.dll</Name>
+      <HintPath>..\..\..\bin\fmodex-dotnet.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Core.dll">
+      <Name>IKVM.OpenJDK.Core.dll</Name>
+      <HintPath>..\..\..\bin\IKVM.OpenJDK.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.Runtime.dll">
+      <Name>IKVM.Runtime.dll</Name>
+      <HintPath>..\..\..\bin\IKVM.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.Runtime.JNI.dll">
+      <Name>IKVM.Runtime.JNI.dll</Name>
+      <HintPath>..\..\..\bin\IKVM.Runtime.JNI.dll</HintPath>
+    </Reference>
+    <Reference Include="jabber-net.dll">
+      <Name>jabber-net.dll</Name>
+      <HintPath>..\..\..\bin\jabber-net.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net.dll">
+      <Name>log4net.dll</Name>
+      <HintPath>..\..\..\bin\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="muzzle.dll">
+      <Name>muzzle.dll</Name>
+      <HintPath>..\..\..\bin\muzzle.dll</HintPath>
+    </Reference>
+    <Reference Include="MXP.dll">
+      <Name>MXP.dll</Name>
+      <HintPath>..\..\..\bin\MXP.dll</HintPath>
+    </Reference>
+    <Reference Include="Nini.dll">
+      <Name>Nini.dll</Name>
+      <HintPath>..\..\..\bin\Nini.dll</HintPath>
+    </Reference>
+    <Reference Include="PrimMesher.dll">
+      <Name>PrimMesher.dll</Name>
+      <HintPath>..\..\..\bin\PrimMesher.dll</HintPath>
+    </Reference>
+    <Reference Include="protobuf-net.dll">
+      <Name>protobuf-net.dll</Name>
+      <HintPath>..\..\..\bin\protobuf-net.dll</HintPath>
+    </Reference>
+    <Reference Include="CommandLine.dll">
+      <Name>CommandLine.dll</Name>
+      <HintPath>..\..\..\bin\CommandLine.dll</HintPath>
+    </Reference>
+    <Reference Include="System">
+      <Name>System</Name>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <Name>System.Drawing</Name>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <Name>System.Windows.Forms</Name>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Name>System.Xml</Name>
+    </Reference>
+    <Reference Include="XMLRPC.dll">
+      <Name>XMLRPC.dll</Name>
+      <HintPath>..\..\..\bin\XMLRPC.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LibCogbot\Cogbot.Library.csproj">
+      <Name>Cogbot.Library</Name>
+      <Project>{12C31C87-C971-48FE-807F-CE79D13E1FFC}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\MushDLR223\MushDLR223.csproj">
+      <Name>MushDLR223</Name>
+      <Project>{AB85D1A2-53C7-4170-BD03-353F1FF3837E}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\modules\CogbotRadegastPluginModule\CogbotRadegastPluginModule.csproj">
+      <Name>CogbotRadegastPluginModule</Name>
+      <Project>{E503D9FA-FBCE-4D21-8768-A65FC97579D1}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\modules\CycWorldModule\CycWorldModule.csproj">
+      <Name>CycWorldModule</Name>
+      <Project>{B4F215C8-87D7-4ACA-9BF9-992FA5B5E7F3}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\modules\FashionBotModule\FashionBotModule.csproj">
+      <Name>FashionBotModule</Name>
+      <Project>{FC160BB4-6CF2-482A-BBF7-8E820AAEC458}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\modules\IrcRegionModule\IrcRegionModule.csproj">
+      <Name>IrcRegionModule</Name>
+      <Project>{C44F333D-ACC7-4EBA-B496-CF55CFFB7CBD}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj">
+      <Name>OpenMetaverse</Name>
+      <Project>{562FEEC8-D298-44E4-A2D4-84CD402D8212}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse.Rendering.Meshmerizer\OpenMetaverse.Rendering.Meshmerizer.csproj">
+      <Name>OpenMetaverse.Rendering.Meshmerizer</Name>
+      <Project>{8660B509-96E5-4DB1-AF26-AAA82983229A}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj">
+      <Name>OpenMetaverse.StructuredData</Name>
+      <Project>{A953DC4B-5320-4CB3-8685-CCB5FE571EF1}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse.Utilities\OpenMetaverse.Utilities.csproj">
+      <Name>OpenMetaverse.Utilities</Name>
+      <Project>{1191FA59-5904-42E0-8D43-F34E81B0E3C0}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverseTypes\OpenMetaverseTypes.csproj">
+      <Name>OpenMetaverseTypes</Name>
+      <Project>{440608A5-BEAD-40CD-ACB8-C3DFFE00667F}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\PathSystem3D\PathSystem3D.csproj">
+      <Name>PathSystem3D</Name>
+      <Project>{BE48CC1C-0E6C-4E1B-9DC5-B041F81DFF12}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\modules\SwiPrologBotModule\PrologBotModule.csproj">
+      <Name>PrologBotModule</Name>
+      <Project>{15A7DBF8-F216-4B7E-8175-5E3F380F9B3E}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\Radegast\Radegast.csproj">
+      <Name>Radegast</Name>
+      <Project>{ED5DF208-5112-479C-AF67-8322A678A661}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\Radegast.Plugin.Speech\RadSpeechLin\RadSpeechLin.csproj">
+      <Name>RadSpeechLin</Name>
+      <Project>{4EA9232B-1A58-4D3A-A201-4E1AD8A4CBDF}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\Radegast.Plugin.Speech\RadSpeechWin\RadSpeechWin.csproj">
+      <Name>RadSpeechWin</Name>
+      <Project>{FEF9B62F-556B-41AC-8A74-56804A8905EB}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\modules\TheSimiansModule\TheSimiansModule.csproj">
+      <Name>TheSimiansModule</Name>
+      <Project>{5980311F-79D0-4C74-A767-2862A6C65459}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs">
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs">
+    </Compile>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>

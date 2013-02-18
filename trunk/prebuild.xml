@@ -37,7 +37,7 @@
         <!-- Libraries -->
 
       <!-- External Libraries -->
-
+<!--
       <Project name="LAIR.CommonPort" path="sources/chatbot/LAIR.ResourceAPIs/LAIR.CommonPort" type="Library" rootNamespace="LAIR.CommonPort" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
@@ -73,7 +73,7 @@
           <Match pattern="*.cs" recurse="true"/>
         </Files>
       </Project>
-
+-->
 
     <Project name="Lucene.Net" path="sources/chatbot/Lucene/src/Lucene.Net" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
@@ -104,7 +104,7 @@
       </Files>
     </Project>
 
-          <Project name="LAIR.ResourceAPIs.PennBank" path="sources/chatbot/LAIR.ResourceAPIs/PennBank/PennBank" type="Library" rootNamespace="LAIR.ResourceAPIs.PennBank" frameworkVersion="v3_5">
+          <!--<Project name="LAIR.ResourceAPIs.PennBank" path="sources/chatbot/LAIR.ResourceAPIs/PennBank/PennBank" type="Library" rootNamespace="LAIR.ResourceAPIs.PennBank" frameworkVersion="v3_5">
            <Configuration name="Debug">
              <Options>
                <OutputPath>../../../../../bin/</OutputPath>
@@ -256,7 +256,7 @@
 
       <Files>
           <Match pattern="*.cs" recurse="true"/>
-          <!--<Match pattern="frm*.cs" subType="Form"/>-->
+          <Match pattern="frm*.cs" subType="Form"/>-
           <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
           <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
       </Files>
@@ -296,9 +296,9 @@
 
       <Files>
           <Match pattern="*.cs" recurse="true"/>
-          <!--<Match pattern="frm*.cs" subType="Form"/>
+          <Match pattern="frm*.cs" subType="Form"/>
             <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
-            <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>-->
+            <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
       </Files>
     </Project>
 
@@ -417,9 +417,9 @@
 
       <Files>
           <Match pattern="*.cs" recurse="true"/>
-          <!--<Match pattern="frm*.cs" subType="Form"/>-->
+          <Match pattern="frm*.cs" subType="Form"/>
           <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
-          <!--<Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>-->
+          <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
       </Files>
     </Project>
 
@@ -470,6 +470,7 @@
 
       </Files>
     </Project>
+-->
 
 
     <Project name="Swicli.Library" path="sources/main/swicli/Swicli.Library" type="Library" frameworkVersion="v3_5">
@@ -993,7 +994,7 @@
          <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
     </Files>
 </Project>
-
+<!--
 
     <Project name="LogicalParticleFilter1" path="sources/chatbot/LogicalParticleFilter" type="Exe" frameworkVersion="v3_5">
   <Configuration name="Debug">
@@ -1028,6 +1029,8 @@
       <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
   </Files>
 </Project>
+
+-->
 
 <!---
     <Project name="RoboKindChat" path="sources/chatbot/RoboKindChat" type="Exe" frameworkVersion="v3_5">
@@ -1070,7 +1073,6 @@
   </Files>
 </Project>
 
--->
 
     <Project name="AltAIMLbot" path="sources/chatbot/AltBotModule/AIMLbot/AIMLbot" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
@@ -1176,6 +1178,7 @@
           <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
       </Files>
   </Project>
+-->
 
 
     <Project name="PathSystem3D" path="sources/main/PathSystem3D" type="Library" frameworkVersion="v3_5">
@@ -1367,7 +1370,7 @@
            <Match path="World" pattern="*.cs" recurse="true"/>
        </Files>
  </Project>
-
+<!--
 
  <Project name="AIMLBotModule" path="sources/chatbot/AIMLBotModule" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
@@ -1402,6 +1405,8 @@
           <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
       </Files>
 </Project>
+
+-->
 <!--
  <Project name="xglore" path="sources/external/xglore" type="exe" frameworkVersion="v3_5">
      <Configuration name="Debug">
@@ -2002,22 +2007,19 @@
 
 
 
-    <!-- DebugApp app -->
+    <!-- DebugApp app 
   <Project name="Cogbot" path="sources/main/Cogbot" icon="../install/icons/cogbot.ico" type="Exe" frameworkVersion="v3_5">
   <Configuration name="Debug">
     <Options>
       <OutputPath>../../../bin/</OutputPath>
-<!--     <PlatformTarget>x86</PlatformTarget> -->
     </Options>
   </Configuration>
   <Configuration name="Release">
     <Options>
       <OutputPath>../../../bin/</OutputPath>
-      <!--     <PlatformTarget>x86</PlatformTarget> -->
     </Options>
   </Configuration>
   <ReferencePath>../../../bin</ReferencePath>
-      <!--<Reference name="Mono.Addins.dll" localCopy="false"/>-->
 
       <Reference name="Cogbot.Library" />
         <Reference name="MySql.Data.dll" localCopy="false"/>
@@ -2056,7 +2058,7 @@
       <Reference name="System.Xml"/>
       <Reference name="TheSimiansModule" />
       <Reference name="XMLRPC.dll" localCopy="false"/>
-
+-->
 <!--
       <Reference name="LAIR.ResourceAPIs.WordNet"/>
       <Reference name="AIMLbot" />
@@ -2086,9 +2088,9 @@
       <Reference name="LookingGlass.Radegast"/>
       <Reference name="LookingGlass.View"/>
       <Reference name="LookingGlass.Rest"/>   -->
-    <Files>
+<!--    <Files>
         <Match pattern="*.cs" recurse="true" subType="Form"/>
-        <!--<Match pattern="frm*.cs" subType="Form"/>-->
+        <Match pattern="frm*.cs" subType="Form"/>
     </Files>
   </Project>
 
@@ -2112,9 +2114,10 @@
       <Reference name="Cogbot.exe" localCopy="false"/>
       <Files>
         <Match pattern="*.cs" recurse="true"/>
-        <!--<Match pattern="frm*.cs" subType="Form"/>-->
+        <Match pattern="frm*.cs" subType="Form"/>
       </Files>
     </Project>
+-->
 
   </Solution>
 
