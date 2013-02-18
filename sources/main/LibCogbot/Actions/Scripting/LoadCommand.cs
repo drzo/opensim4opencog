@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Reflection;
 using MushDLR223.Utilities;
@@ -167,12 +168,17 @@ namespace Cogbot.Actions.System
                 if (!sp.Contains(dir)) sp.Add(dir);
             }
             string lastTested = "";
-            foreach (var s in LockInfo.CopyOf(AppDomain.CurrentDomain.GetAssemblies()))
+            foreach (Assembly s in LockInfo.CopyOf(AppDomain.CurrentDomain.GetAssemblies()))
             {
+                var ss = "" + s;
                 try
                 {
-                    if (s is AssemblyBuilder) continue;
-                    string dir = Path.GetDirectoryName(s.CodeBase);
+                    if (s is _AssemblyBuilder) continue;
+                    var ro = s.ReflectionOnly;
+                    if (ro) continue;
+                    lock (SkippedAssemblies) if (SkippedAssemblies.Contains(ss)) continue;
+                    var loc = s.Location;
+                    string dir = Path.GetDirectoryName(loc ?? s.CodeBase);
                     dir = NormalizePath(dir);
                     if (dir == lastTested) continue;
                     lastTested = dir;
@@ -180,6 +186,7 @@ namespace Cogbot.Actions.System
                 }
                 catch (NotSupportedException)
                 {
+                    lock (SkippedAssemblies) SkippedAssemblies.Add(ss);
                     // Reflected Assemblies do this
                 }
             }
