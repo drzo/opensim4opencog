@@ -254,7 +254,7 @@ namespace MushDLR223.Utilities
 
             bool useHtml = false;
             NameValueCollection getvars = request.QueryString;
-            NameValueCollection postvars = requestData == null ? null : HttpUtility.ParseQueryString(requestData);
+            NameValueCollection postvars = requestData == null ? null : WebLinksWriter.ParseQueryString(requestData);
 
             string botname = GetVariable(getvars, postvars, "bot", () => GetVariable(getvars, postvars, "botid", null));
 

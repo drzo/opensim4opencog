@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -311,6 +312,11 @@ namespace MushDLR223.Utilities
         {
             tl_WarnWriter = writer;
             return writer;
+        }
+
+        public static NameValueCollection ParseQueryString(string qcodes)
+        {
+            return HttpUtility.ParseQueryString(qcodes);
         }
     }
     public class NonClosingTextWriter : TextWriter
