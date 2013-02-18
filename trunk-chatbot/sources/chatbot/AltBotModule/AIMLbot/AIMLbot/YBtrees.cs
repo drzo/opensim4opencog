@@ -9,6 +9,7 @@ using System.Xml;
 using System.Threading;
 using System.IO;
 using AltAIMLbot.Utils;
+using AltAIMLbot.Variables;
 using Aima.Core.Logic.Propositional.Algorithms;
 using Aima.Core.Logic.Propositional.Parsing;
 using Aima.Core.Logic.Propositional.Parsing.AST;
@@ -970,6 +971,16 @@ namespace AltAIMLbot
 
                     case "chat":
                         foreach (RunStatus result in  ProcessChat(myNode))
+                        {
+                            myResult = result;
+                            SetCurNodeIdStatus(myResult);
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
+
+                    case "setaimlvar":
+                        foreach (RunStatus result in  ProcessSetAimlVar(myNode))
                         {
                             myResult = result;
                             SetCurNodeIdStatus(myResult);
@@ -2747,7 +2758,7 @@ namespace AltAIMLbot
             {
                 if (bot.chatInputQueue.Count > 0)
                 {
-                    bot.lastBehaviorChatInput = bot.chatInputQueue.Dequeue();
+                    bot.lastBehaviorChatInput = bot.chatInputQueue.Peek();
                     sentStr += bot.lastBehaviorChatInput;
                 }
                 User user = bot.lastBehaviorUser;
@@ -2755,10 +2766,13 @@ namespace AltAIMLbot
                 Result res = bot.Chat(r, graphName);
                 //bot.lastBehaviorChatOutput=res.Output;
                 bot.lastBehaviorChatOutput = "";
-                bot.postOutput(res.Output.AsString());
                 if (res.isValidOutput)
                 {
+                    bot.postOutput(res.Output.AsString());
+                    bot.lastBehaviorChatOutput = res.Output.AsString();
                     rs = RunStatus.Success;
+                    // eat input on success
+                    bot.chatInputQueue.Dequeue();
                 }
                 else
                 {
@@ -3415,6 +3429,67 @@ namespace AltAIMLbot
             yield break;
         }
 
+        public IEnumerable<RunStatus> ProcessSetAimlVar(BTXmlNode myNode)
+        {
+            // Takes the inner text as AIML category definitions, to create new responses
+            // So the system can change its verbal response behavior based on
+            // its behavior tree
+            RunStatus result = RunStatus.Success;
+
+            try
+            {
+                if (!string.IsNullOrEmpty(myNode.AttributesV("return")))
+                {
+
+                    string returnV = myNode.AttributesV("return");
+                    if (returnV.ToLower() == "failure") { result = RunStatus.Failure; }
+                    if (returnV.ToLower() == "success") { result = RunStatus.Success; }
+                }
+            }
+            catch
+            {
+                result = RunStatus.Success;
+
+            }
+            string varname = "nulvar";
+            string settingValue = myNode.InnerText;
+            User user = bot.lastBehaviorUser;
+
+            try
+            {
+                if (!string.IsNullOrEmpty(myNode.AttributesV("var")))
+                {
+                    varname = myNode.AttributesV("var");
+                }
+            }
+            catch (Exception e)
+            {
+                varname = "nulvar";
+            }
+            if (!string.IsNullOrEmpty(myNode.AttributesV("value")))
+            {
+                settingValue = myNode.AttributesV("value");
+            }
+
+            try
+            {
+                ISettingsDictionary dict;
+                if (bot.lastBehaviorUser!=null) dict = user;
+                else dict = bot.GetDictionary("user");
+
+                dict.addSetting(varname, settingValue);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERR: ProcessStateAiml");
+                Console.WriteLine("ERR:" + EMsg(e));
+                Console.WriteLine("ERR:" + e.StackTrace);
+                Console.WriteLine("ERR XML:" + myNode.OuterXml);
+                //result = RunStatus.Failure;
+            }
+            yield return result;
+            yield break;
+        }
 
         public IEnumerable<RunStatus> ProcessStateAiml(BTXmlNode myNode)
         {
