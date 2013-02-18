@@ -1,12 +1,11 @@
 using System;
 using System.Data;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Text;
 using System.Net;
 using System.Text.RegularExpressions;
-using MySql.Data;
 using System.Security.Cryptography;
-using MySql.Data.MySqlClient;
 using System.IO;
 using System.Xml;
 
@@ -172,7 +171,7 @@ namespace LAIR.ResourceAPIs.Wikipedia
         /// <summary>
         /// Connection to DB
         /// </summary>
-        protected MySqlConnection _connection;   
+        protected DbConnection _connection;   
         
         /// <summary>
         /// Name of DB
@@ -286,11 +285,13 @@ namespace LAIR.ResourceAPIs.Wikipedia
                 return;
 
             // connect to DB
+#if NET40
             _connection = new MySqlConnection("Data Source=" + _server + "; " +
                                               "Database=" + _DB + "; " +
                                               "User Id=" + _user + "; " +
                                               "Password=" + _password + "; " +
                                               "CharSet=utf8;");
+#endif
             _connection.Open();
 
             if (_connection.State != ConnectionState.Open)
@@ -318,13 +319,17 @@ namespace LAIR.ResourceAPIs.Wikipedia
         /// </summary>
         /// <param name="query">MySQL query to submit</param>
         /// <returns>Reader for results</returns>
-        public MySqlDataReader SubmitQuery(string query)
+        public IDataReader SubmitQuery(string query)
         {
             if (!CheckConnection(true))
                 throw new Exception("Must call Connect before SubmitQuery");
 
-            MySqlCommand cmd = new MySqlCommand(query, _connection);
+#if NET40
+            IDbCommand cmd = new MySqlCommand(command, (MySqlConnection) _connection);
             return cmd.ExecuteReader();
+#else
+            throw new NotImplementedException("Find a newer version of MySql.Data.dll");
+#endif
         }
 
         /// <summary>
@@ -336,9 +341,12 @@ namespace LAIR.ResourceAPIs.Wikipedia
         {
             if (!CheckConnection(true))
                 throw new Exception("Must call Connect before SubmitQuery");
-
-            MySqlCommand cmd = new MySqlCommand(command, _connection);
+#if NET40
+            IDbCommand cmd = new MySqlCommand(command, (MySqlConnection) _connection);
             return cmd.ExecuteNonQuery();
+#else
+            throw new NotImplementedException("Find a newer version of MySql.Data.dll");
+#endif
         }
 
         /// <summary>
@@ -367,7 +375,7 @@ namespace LAIR.ResourceAPIs.Wikipedia
                            "WHERE page.page_namespace=" + nsVal + " " +
                            "AND page.page_title=\"" + url + "\"";
 
-            MySqlDataReader reader = SubmitQuery(query);
+            IDataReader reader = SubmitQuery(query);
 
             Page p = null;
             if (reader.Read())
@@ -421,7 +429,7 @@ namespace LAIR.ResourceAPIs.Wikipedia
                 throw new Exception("Invalid page range");
 
             int endPage = startPage + numPages - 1;
-            MySqlDataReader reader = SubmitQuery("SELECT * FROM page WHERE page_namespace=" + NamespaceValue(ns) + " AND page_id >= " + startPage + " AND page_id <= " + endPage);
+            IDataReader reader = SubmitQuery("SELECT * FROM page WHERE page_namespace=" + NamespaceValue(ns) + " AND page_id >= " + startPage + " AND page_id <= " + endPage);
 
             // get titles
             List<string> titles = new List<string>();
@@ -460,7 +468,7 @@ namespace LAIR.ResourceAPIs.Wikipedia
                 throw new Exception("Invalid page range");
 
             int endPage = startPage + numPages - 1;
-            MySqlDataReader reader = SubmitQuery("SELECT * FROM page WHERE page_namespace=" + NamespaceValue(ns) + " AND page_id >= " + startPage + " AND page_id <= " + endPage);
+            IDataReader reader = SubmitQuery("SELECT * FROM page WHERE page_namespace=" + NamespaceValue(ns) + " AND page_id >= " + startPage + " AND page_id <= " + endPage);
 
             // get titles
             List<string> titles = new List<string>();
@@ -493,7 +501,7 @@ namespace LAIR.ResourceAPIs.Wikipedia
                 return titles;
 
             int nsVal = NamespaceValue(ns);
-            MySqlDataReader reader = SubmitQuery("SELECT page_title FROM page " + 
+            IDataReader reader = SubmitQuery("SELECT page_title FROM page " + 
                                                  "WHERE page_namespace=" + nsVal + " AND page_title LIKE \"%" + s + "\"%");
             while (reader.Read())
                 titles.Add(reader["page_title"].ToString());
@@ -514,7 +522,7 @@ namespace LAIR.ResourceAPIs.Wikipedia
                 return false;
 
             int nsVal = NamespaceValue(ns);
-            MySqlDataReader reader = SubmitQuery("SELECT page_id FROM page " +
+            IDataReader reader = SubmitQuery("SELECT page_id FROM page " +
                                                  "WHERE page_namespace=" + nsVal + " AND page_title=\"" + title + "\"");
             if (reader.Read())
             {
@@ -541,7 +549,7 @@ namespace LAIR.ResourceAPIs.Wikipedia
                 return false;
 
             int nsVal = NamespaceValue(ns);
-            MySqlDataReader reader = SubmitQuery("SELECT page_is_redirect FROM page " +
+            IDataReader reader = SubmitQuery("SELECT page_is_redirect FROM page " +
                                                  "WHERE page_namespace=" + nsVal + " AND page_title=\"" + title + "\"");
             if (reader.Read())
             {

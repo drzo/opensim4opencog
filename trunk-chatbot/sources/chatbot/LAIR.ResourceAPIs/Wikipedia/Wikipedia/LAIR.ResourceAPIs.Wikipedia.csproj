@@ -106,10 +106,6 @@
       <Name>log4net.dll</Name>
       <HintPath>..\..\..\..\..\bin\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="MySql.Data.dll">
-      <Name>MySql.Data.dll</Name>
-      <HintPath>..\..\..\..\..\bin\MySql.Data.dll</HintPath>
-    </Reference>
     <Reference Include="System.Drawing">
       <Name>System.Drawing</Name>
     </Reference>

@@ -356,10 +356,10 @@ namespace AltAIMLbot
             StreamReader streamReader = new StreamReader(bodyStream, encoding);
             string infoBody = streamReader.ReadToEnd();
             if (qcodes.Length > 0) infoBody = infoBody + "&"+qcodes;
-            NameValueCollection NVC = HttpUtility.ParseQueryString(infoBody);
+            NameValueCollection NVC = WebLinksWriter.ParseQueryString(infoBody);
             if (NVC.Count == 0)
             {
-                NVC = HttpUtility.ParseQueryString(qcodes );
+                NVC = WebLinksWriter.ParseQueryString(qcodes);
             }
             if (justURL.Contains("graphmasterlist"))
             {

@@ -2,9 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Data;
-using MySql.Data.MySqlClient;
-using System.Collections;
-using System.Windows.Forms;
 using System.IO;
 
 namespace LAIR.ResourceAPIs.Wikipedia
@@ -169,7 +166,7 @@ namespace LAIR.ResourceAPIs.Wikipedia
 
             string query = "SELECT " + selectCols + " FROM page " +
                            "WHERE page_namespace=" + nsVal + " AND page_title=\"" + url + "\"";
-            MySqlDataReader reader = SubmitQuery(query);
+            IDataReader reader = SubmitQuery(query);
 
             if (reader.Read())
             {
@@ -352,7 +349,7 @@ namespace LAIR.ResourceAPIs.Wikipedia
 
                     try
                     {
-                        MySqlDataReader reader = SubmitQuery("SELECT word FROM titleindex " +
+                        IDataReader reader = SubmitQuery("SELECT word FROM titleindex " +
                                                              "WHERE word=\"" + word + "\" AND page_namespace=" + nsVal + " AND page_title=\"" + title + "\"");
 
                         if (!reader.Read())
@@ -615,7 +612,7 @@ namespace LAIR.ResourceAPIs.Wikipedia
                 throw new Exception("Invalid page range");
 
             int endPage = startPage + numPages - 1;
-            MySqlDataReader reader = SubmitQuery("SELECT page_title, redirects_to FROM page WHERE page_namespace=" + NamespaceValue(ns) + " AND page_id >= " + startPage + " AND page_id <= " + endPage);
+            IDataReader reader = SubmitQuery("SELECT page_title, redirects_to FROM page WHERE page_namespace=" + NamespaceValue(ns) + " AND page_id >= " + startPage + " AND page_id <= " + endPage);
 
             // get titles
             List<string> titles = new List<string>();
@@ -649,7 +646,7 @@ namespace LAIR.ResourceAPIs.Wikipedia
                 return titles;
 
             int nsVal = NamespaceValue(ns);
-            MySqlDataReader reader = SubmitQuery("SELECT page_title FROM titleindex " +
+            IDataReader reader = SubmitQuery("SELECT page_title FROM titleindex " +
                                                  "WHERE word=\"" + s + "\" AND page_namespace=" + nsVal);
 
             while (reader.Read())
@@ -672,7 +669,7 @@ namespace LAIR.ResourceAPIs.Wikipedia
                 return false;
 
             int nsVal = NamespaceValue(ns);
-            MySqlDataReader reader = SubmitQuery("SELECT redirects_to FROM page " +
+            IDataReader reader = SubmitQuery("SELECT redirects_to FROM page " +
                                                  "WHERE page_namespace=" + nsVal + " AND page_title=\"" + title + "\"");
             if (reader.Read())
             {          
