@@ -2064,8 +2064,9 @@ writer.WriteLine("");
             }
         }
 
-        internal void AddName(string alias)
+        internal void AddName(AltBot thebot, string alias)
         {
+            theBot = thebot;
             theBot.Graphs[alias] = this;
         }
 

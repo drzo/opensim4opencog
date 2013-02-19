@@ -1135,7 +1135,18 @@ namespace AltAIMLbot
         {
             if (string.IsNullOrEmpty(lname)) return this == bot.ExemplarUser;
             lname = lname.ToLower();
-            return UserName.ToLower() == lname || UserID.ToLower() == lname;
+            return (PadW(NullGuard(UserName, ""), " ").ToLower().Contains(PadW(lname, " "))) ||
+                   NullGuard(UserID, "").ToLower() == lname;
+        }
+
+        private static string PadW(string lname, string pad)
+        {
+            return pad + lname.Trim(pad.ToCharArray()) + pad;
+        }
+
+        private static DataUnifiable NullGuard(DataUnifiable name, DataUnifiable wasNull)
+        {
+            return string.IsNullOrEmpty(name) ? wasNull : name;
         }
 
         private User LastReponderFromDictionary()

@@ -693,7 +693,6 @@ namespace AltAIMLbot
             if (ret2)
             {
                 Console.WriteLine("   eventClosures({0}) ={1}", evnt, resultsTodo.Count);
-                ret = false;
             }
             if (definedBehavior(evnt))
                 Console.WriteLine("   definedBehavior({0}) ={1}", evnt, true);

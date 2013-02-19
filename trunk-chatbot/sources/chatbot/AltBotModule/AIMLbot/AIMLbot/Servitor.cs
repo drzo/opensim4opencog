@@ -790,7 +790,6 @@ namespace AltAIMLbot
                     curBot.chatInputQueue.Clear();
                     curBot.chatInputQueue.Enqueue(input);
                     curBot.lastBehaviorUser = curUser;
-                    //curBot.myBehaviors.runEventHandler("onchat");
                     curBot.flushOutputQueue();
 
                     //curBot.myBehaviors.queueEvent("onchat");
@@ -799,6 +798,14 @@ namespace AltAIMLbot
                     curBot.lastBehaviorChatOutput = "";
                     myScheduler.SleepAllTasks(30000);
                     myScheduler.EnqueueEvent("onchat");
+
+                    string pstate = myScheduler.taskStatus(fnd);
+                    while (pstate != "unknown")
+                    {
+                        Thread.Sleep(50);
+                        myScheduler.Run();
+                        pstate = myScheduler.taskStatus(fnd);
+                    }
 
                     string chatOutput = curBot.lastBehaviorChatOutput;
                     if (!string.IsNullOrEmpty(chatOutput))

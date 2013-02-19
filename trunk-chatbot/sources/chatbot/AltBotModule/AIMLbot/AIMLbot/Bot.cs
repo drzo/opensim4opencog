@@ -1261,6 +1261,17 @@ namespace AltAIMLbot
 
         public void flushOutputQueue()
         {
+            if (outputQueue.Count>0)
+            {
+                while (outputQueue.Count > 0)
+                {
+                    string msg = outputQueue.Dequeue();
+                    msg = string.Format("flushOutputQueue BOT OUTPUT:{0}", msg);
+                    Console.WriteLine(msg);
+                    myBehaviors.logText("BOT OUTPUT:" + msg);
+                }
+                
+            }
             outputQueue.Clear();
             myBehaviors.logText("BOT flushOutputQueue:");
             string flushsignal = GlobalSettings.grabSetting("flushsignal", false);

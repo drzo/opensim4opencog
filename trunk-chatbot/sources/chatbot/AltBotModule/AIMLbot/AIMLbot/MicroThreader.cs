@@ -192,20 +192,20 @@ namespace AltAIMLbot
             }
             TaskItem task = FindTask(name);
             string status = taskStatus(name);
-                var are = new ManualResetEvent(false);
+            
+            var are = new ManualResetEvent(false);
+
             Func<RunStatus> Unblock = () =>
                                           {
                                               are.Set();
                                               return RunStatus.Success;
                                           };
+
             if (task == null || status == null || status == "unknown")
             {
-                string tempEvent = "waitUntil" + name + "Complete";
-                myBehaviors.CreateEvent(tempEvent, Unblock);
                 if (status == "sleeping")
                 {
                     AwakenTask(name);
-                    return;
                 }
                 // start up a new one
                 if (!myBehaviors.definedBehavior(name))
@@ -229,9 +229,9 @@ namespace AltAIMLbot
                 }
                 else
                 {
-                    //Put in background if we are single minded
-                    sleeping.Append(new TaskItem(iterator, this, name));
-
+                    //dont Put in background even if we are single minded
+                    active.Append(new TaskItem(iterator, this, name));
+//                    sleeping.Append(new TaskItem(iterator, this, name));
                 }
 
                 are.WaitOne();
