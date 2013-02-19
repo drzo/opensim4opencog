@@ -834,7 +834,19 @@ namespace AltAIMLbot
                     //curBot.processOutputQueue();
                     curBot.lastBehaviorChatOutput = "";
                     myScheduler.SleepAllTasks(30000);
-                    myScheduler.ActivateBehaviorTask("chatRoot", true);
+                    //myScheduler.ActivateBehaviorTask("chatRoot", true);
+                    myScheduler.ActivateBehaviorTask("chatRoot", false);
+                    string pstate = myScheduler.taskStatus("chatRoot");
+                    while (pstate != "unknown")
+                    {
+                        Thread.Sleep(50);
+                        myScheduler.Run();
+                        pstate = myScheduler.taskStatus("chatRoot");
+                    }
+                    //while (!myScheduler.empty())
+                    //{
+                    //    myScheduler.Run();
+                    //}
                     string chatOutput = curBot.lastBehaviorChatOutput;
                     if (!string.IsNullOrEmpty(chatOutput))
                     {

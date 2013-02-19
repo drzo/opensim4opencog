@@ -179,7 +179,10 @@ namespace AltAIMLbot
             active = new TaskList(this);
             sleeping = new TaskList(this);
         }
-
+        public bool empty()
+        {
+            return ((active.Count == 0) && (sleeping.Count == 0));
+        }
         internal void ActivateBehaviorTask(string name, bool waitUntilComplete)
         {
             if (!waitUntilComplete)

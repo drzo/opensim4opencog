@@ -2768,7 +2768,7 @@ namespace AltAIMLbot
                 bot.lastBehaviorChatOutput = "";
                 if (res.isValidOutput)
                 {
-                    bot.postOutput(res.Output.AsString());
+                   // bot.postOutput(res.Output.AsString());
                     bot.lastBehaviorChatOutput = res.Output.AsString();
                     rs = RunStatus.Success;
                     // eat input on success

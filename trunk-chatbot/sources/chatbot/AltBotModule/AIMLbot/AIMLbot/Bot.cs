@@ -955,9 +955,9 @@ namespace AltAIMLbot
             this.CustomTags = new Dictionary<string, TagHandler>();
             //this.Graphs = new Dictionary<string, GraphMaster>();
             //this.Graphmaster = new GraphMaster("base", this);
-            Graphmaster.AddName("*");
-            Graphmaster.AddName("default");
-            Graphmaster.AddName("base");
+            Graphmaster.AddName(this,"*");
+            Graphmaster.AddName(this, "default");
+            Graphmaster.AddName(this, "base");
             //this._h= new GraphMaster("heardselfsay", this);
             this.setupDictionaries();
             GlobalSettings.IsTraced = true;
@@ -1727,7 +1727,20 @@ namespace AltAIMLbot
                 string pt = GetOutputSentence(node.OuterXml, node, query, request, result, user, allowProcess);
                 return pt;
             }
+            if (tagName == "#text")
+            {
+                return node.Value;
+            }
+            if (tagName == "#whitespace")
+            {
+                return " ";
+            }
+
             AIMLTagHandler tagHandler = GetTagHandler(node, query, request, result, user, false);
+            if (tagHandler == null)
+            {
+                Console.WriteLine("MISSING HANDLER FOR:{0}", tagName);
+            }
             if (tagHandler.IsTraced)
             {
                 TRACE = Console.WriteLine;
@@ -1931,7 +1944,7 @@ namespace AltAIMLbot
                     recursiveResult.Append(oneChildString);
                 }
                 var resultString = recursiveResult.ToString();
-                if (resultString.Length > 4) resultString = resultString.Replace(" , ", " ");
+                //if (resultString.Length > 4) resultString = resultString.Replace(" , ", " ");
                 if (resultString.Length > 0) resultString = resultString.Replace("\n", " ");
                 if (resultString.Length > 0) resultString = resultString.Replace("\r", " ");
                // Console.WriteLine(" -- GetOutputSentence R1 ({0}) :---> '{1}'", template, resultString);
@@ -2084,6 +2097,9 @@ namespace AltAIMLbot
                         
                     case "nop":
                         return new AltAIMLbot.AIMLTagHandlers.nop(this, user, query, request, result, node);
+                    
+                    case "peekinput":
+                        return new AltAIMLbot.AIMLTagHandlers.peekinput(this, user, query, request, result, node);
                         
                     case "scxml":
                         return new AltAIMLbot.AIMLTagHandlers.scxml(this, user, query, request, result, node);
