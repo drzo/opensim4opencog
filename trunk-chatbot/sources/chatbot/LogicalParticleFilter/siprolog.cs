@@ -913,7 +913,13 @@ namespace LogicalParticleFilter1
                 if (db.isStorage)
                 {
                     var db2 = new PDB(false);
+                    db2.IsTraced = db.IsTraced;
                     db2.rules = db.rules.Copy();
+                    if (db.index.Count > 0)
+                    {
+                        db2.index = new Dictionary<string, RuleList>(db.index);
+                    }
+                    db2.isStorage = false;
                     db = db2;
                 }
                 db.startMt = queryMT;
@@ -1287,6 +1293,7 @@ namespace LogicalParticleFilter1
             }
 
             ICollection<Rule> localRules;
+            bool foundIndex = false;
             if (termIsVar)
             {
                 // if its a var then sorry, just do it all ...
@@ -1295,9 +1302,15 @@ namespace LogicalParticleFilter1
             else
             {
                 RuleList fndRL;
-                if (db.index.TryGetValue(thisTerm.fname, out fndRL)) localRules = fndRL.arrayList;
+                if (db.index.TryGetValue(thisTerm.fname, out fndRL))
+                {
+                    localRules = fndRL.arrayList;
+                    foundIndex = true;
+                }
                 else
+                {
                     localRules = new List<Rule>();
+                }
 
                 // What to do for those rules that  are vars ???
                 // for now just copy them over
@@ -1313,7 +1326,7 @@ namespace LogicalParticleFilter1
             {
                 if (localRules.Count == 0)
                 {
-                    Warn("No predicates for the mask: " + thisTerm + " in " + dbIn.ToString());
+                    if (dbIn.IsTraced) Warn("No predicates for the mask: " + thisTerm + " in " + dbIn.ToString());
                 }
                 int i = -1;
                 foreach (Rule rule in localRules)

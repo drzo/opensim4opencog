@@ -363,6 +363,7 @@ namespace LogicalParticleFilter1
                 var inx = index["_varpred_"] = new RuleList();
                 var rules = this.rules;
                 lock (rules)
+                {
                     for (int i = 0; i < rules.Count; i++)
                     {
                         Rule rule = (Rule) rules[i];
@@ -377,7 +378,7 @@ namespace LogicalParticleFilter1
                             inx.Add(rule);
                         }
                     }
-
+                }
             }
             public RuleList rules
             {
@@ -441,6 +442,8 @@ namespace LogicalParticleFilter1
                     return CurrentProlog.FindKB(startMt);
                 }
             }
+
+            public bool IsTraced = true;
         }
 
         public partial class Rule : IHasParent

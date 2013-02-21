@@ -132,7 +132,7 @@ namespace AltAIMLbot.Variables
             _prologEngine = (Func<SIProlog>) (() =>
                                                   {
                                                       var plv = pl();
-                                                      plv.FindOrCreateKB(mtName);
+                                                      plv.FindOrCreateKB(mtName).pdb.IsTraced = false;
                                                       return plv;
                                                   });
             dictMt = mtName;
@@ -228,10 +228,18 @@ namespace AltAIMLbot.Variables
 
         private LogicalParticleFilter1.SIProlog.Atom MakeArg(string value)
         {
+            if (value.Trim() != value)
+            {
+                GlobalSharedSettings.Trace("Bad value name! " + value);
+            }
             return LogicalParticleFilter1.SIProlog.Atom.MakeString(value);
         }
         private LogicalParticleFilter1.SIProlog.Atom MakeKey(string value)
         {
+            if (value.Contains(","))
+            {
+                GlobalSharedSettings.Trace("Bad key name! " + value);
+            }
             return LogicalParticleFilter1.SIProlog.Atom.FromName(value);
         }
 
@@ -259,6 +267,7 @@ namespace AltAIMLbot.Variables
         {
             normalizedName = KeyCase.Default.NormalizeKey(normalizedName);
             var bingingsList = new List<Dictionary<string, SIProlog.Part>>();
+            if (!followGenlMt && pnodeMt.dirty == false && pnodeMt.Size == 0) return null;
             this.prologEngine.askQuery(QueryForNameValue(MakeKey(normalizedName), new SIProlog.Variable("VALUE")),
                                        dictMt, followGenlMt,
                                        bingingsList, null);
@@ -1995,6 +2004,10 @@ namespace AltAIMLbot.Variables
         {
             if (name.Contains(","))
             {
+                if (!IsSubsts)
+                {
+                    WriteErrorLine("Bad name " + name);
+                }
             }
             return name;
         }
@@ -2005,16 +2018,14 @@ namespace AltAIMLbot.Variables
         /// <param name="name">The name of the setting to remove</param>
         public bool removeSetting(string name)
         {
-			return removeSettingReal(name);
+            bool b = removeSettingReal(name);
+            return b;
             return addSetting(name, Unifiable.MISSING);
         }
 
         public bool removeSettingReal(string name)
         {
-            if (name.Contains(","))
-            {
-                return SplitAndDoB(',', name, removeSettingReal);
-            }
+            if (IsSplitName(name)) return SplitAndDoB(name, removeSettingReal);
             lock (orderedKeyLock)
             {
                 if (SuspendUpdates) return true;
@@ -2036,14 +2047,13 @@ namespace AltAIMLbot.Variables
 
         public string TransformKey(string name)
         {
-            if (name.Contains(","))
+            string res;
+            if (IsSplitName(name) && SplitAndDo(",", name, TransformKey, out res))
             {
-                return SplitAndDo(',', name, TransformKey);
+                return res;
             }
+
             if (TrimKeys) name = name.Trim();
-            if (name == "inloop")
-            {
-            }
             name = name.ToLower();
             name = name.Replace("favorite", "fav");
             name = name.Replace("fav_", "fav");
@@ -2064,35 +2074,49 @@ namespace AltAIMLbot.Variables
             //return MakeCaseInsensitive.TransformInput(name);
         }
 
-        public static string SplitAndDo(char c, string name, Func<string, string> transformKey)
+        public static bool SplitAndDo(string splitter, string name, Func<string, string> transformKey, out string res)
         {
-            string res = "";
+            res = "";
+            if (!name.Contains(splitter)) return false;
             bool needComma = false;
-            foreach (var n in name.Split(c))
+            foreach (var n in StaticAIMLUtils.NamesStrings(name))
             {
-                if (needComma) res += ",";
+                if (needComma)
+                {
+                    res += splitter;
+                }
+                else
+                {
+                    needComma = true;
+                }
                 res += transformKey(n);
             }
-            return res;
+            return true;
         }
-        public static bool SplitAndDoB(char c, string name, Func<string, bool> transformKey)
+        static public bool SplitAndDoB(string name, Func<string, bool> transformKey)
         {
-            bool res = false;
-            foreach (var n in name.Split(c))
+            return SplitAndDoNotNull<bool>(name, transformKey);
+            foreach (var n in StaticAIMLUtils.NamesStrings(name))
             {
-                if (transformKey(n)) res = true;
+                if (transformKey(n)) return true;
             }
-            return res;
+            return false;
         }
-        public static T SplitAndDoNotNull<T>(char c, string name, Func<string, T> transformKey)
+        public static T SplitAndDoNotNull<T>(string name, Func<string, T> transformKey)
         {
-            bool res = false;
-            T lastT = default(T);
-            foreach (var n in name.Split(c))
+            var def = default(T);
+            T lastT = def;
+            foreach (var n in StaticXMLUtils.NamesStrings(name))
             {
                 lastT = transformKey(n);
+                if (Equals(def, lastT)) continue;
+                if (typeof(T) == typeof(bool))
+                {
+                    return (T)(object)true;
+                }
                 if (Unifiable.IsMissing(lastT)) continue;
                 if (Unifiable.IsNull(lastT)) continue;
+                return lastT;
                 break;
             }
             return lastT;
@@ -2248,7 +2272,7 @@ namespace AltAIMLbot.Variables
         /// <returns>the value of the setting</returns>
         public string grabSetting(string name, bool useBlackboad)
         {
-            if (name.Contains(",")) return SplitAndDoNotNull(',', name, (s) => grabSetting0(s, useBlackboad));
+            if (IsSplitName(name)) return SplitAndDoNotNull(name, (s) => grabSetting(s, useBlackboad));
             return grabSetting0(name, useBlackboad);
         }
         /// <summary>
@@ -2258,7 +2282,7 @@ namespace AltAIMLbot.Variables
         /// <returns>the value of the setting</returns>
         public DataUnifiable grabSetting(string name)
         {
-            if (name.Contains(",")) return SplitAndDoNotNull(',', name, grabSetting);
+            if (IsSplitName(name)) return SplitAndDoNotNull(name, grabSetting);
             try
             {
                 name = TransformName(name);
@@ -2563,7 +2587,7 @@ namespace AltAIMLbot.Variables
         /// <returns>Existential truth value</returns>
         public bool containsLocalCalled(string name)
         {
-            if (name.Contains(",")) return SplitAndDoB(',', name, containsLocalCalled);
+            if (IsSplitName(name)) return SplitAndDoB(name, containsLocalCalled);
             if (containsLocalCalled0(name)) return true;
             foreach (var setname in GetSettingsAliases(name))
             {
@@ -2571,6 +2595,13 @@ namespace AltAIMLbot.Variables
             }
             return false;
         }
+
+        private bool IsSplitName(string name)
+        {
+            if (IsSubsts) return false;
+            return name.Contains(",");
+        }
+
         public bool containsLocalCalled0(string name)
         {
             name = TransformName(name);
@@ -2595,7 +2626,8 @@ namespace AltAIMLbot.Variables
 
         public bool containsSettingCalled(string name)
         {
-            if (name.Contains(",")) return SplitAndDoB(',', name, containsSettingCalled);
+            if (IsSplitName(name)) return SplitAndDoB(name, containsSettingCalled);
+
             if (containsLocalCalled(name)) return true;
             foreach (ISettingsDictionary dictionary in Overides)
             {

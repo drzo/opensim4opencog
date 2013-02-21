@@ -924,7 +924,10 @@ function validateBrowserForm()
             {
                 DLRConsole.DebugLevel = oldDL;
             }
-            if (DLRConsole.IsCallerNoDebug) return true;
+            if (DLRConsole.IsCallerNoDebug)
+            {
+                return true;
+            }
             return true;
         }
 
