@@ -2035,7 +2035,8 @@ namespace AltAIMLbot
                         return new AltAIMLbot.AIMLTagHandlers.sr(this, user, query, request, result, node);
                         
                     case "srai":
-                        return new AltAIMLbot.AIMLTagHandlers.srai(this, user, query, request, result, node);
+                        //return new AltAIMLbot.AIMLTagHandlers.srai(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.srai_prev(this, user, query, request, result, node);
                         
                     case "star":
                         return new AltAIMLbot.AIMLTagHandlers.star(this, user, query, request, result, node);

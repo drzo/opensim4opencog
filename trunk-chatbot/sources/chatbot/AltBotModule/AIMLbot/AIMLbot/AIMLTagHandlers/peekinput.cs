@@ -47,6 +47,10 @@ namespace AltAIMLbot.AIMLTagHandlers
                 {
                     return bot.chatInputQueue.Peek();
                 }
+                else
+                {
+                    return bot.lastBehaviorChatInput;
+                }
 
             }
             return String.Empty;

@@ -3390,7 +3390,7 @@ namespace AltAIMLbot
                 result = RunStatus.Success;
 
             }
-            yield return RunStatus.Running;
+           // yield return RunStatus.Running;
             try
             {
                 bot.evalTemplateNodeInnerXml(myNode, RequestKind.BehaviourProcess);
