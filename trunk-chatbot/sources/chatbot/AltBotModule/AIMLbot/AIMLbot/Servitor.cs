@@ -947,17 +947,16 @@ namespace AltAIMLbot
             }
             if (Request.IsToplevelRealtimeChat(isToplevel, requestType))
             {
-                if (!respondingDoneFromQueue)
+                if (!respondingDoneFromQueue || sayItPhysically)
                 {
-                    curBot.BotAsUser.JustSaid = answer;
+                    if (isToplevel)
+                    {
+                        curBot.BotAsUser.JustSaid = answer;
+                    }
                 }
                 if (asumeUserHeard || sayItPhysically)
                 {
-                    if (!isToplevel)
-                    {
-
-                    }
-                    else
+                    if (isToplevel)
                     {
                         curUser.That = answer;
                         curUser.Predicates.updateSetting("that", answer);

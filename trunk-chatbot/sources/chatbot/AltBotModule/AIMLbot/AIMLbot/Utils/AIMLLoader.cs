@@ -62,8 +62,7 @@ namespace AltAIMLbot.Utils
         /// </summary>
         public bool RawUserInput;
 
-        protected Request Request;
-        public AIMLLoader SLoader = null;
+        protected Request request;
         private LoaderOptions _loadOpts1;
 
         /// <summary>
@@ -88,8 +87,8 @@ namespace AltAIMLbot.Utils
         public AIMLLoader(AltBot bot, Request request)
         {
             this.bot = bot;
-            Request = request;
-            Request.Loader = this;
+            this.request = request;
+            this.request.Loader = this;
         }
 
         public EasyLogger Logger
@@ -101,9 +100,9 @@ namespace AltAIMLbot.Utils
         {
             get
             {
-                if (_loadOpts1 == null && Request != null)
+                if (_loadOpts1 == null && request != null)
                 {
-                    _loadOpts1 = Request.LoadOptions;
+                    _loadOpts1 = request.LoadOptions;
                 }
                 return _loadOpts1;
             }
@@ -178,9 +177,7 @@ namespace AltAIMLbot.Utils
         {
             long total = 0;
             path = ResolveToURI(path);
-            AltBot RProcessor = loadOpts.RProcessor;
             //RProcessor.ReloadHooks.Add(() => loadAIMLFile0(path, loadOpts, forceReload));
-            Request request = loadOpts.TheRequest;
             loadOpts = EnsureOptions(loadOpts, request, path);
             //request.TargetBot.ReloadHooks.Add(() => request.Loader.loadAIMLFile0(path, loadOpts, forceReload));
 
@@ -252,7 +249,6 @@ namespace AltAIMLbot.Utils
                     return loadAIMLURI(filename);
                 }
                 string path = filename;
-                var request = Request;
                 long total = 0;
                 AutoClosingStream tr = HostSystem.OpenRead(path);
                 try
@@ -284,9 +280,7 @@ namespace AltAIMLbot.Utils
         {
             long total = 0;
             path = ResolveToURI(path);
-            AltBot RProcessor = loadOpts.RProcessor;
             //RProcessor.ReloadHooks.Add(() => loadAIMLFile0(path, loadOpts));
-            Request request = loadOpts.TheRequest;
             loadOpts = EnsureOptions(loadOpts, request, path);
             //request.TargetBot.ReloadHooks.Add(() => request.Loader.loadAIMLFile0(path, loadOpts));
 
@@ -316,9 +310,9 @@ namespace AltAIMLbot.Utils
                 }
                 else
                     writeToLog("Processing AIML file(1): " + path + " from " + master);
-                if (!RProcessor.LoadFromStreamLoader)
+                if (!bot.LoadFromStreamLoader)
                 {
-                    RProcessor.servitor.loadAIMLFromFile(path);
+                    bot.servitor.loadAIMLFromFile(path);
                 }
                 else
                 {
@@ -1147,7 +1141,6 @@ namespace AltAIMLbot.Utils
         public long loadAIMLDir0(string path)
         {
             long total = 0;
-            AltBot RProcessor = loadOpts.RProcessor;
             path = ResolveToURI(path);
 
             Request request = loadOpts.TheRequest;
@@ -1299,7 +1292,6 @@ namespace AltAIMLbot.Utils
 
         public long loadAIMLURI0(string path0)
         {
-            AltBot RProcessor = loadOpts.RProcessor;
             string path = path0;
             loadOpts.Loading0 = path;
             string pathIn = path;
@@ -1339,7 +1331,7 @@ namespace AltAIMLbot.Utils
                     string pop = null;
                     try
                     {
-                        pop = RProcessor.PushSearchPath(hostSystemGetBaseDir);
+                        pop = bot.PushSearchPath(hostSystemGetBaseDir);
                         request.LoadOptions = loadOpts;
                         //total += loadAIMLFile0(path, loadOpts, true);
                         total += loadAIMLFile(currentPath);
@@ -1347,7 +1339,7 @@ namespace AltAIMLbot.Utils
                     finally
                     {
                         request.LoadOptions = savedOpt;
-                        RProcessor.PopSearchPath(pop);
+                        bot.PopSearchPath(pop);
                     }
                     return total;
                 }
@@ -1387,9 +1379,8 @@ namespace AltAIMLbot.Utils
                     string pop = null;
                     try
                     {
-                        Request request = loadOpts.TheRequest;
                         LoaderOptions savedOpt = request.LoadOptions;
-                        pop = RProcessor.PushSearchPath(HostSystem.GetBaseDir(dir));
+                        pop = bot.PushSearchPath(HostSystem.GetBaseDir(dir));
                         if (pathnames != null && pathnames.Length > 0)
                             foreach (string pathname in pathnames)
                             {
@@ -1408,13 +1399,13 @@ namespace AltAIMLbot.Utils
                     }
                     finally
                     {
-                        RProcessor.PopSearchPath(pop);
+                        bot.PopSearchPath(pop);
                     }
                 }
 
                 String nf = "ERROR: XmlTextReader of AIML files (" + path + ")";
                 var nfe = new FileNotFoundException(nf);
-                RProcessor.writeToLog(nfe);
+                bot.writeToLog(nfe);
                 writeToLog(nf);
                 throw nfe;
             }
@@ -1424,7 +1415,7 @@ namespace AltAIMLbot.Utils
             }
             catch (Exception e)
             {
-                RProcessor.writeToLog(e);
+                bot.writeToLog(e);
                 writeToLog("ERROR! " + e);
                 throw e;
             }
@@ -1438,8 +1429,6 @@ namespace AltAIMLbot.Utils
         /// <param name="loadOpts"> Where the XML document originated </param>
         public void loadAIMLString(string docString)
         {
-            AltBot RProcessor = loadOpts.RProcessor;
-            Request request = loadOpts.TheRequest;
             //            RProcessor0.ReloadHooks.Add(() => loadAIMLFile0(path, loadOpts));
             string path = request.Filename;
             loadOpts = EnsureOptions(loadOpts, request, path);
@@ -1472,8 +1461,6 @@ namespace AltAIMLbot.Utils
         public long loadAIMLStream(Stream input0)
         {
             long total = 0;
-            AltBot RProcessor = loadOpts.RProcessor;
-            Request request = loadOpts.TheRequest;
             DateTime oneMinuteFromNow = AltBot.Now + TimeSpan.FromMinutes(1);
             if (request.TimesOutAt < oneMinuteFromNow)
             {
@@ -1514,7 +1501,7 @@ namespace AltAIMLbot.Utils
                 finally
                 {
                     //extDB.SaveIndex();
-                    GraphMaster extDB0 = bot.GetGraph(loadOpts.graphName);
+                    GraphMaster extDB0 = this.bot.GetGraph(loadOpts.graphName);
                     if (extDB0 != null)
                     {
                         extDB0.Close();
@@ -1607,8 +1594,6 @@ namespace AltAIMLbot.Utils
         /// <param name="loadOpts"> Where the XML document originated </param>
         public void loadAIMLStreamFallback(Stream input0)
         {
-            AltBot RProcessor = loadOpts.RProcessor;
-            Request request = loadOpts.TheRequest;
             string path = request.Filename;
             loadOpts = EnsureOptions(loadOpts, request, path);
             path = ResolveToURI(path);
@@ -1641,7 +1626,7 @@ namespace AltAIMLbot.Utils
                     doc.LoadXml(ssss);
                     if (doc.DocumentElement == null)
                     {
-                        RProcessor.writeToLog("ERROR: No Document at " + namefile);
+                        bot.writeToLog("ERROR: No Document at " + namefile);
                         //        continue;
                     }
                     loadAIMLNode(doc.DocumentElement, loadOpts, request);
@@ -1671,7 +1656,6 @@ namespace AltAIMLbot.Utils
 
         private LoaderOptions EnsureOptions(LoaderOptions loadOpts, Request request1, string path)
         {
-            Request request = Request;
             if (request1 == null)
             {
                 writeToLog("ERROR! Ensuring Request=" + request1);
@@ -1701,12 +1685,11 @@ namespace AltAIMLbot.Utils
             long total = 0;
             query = query ?? request.CurrentQuery;
             //Result result = query.Result;
-            AltBot RProcessor = request.TargetBot;
-            AIMLLoader prev = RProcessor.Loader;
+            AIMLLoader prev = bot.Loader;
             GraphMaster loadOptsPrevGraph = loadOpts.CtxGraph;
             try
             {
-                RProcessor.Loader = SLoader;
+                bot.Loader = this;
                 // Get a list of the nodes that are children of the <aiml> tag
                 // these nodes should only be either <topic> or <category>
                 // the <topic> nodes will contain more <category> nodes
@@ -1728,7 +1711,7 @@ namespace AltAIMLbot.Utils
             }
             finally
             {
-                RProcessor.Loader = prev;
+                bot.Loader = prev;
             }
             return total;
         }
@@ -1777,11 +1760,10 @@ namespace AltAIMLbot.Utils
                 return 0;
             }
             long total = 0;
-            AltBot RProcessor = loadOpts.RProcessor;
-            AIMLLoader prev = RProcessor.Loader;
+            AIMLLoader prev = bot.Loader;
             try
             {
-                RProcessor.Loader = SLoader;
+                bot.Loader = this;
                 // Get a list of the nodes that are children of the <aiml> tag
                 // these nodes should only be either <topic> or <category>
                 // the <topic> nodes will contain more <category> nodes
@@ -1843,7 +1825,7 @@ namespace AltAIMLbot.Utils
                 }
                 else if (currentNodeName == "template")
                 {
-                    loadOpts.RProcessor.ImmediateAiml(currentNode, request, SLoader,
+                    bot.ImmediateAiml(currentNode, request, this,
                                                       request.RequestType | RequestKind.TemplateExpander |
                                                       RequestKind.AIMLLoader);
                     total += 1;
@@ -1862,7 +1844,7 @@ namespace AltAIMLbot.Utils
                                                                request.RequestType | RequestKind.TemplateExpander |
                                                                RequestKind.AIMLLoader);
                         res.IsToplevelRequest = true;
-                        loadOpts.RProcessor.ImmediateAiml(currentNode, res, SLoader,
+                        loadOpts.RProcessor.ImmediateAiml(currentNode, res, this,
                                                           request.RequestType | RequestKind.TemplateExpander |
                                                           RequestKind.AIMLLoader);
                         total += 1;
@@ -1870,7 +1852,7 @@ namespace AltAIMLbot.Utils
                     else
                     {
                         if (request.NoImmediate) return 0;
-                        loadOpts.RProcessor.ImmediateAiml(currentNode, request, SLoader,
+                        bot.ImmediateAiml(currentNode, request, this,
                                                           request.RequestType | RequestKind.TemplateExpander |
                                                           RequestKind.AIMLLoader);
                         total += 1;
@@ -1879,7 +1861,7 @@ namespace AltAIMLbot.Utils
             }
             finally
             {
-                RProcessor.Loader = prev;
+                bot.Loader = prev;
             }
             return total;
         }
@@ -2655,7 +2637,6 @@ namespace AltAIMLbot.Utils
         private Unifiable generateCPath_OLD(Unifiable pattern, Unifiable that, Unifiable flag, Unifiable topicName,
                                         bool isUserInput, Func<Unifiable, bool, Unifiable> innerFormater)
         {
-            AltBot RProcessor = bot;
             // to hold the normalized path to be entered into the graphmaster
             Unifiable normalizedPath = Unifiable.CreateAppendable();
             string normalizedPattern; // = Unifiable.Empty;
@@ -2675,7 +2656,7 @@ namespace AltAIMLbot.Utils
             }
 
             bool thatContainedAnd = that.ToUpper().Contains(" AND ");
-            if ((RProcessor.TrustAIML) & (!isUserInput || UseRawUserInput))
+            if ((bot.TrustAIML) & (!isUserInput || UseRawUserInput))
             {
                 normalizedPattern = Trim(pattern);
                 // clip only one off
@@ -2767,7 +2748,7 @@ namespace AltAIMLbot.Utils
                 if (addTagStart != null) normalizedPath.Append(addTagStart);
                 normalizedPath.Append(Unifiable.Create(normalizedPattern));
                 if (addTagEnd != null) normalizedPath.Append(addTagEnd);
-                if (RProcessor.UseInlineThat)
+                if (bot.UseInlineThat)
                 {
                     normalizedPath.Append(Unifiable.TagThat);
                     if (addTagStart != null) normalizedPath.Append(addTagStart);
@@ -2812,9 +2793,8 @@ namespace AltAIMLbot.Utils
             input = input.Replace("*", " * ").Replace("  ", " ");
             input = Trim(input);
             // objects for normalization of the input
-            AltBot RProcessor = bot;
-            var substitutor = new ApplySubstitutions(RProcessor);
-            var stripper = new StripIllegalCharacters(RProcessor);
+            var substitutor = new ApplySubstitutions(bot);
+            var stripper = new StripIllegalCharacters(bot);
 
             Unifiable substitutedInput = Trim(substitutor.TransformU(" " + input + " "));
             bool cand = ToUpper(input).Contains(" AND ");
