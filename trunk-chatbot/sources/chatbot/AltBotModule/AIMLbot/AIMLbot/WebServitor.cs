@@ -488,8 +488,9 @@ namespace AltAIMLbot
                       {
 
                         WebLinksWriter.tl_AsHTML = false;
-                        AIMLLoaderU loader = new AIMLLoaderU(ourServitor.curBot);
-                        string categoryPath = loader.SLoader.generatePath(graphName, pattern, that, topic, state1, state2, false);
+
+                        AIMLLoader loader = ourServitor.curBot.GetBotRequest("WebServitor graphmasterc").Loader;
+                        string categoryPath = loader.generatePath(graphName, pattern, that, topic, state1, state2, false);
                         Console.WriteLine("WEBPOST CREATE:{0} --> {1}:{2}", categoryPath, template, vfilename);
                         string gn = ourServitor.curBot.Graphmaster.ScriptingName;
                          

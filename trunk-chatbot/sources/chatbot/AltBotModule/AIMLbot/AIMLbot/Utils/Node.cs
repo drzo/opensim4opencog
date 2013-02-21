@@ -12,6 +12,7 @@ using AltAIMLParser;
 using AltAIMLbot.Normalize;
 using LAIR.ResourceAPIs.WordNet;
 using LAIR.Collections.Generic;
+using LogicalParticleFilter1;
 using MushDLR223.Utilities;
 using AltAIMLbot.Utils;
 using RaptorDB;
@@ -2103,7 +2104,15 @@ namespace AltAIMLbot.Utils
             //return (filename == lf);
             if (string.IsNullOrEmpty(lf)) lf = null;
             Console.WriteLine("\nwasLoaded:{0} {1}<=>{2}", filename, reftime, lf ?? "Unknown");
-            return (reftime == lf);
+            if (!(reftime == lf))
+            {
+                return false;
+            }
+            if (GlobalSharedSettings.IsDougsMachine)
+            {
+                return false;
+            }
+            return true;
         }
 
         private bool IsMt(string filename)

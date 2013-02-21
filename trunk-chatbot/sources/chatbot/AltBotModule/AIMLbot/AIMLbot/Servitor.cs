@@ -928,6 +928,8 @@ namespace AltAIMLbot
                     curUser.JustSaid = input;
                 }
                 curUser.Predicates.updateSetting("lastinput", input);
+                string confirm0 = curUser.Predicates.grabSetting("lastinput");
+                string confirm = curUser.JustSaid;
                 prologEngine.postListPredToMt("lastinput", input, "lastinputMt");
             }            
         }
@@ -949,7 +951,7 @@ namespace AltAIMLbot
                 {
                     curBot.BotAsUser.JustSaid = answer;
                 }
-                if (asumeUserHeard)
+                if (asumeUserHeard || sayItPhysically)
                 {
                     if (!isToplevel)
                     {

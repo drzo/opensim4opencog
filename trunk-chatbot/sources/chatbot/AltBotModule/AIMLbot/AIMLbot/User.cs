@@ -1029,10 +1029,15 @@ namespace AltAIMLbot
             }
             set
             {
-                if (CheckIsBadEnglish(value)) return;
+                if (CheckIsBadEnglish(value))
+                {
+                    return;
+                }
                 JustSaid0 = value;
             }
         }
+
+        public string lastSetJustSaid;
         public Unifiable JustSaid0
         {
             get
@@ -1053,11 +1058,15 @@ namespace AltAIMLbot
                     }
                     // infinate loop here -> return LastReponder.ResponderJustSaid;
                 }
-                return Unifiable.EnglishNothing;
+                return lastSetJustSaid ?? Unifiable.EnglishNothing;
             }
             set
             {
-                if (CheckIsBadEnglish(value)) return;
+                if (CheckIsBadEnglish(value))
+                {
+                    return;
+                }
+                if (value != null) lastSetJustSaid = value;
                 var _JustSaid = this.JustSaid;
                 // the (_JustSaid != value) holds back the infinate looping                
                 if (_JustSaid == null || TextPatternUtils.SymTrim(_JustSaid).ToUpper() != StaticAIMLUtils.SymTrim(value).ToUpper())
@@ -1071,7 +1080,7 @@ namespace AltAIMLbot
                         Predicates.addSetting("lastinput", value);                        
                         if (LastResponder != null && ThatIsStoredBetweenUsers)
                         {
-                            LastResponder.That = value;
+                            LastResponder.Predicates["that"] = value;
                         }
                     }
                 }
@@ -1589,7 +1598,7 @@ namespace AltAIMLbot
                 {
                     bot.GlobalSettings = SettingsDictionaryReal.ToSettingsDictionary(Predicates);
                 }
-                request.Loader.loadAIMLURI(userdir, options.Value);
+                request.Loader.loadAIMLURI(userdir);
             }
             finally
             {

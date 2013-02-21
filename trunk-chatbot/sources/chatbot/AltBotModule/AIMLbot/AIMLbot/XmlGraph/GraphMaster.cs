@@ -12,6 +12,7 @@ using AIMLbot;
 using AltAIMLbot;
 using AltAIMLbot.Utils;
 using AltAIMLParser;
+using LogicalParticleFilter1;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
@@ -572,7 +573,7 @@ namespace AltAIMLbot.Utils
                                    XmlNode categoryNode, XmlNode templateNode, Unifiable guard, Unifiable topicInfo, Unifiable thatInfo,
                                    List<ConversationCondition> additionalRules, out bool wouldBeRemoval, LoaderOptions loaderOptions)
         {
-            throw new NullReferenceException("in addCategoryTag0 with " + generatedPath);
+         ///   throw new NullReferenceException("in addCategoryTag0 with " + generatedPath);
             if (SilentTagsInPutParallel && !StaticAIMLUtils.IsEmptyTemplate(templateNode) && StaticAIMLUtils.IsSilentTag(templateNode))
             {
                 GraphMaster parallel1 = makeParallel();

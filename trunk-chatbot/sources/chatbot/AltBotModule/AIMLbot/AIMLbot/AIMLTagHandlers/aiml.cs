@@ -41,7 +41,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             if (templateNode.Name.ToLower() == "aiml")
             {
                 // Process each of these child "settings"? nodes
-                request.Loader.loadAIMLNode(templateNode, loaderOptions, request);
+                request.Loader.loadAIMLNode(templateNode);
                 return ProcessSucceed();
             }
             return Unifiable.Empty;

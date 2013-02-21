@@ -1368,7 +1368,7 @@ namespace AltAIMLbot.Variables
             }
             if (lower == "learn" || lower == "srai" || lower == "aiml" || lower == "that" || lower == "category" || lower == "topic")
             {
-                request.Loader.loadAIMLNode(myNode, request.LoadOptions, request);
+                request.Loader.loadAIMLNode(myNode);
                 return;
             }
             if (myNode.NodeType == XmlNodeType.Element && atcount == 0)
@@ -1814,8 +1814,8 @@ namespace AltAIMLbot.Variables
             {
                 if (LoopingOn0(name, type + "1"))
                 {
-                    if (ScriptManager.GettingDeeper(NameSpace + "." + name, type + "-aiml",
-                                                   (new System.Diagnostics.StackTrace(true)).FrameCount))
+                    int fc = (new System.Diagnostics.StackTrace(true)).FrameCount;
+                    if (ScriptManager.GettingDeeper(NameSpace + "." + name, type + "-aiml", fc))
                     {
                         return true;
                     }
@@ -1993,6 +1993,9 @@ namespace AltAIMLbot.Variables
 
         internal string TransformName(string name)
         {
+            if (name.Contains(","))
+            {
+            }
             return name;
         }
 
@@ -2008,6 +2011,10 @@ namespace AltAIMLbot.Variables
 
         public bool removeSettingReal(string name)
         {
+            if (name.Contains(","))
+            {
+                return SplitAndDoB(',', name, removeSettingReal);
+            }
             lock (orderedKeyLock)
             {
                 if (SuspendUpdates) return true;
@@ -2029,6 +2036,10 @@ namespace AltAIMLbot.Variables
 
         public string TransformKey(string name)
         {
+            if (name.Contains(","))
+            {
+                return SplitAndDo(',', name, TransformKey);
+            }
             if (TrimKeys) name = name.Trim();
             if (name == "inloop")
             {
@@ -2051,6 +2062,40 @@ namespace AltAIMLbot.Variables
             }
             return name;
             //return MakeCaseInsensitive.TransformInput(name);
+        }
+
+        public static string SplitAndDo(char c, string name, Func<string, string> transformKey)
+        {
+            string res = "";
+            bool needComma = false;
+            foreach (var n in name.Split(c))
+            {
+                if (needComma) res += ",";
+                res += transformKey(n);
+            }
+            return res;
+        }
+        public static bool SplitAndDoB(char c, string name, Func<string, bool> transformKey)
+        {
+            bool res = false;
+            foreach (var n in name.Split(c))
+            {
+                if (transformKey(n)) res = true;
+            }
+            return res;
+        }
+        public static T SplitAndDoNotNull<T>(char c, string name, Func<string, T> transformKey)
+        {
+            bool res = false;
+            T lastT = default(T);
+            foreach (var n in name.Split(c))
+            {
+                lastT = transformKey(n);
+                if (Unifiable.IsMissing(lastT)) continue;
+                if (Unifiable.IsNull(lastT)) continue;
+                break;
+            }
+            return lastT;
         }
 
         /// <summary>
@@ -2203,6 +2248,7 @@ namespace AltAIMLbot.Variables
         /// <returns>the value of the setting</returns>
         public string grabSetting(string name, bool useBlackboad)
         {
+            if (name.Contains(",")) return SplitAndDoNotNull(',', name, (s) => grabSetting0(s, useBlackboad));
             return grabSetting0(name, useBlackboad);
         }
         /// <summary>
@@ -2212,6 +2258,7 @@ namespace AltAIMLbot.Variables
         /// <returns>the value of the setting</returns>
         public DataUnifiable grabSetting(string name)
         {
+            if (name.Contains(",")) return SplitAndDoNotNull(',', name, grabSetting);
             try
             {
                 name = TransformName(name);
@@ -2516,6 +2563,7 @@ namespace AltAIMLbot.Variables
         /// <returns>Existential truth value</returns>
         public bool containsLocalCalled(string name)
         {
+            if (name.Contains(",")) return SplitAndDoB(',', name, containsLocalCalled);
             if (containsLocalCalled0(name)) return true;
             foreach (var setname in GetSettingsAliases(name))
             {
@@ -2547,6 +2595,7 @@ namespace AltAIMLbot.Variables
 
         public bool containsSettingCalled(string name)
         {
+            if (name.Contains(",")) return SplitAndDoB(',', name, containsSettingCalled);
             if (containsLocalCalled(name)) return true;
             foreach (ISettingsDictionary dictionary in Overides)
             {

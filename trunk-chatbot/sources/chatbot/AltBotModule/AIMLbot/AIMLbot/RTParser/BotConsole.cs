@@ -391,7 +391,7 @@ namespace AltAIMLbot
             // myBot.AddAiml(evidenceCode);
             User myUser = myBot.LastUser;
             var myUsersname = myUser.UserName;
-            Request request = myUser.CreateRequest("current user toplevel", Unifiable.EnglishNothing, true, RequestKind.EventProcessor);
+            Request request = myBot.GetBotRequest("current toplevel");
             myUser.LastRequest = request;
             myBot.BotDirective(myUser, request, "@help", writeLine);
             writeLine("-----------------------------------------------------------------");
@@ -1010,14 +1010,14 @@ namespace AltAIMLbot
                     files = args;
                 }
                 GraphMaster G = robot.GetGraph(graphname, myUser.StartGraph);
-                AIMLLoaderU loader = robot.GetLoader(request);
+                AIMLLoader loader = robot.GetLoader(request);
                 LoaderOptions reqLoadOptionsValue = request.LoadOptions.Value;
                 var prev = request.Graph;
                 try
                 {
                     request.Graph = G;
                     reqLoadOptionsValue.CtxGraph = G;
-                    loader.loadAIMLURI(files, reqLoadOptionsValue);
+                    loader.loadAIMLURI(files);
                     // maybe request.TargetBot.ReloadHooks.Add(() => request.Loader.loadAIMLURI(args, reqLoadOptionsValue));
                     console("Done with " + files);
                 }

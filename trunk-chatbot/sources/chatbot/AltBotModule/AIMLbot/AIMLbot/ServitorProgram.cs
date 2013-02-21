@@ -3,6 +3,7 @@ using System.IO;
 using AIMLbot;
 using AltAIMLParser;
 using AltAIMLbot;
+using AltAIMLbot.Utils;
 using LAIR.ResourceAPIs.WordNet;
 using MushDLR223.ScriptEngines;
 

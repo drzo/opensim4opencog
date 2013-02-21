@@ -35,7 +35,6 @@ using TagHandler=AltAIMLbot.Utils.TagHandler;
 using verbatum=AltAIMLbot.AIMLTagHandlers.verbatum;
 using LogicalParticleFilter1;
 using Action=System.Action;
-using AIMLLoader = AltAIMLbot.Utils.AIMLLoaderS;
 
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
@@ -849,9 +848,16 @@ namespace AltAIMLbot
         /// </summary>
         public void loadAIMLFromFiles(string dirPath)
         {
-            var loader = new AIMLLoaderU(this, GetBotRequest("loadAIMLFromFiles: " + dirPath));
-            loader.LoaderRequest00.Graph = this.Graphmaster;
-            loader.SLoader.loadAIMLURI(dirPath);
+            loadAIMLFromFiles(dirPath, Graphmaster.ScriptingName);
+        }
+        /// <summary>
+        /// Loads AIML from .aiml at dirPath files into the graphmaster "brain" of the bot
+        /// </summary>
+        public void loadAIMLFromFiles(string dirPath, string graphName)
+        {
+            var loader = GetLoader(GetBotRequest("loadAIMLFromFiles: " + dirPath + " into " + graphName));
+            loader.GraphName = graphName;
+            loader.loadAIMLURI(dirPath);
         }
 
         public void loadAIMLFromFile(string filePath)
@@ -867,9 +873,9 @@ namespace AltAIMLbot
         public void loadAIMLFromXML(XmlNode newAIML, string filename)
         {
             Console.WriteLine("Check:loadAIMLFromXML(0)");
-            var loader = new AIMLLoaderU(this, GetBotRequest("loadAIMLFromFiles: " + filename));
-            loader.LoaderRequest00.Graph = this.Graphmaster;
-            loader.SLoader.loadAIMLFromXML(newAIML, filename);
+            var loader = GetLoader(GetBotRequest("loadAIMLFromFiles: " + filename));
+            loader.GraphName = this.Graphmaster.ScriptingName;
+            loader.loadAIMLFromXML(newAIML, filename);
         }
 
         public void logText(string msg)
@@ -1419,7 +1425,7 @@ namespace AltAIMLbot
                     myBehaviors.activationTime("lastchatinput", RunStatus.Success);
 
                     // Normalize the input
-                    AIMLLoaderS loader = new AIMLLoaderS(this);
+                    AIMLLoader loader = request.Loader;
                     SplitIntoSentences splitter = new SplitIntoSentences(null, request.rawInput);
                     string[] rawSentences = splitter.Transform();
 
@@ -1659,8 +1665,9 @@ namespace AltAIMLbot
                     {
                         foreach (var poststates in usergetPostStates)
                         {
-                            string path = loader.generatePath(graphName, sentence, that, topic, prestates, poststates,
-                                                              true);
+                            string path = loader.generateCPath(graphName, sentence, that, null /*flag*/, topic,
+                                                               prestates, poststates,
+                                                               true, null);
                             if (!normalizedPaths.Contains(path))
                             {
                                 normalizedPaths.Add(path);
@@ -2842,7 +2849,9 @@ The AltAIMLbot program.
                                                            ? MakeSubstsDictionary(key)
                                                            : MakeSettingsDictionary(named));
                         User user = ExemplarUser ?? BotAsUser;
-                        Request r = //user.CurrentRequest ??
+
+                        Request r = GetBotRequest("loadDictionary '" + named + "' from '" + type + "' ");
+                        r = r ??
                             user.CreateRequest("@echo <!-- loadDictionary '" + named + "' from '" + type + "' -->",
                                                BotAsUser, Unifiable.EnglishNothing, null, request, false,
                                                RequestKind.AIMLLoader);

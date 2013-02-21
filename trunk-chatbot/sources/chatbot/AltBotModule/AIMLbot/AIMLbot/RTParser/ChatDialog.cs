@@ -767,7 +767,7 @@ namespace AltAIMLbot
                     }
                     List<string> paths = gatherPaths(G.ScriptingName, user, sentence,
                                                      user.getPreStates(), user.getPostStates(),
-                                                     request.LoaderA);
+                                                     request.Loader);
                     SortPaths(paths, G.getPathScore);
                     foreach (var path in paths)
                     {
@@ -948,19 +948,19 @@ namespace AltAIMLbot
         }
 
         public delegate void InputParser(Request request, IEnumerable<Unifiable> rawSentences);
-
+        /*
         private string swapPerson(string inputString)
         {
             if (Loader == null)
             {
-                Loader = new AIMLLoaderU(this, GetBotRequest("swapPerson " + inputString));
+                Loader = new AIMLLoader(this, GetBotRequest("swapPerson " + inputString));
             }
             string temp = Loader.NormalizeU(inputString, true);
             //temp = ApplySubstitutions.Substitute(this, this.PersonSubstitutions, temp);
             temp = ApplySubstitutions.Substitute(Person2Substitutions, temp);
             return temp;
         }
-
+        */
         static public Unifiable CleanupCyc(string text)
         {
             if (text == null) return null;
@@ -1244,7 +1244,7 @@ namespace AltAIMLbot
         }
 
         public Result ImmediateAiml(XmlNode templateNode, Request request0,
-                                            AIMLLoaderU loader, RequestKind requestKind)
+                                            AIMLLoader loader, RequestKind requestKind)
         {
             Result masterResult = request0.CreateResult(request0);
             bool prev = request0.GraphsAcceptingUserInput;

@@ -113,11 +113,48 @@ namespace AltAIMLbot.Utils
             bool indexPosition;
             string indexVal;
             TagName = node.LocalName;
-            Pattern = AIMLLoaderU.TryGetPrecondionThat(TagName, node,
+            Pattern = TryGetPrecondionThat(TagName, node,
                                                       out isRequired, out indexVal, out indexPosition);
             IsPrecond = isRequired;
             IndexPosition = indexPosition;
             IndexVal = indexVal;
+        }
+
+        public static string TryGetPrecondionThat(string tagName, XmlNode extractedXML, out bool isRequired, out string indexVal, out bool indexPosition1)
+        {
+            isRequired = extractedXML != null && extractedXML.LocalName == tagName;
+            indexVal = StaticAIMLUtils.GetAttribValue(extractedXML, "index", "1,1");
+            indexPosition1 = indexVal == "1" || indexVal == "1,1" || indexVal == "1,*";
+            if (!isRequired)
+            {
+                return null;
+            }
+            string patternTxt = StaticAIMLUtils.VisibleRendering(extractedXML.ChildNodes, StaticAIMLUtils.PatternSideRendering);
+            if (patternTxt == "")
+            {
+                patternTxt = StaticAIMLUtils.GetAttribValue(extractedXML, "value," + tagName + ",match,name", null);
+            }
+            isRequired = false;
+            foreach (XmlNode childs in extractedXML.ChildNodes)
+            {
+                if (childs.NodeType != XmlNodeType.Comment)
+                {
+                    isRequired = true;
+                    break;
+                }
+            }
+            if (!isRequired)
+            {
+                if (patternTxt == null)
+                {
+                    //writeToLog("extractThat1: '" + patternTxt + "' from " + extractedXML.OuterXml);
+                }
+                else
+                {
+                    isRequired = true;
+                }
+            }
+            return patternTxt;
         }
 
         /// <summary>

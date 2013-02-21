@@ -1,3 +1,4 @@
+#if false
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -29,11 +30,10 @@ namespace AltAIMLbot.Utils
     /// A utility class for loading AIML files from disk into the graphmaster structure that 
     /// forms an AIML RProcessor's "brain"
     /// </summary>
-    public class AIMLLoaderU : XmlNodeEvaluatorImpl
+    public partial class AIMLLoader : XmlNodeEvaluatorImpl
     {
         #region Attributes
 
-        public static bool SeekOutAndRepair = false;
         public Request LoaderRequest00;
 
         /// <summary>
@@ -78,24 +78,25 @@ namespace AltAIMLbot.Utils
 
         #endregion
 
-        public AIMLLoaderS SLoader = null;
+        public AIMLLoader SLoader = null;
+        /*
         public AIMLLoaderU(AltBot bot)
         {
-            SLoader = new AIMLLoaderS(bot);
+            SLoader = new AIMLLoader(bot);
         }
-
+        */
         /// <summary>
         /// Ctor
         /// </summary>
         /// <param name="bot">The bot whose brain is being processed</param>
-        public AIMLLoaderU(AltBot bot, Request request)
+        /*public AIMLLoaderU_unused(AltBot bot, Request request)
         {
             this.LoaderRequest00 = request;
-            SLoader = new AIMLLoaderS(bot);
+            SLoader = new AIMLLoader(bot, request);
             SLoader.loadOpts = request.LoadOptions;
             //XmlNodeEvaluators.Add(this);
         }
-
+        */
         #region Methods
 
         /// <summary>
@@ -112,6 +113,7 @@ namespace AltAIMLbot.Utils
         /// <param name="path"></param>                
         public long loadAIMLDir(string path, LoaderOptions loadOpts)
         {
+            this.SLoader.bot.RaiseError("Wrong path in code");
             long total = 0;
 
             int before = loadOpts.CtxGraph.Size;
@@ -195,6 +197,7 @@ namespace AltAIMLbot.Utils
 
         private string ResolveToURI(string pathIn, LoaderOptions loadOpts)
         {
+            this.SLoader.bot.RaiseError("Wrong path in code");
             string path = ResolveToURI0(pathIn, loadOpts);
             if (path!=pathIn)
             {
@@ -232,22 +235,9 @@ namespace AltAIMLbot.Utils
             return relPath;
         }
 
-        private static string GetBaseDirectory(LoaderOptions loadOpts)
-        {
-            string baseFile = loadOpts.CurrentlyLoadingFrom ?? loadOpts.CurrentFilename ?? LoaderOptions.MISSING_FILE;
-            if (baseFile == null)
-            {
-                baseFile = HostSystem.ToCanonicalDirectory(".");
-            }
-            if (baseFile.EndsWith("/") || baseFile.EndsWith("\\")) return HostSystem.ToCanonicalDirectory(baseFile);
-            if (HostSystem.FileExists(baseFile)) return HostSystem.ToCanonicalDirectory(new FileInfo(baseFile).DirectoryName);
-            if (HostSystem.DirExists(baseFile)) return HostSystem.ToCanonicalDirectory(baseFile);
-            string bd = HostSystem.ToCanonicalDirectory(HostSystem.GetBaseDir(baseFile));
-            return bd;
-        }
-
         private R LoaderOper<R>(Func<R> action, GraphMaster gm, LoaderOptions loadOpts)
         {
+            this.SLoader.bot.RaiseError("Wrong path in code");
             OutputDelegate prev = StaticAIMLUtils.userTraceRedir;
             try
             {
@@ -724,11 +714,11 @@ namespace AltAIMLbot.Utils
             query = query ?? request.CurrentQuery;
             //Result result = query.Result;
             AltBot RProcessor = request.TargetBot;
-            AIMLLoaderU prev = RProcessor.Loader;
+            var prev = RProcessor.Loader;
             GraphMaster loadOptsPrevGraph = loadOpts.CtxGraph;
             try
             {
-                RProcessor.Loader = this;
+                RProcessor.Loader = this.SLoader;
                 // Get a list of the nodes that are children of the <aiml> tag
                 // these nodes should only be either <topic> or <category>
                 // the <topic> nodes will contain more <category> nodes
@@ -800,10 +790,10 @@ namespace AltAIMLbot.Utils
             }
             long total = 0;
             AltBot RProcessor = loadOpts.RProcessor;
-            AIMLLoaderU prev = RProcessor.Loader;
+            var prev = RProcessor.Loader;
             try
             {
-                RProcessor.Loader = this;
+                RProcessor.Loader = this.SLoader;
                 // Get a list of the nodes that are children of the <aiml> tag
                 // these nodes should only be either <topic> or <category>
                 // the <topic> nodes will contain more <category> nodes
@@ -864,7 +854,7 @@ namespace AltAIMLbot.Utils
                 }
                 else if (currentNodeName == "template")
                 {
-                    loadOpts.RProcessor.ImmediateAiml(currentNode, request, this,
+                    loadOpts.RProcessor.ImmediateAiml(currentNode, request, this.SLoader,
                                                                request.RequestType | RequestKind.TemplateExpander |
                                                                RequestKind.AIMLLoader);
                     total += 1;
@@ -883,7 +873,7 @@ namespace AltAIMLbot.Utils
                                                                request.RequestType | RequestKind.TemplateExpander |
                                                                RequestKind.AIMLLoader);
                         res.IsToplevelRequest = true;
-                        loadOpts.RProcessor.ImmediateAiml(currentNode, res, this,
+                        loadOpts.RProcessor.ImmediateAiml(currentNode, res, this.SLoader,
                                                                request.RequestType | RequestKind.TemplateExpander |
                                                                RequestKind.AIMLLoader);
                         total += 1;
@@ -891,7 +881,7 @@ namespace AltAIMLbot.Utils
                     else
                     {
                         if (request.NoImmediate) return 0;
-                        loadOpts.RProcessor.ImmediateAiml(currentNode, request, this,
+                        loadOpts.RProcessor.ImmediateAiml(currentNode, request, this.SLoader,
                                                                request.RequestType | RequestKind.TemplateExpander |
                                                                RequestKind.AIMLLoader);
                         total += 1;
@@ -1450,11 +1440,6 @@ namespace AltAIMLbot.Utils
             return patternTxt;
         }
 
-        public override string ToString()
-        {
-            return "[AIMLLoader req='" + LoaderRequest00 + "' bot='" + LoaderRequest00.TargetBot.BotID + "']";
-            return base.ToString();
-        }
 
         public void writeToLog(string message, params object[] args)
         {
@@ -1567,6 +1552,7 @@ namespace AltAIMLbot.Utils
         public Unifiable generatePath(Unifiable pattern, Unifiable that, Unifiable flag, Unifiable topicName,
                                       bool isUserInput, Func<Unifiable, bool, Unifiable> innerFormater)
         {
+            this.RProcessorOld.RaiseError("Wrong generate path in code");
             if (isUserInput)
             {
                 
@@ -1601,7 +1587,7 @@ namespace AltAIMLbot.Utils
 
         private static string LastRepair(string normalizedPattern, bool isUserInput, bool UseRawUserInput)
         {
-            if (!AIMLLoaderU.SeekOutAndRepair) return normalizedPattern;
+            if (!SeekOutAndRepair) return normalizedPattern;
             bool hasStars = normalizedPattern.Contains("*") || normalizedPattern.Contains("_");
             if (!hasStars) return normalizedPattern;
             bool hasBrackets = normalizedPattern.Contains("<") || normalizedPattern.Contains(">");
@@ -1877,3 +1863,5 @@ namespace AltAIMLbot.Utils
         #endregion
     }
 }
+
+#endif

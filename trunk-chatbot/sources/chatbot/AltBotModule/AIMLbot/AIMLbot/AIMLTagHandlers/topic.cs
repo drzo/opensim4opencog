@@ -39,8 +39,10 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             if (templateNode.Name.ToLower() == "topic")
             {
+
                 // Process each of these child "settings"? nodes
-                return Succeed(Proc.Loader.processTopic(templateNode, templateNode.ParentNode, loaderOptions, loaderOptions.AdditionalPreconditions));
+                loaderOptions.Loader.processTopic(templateNode, loaderOptions.CurrentFilename);
+                return Succeed("loaded from " + loaderOptions.CurrentFilename);
             }
             return Succeed(UnifiableEmpty);
         }

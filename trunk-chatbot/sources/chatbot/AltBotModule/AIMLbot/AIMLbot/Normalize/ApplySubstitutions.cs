@@ -77,7 +77,7 @@ namespace AltAIMLbot.Normalize
             {
                 if (did++ > 200) break;
                 var grabSetting = dictionary.grabSetting(settingName);
-
+                if (grabSetting == null) continue;
                 string fromValue = settingName;
                 string toValue = grabSetting.ToString();
 

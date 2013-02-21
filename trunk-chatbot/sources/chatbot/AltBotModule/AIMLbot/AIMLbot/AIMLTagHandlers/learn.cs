@@ -173,7 +173,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                             {
                                 try
                                 {
-                                    long successes = request.Loader.loadAIMLNode(templateNode, loaderOptions, request);
+                                    long successes = request.Loader.loadAIMLNode(templateNode);
                                     return "" + successes;
                                 }
                                 finally
@@ -189,7 +189,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                             {
                                 path = path ?? innerXML;
                                 loaderOptions.Loading0 = path;
-                                long forms = request.Loader.loadAIMLURI(path, loaderOptions);
+                                long forms = request.Loader.loadAIMLURI(path);
                                 QueryHasSuceededN++;
                                 return "" + forms; // Succeed();
                             }

@@ -153,6 +153,7 @@ namespace AltAIMLbot
         public static readonly Unifiable INCOMPLETE = CreateSpecial("$INCOMPLETE", null);
         public static readonly int MaxCategories = 10000;
         public static readonly Unifiable MISSING = CreateSpecial("$MISSING", /*"OM"*/null);
+        public static readonly Unifiable UNSPECIFIED = STAR;//CreateSpecial("$MISSING", /*"OM"*/null);
         public static readonly bool MustBeFast = true;
         public static readonly bool NOCateIndex = true;
         public static readonly Unifiable NULL = CreateSpecial("$NULL", null);

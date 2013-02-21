@@ -485,7 +485,7 @@ namespace AltAIMLbot.Utils
             query = query ?? request.CurrentQuery;
             //Result result = query.Result;
             AltBot RProcessor = request.TargetBot;
-            AIMLLoaderU prev = RProcessor.Loader;
+            AIMLLoader prev = RProcessor.Loader;
             try
             {
                 // RProcessor.Loader = this;
@@ -835,7 +835,7 @@ namespace AltAIMLbot.Utils
 
         public static string PadStars(string pattern)
         {
-            if (!AIMLLoaderU.SeekOutAndRepair) return pattern;
+            if (!AIMLLoader.SeekOutAndRepair) return pattern;
             pattern = Trim(pattern);
             int pl = pattern.Length;
             if (pl == 0) return "~*";

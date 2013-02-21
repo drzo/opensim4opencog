@@ -94,14 +94,19 @@ namespace AltAIMLbot.Utils
         }
 
 
-        public LoaderOptions(Request impl, GraphMaster master)
+        public LoaderOptions(Request impl, string graphname, string thatname)
         {
-            TheRequest = (MasterRequest) impl ;
+            TheRequest = (MasterRequest)impl;
             _curently_loading = impl.Filename;
             DebugFiles = false;
             recurse = false;
             _currently_loadingfrom = impl.LoadingFrom;
-            _specified_Graph = master;
+            _specified_Graph = null;
+            graphName = graphname;
+            if (thatname != "*")
+            {
+                currentThat = thatname;
+            }
             RProcessor = impl.TargetBot;
             CategoryInfos = new List<CategoryInfo>();
         }
@@ -175,6 +180,12 @@ namespace AltAIMLbot.Utils
             set {
                 _searchForGuard = value;
             }
+        }
+
+        public AIMLLoader Loader
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
 

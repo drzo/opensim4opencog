@@ -166,7 +166,7 @@ namespace AltAIMLbot
             var botAsUser1 = BotAsUser ?? LastUser;
             s = Unifiable.Trim(s);
             if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
-            var r = new MasterRequest(s, botAsUser1, Unifiable.EnglishNothing, botAsUser1, this, null,
+            var r = new MasterRequest(s, botAsUser1, Unifiable.STAR, botAsUser1, this, null,
                                       DefaultStartGraph, true, RequestKind.BotPropertyEval);           
             //r.ChatOutput.RawText = s;
             r.writeToLog = writeToLog;
@@ -187,9 +187,9 @@ namespace AltAIMLbot
             return r;
         }
 
-        private AIMLLoaderU _loader;
-        private AIMLLoaderU _loaderOnceLeast;
-        public AIMLLoaderU Loader
+        private AIMLLoader _loader;
+        private AIMLLoader _loaderOnceLeast;
+        public AIMLLoader Loader
         {
             set
             {
@@ -786,10 +786,9 @@ namespace AltAIMLbot
             {
                 request.GraphsAcceptingUserInput = false;
                 request.Filename = path;
-                LoaderOptions options = request.LoadOptions;
-                request.Loader.loadAIMLURI(path, options);
+                request.Loader.loadAIMLURI(path);
                 request.Loader.DumpErrors(DLRConsole.DebugWriteLine, false);
-                ReloadHooks.Add(() => request.Loader.loadAIMLURI(path, options));
+                ReloadHooks.Add(() => request.Loader.loadAIMLURI(path));
             }
             finally
             {
@@ -827,13 +826,15 @@ namespace AltAIMLbot
         }
 
 
-        internal AIMLLoaderU GetLoader(Request request)
+        internal AIMLLoader GetLoader(Request request)
         {
             AltBot bot = this;
-            AIMLLoaderU loader = bot.Loader;
+            if (request != null) return request.Loader;
+            RaiseError("Request should nopt be null");
+            AIMLLoader loader = bot.Loader;
             if (!bot.StaticLoader || loader == null)
             {
-                loader = new AIMLLoaderU(bot, request);
+                loader = new AIMLLoader(bot, request);
             }
             bot.Loader = loader;
             return loader;
@@ -858,8 +859,8 @@ namespace AltAIMLbot
             try
             {
                 request.GraphsAcceptingUserInput = false;
-                AIMLLoaderU loader = GetLoader(request);
-                loader.loadAIMLNode(newAIML.DocumentElement, filename, request);
+                AIMLLoader loader = GetLoader(request);
+                loader.loadAIMLNode(newAIML.DocumentElement);
             }
             finally
             {
@@ -1170,7 +1171,7 @@ namespace AltAIMLbot
                 loader.CtxGraph = graph;
                 loader.Loading0 = "from_text";
                 string s = string.Format("<aiml graph=\"{0}\">{1}</aiml>", graph.ScriptingName, aimlText);
-                request.Loader.loadAIMLString(s, loader);
+                request.Loader.loadAIMLString(s);
             }
             catch (Exception e)
             {
@@ -1807,7 +1808,10 @@ The AIMLbot program.
             }
 
             GlobalSettings.IsTraced = true;
-            thisBotAsUser.Predicates.InsertProvider(() => GlobalSettings);
+            if (GlobalSettings != thisBotAsUser.Predicates)
+            {
+                thisBotAsUser.Predicates.InsertProvider(() => GlobalSettings);
+            }
             //BotAsUser.UserDirectory = "aiml/users/heardselfsay";
             //BotAsUser.UserID = "heardselfsay";
             //BotAsUser.UserName = "heardselfsay";

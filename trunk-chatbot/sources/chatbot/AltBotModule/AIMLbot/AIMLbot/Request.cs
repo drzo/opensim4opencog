@@ -481,8 +481,12 @@ namespace AltAIMLbot.Utils
             this.Stage = SideEffectStage.UNSTARTED;
             matchable = matchable ?? StaticAIMLUtils.MakeMatchable(rawInput);
             qsbase = this;
+            ithat = thatSaid;
             SuspendSearchLimits = true;
-            Graph = graphMaster;
+            if (graphMaster != null)
+            {
+                Graph = graphMaster;
+            }
             if (parent != null)
             {
                 //ChatInput = parent.ChatInput;
@@ -680,21 +684,48 @@ namespace AltAIMLbot.Utils
         }
 
         public LoaderOptions lastOptions;
+
         public LoaderOptions LoadOptions
         {
             get
             {
                 // when we change to s struct, lastOptions will never be null
+                if (!(lastOptions is ValueType)) {
+                    if (lastOptions != null && lastOptions.TheRequest == this) return lastOptions;
+                }
+                string that = ThatOrNull ?? "*";
+
+                if (that != "*" && !RequestType.ContainsAny(RequestKind.NaturalLang))
+                {
+                    ithat = that;
+                   // bot.RaiseError("non * that " + this);
+                }
+
                 // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                if (lastOptions == null || lastOptions.TheRequest != thisRequest)
+                if (lastOptions == null)
                     // ReSharper restore ConditionIsAlwaysTrueOrFalse
                 {
-                    lastOptions = new LoaderOptions(thisRequest, Graph);
+                    lastOptions = new LoaderOptions(thisRequest, CurrentGraphName, that);
+                }
+                else if (lastOptions.TheRequest != thisRequest)
+                {
+                    lastOptions = new LoaderOptions(thisRequest, CurrentGraphName, that);
                 }
                 return lastOptions;
             }
             set
             {
+                if (lastOptions != null)
+                {
+                    if (lastOptions != value)
+                    {
+                        bot.RaiseError("Replacing loader options");
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
                 lastOptions = value;
                 Graph = value.CtxGraph;
                 Filename = value.CurrentFilename;
@@ -703,35 +734,25 @@ namespace AltAIMLbot.Utils
         }
 
 
-        private AIMLLoaderU _uaimlloader = null;
-        public AIMLLoaderU ULoader
+        internal AIMLLoader _uaimlloader = null;
+
+        public AIMLLoader Loader
         {
             get
             {
-                if (_uaimlloader == null) _uaimlloader = new AIMLLoaderU(TargetBot, thisRequest);
+                if (_uaimlloader == null)
+                {
+                    _uaimlloader = new AIMLLoader(TargetBot, thisRequest);
+                }
                 return _uaimlloader;
             }
-        }
-
-
-        //private AIMLLoader _aimlloader = null;
-        public AIMLLoaderU Loader
-        {
-            get
+            set
             {
-                // if (_aimlloader == null) _aimlloader = new AIMLLoader(TargetBot);
-                //return _aimlloader;
-                return ULoader;
-            }
-
-        }
-        private AIMLLoaderS _aimlloader = null;
-        public AIMLLoaderS LoaderA
-        {
-            get
-            {
-                if (_aimlloader == null) _aimlloader = new AIMLLoaderS(TargetBot);
-                return _aimlloader;
+                if (_uaimlloader != null && _uaimlloader != value)
+                {
+                    bot.RaiseError("Replacing loader");
+                }
+                _uaimlloader = value;
             }
         }
 
@@ -773,42 +794,18 @@ namespace AltAIMLbot.Utils
         private string _loadingfrom;
 
         internal GraphMaster sGraph = null;
-        public GraphMaster Graph
-        {
-            get
-            {
-                GraphMaster GM = Graph0;
-                ListenerTest(GM);
-                return GM;
-            }
-            set
-            {
-                ListenerTest(value);
-                LoadOptions.CtxGraph = value;
-                Graph0 = value;
-            }
-        }
 
         public string CurrentGraphName
         {
             get { return Graph.ScriptingName; }
         }
 
-        private void ListenerTest(GraphMaster master)
-        {
-            if (master == null) return;
-            if (master.AlsoKnownAs("listener"))
-            {
-                throw new NotImplementedException();
-            }
-        }
-
         public void AddGraph(GraphMaster master)
         {
-            /// throw new NotImplementedException();
+             throw new NotImplementedException();
         }
 
-        public GraphMaster Graph0
+        public GraphMaster Graph
         {
             get
             {
@@ -1286,21 +1283,21 @@ namespace AltAIMLbot.Utils
         {
             get
             {
-                var t = That0;
+                var t = ThatOrNull;
                 if (user.CheckIsBadEnglish(t))
                 {
                     bot.Logger.Warn("Just said is bad english: " + t);
-                    t = That0;
+                    t = ThatOrNull;
                 }
-                return t;
+                return t ?? Unifiable.EnglishNothing;
             }
             set
             {
                 user.CheckIsBadEnglish(value);
-                That0 = value;
+                ThatOrNull = value;
             }
         }
-        public Unifiable That0
+        public Unifiable ThatOrNull
         {
             get
             {
@@ -1350,7 +1347,7 @@ namespace AltAIMLbot.Utils
                         writeToLog("ERROR That Requester !" + r1);
                     }
                 }
-                return u ?? Unifiable.EnglishNothing;
+                return u;
             }
             set
             {
@@ -1902,7 +1899,9 @@ namespace AltAIMLbot.Utils
 
 namespace AltAIMLParser
 {
-
+}
+namespace AltAIMLbot.Utils
+{
     [Flags]
     public enum RequestKind
     {
@@ -1957,17 +1956,19 @@ namespace AltAIMLParser
             {
                 throw new ArgumentException("umask should not be 0", "mask");
             }
-            return (ulongValue(flags) & umask) != umask;
+            var fm = (ulongValue(flags) & umask);
+            return  fm == umask;
         }
 
-        public static bool ContainsAny<T>(this T flags, T mask) where T: struct
+        public static bool ContainsAny<T>(this T flags, T mask) where T : struct
         {
             ulong umask = ulongValue(mask);
             if (umask == 0)
             {
                 throw new ArgumentException("umask should not be 0", "mask");
             }
-            return (ulongValue(flags) & umask) != 0;
+            var fm = (ulongValue(flags) & umask);
+            return fm != 0;
         }
     }
 }
