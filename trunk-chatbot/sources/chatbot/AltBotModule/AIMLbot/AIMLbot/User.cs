@@ -372,7 +372,7 @@ namespace AltAIMLbot
         public bool SetMeMyselfAndI(string value)
         {
             var r = Predicates as SettingsDictionaryReal;
-            r.IsIdentityReadOnly = true;
+            //r.IsIdentityReadOnly = true;
             string strip = "state,topic,graph,that";
             r.removeSetting(strip);
             r.readonlySetting(strip, true);
@@ -938,14 +938,14 @@ namespace AltAIMLbot
                     var tt = lastResponder.JustSaid;
                     if (IsSomething(tt, out something))
                     {
-                        rbot.Logger.Warn("using last responder to guess that=" + something);
+                        writeDebugLine("using last responder to guess that=" + something);
                         return something;
                     }
                 }
                 Result r = GetResult(0, true) ?? GetResult(0, false, lastResponder);
                 if (r != null && IsSomething(r.NormalizedOutput, out something))
                 {
-                    rbot.Logger.Warn("using last Result to guess that=" + something);
+                    writeDebugLine("using last Result to guess that=" + something);
                     return something;
                 }
                 if (lastResponder != null && IsSomething(lastResponder.JustSaid, out something)) return something;

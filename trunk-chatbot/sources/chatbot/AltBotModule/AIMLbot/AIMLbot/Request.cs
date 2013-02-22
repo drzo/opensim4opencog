@@ -648,7 +648,7 @@ namespace AltAIMLbot.Utils
             {
                 if (IsToplevelRequest)
                 {
-                    CheckEnglish(thatSaid);
+                 //   CheckEnglish(thatSaid);
                 }
             }                        
 
