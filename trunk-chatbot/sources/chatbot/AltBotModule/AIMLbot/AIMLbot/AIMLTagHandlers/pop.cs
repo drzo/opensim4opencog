@@ -104,8 +104,8 @@ namespace AltAIMLbot.AIMLTagHandlers
                     //else
                     //{
                     // Plain old SRAI
-                    string ourInput = this.TemplateNodeInnerText;
-                    Request subRequest = new Request(ourInput, this.user, request.LoadOptions, request.Responder, this.bot, request, request.Graph, false,
+                    string ourInput = this.Recurse();
+                    Request subRequest = new Request(ourInput, this.user, request, request.Responder, this.bot, request, request.Graph, false,
                                                          request.RequestType | RequestKind.SraiTag);
                     subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
                     subRequest.depth = this.request.depth + 1;

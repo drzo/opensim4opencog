@@ -77,22 +77,6 @@ namespace AltAIMLbot.Utils
             if (this.templateNode.Attributes != null) this.templateNode.Attributes.RemoveNamedItem("xmlns");
         }
 
-        public SubQuery TheQuery
-        {
-            get
-            {
-                SubQuery ret = this.query
-                    //?? request.CurrentQuery ?? this.query ?? result.CurrentQuery
-                    ;
-                return ret;
-            }
-        }
-
-        public SubQuery CurrentQuery
-        {
-            get { return query; }
-        }
-
         protected bool ReadOnly { get; set; }
 
         public AltBot TargetBot
@@ -771,7 +755,7 @@ namespace AltAIMLbot.Utils
                 double defualtReward = query.GetSucceedReward(type);
                 double templateScore = GetAttribValue<double>(templateNode, "score", () => defualtReward,
                                                               ReduceStarAttribute<double>);
-                templateScore *= CurrentQuery.CurrentTemplate.TemplateRating;
+                templateScore *= query.CurrentTemplate.TemplateRating;
                 double beforerating = request.TopLevelScore;
                 double newrating = beforerating*templateScore;
                 request.TopLevelScore = newrating;
@@ -1485,6 +1469,9 @@ namespace AltAIMLbot.Utils
 
         protected Unifiable RecurseReal(Func<Unifiable, Unifiable> afterEachOrNull, XmlNode node, bool saveOnChildren)
         {
+            if (isRecursive && !node.HasChildNodes) return string.Empty;
+
+            saveOnChildren = false;
             //Unifiable templateNodeInnerText;//= this.templateNodeInnerText;
             Unifiable templateResult = Unifiable.CreateAppendable();
             if (node.HasChildNodes && isRecursive)
@@ -2353,6 +2340,16 @@ namespace AltAIMLbot.Utils
             if (dict == null) dict = query;
             return type ?? dict.NameSpace;
         }
+
+        #region IAIMLTransaction Members
+
+
+        public SubQuery CurrentQuery
+        {
+            get { return query; }
+        }
+
+        #endregion
     }
 
     public interface IAIMLTransaction

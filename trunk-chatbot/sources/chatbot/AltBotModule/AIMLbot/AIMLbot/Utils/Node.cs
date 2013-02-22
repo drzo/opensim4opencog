@@ -661,7 +661,8 @@ namespace AltAIMLbot.Utils
 
         private static bool IsSectionHeader(string firstWord)
         {
-            return (firstWord == "<THAT>") || (firstWord == "<TOPIC>") || (firstWord == "<STATE>") || (firstWord == "<PATTERN>");
+            return (firstWord.StartsWith("TAG-") || firstWord == "<THAT>") || (firstWord == "<TOPIC>") ||
+                   (firstWord == "<STATE>") || (firstWord == "<PATTERN>");
         }
 
         /// <summary>
@@ -1024,23 +1025,28 @@ namespace AltAIMLbot.Utils
         {
             firstWord = firstWord.ToUpper();
             MatchState newMatchstate = matchstate;
-            if (firstWord == "<THAT>")
+            firstWord = firstWord.Trim('<', '>');
+            if (firstWord.StartsWith("TAG-"))
+            {
+                firstWord = firstWord.Substring(4);
+            }
+            if (firstWord == "THAT")
             {
                 newMatchstate = MatchState.That;
             }
-            else if (firstWord == "<TOPIC>")
+            else if (firstWord == "TOPIC")
             {
                 newMatchstate = MatchState.Topic;
             }
-            else if (firstWord == "<STATE>")
+            else if (firstWord == "STATE")
             {
                 newMatchstate = MatchState.State;
             }
-            else if (firstWord == "<PATTERN>")
+            else if (firstWord == "PATTERN" || firstWord == "INPUT")
             {
                 newMatchstate = MatchState.Pattern;
             }
-            else if (firstWord == "<FLAG>")
+            else if (firstWord == "FLAG")
             {
                 newMatchstate = MatchState.Flag;
             }

@@ -246,7 +246,7 @@ namespace AltAIMLbot.Utils
                 var used = new List<XmlAttribute>();
                 string defaultElement = "";
                 Action gmrerstore;
-                gmrerstore = request.LoadOptions.WithAttributesForUnwind(templateNode, ref defaultElement, used);
+                gmrerstore = request.WithAttributesForUnwind(templateNode, ref defaultElement, used);
                 int uc = used.Count;
                 UndoStack savedValues = null;
 
@@ -505,23 +505,23 @@ namespace AltAIMLbot.Utils
                 }
                 if (name.StartsWith("star_"))
                 {
-                    return GetDictData(query.InputStar, name, 5, out rfound);
+                    return GetDictData(query.InputStars, name, 5, out rfound);
                 }
                 else if (name.StartsWith("inputstar_"))
                 {
-                    return GetDictData(query.InputStar, name, 10, out rfound);
+                    return GetDictData(query.InputStars, name, 10, out rfound);
                 }
                 else if (name.StartsWith("input_"))
                 {
-                    return GetDictData(query.InputStar, name, 6, out rfound);
+                    return GetDictData(query.InputStars, name, 6, out rfound);
                 }
                 else if (name.StartsWith("thatstar_"))
                 {
-                    return GetDictData(query.ThatStar, name, 9, out rfound);
+                    return GetDictData(query.ThatStars, name, 9, out rfound);
                 }
                 else if (name.StartsWith("that_"))
                 {
-                    return GetDictData(query.ThatStar, name, 5, out rfound);
+                    return GetDictData(query.ThatStars, name, 5, out rfound);
                 }
                 else if (name.StartsWith("topicstar_"))
                 {

@@ -32,7 +32,7 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             if (CheckNode("cycassert"))
             {
-                string sent = templateNodeInnerText = Recurse();
+                string sent = templateNodeInnerText = ((AIMLTagHandler) this).Recurse();
                 if (IsValue(sent))
                 {
                     string mt = TheCyc.Cyclify(GetAttribValue("mt", Proc.GetUserMt(user, query)));

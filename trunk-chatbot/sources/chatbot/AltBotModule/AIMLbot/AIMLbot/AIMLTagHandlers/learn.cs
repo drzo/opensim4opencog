@@ -108,7 +108,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             }
         }
 
-        protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
+        protected override Unifiable ProcessLoad(LoaderOptions request000)
         {
             if (CheckNode("learn,load,graph,aiml"))
             {
@@ -132,7 +132,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 bool outRecurse;                
                 if (TryParseBool(templateNode, "recurse", out outRecurse))
                 {
-                    loaderOptions.Recurse = outRecurse;
+                    request.Recurse = outRecurse;
                 }
 
                 GraphMaster g = request.Graph;
@@ -149,9 +149,8 @@ namespace AltAIMLbot.AIMLTagHandlers
                 {
                     //templateNode.LocalName
                     string documentInfo =  DocumentInfo();;
-                    loaderOptions = request.LoadOptions;
                     request.CurrentlyLoadingFrom = documentInfo;
-                    loaderOptions.CtxGraph = request.Graph;
+                    request.Graph = request.Graph;
                     string innerXML = InnerXmlText(templateNode);
 
 
@@ -188,7 +187,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                             else
                             {
                                 path = path ?? innerXML;
-                                loaderOptions.CurrentFilename = path;
+                                request.CurrentFilename = path;
                                 long forms = request.Loader.loadAIMLURI(path);
                                 QueryHasSuceededN++;
                                 return "" + forms; // Succeed();

@@ -39,7 +39,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode, 1)
         {
-            StarDict = () => TheQuery.InputStar;
+            StarDict = () => CurrentQuery.InputStars;
         }
     }
 
@@ -61,7 +61,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 return vorNull;
             }
             writeToLogWarn("Why is a star in Recurse?");
-            return base.Recurse();
+            return ((AIMLTagHandler) this).Recurse();
         }
 
         protected Func<IList<string>> StarDict;

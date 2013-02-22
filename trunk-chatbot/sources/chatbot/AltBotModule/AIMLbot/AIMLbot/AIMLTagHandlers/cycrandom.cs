@@ -43,7 +43,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                         TheCyc.EvalSubL(
                             String.Format(
                                 "(clet ((list {0})) (nth (random (length list)) list))",
-                                base.Recurse()), filter);
+                                ((AIMLTagHandler) this).Recurse()), filter);
                 }
             }
             return Unifiable.Empty;

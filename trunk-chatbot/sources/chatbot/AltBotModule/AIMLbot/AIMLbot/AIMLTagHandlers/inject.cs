@@ -57,7 +57,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 try
                 {
                     string queueName = GetAttribValue("chem", null);
-                    string templateNodeInnerValue = this.TemplateNodeInnerText;
+                    string templateNodeInnerValue = this.Recurse();
                     //this.user.bot.myChemistry.addChemical(queueName, double.Parse((string)templateNodeInnerValue), "aiml");
                     //this.user.bot.myChemistry.tick_chemistry(false);
                     this.user.rbot.realChem.addChemical(queueName, double.Parse((string)templateNodeInnerValue), "aiml");

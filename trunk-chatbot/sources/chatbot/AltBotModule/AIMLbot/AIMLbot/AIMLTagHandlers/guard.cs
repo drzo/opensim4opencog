@@ -49,7 +49,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             if (templateNode.Name.ToLower() == "guard")
             {
                 string language = GetAttribValue("lang", "cycl");
-                templateNodeInnerText = Recurse();
+                templateNodeInnerText = ((AIMLTagHandler) this).Recurse();
                 if (!IsNullOrEmpty(templateNodeInnerText))
                 {
                     Unifiable res = Proc.SystemExecute(templateNodeInnerText, language, request);

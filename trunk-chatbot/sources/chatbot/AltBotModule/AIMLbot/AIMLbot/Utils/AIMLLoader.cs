@@ -86,10 +86,9 @@ namespace AltAIMLbot.Utils
 
         public AIMLLoader(AltBot bot, Request request)
         {
+            request.loader = this;
             this.bot = bot;
             this.request = request;
-            this.request.Loader = this;
-            this.loadOpts = request.LoadOptions;
         }
 
         public EasyLogger Logger
@@ -99,17 +98,7 @@ namespace AltAIMLbot.Utils
 
         public LoaderOptions loadOpts
         {
-            get { return request.LoadOptions; }
-            set { request.LoadOptions = value; }
-        }
-
-
-        public string CurrentlyLoadingFrom { get; set; }
-
-        public string GraphName
-        {
-            get { return loadOpts.graphName; }
-            set { loadOpts.graphName = value; }
+           get { return request; }
         }
 
 
@@ -173,8 +162,7 @@ namespace AltAIMLbot.Utils
             long total = 0;
             path = ResolveToURI(path);
             //RProcessor.ReloadHooks.Add(() => loadAIMLFile0(path, loadOpts, forceReload));
-            loadOpts.SuggestPath(path);
-            EnsureOptions(loadOpts, request, path);
+            EnsureOptions(path);
             //request.TargetBot.ReloadHooks.Add(() => request.Loader.loadAIMLFile0(path, loadOpts, forceReload));
 
             if (!HostSystem.FileExists(path))
@@ -187,7 +175,7 @@ namespace AltAIMLbot.Utils
                 }
                 return total;
             }
-            GraphMaster master = loadOpts.CtxGraph;
+            GraphMaster master = loadOpts.Graph;
             try
             {
                 // load the document
@@ -279,7 +267,7 @@ namespace AltAIMLbot.Utils
             long total = 0;
             path = ResolveToURI(path);
             //RProcessor.ReloadHooks.Add(() => loadAIMLFile0(path, loadOpts));
-            EnsureOptions(loadOpts, request, path);
+            EnsureOptions(path);
             //request.TargetBot.ReloadHooks.Add(() => request.Loader.loadAIMLFile0(path, loadOpts));
 
             if (!HostSystem.FileExists(path))
@@ -292,7 +280,7 @@ namespace AltAIMLbot.Utils
                 }
                 return total;
             }
-            GraphMaster master = loadOpts.CtxGraph;
+            GraphMaster master = loadOpts.Graph;
             try
             {
                 // load the document
@@ -875,8 +863,8 @@ namespace AltAIMLbot.Utils
         public string generatePath(string graphName, string pattern, string that, string topicName, string stateNamePre,
                            string stateNamePost, bool isUserInput)
         {
-            return generateCPath(graphName, pattern, that, null /*flag*/, topicName, stateNamePre, stateNamePost,
-                                 isUserInput, null);
+            return generateCPath(graphName, pattern, that, loadOpts.currentFlags, topicName, stateNamePre, stateNamePost,
+                                 isUserInput, null, bot);
         }
         /// <summary>
         ///   Generates a path from the passed arguments
@@ -888,12 +876,12 @@ namespace AltAIMLbot.Utils
         /// <param name="stateNamePost"> the state at the end (tie breaker) </param>
         /// <param name="isUserInput"> marks the path to be created as originating from user input - so normalize out the * and _ wildcards used by AIML </param>
         /// <returns> The appropriately processed path </returns>
-        public string generateCPath(string graphName, string pattern, string that, string flag, string topicName, string stateNamePre,
-                                   string stateNamePost, bool isUserInput,  Func<Unifiable, bool, Unifiable> innerFormater)
+        static public string generateCPath(string graphName, string pattern, string that, string flag, string topicName, string stateNamePre,
+                                   string stateNamePost, bool isUserInput, Func<Unifiable, bool, Unifiable> innerFormater, AltBot bot)
         {
             // to hold the normalized path to be entered into the graphmaster
             var normalizedPath = new StringBuilder();
-            string normalizedPattern = string.Empty;
+            string normalizedPattern = "*";
             string normalizedThat = "*";
             string normalizedTopic = "*";
             string normalizedStatePre = "*";
@@ -911,6 +899,7 @@ namespace AltAIMLbot.Utils
             }
             else
             {
+                var Normalize = new Func<string, bool, string>((a, b) => Normalize3(a, b, bot));
                 normalizedPattern = Normalize(pattern, isUserInput).Trim();
                 normalizedThat = Normalize(that, isUserInput).Trim();
                 normalizedTopic = Normalize(topicName, isUserInput).Trim();
@@ -954,17 +943,17 @@ namespace AltAIMLbot.Utils
                 // o.k. build the path :standard <pattern><that><state><topic>
                 if (0 == 0)
                 {
-                    normalizedPath.Append("<state> ");
+                    normalizedPath.Append("TAG-STATE ");
                     normalizedPath.Append(normalizedGraphName);
                     normalizedPath.Append(" ");
                     normalizedPath.Append(normalizedStatePre);
-                    normalizedPath.Append(" <pattern> ");
+                    normalizedPath.Append(" TAG-INPUT ");
                     normalizedPath.Append(normalizedPattern);
-                    normalizedPath.Append(" <that> ");
+                    normalizedPath.Append(" TAG-THAT ");
                     normalizedPath.Append(normalizedThat);
-                    normalizedPath.Append(" <state> ");
+                    normalizedPath.Append(" TAG-STATE ");
                     normalizedPath.Append(normalizedStatePost);
-                    normalizedPath.Append(" <topic> ");
+                    normalizedPath.Append(" TAG-TOPIC ");
                     normalizedPath.Append(normalizedTopic);
                 }
                 else
@@ -996,22 +985,27 @@ namespace AltAIMLbot.Utils
         /// <param name="input"> The string to be normalized </param>
         /// <param name="isUserInput"> True if the string being normalized is part of the user input path - flags that we need to normalize out * and _ chars </param>
         /// <returns> The normalized string </returns>
-        private string Normalize(string input, bool isUserInput)
+        static private string Normalize3(string input, bool isUserInput, AltBot bot)
         {
+            if (input == null)
+            {
+                return "NULL-ERROR";
+            }
             if (input == "*") return input;
-            string r = Normalize0(input, isUserInput);
+            string r = Normalize0(input, isUserInput, bot);
             if (input.Contains("_"))
             {
                 if (r.Trim() != input.Trim())
                 {
-                    r = Normalize0(input, isUserInput);
+                    r = Normalize0(input, isUserInput, bot);
                 }
             }
             return r;
         }
 
-        private string Normalize0(string input, bool isUserInput)
+        static private string Normalize0(string input, bool isUserInput, AltBot bot)
         {
+            if (input == null) return "NULL-ERROR";
             var result = new StringBuilder();
 
             // objects for normalization of the input
@@ -1082,7 +1076,7 @@ namespace AltAIMLbot.Utils
 
         public long loadAIMLNode(XmlNode templateNode)
         {
-            LoadBtxml(templateNode, CurrentlyLoadingFrom);
+            LoadBtxml(templateNode, loadOpts.CurrentlyLoadingFrom);
             return 1;
         }
 
@@ -1106,20 +1100,18 @@ namespace AltAIMLbot.Utils
         {
             long total = 0;
 
-            int before = loadOpts.CtxGraph.Size;
+            int before = loadOpts.Graph.Size;
             long saved0 = Unifiable.LowMemExpireUnifiableCaches();
             writeToLog("Starting to process AIML files found in the directory (" + path + ")");
-            var loaderOpt = loadOpts.Copy();
             try
             {
                 total = loadAIMLDir0(path);
             }
             finally
             {
-                loadOpts = loaderOpt;
                 long saved1 = Unifiable.LowMemExpireUnifiableCaches();
                 long saved2 = Unifiable.LowMemExpireUnifiableCaches();
-                writeToLog("Finished processing the AIML files. " + Convert.ToString(before - loadOpts.CtxGraph.Size) +
+                writeToLog("Finished processing the AIML files. " + Convert.ToString(before - loadOpts.Graph.Size) +
                            " categories processed. saved0-2 {0}-{1}-{2} ", saved0, saved1, saved2);
             }
 
@@ -1141,7 +1133,7 @@ namespace AltAIMLbot.Utils
                     {
                         try
                         {
-                            request.LoadOptions = savedOpt.Copy();
+                            request.LoadOptions = savedOpt;
                             request.CurrentFilename = f;
                             total += loadAIMLFile(f);
                         }
@@ -1156,7 +1148,7 @@ namespace AltAIMLbot.Utils
                     }
                     catch (Exception ee)
                     {
-                        loadOpts.CtxGraph.RemoveFileLoaded(path);
+                        loadOpts.Graph.RemoveFileLoaded(path);
                         writeToLog("Error in loadAIMLFile " + ee);
                     }
                 }
@@ -1182,7 +1174,7 @@ namespace AltAIMLbot.Utils
             string path = ResolveToURI0(pathIn);
             if (path != pathIn)
             {
-                writeToLog("ResolveToURI '{0}'->'{1}'", pathIn, path);
+                if (DLRConsole.DebugLevel > 6) writeToLog("ResolveToURI '{0}'->'{1}'", pathIn, path);
             }
             return path;
         }
@@ -1196,7 +1188,7 @@ namespace AltAIMLbot.Utils
             IEnumerable<string> combine;
             //combine = baseFile != null ? new[] { "./", baseFile, "aiml/" } : new[] { "./", "aiml/" };
             string prefix;
-            combine = loadOpts.TheRequest.TargetBot.RuntimeDirectories;
+            combine = TargetBot.RuntimeDirectories;
             string pathFull = HostSystem.ResolveToURI(pathIn, combine, out prefix);
             string relPath = HostSystem.ToRelativePath(pathFull, prefix);
             string rpath = HostSystem.Combine(prefix, relPath);
@@ -1215,6 +1207,11 @@ namespace AltAIMLbot.Utils
                 if (!relPath.Contains("*")) AltBot.writeDebugLine("WARNING PATH NOT EXIST ERROR: " + relPath);
             }
             return relPath;
+        }
+
+        protected AltBot TargetBot
+        {
+            get { return bot; }
         }
 
         private R LoaderOper<R>(Func<R> action, GraphMaster gm)
@@ -1264,7 +1261,7 @@ namespace AltAIMLbot.Utils
         public long loadAIMLURI(string path)
         {
             loadOpts.SuggestPath(path);
-            long total = LoaderOper(() => loadAIMLURI0(path), loadOpts.CtxGraph);
+            long total = LoaderOper(() => loadAIMLURI0(path), loadOpts.Graph);
             TotalCheck(path, total);
             return total;
         }
@@ -1283,8 +1280,7 @@ namespace AltAIMLbot.Utils
                 if (HostSystem.DirExists(path))
                 {
                     path = HostSystem.ToCanonicalDirectory(path);
-                    Request request = loadOpts.TheRequest;
-                    LoaderOptions savedOpt = request.LoadOptions;
+                    var savedOpt = request.LoadOptions;
                     try
                     {
                         // request.LoadOptions = loadOpts;
@@ -1296,22 +1292,19 @@ namespace AltAIMLbot.Utils
                     }
                     finally
                     {
-                        request.LoadOptions = savedOpt;
+                        request.LoadOptions.SetLoaderOptions(savedOpt);
                     }
                     return total;
                 }
                 else if (HostSystem.FileExists(path))
                 {
                     string hostSystemGetBaseDir = HostSystem.GetBaseDir(pathIn);
-                    Request request = loadOpts.TheRequest;
-
                     string currentPath = HostSystem.ToRelativePath(pathIn, hostSystemGetBaseDir);
                     LoaderOptions savedOpt = request.LoadOptions;
                     string pop = null;
                     try
                     {
                         pop = bot.PushSearchPath(hostSystemGetBaseDir);
-                        request.LoadOptions = loadOpts;
                         //total += loadAIMLFile0(path, loadOpts, true);
                         total += loadAIMLFile(currentPath);
                     }
@@ -1335,7 +1328,6 @@ namespace AltAIMLbot.Utils
                     WebRequest req = WebRequest.Create(uri);
                     WebResponse resp = req.GetResponse();
                     Stream stream = resp.GetResponseStream();
-                    Request request = loadOpts.TheRequest;
                     LoaderOptions savedOpt = request.LoadOptions;
                     try
                     {
@@ -1410,7 +1402,7 @@ namespace AltAIMLbot.Utils
         {
             //            RProcessor0.ReloadHooks.Add(() => loadAIMLFile0(path, loadOpts));
             string path = request.CurrentFilename;
-            EnsureOptions(loadOpts, request, path);
+            EnsureOptions(path);
             try
             {
                 byte[] byteArray = Encoding.ASCII.GetBytes(docString);
@@ -1447,7 +1439,7 @@ namespace AltAIMLbot.Utils
                 writeToLog("Bumping up timelimit for " + loadOpts);
             }
             string path = request.CurrentFilename;
-            EnsureOptions(loadOpts, request, path);
+            EnsureOptions(path);
 
             XmlReader xtr = XmlDocumentLineInfo.CreateXmlTextReader(input0);
             string namefile = "" + path;
@@ -1574,7 +1566,7 @@ namespace AltAIMLbot.Utils
         public void loadAIMLStreamFallback(Stream input0)
         {
             string path = request.CurrentFilename;
-            EnsureOptions(loadOpts, request, path);
+            EnsureOptions(path);
             path = ResolveToURI(path);
 
             var strmreader = new StreamReader(input0);
@@ -1633,17 +1625,17 @@ namespace AltAIMLbot.Utils
             return;
         }
 
-        private LoaderOptions EnsureOptions(LoaderOptions loadOpts, Request request1, string path)
+        private void EnsureOptions(string path)
         {
             loadOpts.SuggestPath(path);
-            if (request1 == null)
+            if (request == null)
             {
-                writeToLog("ERROR! Ensuring Request=" + request1);
-                request1 = request;
+                writeToLog("ERROR! Ensuring Request=" + request);
+                request = request;
             }
-            if (request1 != loadOpts.TheRequest)
+            if (request != loadOpts)
             {
-                writeToLog("ERROR! loadOpts wrong Request=" + request1);
+                writeToLog("ERROR! loadOpts wrong Request=" + request);
             }
             string fn = loadOpts.CurrentFilename;
             if (fn == LoaderOptions.MISSING_FILE || CommonStaticUtils.IsNullOrEmpty(fn))
@@ -1654,13 +1646,12 @@ namespace AltAIMLbot.Utils
             path = path.Replace("\\", "/").ToLower();
             if (!fn.Contains(path) && !path.Contains(fn))
             {
-                // writeToLog("WARNING! Ensuring loadOpts.Filename='{0}' but path='{1}'", fn, path);
+                writeToLog("WARNING! Ensuring loadOpts.Filename='{0}' but path='{1}'", fn, path);
             }
-            if (!request1.LoadOptions.Equals(loadOpts))
+            if (!request.Equals(loadOpts))
             {
-                /// writeToLog("ERROR! Ensuring loadOpts.Filename='{0}' but path='{1}'", fn, path);
+                writeToLog("ERROR! Ensuring loadOpts.Filename='{0}' but path='{1}'", fn, path);
             }
-            return loadOpts;
         }
 
         public long InsideLoaderContext(XmlNode currentNode, Request request, SubQuery query,
@@ -1670,7 +1661,7 @@ namespace AltAIMLbot.Utils
             query = query ?? request.CurrentQuery;
             //Result result = query.Result;
             AIMLLoader prev = bot.Loader;
-            GraphMaster loadOptsPrevGraph = loadOpts.CtxGraph;
+            GraphMaster loadOptsPrevGraph = loadOpts.Graph;
             try
             {
                 bot.Loader = this;
@@ -1682,7 +1673,7 @@ namespace AltAIMLbot.Utils
                 var ts = EnterTag(request, currentNode, query);
                 try
                 {
-                    loadOpts.CtxGraph = request.Graph;
+                    loadOpts.Graph = request.Graph;
                     long done = doit();
                     total += done;
                     // TotalCheck(currentNode.OuterXml, total, null);
@@ -1690,7 +1681,7 @@ namespace AltAIMLbot.Utils
                 finally
                 {
                     ts();
-                    loadOpts.CtxGraph = loadOptsPrevGraph;
+                    loadOpts.Graph = loadOptsPrevGraph;
                 }
             }
             finally
@@ -1722,7 +1713,7 @@ namespace AltAIMLbot.Utils
         {
             List<ConversationCondition> additionalRules = loadOpts.AdditionalPreconditions;
             long total = LoaderOper(() => loadAIMLNode0(currentNode, loadOpts, request, additionalRules),
-                                    loadOpts.CtxGraph);
+                                    loadOpts.Graph);
             //TotalCheck(TextAndSourceInfo(currentNode), total);
             return total;
         }
@@ -1885,7 +1876,7 @@ namespace AltAIMLbot.Utils
                                                                   OutputDelegate outputdelegate)
         {
             //XmlNode node = 
-            loadAIMLNode(src, request.LoadOptions, request);
+            loadAIMLNode(src, request, request);
             //if (node == null) return NO_XmlNode;
             return new[] {src};
         }
@@ -1940,11 +1931,11 @@ namespace AltAIMLbot.Utils
             // find the name of the topic or set to default "*"
             Unifiable thatPattten = GetAttribValue(thatNode, "pattern,value,name", Unifiable.STAR);
             // process all the category nodes
-            Unifiable newThatInfo = path.CtxGraph.FindThat(thatNode, thatPattten);
+            Unifiable newThatInfo = path.Graph.FindThat(thatNode, thatPattten);
             foreach (XmlNode cateNode in thatNode.ChildNodes)
             {
                 // getting stacked up inside
-                loadAIMLNode0(cateNode, path, path.TheRequest, additionalRules);
+                loadAIMLNode0(cateNode, path, request, additionalRules);
             }
             foreach (CategoryInfo ci0 in newCats)
             {
@@ -2121,7 +2112,7 @@ namespace AltAIMLbot.Utils
             {
                 if (loaderOpts.SearchForGuard) guardnode = FindNode("guard", outerNode, null);
             }
-            Unifiable guard = guardnode == null ? null : loaderOpts.CtxGraph.GetGuardInfo(guardnode);
+            Unifiable guard = guardnode == null ? null : loaderOpts.Graph.GetGuardInfo(guardnode);
             string errors = "";
             XmlNode TemplateOverwrite = TheTemplateOverwrite;
             bool unusableCategory = false;
@@ -2190,10 +2181,10 @@ namespace AltAIMLbot.Utils
                 generateAddableCategoryPath(patternText, that, cond, topicName, loaderOpts.graphName, loaderOpts.stateNamePre,
                              loaderOpts.stateNamePost, loaderOpts.CurrentFilename,
                              false, normalizerT);//.ToUpper();
-            Unifiable patternInfo = loaderOpts.CtxGraph.FindPattern(patternNode, patternText);
+            Unifiable patternInfo = loaderOpts.Graph.FindPattern(patternNode, patternText);
             //PatternInfo.GetPattern(loaderOpts, patternNode, categoryPath);
-            Unifiable topicInfo = loaderOpts.CtxGraph.FindTopic(topicName);
-            Unifiable thatInfo = loaderOpts.CtxGraph.FindThat(thatNodeOrNull, that);
+            Unifiable topicInfo = loaderOpts.Graph.FindTopic(topicName);
+            Unifiable thatInfo = loaderOpts.Graph.FindThat(thatNodeOrNull, that);
             FirstUse<XmlNode> templateNodeFindable = TheTemplateOverwrite;
 
             if (templateNode != null)
@@ -2211,7 +2202,7 @@ namespace AltAIMLbot.Utils
             // o.k., add the processed AIML to the GraphMaster structure
             if (!IsNullOrEmpty(categoryPath))
             {
-                GraphMaster pathCtxGraph = loaderOpts.CtxGraph;
+                GraphMaster pathCtxGraph = loaderOpts.Graph;
                 //lock (pathCtxGraph.LockerObject)
                 {
                     try
@@ -2227,7 +2218,7 @@ namespace AltAIMLbot.Utils
 
                         if (bot.useServitor)
                         {
-                            AddCateAndTemplate(loaderOpts.CurrentFilename, templateNode, loaderOpts.CtxGraph, categoryPath);
+                            AddCateAndTemplate(loaderOpts.CurrentFilename, templateNode, loaderOpts.Graph, categoryPath);
                             return null;
                         }
                         List<CategoryInfo> added = pathCtxGraph.addCategoryTag(categoryPath, patternInfo,
@@ -2544,7 +2535,7 @@ namespace AltAIMLbot.Utils
 
             Unifiable res =
                 Unifiable.MakePath(generateCPath(graphName, pattern, that, flag, topicName, stateNamePre, stateNamePost,
-                                                 isUserInput, null));
+                                                 isUserInput, null, bot));
             if (isUserInput)
             {
                 var ress = (string) res;

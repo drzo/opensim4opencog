@@ -947,10 +947,12 @@ namespace AltAIMLbot
                     foreach (string c in new[]
                                              {
                                                  "name", "id", "userid", "you","yours","your",null,
-                                                 "that", "topic", "lastoutput", "lastinput", "lastsaid", "lastheard","rawinput", "input", "inputreq",null,
+                                                 "lastoutput", "lastinput", "lastsaid", "lastheard","rawinput", "input", "inputreq",null,
                                                  "question", "yours_question",null,
                                                  "who", "what", "when", "where", "why", "how", null,
                                                  "he", "it", "they", "them",null,
+                                                 "startgraph","heardselfsaygraph","heardyousaygraph",null,
+                                                 "that", "topic", "state", "graph", "flags", null,
                                              })
                     {
                         if (string.IsNullOrEmpty(c))
@@ -1011,19 +1013,18 @@ namespace AltAIMLbot
                 }
                 GraphMaster G = robot.GetGraph(graphname, myUser.StartGraph);
                 AIMLLoader loader = robot.GetLoader(request);
-                LoaderOptions reqLoadOptionsValue = request.LoadOptions;
-                var prev = request.Graph;
+                var savedOpts = request.LoadOptions;
                 try
                 {
                     request.Graph = G;
-                    reqLoadOptionsValue.CtxGraph = G;
+                    savedOpts.Graph = G;
                     loader.loadAIMLURI(files);
                     // maybe request.TargetBot.ReloadHooks.Add(() => request.Loader.loadAIMLURI(args, reqLoadOptionsValue));
                     console("Done with " + files);
                 }
                 finally
                 {
-                    request.Graph = prev;
+                    request.LoadOptions = savedOpts;
                 }
                 return true;
             }

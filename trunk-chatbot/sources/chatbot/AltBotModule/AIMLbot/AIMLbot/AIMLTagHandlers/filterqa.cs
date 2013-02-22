@@ -67,7 +67,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             if (this.TemplateNodeName == "filterqa")
             {
                 //string message = this.templateNode.InnerText ;
-                string message = this.TemplateNodeInnerText;
+                string message = this.Recurse();
                 //if (this.TemplateNodeHasText)
                     if (message.Length >0)
                     {

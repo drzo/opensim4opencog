@@ -19,7 +19,7 @@ namespace AltAIMLbot.Utils
     /// <summary>
     /// Encapsulates all sorts of information about a request to the Proccessor for processing
     /// </summary>
-    sealed public class Request : QuerySettings, QuerySettingsSettable, QuerySettingsReadOnly, UndoStackHolder
+    public partial class Request : LoaderOptions, /*QuerySettings, QuerySettingsSettable, QuerySettingsReadOnly,*/ UndoStackHolder
     {
         #region Attributes
         public int depth = 0;
@@ -207,7 +207,7 @@ namespace AltAIMLbot.Utils
         {
             get
             {
-                if (ChatInput == null) return "@echo -no ChatInput yet-";
+                if (ChatInput == null) return "@echo -ERROR no ChatInput yet-";
                 return ChatInput.OrignalRawText;
             }
         }
@@ -251,7 +251,12 @@ namespace AltAIMLbot.Utils
         /// <summary>
         /// The Proccessor to which the request is being made
         /// </summary>
-        public AltBot TargetBot { get; set; }
+        public AltBot TargetBot
+        {
+            get { return bot; }
+            set { bot = value; }
+        }
+
 
         /// <summary>
         /// The final result produced by this request
@@ -378,7 +383,8 @@ namespace AltAIMLbot.Utils
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder(ToRequestString());
+            string s = base.generateCPath(bot);
+            StringBuilder sb = new StringBuilder(s + " " + ToRequestString());
             sb.AppendLine();
             Request r = this.ParentRequest;
             while (r != null)
@@ -439,7 +445,7 @@ namespace AltAIMLbot.Utils
                         requestType);
         }
         private Request(QuerySettingsReadOnly defaults, bool unused)
-            : base(defaults)
+            : base()
         {
             ApplySettings(defaults, this);
             SideEffects = new CommitQueue();
@@ -470,17 +476,49 @@ namespace AltAIMLbot.Utils
         {
             InitRequest(rawInput, user, options, null, targetUser, bot, parent, graphMaster, isToplevel, requestType);
         }
+        public Request(Unifiable rawInput, User user, LoaderOptions options, Unifiable thatSaid, User targetUser, AltBot bot, Request parent, GraphMaster graphMaster, bool isToplevel, RequestKind requestType)
+            : this(bot.GetQuerySettings(), false) // Get query settings intially from user
+        {
+            InitRequest(rawInput, user, options, thatSaid, targetUser, bot, parent, graphMaster, isToplevel, requestType);
+        }
         public void InitRequest(Unifiable rawInput, User user, LoaderOptions options, Unifiable thatSaid, User targetUser, AltBot bot, Request parent, GraphMaster graphMaster, bool isToplevel, RequestKind requestType)
         {
-       
-            LoadOptions = options = new LoaderOptions(this, options);
-            bool englishChat = requestType.ContainsAny(RequestKind.NaturalLang);
 
-            thatSaid = thatSaid ?? options.currentThat;
-            options.currentThat = thatSaid;
+            bool englishChat = requestType.ContainsAny(RequestKind.NaturalLang);
+            if (parent == null && options == null)
+            {
+                if (!isToplevel)
+                {
+                    writeToLog("WARN not toplevel");
+                }
+                var u = user ?? targetUser ?? bot.ExemplarUser ?? bot.BotAsUser;
+                options = new LoaderOptions(u);
+            }
+            this.bot = bot;
+            this.Requester = user;
+            this.Responder = targetUser;
+            ExitQueue = new CommitQueue();
+            TargetBot = bot;
+            this.StartedOn = DateTime.Now;
+            this.depth = 0;
+            this.depthMax = 128; 
+
+            thatSaid = BestOf(currentThat, thatSaid);
+            SetLoaderOptions(parent);
+            SetLoaderOptions(options);
+            currentInput = BestOf(currentInput, rawInput);
             if (!englishChat)
             {
-                if (thatSaid != "*")
+                if (currentThat != "*")
+                {
+                    user.WriteToUserTrace("SWARN is this supposed to be english?");
+
+                }
+            }
+            else
+            {
+
+                if (currentThat == "*")
                 {
                     user.WriteToUserTrace("SWARN is this supposed to be english?");
 
@@ -502,20 +540,13 @@ namespace AltAIMLbot.Utils
                 this.ParentRequest = parent;
                 CopyToRequest(parent, this);
             }
-            ExitQueue = new CommitQueue();
-            TargetBot = bot;
             ChatInput = new Utterance(null, user, targetUser, rawInput, -1);// RTParser.Utterance.GetParsedUserInputSentences(thisRequest, rawInput);
-            this.Requester = user;
-            this.bot = bot;
-            this.StartedOn = DateTime.Now;
-            this.depth = 0;
-            this.depthMax = 128;
+
             TargetSettings = user.Predicates;
             IsToplevelRequest = isToplevel;
             RequestType = requestType;
             this.Stage = SideEffectStage.UNSTARTED;
             matchable = matchable ?? StaticAIMLUtils.MakeMatchable(rawInput);
-            ithat = thatSaid;
             SuspendSearchLimits = true;
             if (graphMaster != null)
             {
@@ -549,7 +580,7 @@ namespace AltAIMLbot.Utils
                 ChatInput.InResponse = inresp;
                 thatSaid = thatSaid ?? inresp.TheMainSentence;
             }
-            ithat = thatSaid;
+
             UsedResults = new ListAsSet<Result>();
             Flags = Unifiable.EnglishNothing;
             QuerySettingsSettable querySettings = GetQuerySettings();
@@ -595,6 +626,10 @@ namespace AltAIMLbot.Utils
                     user.CurrentRequest = thisRequest;
                 }
             }
+            SetSpeakerAndResponder(user, targetUser);
+            TargetSettings.IsTraced = true;
+            SettingsDictionaryReal r = TargetSettings.ChangeType(typeof(SettingsDictionaryReal)) as SettingsDictionaryReal;
+            
             this.TargetBot = bot;
             this.TimeOutFromNow = TimeSpan.FromMilliseconds(TargetBot.TimeOut);
             //this.framesAtStart = new StackTrace().FrameCount;
@@ -611,7 +646,10 @@ namespace AltAIMLbot.Utils
 
             if (englishChat)
             {
-                CheckEnglish(thatSaid);
+                if (IsToplevelRequest)
+                {
+                    CheckEnglish(thatSaid);
+                }
             }                        
 
             if (!isToplevel)
@@ -717,110 +755,35 @@ namespace AltAIMLbot.Utils
             set { Graph.GraphsAcceptingUserInput = value; }
         }
 
-        public LoaderOptions LoadOptions { get; internal set; }
-
-        internal AIMLLoader _uaimlloader = null;
-
+        internal AIMLLoader loader;
         public AIMLLoader Loader
         {
             get
             {
-                if (_uaimlloader == null)
+                if (loader == null)
                 {
-                    _uaimlloader = new AIMLLoader(TargetBot, thisRequest);
+                    loader = new AIMLLoader(TargetBot, this);
                 }
-                return _uaimlloader;
-            }
-            set
-            {
-                if (_uaimlloader != null && _uaimlloader != value)
-                {
-                    bot.RaiseError("Replacing loader");
-                }
-                _uaimlloader = value;
+                return loader;
             }
         }
-
-
-        public string CurrentGraphName
+        public LoaderOptions LoadOptions
         {
-            get { return LoadOptions.graphName; }
+            get { return CopyOptions(); }
+            set { CopyFromTo(value, this); }
         }
 
         public void AddGraph(GraphMaster master)
         {
              throw new NotImplementedException();
         }
-
-        public GraphMaster Graph
-        {
-            get
-            {
-                if (LoadOptions.CtxGraph != null)
-                    return LoadOptions.CtxGraph;
-                if (ParentRequest != null)
-                {
-                    var pg = ParentRequest.Graph;
-                    if (pg != null) return pg;
-                }
-                if (Requester == null)
-                {
-                    if (ovrdGraphName == null) return null;
-                    return TargetBot.GetGraph(ovrdGraphName, null);
-                }
-                GraphMaster probably = Requester.StartGraph;
-                if (ovrdGraphName != null)
-                {
-                    if (probably != null)
-                    {
-                        // very good!
-                        if (probably.ScriptingName == ovrdGraphName) return probably;
-                        if (probably.ScriptingName == null)
-                        {
-                            // not  so good!
-                            return probably;
-                        }
-                        if (probably.ScriptingName.Contains(ovrdGraphName)) return probably;
-                        // transtiton
-                        var newprobably = TargetBot.GetGraph(ovrdGraphName, probably);
-                        if (newprobably != probably)
-                        {
-                            Requester.WriteToUserTrace("Changing request graph " + probably + " -> " + newprobably + " for " + this);
-                            probably = newprobably;
-                        }
-                    }
-                    else
-                    {
-                        probably = TargetBot.GetGraph(ovrdGraphName, TargetBot.DefaultStartGraph);
-                        {
-                            Requester.WriteToUserTrace("Changing request graph " + probably + " -> " + null + " for " + this);
-                        }
-                    }
-                }
-                return probably;
-            }
-            set
-            {
-                if (value != null)
-                {
-                    if (ovrdGraphName == value.ScriptingName) return;
-                    ovrdGraphName = value.ScriptingName;
-                }
-                LoaderOptions lo = LoadOptions;
-                lo.CtxGraph = value;
-            }
-        }
-
-        private string ovrdGraphName = null;
-        /// <summary>
-        /// The Graph to start the query on
         /// </summary>
         public override string StartGraphName
         {
             get
             {
-                if (ovrdGraphName != null)
-                    return ovrdGraphName;
+                if (base.graphName != null)
+                    return base.graphName;
                 if (ParentRequest != null)
                 {
                     var pg = ((QuerySettingsReadOnly)ParentRequest).StartGraphName;
@@ -835,8 +798,8 @@ namespace AltAIMLbot.Utils
             set
             {
                 // if (sGraph != null)
-                LoadOptions.CtxGraph = GetGraph(value);
-                ovrdGraphName = value;
+                base.Graph = GetGraph(value);
+                base.graphName = value;
             }
         }
 
@@ -888,8 +851,6 @@ namespace AltAIMLbot.Utils
             result.AddOutputSentences(ti, nai, score);
         }
 
-        private Unifiable _topic;
-
         public Unifiable Flags { get; set; }
         public GraphQuery TopLevelQuery { get; set; }
 
@@ -897,43 +858,13 @@ namespace AltAIMLbot.Utils
         {
             get
             {
-                return Requester.TopicSetting;
-                if (_topic != null) return _topic;
+                if (base.topicName != null) return topicName;
                 if (ParentRequest != null) return ParentRequest.Topic;
                 return Requester.TopicSetting;
             }
             set
             {
-                if (true)
-                {
-                    Requester.TopicSetting = value;
-                    return;
-                }
-                Unifiable prev = Topic;
-                Requester.TopicSetting = value;
-                if (value == TargetBot.NOTOPIC)
-                {
-                    if (_topic != null)
-                    {
-                        _topic = null;
-                    }
-                    else
-                    {
-
-                    }
-                }
-                if (prev == value) return;
-                if (_topic != null)
-                {
-                    _topic = value;
-                    return;
-                }
-                if (ParentRequest != null)
-                {
-                    ParentRequest.Topic = value;
-                    return;
-                }
-                _topic = value;
+                topicName = value;
             }
         }
 
@@ -942,9 +873,10 @@ namespace AltAIMLbot.Utils
             get
             {
                 var tops = Requester.Topics;
-                if (_topic != null)
+                var currentTopic = Topic;
+                if (currentTopic != null)
                 {
-                    if (!tops.Contains(_topic)) tops.Insert(0, _topic);
+                    if (!tops.Contains(Topic)) tops.Insert(0, currentTopic);
                 }
                 if (tops.Count == 0) return new List<Unifiable>() { TargetBot.NOTOPIC };
                 return tops;
@@ -1086,7 +1018,7 @@ namespace AltAIMLbot.Utils
         public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, GraphMaster graphMaster, RequestKind kind)
         {
             Request subRequest = CreateSubRequest(templateNodeInnerValue, Requester,
-                                                  LoadOptions, Responder, TargetBot, this, graphMaster, kind);
+                                                  this, Responder, TargetBot, this, graphMaster, kind);
             return (MasterRequest)subRequest;
         }
 
@@ -1223,12 +1155,6 @@ namespace AltAIMLbot.Utils
 
         public bool IsToplevelRequest { get; set; }
 
-        internal Unifiable ithat
-        {
-            get { return LoadOptions.currentThat; }
-            set { LoadOptions.currentThat = value; }
-        }
-
         public Unifiable That
         {
             get
@@ -1249,7 +1175,7 @@ namespace AltAIMLbot.Utils
             }
             set
             {
-                ithat = value;
+                currentThat = value;
             }
         }
 
@@ -1259,7 +1185,7 @@ namespace AltAIMLbot.Utils
             while (req != null)
             {
                 Unifiable something;
-                if (IsSomething(req.ithat, out something))
+                if (IsSomething(req.currentThat, out something))
 
                     return something;
 
@@ -1509,22 +1435,10 @@ namespace AltAIMLbot.Utils
 
         public SubQuery CurrentQuery
         {
-            get
-            {
-                Result r = _CurrentResult;
-                if (r != null && !ReferenceEquals(r, this))
-                {
-                    SubQuery sq = r.CurrentQuery;
-                    if (sq != null) return sq;
-                    if (ParentRequest != null)
-                    {
-                        return ParentRequest.CurrentQuery;
-                    }
-                }
-                return null;
-            }
+            get { return _CurrentQuery; }
             set { _CurrentQuery = value; }
         }
+
         internal SubQuery _CurrentQuery;
 
 
@@ -1756,18 +1670,6 @@ namespace AltAIMLbot.Utils
             set;
         }
 
-        public string CurrentlyLoadingFrom
-        {
-            get { return LoadOptions.CurrentlyLoadingFrom; }
-            set { LoadOptions.CurrentlyLoadingFrom = value; }
-        }
-
-        public string CurrentFilename
-        {
-            get { return LoadOptions.CurrentFilename; }
-            set { LoadOptions.CurrentFilename = value; }
-        }
-
         public AIMLTagHandler LastHandler;
 
         #endregion
@@ -1782,6 +1684,10 @@ namespace AltAIMLbot.Utils
 
 namespace AltAIMLParser
 {
+    public class nix
+    {
+        public void pex() { }
+    }
 }
 namespace AltAIMLbot.Utils
 {
@@ -1863,6 +1769,7 @@ namespace AltAIMLbot
 
         private bool IgnoreTasks;
         private readonly List<NamedAction> commitHooks = new List<NamedAction>();
+
         public static List<NamedAction> DoAll(List<NamedAction> todo)
         {
             var newList = new List<NamedAction>();
@@ -1897,7 +1804,8 @@ namespace AltAIMLbot
             // throw new NotImplementedException();
         }
 
-        readonly object SyncLock = new object();
+        private readonly object SyncLock = new object();
+
         public void Commit(bool clearAfter)
         {
             lock (SyncLock)
@@ -1941,6 +1849,7 @@ namespace AltAIMLbot
         }
 
         public bool Immediate = false;
+
         public void Add(string name, ThreadStart action)
         {
             var newKeyValuePair = new NamedAction(name, action);
@@ -1972,269 +1881,3 @@ namespace AltAIMLbot
 
     }
 }
-#if false 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using AltAIMLbot.Utils;
-using RTParser.Variables;
-
-namespace AltAIMLbot
-{
-    /// <summary>
-    /// Encapsulates all sorts of information about a request to the bot for processing
-    /// </summary>
-    public class Request
-    {
-#region Attributes
-        /// <summary>
-        /// The raw input from the user
-        /// </summary>
-        public string rawInput;
-        /// <summary>
-        /// The raw input from the user
-        /// </summary>
-        public Utterance ChatInput { get; set; }
-
-        /// <summary>
-        /// The time at which this request was created within the system
-        /// </summary>
-        public DateTime StartedOn;
-
-        /// <summary>
-        /// The user who made this request
-        /// </summary>
-        public User user;
-        /// <summary>
-        /// The user who made this request
-        /// </summary>
-        public User Requester { get; set; }
-        private User _responderUser;
-        public Request ParentRequest { get; set; }
-
-        public int depth=0;
-        public int depthMax = 128;
-
-        /// <summary>
-        /// The user who is the target of this request
-        /// </summary>
-        public User Responder
-        {
-            get
-            {
-                if (_responderUser != null) return _responderUser;
-                var parentRequest = this.ParentRequest;
-                if (parentRequest != null) return parentRequest.Responder;
-                return null;
-            }
-            set
-            {
-                _responderUser = value;
-                // if (value != null) That = value.JustSaid;
-            }
-        }
-
-        /// <summary>
-        /// The bot to which the request is being made
-        /// </summary>
-        public AltBot bot;
-
-        /// <summary>
-        /// The final result produced by this request
-        /// </summary>
-        public Result result;
-
-        /// <summary>
-        /// Flag to show that the request has timed out
-        /// </summary>
-        public bool hasTimedOut = false;
-
-        public double thisScore = 1.0;
-        protected Result _CurrentResult;
-        /// <summary>
-        /// The final result produced by this request
-        /// </summary>
-        private Result _result;
-        public Result CurrentResult
-        {
-            get
-            {
-                if (_result == null)
-                {
-                    return null;
-                }
-                return _result;
-            }
-            set { _result = value; }
-        }
-
-        #endregion
-
-        /// <summary>
-        /// Ctor
-        /// </summary>
-        /// <param name="rawInput">The raw input from the user</param>
-        /// <param name="user">The user who made the request</param>
-        /// <param name="bot">The bot to which this is a request</param>
-        public Request(string rawInput, User user, AltBot bot)
-        {
-            this.rawInput = rawInput;
-            this.user = user;
-            this.bot = bot;
-            this.StartedOn = DateTime.Now;
-            this.depth = 0;
-            this.depthMax = 128;
-            TargetSettings = user.Predicates;
-        }
-        public TimeSpan _Durration = TimeSpan.Zero;
-        /// <summary>
-        /// The Proccessor to which the request is being made
-        /// </summary>
-        public AltBot TargetBot { get; set; }
-
-        /// <summary>
-        /// The amount of time the request took to process
-        /// </summary>
-        public TimeSpan Durration
-        {
-            get
-            {
-                if (_Durration == TimeSpan.Zero) return DateTime.Now - StartedOn;
-                return _Durration;
-            }
-            set { _Durration = value; }
-        }
-        public DateTime TimesOutAt { get; set; }
-        public string _WhyRequestComplete;
-        public GraphMaster CurrentGraph;
-        public SettingsDictionary TargetSettings;
-        public bool MayTimeOut;
-
-        public string WhyResultComplete
-        {
-            get
-            {
-                var currentResult = CurrentResult;
-                if (currentResult == null) return null;
-                return currentResult.WhyResultComplete;
-            }
-        }
-        public bool IsToplevelRequest { get; set; }
-        public bool _SuspendSearchLimits { get; set; }
-        public bool SuspendSearchLimits
-        {
-            get { return _SuspendSearchLimits && IsToplevelRequest; }
-            set { _SuspendSearchLimits = value; }
-        }
-        /// <summary>
-        /// Flag to show that the request has timed out
-        /// </summary>
-        public virtual string WhyRequestComplete
-        {
-            get
-            {
-                if (SuspendSearchLimits) return null;
-                return _WhyRequestComplete;
-            }
-            set { if (!SuspendSearchLimits) _WhyRequestComplete = value; }
-        }
-
-        public string WhyComplete
-        {
-            get
-            {
-                Result currentResult = CurrentResult;
-                return WhyRequestComplete ?? (currentResult == null ? null : currentResult.WhyResultComplete);
-            }
-            set { _WhyRequestComplete = value; }
-        }
-        public TimeSpan TimeOut
-        {
-            get
-            {
-                if (TimesOutAt > StartedOn) return TimesOutAt - StartedOn;
-                return TimeSpan.FromMilliseconds(TargetBot.TimeOut);
-            }
-            set
-            {
-                TimesOutAt = StartedOn + value;
-                WhyComplete = null;
-            }
-        }
-
-        public TimeSpan TimeOutFromNow
-        {
-            set
-            {
-                WhyComplete = null;
-                StartedOn = DateTime.Now;
-                if (TimeOut < value)
-                {
-                    TimeOut = value;
-                }
-                else
-                {
-                    TimeOut = value;
-                }
-            }
-        }
-
-        public void AddGraph(object master)
-        {
-            /// throw new NotImplementedException();
-        }
-        public Result CreateResult(Request parentReq)
-        {
-            if (parentReq != this)
-            {
-                return parentReq.CreateResult(parentReq);
-            }
-
-            Result currentResult = parentReq.CurrentResult;
-            if (currentResult == null)
-            {
-                var r = new AltAIMLbot.Result(rawInput, Requester, TargetBot, parentReq, parentReq.Responder);
-                parentReq.CurrentResult = r;
-                //ExitQueue.Add("exit subResult", r.Exit);
-                r.request = thisRequest;
-                currentResult = r;
-            }
-            TimeOutFromNow = parentReq.TimeOut;
-            return (Result)currentResult;
-        }
-        public void Exit()
-        {
-            /// throw new NotImplementedException();
-        }
-        private Request thisRequest
-        {
-            get { return (Request)this; }
-        }
-
-        public SettingsDictionary GetDictionary(string type0)
-        {
-            if (type0 == "user") type0 = user.UserID;
-            return (SettingsDictionary)bot.GetDictionary(type0);
-        }
-
-        public GraphMaster GetGraph(string name)
-        {
-            if ((name == null || name == "*") && CurrentGraph != null)
-            {
-                return CurrentGraph;
-            }
-            return bot.GetGraph(name) ?? bot.Graphmaster;
-        }
-
-        public SettingsDictionary GetSubstitutions(string named, bool createIfMissing)
-        {
-            return (SettingsDictionary)TargetBot.GetDictionary(named, "substitutions", createIfMissing);
-        }
-
-        public void writeToLog(string s, params object[] args)
-        {
-            TargetBot.writeToLog(s, args);
-        }
-    }
-}
-#endif

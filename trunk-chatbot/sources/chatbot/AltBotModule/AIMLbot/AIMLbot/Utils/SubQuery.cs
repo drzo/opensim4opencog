@@ -45,7 +45,7 @@ namespace AltAIMLbot.Utils
         /// If the raw input matches a wildcard then this attribute will contain the block of 
         /// text that the user has inputted that is matched by the wildcard.
         /// </summary>
-        public List<string> InputStar
+        public List<string> InputStars
         {
             get { return Stars["pattern"]; }
         }
@@ -54,7 +54,7 @@ namespace AltAIMLbot.Utils
         /// If the "that" part of the normalized path contains a wildcard then this attribute 
         /// will contain the block of text that the user has inputted that is matched by the wildcard.
         /// </summary>
-        public List<string> ThatStar
+        public List<string> ThatStars
         {
             get { return Stars["that"]; }
         }
@@ -168,6 +168,8 @@ namespace AltAIMLbot.Utils
                 Stars[node] = new List<string>();
             }
             Result = res;
+            res._CurrentQuery = this;
+            request._CurrentQuery = this;
             Request = request;
             Graph = request.Graph;
             TargetSettings = request.TargetSettings;
@@ -472,7 +474,7 @@ namespace AltAIMLbot.Utils
             string nodePattern = ((object) Pattern ?? "-no-pattern-").ToString().Trim();
             string s = SafeFormat("\nINPUT='{6}'\nPATTERN='{0}' InThToGu={1}:{2}:{3}:{4} Tc={5} Graph={7}\n",
                                   nodePattern,
-                                  InputStar.Count, ThatStar.Count, TopicStar.Count,
+                                  InputStars.Count, ThatStars.Count, TopicStar.Count,
                                   GuardStar.Count, Templates == null ? 0 : Templates.Count,
                                   FullPath, Graph);
             if (Templates != null)
@@ -521,8 +523,8 @@ namespace AltAIMLbot.Utils
         public SubQuery CopyOf()
         {
             SubQuery sq = new SubQuery(FullPath, Result, Request);
-            sq.InputStar.AddRange(InputStar);
-            sq.ThatStar.AddRange(ThatStar);
+            sq.InputStars.AddRange(InputStars);
+            sq.ThatStars.AddRange(ThatStars);
             sq.TopicStar.AddRange(TopicStar);
             sq.GuardStar.AddRange(GuardStar);
             sq.Flags.AddRange(Flags);
@@ -566,10 +568,10 @@ namespace AltAIMLbot.Utils
             switch (matchstate)
             {
                 case MatchState.Pattern:
-                    return InputStar;
+                    return InputStars;
                     break;
                 case MatchState.That:
-                    return ThatStar;
+                    return ThatStars;
                     break;
                 case MatchState.Topic:
                     return TopicStar;
@@ -745,8 +747,8 @@ namespace AltAIMLbot.Utils
                 && Equals(other.Result, Result)
                 //  && Equals(other.TopLevel, TopLevel)                        
                 && StaticAIMLUtils.CollectionEquals(other.GuardStar, GuardStar)
-                && StaticAIMLUtils.CollectionEquals(other.InputStar, InputStar)
-                && StaticAIMLUtils.CollectionEquals(other.ThatStar, ThatStar)
+                && StaticAIMLUtils.CollectionEquals(other.InputStars, InputStars)
+                && StaticAIMLUtils.CollectionEquals(other.ThatStars, ThatStars)
                 && StaticAIMLUtils.CollectionEquals(other.TopicStar, TopicStar)
                 && StaticAIMLUtils.SetsEquals(other.Flags, Flags)
                 //  && other.HasFailed == HasFailed

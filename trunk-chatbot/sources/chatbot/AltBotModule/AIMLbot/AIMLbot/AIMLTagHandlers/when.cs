@@ -67,7 +67,7 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override Unifiable ComputeInnerOrNull()
         {
-            return Recurse();
+            return ((AIMLTagHandler) this).Recurse();
         }
     }
 }

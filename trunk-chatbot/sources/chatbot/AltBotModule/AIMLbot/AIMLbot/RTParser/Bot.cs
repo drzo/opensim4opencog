@@ -1158,12 +1158,10 @@ namespace AltAIMLbot
 
         public void AddAiml(GraphMaster graph, string aimlText, Request request)
         {
-            GraphMaster prev = request.Graph;
+            var loader = request.LoadOptions;
             try
             {
-                request.Graph = graph;
-                LoaderOptions loader = request.LoadOptions; // LoaderOptions.GetDefault(request);
-                loader.CtxGraph = graph;
+                loader.Graph = graph;
                 loader.CurrentFilename = "from_text";
                 string s = string.Format("<aiml graph=\"{0}\">{1}</aiml>", graph.ScriptingName, aimlText);
                 request.Loader.loadAIMLString(s);
@@ -1177,7 +1175,7 @@ namespace AltAIMLbot
             }
             finally
             {
-                request.Graph = prev;
+                request.LoadOptions = loader;
             }
         }
 

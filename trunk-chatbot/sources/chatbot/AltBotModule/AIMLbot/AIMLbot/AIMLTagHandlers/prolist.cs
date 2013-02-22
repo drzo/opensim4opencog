@@ -41,7 +41,7 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             if (this.TemplateNodeName == "prolist")
             {
-                string text = this.TemplateNodeInnerText.ToLower(this.bot.Locale);
+                string text = ((string) this.Recurse()).ToLower(this.bot.Locale);
                 text = text.Replace("?", " questionmark ");
                 text = text.Replace("!", " exclamationmark ");
                 text = text.Replace(".", " periodmark ");

@@ -35,7 +35,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 Unifiable filter = base.GetAttribValue("filter", null);
                 if (!IsNullOrEmpty(templateNodeInnerText))
                 {
-                    if (WhenTrue(TheCyc.EvalSubL(Recurse(), filter)))
+                    if (WhenTrue(TheCyc.EvalSubL(((AIMLTagHandler) this).Recurse(), filter)))
                     {
                         base.Succeed();
                         return templateNodeInnerText;

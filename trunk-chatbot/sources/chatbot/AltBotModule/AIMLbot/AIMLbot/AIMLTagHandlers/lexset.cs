@@ -32,7 +32,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 // Simply push the filled in tag contents onto the stack
                 try
                 {
-                    Unifiable templateNodeInnerValue = Recurse();
+                    Unifiable templateNodeInnerValue = ((AIMLTagHandler) this).Recurse();
                     string word = GetAttribValue("name", null);
                     string lexlist = (string)templateNodeInnerValue;
                     string [] lexset = lexlist.Split(' ');

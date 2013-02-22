@@ -41,7 +41,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             {
 
                 // Process each of these child "settings"? nodes
-                loaderOptions.Loader.processTopic(templateNode, loaderOptions.CurrentFilename);
+                request.Loader.processTopic(templateNode, loaderOptions.CurrentFilename);
                 return Succeed("loaded from " + loaderOptions.CurrentFilename);
             }
             return Succeed(UnifiableEmpty);

@@ -41,14 +41,14 @@ namespace AltAIMLbot.AIMLTagHandlers
         }
         protected override Unifiable ProcessChangeU()
         {
-            if (Formatter == null) return TemplateNodeInnerText;
+            if (Formatter == null) return (string) Recurse();
             StringBuilder result = new StringBuilder();            
             if (this.TemplateNodeHasText)
             {
                 bool needSpace = false;
                 string[] words = splitter != null
-                                     ? this.TemplateNodeInnerText.Split(splitter, StringSplitOptions.None)
-                                     : new[] {this.TemplateNodeInnerText};
+                                     ? ((string) this.Recurse()).Split(splitter, StringSplitOptions.None)
+                                     : new[] {(string) this.Recurse()};
                 foreach (string word in words)
                 {
                     string newWord = Formatter(word);

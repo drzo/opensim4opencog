@@ -51,7 +51,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 // Simply push the filled in tag contents onto the stack
                 try
                 {
-                    String templateNodeInnerValue = this.TemplateNodeInnerText;
+                    String templateNodeInnerValue = this.Recurse();
                     string myUrl = TemplateNodeAttributes["url"].Value;
                     string myAppID = TemplateNodeAttributes["appid"].Value;
                     if (myUrl == null) { myUrl = bot.GlobalSettings.grabSetting("wolframserverurl"); }

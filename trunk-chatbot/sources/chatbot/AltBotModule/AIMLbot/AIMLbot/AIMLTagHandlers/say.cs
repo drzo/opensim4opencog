@@ -60,7 +60,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     if (this.TemplateNodeHasText)
                     {
                         // non atomic version of the node
-                        string message = this.TemplateNodeInnerText;
+                        string message = this.Recurse();
                         //if (bot.saySapi) message = this.TemplateNodeInnerXml;
                         Console.WriteLine("  SayA msg1:{0}", message);
                         string lastOut = this.bot.getBBHash("TTSText");
@@ -90,7 +90,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     else
                     {
                         string message = this.TemplateNodeInnerXml; //.InnerText;
-                        string message2 = this.TemplateNodeInnerText;
+                        string message2 = this.Recurse();
                         Console.WriteLine("  SayB msg1:{0}", message);
                         Console.WriteLine("  SayB msg2:{0}", message2);
                         //if (message.Length > 0) this.user.bot.sayProcessor(message);

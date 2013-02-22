@@ -63,7 +63,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     }
                     else
                     {
-                        message = this.TemplateNodeInnerText;
+                        message = this.Recurse();
                     }
                     return message;
 

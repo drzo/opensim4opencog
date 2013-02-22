@@ -47,7 +47,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 if (this.TemplateNodeHasText)
                 {
                     StringBuilder result = new StringBuilder();
-                    char[] letters = this.TemplateNodeInnerText.Trim().ToCharArray();
+                    char[] letters = ((string) this.Recurse()).Trim().ToCharArray();
                     bool doChange = true;
                     for (int i = 0; i < letters.Length; i++)
                     {

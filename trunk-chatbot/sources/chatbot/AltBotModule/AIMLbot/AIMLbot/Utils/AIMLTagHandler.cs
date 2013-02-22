@@ -114,12 +114,12 @@ namespace AltAIMLbot.Utils
         
         protected bool TemplateNodeHasText
         {
-            get { return TemplateNodeInnerText.Length > 0; }
+            get { return ((string) Recurse()).Length > 0; }
         }
 
         protected string RecurseStar()
         {
-            this.TemplateNodeInnerText = GetStarContent();
+            innerResult.Value = GetStarContent();
             if (this.TemplateNodeHasText)
             {
                 return this.Transform();

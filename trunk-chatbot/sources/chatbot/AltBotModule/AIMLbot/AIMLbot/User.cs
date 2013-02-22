@@ -371,6 +371,12 @@ namespace AltAIMLbot
 
         public bool SetMeMyselfAndI(string value)
         {
+            var r = Predicates as SettingsDictionaryReal;
+            r.IsIdentityReadOnly = true;
+            string strip = "state,topic,graph,that";
+            r.removeSetting(strip);
+            r.readonlySetting(strip, true);
+            r.SuspendUpdates = false;
             string saved = value.Replace("_", " ").Trim(" ,".ToCharArray());
             if (saved.Length == 0) return false;
             if (Predicates == null) return false;
@@ -947,7 +953,7 @@ namespace AltAIMLbot
                 while
                     (fr != null)
                 {
-                    var frithat = fr.ithat;
+                    var frithat = fr.currentThat;
                     if (IsSomething(frithat, out something))
                     {
                         rbot.Logger.Warn("using last Request to guess that=" + something);
@@ -990,7 +996,7 @@ namespace AltAIMLbot
                 Predicates["that"] = value;
                 if (CurrentRequest != null)
                 {
-                    CurrentRequest.ithat = value;
+                    CurrentRequest.currentThat = value;
                 }
             }
         }
@@ -1578,7 +1584,7 @@ namespace AltAIMLbot
             request.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
             request.Graph = StartGraph;
             request.CurrentlyLoadingFrom = userdir;
-            var options = request.LoadOptions; //LoaderOptions.GetDefault(request);
+            var options = request.LoadOptions;
             var gs = bot.GlobalSettings;
             try
             {
@@ -1777,13 +1783,15 @@ namespace AltAIMLbot
                 targetJustSaid = target.JustSaid;
                 rbot.Logger.Warn("using target.JustSaid = " + targetJustSaid);
             }
-            LoaderOptions loadOpts = new LoaderOptions();
-            
+            LoaderOptions loadOpts = new LoaderOptions(this);
+            if (G != null) loadOpts.Graph = G;
+            if (parentRequest != null) loadOpts.SetLoaderOptions(parentRequest);
             loadOpts.currentThat = targetJustSaid;
 
             if (parentRequest == null)
             {
-                request = new MasterRequest(message, this, loadOpts, target, bot, parentRequest, G, isToplevel, requestType);
+                request = new MasterRequest(message, this, loadOpts, targetJustSaid, target, bot, parentRequest, G,
+                                            isToplevel, requestType);
             }
             else
             {

@@ -283,7 +283,7 @@ namespace AltAIMLbot.Utils
         public static CategoryInfo GetCategoryInfo(Unifiable info, XmlNode node, LoaderOptions filename, XmlNode templateNode,
             Unifiable template, Unifiable guard, Unifiable topicInfo, Node patternNode, Unifiable thatInfo, IEnumerable<ConversationCondition> conds)
         {
-            return filename.CtxGraph.FindCategoryInfo(info, node, filename, templateNode, template, guard, topicInfo,
+            return filename.Graph.FindCategoryInfo(info, node, filename, templateNode, template, guard, topicInfo,
                                                       patternNode, thatInfo, conds);
         }
 

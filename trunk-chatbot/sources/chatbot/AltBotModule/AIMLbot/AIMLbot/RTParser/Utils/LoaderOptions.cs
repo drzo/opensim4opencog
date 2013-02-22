@@ -5,6 +5,7 @@ using System.Threading;
 using System.Xml;
 using AIMLbot;
 using AltAIMLParser;
+using AltAIMLbot.Variables;
 using LogicalParticleFilter1;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
@@ -15,7 +16,7 @@ using MasterRequest = AltAIMLbot.Utils.Request;
 
 namespace AltAIMLbot.Utils
 {
-    public class LoaderOptions
+    public class LoaderOptions: QuerySettings
     {
         public string graphName = "*";
         public string topicName = "*";
@@ -41,7 +42,7 @@ namespace AltAIMLbot.Utils
         public bool SearchForGuard = false;
 
         // simply a cache
-        private GraphMaster _specified_Graph;
+        protected GraphMaster _sGraph;
         public void WithAttributes(XmlNode node, ref string defaultElement, Action action)
         {
             if (node.Attributes == null)
@@ -58,7 +59,6 @@ namespace AltAIMLbot.Utils
             {
                 ts();
             }
-            var restore = Copy();
         }
         public Action WithAttributesForUnwind(XmlNode node, ref string defaultElement, List<XmlAttribute> consumed)
         {
@@ -72,7 +72,7 @@ namespace AltAIMLbot.Utils
             }
             bool defaultElementResore = false;
             string prevDefaultEle = null;
-            var restore = Copy();
+            var restore = CopyOptions();
             var current = this;
             bool isNamed = false;
             foreach (XmlAttribute Attrib in node.Attributes)
@@ -130,49 +130,70 @@ namespace AltAIMLbot.Utils
             {
                 if (defaultElementResore && !isNamed)
                 {
-                    TheRequest.bot.RaiseError("Cant reset default element! ");
+                    AltBot.ConsoleRobot.RaiseError("Cant reset default element! ");
                     //defaultElement = prevDefaultEle;
                 }
                 CopyFromTo(restore, this);
             };
         }
-
-        public LoaderOptions()
+        public LoaderOptions(User dict)
+            : base(null)
         {
-
+            this.graphName = StarNulls(dict.StartGraphName);
+            this.topicName = StarNulls(dict.Topic);
+            this.currentThat = StarNulls(dict.That);
+            this.currentInput = StarNulls(dict.JustSaid);
+            this.CurrentlyLoadingFrom = StarNulls(dict.Predicates["cwd"]);
+            this.stateNamePre = StarNulls(dict.Predicates["state"]);
+          this.currentFlags = StarNulls(dict.Predicates["flags"]);
+            //CategoryInfos = new List<CategoryInfo>();
         }
 
-        public LoaderOptions(Request req, LoaderOptions copyFrom)
+        static private string StarNulls(string startGraphName)
         {
-            TheRequest = req;
+            if (IsNullOrEmpty(startGraphName))
+            {
+                return "*";
+            }
+            return startGraphName;
+        }
+
+        protected LoaderOptions()
+            : base(null)
+        {
+            //CategoryInfos = new List<CategoryInfo>();
+        }
+
+        public void SetLoaderOptions(LoaderOptions copyFrom)
+        {
             if (copyFrom != default(LoaderOptions))
             {
                 CopyFromTo(copyFrom, this);
             }
-            //CategoryInfos = new List<CategoryInfo>();
         }
 
-        private void CopyFromTo(LoaderOptions from, LoaderOptions to)
+        static public void CopyFromTo(LoaderOptions from, LoaderOptions to)
         {
-            foreach (FieldInfo fi in GetType().GetFields())
+            foreach (FieldInfo fi in typeof(LoaderOptions).GetFields())
             {
-                fi.SetValue(to, fi.GetValue(from));
+                if (!typeof(IComparable<string>).IsAssignableFrom(fi.FieldType)) continue;
+                fi.SetValue(to, StarNulls("" + (fi.GetValue(from) ?? "*")));
             }
         }
 
-        public GraphMaster CtxGraph
+        public GraphMaster Graph
         {
             get
             {
-                if (_specified_Graph == null)
+                if (_sGraph == null)
                 {
-                    _specified_Graph = AltBot.FindGlobalGraph(graphName);
+                    _sGraph = AltBot.FindGlobalGraph(graphName);
                 }
-                return _specified_Graph;
+                return _sGraph;
             }
             set
             {
-                _specified_Graph = value;
+                _sGraph = value;
                 if (value != null)
                 {
                     graphName = value.ScriptingName;
@@ -180,23 +201,25 @@ namespace AltAIMLbot.Utils
             }
         }
 
-        public AIMLLoader Loader
+        //public Request TheRequest = this;
+
+        public string generateCPath(AltBot bot)
         {
-            get { return TheRequest.Loader; }
+            return AIMLLoader.generateCPath(graphName, currentInput, currentThat, currentFlags, topicName, stateNamePre,
+                                            stateNamePost,
+                                            true, null, bot);
         }
 
-        public Request TheRequest;
-
-        public override string ToString()
+        override public string ToString()
         {
             return GlobalSharedSettings.StructToString(this);
         }
 
 
-        internal LoaderOptions Copy()
+        protected LoaderOptions CopyOptions()
         {
-            var loaderOpts = new LoaderOptions(null, this);
-            //CopyFromTo(this, loaderOpts);
+            var loaderOpts = new LoaderOptions();
+            CopyFromTo(this, loaderOpts);
             return loaderOpts;
         }
 
@@ -220,9 +243,31 @@ namespace AltAIMLbot.Utils
             }
         }
 
+        internal string BestOf(string befor, string after)
+        {
+            if (NullOrStar(befor))
+            {
+                if (NullOrStar(after))
+                {
+                    return "*";
+                }
+                return after;
+            }
+
+            if (!NullOrStar(after)) return after;
+            return befor;
+        }
+
+
         private bool NullOrStar(string path)
         {
             return string.IsNullOrEmpty(path) || path == "*";
+        }
+
+        public override string StartGraphName
+        {
+            get { return graphName; }
+            set { graphName = value; }
         }
     }
 }

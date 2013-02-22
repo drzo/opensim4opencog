@@ -35,7 +35,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode, 1)
         {
-            StarDict = () => TheQuery.GuardStar;
+            StarDict = () => CurrentQuery.GuardStar;
         }
     }
 }

@@ -39,7 +39,7 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             if (templateNode.Name.ToLower() == "category")
             {
-                loaderOptions.Loader.processCategory(templateNode, loaderOptions.CurrentFilename);
+                request.Loader.processCategory(templateNode, loaderOptions.CurrentFilename);
             }
             return Unifiable.Empty;
         }

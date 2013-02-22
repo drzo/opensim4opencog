@@ -48,7 +48,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 try
                 {
                     String queueName = TemplateNodeAttributes["key"].Value;
-                    String templateNodeInnerValue = this.TemplateNodeInnerText;
+                    String templateNodeInnerValue = this.Recurse();
                     Console.WriteLine("PostCache [{0}] = {1}", queueName, templateNodeInnerValue);
                     this.user.rbot.setBBHash(queueName, (string)templateNodeInnerValue);
                 }

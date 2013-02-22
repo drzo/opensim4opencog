@@ -38,7 +38,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 if (this.TemplateNodeHasText)
                 {
                     // non atomic version of the node
-                    msg = this.TemplateNodeInnerText;
+                    msg = this.Recurse();
                     int limit = 256;
                     if (TemplateNodeAttributes["max"] != null)
                     {

@@ -36,7 +36,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode, 1)
         {
-            StarDict = () => TheQuery.ThatStar;
+            StarDict = () => CurrentQuery.ThatStars;
         }
         protected override Unifiable Format(Unifiable unifiable)
         {

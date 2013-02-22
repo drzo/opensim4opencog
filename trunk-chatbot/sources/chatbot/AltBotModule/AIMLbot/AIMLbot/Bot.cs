@@ -857,10 +857,11 @@ namespace AltAIMLbot
         /// </summary>
         public void loadAIMLFromFiles(string dirPath, string graphName)
         {
-            var loader = GetLoader(GetBotRequest("loadAIMLFromFiles: " + dirPath + " into " + graphName));
-            loader.GraphName = graphName;
+            var aloader = GetLoader(GetBotRequest("loadAIMLFromFiles: " + dirPath + " into " + graphName));
+            var loader = aloader.loadOpts;
+            loader.graphName = graphName;
             loader.CurrentlyLoadingFrom = dirPath;
-            loader.loadAIMLURI(dirPath);
+            aloader.loadAIMLURI(dirPath);
         }
 
         public void loadAIMLFromFile(string filePath)
@@ -877,7 +878,7 @@ namespace AltAIMLbot
         {
             Console.WriteLine("Check:loadAIMLFromXML(0)");
             var loader = GetLoader(GetBotRequest("loadAIMLFromFiles: " + filename));
-            loader.GraphName = this.Graphmaster.ScriptingName;
+            loader.loadOpts.graphName = this.Graphmaster.ScriptingName;
             loader.loadAIMLFromXML(newAIML, filename);
         }
 
@@ -1400,7 +1401,7 @@ namespace AltAIMLbot
 
         public AltAIMLbot.Result Chat(Request request)
         {
-            return Chat(request, request.CurrentGraphName);
+            return Chat(request, request.graphName);
         }
 
         /// <summary>
@@ -1445,7 +1446,7 @@ namespace AltAIMLbot
                         foreach (string sentence in rawSentences)
                         {
                             result.InputSentences.Add(sentence);
-                            List<string> paths = gatherPaths(request.CurrentGraphName, user, sentence,
+                            List<string> paths = gatherPaths(request.graphName, user, sentence,
                                                              user.getPreStates(), user.getPostStates(),
                                                              loader);
                             SortPaths(paths, ourGraphMaster.getPathScore);
@@ -1476,7 +1477,7 @@ namespace AltAIMLbot
                             foreach (string nstate in user.Qstate.Keys)
                             {
                                 var states = new[] {nstate};
-                                List<string> paths = gatherPaths(request.CurrentGraphName, user, sentence, states,
+                                List<string> paths = gatherPaths(request.graphName, user, sentence, states,
                                                                  states, loader);
                                 SortPaths(paths, ourGraphMaster.getPathScore);
 
@@ -1522,7 +1523,7 @@ namespace AltAIMLbot
                             myBehaviors.SkipLog = false;
                             if (LogicalParticleFilter1.GlobalSharedSettings.Trace("failed to find response to " + path))
                             {
-                                ourGraphMaster.evaluate(path, query, request, MatchState.Pattern, new StringBuilder());
+                                queryTemplate = ourGraphMaster.evaluate(path, query, request, MatchState.Pattern, new StringBuilder());
                             }
                             //myBehaviors.SkipLog = true;
                             myBehaviors.logText("failed to find response to " + path);
@@ -1668,9 +1669,9 @@ namespace AltAIMLbot
                     {
                         foreach (var poststates in usergetPostStates)
                         {
-                            string path = loader.generateCPath(graphName, sentence, that, null /*flag*/, topic,
-                                                               prestates, poststates,
-                                                               true, null);
+                            string path = AIMLLoader.generateCPath(graphName, sentence, that, null, topic,
+                                                                   prestates, poststates,
+                                                                   true, null, loader.bot);
                             if (!normalizedPaths.Contains(path))
                             {
                                 normalizedPaths.Add(path);
@@ -2628,16 +2629,16 @@ The AltAIMLbot program.
                 if (key.StartsWith("bot"))
                 {
                     key = key.Substring(3);
-                   if (_botAsUser !=null) _botAsUser.Predicates.addSetting(key, data);
+                    if (_botAsUser != null) _botAsUser.Predicates.addSetting("bb_" + key, data);
                 }
                 else if (key.StartsWith("user"))
                 {
                     key = key.Substring(4);
-                    if (LastUser != null) LastUser.Predicates.addSetting(key, data);
+                    if (LastUser != null) LastUser.Predicates.addSetting("bb_" + key, data);
                 }
                 else
                 {
-                    if (GlobalSettings != null) GlobalSettings.addSetting(key, data);
+                    if (GlobalSettings != null) GlobalSettings.addSetting("bb_" + key, data);
                 }
             }
             catch (Exception e)
@@ -2674,24 +2675,25 @@ The AltAIMLbot program.
             if (!string.IsNullOrEmpty(gs)) return gs;
             if (GlobalSettings != null)
             {
-                gs = GlobalSettings.grabSetting(key, false);
+                gs = GlobalSettings.grabSetting("bb_" + key, false);
                 if (!string.IsNullOrEmpty(gs)) return gs;
             }
             if (key.StartsWith("bot"))
             {
                 key = key.Substring(3);
-                gs = _botAsUser.Predicates.grabSetting(key, false);
+                gs = _botAsUser.Predicates.grabSetting("bb_" + key, false);
                 if (!string.IsNullOrEmpty(gs)) return gs;
             }
             else if (key.StartsWith("user"))
             {
                 key = key.Substring(4);
-                gs = LastUser.Predicates.grabSetting(key, true);
+                gs = LastUser.Predicates.grabSetting("bb_" + key, true);
                 if (!string.IsNullOrEmpty(gs)) return gs;
             }
             return "";
         }
 
+        public bool bbDisabled = true;
         public string getBBHash0(string key)
         {
             try

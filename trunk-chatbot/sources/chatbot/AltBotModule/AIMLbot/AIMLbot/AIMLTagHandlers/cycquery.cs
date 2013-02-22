@@ -35,7 +35,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             {
                 Unifiable filter = GetAttribValue("filter", null);
                 Unifiable varname = base.GetAttribValue("varname", "?REPLY");
-                String sent = Recurse();
+                String sent = ((AIMLTagHandler) this).Recurse();
                 string mt = TheCyc.Cyclify(GetAttribValue("mt", /*Proc.GetUserMt(user)*/ "#$EverythingPSC"));
                 if (!IsEMPTY(sent))
                 {

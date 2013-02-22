@@ -66,16 +66,14 @@ namespace AltAIMLbot.Utils
             {
                 PreProcessChange();
             }
-            LoaderOptions saveOpts = request.LoadOptions;
-            LoaderOptions loaderOptions = saveOpts.Copy();
-            request.LoadOptions = loaderOptions;
+            var saveOpts = request.LoadOptions;
             Unifiable vv = null;
-            GraphMaster GM = loaderOptions.CtxGraph;
+            GraphMaster GM = request.Graph;
             int size = GM.Size;
             try
             {
-                request.CurrentlyLoadingFrom = loaderOptions.CurrentlyLoadingFrom = DocumentInfo();
-                vv = ProcessLoad(loaderOptions);
+                request.CurrentlyLoadingFrom = DocumentInfo();
+                vv = ProcessLoad(request);
                 if (!IsNullOrEmpty(vv))
                 {
                     FinalResult = vv;
