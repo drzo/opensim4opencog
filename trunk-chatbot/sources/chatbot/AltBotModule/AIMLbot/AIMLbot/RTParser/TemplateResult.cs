@@ -24,7 +24,7 @@ namespace AltAIMLbot
         public bool TemplateSucceeded;
         public bool CreatedOutput;
         public string TemplateOutput;
-        public AIMLTagHandlerU TagHandlerU;
+        public AIMLTagHandler TagHandlerU;
         public SubQuery SubQuery;
         public TemplateInfo TemplateInfo;
         public Result result;

@@ -102,7 +102,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// AIML predicate, and a required attribute value, which contains a simple pattern expression. The 
     /// element may contain any AIML template elements. 
     /// </summary>
-    public class condition_aima : AIMLTagHandlerU
+    public class condition_aima : AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -128,9 +128,9 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected Unifiable ProcessChangeU0Childs()
         {
-            if (RecurseResultValid)
+            if (FinalResultValid)
             {
-                return RecurseResult;
+                return FinalResult;
             }
             int maxConditions = GetAttribValue<int>(templateNode, "count", 1);
             maxTrueConditions = maxConditions;
@@ -139,7 +139,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             var vv = OutputFromNodes(nodes, (node) => (currentTrueConditions++ < maxTrueConditions));
             if (!IsNullOrEmpty(vv))
             {
-                RecurseResult = vv;
+                FinalResult = vv;
                 return vv;
             }
             return vv;

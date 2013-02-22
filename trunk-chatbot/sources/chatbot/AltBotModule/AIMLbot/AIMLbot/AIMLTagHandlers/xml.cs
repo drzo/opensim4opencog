@@ -14,7 +14,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// The bot element does not have any content. 
     /// </summary>
-    public class xml : AIMLTagHandlerU
+    public class xml : AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -35,10 +35,7 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             isRecursive = false;
         }
-        public override Unifiable CompleteProcessU()
-        {
-            return templateNode.InnerXml;
-        }
+
         protected override Unifiable ProcessChangeU()
         {
             return templateNode.InnerXml;

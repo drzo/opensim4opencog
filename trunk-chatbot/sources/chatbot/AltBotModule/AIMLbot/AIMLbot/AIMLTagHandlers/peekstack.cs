@@ -5,7 +5,7 @@ using AltAIMLbot.Utils;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class peekstack : AIMLTagHandlerU
+    public class peekstack : AIMLTagHandler
     {
 
         public peekstack(AltBot bot,

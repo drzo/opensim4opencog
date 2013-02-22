@@ -6,7 +6,7 @@ using AltAIMLbot.Utils;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class evidence_assoc : AIMLTagHandlerU
+    public class evidence_assoc : AIMLTagHandler
     {
 
         public evidence_assoc(AltBot bot,

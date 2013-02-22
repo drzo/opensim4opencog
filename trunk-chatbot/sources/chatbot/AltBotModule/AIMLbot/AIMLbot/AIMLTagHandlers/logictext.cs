@@ -57,7 +57,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             isBoring = true;
         }
 
-        protected override String ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
              Random rgen = new Random();
            if (this.TemplateNodeName == "logictext")

@@ -9,7 +9,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// The space element has no attributes. It may contain any AIML template elements.
     /// </summary>
-    public class space : AIMLTagHandlerU
+    public class space : AIMLTagHandler
     {
         /// <summary>
         /// Ctor

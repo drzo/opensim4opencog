@@ -6,7 +6,7 @@ using AltAIMLbot.Utils;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class setevidence : AIMLTagHandlerU
+    public class setevidence : AIMLTagHandler
     {
 
         public setevidence(AltBot bot,

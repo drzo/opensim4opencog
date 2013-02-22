@@ -6,7 +6,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// <summary>
     /// IMPLEMENTED FOR COMPLETENESS REASONS
     /// </summary>
-    public class template : AIMLTagHandlerU
+    public class template : AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -27,8 +27,9 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
         }
 
-        protected override Unifiable ProcessChangeU()
+        public override Unifiable RecurseChildren()
         {
+            if (FinalResultValid) return FinalResult;
             if (!IsStarted && QueryHasFailed)
             {
                 QueryHasFailed = false;
@@ -38,13 +39,13 @@ namespace AltAIMLbot.AIMLTagHandlers
             {
                 return FAIL;
             }
-            RecurseResult = templateResult;//.ToString();
+            FinalResult = templateResult;//.ToString();
             return templateResult;
         }
 
-        public override Unifiable CompleteProcessU()
+        protected override Unifiable ProcessChangeU()
         {
-            if (RecurseResultValid) return RecurseResult;
+            if (FinalResultValid) return FinalResult;
             TemplateInfo queryTemplate = query.CurrentTemplate;
             if (queryTemplate != null)
             {

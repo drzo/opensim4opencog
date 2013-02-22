@@ -10,7 +10,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// The id element does not have any content.
     /// </summary>
-    public class id : AIMLTagHandlerU
+    public class id : AIMLTagHandler
     {
         /// <summary>
         /// Ctor

@@ -6,7 +6,7 @@ using AltAIMLbot.Utils;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class state : AIMLTagHandlerU
+    public class state : AIMLTagHandler
     {
 
         public state(AltBot bot,

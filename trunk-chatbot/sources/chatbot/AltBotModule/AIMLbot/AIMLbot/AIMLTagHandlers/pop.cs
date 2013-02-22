@@ -10,7 +10,7 @@ using AltAIMLbot.Utils;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class pop : AIMLTagHandlerU
+    public class pop : AIMLTagHandler
     {
 
         public pop(AltBot bot,
@@ -81,7 +81,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                         {
                             try
                             {
-                                Request subRequest0 = new Request(innerContent, this.user, request.That, this.bot, false, request.RequestType | RequestKind.SraiTag);
+                                Request subRequest0 = new Request(innerContent, this.user, request.That, this.bot, false, request.RequestType | RequestKind.SraiTag, request);
                                 subRequest0.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
                                 subRequest0.depth = this.request.depth + 1;
                                 Result subResult0 = this.bot.Chat(subRequest0, graphName);
@@ -105,8 +105,8 @@ namespace AltAIMLbot.AIMLTagHandlers
                     //{
                     // Plain old SRAI
                     string ourInput = this.TemplateNodeInnerText;
-                    Request subRequest = new Request(ourInput, this.user, request.That, request.Responder, this.bot, request, request.Graph, false,
-                                                     request.RequestType | RequestKind.SraiTag);
+                    Request subRequest = new Request(ourInput, this.user, request.LoadOptions, request.Responder, this.bot, request, request.Graph, false,
+                                                         request.RequestType | RequestKind.SraiTag);
                     subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
                     subRequest.depth = this.request.depth + 1;
                     Result subResult = this.bot.Chat(subRequest, graphName);

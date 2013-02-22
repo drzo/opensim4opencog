@@ -136,17 +136,17 @@ namespace AltAIMLbot.Utils
 
         public
             //static 
-            Dictionary<string, AltAIMLbot.Utils.AIMLTagHandlerU> TagHandlers;
+            Dictionary<string, AIMLTagHandler> TagHandlers;
 
         private AltBot ov_TargetBot;
         public TemplateInfo CurrentTemplate;
-        public AltAIMLbot.Utils.AIMLTagHandlerU LastTagHandlerU;
+        public AIMLTagHandler LastTagHandlerU;
         public Node Pattern;
         public string prefix;
         public Request Request;
         public Result Result;
         public GraphQuery TopLevel;
-        public AltAIMLbot.Utils.AIMLTagHandlerU CurrentTagHandlerU;
+        public AIMLTagHandler CurrentTagHandlerU;
         public XmlNode CurrentNode;
 
         public override bool Equals(object obj)
@@ -285,7 +285,7 @@ namespace AltAIMLbot.Utils
         public int GetDictValue;
         public int SetDictValue;
 
-        public bool IsSourceRequest(AltAIMLbot.Utils.AIMLTagHandlerU node, out string src)
+        public bool IsSourceRequest(AIMLTagHandler node, out string src)
         {
             src = null;
             return false;
@@ -504,7 +504,7 @@ namespace AltAIMLbot.Utils
             {
                 if (TagHandlers != null)
                 {
-                    foreach (KeyValuePair<string, AltAIMLbot.Utils.AIMLTagHandlerU> aimlTagHandler in TagHandlers)
+                    foreach (KeyValuePair<string, AIMLTagHandler> aimlTagHandler in TagHandlers)
                     {
                         aimlTagHandler.Value.Dispose();
                     }
@@ -585,16 +585,16 @@ namespace AltAIMLbot.Utils
             }
         }
 
-        public AltAIMLbot.Utils.AIMLTagHandlerU GetTagHandler(XmlNode node)
+        public AIMLTagHandler GetTagHandler(XmlNode node)
         {
             lock (TagHandlerLock)
             {
                 string str = node.OuterXml;
                 str = TextPatternUtils.CleanWhitepaces(str).ToLower();
-                AltAIMLbot.Utils.AIMLTagHandlerU handlerU;
+                AIMLTagHandler handlerU;
                 if (TagHandlers == null)
                 {
-                    TagHandlers = new Dictionary<string, AltAIMLbot.Utils.AIMLTagHandlerU>();
+                    TagHandlers = new Dictionary<string, AIMLTagHandler>();
                 }
                 else if (TagHandlers.TryGetValue(str, out handlerU))
                 {

@@ -45,13 +45,13 @@ namespace AltAIMLbot
         /// <param name="result">the result to be sent to the user</param>
         /// <param name="node">the node to evaluate</param>
         /// <returns>the output Unifiable</returns>
-        static public AIMLTagHandlerU getBespokeTags(User user, SubQuery query, Request request, Result result, XmlNode node)
+        static public AIMLTagHandler getBespokeTags(User user, SubQuery query, Request request, Result result, XmlNode node)
         {
             AltBot targetBot = query.TargetBot;
             string nodename = node.Name.ToLower();
             if (CustomTags != null)
             {
-                return null;
+                //return null;
                 try
                 {
                     lock (CustomTags)
@@ -61,7 +61,7 @@ namespace AltAIMLbot
                         {
                             TagHandler customTagHandler = CustomTags[node.Name.ToLower()];
 
-                            AIMLTagHandlerU newCustomTag = customTagHandler.Instantiate(LateBindingAssemblies, user,
+                            AIMLTagHandler newCustomTag = customTagHandler.Instantiate(LateBindingAssemblies, user,
                                                                                        query,
                                                                                        request, result, node, targetBot);
                             if (Equals(null, newCustomTag))
@@ -87,7 +87,7 @@ namespace AltAIMLbot
                     Type t = Type.GetType(typeName);
                     if (t == null) return null;
                     ConstructorInfo c = t.GetConstructor(TagHandler.CONSTRUCTOR_TYPES);
-                    return (AIMLTagHandlerU)c.Invoke(new object[] { targetBot, user, query, request, result, node });
+                    return (AIMLTagHandler)c.Invoke(new object[] { targetBot, user, query, request, result, node });
                 }
                 catch (Exception e)
                 {
@@ -120,7 +120,7 @@ namespace AltAIMLbot
                 try
                 {
                     var typeCustomAttributes = type.GetCustomAttributes(false);
-                    if (typeCustomAttributes.Length == 0 && typeof (AIMLTagHandlerU).IsAssignableFrom(type) &&
+                    if (typeCustomAttributes.Length == 0 && typeof (AIMLTagHandler).IsAssignableFrom(type) &&
                         !type.IsAbstract && !type.IsInterface)
                     {
                         try

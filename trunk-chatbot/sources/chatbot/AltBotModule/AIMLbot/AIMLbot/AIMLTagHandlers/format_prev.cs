@@ -35,11 +35,11 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         private readonly Func<string, string> Formatter;
         protected string[] splitter = null;
-        public override bool isFormatter
+        public override bool IsFormatter
         {
             get { return true; }
         }
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (Formatter == null) return TemplateNodeInnerText;
             StringBuilder result = new StringBuilder();            

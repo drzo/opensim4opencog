@@ -6,7 +6,7 @@ using AltAIMLbot.Utils;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class dbdelete : AIMLTagHandlerU
+    public class dbdelete : AIMLTagHandler
     {
 
         public dbdelete(AltBot bot,

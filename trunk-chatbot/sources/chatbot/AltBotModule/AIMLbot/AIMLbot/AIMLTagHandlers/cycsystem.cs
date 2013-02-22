@@ -27,10 +27,6 @@ namespace AltAIMLbot.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
         }
-        public override Unifiable CompleteProcessU()
-        {
-            return ProcessAimlChange();
-        }
 
         protected override Unifiable ProcessChangeU()
         {

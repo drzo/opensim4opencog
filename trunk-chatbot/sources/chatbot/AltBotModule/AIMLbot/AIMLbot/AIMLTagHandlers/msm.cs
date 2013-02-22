@@ -6,7 +6,7 @@ using AltAIMLbot.Utils;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class msm : AIMLTagHandlerU
+    public class msm : AIMLTagHandler
     {
 
         public msm(AltBot bot,

@@ -7,7 +7,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// <summary>
     /// &lt;cycretract&gt; simple way to retract a CycL statement
     /// </summary>
-    public class cycretract : AIMLTagHandlerU
+    public class cycretract : AIMLTagHandler
     {
         public cycretract(){}
         /// <summary>
@@ -28,10 +28,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
         }
-        public override Unifiable CompleteProcessU()
-        {
-            return ProcessAimlChange();
-        }
+
         protected override Unifiable ProcessChangeU()
         {
             if (templateNode.Name.ToLower() == "cycretract")

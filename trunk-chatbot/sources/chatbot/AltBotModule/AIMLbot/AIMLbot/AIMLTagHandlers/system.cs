@@ -6,7 +6,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// <summary>
     /// NOT IMPLEMENTED FOR SECURITY REASONS
     /// </summary>
-    public class system : AIMLTagHandlerU
+    public class system : AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -46,7 +46,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 }
                 return r;
             }
-            return RecurseResult;
+            return FinalResult;
         }
     }
 }

@@ -5,7 +5,7 @@ using AltAIMLParser;
 
 namespace AltAIMLbot.Utils
 {
-    public abstract class AIMLFormatingTagHandler : AIMLTagHandlerU
+    public abstract class AIMLFormatingTagHandler : AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -28,6 +28,11 @@ namespace AltAIMLbot.Utils
             IsStarAtomically = true;
         }
 
+
+        public override bool IsFormatter
+        {
+            get { return true; }
+        }
         #region Overrides of AIMLTagHandler
 
         /// <summary>
@@ -36,12 +41,13 @@ namespace AltAIMLbot.Utils
         /// <returns>The resulting processed text</returns>
         protected override Unifiable ProcessChangeU()
         {
-            if (RecurseResultValid) return RecurseResult;
-            if (isRecursive && !ReadOnly)
+            bool readOnly = ReadOnly || true;
+            if (FinalResultValid) return FinalResult;
+            if (isRecursive)
             {
-                return RecurseResult = Format(TransformAtomically(FormatEach, true));
+                return FinalResult = Format(TransformAtomically(FormatEach, !readOnly));
             }
-            return RecurseResult = TransformAtomically(Format, false);
+            return FinalResult = TransformAtomically(Format, false);
         }
 
         protected virtual Unifiable FormatEach(Unifiable text)
@@ -49,16 +55,16 @@ namespace AltAIMLbot.Utils
             return text;
         }
 
-        public override Unifiable CompleteProcessU()
+        public override Unifiable RecurseChildren()
         {
-            if (RecurseResultValid) return RecurseResult;
-            var vv = ProcessAimlChange();
+            if (FinalResultValid) return RecurseResult;
+            var vv = base.Recurse();
             if (!Unifiable.IsNullOrEmpty(vv))
             {
-                RecurseResult = vv;
+                FinalResult = vv;
                 return vv;
             }
-            RecurseResult = vv;
+            FinalResult = vv;
             return vv;
         }
 

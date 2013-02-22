@@ -1011,7 +1011,7 @@ namespace AltAIMLbot
                 }
                 GraphMaster G = robot.GetGraph(graphname, myUser.StartGraph);
                 AIMLLoader loader = robot.GetLoader(request);
-                LoaderOptions reqLoadOptionsValue = request.LoadOptions.Value;
+                LoaderOptions reqLoadOptionsValue = request.LoadOptions;
                 var prev = request.Graph;
                 try
                 {

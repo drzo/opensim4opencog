@@ -22,7 +22,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// A set element may contain any AIML template elements.
     /// </summary>
-    public class set : AIMLTagHandlerU
+    public class set : AIMLTagHandler
     {
         /// <summary>
         /// Ctor

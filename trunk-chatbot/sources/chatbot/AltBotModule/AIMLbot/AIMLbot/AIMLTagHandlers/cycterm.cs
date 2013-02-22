@@ -7,7 +7,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// <summary>
     /// &lt;cycterm&gt; translates an English word/phrase into a Cyc symbol 
     /// </summary>
-    public class cycterm : AIMLTagHandlerU
+    public class cycterm : AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -29,10 +29,6 @@ namespace AltAIMLbot.AIMLTagHandlers
             //isRecursive = false;
         }
 
-        public override Unifiable CompleteProcessU()
-        {
-            return ProcessAimlChange();
-        }
         protected override Unifiable ProcessChangeU()
         {
             if (base.CheckNode("cycterm"))

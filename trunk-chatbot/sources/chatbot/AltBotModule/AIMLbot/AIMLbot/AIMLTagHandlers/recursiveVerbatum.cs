@@ -9,7 +9,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// The version element does not have any content. 
     /// </summary>
-    public class recursiveVerbatum : AIMLTagHandlerU
+    public class recursiveVerbatum : AIMLTagHandler
     {
         /// <summary>
         /// Ctor

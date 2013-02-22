@@ -53,7 +53,7 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected int DefaultIndex { get; set; }
 
-        override protected Unifiable Recurse()
+        public override Unifiable RecurseChildren()
         {
             var vorNull = ComputeInnerOrNull();
             if (!Unifiable.IsNull(vorNull))
@@ -114,7 +114,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                                            ? STAR_TRUE
                                            : STAR_FALSE;
                             }
-                            AIMLTagHandlerU part = GetChildTagHandler(childNode);
+                            AIMLTagHandler part = GetChildTagHandler(childNode);
                             if (part.CallCanUnify(with) > 0) return STAR_FALSE;
                         }
                         catch (Exception e)

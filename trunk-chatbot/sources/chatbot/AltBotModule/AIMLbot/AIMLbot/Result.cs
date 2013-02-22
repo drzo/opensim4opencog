@@ -508,7 +508,7 @@ namespace AltAIMLbot
 
         public string _normalizedOutput;
         public readonly AltAIMLbot.Utterance ChatInput;
-        private SubQuery _CurrentQuery;
+        internal SubQuery _CurrentQuery;
         private string matchable;
         private int OutputPings;
         public char resultCount;

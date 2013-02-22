@@ -10,7 +10,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// elements randomly. The random element must contain one or more li elements of type 
     /// defaultListItem, and cannot contain any other elements.
     /// </summary>
-    public class random : AIMLTagHandlerU
+    public class random : AIMLTagHandler
     {
         static Random r = new Random();
         /// <summary>
@@ -36,9 +36,9 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override Unifiable ProcessChangeU()     
         {
-            if (RecurseResultValid)
+            if (FinalResultValid)
             {
-                return RecurseResult;
+                return FinalResult;
             }
             ResetValues(true);
             int maxConditions = GetAttribValue<int>(templateNode, "count", 1);

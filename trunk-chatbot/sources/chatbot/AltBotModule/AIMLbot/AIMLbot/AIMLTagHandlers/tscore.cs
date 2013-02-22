@@ -6,7 +6,7 @@ using AltAIMLbot.Utils;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class tscore : AIMLTagHandlerU
+    public class tscore : AIMLTagHandler
     {
 
         public tscore(AltBot bot,

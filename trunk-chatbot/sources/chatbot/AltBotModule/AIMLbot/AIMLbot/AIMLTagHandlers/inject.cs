@@ -49,7 +49,7 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (this.TemplateNodeName == "inject")
             {
@@ -62,6 +62,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     //this.user.bot.myChemistry.tick_chemistry(false);
                     this.user.rbot.realChem.addChemical(queueName, double.Parse((string)templateNodeInnerValue), "aiml");
                     this.user.rbot.realChem.tick_chemistry(false);
+                    return Succeed("inject chem='" + queueName + "' value='" + templateNodeInnerValue + "'");
                 }
                 catch
                 {

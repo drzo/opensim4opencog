@@ -54,7 +54,7 @@ namespace AltAIMLbot.Utils
         /// </summary>
         /// <param name="Assemblies">All the assemblies the bot knows about</param>
         /// <returns>The instantiated class</returns>
-        public AIMLTagHandlerU Instantiate(Dictionary<string, Assembly> Assemblies, User user, SubQuery query,
+        public AIMLTagHandler Instantiate(Dictionary<string, Assembly> Assemblies, User user, SubQuery query,
                                           Request request, Result result, XmlNode node, AltBot bot)
         {
             lock (Assemblies)
@@ -64,10 +64,10 @@ namespace AltAIMLbot.Utils
                     {
                         if (info == null) info = type.GetConstructor(CONSTRUCTOR_TYPES);
                         if (info != null)
-                            return (AIMLTagHandlerU)info.Invoke(new object[] { bot, user, query, request, result, node });
+                            return (AIMLTagHandler)info.Invoke(new object[] { bot, user, query, request, result, node });
                     }
                     Assembly tagDLL = Assemblies[this.AssemblyName];
-                    AIMLTagHandlerU newCustomTag = (AIMLTagHandlerU)tagDLL.CreateInstance(ClassName);
+                    AIMLTagHandler newCustomTag = (AIMLTagHandler)tagDLL.CreateInstance(ClassName);
                     if (newCustomTag == null) return null;
                     newCustomTag.query = query;
                     newCustomTag.request = request;

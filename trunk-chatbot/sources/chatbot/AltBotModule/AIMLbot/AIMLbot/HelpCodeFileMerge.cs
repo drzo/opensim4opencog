@@ -114,7 +114,7 @@ namespace AltAIMLbot
             return false;
         }
 
-        public static int IsOneOf(this string graphPath, string[] ces)
+        public static int IsOneOf(this string graphPath, params string[] ces)
         {
             bool gpnull = graphPath == null;
             string ew = gpnull ? null : graphPath.ToLower();
@@ -144,7 +144,10 @@ namespace AltAIMLbot
                     if (gpnull) return index;
                     continue;
                 }
-                if (!gpnull && ew.Contains(ce.ToLower())) return index;
+                if (!gpnull && ew.Contains(ce.ToLower()))
+                {
+                    return index;
+                }
             }
             if (gpnull) return -2;
             return -1;

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 #if (COGBOT_LIBOMV || USE_STHREADS)
 using System.Linq;
+using LogicalParticleFilter1;
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;
@@ -49,7 +50,7 @@ namespace AltAIMLbot
         {
             try
             {
-                var R = new Request("ONUSER" + name + " " + UserID, this, Unifiable.EnglishNothing, rbot,
+                var R = new Request("ONUSER" + name + " " + UserID, this, rbot,
                                     true, RequestKind.EventProcessor);
                 R.Graph = robot.DefaultEventGraph;
                 R.AddGraph(robot.DefaultEventGraph);
@@ -78,8 +79,7 @@ namespace AltAIMLbot
                 _lastRequest = value;
             }
         }
-        public static bool ThatIsStoredBetweenUsers = true;
-        public static bool ThatIsONLYStoredBetweenUsers = false;
+
         public readonly object QueryLock = new object();
         public bool IsValid { get; set; }
         #region Attributes
@@ -943,10 +943,6 @@ namespace AltAIMLbot
                     return something;
                 }
                 if (lastResponder != null && IsSomething(lastResponder.JustSaid, out something)) return something;
-                if (ThatIsStoredBetweenUsers)
-                {
-                    if (ThatIsONLYStoredBetweenUsers) return Unifiable.EnglishNothing;
-                }
                 var fr = CurrentRequest;
                 while
                     (fr != null)
@@ -996,11 +992,6 @@ namespace AltAIMLbot
                 {
                     CurrentRequest.ithat = value;
                 }
-                var LastResponder = this.LastResponder;
-                if (LastResponder != null && ThatIsStoredBetweenUsers)
-                {
-                    LastResponder.JustSaid = value;
-                }
             }
         }
 
@@ -1023,7 +1014,10 @@ namespace AltAIMLbot
                 if (CheckIsBadEnglish(t))
                 {
                     rbot.Logger.Warn("Just said is bad english: " + t);
-                    t = JustSaid0;
+                    if (GlobalSharedSettings.Trace("Just Said"))
+                    {
+                        t = JustSaid0;
+                    }
                 }
                 return t;
             }
@@ -1037,19 +1031,19 @@ namespace AltAIMLbot
             }
         }
 
-        public string lastSetJustSaid;
         public Unifiable JustSaid0
         {
             get
             {
-                //if (true) return That;
                 Unifiable something;
                 //if (IsSomething(_JustSaid, out something)) return something;
                 var vv = Predicates.grabSetting("lastinput,lastsaid");
                 if (IsSomething(vv, out something)) return something;
                 if (LastResponder != null)
                 {
-                    vv = LastResponder.Predicates.grabSetting("lastheard,that");
+                    vv = LastResponder.Predicates.grabSetting("that");
+                    if (IsSomething(vv, out something)) return something;
+                    vv = LastResponder.Predicates.grabSetting("lastheard");
                     if (IsSomething(vv, out something)) return something;
                     var llr = LastResponder.LastResponder;
                     if (llr != null && llr != this)
@@ -1058,7 +1052,7 @@ namespace AltAIMLbot
                     }
                     // infinate loop here -> return LastReponder.ResponderJustSaid;
                 }
-                return lastSetJustSaid ?? Unifiable.EnglishNothing;
+                return Unifiable.EnglishNothing;
             }
             set
             {
@@ -1066,7 +1060,6 @@ namespace AltAIMLbot
                 {
                     return;
                 }
-                if (value != null) lastSetJustSaid = value;
                 var _JustSaid = this.JustSaid;
                 // the (_JustSaid != value) holds back the infinate looping                
                 if (_JustSaid == null || TextPatternUtils.SymTrim(_JustSaid).ToUpper() != StaticAIMLUtils.SymTrim(value).ToUpper())
@@ -1075,13 +1068,8 @@ namespace AltAIMLbot
                     if (StaticAIMLUtils.IsSomething(value, out something))
                     {
                         value = something;
-                        _JustSaid = value;
                         Predicates.addSetting("lastsaid", value);
                         Predicates.addSetting("lastinput", value);                        
-                        if (LastResponder != null && ThatIsStoredBetweenUsers)
-                        {
-                            LastResponder.Predicates["that"] = value;
-                        }
                     }
                 }
             }
@@ -1589,7 +1577,7 @@ namespace AltAIMLbot
             var request = bot.GetBotRequest("@echo load user aiml " + userdir);
             request.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
             request.Graph = StartGraph;
-            request.LoadingFrom = userdir;
+            request.CurrentlyLoadingFrom = userdir;
             var options = request.LoadOptions; //LoaderOptions.GetDefault(request);
             var gs = bot.GlobalSettings;
             try
@@ -1789,13 +1777,17 @@ namespace AltAIMLbot
                 targetJustSaid = target.JustSaid;
                 rbot.Logger.Warn("using target.JustSaid = " + targetJustSaid);
             }
+            LoaderOptions loadOpts = new LoaderOptions();
+            
+            loadOpts.currentThat = targetJustSaid;
+
             if (parentRequest == null)
             {
-                request = new MasterRequest(message, this, targetJustSaid, target, bot, parentRequest, G, isToplevel, requestType);
+                request = new MasterRequest(message, this, loadOpts, target, bot, parentRequest, G, isToplevel, requestType);
             }
             else
             {
-                request = parentRequest.CreateSubRequest(message, this, targetJustSaid, target, bot, parentRequest, G, requestType);
+                request = parentRequest.CreateSubRequest(message, this, loadOpts, target, bot, parentRequest, G, requestType);
             }
             if (parentRequest != null)
             {

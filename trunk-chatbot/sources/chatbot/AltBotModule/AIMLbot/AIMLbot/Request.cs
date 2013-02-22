@@ -256,7 +256,7 @@ namespace AltAIMLbot.Utils
         /// <summary>
         /// The final result produced by this request
         /// </summary>
-        private Result _result;
+        internal Result _result;
         public Result CurrentResult
         {
             get
@@ -432,15 +432,32 @@ namespace AltAIMLbot.Utils
         /// <param name="rawInput">The raw input from the user</param>
         /// <param name="user">The user who made the request</param>
         /// <param name="bot">The bot to which this is a request</param>
-        public Request(Unifiable rawInput, User user, Unifiable thatSaid, AltBot bot, bool isToplevel, RequestKind requestType)
-            : this(rawInput, user, thatSaid, bot.BotAsUser, bot, null, null, isToplevel, requestType)
+        public Request(Unifiable rawInput, User user, AltBot bot, bool isToplevel, RequestKind requestType)
+            : this(bot.GetQuerySettings(), false) // Get query settings intially from user
         {
-
+            InitRequest(rawInput, user, default(LoaderOptions), user.That, bot.BotAsUser, bot, null, null, isToplevel,
+                        requestType);
         }
         private Request(QuerySettingsReadOnly defaults, bool unused)
             : base(defaults)
         {
             ApplySettings(defaults, this);
+            SideEffects = new CommitQueue();
+            qsbase = this;
+        }
+
+        public Request(Unifiable rawInput, User user, Unifiable thatSaid, AltBot bot, bool isToplevel, RequestKind requestType)
+            : this(bot.GetQuerySettings(), false) // Get query settings intially from user
+        {
+            InitRequest(rawInput, user, default(LoaderOptions), thatSaid, bot.BotAsUser, bot, null, null, isToplevel, requestType);
+            That = thatSaid;
+        }
+
+        public Request(Unifiable rawInput, User user, Unifiable thatSaid, AltBot bot, bool isToplevel, RequestKind requestType, Request parent)
+            : this(bot.GetQuerySettings(), false) // Get query settings intially from user
+        {
+            InitRequest(rawInput, user, default(LoaderOptions), thatSaid, bot.BotAsUser, bot, parent, null, isToplevel, requestType);
+            That = thatSaid;
         }
         /// <summary>
         /// Ctor
@@ -448,9 +465,28 @@ namespace AltAIMLbot.Utils
         /// <param name="rawInput">The raw input from the user</param>
         /// <param name="user">The user who made the request</param>
         /// <param name="bot">The bot to which this is a request</param>
-        public Request(Unifiable rawInput, User user, Unifiable thatSaid, User targetUser, AltBot bot, Request parent, GraphMaster graphMaster, bool isToplevel, RequestKind requestType)
+        public Request(Unifiable rawInput, User user, LoaderOptions options, User targetUser, AltBot bot, Request parent, GraphMaster graphMaster, bool isToplevel, RequestKind requestType)
             : this(bot.GetQuerySettings(), false) // Get query settings intially from user
         {
+            InitRequest(rawInput, user, options, null, targetUser, bot, parent, graphMaster, isToplevel, requestType);
+        }
+        public void InitRequest(Unifiable rawInput, User user, LoaderOptions options, Unifiable thatSaid, User targetUser, AltBot bot, Request parent, GraphMaster graphMaster, bool isToplevel, RequestKind requestType)
+        {
+       
+            LoadOptions = options = new LoaderOptions(this, options);
+            bool englishChat = requestType.ContainsAny(RequestKind.NaturalLang);
+
+            thatSaid = thatSaid ?? options.currentThat;
+            options.currentThat = thatSaid;
+            if (!englishChat)
+            {
+                if (thatSaid != "*")
+                {
+                    user.WriteToUserTrace("SWARN is this supposed to be english?");
+
+                }
+            }
+
             this.RaiseError = new ExceptionFactoryMethod(
                 (f, a) =>
                     {
@@ -467,7 +503,6 @@ namespace AltAIMLbot.Utils
                 CopyToRequest(parent, this);
             }
             ExitQueue = new CommitQueue();
-            SideEffects = new CommitQueue();
             TargetBot = bot;
             ChatInput = new Utterance(null, user, targetUser, rawInput, -1);// RTParser.Utterance.GetParsedUserInputSentences(thisRequest, rawInput);
             this.Requester = user;
@@ -480,7 +515,6 @@ namespace AltAIMLbot.Utils
             RequestType = requestType;
             this.Stage = SideEffectStage.UNSTARTED;
             matchable = matchable ?? StaticAIMLUtils.MakeMatchable(rawInput);
-            qsbase = this;
             ithat = thatSaid;
             SuspendSearchLimits = true;
             if (graphMaster != null)
@@ -527,7 +561,6 @@ namespace AltAIMLbot.Utils
                 ApplySettings(parent.GetQuerySettings(), querySettings);
                 Proof = parent.Proof;
                 this.ParentRequest = parent;
-                this.lastOptions = parent.LoadOptions;
                 this.writeToLog = parent.writeToLog;
                 Graph = parent.Graph;
                 MaxInputs = 1;
@@ -575,7 +608,7 @@ namespace AltAIMLbot.Utils
                 this.ParentRequest = parent;
                 CopyToRequest(parent, this);
             }
-            bool englishChat = requestType.ContainsAny(RequestKind.NaturalLang);
+
             if (englishChat)
             {
                 CheckEnglish(thatSaid);
@@ -592,6 +625,7 @@ namespace AltAIMLbot.Utils
                 }
             }
         }
+
 
         private void CheckEnglish(Unifiable thatSaid)
         {
@@ -683,56 +717,7 @@ namespace AltAIMLbot.Utils
             set { Graph.GraphsAcceptingUserInput = value; }
         }
 
-        public LoaderOptions lastOptions;
-
-        public LoaderOptions LoadOptions
-        {
-            get
-            {
-                // when we change to s struct, lastOptions will never be null
-                if (!(lastOptions is ValueType)) {
-                    if (lastOptions != null && lastOptions.TheRequest == this) return lastOptions;
-                }
-                string that = ThatOrNull ?? "*";
-
-                if (that != "*" && !RequestType.ContainsAny(RequestKind.NaturalLang))
-                {
-                    ithat = that;
-                   // bot.RaiseError("non * that " + this);
-                }
-
-                // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                if (lastOptions == null)
-                    // ReSharper restore ConditionIsAlwaysTrueOrFalse
-                {
-                    lastOptions = new LoaderOptions(thisRequest, CurrentGraphName, that);
-                }
-                else if (lastOptions.TheRequest != thisRequest)
-                {
-                    lastOptions = new LoaderOptions(thisRequest, CurrentGraphName, that);
-                }
-                return lastOptions;
-            }
-            set
-            {
-                if (lastOptions != null)
-                {
-                    if (lastOptions != value)
-                    {
-                        bot.RaiseError("Replacing loader options");
-                    }
-                    else
-                    {
-                        return;
-                    }
-                }
-                lastOptions = value;
-                Graph = value.CtxGraph;
-                Filename = value.CurrentFilename;
-                LoadingFrom = value.CurrentlyLoadingFrom;
-            }
-        }
-
+        public LoaderOptions LoadOptions { get; internal set; }
 
         internal AIMLLoader _uaimlloader = null;
 
@@ -756,48 +741,10 @@ namespace AltAIMLbot.Utils
             }
         }
 
-        public string Filename
-        {
-            get { return _filename; }
-            set
-            {
-                //if (_loadingfrom == null)
-                //{
-                //    _loadingfrom = _filename;
-                //}
-                if (_loadingfrom == null)
-                {
-                    _loadingfrom = null;
-                    //_loadingfrom = value;
-                }
-                _filename = value;
-            }
-        }
-        public string LoadingFrom
-        {
-            get { return _loadingfrom; }
-            set
-            {
-                if (_filename == null)
-                {
-                    //   _filename = value;
-                }
-                else
-                {
-                    //   Filename = null;
-                }
-                _loadingfrom = value;
-            }
-        }
-
-        private string _filename;
-        private string _loadingfrom;
-
-        internal GraphMaster sGraph = null;
 
         public string CurrentGraphName
         {
-            get { return Graph.ScriptingName; }
+            get { return LoadOptions.graphName; }
         }
 
         public void AddGraph(GraphMaster master)
@@ -809,8 +756,8 @@ namespace AltAIMLbot.Utils
         {
             get
             {
-                if (sGraph != null)
-                    return sGraph;
+                if (LoadOptions.CtxGraph != null)
+                    return LoadOptions.CtxGraph;
                 if (ParentRequest != null)
                 {
                     var pg = ParentRequest.Graph;
@@ -818,24 +765,24 @@ namespace AltAIMLbot.Utils
                 }
                 if (Requester == null)
                 {
-                    if (ovGraph == null) return null;
-                    return TargetBot.GetGraph(ovGraph, null);
+                    if (ovrdGraphName == null) return null;
+                    return TargetBot.GetGraph(ovrdGraphName, null);
                 }
                 GraphMaster probably = Requester.StartGraph;
-                if (ovGraph != null)
+                if (ovrdGraphName != null)
                 {
                     if (probably != null)
                     {
                         // very good!
-                        if (probably.ScriptingName == ovGraph) return probably;
+                        if (probably.ScriptingName == ovrdGraphName) return probably;
                         if (probably.ScriptingName == null)
                         {
                             // not  so good!
                             return probably;
                         }
-                        if (probably.ScriptingName.Contains(ovGraph)) return probably;
+                        if (probably.ScriptingName.Contains(ovrdGraphName)) return probably;
                         // transtiton
-                        var newprobably = TargetBot.GetGraph(ovGraph, probably);
+                        var newprobably = TargetBot.GetGraph(ovrdGraphName, probably);
                         if (newprobably != probably)
                         {
                             Requester.WriteToUserTrace("Changing request graph " + probably + " -> " + newprobably + " for " + this);
@@ -844,7 +791,7 @@ namespace AltAIMLbot.Utils
                     }
                     else
                     {
-                        probably = TargetBot.GetGraph(ovGraph, TargetBot.DefaultStartGraph);
+                        probably = TargetBot.GetGraph(ovrdGraphName, TargetBot.DefaultStartGraph);
                         {
                             Requester.WriteToUserTrace("Changing request graph " + probably + " -> " + null + " for " + this);
                         }
@@ -856,17 +803,15 @@ namespace AltAIMLbot.Utils
             {
                 if (value != null)
                 {
-                    if (ovGraph == value.ScriptingName) return;
-                    ovGraph = value.ScriptingName;
+                    if (ovrdGraphName == value.ScriptingName) return;
+                    ovrdGraphName = value.ScriptingName;
                 }
                 LoaderOptions lo = LoadOptions;
                 lo.CtxGraph = value;
-                sGraph = value;
             }
         }
 
-        private string ovGraph = null;
-
+        private string ovrdGraphName = null;
         /// <summary>
         /// The Graph to start the query on
         /// </summary>
@@ -874,8 +819,8 @@ namespace AltAIMLbot.Utils
         {
             get
             {
-                if (ovGraph != null)
-                    return ovGraph;
+                if (ovrdGraphName != null)
+                    return ovrdGraphName;
                 if (ParentRequest != null)
                 {
                     var pg = ((QuerySettingsReadOnly)ParentRequest).StartGraphName;
@@ -890,14 +835,14 @@ namespace AltAIMLbot.Utils
             set
             {
                 // if (sGraph != null)
-                sGraph = GetGraph(value);
-                ovGraph = value;
+                LoadOptions.CtxGraph = GetGraph(value);
+                ovrdGraphName = value;
             }
         }
 
         public GraphMaster GetGraph(string value)
         {
-            return TargetBot.GetGraph(value, sGraph);
+            return TargetBot.GetGraph(value, Graph);
         }
 
         public void ExcludeGraph(string srai)
@@ -1141,14 +1086,14 @@ namespace AltAIMLbot.Utils
         public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, GraphMaster graphMaster, RequestKind kind)
         {
             Request subRequest = CreateSubRequest(templateNodeInnerValue, Requester,
-                                                  That, Responder, TargetBot, this, graphMaster, kind);
+                                                  LoadOptions, Responder, TargetBot, this, graphMaster, kind);
             return (MasterRequest)subRequest;
         }
 
-        public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User requester, Unifiable thatSaid, User requestee,
+        public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User requester, LoaderOptions opts, User requestee,
                                               AltBot rTPBot, Request parent, GraphMaster graphMaster, RequestKind kind)
         {
-            var subRequest = new MasterRequest(templateNodeInnerValue, requester, thatSaid,
+            var subRequest = new MasterRequest(templateNodeInnerValue, requester, opts,
                                                requestee, rTPBot ?? TargetBot, parent, graphMaster, false, kind);
             CopyToRequest(this, subRequest);
             return subRequest;
@@ -1156,7 +1101,7 @@ namespace AltAIMLbot.Utils
 
         public static void CopyToRequest(Request request, Request subRequest)
         {
-            subRequest.sGraph = subRequest.sGraph ?? request.sGraph;
+            subRequest.Graph = subRequest.Graph ?? request.Graph;
             subRequest.depth = request.depth + 1;
             subRequest.StartedOn = request.StartedOn;
             subRequest.TimesOutAt = request.TimesOutAt;
@@ -1278,112 +1223,38 @@ namespace AltAIMLbot.Utils
 
         public bool IsToplevelRequest { get; set; }
 
-        internal Unifiable ithat = null;
+        internal Unifiable ithat
+        {
+            get { return LoadOptions.currentThat; }
+            set { LoadOptions.currentThat = value; }
+        }
+
         public Unifiable That
         {
             get
             {
-                var t = ThatOrNull;
-                if (user.CheckIsBadEnglish(t))
+                var t = RequestThat();
+                if (!user.CheckIsBadEnglish(t))
                 {
-                    bot.Logger.Warn("Just said is bad english: " + t);
-                    t = ThatOrNull;
+                    return t;
                 }
-                return t ?? Unifiable.EnglishNothing;
+                bot.Logger.Warn("RequestThat is bad english: " + t);
+                t = user.That;
+                if (!user.CheckIsBadEnglish(t))
+                {
+                    return t;
+                }
+                bot.Logger.Warn("User.That is bad english: " + t);
+                return t;
             }
             set
             {
-                user.CheckIsBadEnglish(value);
-                ThatOrNull = value;
-            }
-        }
-        public Unifiable ThatOrNull
-        {
-            get
-            {
-                Unifiable something;
-                if (IsSomething(ithat, out something)) return something;
-                if (User.ThatIsStoredBetweenUsers)
-                {
-                    if (Requester != null && IsSomething(Requester.That, out something)) return something;
-                    if (Responder != null && IsSomething(Responder.JustSaid, out something)) return something;
-                    if (User.ThatIsONLYStoredBetweenUsers)
-                    {
-                        return Unifiable.EnglishNothing;
-                    }
-                }
-                string u1 = null;
-                string u2 = null;
-                Unifiable r1 = RequestThat();
-
-                if (Requester != null)
-                {
-                    if (IsSomething(Requester.That, out something)) u1 = something;
-                }
-                if (Responder != null && Responder != Requester)
-                {
-                    if (IsSomething(Responder.JustSaid, out something))
-                    {
-                        u2 = something;
-                        if (u1 != null)
-                        {
-                            char[] cs = " .?".ToCharArray();
-                            if (u1.Trim(cs).ToLower() != u2.Trim(cs).ToLower())
-                            {
-                                writeToLog("Responder.JustSaid=" + u2 + " Requester.That=" + u1);
-                                if (u2.Contains(u1))
-                                {
-                                    u2 = u1;
-                                }
-                            }
-                        }
-                    }
-                }
-                string u = u2 ?? u1;
-                if (IsSomething(r1, out something))
-                {
-                    if (r1 != u)
-                    {
-                        writeToLog("ERROR That Requester !" + r1);
-                    }
-                }
-                return u;
-            }
-            set
-            {
-                if (IsNullOrEmpty(value) || value == "TAG-THINK.")
-                {
-                    {
-                        string ex = "set_That: " + this;
-                        writeToLog0(ex);
-                        return;
-                        throw new NullReferenceException(ex);
-
-                    }
-                }
-
-                var svalue = value;
-                if (svalue == "*" || svalue == "_" || svalue == "?" || svalue.AsString().Contains("TAG-"))
-                {
-                    writeToLog("ERROR set_That: " + svalue + " from " + ithat);
-                    ithat = Unifiable.EnglishNothing;
-                }
-                else
-                {
-                    ithat = value;
-                }
-                if (User.ThatIsStoredBetweenUsers)
-                {
-                    var responder = Responder;
-                    if (responder != null) responder.JustSaid = ithat;
-                    //   throw new InvalidOperationException("must User.set_That()");
-                }
+                ithat = value;
             }
         }
 
         public Unifiable RequestThat()
         {
-            if (User.ThatIsONLYStoredBetweenUsers) throw RaiseError("must User.get_That()");
             var req = this;
             while (req != null)
             {
@@ -1426,9 +1297,9 @@ namespace AltAIMLbot.Utils
             }
         }
 
-        private AIMLTagHandlerU _lastHandlerU;
+        private AIMLTagHandler _lastHandlerU;
 
-        public AIMLTagHandlerU LastHandlerU
+        public AIMLTagHandler LastHandlerU
         {
             get { return _lastHandlerU; }
             set { if (value != null) _lastHandlerU = value; }
@@ -1654,7 +1525,7 @@ namespace AltAIMLbot.Utils
             }
             set { _CurrentQuery = value; }
         }
-        protected SubQuery _CurrentQuery;
+        internal SubQuery _CurrentQuery;
 
 
         public void AddSubResult(Result subResult)
@@ -1756,7 +1627,7 @@ namespace AltAIMLbot.Utils
                 }
                 else
                 {
-                    if (!AIMLTagHandlerU.IsUnevaluated(templateNodeInnerValue))
+                    if (!AIMLTagHandler.IsUnevaluated(templateNodeInnerValue))
                     {
                         writeToLog("Looped maybe '" + prevResults + "' on: " + templateNodeInnerValue);
                         return false;
@@ -1885,7 +1756,19 @@ namespace AltAIMLbot.Utils
             set;
         }
 
-        public AIMLTagHandlerU LastHandler;
+        public string CurrentlyLoadingFrom
+        {
+            get { return LoadOptions.CurrentlyLoadingFrom; }
+            set { LoadOptions.CurrentlyLoadingFrom = value; }
+        }
+
+        public string CurrentFilename
+        {
+            get { return LoadOptions.CurrentFilename; }
+            set { LoadOptions.CurrentFilename = value; }
+        }
+
+        public AIMLTagHandler LastHandler;
 
         #endregion
 

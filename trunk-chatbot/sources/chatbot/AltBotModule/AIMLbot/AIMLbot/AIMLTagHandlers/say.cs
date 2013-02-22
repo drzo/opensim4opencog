@@ -50,7 +50,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             this.isRecursive = true;
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (this.TemplateNodeName == "say")
             {

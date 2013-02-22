@@ -30,7 +30,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             this.isBoring = true;
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             string msg = string.Empty ;
             if (this.TemplateNodeName == "summerize")

@@ -17,10 +17,6 @@ namespace AltAIMLbot.Normalize
         public StripIllegalCharacters(AltBot bot)
             : base(bot) 
         { }
-        protected override string ProcessChange()
-        {
-            return ProcessChangeU().AsString();
-        }
         protected override Unifiable ProcessChangeU()
         {
             return InputStringU;

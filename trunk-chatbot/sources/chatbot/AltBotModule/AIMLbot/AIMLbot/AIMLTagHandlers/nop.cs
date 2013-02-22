@@ -39,7 +39,7 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
         }
 
-        protected override String ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (this.TemplateNodeName == "nop")
             {

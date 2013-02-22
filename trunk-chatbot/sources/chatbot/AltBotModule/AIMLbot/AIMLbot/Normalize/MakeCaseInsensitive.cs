@@ -21,10 +21,7 @@ namespace AltAIMLbot.Normalize
         {
             return this.InputStringU.ToCaseInsensitive();
         }
-        protected override string ProcessChange()
-        {
-            return TransformInput(InputString);
-        }
+
         /// <summary>
         /// An ease-of-use static method that re-produces the instance transformation methods
         /// </summary>

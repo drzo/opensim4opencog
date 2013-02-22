@@ -4,7 +4,7 @@ using AltAIMLbot;
 
 namespace AltAIMLbot.Utils
 {
-    public abstract class LoadingTagHandler : AIMLTagHandlerU
+    public abstract class LoadingTagHandler : AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -59,24 +59,26 @@ namespace AltAIMLbot.Utils
             return recursiveResult;
         }
 
-        sealed public override Unifiable CompleteProcessU()
+        public override Unifiable RecurseChildren()
         {
+            if (FinalResultValid) return FinalResult;
             if (!IsLoadReady)
             {
                 PreProcessChange();
             }
             LoaderOptions saveOpts = request.LoadOptions;
-            LoaderOptions loaderOptions = saveOpts;
+            LoaderOptions loaderOptions = saveOpts.Copy();
+            request.LoadOptions = loaderOptions;
             Unifiable vv = null;
             GraphMaster GM = loaderOptions.CtxGraph;
             int size = GM.Size;
             try
             {
-                request.LoadingFrom = loaderOptions.LoadingFrom0 = DocumentInfo();
+                request.CurrentlyLoadingFrom = loaderOptions.CurrentlyLoadingFrom = DocumentInfo();
                 vv = ProcessLoad(loaderOptions);
                 if (!IsNullOrEmpty(vv))
                 {
-                    RecurseResult = vv;
+                    FinalResult = vv;
                 }
             }
             finally
@@ -86,11 +88,11 @@ namespace AltAIMLbot.Utils
             int newSize = GM.Size;
             int change = newSize - size;
             string ch = "Loaded " + change + " into " + GM + " was " + size;
-            if (RecurseResult == (string) null)
+            if (FinalResult == (string) null)
             {
                 return Succeed(ch);
             }
-            return Succeed(ch + " " + RecurseResult);
+            return Succeed(ch + " " + FinalResult);
         }
 
         protected abstract Unifiable ProcessLoad(LoaderOptions loaderOptions);

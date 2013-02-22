@@ -91,7 +91,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// AIML predicate, and a required attribute value, which contains a simple pattern expression. The 
     /// element may contain any AIML template elements. 
     /// </summary>
-    public class liif : AIMLTagHandlerU
+    public class liif : AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -139,7 +139,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 return Failure("FIIF NULL");
             }
             Succeed();
-            if (RecurseResultValid) return RecurseResult;
+            if (FinalResultValid) return FinalResult;
             return s;
         }
 

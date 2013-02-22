@@ -281,7 +281,7 @@ namespace AltAIMLbot
 
         public void InternType(Type t)
         {
-            if (!typeof (AIMLTagHandlerU).IsAssignableFrom(t)) return;
+            if (!typeof (AIMLTagHandler).IsAssignableFrom(t)) return;
             TagHandlerProcessor.AddTagHandler(t);
         }
 

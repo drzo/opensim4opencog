@@ -6,7 +6,7 @@ using AltAIMLbot.Utils;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class transition : AIMLTagHandlerU
+    public class transition : AIMLTagHandler
     {
 
         public transition(AltBot bot,

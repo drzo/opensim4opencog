@@ -41,20 +41,9 @@ namespace AltAIMLbot.AIMLTagHandlers
         }
         protected override bool ExpandingSearchWillYieldNoExtras { get { return true; } }
 
-        public override Unifiable CompleteProcessU()
-        {
-            Unifiable pc = ProcessChangeU();
-            string s = (string) pc;
-            if (pc != null && pc == "name")
-            {
-                return pc;
-            }
-            return pc;
-        }
-
         protected override Unifiable ComputeInnerOrNull()
         {
-            if (RecurseResultValid) return RecurseResult;
+            if (FinalResultValid) return FinalResult;
             Unifiable u = ProcessChange0();
             if (IsIncomplete(u))
             {

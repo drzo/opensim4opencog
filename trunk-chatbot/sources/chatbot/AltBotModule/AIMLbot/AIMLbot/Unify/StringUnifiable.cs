@@ -128,7 +128,7 @@ namespace AltAIMLbot
             if (str == "*" || str == "_") return true;
             if (IsLazy)
             {
-                AIMLTagHandlerU tagHandler = GetTagHandler(query);
+                AIMLTagHandler tagHandler = GetTagHandler(query);
                 IUnifibleTagHandler utagHandler = tagHandler as IUnifibleTagHandler;
                 if (utagHandler != null)
                 {
@@ -1349,7 +1349,7 @@ namespace AltAIMLbot
                         writeToLog("UnifyLazy: SUCCEED T1 " + ov + " in " + query);
                         return true;
                     }
-                AIMLTagHandlerU tagHandler = GetTagHandler(query);
+                AIMLTagHandler tagHandler = GetTagHandler(query);
                 if (tagHandler.CallCanUnify(ov) == UNIFY_TRUE)
                 {
                     writeToLog("UnifyLazy: SUCCEED" + ov + " in " + query);
@@ -1359,7 +1359,7 @@ namespace AltAIMLbot
                 {
                     return false;
                 }
-                Unifiable outputSentence = tagHandler.CompleteAimlProcess();
+                Unifiable outputSentence = tagHandler.Recurse();
                 if (ov.CanUnify(outputSentence, query))
                 {
                     return true;
@@ -1393,11 +1393,11 @@ namespace AltAIMLbot
         //private SubQuery savedSQ;
         //AIMLTagHandlerU savedTagHandler;
         //public XmlNode node;
-        public AIMLTagHandlerU GetTagHandler(SubQuery subquery)
+        public AIMLTagHandler GetTagHandler(SubQuery subquery)
         {
-            if (valueCache is AIMLTagHandlerU)
+            if (valueCache is AIMLTagHandler)
             {
-                AIMLTagHandlerU tagHandler = (AIMLTagHandlerU) valueCache;
+                AIMLTagHandler tagHandler = (AIMLTagHandler) valueCache;
                 tagHandler.ResetValues(false);
                 return tagHandler;
             }
@@ -1481,11 +1481,11 @@ namespace AltAIMLbot
             {
                 //todo 
                 if (query == null) return AsString();
-                AIMLTagHandlerU tagHandler = GetTagHandler(query);
+                AIMLTagHandler tagHandler = GetTagHandler(query);
                 ThreadStart undo = tagHandler.EnterUnify();
                 try
                 {
-                    Unifiable outputSentence = tagHandler.CompleteAimlProcess();
+                    Unifiable outputSentence = tagHandler.Recurse();
                     if (!IsNullOrEmpty(outputSentence))
                     {
                         valueCache = outputSentence.AsString();
@@ -1493,7 +1493,7 @@ namespace AltAIMLbot
                     }
                     writeToLog("Failed Eval " + str);
                     tagHandler.IsTraced = true;
-                    outputSentence = tagHandler.CompleteAimlProcess();
+                    outputSentence = tagHandler.Recurse();
                 }
                 finally
                 {

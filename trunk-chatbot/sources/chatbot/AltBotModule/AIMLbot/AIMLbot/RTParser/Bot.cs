@@ -166,7 +166,7 @@ namespace AltAIMLbot
             var botAsUser1 = BotAsUser ?? LastUser;
             s = Unifiable.Trim(s);
             if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
-            var r = new MasterRequest(s, botAsUser1, Unifiable.STAR, botAsUser1, this, null,
+            var r = new MasterRequest(s, botAsUser1, default(LoaderOptions), botAsUser1, this, null,
                                       DefaultStartGraph, true, RequestKind.BotPropertyEval);           
             //r.ChatOutput.RawText = s;
             r.writeToLog = writeToLog;
@@ -774,18 +774,13 @@ namespace AltAIMLbot
             if (useServitor)
             {
                 updateServitor2RTP();
-                if (HostSystem.FileOrDirExists(path))
-                {
-                    servitor.loadAIMLFromFiles(path);
-                }
             }
-            if (!LoadIntoOldAIML) return;
             bool prev = request.GraphsAcceptingUserInput;
             LoaderOptions savedOptions = request.LoadOptions;
             try
             {
                 request.GraphsAcceptingUserInput = false;
-                request.Filename = path;
+                request.CurrentFilename = path;
                 request.Loader.loadAIMLURI(path);
                 request.Loader.DumpErrors(DLRConsole.DebugWriteLine, false);
                 ReloadHooks.Add(() => request.Loader.loadAIMLURI(path));
@@ -804,7 +799,7 @@ namespace AltAIMLbot
         private void loadAIMLAndSettings(string path, bool skipSettings)
         {
             Request request = GetBotRequest("-loadAIMLAndSettings-" + path + "-");
-            request.LoadingFrom = null;
+            request.CurrentlyLoadingFrom = null;
             bool prev = request.GraphsAcceptingUserInput;
             try
             {
@@ -1167,9 +1162,9 @@ namespace AltAIMLbot
             try
             {
                 request.Graph = graph;
-                LoaderOptions loader = request.LoadOptions.Value; // LoaderOptions.GetDefault(request);
+                LoaderOptions loader = request.LoadOptions; // LoaderOptions.GetDefault(request);
                 loader.CtxGraph = graph;
-                loader.Loading0 = "from_text";
+                loader.CurrentFilename = "from_text";
                 string s = string.Format("<aiml graph=\"{0}\">{1}</aiml>", graph.ScriptingName, aimlText);
                 request.Loader.loadAIMLString(s);
             }
@@ -1735,7 +1730,7 @@ The AIMLbot program.
             PushSearchPath(file);
             string s = string.Format("-LoadPersonalDirectories: '{0}'-", file);
             Request request = GetBotRequest(s);
-            request.LoadingFrom = file;
+            request.CurrentlyLoadingFrom = file;
             writeToLog(s);
             bool prev = request.GraphsAcceptingUserInput;
             try

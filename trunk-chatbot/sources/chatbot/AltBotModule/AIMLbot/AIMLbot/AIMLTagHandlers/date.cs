@@ -9,7 +9,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// The date element does not have any content. 
     /// </summary>
-    public class date : AIMLTagHandlerU
+    public class date : AIMLTagHandler
     {
         /// <summary>
         /// Ctor

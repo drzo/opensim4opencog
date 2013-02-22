@@ -1,8 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Threading;
 using System.Xml;
 using AIMLbot;
 using AltAIMLParser;
+using LogicalParticleFilter1;
+using MushDLR223.Utilities;
+using MushDLR223.Virtualization;
 using MasterRequest = AltAIMLbot.Utils.Request;
 
 
@@ -12,238 +17,212 @@ namespace AltAIMLbot.Utils
 {
     public class LoaderOptions
     {
-        //public LoaderOptions prevoious;
-        public static readonly string MISSING_FILE = "loadopts_MISSING_FILE";
-        public readonly MasterRequest TheRequest;
-        private string _curently_loading;
-        public string _currently_loadingfrom;
-        private GraphMaster _specified_Graph;
+        public string graphName = "*";
+        public string topicName = "*";
+        public string stateNamePre = "*";
+        public string stateNamePost = "*";
+        public string currentThat = "*";
+        public string currentFlags = "*";
+        public string currentInput = "*";
+
+       
         public List<ConversationCondition> AdditionalPreconditions;
+
+        // below is more "loader"ish
+        //public LoaderOptions prevoious;
+        public static readonly string MISSING_FILE = "*";
+        public string CurrentFilename = MISSING_FILE;
+        public string CurrentlyLoadingFrom = null;
+
         public List<CategoryInfo> CategoryInfos;
         public bool DebugFiles;
-        public bool recurse;
-        public AltBot RProcessor;
+        public bool Recurse;
         public bool NeedsLoaderLock;
-        private bool _searchForGuard = false;
-        internal string graphName = "*";
-        internal string topicName = "*";
-        internal string stateNamePre = "*";
-        internal string stateNamePost = "*";
-        internal string currentThat = "*";
-        public void withAttributes(XmlNode node, ref string defaultElement, Action action)
+        public bool SearchForGuard = false;
+
+        // simply a cache
+        private GraphMaster _specified_Graph;
+        public void WithAttributes(XmlNode node, ref string defaultElement, Action action)
         {
-            string preTopic = topicName;
-            string preRef = defaultElement;
-            string preStateNamePre = stateNamePre;
-            string preStateNamePost = stateNamePost;
-            string preThat = currentThat;
-            string preGraph = graphName;
-            foreach (XmlAttribute Attrib in node.Attributes)
+            if (node.Attributes == null)
             {
-                if (Attrib.Name == "name")
-                {
-                    defaultElement = node.Attributes["name"].Value;
-                }
-                if (Attrib.Name == "state")
-                {
-                    stateNamePre = node.Attributes["state"].Value;
-                }
-                if (Attrib.Name == "topic")
-                {
-                    topicName = node.Attributes["topic"].Value;
-                }
-                if (Attrib.Name == "graph")
-                {
-                    graphName = node.Attributes["graph"].Value;
-                }
-                if (Attrib.Name == "that")
-                {
-                    currentThat = node.Attributes["that"].Value;
-                }
-                if (Attrib.Name == "prestate")
-                {
-                    stateNamePre = node.Attributes["prestate"].Value;
-                }
-                if (Attrib.Name == "poststate")
-                {
-                    stateNamePost = node.Attributes["poststate"].Value;
-                }
+                action();
+                return;
             }
+            var ts = WithAttributesForUnwind(node, ref defaultElement, this, null);
             try
             {
                 action();
             }
             finally
             {
-                topicName = preTopic;
-                stateNamePre = preStateNamePre;
-                stateNamePost = preStateNamePost;
-                graphName = preGraph;
-                currentThat = preThat;
-                defaultElement = preRef;
+                ts();
             }
+            var restore = Copy();
         }
-
-        public bool RemovePreviousTemplatesFromNodes
+        public Action WithAttributesForUnwind(XmlNode node, ref string defaultElement, List<XmlAttribute> consumed)
         {
-            get { return CtxGraph.RemovePreviousTemplatesFromNodes; }
+            return WithAttributesForUnwind(node, ref defaultElement, this, consumed);
         }
-        public bool DistinguishSilenetTags
+        public Action WithAttributesForUnwind(XmlNode node, ref string defaultElement, object saveOn, List<XmlAttribute> consumed)
         {
-            get { return CtxGraph.DistinguishSilenetTags; }
-        }
-
-
-        public LoaderOptions(Request impl, string graphname, string thatname)
-        {
-            TheRequest = (MasterRequest)impl;
-            _curently_loading = impl.Filename;
-            DebugFiles = false;
-            recurse = false;
-            _currently_loadingfrom = impl.LoadingFrom;
-            _specified_Graph = null;
-            graphName = graphname;
-            if (thatname != "*")
+            if (node.Attributes == null)
             {
-                currentThat = thatname;
+                return StaticAIMLUtils.DoNothing;
             }
-            RProcessor = impl.TargetBot;
-            CategoryInfos = new List<CategoryInfo>();
+            bool defaultElementResore = false;
+            string prevDefaultEle = null;
+            var restore = Copy();
+            var current = this;
+            bool isNamed = false;
+            foreach (XmlAttribute Attrib in node.Attributes)
+            {
+                Type so = saveOn.GetType();
+                bool wasName = false;
+                string name = Attrib.Name;
+                if (name == "name")
+                {
+                    wasName = true;
+                    isNamed = true;
+                    name = node.Name;
+                    if (string.IsNullOrEmpty(defaultElement))
+                    {
+                        AltBot.writeDebugLine("WARN Cant on default attribute " + Attrib);
+                    }
+                    else
+                    {
+                        if (consumed != null) consumed.Add(Attrib);
+                    }
+                    prevDefaultEle = defaultElement;
+                    defaultElementResore = true;
+                    defaultElement = node.Attributes["name"].Value;
+                }
+                var ic = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.IgnoreCase;
+                FieldInfo fi = so.GetField(name, ic) ??
+                               so.GetField(name + "Name", ic) ??
+                               so.GetField("current" + name, ic) ??
+                               so.GetField(name + "NamePre", ic) ??
+                               so.GetField(name + "NamePost", ic);
+                if (name == "version" || name=="id") continue;
+
+                if (fi != null)
+                {
+                    string val = Attrib.Value;
+                    fi.SetValue(saveOn, val);
+                    if (consumed != null)
+                    {
+                        consumed.Add(Attrib);
+                    }
+                    if (wasName)
+                    {
+                        defaultElementResore = false;
+                    }
+                    continue;
+                }
+                if (wasName)
+                {
+                    AltBot.writeDebugLine("WARN Cant find default element " + Attrib);
+                    continue;
+                }
+                ///AltBot.writeDebugLine("WARN `ibute " + Attrib);
+            }
+            return () =>
+            {
+                if (defaultElementResore && !isNamed)
+                {
+                    TheRequest.bot.RaiseError("Cant reset default element! ");
+                    //defaultElement = prevDefaultEle;
+                }
+                CopyFromTo(restore, this);
+            };
+        }
+
+        public LoaderOptions()
+        {
+
+        }
+
+        public LoaderOptions(Request req, LoaderOptions copyFrom)
+        {
+            TheRequest = req;
+            if (copyFrom != default(LoaderOptions))
+            {
+                CopyFromTo(copyFrom, this);
+            }
+            //CategoryInfos = new List<CategoryInfo>();
+        }
+
+        private void CopyFromTo(LoaderOptions from, LoaderOptions to)
+        {
+            foreach (FieldInfo fi in GetType().GetFields())
+            {
+                fi.SetValue(to, fi.GetValue(from));
+            }
         }
 
         public GraphMaster CtxGraph
         {
             get
             {
-                if (_specified_Graph != null)
+                if (_specified_Graph == null)
                 {
-                    return _specified_Graph;
+                    _specified_Graph = AltBot.FindGlobalGraph(graphName);
                 }
-                return TheRequest.Graph;
+                return _specified_Graph;
             }
             set
             {
                 _specified_Graph = value;
-                TheRequest.sGraph = value;
-            }
-        }
-
-        public string CurrentFilename
-        {
-            get { return _curently_loading ?? TheRequest.Filename; }
-        }
-
-
-        public string Loading0
-        {
-            set
-            {
-                //PrevFilename = _filename;
-                TheRequest.Filename = value;
-                _curently_loading = value;
-            }
-        }
-
-        public string LoadingFrom0
-        {
-            set
-            {
-                if (TheRequest.Filename == null)
+                if (value != null)
                 {
-                    TheRequest.Filename = value;
+                    graphName = value.ScriptingName;
                 }
-                _currently_loadingfrom = value;
-            }
-        }
-
-        public string CurrentlyLoadingFrom
-        {
-            get { return _currently_loadingfrom ?? TheRequest.LoadingFrom; }
-        }
-
-
-        public LoaderOptions Value
-        {
-            get { return this; }
-        }
-
-        public ICollection<CrossAppDomainDelegate> ReloadHooks
-        {
-            get { return RProcessor.ReloadHooks; }
-        }
-
-        public bool SearchForGuard
-        {
-            get {
-                return _searchForGuard;
-            }
-            set {
-                _searchForGuard = value;
             }
         }
 
         public AIMLLoader Loader
         {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
+            get { return TheRequest.Loader; }
         }
 
-
-        /*public static LoaderOptions GetDefault(Request r)
-        {
-            LoaderOptions ops = new LoaderOptions();
-            ops.TheRequest = r;
-            return ops;
-        }*/
-        //private LoaderOptions(Request request)
-        //{
-        //  TheRequest = request;
-        //}
+        public Request TheRequest;
 
         public override string ToString()
         {
-            return CtxGraph + "<-" + CurrentFilename + "<-" + CurrentlyLoadingFrom;
-        }
-
-        public bool Equals(LoaderOptions other)
-        {
-            bool b = Equals(other.CurrentFilename, CurrentFilename)
-                     && other.recurse.Equals(recurse)
-                     && Equals(other.CtxGraph, CtxGraph);
-            if (b) return b;
-            return false;
+            return GlobalSharedSettings.StructToString(this);
         }
 
 
-        public override bool Equals(object obj)
+        internal LoaderOptions Copy()
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (obj.GetType() != typeof (LoaderOptions)) return false;
-            return Equals((LoaderOptions) obj);
+            var loaderOpts = new LoaderOptions(null, this);
+            //CopyFromTo(this, loaderOpts);
+            return loaderOpts;
         }
 
-        public static bool operator ==(LoaderOptions thiz, LoaderOptions other)
+        public void SuggestPath(string path)
         {
-            if (ReferenceEquals(null, thiz)) return ReferenceEquals(null, other);
-            if (ReferenceEquals(null, other)) return false;
-            return thiz.Equals(other);
-        }
-
-        public static bool operator !=(LoaderOptions thiz, LoaderOptions other)
-        {
-            return !(thiz == other);
-        }
-
-
-        public override int GetHashCode()
-        {
-            unchecked
+            if (NullOrStar(path)) return;
+            if (NullOrStar(CurrentlyLoadingFrom))
             {
-                int result = (_curently_loading != null ? _curently_loading.GetHashCode() : 0);
-                result = (result*397) ^ recurse.GetHashCode();
-                result = (result*397) ^ (_specified_Graph != null ? _specified_Graph.GetHashCode() : 0);
-                return result;
+                CurrentlyLoadingFrom = path;
             }
+            if (NullOrStar(CurrentFilename))
+            {
+                CurrentFilename = path;
+            }
+            else
+            {
+                if (HostSystem.FileExists(path))
+                {
+                    CurrentFilename = path;
+                }
+            }
+        }
+
+        private bool NullOrStar(string path)
+        {
+            return string.IsNullOrEmpty(path) || path == "*";
         }
     }
 }

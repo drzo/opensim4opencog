@@ -1212,6 +1212,11 @@ namespace AltAIMLbot
             get { return ToVMString(this); }
         }
 
+        public decimal Length
+        {
+            get { return AsString().Length; }
+        }
+
         public static string DescribeUnifiable(Object value)
         {
             if (value == null) return "-UOBJECT-";

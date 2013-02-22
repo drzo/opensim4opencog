@@ -17,7 +17,7 @@ namespace AltAIMLbot.AIMLTagHandlers
    ///      <template><srai>INPUTREQTEST1<srai/></template>
    ///  </category>
    /// </summary>
-    public class inputreq : AIMLTagHandlerU
+    public class inputreq : AIMLTagHandler
     {
         /// <summary>
         /// Ctor

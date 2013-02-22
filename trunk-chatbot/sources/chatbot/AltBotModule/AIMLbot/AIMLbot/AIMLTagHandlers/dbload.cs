@@ -7,7 +7,7 @@ using MushDLR223.Virtualization;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class dbload : AIMLTagHandlerU
+    public class dbload : AIMLTagHandler
     {
 
         public dbload(AltBot bot,

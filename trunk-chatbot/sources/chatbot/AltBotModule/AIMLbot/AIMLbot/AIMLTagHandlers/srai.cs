@@ -18,7 +18,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// As with all AIML elements, nested forms should be parsed from inside out, so embedded srais are 
     /// perfectly acceptable. 
     /// </summary>
-    public class srai : AIMLTagHandlerU
+    public class srai : AIMLTagHandler
     {
         public static bool UseSraiLimiters = false;
         AltBot mybot;
@@ -85,13 +85,12 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override Unifiable ProcessChangeU()
         {
-            if (RecurseResultValid) return RecurseResult;
             if (InUnify)
             {
                 return Unifiable.INCOMPLETE;
             }
             IsStarted = true;
-            if (!RecurseResultValid)
+            if (!FinalResultValid)
             {
                 try
                 {
@@ -104,14 +103,14 @@ namespace AltAIMLbot.AIMLTagHandlers
                         writeToLog("WARNING Depth pretty deep " + templateNode);
                         if (UseSraiLimiters)
                         {
-                            writeToLog(" returning " + RecurseResult);
-                            return RecurseResult;
+                            writeToLog(" returning " + FinalResult);
+                            return FinalResult;
                         }
                     }
-                    var vv = /*UseOriginalProcess  ? (Unifiable)OriginalProcessChange() : */ ProcessChange0();
+                    var vv = /*UseOriginalProcess  ? (Unifiable)OriginalProcessChange() : */ RecurseChildren();
                     if (!IsNullOrEmpty(vv))
                     {
-                        RecurseResult = vv;
+                        FinalResult = vv;
                         templateNode.InnerXml = XmlValueSettable(vv);
                         return vv;
                     }
@@ -122,7 +121,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                             vv = GetTemplateNodeInnerText();
                             return vv;
                         }
-                        RecurseResult = vv;
+                        FinalResult = vv;
                         templateNode.InnerXml = XmlValueSettable(vv);
                         return vv;
                     }
@@ -141,51 +140,16 @@ namespace AltAIMLbot.AIMLTagHandlers
                     user.Exit(this); 
                 }
             }
-            return RecurseResult;
+            return FinalResult;
         }
 
         private const bool ProcessChange12 = true;
-        public override Unifiable CompleteProcessU()
-        {
-            if (RecurseResultValid) return RecurseResult;
-            if (InUnify)
-            {
-                return Unifiable.INCOMPLETE;
-            }
-            // ReSharper disable ConditionIsAlwaysTrueOrFalse
-            var sraiResult = ProcessChange12 ? ProcessChange0() : ProcessAimlChange();
-            // ReSharper restore ConditionIsAlwaysTrueOrFalse
-            if (IsNull(sraiResult))
-            {
-                return sraiResult;
-                ResetValues(true);
-                sraiResult = base.CompleteProcessU();
-                if (RecurseResultValid)
-                {
-                    return RecurseResult;
-                }
-                writeToLogWarn("srai.CompleteProcessU() == NULL!");
-                return sraiResult;
-            }
-            return sraiResult;
-            // return base.CompleteProcessU();
-        }
 
-        public override string Transform()
-        {
-            if (RecurseResultValid) return RecurseResult;
-            var vv = ProcessChange0();
-            return vv;
-        }/*
-        public override Unifiable RecurseProcess()
-        {
-            return ProcessChangeU();
-        }
-        */
-        protected Unifiable ProcessChange0()
+
+        public override Unifiable RecurseChildren()
         {
             string s;
-            if (RecurseResultValid) return RecurseResult;
+            if (FinalResultValid) return FinalResult;
             if (CheckNode("srai"))
             {
                 bool chatTraced = Proc.chatTrace;

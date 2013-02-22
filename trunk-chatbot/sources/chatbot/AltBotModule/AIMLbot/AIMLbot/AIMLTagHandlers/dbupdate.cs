@@ -6,7 +6,7 @@ using AltAIMLbot.Utils;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class dbupdate : AIMLTagHandlerU
+    public class dbupdate : AIMLTagHandler
     {
 
         public dbupdate(AltBot bot,

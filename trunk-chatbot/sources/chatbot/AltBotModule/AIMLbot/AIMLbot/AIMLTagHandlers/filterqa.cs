@@ -31,7 +31,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             this.isRecursive = true;
             this.isBoring = true;
         }
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             // takes the contents returned, spliting into canidate answers using sep attribute
             // then sees if it is a failure or error

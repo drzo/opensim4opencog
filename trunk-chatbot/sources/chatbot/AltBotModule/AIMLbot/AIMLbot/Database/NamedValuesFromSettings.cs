@@ -22,7 +22,7 @@ namespace AltAIMLbot.Database
             OutputDelegate writeToLog = request.writeToLog ?? TextPatternUtils.DEVNULL;
             AltBot TargetBot = request.TargetBot;
             ISettingsDictionary udict;
-            string dictName = AIMLTagHandlerU.GetNameOfDict(query, subject ?? dict.NameSpace, node, out udict);
+            string dictName = AIMLTagHandler.GetNameOfDict(query, subject ?? dict.NameSpace, node, out udict);
             // try to use a global blackboard predicate
             User gUser = TargetBot.ExemplarUser;
 

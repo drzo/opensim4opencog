@@ -19,37 +19,6 @@ namespace AltAIMLbot.Utils
         public bool IsTraced { get; set; }
 
         /// <summary>
-        /// Ctor
-        /// </summary>
-        /// <param name="bot">The bot involved in this request</param>
-        /// <param name="user">The user making the request</param>
-        /// <param name="query">The query that originated this node</param>
-        /// <param name="request">The request itself</param>
-        /// <param name="result">The result to be passed back to the user</param>
-        /// <param name="templateNode">The node to be processed</param>
-        public AIMLTagHandler   (   AltBot bot, 
-                                    User user, 
-                                    AltAIMLbot.Utils.SubQuery query,
-                                    Request request, 
-                                    AltAIMLbot.Result result, 
-                                    XmlNode templateNode) :base(bot,templateNode.OuterXml)
-        {
-            this.user = user;
-            this.query = query;
-            this.request = request;
-            this.result = result;
-            this.templateNode = templateNode;
-            if (templateNode is XmlElement) TemplateNodeAttributes.RemoveNamedItem("xmlns");
-        }
-
-        /// <summary>
-        /// Default ctor to use when late binding
-        /// </summary>
-        public AIMLTagHandler()
-        {
-        }
-
-        /// <summary>
         /// A flag to denote if inner tags are to be processed recursively before processing this tag
         /// </summary>
         public bool isRecursive = true;
@@ -108,7 +77,7 @@ namespace AltAIMLbot.Utils
         /// </summary>
         /// <param name="outerXML">the string to XMLize</param>
         /// <returns>The XML node</returns>
-        public static XmlNode getNode(string outerXML)
+        public static XmlNode getNode_S(string outerXML)
         {
             //XmlDocument temp = new XmlDocumentLineInfo();
             var temp = new XmlDocument();
@@ -117,7 +86,7 @@ namespace AltAIMLbot.Utils
             return temp.FirstChild;
         }
 
-        public string GetAttribValue(string attributeName, string otherwise)
+        public string GetAttribValue_S(string attributeName, string otherwise)
         {
             return GetAttribValue<string>(attributeName, otherwise);
         }
@@ -130,7 +99,7 @@ namespace AltAIMLbot.Utils
             return StaticXMLUtils.GetAttribValue(templateNode, attribName, defaultIfEmpty, null);
         }
 
-        public static T GetAttribValue<T>(XmlNode templateNode, string attribName, T defaultIfEmpty) where T : IConvertible
+        public static T GetAttribValue_S<T>(XmlNode templateNode, string attribName, T defaultIfEmpty) where T : IConvertible
         {
             return StaticXMLUtils.GetAttribValue(templateNode, attribName, () => (defaultIfEmpty), null);
         }
@@ -161,11 +130,11 @@ namespace AltAIMLbot.Utils
             }
         }
 
-        public string GetStarContent()
+        public Unifiable GetStarContent_S()
         {
-            XmlNode starNode = Utils.AIMLTagHandler.getNode("<star/>");
+            XmlNode starNode = getNode("<star/>");
             star recursiveStar = new star(this.bot, this.user, this.query, this.request, this.result, starNode);
-            return recursiveStar.Transform();
+            return ((TextTransformer) recursiveStar).Transform();
         }
 
         protected string TemplateNodeInnerXml
@@ -191,15 +160,15 @@ namespace AltAIMLbot.Utils
 
         public virtual bool isVerbatum
         {
-            get { return SelfProcessing || isFormatter; }
+            get { return SelfProcessing || IsFormatter; }
         }
-        public override bool isFormatter
+        public override bool IsFormatter
         {
             get { return false; }
         }
 
         #endregion
-        internal static string GetNameOfDict(SubQuery query, string dictName, XmlNode templateNode, out ISettingsDictionary dict)
+        internal static string GetNameOfDict_S(SubQuery query, string dictName, XmlNode templateNode, out ISettingsDictionary dict)
         {
             string type = TextPatternUtils.ToLower(dictName);
             //ISettingsDictionary udict = query.GetDictionary(type, templateNode, dict);
@@ -263,11 +232,11 @@ namespace AltAIMLbot.Utils
         {
             this.bot.writeToLog("" + s + " in " + templateNode.OuterXml);
         }
-        protected bool CheckNode(string s)
+        protected bool CheckNode_S(string s)
         {
             return s.Contains(TemplateNodeName);
         }
-        public override string ToString()
+        public  string ToString_S()
         {
             if (templateNode.OuterXml != initialString)
             {
@@ -276,11 +245,7 @@ namespace AltAIMLbot.Utils
             return GetType().Name + ": " + templateNode.OuterXml;
         }
 
-        protected override Unifiable ProcessChangeU()
-        {
-            return TransformU();
-        }
-
         public bool SelfProcessing { get; set; }
+        //public abstract Unifiable Recurse();
     }
 }

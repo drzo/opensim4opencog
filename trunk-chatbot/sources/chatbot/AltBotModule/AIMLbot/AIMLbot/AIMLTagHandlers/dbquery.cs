@@ -10,7 +10,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// <summary>
     /// 
     /// </summary>
-    public class dbquery : AIMLTagHandlerU
+    public class dbquery : AIMLTagHandler
     {
 
         public dbquery(AltBot bot,

@@ -9,7 +9,7 @@ using MushDLR223.Virtualization;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class markov : AIMLTagHandlerU
+    public class markov : AIMLTagHandler
     {
 
         public markov(AltBot bot,

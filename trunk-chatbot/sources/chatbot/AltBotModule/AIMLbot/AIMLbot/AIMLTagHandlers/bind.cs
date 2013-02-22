@@ -47,7 +47,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                         {
                             return UnifyWithTextNode(childNode, srch) ? AND_TRUE : AND_FALSE;
                         }
-                        AIMLTagHandlerU part = GetChildTagHandler(childNode);
+                        AIMLTagHandler part = GetChildTagHandler(childNode);
                         if (part.CallCanUnify(with) > 0) return AND_FALSE;
                     }
                     catch (Exception e)

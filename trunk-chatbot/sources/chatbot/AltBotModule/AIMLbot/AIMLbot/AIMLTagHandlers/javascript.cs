@@ -19,7 +19,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// <summary>
     /// NOT IMPLEMENTED FOR SECURITY REASONS
     /// </summary>
-    public class javascript : AIMLTagHandlerU
+    public class javascript : AIMLTagHandler
     {
         /// <summary>
         /// Ctor

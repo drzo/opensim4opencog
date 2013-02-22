@@ -203,6 +203,7 @@ namespace MushDLR223.Utilities
                 ir = StaticXMLUtils.ValueText(value);
                 wasSetter = true;
             }
+            if (!wasSetter) writeToLog("ERROR not a setter");
             if (ir.Length == 0)
             {
                 if (LocalName != "think")
@@ -232,7 +233,7 @@ namespace MushDLR223.Utilities
                     //base.InnerXml = ir;
                 } else
                 {
-                    writeToLog("WARNING: InnerXml Is not being changed to \"" + value + "\"");
+                    writeToLog("WARNING: ERROR InnerXml Is not being changed to \"" + value + "\"");
                 }
                 return true;
             }

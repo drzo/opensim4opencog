@@ -4,7 +4,7 @@ using AltAIMLbot.Utils;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class format : AIMLTagHandlerU
+    public class format : AIMLTagHandler
     {
         private Func<Unifiable, Unifiable> UFormatter;
         private Func<string, string> SFormatter;

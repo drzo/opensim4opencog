@@ -31,10 +31,6 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
           //  this.isRecursive = false;
         }
-        public override Unifiable CompleteProcessU()
-        {
-            return ProcessAimlChange();
-        }
 
         protected override Unifiable ProcessChangeU()
         {

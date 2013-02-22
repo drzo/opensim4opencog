@@ -41,7 +41,7 @@ namespace AltAIMLbot.AIMLTagHandlers
 
 
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (this.TemplateNodeName == "ketext")
             {
@@ -59,6 +59,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     catch (Exception e) { } 
 
                     this.user.rbot.prologEngine.loadKEText(myMt, templateNodeInnerValue);
+                    return Succeed("loaded ketext mt='" + myMt + "' text='" + templateNodeInnerValue + "'");
                 }
                 catch
                 {

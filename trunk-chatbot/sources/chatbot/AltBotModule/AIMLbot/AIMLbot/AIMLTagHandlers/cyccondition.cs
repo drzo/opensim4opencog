@@ -90,7 +90,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// AIML predicate, and a required attribute value, which contains a simple pattern expression. The 
     /// element may contain any AIML template elements. 
     /// </summary>
-    public class cyccondition : AIMLTagHandlerU
+    public class cyccondition : AIMLTagHandler
     {
         /// <summary>
         /// Ctor

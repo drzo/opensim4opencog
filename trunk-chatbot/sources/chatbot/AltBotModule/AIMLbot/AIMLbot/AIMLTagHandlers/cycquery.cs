@@ -42,7 +42,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     if (WhenTrue(TheCyc.EvalSubL(String.Format("(ask-template '{0} `{1} {2})", varname, sent, mt), filter)))
                     {
                         Succeed();
-                        return RecurseResult;
+                        return FinalResult;
                     }
                 }
             }

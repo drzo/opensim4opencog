@@ -132,7 +132,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 bool outRecurse;                
                 if (TryParseBool(templateNode, "recurse", out outRecurse))
                 {
-                    loaderOptions.recurse = outRecurse;
+                    loaderOptions.Recurse = outRecurse;
                 }
 
                 GraphMaster g = request.Graph;
@@ -150,7 +150,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     //templateNode.LocalName
                     string documentInfo =  DocumentInfo();;
                     loaderOptions = request.LoadOptions;
-                    request.LoadingFrom = documentInfo;
+                    request.CurrentlyLoadingFrom = documentInfo;
                     loaderOptions.CtxGraph = request.Graph;
                     string innerXML = InnerXmlText(templateNode);
 
@@ -188,7 +188,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                             else
                             {
                                 path = path ?? innerXML;
-                                loaderOptions.Loading0 = path;
+                                loaderOptions.CurrentFilename = path;
                                 long forms = request.Loader.loadAIMLURI(path);
                                 QueryHasSuceededN++;
                                 return "" + forms; // Succeed();

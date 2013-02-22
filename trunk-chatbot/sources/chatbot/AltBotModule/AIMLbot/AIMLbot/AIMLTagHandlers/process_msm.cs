@@ -8,7 +8,7 @@ using AltAIMLbot.Utils;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class process_msm : AIMLTagHandlerU
+    public class process_msm : AIMLTagHandler
     {
 
         public process_msm(AltBot bot,

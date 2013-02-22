@@ -13,7 +13,7 @@ using org.opencyc.cycobject;
 
 namespace AltAIMLbot.Database
 {
-    abstract public class CycTagHandler:AIMLTagHandlerU
+    abstract public class CycTagHandler:AIMLTagHandler
     {
         protected CycTagHandler(AltBot bot,
                         User user,
@@ -36,7 +36,7 @@ namespace AltAIMLbot.Database
         /// The method that does the actual processing of the text.
         /// </summary>
         /// <returns>The resulting processed text</returns>
-        protected abstract override Unifiable ProcessChangeU();
+        //protected abstract Unifiable ProcessOuterChange();
 
         #endregion
     }

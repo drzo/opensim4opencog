@@ -64,6 +64,12 @@ namespace AltAIMLbot.Utils
                     "pos",
                     "constant",
                     "id",
+
+                    "state",
+                    "flag",
+                    "graph",
+                    "topic",
+                    "that",
                 };
 
         public static readonly List<String> LoaderTags = new List<string>()
@@ -216,89 +222,49 @@ namespace AltAIMLbot.Utils
             }
         }
 
-        public static ThreadStart EnterTag(Request request, XmlNode templateNode, SubQuery query)
+        public static Action EnterTag(Request request, XmlNode templateNode, SubQuery query)
         {
             if (templateNode.NodeType != XmlNodeType.Element)
             {
+                return DoNothing;
                 throw new NotImplementedException("EnterTag: " + templateNode.NodeType);
             }
             bool needsUnwind = false;
-            UndoStackHolder thiz = (UndoStackHolder)query ?? request;
+            UndoStackHolder thiz = (UndoStackHolder) query ?? request;
             ISettingsDictionary dict = query ?? request.TargetSettings;
             XmlAttributeCollection collection = templateNode.Attributes;
             EnterContext(request, query);
-            if (collection != null && collection.Count > 0)
+            if (collection == null || collection.Count <= 0)
             {
-                // graphmaster
-                GraphMaster oldGraph = request.Graph;
-                GraphMaster newGraph = null;
-                // topic
-                Unifiable oldTopic = request.Topic;
-                Unifiable newTopic = null;
-
-                // that
-                Unifiable oldThat = request.That;
-                Unifiable newThat = null;
-
+                return () =>
+                           {
+                               ExitContext(request, query);
+                           };
+            }
+            else
+            {
+                var used = new List<XmlAttribute>();
+                string defaultElement = "";
+                Action gmrerstore;
+                gmrerstore = request.LoadOptions.WithAttributesForUnwind(templateNode, ref defaultElement, used);
+                int uc = used.Count;
                 UndoStack savedValues = null;
 
                 foreach (XmlAttribute node in collection)
                 {
+                    if (used.Contains(node))
+                    {
+                        continue;
+                    }
                     bool found;
                     string n = node.Name.ToLower();
                     switch (n)
                     {
+                        case "state":
+                        case "flag":
                         case "graph":
-                            {                                
-                                string graphName = ReduceStar<string>(node.Value, query, dict, out found);
-                                if (graphName != null)
-                                {
-                                    GraphMaster innerGraph = request.TargetBot.GetGraph(graphName, oldGraph);
-
-                                    if (innerGraph != null)
-                                    {
-                                        if (innerGraph != oldGraph)
-                                        {
-                                            request.Graph = innerGraph;
-                                            request.LoadOptions.CtxGraph = innerGraph;
-                                            newGraph = innerGraph;
-                                            request.writeToLog("ENTERING: {0} as {1} from {2}",
-                                                               graphName, innerGraph, oldGraph);
-                                            needsUnwind = true;
-                                        }
-                                        else
-                                        {
-                                            newGraph = innerGraph;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        oldGraph = null; //?
-                                    }
-                                }
-                            }
-                            break;
                         case "topic":
-                            {
-                                newTopic = ReduceStar<Unifiable>(node.Value, query, dict, out found);
-                                if (newTopic != null)
-                                {
-                                    if (IsNullOrEmpty(newTopic)) newTopic = Unifiable.EnglishNothing;
-                                    needsUnwind = true;
-                                    request.Topic = newTopic;
-                                }
-                            }
-                            break;
                         case "that":
-                            {
-                                newThat = ReduceStar<Unifiable>(node.Value, query, dict, out found);
-                                if (newThat != null)
-                                {
-                                    if (IsNullOrEmpty(newThat)) newThat = Unifiable.EnglishNothing;
-                                    needsUnwind = true;
-                                    request.That = newThat;
-                                }
-                            }
                             break;
 
                         default:
@@ -331,7 +297,7 @@ namespace AltAIMLbot.Utils
                                     }
                                 }
 
-                                // now require temp vars to say  with_id="tempId"
+                                // now require temp vars to s   ay  with_id="tempId"
                                 // to set the id="tempid" teporarily while evalig tags
                                 if (!n.StartsWith("with_"))
                                 {
@@ -353,78 +319,39 @@ namespace AltAIMLbot.Utils
                     }
                 }
 
-                // unwind
-                if (needsUnwind)
-                {
-                    return () =>
+                // unwind                
+
+                return () =>
+                           {
+                               if (needsUnwind)
                                {
-                                   EnterContext(request, query);
                                    try
                                    {
+                                       EnterContext(request, query);
                                        if (savedValues != null)
                                        {
                                            savedValues.UndoAll();
-                                       }
-                                       if (newGraph != null)
-                                       {
-                                           GraphMaster cg = request.Graph;
-                                           if (cg == newGraph)
-                                           {
-                                               request.writeToLog("LEAVING: {0}  back to {1}", request.Graph, oldGraph);
-                                               request.Graph = oldGraph;
-                                           }
-                                           else
-                                           {
-                                               request.writeToLog(
-                                                   "WARNING: UNWIND GRAPH UNEXPECTED CHANGE {0} FROM {1} SETTING TO {2}",
-                                                   cg, newGraph, oldGraph);
-                                               request.Graph = oldGraph;
-                                           }
-                                       }
-                                       if (newTopic != null)
-                                       {
-                                           Unifiable ct = request.Topic;
-                                           if (newTopic == ct)
-                                           {
-                                               request.Topic = oldTopic;
-                                           }
-                                           else
-                                           {
-                                               request.writeToLog(
-                                                   "WARNING: UNWIND TOPIC UNEXPECTED CHANGE {0} FROM {1} SETTING TO {2}",
-                                                   ct, newTopic, oldTopic);
-                                               request.Topic = oldTopic;
-                                           }
-                                       }
-                                       if (newThat != null)
-                                       {
-                                           Unifiable ct = request.That;
-                                           if (newThat == ct)
-                                           {
-                                               request.That = oldThat;
-                                           }
-                                           else
-                                           {
-                                               request.writeToLog(
-                                                   "WARNING: UNWIND THAT UNEXPECTED CHANGE {0} FROM {1} SETTING TO {2}",
-                                                   ct, newThat, oldThat);
-                                               request.That = oldThat;
-                                           }
                                        }
                                    }
                                    catch (Exception ex)
                                    {
                                        request.writeToLog("ERROR " + ex);
                                    }
-                                   ExitContext(request, query);
-                                   ExitContext(request, query);
-                               };
-                }
+                                   finally
+                                   {
+                                       ExitContext(request, query);
+                                   }
+                               }
+                               ExitContext(request, query);
+                               if (uc > 0) gmrerstore();
+                           };
             }
-            return () =>
-                       {
-                           ExitContext(request, query);
-                       };
+        }
+
+
+        public static void DoNothing()
+        {
+             
         }
 
         private static void EnterContext(Request request, SubQuery query)
@@ -494,7 +421,7 @@ namespace AltAIMLbot.Utils
                 // the <topic> nodes will contain more <category> nodes
                 string currentNodeName = currentNode.Name.ToLower();
 
-                ThreadStart ts = EnterTag(request, currentNode, query);
+                var ts = EnterTag(request, currentNode, query);
                 try
                 {
                     total += doit();

@@ -73,7 +73,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     }
                     if (!IsNullOrEmpty(templateNodeInnerText))
                     {
-                        return ProcessAimlChange();
+                        return Recurse();
                     }
                     else
                     {

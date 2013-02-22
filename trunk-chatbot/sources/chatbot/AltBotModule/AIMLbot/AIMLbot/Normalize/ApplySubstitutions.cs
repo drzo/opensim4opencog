@@ -22,11 +22,6 @@ namespace AltAIMLbot.Normalize
             : base(bot)
         { }
 
-        protected override string ProcessChange()
-        {
-            return ProcessChangeU().AsString();
-        }
-
         /// <summary>
         /// Produces a random "marker" Unifiable that tags text that is already the result of a substitution
         /// </summary>

@@ -25,7 +25,6 @@ using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using org.opencyc.api;
-using AIMLTagHandler = AltAIMLbot.Utils.AIMLTagHandler;
 using CustomTagAttribute = AltAIMLbot.Utils.CustomTagAttribute;
 using Gender=AltAIMLbot.Utils.Gender;
 using MatchState=AltAIMLbot.Utils.MatchState;
@@ -96,7 +95,10 @@ namespace AltAIMLbot
         public bool loadChanging = true;
         public RandomMemory myRandMem = new RandomMemory();
 
-        [NonSerialized] public readonly SIProlog prologEngine = SIProlog.CurrentProlog;
+        public SIProlog prologEngine
+        {
+            get { return SIProlog.CurrentProlog; }
+        }
 
         public static object BotInitLock = new object();
 
@@ -857,6 +859,7 @@ namespace AltAIMLbot
         {
             var loader = GetLoader(GetBotRequest("loadAIMLFromFiles: " + dirPath + " into " + graphName));
             loader.GraphName = graphName;
+            loader.CurrentlyLoadingFrom = dirPath;
             loader.loadAIMLURI(dirPath);
         }
 
@@ -981,7 +984,7 @@ namespace AltAIMLbot
             named = named.Trim();
             named = MakeMtName(named);
             string mtName = "chat" + named + "Mt";
-            KeyValueListSIProlog v = new KeyValueListSIProlog(() => prologEngine, mtName, "chatVar");
+            KeyValueListSIProlog v = new KeyValueListSIProlog(() => this.prologEngine, mtName, "chatVar");
             var dict = new SettingsDictionaryReal(mtName, this, (KeyValueList) v);
             dict.bbPrefix = "user";
             if (mtName != named)
@@ -1701,11 +1704,14 @@ namespace AltAIMLbot
         public object evalTemplateNode(XmlNode templateNode, RequestKind requestType)
         {
             if (StaticXMLUtils.IsBlank(templateNode)) return "";
-            var imaginaryUser = LastUser;
-            Request request = new Request("evalTemplateNode Request", imaginaryUser, imaginaryUser.That, this, false,
-                                          requestType | RequestKind.TemplateExpander);
-            AltAIMLbot.Result result = new MasterResult(request.user, this, request);
-            AltAIMLbot.Utils.SubQuery query = new SubQuery("evalTemplateNode SubQuery", result, request);
+
+            string s = "evalTemplateNode: " + templateNode.OuterXml;
+            s = Unifiable.Trim(s);
+            if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
+
+            Request request = GetBotRequest(s, requestType | RequestKind.TemplateExpander);            
+            Result result = new MasterResult(request.user, this, request);
+            SubQuery query = new SubQuery("SubQuery " + s, result, request);
 
 
             string outputSentence = this.processNode(templateNode, query, request, result, request.user, true);
@@ -1732,6 +1738,7 @@ namespace AltAIMLbot
                 request.hasTimedOut = true;
                 return string.Empty;
             }
+            CheckRequestResultQuery(request, result, query);
 
             // DMILES: for KHC, a local way we can switch back and forth
             OutputDelegate TRACE = DEVNULL;
@@ -1781,52 +1788,7 @@ namespace AltAIMLbot
             {
                 if (node.HasChildNodesNonText())
                 {
-                    // recursively check
-                    foreach (XmlNode childNode in node.ChildNodes)
-                    {
-                        // expand only elements?
-                        if (childNode.NodeType == XmlNodeType.Element)
-                        {
-                            string debug = childNode.OuterXml;
-                            string debug1 = childNode.InnerXml;
-                            string debug2 = childNode.InnerText;
-                            try
-                            {
-                                string value = this.processNode(childNode, query, request, result, user,
-                                                                allowProcess);
-                                if (value == null)
-                                {
-                                    value = String.Empty;
-                                }
-                                if (!allowProcess)
-                                {
-                                    continue;
-                                }
-                                if (value.Contains("<"))
-                                {
-                                    childNode.InnerXml = value;
-                                }
-                                else
-                                {
-                                    childNode.InnerXml = value;
-                                }
-                                string debug3 = childNode.OuterXml;
-                                if (false &&
-                                    (!MustSame(debug2, childNode.InnerText) ||
-                                     !MustSame(debug1, childNode.InnerXml) ||
-                                     !MustSame(debug, childNode.OuterXml)))
-                                {
-                                    TRACE("AIML processNodeChild changed {0} -> {1}", debug, debug3);
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                TRACE("AIML processNode ERR {0}: {1} {2}", tagName, e, tagHandler);
-                                TRACE("AIML processNode OuterXML: {0}", debug);
-                                childNode.InnerXml = childNode.InnerText;
-                            }
-                        }
-                    }
+                    string resultNodeInnerInnerXML = tagHandler.TransformInner();
                     // we should have filled in the inner text by now
                     resultNodeInnerXML = tagHandler.Transform();
                     //string resultNodeInnerXML = node.InnerXml;
@@ -1900,6 +1862,36 @@ namespace AltAIMLbot
             return recursiveResult;
         }
 
+        private void CheckRequestResultQuery(Request request, Result result, SubQuery query)
+        {
+            if (Changes(request._result, result))
+            {
+                request._result = result;
+            }
+            if (Changes(result.request, request))
+            {
+                result.request = request;
+            }
+            if (Changes(request._CurrentQuery, query))
+            {
+                request._CurrentQuery = query;
+            }
+            if (Changes(result._CurrentQuery, query))
+            {
+                result._CurrentQuery = query;
+            }
+            if (Changes(query.Request, request))
+            {
+                query.Request = request;
+            }
+        }
+
+        private bool Changes(object befor, object after)
+        {
+            if (befor == null) return true;
+            if (befor == after) return false;
+            return true;
+        }
 
 
         bool MustSame(string s1, string s2)
@@ -1908,7 +1900,7 @@ namespace AltAIMLbot
             return false;
         }
 
-        public string GetOutputSentence(string template, XmlNode resultNode000, SubQuery query, Request request, AltAIMLbot.Result result, AltAIMLbot.User user, bool allowProcess)
+        public string GetOutputSentence(string template, XmlNode resultNode000, SubQuery query, Request request, Result result, User user, bool allowProcess)
         {
 
             if (template == null)
@@ -1919,7 +1911,7 @@ namespace AltAIMLbot
             {
                 return template;
             }
-            XmlNode resultNode = AIMLTagHandler.getNode("<node>" + template + "</node>");
+            XmlNode resultNode = AIMLTagHandler.getNode("<li>" + template + "</li>");
             while (true)
             {
                 if (resultNode.HasChildNodes)
@@ -1927,7 +1919,13 @@ namespace AltAIMLbot
                     if (resultNode.ChildNodes.Count == 1)
                     {
                         var cn = resultNode.FirstChild;
-                        string cnName = cn.Name;
+                        string cnName = resultNode.Name;
+                        if (cnName == "template" || cnName == "li")
+                        {
+                            //resultNode = cn;
+                            //continue;
+                        }
+                        cnName = cn.Name;
                         if (cnName == "template" || cnName == "li")
                         {
                             resultNode = cn;
@@ -1937,45 +1935,68 @@ namespace AltAIMLbot
                 }
                 break;
             }
-
-            if (resultNode.HasChildNodes)
+            string lrn = resultNode.LocalName;
+            string resultNodeString = resultNode.OuterXml;
+            if (lrn.IsOneOf("li", "template") < 0)
             {
-                StringBuilder recursiveResult = new StringBuilder();
-                // recursively check
-                bool needSpace = false;
-                string sep = "";
-                string lastResult = "";
-                foreach (XmlNode childNode in resultNode.ChildNodes)
+                if (!resultNode.HasChildNodes && resultNode.NodeType != XmlNodeType.Element)
                 {
-                    string oneChildString;
-                    oneChildString = this.processNode(childNode, query, request, result, user, allowProcess);
-                    if (string.IsNullOrEmpty(oneChildString))
-                    {
-                        continue;
-                    }
-                    if (needSpace)
-                    {
-                        if (!lastResult.EndsWith(sep)) recursiveResult.Append(sep);
-                    }
-                    else needSpace = true;
-                    lastResult = oneChildString;
-                    recursiveResult.Append(oneChildString);
+                    return resultNodeString;
                 }
-                var resultString = recursiveResult.ToString();
-                //if (resultString.Length > 4) resultString = resultString.Replace(" , ", " ");
-                if (resultString.Length > 0) resultString = resultString.Replace("\n", " ");
-                if (resultString.Length > 0) resultString = resultString.Replace("\r", " ");
-               // Console.WriteLine(" -- GetOutputSentence R1 ({0}) :---> '{1}'", template, resultString);
-                return resultString;
+                if (resultNode000 != null)
+                {
+                    resultNode = resultNode000;
+                }
+                // writeToLogWarn("not sure what kind of 0utput this is " + resultNode);
+            }
+            if (!resultNode.HasChildNodes && resultNode.NodeType != XmlNodeType.Element)
+            {
+                //  Console.WriteLine(" -- GetOutputSentence R2 ({0}) :---> '{1}'", template, resultNode.InnerXml);
+                return StaticAIMLUtils.InnerXmlText(resultNode);
+            }
+            StringBuilder recursiveResult = new StringBuilder();
+            // recursively check
+            bool needSpace = false;
+            string sep = "";
+            string lastResult = "";
+            int childs = 0;
+            foreach (XmlNode childNode in resultNode.ChildNodes)
+            {
+                string oneChildString;
+                oneChildString = this.processNode(childNode, query, request, result, user, allowProcess);
+                if (string.IsNullOrEmpty(oneChildString))
+                {
+                    continue;
+                }
+                if (needSpace)
+                {
+                    if (!lastResult.EndsWith(sep)) recursiveResult.Append(sep);
+                }
+                else
+                {
+                    needSpace = true;
+                }
+                lastResult = oneChildString;
+                childs++;
+                recursiveResult.Append(oneChildString);
+            }
+            string resultString;
+            if (childs == 1)
+            {
+                resultString = lastResult;
             }
             else
             {
-              //  Console.WriteLine(" -- GetOutputSentence R2 ({0}) :---> '{1}'", template, resultNode.InnerXml);
-                return resultNode.InnerXml;
+                resultString = recursiveResult.ToString();
             }
+            //if (resultString.Length > 4) resultString = resultString.Replace(" , ", " ");
+            //if (resultString.Length > 0) resultString = resultString.Replace("\n", " ");
+            //if (resultString.Length > 0) resultString = resultString.Replace("\r", " ");
+            // Console.WriteLine(" -- GetOutputSentence R1 ({0}) :---> '{1}'", template, resultString);
+            return resultString;
         }
 
-        private AIMLTagHandler GetTagHandler(XmlNode node, SubQuery query, Request request, AltAIMLbot.Result result, AltAIMLbot.User user, bool liText)
+        public AIMLTagHandler GetTagHandler(XmlNode node, SubQuery query, Request request, AltAIMLbot.Result result, AltAIMLbot.User user, bool liText)
         {
             AIMLTagHandler tagHandler = this.getBespokeTags(user, query, request, result, node);
             string nodeNameLower = node.Name.ToLower();
@@ -2223,7 +2244,7 @@ namespace AltAIMLbot
                 }
             }
             if (tagHandler != null) return tagHandler;
-            tagHandler = TagHandling.GetTagHandlerU(user, query, request, result, node, false);
+            tagHandler = TagHandling.GetTagHandlerU(user, query, request, result, node, true);
             if (tagHandler != null) return tagHandler;
             if (nodeNameLower == "name")
             {

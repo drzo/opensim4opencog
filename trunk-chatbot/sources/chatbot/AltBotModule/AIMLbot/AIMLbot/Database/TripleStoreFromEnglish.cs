@@ -336,7 +336,7 @@ namespace AltAIMLbot.Database
         public bool IsExcludedRelation(string value)
         {
             if (string.IsNullOrEmpty(value)) return true;
-            if (AIMLTagHandlerU.ReservedAttributes.Contains(value)) return true;
+            if (AIMLTagHandler.ReservedAttributes.Contains(value)) return true;
             return NullOrMatchInSet(ExcludeRels, value);
         }
 

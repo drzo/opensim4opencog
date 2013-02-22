@@ -1145,9 +1145,9 @@ namespace AltAIMLbot
             return solutions;
         }
 
-        private AIMLTagHandlerU ProcessQueryTemplate(Request request, SubQuery query, TemplateInfo s, Result result, AIMLTagHandlerU lastHandlerU, ref int solutions, out bool hasMoreSolutions)
+        private AIMLTagHandler ProcessQueryTemplate(Request request, SubQuery query, TemplateInfo s, Result result, AIMLTagHandler lastHandlerU, ref int solutions, out bool hasMoreSolutions)
         {
-            AIMLTagHandlerU childHandlerU = null;
+            AIMLTagHandler childHandlerU = null;
             request.TopLevelScore = 1.0;
             hasMoreSolutions = false;
             try
@@ -1286,7 +1286,7 @@ namespace AltAIMLbot
 
             //  if (request == null)
 
-            request = new Request(requestName, user, (Unifiable) null, parentRequest.Responder, request0Proccessor,
+            request = new Request(requestName, user, default(LoaderOptions), parentRequest.Responder, request0Proccessor,
                                   parentRequest, parentRequest.Graph, false, requestKind);
 
             if (parentRequest != null)
@@ -1329,7 +1329,7 @@ namespace AltAIMLbot
                 copyChild = false;
             }
             var lastHandler = TagHandling.proccessResponse(query, request, result, templateNode, sGuard, out createdOutput, out templateSucceeded,
-                             (AIMLTagHandlerU)null, templateInfo, copyChild, false); //not sure if should copy parent
+                             (AIMLTagHandler)null, templateInfo, copyChild, false); //not sure if should copy parent
             if (doUndos) query.UndoAll();
             request.LastHandlerU = lastHandler;
             return result;

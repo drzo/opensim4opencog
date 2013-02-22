@@ -10,7 +10,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// The size element does not have any content. 
     /// </summary>
-    public class size : AIMLTagHandlerU
+    public class size : AIMLTagHandler
     {
         /// <summary>
         /// Ctor

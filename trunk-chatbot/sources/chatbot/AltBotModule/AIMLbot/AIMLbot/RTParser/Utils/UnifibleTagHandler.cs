@@ -8,7 +8,7 @@ using AltAIMLbot;
 
 namespace AltAIMLbot.Utils
 {
-    public abstract class UnifibleTagHandler : AIMLTagHandlerU, IUnifibleTagHandler
+    public abstract class UnifibleTagHandler : AIMLTagHandler, IUnifibleTagHandler
     {
         internal const float AND_FALSE = 1;
         internal const float AND_TRUE = 0;
@@ -217,8 +217,8 @@ namespace AltAIMLbot.Utils
             }
             return re;
         }
-        
-        override protected Unifiable Recurse()
+
+        public override Unifiable RecurseChildren()
         {
             var vorNull = ComputeInnerOrNull();
             if (!Unifiable.IsNull(vorNull))
@@ -244,7 +244,7 @@ namespace AltAIMLbot.Utils
                 {
                     throw new Exception("This is inside iteself!");
                 }
-                AIMLTagHandlerU part = GetChildTagHandler(childNode);
+                AIMLTagHandler part = GetChildTagHandler(childNode);
                 partCallCanUnify = part.CallCanUnify(with);
             }
             return partCallCanUnify;

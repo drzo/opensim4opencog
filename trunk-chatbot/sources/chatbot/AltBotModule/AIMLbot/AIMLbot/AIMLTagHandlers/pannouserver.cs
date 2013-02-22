@@ -63,7 +63,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             isBoring = true;
         }
 
-        protected override String ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (this.TemplateNodeName == "pannouserver")
             {

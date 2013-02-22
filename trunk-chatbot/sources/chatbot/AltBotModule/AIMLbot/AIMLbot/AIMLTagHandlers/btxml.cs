@@ -50,7 +50,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             this.isRecursive = false;
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (this.TemplateNodeName == "btxml")
             {
@@ -58,8 +58,9 @@ namespace AltAIMLbot.AIMLTagHandlers
                 try
                 {
                     //string templateNodeInnerValue = this.TemplateNodeInnerText;
-                    //this.bot.myBehaviors.runBTXML(templateNodeInnerValue);
-                    this.bot.myBehaviors.runBTXML(templateNode);
+                    var expandedTemplateNode = ExpandedTemplateNode;
+                    this.bot.myBehaviors.runBTXML(expandedTemplateNode);
+                    return Succeed("running btxml=" + expandedTemplateNode.OuterXml);
                 }
                 catch
                 {

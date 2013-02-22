@@ -9,6 +9,8 @@ using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 
 namespace MushDLR223.Utilities
 {
+    public delegate void UnwindAction();
+
     //public delegate string ReduceStar0(string value);
     public interface ITraceable
     {
@@ -308,7 +310,8 @@ namespace MushDLR223.Utilities
 
         public static bool IsValueSetter(string s)
         {
-            return s != null && s.StartsWith(isValueSetStart);
+            if (!(s != null && s.StartsWith(isValueSetStart))) return false;
+            return true;
         }
 
         public static string ValueText(string s)
@@ -387,8 +390,15 @@ namespace MushDLR223.Utilities
                     break;
                 case XmlNodeType.ProcessingInstruction:
                     break;
+                case XmlNodeType.Whitespace:
+                case XmlNodeType.SignificantWhitespace:
+                    {
+                        return templateNode.OuterXml;
+                    }
                 case XmlNodeType.Comment:
-                    break;
+                    {
+                        return templateNode.OuterXml;
+                    }
                 case XmlNodeType.Document:
                     break;
                 case XmlNodeType.DocumentType:
@@ -396,10 +406,6 @@ namespace MushDLR223.Utilities
                 case XmlNodeType.DocumentFragment:
                     break;
                 case XmlNodeType.Notation:
-                    break;
-                case XmlNodeType.Whitespace:
-                    break;
-                case XmlNodeType.SignificantWhitespace:
                     break;
                 case XmlNodeType.EndElement:
                     break;

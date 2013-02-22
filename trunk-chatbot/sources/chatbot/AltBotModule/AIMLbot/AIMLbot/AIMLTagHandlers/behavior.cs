@@ -47,9 +47,9 @@ namespace AltAIMLbot.AIMLTagHandlers
 
 
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
-            if (this.TemplateNodeName == "behavior")
+            if (CheckNode("behavior"))
             {
                 // Simply pass the contents to the defineBehavior
                 try
@@ -70,6 +70,7 @@ namespace AltAIMLbot.AIMLTagHandlers
 
 
                     this.user.rbot.defineBehavior((string)myName, (string)templateNodeTotalValue);
+                    return Succeed("defined behavior called '" + myName + "'");
                 }
                 catch
                 {

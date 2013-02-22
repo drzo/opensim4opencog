@@ -29,7 +29,7 @@ namespace MushDLR223.Utilities
             get { return base.ParentNode as XmlSourceLineInfo; }
             set { throw new NotImplementedException(); }
         }
-        public bool protect = false;
+        public bool protect = true;
 
         public XmlTextLineInfo(string text, XmlDocumentLineInfo info)
             : base(XmlDocumentLineInfo.Intern(text), info.FileDoc)
@@ -59,6 +59,7 @@ namespace MushDLR223.Utilities
             }
             set
             {
+                writeToLog("ERROR no need to set XML Values");
                 if (protect)
                 {
                     writeToLog("WARNING: InnerText Should not be changed to \"" + value + "\"");
@@ -80,10 +81,13 @@ namespace MushDLR223.Utilities
                         return vv;
                     }
                     var ixml = base.InnerText;
-                    var inxml = base.InnerXml;
-                    if (inxml != ixml)
+                    if (false)
                     {
-                        writeToLog("InnerText " + ixml + " " + inxml);
+                        var inxml = base.InnerXml;
+                        if (inxml != ixml)
+                        {
+                            writeToLog("InnerText " + ixml + " " + inxml);
+                        }
                     }
                     if (StaticXMLUtils.IsValueSetter(ixml))
                     {
@@ -105,6 +109,7 @@ namespace MushDLR223.Utilities
             }
             set
             {
+                writeToLog("ERROR no need to set XML Values");
                 //if (base.InnerXml == value) return;
                 if (SetNewValue(value))
                 {
@@ -122,6 +127,7 @@ namespace MushDLR223.Utilities
 
         private void writeToLog(string s)
         {
+            DLRConsole.DebugWriteLine(s);
         }
 
         private bool SetNewValue(string value)
@@ -130,9 +136,10 @@ namespace MushDLR223.Utilities
             bool wasSetter = false;
             if (StaticXMLUtils.IsValueSetter(value))
             {
-                ir = /*StaticXMLUtils.ValueText*/(value);
+                ir = StaticXMLUtils.ValueText(value);
                 wasSetter = true;
             }
+            if (!wasSetter) writeToLog("ERROR not a setter");
             if (ir.Length == 0)
             {
                 if (LocalName != "think")

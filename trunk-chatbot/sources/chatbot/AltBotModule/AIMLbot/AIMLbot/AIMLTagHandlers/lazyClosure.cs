@@ -9,7 +9,7 @@ using MushDLR223.Utilities;
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    internal class lazyClosure : AIMLTagHandlerU
+    internal class lazyClosure : AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -37,7 +37,7 @@ namespace AltAIMLbot.AIMLTagHandlers
         /// The method that does the actual Processing of the text.
         /// </summary>
         /// <returns>The resulting Processed text</returns>
-        public override Unifiable RecurseProcess()
+        protected override Unifiable ProcessChangeU()
         {
             if (templateNode.NodeType == XmlNodeType.Comment) return Unifiable.Empty;
             if (templateNode.NodeType == XmlNodeType.Text)
@@ -148,18 +148,18 @@ namespace AltAIMLbot.AIMLTagHandlers
             var sd = request.GetSubstitutions(currentNodeName, false);
             if (sd != null)
             {
-                if (RecurseResultValid) return RecurseResult;
-                if (!Unifiable.IsIncomplete(RecurseResult))
+                if (FinalResultValid) return FinalResult;
+                if (!Unifiable.IsIncomplete(FinalResult))
                 {
-                    return RecurseResult;
+                    return FinalResult;
                 }
                 Func<Unifiable, Unifiable> Format = (v) => ApplySubstitutions.Substitute(sd, templateNodeInnerText);
                 if (base.isRecursive && !ReadOnly)
                 {
-                    RecurseResult = Format(TransformAtomically(null, true));
+                    FinalResult = Format(TransformAtomically(null, true));
                     return finalResult.Value;
                 }
-                return RecurseResult = TransformAtomically(Format, false);
+                return FinalResult = TransformAtomically(Format, false);
             }
 
             if (AltBot.UnknownTagsAreBotVars)
@@ -196,26 +196,6 @@ namespace AltAIMLbot.AIMLTagHandlers
             WriteLine("");
             WriteLine("");
             return Succeed("total is " + total);
-        }
-
-        #endregion
-
-        #region Overrides of TextTransformer
-
-        /// <summary>
-        /// The method that does the actual Processing of the text.
-        /// </summary>
-        /// <returns>The resulting Processed text</returns>
-        protected override Unifiable ProcessChangeU()
-        {
-            if (RecurseResultValid)
-            {
-                return RecurseResult;
-            }
-            var vv = RecurseProcess();
-            RecurseResult = vv;
-            return vv;
-            // return Unifiable.STAR;
         }
 
         #endregion

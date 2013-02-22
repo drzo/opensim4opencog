@@ -10,7 +10,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// The atomic sr does not have any content. 
     /// </summary>
-    public class xmlattribute : AIMLTagHandlerU
+    public class xmlattribute : AIMLTagHandler
     {
         /// <summary>
         /// Ctor

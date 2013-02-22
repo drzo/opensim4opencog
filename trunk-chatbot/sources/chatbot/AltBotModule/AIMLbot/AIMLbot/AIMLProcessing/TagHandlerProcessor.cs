@@ -23,10 +23,12 @@ namespace AltAIMLbot
     public partial class TagHandlerProcessor // : StaticAIMLUtils
     {
 
-        internal AIMLTagHandlerU GetTagHandler(User user, SubQuery query, Request request, Result result, XmlNode node,
-                                              AIMLTagHandlerU parentTagHandlerU)
+        internal AIMLTagHandler GetTagHandler(User user, SubQuery query, Request request, Result result, XmlNode node,
+                                              AIMLTagHandler parentTagHandlerU)
         {
-            AIMLTagHandlerU tag = GetTagHandlerU(user, query, request, result, node, true);
+
+            AltBot targetBot = user.bot;
+            AIMLTagHandler tag = targetBot.GetTagHandler(node, query, request, result, user, true);
             if (query != null) query.CurrentTagHandlerU = tag;
             if (query != null) query.CurrentNode = node;
             if (tag == null)
@@ -58,9 +60,9 @@ namespace AltAIMLbot
             return tag;
         }
 
-        internal AIMLTagHandlerU GetTagHandlerU(User user, SubQuery query, Request request, Result result, XmlNode node, bool liText)
+        internal AIMLTagHandler GetTagHandlerU(User user, SubQuery query, Request request, Result result, XmlNode node, bool liText)
         {
-            AIMLTagHandlerU tagHandlerU = getBespokeTags(user, query, request, result, node);
+            AIMLTagHandler tagHandlerU = getBespokeTags(user, query, request, result, node);
             string nodeNameLower = StaticAIMLUtils.ToLower(node.LocalName);
             AltBot targetBot = query.TargetBot;
             if (Equals(null, tagHandlerU))
@@ -363,7 +365,7 @@ namespace AltAIMLbot
 
                     case "#text":
                         if (!liText) return null;
-                        return new verbatum(node.InnerText, targetBot, user, query, request, result, node);
+                        return new verbatum(node.Value, targetBot, user, query, request, result, node);
                     case "#comment":
                         return new verbatum(node.OuterXml, targetBot, user, query, request, result, node);
                     case "br":
@@ -413,7 +415,7 @@ namespace AltAIMLbot
                         if (node.Name.ToLower() != newnode.Name.ToLower())
                         {
                             writeToLog("AIMLLOADER: converted " + node.OuterXml + " -> " + newnode.OuterXml);
-                            return GetTagHandlerU(user, query, request, result, newnode, liText);
+                            return targetBot.GetTagHandler(newnode, query, request, result,user, liText);
                         }
                         writeToLog("AIMLLOADER: ! convert " + node.OuterXml + " -> " + newnode.OuterXml);
                     }
@@ -451,11 +453,11 @@ namespace AltAIMLbot
         /// <param name="copyChild"></param>
         /// <param name="copyParent"></param>
         /// <returns></returns>
-        public AIMLTagHandlerU proccessResponse(SubQuery query,
+        public AIMLTagHandler proccessResponse(SubQuery query,
                                      Request request, Result result,
                                      XmlNode templateNode, Unifiable sGuard,
                                      out bool createdOutput, out bool templateSucceeded,
-                                     AIMLTagHandlerU parentHandlerU, TemplateInfo templateInfo,
+                                     AIMLTagHandler parentHandlerU, TemplateInfo templateInfo,
                                      bool copyChild, bool copyParent)
         {
             //request.CurrentResult = result;
@@ -492,10 +494,10 @@ namespace AltAIMLbot
             }
         }
 
-        private AIMLTagHandlerU proccessTemplate(SubQuery query, Request request, Result result,
+        private AIMLTagHandler proccessTemplate(SubQuery query, Request request, Result result,
                                                 XmlNode templateNode, Unifiable sGuard,
                                                 out bool createdOutput, out bool templateSucceeded,
-                                                AIMLTagHandlerU parentHandlerU, TemplateInfo templateInfo,
+                                                AIMLTagHandler parentHandlerU, TemplateInfo templateInfo,
                                                 bool copyChild, bool copyParent)
         {
             ChatLabel label = request.PushScope;
@@ -551,10 +553,10 @@ namespace AltAIMLbot
             }
         }
 
-        public AIMLTagHandlerU proccessResponse000(SubQuery query, Request request, Result result,
+        public AIMLTagHandler proccessResponse000(SubQuery query, Request request, Result result,
                                                 XmlNode sOutput, Unifiable sGuard,
                                                 out bool createdOutput, out bool templateSucceeded,
-                                                AIMLTagHandlerU parentHandlerU, TemplateInfo templateInfo,
+                                                AIMLTagHandler parentHandlerU, TemplateInfo templateInfo,
                                                 bool copyChild, bool copyParent)
         {
             AltBot Proc = query.TargetBot;
@@ -580,7 +582,7 @@ namespace AltAIMLbot
 
             bool protectChild = copyChild || childOriginal;
             bool suspendingLimits = request.IsToplevelRequest || request.SuspendSearchLimits;
-            AIMLTagHandlerU tagHandlerU = GetTagHandler(request.Requester, query, request, result,
+            AIMLTagHandler tagHandlerU = GetTagHandler(request.Requester, query, request, result,
                                                                   templateNode, parentHandlerU);
             string outputSentenceOut = processNode(templateNode, query,
                                                                request, result, request.Requester, parentHandlerU,
@@ -750,8 +752,8 @@ namespace AltAIMLbot
         /// <returns>the output Unifiable</returns>
         public string processNode(XmlNode node, SubQuery query,
                                   Request request, Result result, User user,
-                                  AIMLTagHandlerU parentHandlerU, bool protectChild, bool copyParent,
-                                  AIMLTagHandlerU nodeHandlerU, bool suspendLimits, out bool templateSucceeded)
+                                  AIMLTagHandler parentHandlerU, bool protectChild, bool copyParent,
+                                  AIMLTagHandler nodeHandlerU, bool suspendLimits, out bool templateSucceeded)
         {
             Request originalSalientRequest = Request.GetOriginalSalientRequest(request);
             var wasSuspendRestrati = request.SuspendSearchLimits;
@@ -786,7 +788,7 @@ namespace AltAIMLbot
                 {
                     return "";
                 }
-                if (nodeHandlerU.RecurseResultValid) return nodeHandlerU.RecurseResult;
+                if (nodeHandlerU.FinalResultValid) return nodeHandlerU.FinalResult;
                 return outputSentence;
             }
             finally
@@ -807,8 +809,8 @@ namespace AltAIMLbot
         /// <returns>the output Unifiable</returns>
         public string processNodeVV(XmlNode node, SubQuery query,
                                   Request request, Result result, User user,
-                                  AIMLTagHandlerU parentHandlerU, bool protectChild, bool copyParent,
-                                  AIMLTagHandlerU tagHandlerU, out bool childSuccess)
+                                  AIMLTagHandler parentHandlerU, bool protectChild, bool copyParent,
+                                  AIMLTagHandler tagHandlerU, out bool childSuccess)
         {
             AltBot TargetBot = request.TargetBot;
             childSuccess = true;
@@ -887,7 +889,7 @@ namespace AltAIMLbot
                     return Unifiable.Empty;
                 }
                 string nodeInner = node.InnerXml;
-                TargetBot.EvalAiml(node, request, del ?? StaticAIMLUtils.DEVNULL);
+                TargetBot.EvalAiml(node, request, del ?? TextPatternUtils.DEVNULL);
                 return node.InnerXml;
             }
 
@@ -913,7 +915,7 @@ namespace AltAIMLbot
             tagHandlerU.SetParent(parentHandlerU);
             //if (parent!=null) parent.AddChild(tagHandler);
 
-            Unifiable cp = tagHandlerU.CompleteAimlProcess();
+            Unifiable cp = tagHandlerU.Transform();
             if (Unifiable.IsNullOrEmpty(cp) && (!tagHandlerU.QueryHasSuceeded || tagHandlerU.QueryHasFailed))
             {
                 bool needsOneMoreTry = !request.SuspendSearchLimits &&
@@ -925,7 +927,7 @@ namespace AltAIMLbot
                     try
                     {
                         request.SuspendSearchLimits = true;
-                        cp = tagHandlerU.CompleteAimlProcess();
+                        cp = tagHandlerU.Transform();
                         if (Unifiable.IsNull(cp))
                         {
                             childSuccess = false;
@@ -934,9 +936,9 @@ namespace AltAIMLbot
                         if (false && Unifiable.IsNullOrEmpty(cp))
                         {
                             // trace the next line to see why
-                            AIMLTagHandlerU handlerU = tagHandlerU;
+                            AIMLTagHandler handlerU = tagHandlerU;
                             TargetBot.TraceTest("ERROR: Try Again since NULL " + handlerU,
-                                () => { cp = handlerU.CompleteAimlProcess(); });
+                                () => { cp = handlerU.Transform(); });
                         }
                     }
                     finally

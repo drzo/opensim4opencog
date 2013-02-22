@@ -32,12 +32,12 @@ namespace AltAIMLbot.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
         }
-        public override bool isFormatter
+        public override bool IsFormatter
         {
             get { return true; }
         }
 
-        protected override string ProcessChange()
+        protected override Unifiable ProcessChangeU()
         {
             if (this.TemplateNodeName == "prolist")
             {

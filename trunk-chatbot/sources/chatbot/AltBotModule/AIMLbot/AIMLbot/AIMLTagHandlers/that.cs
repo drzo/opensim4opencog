@@ -75,7 +75,7 @@ namespace AltAIMLbot.AIMLTagHandlers
         }
     }
 
-    abstract public class AIMLConstraintTagHandler : AIMLTagHandlerU
+    abstract public class AIMLConstraintTagHandler : AIMLTagHandler
     {
         protected int offetFrom;
         public AIMLConstraintTagHandler(AltBot bot,
