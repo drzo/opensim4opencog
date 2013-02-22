@@ -428,7 +428,7 @@ namespace AltAIMLbot.Utils
                 }
                 if (IsEMPTY(value))
                 {
-                    writeToLog("WARN: EXPTY" + Unifiable.DescribeUnifiable(value));
+                  //  writeToLog("WARN: EXPTY" + Unifiable.DescribeUnifiable(value));
                 }
             }
         }
