@@ -558,13 +558,14 @@ namespace AltAIMLbot.Utils
             fields["that"] = "";
             fields["state2"] = "";
             fields["topic"] = "";
-
+            // XML Style
             foreach (string s in frags)
             {
                 string[] args = s.Split('>');
                 if (args.Length == 2)
                 {
                     string key = args[0].ToLower().Trim();
+                    key = key.Remove('/');
                     string value = args[1].Trim();
                     // we have two state positions
                     if (key == "state")
@@ -575,6 +576,35 @@ namespace AltAIMLbot.Utils
                     fields[key] = value;
                 }
             }
+            
+            frags = path.Split(new string[] { "TAG-" }, StringSplitOptions.None);
+            stateindex = 0;
+            foreach (string s in frags)
+            {
+                // not quite ...
+                string[] args = s.Split(' ');
+                if (args.Length >= 2)
+                {
+                    string key = args[0].ToLower().Trim();
+                    // was "TAG-STATE xxx yyy" => "|STATE xxx yyy"
+                    string value = "|"+s;
+                    value = value.Replace("|"+key.ToUpper () + " ", "");
+                    
+                    // we have two state positions
+                    if (key == "state")
+                    {
+                        stateindex++;
+                        key = String.Format("state{0}", stateindex);
+                    }
+                    fields[key] = value;
+                    //TAG-INPUT => pattern
+                    if (key == "input")
+                    {
+                        fields["pattern"] = value;
+                    }
+                }
+            }
+
             return fields;
         }
 
