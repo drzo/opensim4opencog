@@ -9,7 +9,8 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// The think element has no attributes. It may contain any AIML template elements.
     /// </summary>
-    public class think : AIMLFormatingTagHandler
+    //public class think : AIMLFormatingTagHandler
+    public class think : Utils.AIMLTagHandler
     {
         /// <summary>
         /// Ctor
@@ -30,7 +31,7 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             IsStarAtomically = false;
         }
-
+        /*
         /// <summary>
         /// The method that does the actual Processing of the text.
         /// </summary>
@@ -48,12 +49,12 @@ namespace AltAIMLbot.AIMLTagHandlers
             //if (true) return THINKYTAG;
             return Succeed(" THOUGHT: '" + templateNodeInnerText + "'");
         }
-
+*/
         static public Unifiable THINKYTAG
         {
             get { return "TAG-THINK"; }
         }
-
+/*
         protected override Unifiable templateNodeInnerText
         {
             get
@@ -65,5 +66,12 @@ namespace AltAIMLbot.AIMLTagHandlers
                 base.templateNode.InnerText = value;
             }
         }
+        */
+        protected override Unifiable ProcessChangeU() {
+            string innerThought = Recurse();
+            return string.Empty; 
+        }
+
+
     }
 }

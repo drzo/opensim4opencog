@@ -20,3 +20,9 @@ D:\dev\Cogbot2012-10-01\bin\Iesi.Collections.Generic.XML
 D:\dev\Cogbot2012-10-01\sources\chatbot\AltBotModule\GenericSets\src\Iesi.Collections.Generic\obj\Debug\ResolveAssemblyReference.cache
 D:\dev\Cogbot2012-10-01\sources\chatbot\AltBotModule\GenericSets\src\Iesi.Collections.Generic\obj\Debug\Iesi.Collections.Generic.dll
 D:\dev\Cogbot2012-10-01\sources\chatbot\AltBotModule\GenericSets\src\Iesi.Collections.Generic\obj\Debug\Iesi.Collections.Generic.pdb
+D:\dev\Cogbot2013-02-16\bin\Iesi.Collections.Generic.dll
+D:\dev\Cogbot2013-02-16\bin\Iesi.Collections.Generic.pdb
+D:\dev\Cogbot2013-02-16\bin\Iesi.Collections.Generic.XML
+D:\dev\Cogbot2013-02-16\sources\chatbot\AltBotModule\GenericSets\src\Iesi.Collections.Generic\obj\Debug\ResolveAssemblyReference.cache
+D:\dev\Cogbot2013-02-16\sources\chatbot\AltBotModule\GenericSets\src\Iesi.Collections.Generic\obj\Debug\Iesi.Collections.Generic.dll
+D:\dev\Cogbot2013-02-16\sources\chatbot\AltBotModule\GenericSets\src\Iesi.Collections.Generic\obj\Debug\Iesi.Collections.Generic.pdb
