@@ -1565,6 +1565,12 @@ namespace MushDLR223.Utilities
           
             return false;
         }
+
+        public static string NodeString(XmlNode myNode)
+        {
+            if (myNode == null) return "<!--noNode-->";
+            return myNode.OuterXml.Replace("\r", " ").Replace("\n", " ").Replace("\t", " ").Replace("  ", " ").Trim();
+        }
     }
 
     internal class LineNumberInfoZeroZero : IXmlLineInfo

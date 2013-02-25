@@ -5,6 +5,30 @@ using MushDLR223.ScriptEngines;
 
 namespace MushDLR223.Utilities
 {
+    internal static class UtilMethods
+    {
+        public static int ContainsAny(this string graphPath, params string[] ces)
+        {
+            bool gpnull = string.IsNullOrEmpty(graphPath);
+            string ew = gpnull ? "" : graphPath.ToLower();
+            for (int index = 0; index < ces.Length; index++)
+            {
+                var ce = ces[index];
+                if (string.IsNullOrEmpty(ce))
+                {
+                    if (gpnull) return index;
+                    continue;
+                }
+                if (!gpnull && ew.Contains(ce.ToLower()))
+                {
+                    return index;
+                }
+            }
+            if (gpnull) return -2;
+            return -1;
+        }
+    }
+
     public class OutputDelegateWriter : TextWriter
     {
         private readonly OutputDelegate output;
@@ -21,6 +45,7 @@ namespace MushDLR223.Utilities
         {
             return output.GetHashCode();
         }
+
         public override bool Equals(object obj)
         {
             if (base.Equals(obj)) return true;
@@ -31,23 +56,27 @@ namespace MushDLR223.Utilities
 
         public override void Write(string format, params object[] arg)
         {
-            lock (locker) sw.Write(format, arg);           
+            lock (locker) sw.Write(format, arg);
         }
+
         public override void Write(char value)
         {
             lock (locker) sw.Write(value);
         }
+
         public override void Write(char[] buffer, int index, int count)
         {
-            DLRConsole.InitialConsoleOut.Flush(); 
+            DLRConsole.InitialConsoleOut.Flush();
             lock (locker) sw.Write(buffer, index, count);
             Flush();
         }
+
         public override void Close()
         {
             //base.Close();
             Flush();
         }
+
         public override void WriteLine(string format, params object[] arg)
         {
             lock (locker)
@@ -56,6 +85,7 @@ namespace MushDLR223.Utilities
                 output(format, arg);
             }
         }
+
         public override void WriteLine(char[] buffer, int index, int count)
         {
             lock (locker)
@@ -64,6 +94,7 @@ namespace MushDLR223.Utilities
                 Flush();
             }
         }
+
         public override void WriteLine()
         {
             lock (locker)
@@ -72,11 +103,13 @@ namespace MushDLR223.Utilities
                 Flush();
             }
         }
+
         public override void Flush()
         {
             Flush0();
             DLRConsole.InitialConsoleOut.Flush();
         }
+
         public void Flush0()
         {
             string toWrite = "";
@@ -129,5 +162,15 @@ namespace MushDLR223.Utilities
         }
 
         #endregion
+
+        public static OutputDelegate OnlyWith(OutputDelegate writeLine, Predicate<string> msgTest)
+        {
+            return (f, a) =>
+                       {
+                           string msg = DLRConsole.SafeFormat(f, a);
+                           if (!msgTest(msg)) return;
+                           writeLine(f, a);
+                       };
+        }
     }
 }

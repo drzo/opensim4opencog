@@ -21,7 +21,7 @@ using IHttpRequest = System.Web.HttpRequest;
 using IHttpClientContext = System.Web.HttpContext;
 #endif
 
-#if (COGBOT_LIBOMV || USE_STHREADS)
+#if (COGBOT_LIBOMV || USE_STHREADS || true)
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;
@@ -81,8 +81,8 @@ namespace MushDLR223.Utilities
             Init();
         }
         internal void Init()
-        {
-            #if USE_HTTPSERVER_DLL
+        {            
+#if USE_HTTPSERVER_DLL
             _listener = HttpServer.HttpListener.Create(new CHLogger(this), IPAddress.Any, _port);
             _listener.Accepted += _listener_Accepted;
             _listener.Set404Handler(_listener_404);
@@ -223,6 +223,10 @@ namespace MushDLR223.Utilities
             }
 
             if (path.StartsWith("/?") || path.StartsWith("/test"))
+            {
+                useHtml = true;
+            }
+            if (DLRConsole.IsDougsMachine)
             {
                 useHtml = true;
             }
@@ -568,6 +572,7 @@ namespace MushDLR223.Utilities
 
         static public void workArroundReuse(int port)
         {
+            return;
             try
             {
                 TcpClient client = new TcpClient();
