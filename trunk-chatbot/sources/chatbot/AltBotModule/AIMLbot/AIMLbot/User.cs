@@ -378,7 +378,7 @@ namespace AltAIMLbot
         public bool SetMeMyselfAndI(string value)
         {
             var r = Predicates as SettingsDictionaryReal;
-            //r.IsIdentityReadOnly = true;
+            r.IsIdentityReadOnly = false;
             string strip = "state,topic,graph,that";
             r.removeSetting(strip);
             r.readonlySetting(strip, true);

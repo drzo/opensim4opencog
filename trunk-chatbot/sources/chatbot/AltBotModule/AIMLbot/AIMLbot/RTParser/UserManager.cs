@@ -205,8 +205,9 @@ namespace AltAIMLbot
                     + "' UserName='" + user.UserName
                     + "' name='" + uname
                     + "' roleacct='" + user.IsRoleAcct
-                    + "' ListeningGraph='" + user.HeardSelfSayGraph
                     + "' StartGraph='" + user.StartGraph
+                    + "' HeardYouSayGraph='" + user.HeardYouSayGraph
+                    + "' HeardSelfSayGraph='" + user.HeardSelfSayGraph
                     + "'");
         }
 

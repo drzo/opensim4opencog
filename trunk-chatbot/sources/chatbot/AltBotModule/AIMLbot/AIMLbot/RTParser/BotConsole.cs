@@ -620,11 +620,30 @@ namespace AltAIMLbot
                 {
                     // See what the servitor says
                     updateRTP2Sevitor(myUser);
-                    servitor.respondToChat(input, myUser);
+                    servitor.respondToChat(args, myUser);
                     updateServitor2RTP(myUser);
                 }
             }
-
+            if (cmd == "bbclear")
+            {
+                if (showHelp)
+                {
+                    console("@bbclear -- flushes memcached");
+                }
+                else
+                {
+                    // See what the servitor says
+                    lock(BBDict)
+                    {
+                        BBDict.Clear();
+                    }
+                    if ((myChemistry != null) && (myChemistry.m_cBus != null))
+                    {
+                        myChemistry.BlackBoard.Clear();
+                        
+                    }
+                }
+            }
             if (showHelp) console("@user [var [value]] -- lists or changes the current users get/set vars.");
             if (cmd == "user")
             {
@@ -1036,7 +1055,8 @@ namespace AltAIMLbot
             if (showHelp) console("@load <graph> - <uri>");
             if (cmd == "load")
             {
-                Request request = myUser.LastRequest;
+                Request request = myUser.LastRequest ?? robot.GetBotRequest(cmd + " " + args);
+                request.Requester = myUser;
                 string graphname;
                 string files;
                 if (!SplitOff(args, "-", out graphname, out files))

@@ -6682,6 +6682,7 @@ namespace AltAIMLbot
 
         public bool AcceptsThread(NativeThread currentThread)
         {
+            return true;
             if (OnlyThisThread != null) return currentThread == OnlyThisThread;
             if (contextBot.myServitor.IsServitorThread(currentThread))
             {
