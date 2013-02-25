@@ -642,6 +642,10 @@ namespace AltAIMLbot
         public AltBot()
             : base()
         {
+            BotBehaving = new BehaviorContext()
+                              {
+                                  mbot = this
+                              };
             lock (OneAtATime)
             {
                 _lastAltBot = this;

@@ -78,6 +78,9 @@ namespace AltAIMLbot
         /// </summary>
         public static int DebugLevelExternalDb = 1;
 
+        // True was the way it worked before
+        public static bool RunAllTreesIfRootIsMissing = true;
+
         public  AltBot curBot;
 
         public bool NeedsLoad = true;
@@ -627,7 +630,18 @@ namespace AltAIMLbot
             Console.WriteLine(" Servitor startup complete");
         }
 
-        private bool LoadCompleteOnce = false;
+        public bool LoadCompleteOnce
+        {
+            get
+            {
+                lock (ServitorStartStopLoadLock)
+                {
+                    return _loadCompleteOnce;
+                }
+            }
+        }
+
+        private bool _loadCompleteOnce = false;
         public object ServitorStartStopLoadLock = new object();
         public bool NeedsStarted = true;
         private MasterUser _curUser;
@@ -658,8 +672,8 @@ namespace AltAIMLbot
             curBot.isAcceptingUserInput = true;
             lock (ServitorStartStopLoadLock)
             {
-                if (LoadCompleteOnce) return;
-                LoadCompleteOnce = true;
+                if (_loadCompleteOnce) return;
+                _loadCompleteOnce = true;
             }
             curBot.loadGlobalBotSettings();
             curBot.startServitor();
@@ -712,7 +726,7 @@ namespace AltAIMLbot
             }
             if ((myScheduler != null) && curBot.myBehaviors.definedBehavior("startup"))
             {
-                myScheduler.ActivateBehaviorTask("startup");
+                myScheduler.ActivateBehaviorTask("startup", curBot.BotBehaving);
                 Console.WriteLine("*** ActivateBehaviorTask startup ***");
             }
             else
@@ -851,7 +865,7 @@ namespace AltAIMLbot
                     curBot.lastBehaviorChatOutput = "";
                     myScheduler.SleepAllTasks(30000);
                     //myScheduler.ActivateBehaviorTask("chatRoot", true);
-                    myScheduler.ActivateBehaviorTask("chatRoot", false);
+                    myScheduler.ActivateBehaviorTask("chatRoot", false, curBot.BotBehaving);
                     string pstate = myScheduler.taskStatus("chatRoot");
                     while (pstate != "unknown")
                     {
@@ -1533,7 +1547,7 @@ namespace AltAIMLbot
             try
             { 
                 //BBDict[key] =curbot.bbGetHash(key)
-                return curBot.getBBHash(key);
+                return curBot.getBBHash(key) ?? "";
             }
             catch
             {

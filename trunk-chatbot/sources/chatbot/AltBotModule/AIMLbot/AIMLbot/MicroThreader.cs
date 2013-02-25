@@ -10,6 +10,7 @@ using Iesi.Collections.Generic;
 using LogicalParticleFilter1;
 using MushDLR223.Utilities;
 using ikvm.lang;
+using System.Threading;
 
 namespace AltAIMLbot
 {
@@ -18,31 +19,74 @@ namespace AltAIMLbot
     //tasks may move between lists but they may only be in one list at a time
     public class TaskItem
     {
-        public readonly IEnumerator<RunStatus > Task;
+        public IEnumerator<RunStatus> Task
+        {
+            get
+            {
+                Calling(Scheduler.active, InitialContext);
+                return _task;
+            }
+        }
+
         public TaskItem Next;
         public Scheduler Scheduler;
         public long Data;
         public string name;
+        public BehaviorContext InitialContext;
+        private IEnumerator<RunStatus> _task;
 
-        public TaskItem(IEnumerator<RunStatus> task, Scheduler scheduler)
+        public TaskItem(IEnumerator<RunStatus> task, Scheduler scheduler, BehaviorContext bctx)
         {
-            this.Task = task;
+            this._task = task;
             this.Scheduler = scheduler;
+            this.InitialContext = bctx;
         }
-        public TaskItem(IEnumerator<RunStatus> task, Scheduler scheduler,string myName)
+
+        public TaskItem(IEnumerator<RunStatus> task, Scheduler scheduler, string myName, BehaviorContext bctx)
         {
-            this.Task = task;
+            this._task = task;
             this.Scheduler = scheduler;
             this.name = myName;
+            this.InitialContext = bctx;
         }
 
         public bool IsNamed(string n)
         {
             return KeyCase.DefaultFN.SameKey(name, n);
         }
+
+        public void Removing(TaskList taskList)
+        {
+            if (InitialContext != null)
+            {
+                InitialContext.RemoveCurrentTask(this, taskList, Scheduler.active == taskList);
+            }
+        }
+
+        public void Adding(TaskList taskList)
+        {
+            if (InitialContext != null)
+            {
+                InitialContext.AddCurrentTask(this, taskList, Scheduler.active == taskList);
+            }
+        }
+
+        public void Calling(TaskList taskList, BehaviorContext bctx)
+        {
+            if (InitialContext == null) InitialContext = bctx;
+            if (InitialContext != null)
+            {
+                InitialContext.SetCurrentTask(this, taskList, Scheduler.active == taskList);
+            }
+        }
+
+        public override string ToString()
+        {
+            return "TI: '" + name + "' " + InitialContext + " " + Data + " " + _task;
+        }
     }
 
-    class TaskList
+    public class TaskList
     {
         public readonly Scheduler Scheduler;
 
@@ -56,52 +100,74 @@ namespace AltAIMLbot
 
         public void Append(TaskItem task)
         {
-            Debug.Assert(task.Next == null);
-            if (First == null)
+            lock (SyncOf(task))
             {
-                Debug.Assert(Last == null);
-                First = Last = task;
-            }
-            else
-            {
-                Debug.Assert(Last.Next == null);
-                Last.Next = task;
-                Last = task;
+                Debug.Assert(task.Next == null);
+                if (First == null)
+                {
+                    Debug.Assert(Last == null);
+                    First = Last = task;
+                }
+                else
+                {
+                    Debug.Assert(Last.Next == null);
+                    Last.Next = task;
+                    Last = task;
+                }
+                task.Adding(this);
             }
         }
+
+        public int _count = -1;
         public int Count
         {
             get
             {
-                int count=0;
-                var en = GetEnumerator();
-                while (en.MoveNext())
+                lock (SyncOf(First))
                 {
-                    count++;
+                    int count = 0;
+                    var en = GetEnumerator();
+                    while (en.MoveNext())
+                    {
+                        count++;
+                    }
+                    return count;
                 }
-                return count;
             }
         }
 
         public void Remove(TaskItem task, TaskItem previous)
         {
-            if (previous == null)
+            lock (SyncOf(task))
             {
-                Debug.Assert(task == First);
-                First = task.Next;
-            }
-            else
-            {
-                Debug.Assert(previous.Next == task);
-                previous.Next = task.Next;
-            }
+                if (previous == null)
+                {
+                    var cond = task == First;
+                    if (!cond)
+                    {
+                        // somethjing has removed this already!
+                      //  return;
+                    }
+                    Debug.Assert(cond, "task == First");
+                    First = task.Next;
+                }
+                else
+                {
+                    Debug.Assert(previous.Next == task);
+                    previous.Next = task.Next;
+                }
 
-            if (task.Next == null)
-            {
-                Debug.Assert(Last == task);
-                Last = previous;
+                if (task.Next == null)
+                {
+                    Debug.Assert(Last == task);
+                    Last = previous;
+                }
+                task.Next = null;
             }
-            task.Next = null;
+            if (Count == 0)
+            {
+                _count = 0;
+            }
         }
 
         public TaskEnumerator GetEnumerator()
@@ -111,8 +177,8 @@ namespace AltAIMLbot
 
         public sealed class TaskEnumerator
         {
-            TaskList list;
-            TaskItem current, previous;
+            protected TaskList list;
+            private TaskItem current, previous;
 
             public TaskEnumerator(TaskList list)
             {
@@ -120,57 +186,188 @@ namespace AltAIMLbot
                 previous = current = null;
             }
 
-            public TaskItem Current { get { return current; } }
+            public TaskItem Current
+            {
+                get { lock (SyncOf(current)) { return current; } }
+            }
 
             public bool MoveNext()
             {
-                TaskItem next;
-                if (current == null)
+                lock (SyncOf(current))
                 {
-                    if (previous == null)
-                        next = list.First;
+                    TaskItem next;
+                    if (current == null)
+                    {
+                        if (previous == null)
+                            next = list.First;
+                        else
+                            next = previous.Next;
+                    }
                     else
-                        next = previous.Next;
-                }
-                else
-                {
-                    next = current.Next;
-                }
+                    {
+                        next = current.Next;
+                    }
 
-                if (next != null)
-                {
-                    if (current != null)
-                        previous = Current;
-                    current = next;
-                    return true;
+                    if (next != null)
+                    {
+                        if (current != null)
+                            previous = Current;
+                        current = next;
+                        return true;
+                    }
+                    return false;
                 }
-                return false;
+            }
+
+            private object SyncOf(TaskItem taskItem)
+            {
+                return list.SyncOf(taskItem);
             }
 
             public void MoveCurrentToList(TaskList otherList)
             {
-                otherList.Append(RemoveCurrent());
+                lock (SyncOf(current))
+                {
+                    otherList.Append(RemoveCurrent());
+                }
             }
 
             public TaskItem RemoveCurrent()
             {
-                Debug.Assert(current != null);
-                TaskItem ret = current;
-                list.Remove(current, previous);
-                current = null;
-                return ret;
+                lock (SyncOf(current))
+                {
+                    Debug.Assert(current != null);
+                    TaskItem ret = current;
+                    ret.Removing(list);
+                    list.Remove(current, previous);
+                    current = null;
+                    return ret;
+                }
             }
+        }
+
+        internal object SyncOf(TaskItem taskItem)
+        {
+            if (taskItem == null)
+            {
+                return this;
+            }
+            return this;//
+            return taskItem;
+        }
+    }
+
+    public static class MicroLocker
+    {
+        static public object TickLockLock = new object();
+        static public IDictionary<object, Locker> Object2Locker = new Dictionary<object, Locker>();
+        static public Locker GetLocker(object obj)
+        {
+            lock (Object2Locker)
+            {
+                Locker lockr;
+                if (!Object2Locker.TryGetValue(obj, out lockr))
+                {
+                    lockr = Object2Locker[obj] = new Locker(obj);
+
+                }
+                return lockr;
+            }
+        }
+
+        public class Locker
+        {
+            public Locker(Func<object> obj)
+            {
+                lockGetter = obj;
+            }
+
+            public Locker(object obj)
+            {
+                lockGetter = () => obj;
+            }
+
+            public object TickLock
+            {
+                get
+                {
+                    if (lockGetter == null)
+                        return this;
+                    return lockGetter();
+                }
+            }
+
+            private readonly Func<object> lockGetter;
+            public Thread LastTickUser;
+            public string LastTickStackTrace;
+            public TimeSpan DefaultWait = TimeSpan.FromSeconds(1);
+
+
+            public Func<R> Run<R>(Func<R> RunOneTick, Func<Thread, string, R> cantGetIn)
+            {
+                if (TickLock == null)
+                {
+                    return RunOneTick;
+                }
+                bool lockedOut = false;
+                Thread lastTicker = null;
+                string lastTickerTrace = "";
+                lock (TickLockLock)
+                {
+                    if (!Monitor.TryEnter(TickLock, DefaultWait))
+                    {
+                        lockedOut = true;
+                        lastTicker = LastTickUser;
+                        lastTickerTrace = LastTickStackTrace;
+                        //   TickLock = new object();
+                    }
+                }
+                if (lockedOut)
+                {
+                    return () => cantGetIn(lastTicker, lastTickerTrace);
+                }
+                lock (TickLockLock)
+                {
+                    LastTickUser = Thread.CurrentThread;
+                    LastTickStackTrace = ThreadPoolUtil.SafeThreadPool.StackTraceString();
+                }
+                return () =>
+                           {
+                               try
+                               {
+                                   return RunOneTick();
+                               }
+                               finally
+                               {
+                                   Monitor.Exit(TickLock);
+                               }
+                           };
+            }
+        }
+
+        public static Func<R> Run<R>(object extlocker, Func<R> p1)
+        {
+            return GetLocker(extlocker).Run(p1, (t, s) => p1());
+        }
+        public static Func<R> Run<R>(object extlocker, Func<R> p1, Func<Thread, string, R> cantGetIn)
+        {
+            return GetLocker(extlocker).Run(p1, cantGetIn);
         }
     }
 
     public sealed class Scheduler
     {
-        TaskList active, sleeping;
+        readonly public TaskList active, sleeping;
         Servitor servitor;
         public bool singular = true; // only one process
         BehaviorSet myBehaviors
         {
-            get { return servitor.curBot.myBehaviors; }
+            get { return servitorBot.myBehaviors; }
+        }
+
+        private BehaviorContext servitorBot
+        {
+            get { return servitor.curBot.BotBehaving; }
         }
 
         public Scheduler(Servitor myServitor)
@@ -183,63 +380,44 @@ namespace AltAIMLbot
         {
             return ((active.Count == 0) && (sleeping.Count == 0));
         }
-        internal void ActivateBehaviorTask(string name, bool waitUntilComplete)
+
+
+        public void WaitUntilComplete(string fnd)
         {
-            if (!waitUntilComplete)
+            var tree = myBehaviors.GetTreeByName(fnd);
+            if (tree != null)
             {
-                ActivateBehaviorTask(name);
-                return;
-            }
-            TaskItem task = FindTask(name);
-            string status = taskStatus(name);
-            
-            var are = new ManualResetEvent(false);
-
-            Func<RunStatus> Unblock = () =>
-                                          {
-                                              are.Set();
-                                              return RunStatus.Success;
-                                          };
-
-            if (task == null || status == null || status == "unknown")
-            {
-                if (status == "sleeping")
+                if (!tree.AcceptsThread(Thread.CurrentThread))
                 {
-                    AwakenTask(name);
-                }
-                // start up a new one
-                if (!myBehaviors.definedBehavior(name))
-                {
+                    Console.WriteLine("Cant run this tree in foreground! " + fnd);
                     return;
                 }
-                IEnumerator<RunStatus> iterator = myBehaviors.getBehaviorEnumerator(name);
-                iterator = new ListOfIters(new List<IEnumerator<RunStatus>>
-                                               {
-                                                   iterator,
-                                                   new OneRunStatus()
-                                                       {
-                                                           Once = Unblock
-                                                       }
-                                               });
+            }
 
-
-                if ((singular == false) || (active.Count == 0))
-                {
-                    active.Append(new TaskItem(iterator, this, name));
-                }
-                else
-                {
-                    //dont Put in background even if we are single minded
-                    active.Append(new TaskItem(iterator, this, name));
-//                    sleeping.Append(new TaskItem(iterator, this, name));
-                }
-
-                are.WaitOne();
-                return;
+            string pstate = taskStatus(fnd);
+            while (pstate != "unknown")
+            {
+                Thread.Sleep(50);
+                Run();
+                pstate = taskStatus(fnd);
             }
         }
 
-        public void ActivateBehaviorTask(string name)
+        public void ActivateBehaviorTask(string name, bool waitUntilComplete, BehaviorContext bctx)
+        {
+            if (!waitUntilComplete)
+            {
+                ActivateBehaviorTask(name, servitorBot);
+                return;
+            }
+
+            TaskItem task = FindTask(name);
+            string status = taskStatus(name);
+            ActivateBehaviorTask(name, servitorBot);
+            WaitUntilComplete(name);
+        }
+
+        public void ActivateBehaviorTask(string name, BehaviorContext bctx)
         {
             // if its already running or sleeping 
             string status = taskStatus(name);
@@ -259,12 +437,12 @@ namespace AltAIMLbot
             
             if ((singular ==false) || (active.Count ==0))
             {
-                active.Append(new TaskItem(iterator, this, name));
+                active.Append(new TaskItem(iterator, this, name, bctx));
             }
             else
             {
                 //Put in background if we are single minded
-                sleeping.Append(new TaskItem(iterator, this, name));
+                sleeping.Append(new TaskItem(iterator, this, name, bctx));
 
             }
 
@@ -277,7 +455,7 @@ namespace AltAIMLbot
             {
                 return;
             }
-            ActivateBehaviorTask(evntBehavior);
+            ActivateBehaviorTask(evntBehavior, servitorBot);
         }
 
         public void RemoveBehaviorTask(string name)
@@ -397,7 +575,7 @@ namespace AltAIMLbot
 
         public void AddTask(IEnumerator<RunStatus> task)
         {
-            active.Append(new TaskItem(task, this));
+            active.Append(new TaskItem(task, this, servitorBot));
         }
 
         public void AwakenTask(string taskName)
@@ -422,6 +600,28 @@ namespace AltAIMLbot
 
         public void Run()
         {
+            var lockOn = TickLock ?? active;
+            Func<bool> b = MicroLocker.Run(lockOn, () =>
+                                                       {
+                                                           RunOneTick();
+                                                           return true;
+                                                       },
+                                           (lastTickerTrace, lastTicker) =>
+                                               {
+                                                   return false;
+                                                   Console.WriteLine("Cant get in becasue of other thread" +
+                                                                     lastTickerTrace);
+                                                   Console.WriteLine("ERROR Cant get in becasue of " +
+                                                                     lastTicker);
+                                                   RunOneTick();
+                                                   return false;
+                                               });
+            b();
+        }
+        public object TickLock = null;
+
+        public void RunOneTick()
+        {
             //cache this, it's expensive to access DateTime.Now
             int sleepCount = sleeping.Count;
             int activeCount = active.Count;
@@ -440,7 +640,10 @@ namespace AltAIMLbot
             while (en.MoveNext())
             {
                 //run each task's enumerator for one yield iteration
-                IEnumerator<RunStatus>  t = en.Current.Task;
+                var ti = en.Current;
+
+                ti.Calling(active, myBehaviors.bot.BotBehaving);
+                IEnumerator<RunStatus> t = ti.Task;
                 if (!t.MoveNext())
                 {
                     //it finished, so remove it
@@ -450,6 +653,7 @@ namespace AltAIMLbot
 
                 //check the current state
                 object state = t.Current;
+                // ReSharper disable ConditionIsAlwaysTrueOrFalse
                 if (state == null)
                 {
                     //it's just cooperatively yielding, state unchanged
@@ -474,10 +678,10 @@ namespace AltAIMLbot
                         en.RemoveCurrent();
                         continue;
                     }
-
-
+                  //  throw new InvalidOperationException("Unknown task state returned: " + state.GetType().FullName + " " + state);
                 }
-                else if (state is TimeSpan)
+
+                if (state is TimeSpan)
                 {
                     //it wants to sleep, move to the sleeping list. we use the Data property for the wakeup time
                     en.Current.Data = nowTicks + ((TimeSpan)state).Ticks;
@@ -485,7 +689,7 @@ namespace AltAIMLbot
                 }
                 else if (state is IEnumerable<RunStatus>)
                 {
-                    throw new NotImplementedException("Nested tasks are not supported yet");
+                    throw new NotImplementedException("Nested tasks are not supported yet " + state.GetType().FullName + " " + state);
                 }
                 else if (state is Signal)
                 {
@@ -503,7 +707,7 @@ namespace AltAIMLbot
 
                 else
                 {
-                    throw new InvalidOperationException("Unknown task state returned:" + state.GetType().FullName);
+                    throw new InvalidOperationException("Unknown task state returned: " + state.GetType().FullName + " " + state);
                 }
             }
         }
@@ -578,7 +782,7 @@ namespace AltAIMLbot
                     break;
 
                 case "activate":
-                    ActivateBehaviorTask(behaviorName);
+                    ActivateBehaviorTask(behaviorName, servitorBot);
                      ids = idStatus(behaviorName);
                      tsk = taskStatus(behaviorName);
                      writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);

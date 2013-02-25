@@ -16,6 +16,7 @@ using Aima.Core.Logic.Propositional.Visitors;
 using AltAIMLParser;
 using MiniSatCS;
 using System.Reflection;
+using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using AltAIMLbot;
 using LogicalParticleFilter1;
@@ -54,10 +55,11 @@ namespace AltAIMLbot
     /// </summary> 
     public enum RunStatus
     {
-        Non,
-        Success,
-        Failure,
-        Running,
+        Missing = 0,
+        Non = 1,
+        Success = 2,
+        Failure = 3,
+        Running = 4,
     }
     public enum Threshold
     {
@@ -847,10 +849,21 @@ namespace AltAIMLbot
 
         }
 
+        public static OutputDelegate LogToConsole = null;
         public void logText(string msg)
         {
             if (bot == null) return;
             if (SkipLog) return;
+            if (BehaviorSet.LogToConsole != null)
+            {
+                try
+                {
+                    BehaviorSet.LogToConsole(msg);
+                }
+                catch (Exception)
+                {
+                }
+            }
             lock (bot.loglock)
             {
                 try
@@ -883,6 +896,16 @@ namespace AltAIMLbot
                 }
                 try
                 {
+                    if (BehaviorSet.LogToConsole != null)
+                    {
+                        try
+                        {
+                            BehaviorSet.LogToConsole(msg);
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
                     string tag = String.Format("{1} {0}<{2} {3} >\n", msg, indent, myNode.Name.ToLower(), astr);
                     System.IO.File.AppendAllText(miniLog, tag);
                 }
@@ -1029,6 +1052,11 @@ namespace AltAIMLbot
                 Console.WriteLine("WARN: Tree '{0}' is null", name);
                 return null;
             }
+            if (!curTree.AcceptsThread(Thread.CurrentThread))
+            {
+                Console.WriteLine("WARN: Tree '{0}' wont run on this thread", name);
+                return null;
+            }
             return curTree.runBehaviorTree(bot).GetEnumerator();
 
         }
@@ -1070,6 +1098,10 @@ namespace AltAIMLbot
             {
                 try
                 {
+                    if (!Servitor.RunAllTreesIfRootIsMissing)
+                    {
+                        return;
+                    }
                     foreach (string treeName in GetBTKeyNames())
                     {
                         try
@@ -1140,6 +1172,8 @@ namespace AltAIMLbot
             list.Add(action);
         }
     }
+
+#if false
 
     [Serializable]
     public class BehaviorTree0 
@@ -3246,4 +3280,5 @@ namespace AltAIMLbot
             kb.Tell(string.Format("((selfFeelNaughtyAbout{0}) => selfFeelNaughty)", target));
         }
     }
+#endif
 }

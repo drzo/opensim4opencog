@@ -15,22 +15,24 @@ using Aima.Core.Logic.Propositional.Parsing;
 using Aima.Core.Logic.Propositional.Parsing.AST;
 using Aima.Core.Logic.Propositional.Visitors;
 using AltAIMLParser;
+using LAIR.Collections.Generic;
 using MiniSatCS;
 using System.Reflection;
+using MushDLR223.ScriptEngines;
 using MushDLR223.Virtualization;
 using AltAIMLbot;
 using VDS.RDF.Parsing;
 using LogicalParticleFilter1;
 using LAIR.ResourceAPIs.WordNet;
-using LAIR.Collections.Generic;
 using CAMeRAVUEmotion;
 using MushDLR223.Utilities;
 using BTXmlNode = System.Xml.XmlNode;
-#if (COGBOT_LIBOMV || USE_STHREADS)
+#if (COGBOT_LIBOMV || USE_STHREADS || true)
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;
 using Monitor = ThreadPoolUtil.Monitor;
+using NativeThread = System.Threading.Thread;
 #endif
 
 /******************************************************************************************
@@ -54,26 +56,121 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 namespace AltAIMLbot
 {
-    public class ListOfIters : IEnumerator<RunStatus>
+    public class ListOfIters : IEnumerator<RunStatus>, IEnumerable<RunStatus>
     {
-        public List<IEnumerator<RunStatus>> Iters;
+        public List<Func<IEnumerator<RunStatus>>> Iters;
         private IEnumerator<RunStatus> curIter = null;
 
-        public ListOfIters(List<IEnumerator<RunStatus>> list)
+        public bool pastEnd
+        {
+            get
+            {
+                if (LastException != null) return true;
+                return listIndex >= 0 && curIter == null;
+            }
+        }
+
+        private RunStatus result;
+        [ThreadStatic] 
+        static bool inToString = false;
+        public override string ToString()
+        {
+            bool b4 = inToString;
+            try
+            {
+                inToString = true;
+                return "ListOfIters=" + (listIndex) + "/" + Iters.Count + ".Current=" + Current + " hasNxt=" + HasNext + " " +
+                       LastException;
+            }
+            finally
+            {
+                inToString = b4;
+            }
+        }
+        public ListOfIters(List<Func<IEnumerator<RunStatus>>> list)
         {
             this.Iters = list;
-            if (Iters.Count > 0)
-            {
-                curIter = Iters[0];
-                Iters.RemoveAt(0);
-            }
+            this.listIndex = -1;
         }
 
         #region IEnumerator<RunStatus> Members
 
+        /// <summary>
+        /// Gets the element in the collection at the current position of the enumerator.
+        /// </summary>
+        /// <returns>
+        /// The element in the collection at the current position of the enumerator.
+        /// </returns>
         public RunStatus Current
         {
-            get { return curIter.Current;  }
+            get
+            {
+                result = Currently;
+                if (result == RunStatus.Running)
+                {
+                    return result;
+                }
+                return result;
+            }
+        }
+
+        public RunStatus Currently
+        {
+            get
+            {
+                if (!beenCalled)
+                {
+                    RaiseException("must first call MoveNExt()");
+                    return RunStatus.Running;
+                }
+                if (pastEnd)
+                {
+                    RaiseException("must call Reset()");
+                    if (result == RunStatus.Running)
+                    {
+                        result = RunStatus.Success;
+                    }
+                    return result;
+                }
+                if (curIter == null)
+                {
+                    RaiseException("must call Reset2()");
+                    return result;
+                    return RunStatus.Success;
+                }
+                result = curIter.Current;
+                if (result == RunStatus.Failure) return result;
+                if (result == RunStatus.Success)
+                {
+                    if (HasNext)
+                    {
+                        result = RunStatus.Running;
+                    }
+                    return result;
+                }
+                return RunStatus.Running;
+            }
+        }
+
+        public bool HasNext
+        {
+            get
+            {
+                var curIter = this.curIter;
+                int count = Iters.Count;
+                if (!beenCalled) return count > 0;
+                if (pastEnd) return false;
+                if (listIndex < (count - 1)) return true;
+                if (curIter == null) return false;
+                if (listIndex < count) return true;
+                return false;
+            }
+        }
+
+        public static void RaiseException(string why)
+        {
+            if (inToString) return;
+           // throw new NotImplementedException(why);
         }
 
         #endregion
@@ -82,7 +179,7 @@ namespace AltAIMLbot
 
         public void Dispose()
         {
-           
+
         }
 
         #endregion
@@ -96,40 +193,228 @@ namespace AltAIMLbot
 
         public bool MoveNext()
         {
-           if (curIter==null)
-           {
-               if (Iters.Count == 0) return false;
-               curIter = Iters[0];
-               Iters.RemoveAt(0);
-           }
-           if (!curIter.MoveNext())
-           {
-               return MoveNext();
-           }
-           return true;
+            if (curIter == null)
+            {
+                listIndex++;
+                if (listIndex >= Iters.Count)
+                {
+                    return false;
+                }
+                var f = Iters[listIndex];
+                if (f == null)
+                {
+                    return MoveNext();
+                }
+                curIter = f();
+                if (curIter == null)
+                {
+                    return MoveNext();
+                }
+            }
+            if (!curIterMoveNext())
+            {
+                curIter = null;
+                return MoveNext();
+            }
+            return true;
+        }
+
+        private bool curIterMoveNext()
+        {
+            result = RunStatus.Running;
+            try
+            {
+                return curIter.MoveNext();
+            }
+            catch (Exception e)
+            {
+                LastException = e;
+                if (result == RunStatus.Running)
+                {
+                    result = RunStatus.Failure;
+                }
+                Console.WriteLine("" + e);
+                return true;
+            }
+        }
+
+        protected bool beenCalled
+        {
+            get { return listIndex != -1; }
         }
 
         public void Reset()
         {
-            throw new NotImplementedException();
+            curIter = null;
+            LastException = null;
+            listIndex = -1;
+        }
+
+        #endregion
+
+        public IEnumerator<RunStatus> GetEnumerator()
+        {
+            return this;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this;
+        }
+
+        //public List<Func<IEnumerator<RunStatus>>>.Enumerator iiter { get; set; }
+
+        public int listIndex { get; set; }
+
+        public Exception LastException { get; set; }
+    }
+
+    public class EnumeratorToEnumerable : IEnumerator<RunStatus>, IEnumerable<RunStatus>
+    {
+        private IEnumerator<RunStatus> curIter;
+        private IEnumerable<RunStatus> curAble;
+        public EnumeratorToEnumerable(IEnumerator<RunStatus> rso )
+        {
+            curIter = rso;
+        }
+        public EnumeratorToEnumerable(IEnumerable<RunStatus> rse )
+        {
+            curAble = rse;
+        }
+        #region IEnumerable<RunStatus> Members
+
+        IEnumerator<RunStatus> IEnumerable<RunStatus>.GetEnumerator()
+        {
+            if (curAble != null)
+            {
+                return new EnumeratorToEnumerable(curAble.GetEnumerator());
+            }
+            return this;
+        }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable<RunStatus>)this).GetEnumerator();
+        }
+
+        #endregion
+
+        #region IEnumerator<RunStatus> Members
+
+        RunStatus IEnumerator<RunStatus>.Current
+        {
+            get { return curIter.Current; }
+        }
+
+        #endregion
+
+        #region IDisposable Members
+
+        void IDisposable.Dispose()
+        {
+            curIter.Dispose();
+        }
+
+        #endregion
+
+        #region IEnumerator Members
+
+        object IEnumerator.Current
+        {
+            get { return curIter.Current; }
+        }
+
+        bool IEnumerator.MoveNext()
+        {
+            return curIter.MoveNext();
+        }
+
+        void IEnumerator.Reset()
+        {
+            curIter.Reset();
         }
 
         #endregion
     }
-    public class OneRunStatus : IEnumerator<RunStatus>
+
+    public class OneRunStatus : IEnumerator<RunStatus>, IEnumerable<RunStatus>
     {
+        public static Func<IEnumerator<RunStatus>> oneAct(Action act)
+        {
+            return new OneRunStatus(act).GetEnumerator;
+        }
+        public static Func<IEnumerator<RunStatus>> oneAct(Func<RunStatus> act)
+        {
+            return new OneRunStatus(act).GetEnumerator;
+        }
+
+        public OneRunStatus()
+        {
+        }
+        public OneRunStatus(Action any)
+        {
+            Once = () =>
+            {
+                any();
+                return RunStatus.Success;
+            };
+        }
+        public OneRunStatus(Action any, RunStatus result0)
+        {
+            Once = () =>
+            {
+                any();
+                return result0;
+            };
+        }
+        public OneRunStatus(Func<RunStatus> any)
+        {
+            Once = any;
+        }
+
         public Func<RunStatus> Once;
         private bool beenCalled = false;
         public void Dispose()
         {
-            throw new NotImplementedException();
+           // throw new NotImplementedException();
         }
 
         public bool MoveNext()
         {
-            if (beenCalled) return false;
+            if (beenCalled)
+            {
+                if (result == RunStatus.Running)
+                {
+                    result = RunStatus.Success;
+                }
+                pastEnd = true;
+                return false;
+            }
+            result = RunStatus.Running;
             beenCalled = true;
-            result = Once();
+            try
+            {
+                result = Once();
+            }
+            catch (Exception e)
+            {
+                if (result == RunStatus.Running)
+                {
+                    result = RunStatus.Failure;
+                }
+                Console.WriteLine("" + e);
+            }
+            finally
+            {
+                if (result == RunStatus.Running)
+                {
+                    result = RunStatus.Success;
+                }
+            }
             return true;
 
         }
@@ -137,13 +422,23 @@ namespace AltAIMLbot
         public void Reset()
         {
             beenCalled = false;
+            pastEnd = false;
         }
 
         public RunStatus Current
         {
             get
             {
-                if (!beenCalled) throw new InvalidOperationException("must first call MoveNExt()");
+                if (!beenCalled)
+                {
+                    ListOfIters.RaiseException("must first call MoveNExt()");
+                    return RunStatus.Running;
+                }
+                if (pastEnd) 
+                {
+                    ListOfIters.RaiseException("must call Reset()");
+                    return RunStatus.Success;
+                }
                 return result;
             }
         }
@@ -154,6 +449,26 @@ namespace AltAIMLbot
         }
 
         public RunStatus result { get; set; }
+
+        #region IEnumerable<RunStatus> Members
+
+        public IEnumerator<RunStatus> GetEnumerator()
+        {
+            return this;
+        }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable<RunStatus>)this).GetEnumerator();
+        }
+
+        #endregion
+
+        public bool pastEnd { get; set; }
     }
 
     public class BTXmlDocument : XmlDocument
@@ -352,6 +667,7 @@ namespace AltAIMLbot
 
         [NonSerialized] private AltBot _bot;
         [NonSerialized] public BTXmlDocument treeDoc;
+        [NonSerialized] public Thread OnlyThisThread = null;
 
         // Kinda based on the idea at ...
         // http://www.garagegames.com/community/blogs/view/21143
@@ -387,9 +703,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("ERR:" + EMsg(e));
-                Console.WriteLine("ERR:" + e.StackTrace);
-                Console.WriteLine("ERR XML:" + behaviorDef);
+                LogException(e, "evalBehaviorXml = {0}", behaviorDef);
             }
             foreach (RunStatus myChildResult in runSubTree(evalDoc))
             {
@@ -431,16 +745,125 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("ERR: SourceTree =", mname);
-                Console.WriteLine("ERR:" + EMsg(e));
-                Console.WriteLine("ERR:" + e.StackTrace);
-                Console.WriteLine("ERR XML:" + behaviorDef);
+                LogException(e, "defineBehavior {0}={1}", mname, behaviorDef);
             }
         }
 
+        private void LogException(Exception exception, string f, params object[] a)
+        {
+            try
+            {
+                LogException0(null, exception, f, a, BehaviorSet.LogToConsole ?? Console.WriteLine);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR " + f + " " + e);
+            }
+        }
+
+        private void LogException(XmlNode node, Exception exception, string f, params object[] a)
+        {
+            try
+            {
+                LogException0(node, exception, f, a, BehaviorSet.LogToConsole ?? Console.WriteLine);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR " + f + " " + e);
+            }
+        }
+
+        private void LogException0(XmlNode node, Exception exception, string f, object[] a, OutputDelegate cw)
+        {
+            if (a != null && a.Length > 1)
+            {
+                //header
+                cw("ERROR:" + f);
+            }
+            string stuff1 = DLRConsole.SafeFormat(f, a);
+            cw("ERR:" + stuff1);
+            if (exception != null)
+            {
+                string stuff2 = EMsg(exception);
+                if (!stuff1.Contains(stuff2))
+                {
+                    cw("ERR:" + stuff1);
+                }
+            }
+            if (node != null)
+            {
+                cw("ERROR XML: " + node.OuterXml);
+            }
+        }
+
+        public object TreeNameLock = new object();
+
         public IEnumerable<RunStatus> runBehaviorTree(AltBot theBot)
         {
-            bot = theBot;
+            if (true) return MicroLocker.Run(TreeNameLock, () => runBehaviorTree1(theBot)).Invoke();
+            return MicroLocker.Run(TreeNameLock, () => runBehaviorTree0(theBot)).Invoke();
+        }
+        public IEnumerable<RunStatus> runBehaviorTree0(AltBot theBot)
+        {
+            var treeName = this.name;
+            object botRequestLock = TreeNameLock;
+            BehaviorContext bctx = bot.BotBehaving;
+            lock (botRequestLock)
+            {
+                var needsExit = new bool[1];
+                var initialThread = new NativeThread[1];
+                IEnumerable<RunStatus> ret = new ListOfIters(
+                    new List<Func<IEnumerator<RunStatus>>>()
+                        {
+                            oneRunStatus(
+                                () =>
+                                    {
+                                        Console.WriteLine("Entering runBTX " + treeName);
+                                        initialThread[0] = NativeThread.CurrentThread;
+                                        bool madeIt = Monitor.TryEnter(botRequestLock, TimeSpan.FromSeconds(20));
+                                        needsExit[0] = madeIt;
+                                        bctx.templateNode = treeDoc;
+                                        if (!madeIt)
+                                        {
+                                            Console.WriteLine("ERROR/WARN Didnt get my lock! " + treeName);
+                                        } 
+
+                                    }),
+                            runBehaviorTree1(theBot).GetEnumerator,
+                            oneRunStatus(
+                                () =>
+                                    {
+                                        bool madeIt = needsExit[0];
+                                        bool sameThread = initialThread[0] == NativeThread.CurrentThread;
+                                        if (madeIt && sameThread)
+                                        {
+                                            Monitor.Exit(botRequestLock);
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("ERROR/WARN exiting runBTX " + treeName + " madeIt =" +
+                                                              madeIt + " sameThread=" + sameThread);
+                                        }
+                                        bctx.templateNode = null;
+                                    }),
+                        });
+                return ret;
+            }
+        }
+
+        public static Func<IEnumerator<RunStatus>> oneRunStatus(Action act)
+        {
+            return OneRunStatus.oneAct(act);
+        }
+
+        public static Func<IEnumerator<RunStatus>> oneRunStatus(Func<RunStatus> act)
+        {
+            return OneRunStatus.oneAct(act);
+        }
+
+        public IEnumerable<RunStatus> runBehaviorTree1(AltBot theBot)
+        {
+            _bot = theBot;
             // Execute All Children
             foreach (XmlNode childNode in treeDoc.ChildNodes)
             {
@@ -554,12 +977,13 @@ namespace AltAIMLbot
                 // the only node with no parent is the root node, which has no path 
                 return "";
             }
-            if (node.ParentNode .NodeType == XmlNodeType .Document )
+            if (node.ParentNode.NodeType == XmlNodeType.Document)
 
                 return "  " + getIndent(node.ParentNode as BTXmlDocument);
             else
-                return "  " + getIndent((BTXmlNode)(node.ParentNode));
+                return "  " + getIndent((BTXmlNode) (node.ParentNode));
         }
+
         public string getIndent(BTXmlDocument node)
         {
             if (node == null || node.ParentNode == null)
@@ -594,12 +1018,12 @@ namespace AltAIMLbot
             while (xnIndex.PreviousSibling != null && xnIndex.PreviousSibling.Name == xnIndex.Name)
             {
                 iIndex++;
-                xnIndex = (BTXmlNode)xnIndex.PreviousSibling;
+                xnIndex = (BTXmlNode) xnIndex.PreviousSibling;
             }
 
             // the path to a node is the path to its parent, plus "/node()[n]", where 
             // n is its position among its siblings.          
-            return String.Format("{0}/{1}[{2}]", GetXPathToNode((BTXmlNode)node.ParentNode), node.Name, iIndex);
+            return String.Format("{0}/{1}[{2}]", GetXPathToNode((BTXmlNode) node.ParentNode), node.Name, iIndex);
         }
 
         public RunStatus tickMonitor()
@@ -618,19 +1042,31 @@ namespace AltAIMLbot
         {
             yield return RunStatus.Success;
         }
+
         public IEnumerable<RunStatus> atomicFailure()
         {
-            yield return RunStatus.Failure ;
+            yield return RunStatus.Failure;
         }
+
         public IEnumerable<RunStatus> atomicRunning()
         {
-            yield return RunStatus.Running ;
+            yield return RunStatus.Running;
         }
 
         public void logNode(string msg, BTXmlNode myNode)
         {
             lock (bot.loglock)
             {
+                if (BehaviorSet.LogToConsole != null)
+                {
+                    try
+                    {
+                        BehaviorSet.LogToConsole(msg + " " + StaticXMLUtils.NodeString(myNode));
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
                 string miniLog = String.Format(@"./aiml/BTTrace.txt");
                 string astr = "";
                 string indent = getIndent(myNode);
@@ -645,8 +1081,8 @@ namespace AltAIMLbot
                 }
                 try
                 {
-                    string tag = String.Format("{1} {0}<{2} {3} >\n", msg, indent, myNode.Name.ToLower(), astr);
-                    System.IO.File.AppendAllText(miniLog, tag);
+                    string tag = String.Format("{1} {0}<{2} {3} >", msg, indent, myNode.Name.ToLower(), astr);
+                    System.IO.File.AppendAllText(miniLog, tag + "\n");
                 }
                 catch
                 { }
@@ -655,6 +1091,17 @@ namespace AltAIMLbot
         }
         public void logText(string msg)
         {
+            if (BehaviorSet.LogToConsole != null)
+            {
+                try
+                {
+                    BehaviorSet.LogToConsole(msg);
+                }
+                catch (Exception)
+                {
+                }
+            }
+            var bot = _bot;
             lock (bot.loglock)
             {
                 try
@@ -685,9 +1132,9 @@ namespace AltAIMLbot
             string nodeID = "null";
             try
             {
-                if (!string.IsNullOrEmpty (myNode.AttributesV("id")))
+                if (!string.IsNullOrEmpty(myNode.AttributesV("id")))
                 {
-                        nodeID = myNode.AttributesV("id");
+                    nodeID = myNode.AttributesV("id");
                 }
             }
             catch (Exception e)
@@ -1477,8 +1924,10 @@ namespace AltAIMLbot
            }
             catch (Exception e)
             {
+                LogException(myNode, e, "evalBehaviorXml = {0}", myNode.OuterXml);
+
                 bot.inCritical = origCritical;
-                myResult = RunStatus .Failure ;
+                myResult = RunStatus.Failure;
                 Console.WriteLine("### BNODE ERR:{0} {1} {2}", myNode.Name.ToLower(), nodeID, myResult);
                 Console.WriteLine("### BNODE ERR:" + EMsg(e));
                 Console.WriteLine("### BNODE ERR:" + e.StackTrace);
@@ -2455,7 +2904,7 @@ namespace AltAIMLbot
             {
                 dval = double.Parse(val);
             }
-            catch (Exception e)
+            catch (FormatException e)
             {
                 dval = 0;
             }
@@ -4819,8 +5268,9 @@ namespace AltAIMLbot
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                LogException(myNode, e, "ProcessCoppeliaFeatureBelief");
             }
             //int newState = Global.AddState(bState);
             //bot.servitor.CoppeliaStateDictionary[cState] = newState;
@@ -4902,8 +5352,9 @@ namespace AltAIMLbot
                         }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                LogException(myNode, e, "ProcessCoppelia");
             }
             //int newState = Global.AddState(bState);
             //bot.servitor.CoppeliaStateDictionary[cState] = newState;
@@ -4939,8 +5390,9 @@ namespace AltAIMLbot
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                LogException(myNode, e, "ProcessCoppelia");
             }
             //int newState = Global.AddState(bState);
             //bot.servitor.CoppeliaStateDictionary[cState] = newState;
@@ -4975,8 +5427,9 @@ namespace AltAIMLbot
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                LogException(myNode, e, "ProcessCoppelia");
             }
             //int newState = Global.AddState(bState);
             //bot.servitor.CoppeliaStateDictionary[cState] = newState;
@@ -5003,7 +5456,7 @@ namespace AltAIMLbot
                 int iEmotion = AgentEmotions.Parse(cEmotion);
                 if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                 {
-                    if (iEmotion >=0 )
+                    if (iEmotion >= 0)
                     {
                         Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
                         a1.SetEmotion(iEmotion, fValue);
@@ -5011,8 +5464,9 @@ namespace AltAIMLbot
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                LogException(myNode, e, "ProcessCoppelia");
             }
             //int newState = Global.AddState(bState);
             //bot.servitor.CoppeliaStateDictionary[cState] = newState;
@@ -5277,8 +5731,9 @@ namespace AltAIMLbot
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                LogException(myNode, e, "ProcessCoppelia");
             }
             //int newState = Global.AddState(bState);
             //bot.servitor.CoppeliaStateDictionary[cState] = newState;
@@ -5315,15 +5770,16 @@ namespace AltAIMLbot
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                LogException(myNode, e, "ProcessCoppelia");
             }
             //int newState = Global.AddState(bState);
             //bot.servitor.CoppeliaStateDictionary[cState] = newState;
             yield return rs;
             yield break;
         }
-// Coppelia Morals
+        // Coppelia Morals
         public IEnumerable<RunStatus> ProcessCoppeliaMoral(BTXmlNode myNode)
         {
             // <coppeliaMoral moral="act" initial="true/false" />
@@ -5347,8 +5803,9 @@ namespace AltAIMLbot
                     //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                 }
             }
-            catch
+            catch (Exception e)
             {
+                LogException(myNode, e, "ProcessCoppelia");
             }
             yield return rs;
             yield break;
@@ -5383,8 +5840,9 @@ namespace AltAIMLbot
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                LogException(myNode, e, "ProcessCoppelia");
             }
             //int newState = Global.AddState(bState);
             //bot.servitor.CoppeliaStateDictionary[cState] = newState;
@@ -5426,8 +5884,9 @@ namespace AltAIMLbot
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                LogException(myNode, e, "ProcessCoppelia");
             }
             //int newState = Global.AddState(bState);
             //bot.servitor.CoppeliaStateDictionary[cState] = newState;
@@ -5463,16 +5922,16 @@ namespace AltAIMLbot
                             AgentAction act = bot.servitor.CoppeliaActionDictionary[cAct];
                             Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
                             int state = bot.servitor.CoppeliaStateDictionary[cState];
-                            a1.SetActionStateBelief(act.GlobalIndex ,state, fValue);
+                            a1.SetActionStateBelief(act.GlobalIndex, state, fValue);
                             //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                         }
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
-            }
-            //int newState = Global.AddState(bState);
+                LogException(myNode, e, "ProcessCoppelia");
+            }            //int newState = Global.AddState(bState);
             //bot.servitor.CoppeliaStateDictionary[cState] = newState;
             yield return rs;
             yield break;
@@ -5513,8 +5972,9 @@ namespace AltAIMLbot
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                LogException(myNode, e, "ProcessCoppelia");
             }
             //int newState = Global.AddState(bState);
             //bot.servitor.CoppeliaStateDictionary[cState] = newState;
@@ -5567,8 +6027,9 @@ namespace AltAIMLbot
                 }
 
             }
-            catch
+            catch (Exception e)
             {
+                LogException(myNode, e, "ProcessCoppelia");
             }
             //int newState = Global.AddState(bState);
             //bot.servitor.CoppeliaStateDictionary[cState] = newState;
@@ -5599,7 +6060,7 @@ namespace AltAIMLbot
                 fValue = float.Parse(cValue);
                 int relationID = AgentRelations.Parse(cRelation);
 
-                if (relationID >=0 )
+                if (relationID >= 0)
                 {
                     if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                     {
@@ -5607,7 +6068,7 @@ namespace AltAIMLbot
                         {
                             Agent agent = bot.servitor.CoppeliaAgentDictionary[cAgent];
                             Agent recipent = bot.servitor.CoppeliaAgentDictionary[cRecipient];
-                            agent.SetRelation(recipent.AgentID,relationID,fValue);
+                            agent.SetRelation(recipent.AgentID, relationID, fValue);
                             //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
 
                         }
@@ -5615,8 +6076,9 @@ namespace AltAIMLbot
                 }
 
             }
-            catch
+            catch (Exception e)
             {
+                LogException(myNode, e, "ProcessCoppelia");
             }
             //int newState = Global.AddState(bState);
             //bot.servitor.CoppeliaStateDictionary[cState] = newState;
@@ -5637,9 +6099,10 @@ namespace AltAIMLbot
         //  guest object type
         public IEnumerable<RunStatus> ProcessAssertCoppelia(BTXmlNode myNode)
         {
+            var myLocalBehaviors = bot.myBehaviors;
             string condition = myNode.AttributesV("cond");
             string parameters = myNode.InnerText;
-            string condData = myNode.AttributesV("cond")== null ? null : myNode.AttributesV("cond");
+            string condData = myNode.AttributesV("cond") == null ? null : myNode.AttributesV("cond");
             string[] parms = condData.Trim().Split(' ');
             string varName = parms[0];
             string rel = "";
@@ -5670,7 +6133,7 @@ namespace AltAIMLbot
 
             if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
             {
-               a1 =bot.servitor.CoppeliaAgentDictionary[cAgent];
+                a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
             }
             if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cRecipient))
             {
@@ -5686,7 +6149,7 @@ namespace AltAIMLbot
             {
                 dval = double.Parse(val);
             }
-            catch (Exception e)
+            catch (FormatException e)
             {
                 dval = 0;
             }
@@ -5701,7 +6164,7 @@ namespace AltAIMLbot
                 sv = bot.getBBHash(varName) ?? "0.0";
                 if (!string.IsNullOrEmpty(sv)) bbVal = double.Parse(sv);
             }
-            catch (Exception e) { }
+            catch (FormatException e) { }
 
             if (varName == "angerat") bbVal = a1.GetAnger(a2.AgentID);
             if (varName == "emotion") bbVal = a1.GetEmotion(iEmotions);
@@ -5709,13 +6172,13 @@ namespace AltAIMLbot
 
             // Special variables?
             if (varName == "timeout") bbVal = elapsedTime;
-            if (varName == "behaviorstackcount") bbVal = bot.myBehaviors.behaviorStack.Count;
-            if (varName == "behaviorqueuecount") bbVal = bot.myBehaviors.eventQueue.Count;
+            if (varName == "behaviorstackcount") bbVal = myLocalBehaviors.behaviorStack.Count;
+            if (varName == "behaviorqueuecount") bbVal = myLocalBehaviors.eventQueue.Count;
             if (varName == "prob") bbVal = rgen.NextDouble();
             if (varName.Contains(".runtime"))
             {
                 string tName = varName.Replace(".runtime", "");
-                bbVal = bot.myBehaviors.timeRunning(tName);
+                bbVal = myLocalBehaviors.timeRunning(tName);
             }
             if (varName.Contains(".lastrun"))
             {
@@ -5726,7 +6189,7 @@ namespace AltAIMLbot
             {
                 string dName = varName.Replace(".drive", "");
                 double halflife = 1000 * double.Parse(myNode.AttributesV("halflife"));
-                int lastRun = bot.myBehaviors.lastRunning(dName);
+                int lastRun = myLocalBehaviors.lastRunning(dName);
                 bbVal = Math.Pow(0.5, (lastRun / halflife));
             }
 
@@ -5798,7 +6261,7 @@ namespace AltAIMLbot
                 Sentence sen = (Sentence)new PEParser().Parse(query);
                 try
                 {
-                    valid = bot.myActiveModel.IsTrue(sen);
+                    valid = _bot.myActiveModel.IsTrue(sen);
                 }
                 catch
                 {
@@ -5822,7 +6285,7 @@ namespace AltAIMLbot
         }
 
         #endregion
-       // <loadchatmaper path="chatmapper\example.xml"/>
+        // <loadchatmaper path="chatmapper\example.xml"/>
         public IEnumerable<RunStatus> ProcessUpdatePersona(BTXmlNode myNode)
         {
             // Append some si_text 
@@ -5899,14 +6362,14 @@ namespace AltAIMLbot
                 string destFile = srcFile.Replace(".xml", ".btxml");
                 destFile = HostSystem.FileSystemPath(destFile);
                 System.IO.File.WriteAllText(destFile, myCodes);
-                chatDoc.LoadXml (myCodes);
-                bot.loadAIMLFromXML(chatDoc, "vf:"+srcFile +DateTime.Now.ToString());
+                chatDoc.LoadXml(myCodes);
+                bot.loadAIMLFromXML(chatDoc, "vf:" + srcFile + DateTime.Now.ToString());
 
                 rs = RunStatus.Success;
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error ProcessLoadChatMapper '{0}','{1}':{2}", srcFile, innerStr, EMsg(e));
+                LogException(myNode, e, "ProcessLoadChatMapper '{0}','{1}':{2}", srcFile, innerStr, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;
@@ -6205,6 +6668,18 @@ namespace AltAIMLbot
             kb.Tell(string.Format("((selfFeelFearConfirmedOf{0}) => selfFeelFearConfirmed)", target));
 
             kb.Tell(string.Format("((selfFeelNaughtyAbout{0}) => selfFeelNaughty)", target));
+        }
+
+        public bool AcceptsThread(NativeThread currentThread)
+        {
+            if (OnlyThisThread != null) return currentThread == OnlyThisThread;
+            if (bot.myServitor.IsServitorThread(currentThread))
+            {
+                return true;
+            }
+            Console.WriteLine("Thread " + currentThread + " taking over this " + name);
+            OnlyThisThread = currentThread;
+            return true;
         }
     }
     #endregion 

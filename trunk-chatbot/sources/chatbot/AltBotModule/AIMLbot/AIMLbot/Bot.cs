@@ -75,6 +75,11 @@ namespace AltAIMLbot
 
         static public bool MemcachedServerKnownDead = false;
 
+        /// <summary>
+        /// When behaviour trees run they need a body/situational context like is "current user", "last heard" etc
+        /// </summary>
+        public BehaviorContext BotBehaving;
+
         public RChem myChemistry = null;
         public Qchem realChem = null;
         public ChemTrace myChemTrace = null;
