@@ -51,7 +51,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 try
                 {
 
-                    this.user.rbot.myBehaviors.defineSubAIML(this.templateNode);
+                    this.user.rbot.myBehaviors.defineSubAIML(this.templateNode, bot);
                 }
                 catch
                 {

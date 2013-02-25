@@ -143,14 +143,14 @@ namespace AltAIMLbot
         /// <summary>
         /// The bot this user is using
         /// </summary>
-        public BehaviorContext bot
+        internal BehaviorContext bot
         {
             get { return AsBehaviorUser(); }
         }
 
         public AltBot mbot { get; set; }
 
-        public BehaviorContext rbot
+        internal BehaviorContext rbot
         {
             get { return bot ?? AltBot.SingleInstance.BotBehaving; }
         }

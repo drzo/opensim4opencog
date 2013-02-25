@@ -40,7 +40,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 namespace AltAIMLbot
 {
     [Serializable]
-    public class BehaviorContext : AIMLTagHandler
+    sealed class BehaviorContext : AIMLTagHandler
     {
         public object RequestLock = new object();
         public TaskItem RunningItem;
@@ -57,7 +57,7 @@ namespace AltAIMLbot
 
         private readonly Regex SentRegex = new Regex(@"(\S.+?[.!?,\)])(?=\s+|$)");
 
-        public override AltBot mbot
+        protected override AltBot mbot
         {
             get
             {
@@ -68,7 +68,7 @@ namespace AltAIMLbot
             }
         }
 
-        public TagHandlerProcessor TagHandling
+        internal TagHandlerProcessor TagHandling
         {
             get { return mbot.TagHandling; }
         }
@@ -111,7 +111,7 @@ namespace AltAIMLbot
             get { return mbot.prologEngine; }
         }
 
-        protected string OutputQueueString
+        internal string OutputQueueString
         {
             get
             {
@@ -534,11 +534,6 @@ namespace AltAIMLbot
             get { return mbot.wordNetEngine; }
         }
 
-        public AltBot substs
-        {
-            get { return mbot; }
-        }
-
         public actMSM pMSM
         {
             get { return mbot.pMSM; }
@@ -596,10 +591,16 @@ namespace AltAIMLbot
             }
         }
 
-        protected object SyncQueue
+        internal object SyncQueue
         {
             get { return RequestLock; }
         }
+
+        public AltBot curBot
+        {
+            get { return mbot; }
+        }
+
 
         public static implicit operator AltBot(BehaviorContext bhu)
         {
@@ -618,13 +619,13 @@ namespace AltAIMLbot
 
         internal Result Chat(Request request)
         {
-            Result result = mbot.Chat(request);
+            result = mbot.Chat(request);
             return result;
         }
 
         internal Result Chat(Request request, string graphName)
         {
-            Result result = mbot.Chat(request, graphName);
+            result = mbot.Chat(request, graphName);
             return result;
         }
 
@@ -938,7 +939,7 @@ namespace AltAIMLbot
             }
         }
 
-        public int DebugMicrothreader = 0;
+        public int DebugMicrothreader = 4;
         internal void SetCurrentTask(TaskItem ti, TaskList list, bool wasActiveTaskList)
         {
             bool match = (RunningItem != ti);
@@ -952,7 +953,7 @@ namespace AltAIMLbot
         internal void AddCurrentTask(TaskItem ti, TaskList list, bool wasActiveTaskList)
         {
             bool match = (RunningItem != ti);
-            if (DebugMicrothreader > 2) Console.WriteLine("CT-ADD: " + ti + " MATCH=" + match + " active=" + wasActiveTaskList);
+            if (DebugMicrothreader > 3) Console.WriteLine("CT-ADD: " + ti + " MATCH=" + match + " active=" + wasActiveTaskList);
             RanItems.Remove(ti);
             RunningItems.Remove(ti);
             RunningItems.Insert(0, ti);

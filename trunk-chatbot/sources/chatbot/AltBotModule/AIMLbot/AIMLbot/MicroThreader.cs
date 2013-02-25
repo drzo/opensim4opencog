@@ -12,6 +12,8 @@ using MushDLR223.Utilities;
 using ikvm.lang;
 using System.Threading;
 
+using BCTX = AltAIMLbot.AltBot;
+
 namespace AltAIMLbot
 {
     //see http://mjhutchinson.com/journal/2010/02/01/iteratorbased_microthreading
@@ -23,7 +25,7 @@ namespace AltAIMLbot
         {
             get
             {
-                Calling(Scheduler.active, InitialContext);
+                Calling(Scheduler.active, BContext);
                 return _task;
             }
         }
@@ -32,24 +34,24 @@ namespace AltAIMLbot
         public Scheduler Scheduler;
         public long Data;
         public string name;
-        public BehaviorContext InitialContext;
+        public BCTX BContext;
         readonly private IEnumerator<RunStatus> _task;
 
-        public TaskItem(IEnumerator<RunStatus> task, Scheduler scheduler, BehaviorContext bctx)
+        public TaskItem(IEnumerator<RunStatus> task, Scheduler scheduler, BCTX bctx)
         {
             Debug.Assert(task != null);
             this._task = task;
             this.Scheduler = scheduler;
-            this.InitialContext = bctx;
+            this.BContext = bctx;
         }
 
-        public TaskItem(IEnumerator<RunStatus> task, Scheduler scheduler, string myName, BehaviorContext bctx)
+        public TaskItem(IEnumerator<RunStatus> task, Scheduler scheduler, string myName, BCTX bctx)
         {
             Debug.Assert(task != null);
             this._task = task;
             this.Scheduler = scheduler;
             this.name = myName;
-            this.InitialContext = bctx;
+            this.BContext = bctx;
         }
 
         public bool IsNamed(string n)
@@ -59,32 +61,32 @@ namespace AltAIMLbot
 
         public void Removing(TaskList taskList)
         {
-            if (InitialContext != null)
+            if (BContext != null)
             {
-                InitialContext.RemoveCurrentTask(this, taskList, Scheduler.active == taskList);
+                BContext.RemoveCurrentTask(this, taskList, Scheduler.active == taskList);
             }
         }
 
         public void Adding(TaskList taskList)
         {
-            if (InitialContext != null)
+            if (BContext != null)
             {
-                InitialContext.AddCurrentTask(this, taskList, Scheduler.active == taskList);
+                BContext.AddCurrentTask(this, taskList, Scheduler.active == taskList);
             }
         }
 
-        public void Calling(TaskList taskList, BehaviorContext bctx)
+        public void Calling(TaskList taskList, BCTX bctx)
         {
-            if (InitialContext == null) InitialContext = bctx;
-            if (InitialContext != null)
+            if (BContext == null) BContext = bctx;
+            if (BContext != null)
             {
-                InitialContext.SetCurrentTask(this, taskList, Scheduler.active == taskList);
+                BContext.SetCurrentTask(this, taskList, Scheduler.active == taskList);
             }
         }
 
         public override string ToString()
         {
-            return "TI: '" + name + "' " + InitialContext + " " + Data + " " + _task;
+            return "TI: '" + name + "' " + BContext + " " + Data + " " + _task;
         }
     }
 
@@ -360,21 +362,18 @@ namespace AltAIMLbot
     public sealed class Scheduler
     {
         readonly public TaskList active, sleeping;
-        Servitor servitor;
         public bool singular = true; // only one process
-        BehaviorSet myBehaviors
+
+        private readonly Func<BehaviorSet> bsgetter;
+
+        private BehaviorSet myBehaviors
         {
-            get { return servitorBot.myBehaviors; }
+            get { return bsgetter(); }
         }
 
-        private BehaviorContext servitorBot
+        public Scheduler(Servitor behaviors)
         {
-            get { return servitor.curBot.BotBehaving; }
-        }
-
-        public Scheduler(Servitor myServitor)
-        {
-            servitor = myServitor;
+            bsgetter = (() => behaviors.curBot.myBehaviors);
             active = new TaskList(this);
             sleeping = new TaskList(this);
         }
@@ -405,20 +404,28 @@ namespace AltAIMLbot
             }
         }
 
-        public bool ActivateBehaviorTask(string name, bool waitUntilComplete, BehaviorContext bctx)
+        public bool ActivateBehaviorTask(string name, BCTX bctx)
         {
-            if (!waitUntilComplete)
+            return ActivateBehaviorTask(name, false, bctx);
+        }
+        public bool ActivateBehaviorTask(string name, bool waitUntilComplete, BCTX bctx)
+        {
+            if (!ActivateBehaviorTask_ul(name, bctx))
             {
-                return ActivateBehaviorTask(name, servitorBot);
+                Console.WriteLine("** WARNING Could not activate task! " + name);
+                return false;
             }
 
-            TaskItem task = FindTask(name);
-            string status = taskStatus(name);
-            ActivateBehaviorTask(name, servitorBot);
-            WaitUntilComplete(name);
-        }
+            if (!waitUntilComplete)
+            {
+                return true;
+            }
 
-        public bool ActivateBehaviorTask(string name, BehaviorContext bctx)
+            WaitUntilComplete(name);
+            
+            return true;
+        }
+        private bool ActivateBehaviorTask_ul(string name, BCTX bctx)
         {
             // if its already running or sleeping 
             string status = taskStatus(name);
@@ -431,10 +438,14 @@ namespace AltAIMLbot
             // start up a new one
             if (!myBehaviors.definedBehavior(name))
             {
-                return;
+                return false;
             }
-            IEnumerator<RunStatus> iterator = myBehaviors.getBehaviorEnumerator(name);
-            
+            IEnumerator<RunStatus> iterator = myBehaviors.getBehaviorEnumerator(name, bctx);
+            if (iterator == null)
+            {
+                // we didn't find it!
+                return false;
+            }
             if ((singular ==false) || (active.Count ==0))
             {
                 active.Append(new TaskItem(iterator, this, name, bctx));
@@ -445,17 +456,18 @@ namespace AltAIMLbot
                 sleeping.Append(new TaskItem(iterator, this, name, bctx));
 
             }
+            return true;
 
         }
 
-        public void EnqueueEvent(string evnt)
+        public bool EnqueueEvent(string evnt, BCTX bctx)
         {
             string evntBehavior = myBehaviors.getEventHandler(evnt);
             if (string.IsNullOrEmpty(evntBehavior))
             {
-                return;
+                return false;
             }
-            ActivateBehaviorTask(evntBehavior, servitorBot);
+            return ActivateBehaviorTask(evntBehavior, bctx);
         }
 
         public void RemoveBehaviorTask(string name)
@@ -573,9 +585,9 @@ namespace AltAIMLbot
             return report;
         }
 
-        public void AddTask(IEnumerator<RunStatus> task)
+        public void AddTask(IEnumerator<RunStatus> task, BCTX bctx)
         {
-            active.Append(new TaskItem(task, this, servitorBot));
+            active.Append(new TaskItem(task, this, bctx));
         }
 
         public bool AwakenTask(string taskName)
@@ -606,23 +618,18 @@ namespace AltAIMLbot
         public void Run()
         {
             var lockOn = TickLock ?? active;
-            Func<bool> b = MicroLocker.Run(lockOn, () =>
-                                                       {
-                                                           RunOneTick();
-                                                           return true;
-                                                       },
-                                           (lastTickerTrace, lastTicker) =>
-                                               {
-                                                   return false;
-                                                   Console.WriteLine("Cant get in becasue of other thread" +
-                                                                     lastTickerTrace);
-                                                   Console.WriteLine("ERROR Cant get in becasue of " +
-                                                                     lastTicker);
-                                                   RunOneTick();
-                                                   return false;
-                                               });
-            b();
+            MicroLocker.Run(lockOn, () =>
+                                        {
+                                            RunOneTick();
+                                            return true;
+                                        },
+                            (lastTickerTrace, lastTicker) =>
+                                {
+                                    RunOneTick();
+                                    return false;
+                                }).Invoke();
         }
+
         public object TickLock = null;
 
         public void RunOneTick()
@@ -647,7 +654,7 @@ namespace AltAIMLbot
                 //run each task's enumerator for one yield iteration
                 var ti = en.Current;
 
-                ti.Calling(active, myBehaviors.bot.BotBehaving);
+                ti.Calling(active, ti.BContext);
                 IEnumerator<RunStatus> t = ti.Task;
                 if (!t.MoveNext())
                 {
@@ -722,7 +729,7 @@ namespace AltAIMLbot
             active.Append(task);
         }
 
-        public void performAction(TextWriter writer, string action, string query, string behaviorName)
+        public void performAction(TextWriter writer, string action, string query, string behaviorName, BCTX bctx)
         {
             var multiBehaviorName = GatherTaskNames(behaviorName);
             if (multiBehaviorName != null)
@@ -734,7 +741,7 @@ namespace AltAIMLbot
                 }
                 foreach (string behavorT in multiBehaviorName)
                 {
-                    performAction(writer, action, query, behavorT);
+                    performAction(writer, action, query, behavorT, bctx);
                 }
                 return;
             }
@@ -743,7 +750,7 @@ namespace AltAIMLbot
                 foreach (var a in action.Split(' ', ','))
                 {
                     if (string.IsNullOrEmpty(a)) continue;
-                    performAction(writer, a, query, behaviorName);
+                    performAction(writer, a, query, behaviorName, bctx);
                 }
             }
             string ids = "";
@@ -761,7 +768,7 @@ namespace AltAIMLbot
                     if (!string.IsNullOrEmpty(eh) && !KeyCase.DefaultFN.SameKey(eh, behaviorName))
                     {
                         writer.WriteLine("<eventHandler name=\"{0}\" value=\"{1}\">", behaviorName, eh);
-                        performAction(writer, action, query, eh);
+                        performAction(writer, action, query, eh, bctx);
                         writer.WriteLine("</eventHandler>");
                     }
                     if (v03)
@@ -787,7 +794,7 @@ namespace AltAIMLbot
                     break;
 
                 case "activate":
-                    ActivateBehaviorTask(behaviorName, servitorBot);
+                    ActivateBehaviorTask(behaviorName, bctx);
                     WriteNewStatus(writer, behaviorName);
                     break;
                 case "deactivate":
@@ -882,11 +889,11 @@ namespace AltAIMLbot
                     break;
 
                 case "blockcron":
-                    servitor.curBot.blockCron = true;
+                    bctx.blockCron = true;
                     break;
 
                 case "unblockcron":
-                    servitor.curBot.blockCron = false;
+                    bctx.blockCron = false;
                     break;
 
 

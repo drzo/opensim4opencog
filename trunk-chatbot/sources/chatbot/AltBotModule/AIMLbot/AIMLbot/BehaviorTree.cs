@@ -29,6 +29,8 @@ using ThreadPool = ThreadPoolUtil.ThreadPool;
 using Monitor = ThreadPoolUtil.Monitor;
 #endif
 
+using BCTX = AltAIMLbot.AltBot;
+
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 
@@ -61,6 +63,7 @@ namespace AltAIMLbot
         Failure = 3,
         Running = 4,
     }
+
     public enum Threshold
     {
         Positive,
@@ -79,19 +82,21 @@ namespace AltAIMLbot
         /// ID: the variable name
         /// </summary>
         public String ID = null;
+
         /// <summary>
         /// The value of the variable at LastUpdate
         /// </summary>
         public double RefValue = 0;
+
         /// <summary>
         /// The tickCount of the change
         /// </summary>
-        public Int32 LastUpdate=0;
+        public Int32 LastUpdate = 0;
 
         /// <summary>
         /// The halflife of the variable in milliseconds (since it is based on Environment.TickCount)
         /// </summary>
-        public double Halflife =1;
+        public double Halflife = 1;
 
         public Valence(string myID)
         {
@@ -103,18 +108,21 @@ namespace AltAIMLbot
         {
             double timeInterval;
             timeInterval = Environment.TickCount - LastUpdate;
-            double CV = Math.Pow(0.5, (timeInterval / Halflife));
+            double CV = Math.Pow(0.5, (timeInterval/Halflife));
             return CV;
         }
-        public void adjust (double increment)
+
+        public void adjust(double increment)
         {
             RefValue = CurVal() + increment;
             LastUpdate = Environment.TickCount;
         }
+
         public void setHalflife(double halfLife)
         {
             Halflife = halfLife;
         }
+
         public void setInitialValue(double initV)
         {
             RefValue = initV;
@@ -130,7 +138,7 @@ namespace AltAIMLbot
     [Serializable]
 
     public class ValenceSet
-    {       
+    {
 
         public CIDictionary<string, Valence> Valences = new CIDictionary<string, Valence>();
 
@@ -139,21 +147,22 @@ namespace AltAIMLbot
             Valences = new CIDictionary<string, Valence>();
         }
 
-        public void Add(string ID,double halflife)
+        public void Add(string ID, double halflife)
         {
             Valence substance = new Valence(ID);
             substance.Halflife = halflife;
             substance.adjust(1.0);
             Valences[ID] = substance;
-            
+
         }
+
         public void adjust(string ID, double amount)
         {
             if (!Valences.ContainsKey(ID))
             {
                 Add(ID, 1);
             }
-            Valence deStuff = (Valence)Valences[ID];
+            Valence deStuff = (Valence) Valences[ID];
             deStuff.adjust(amount);
         }
 
@@ -165,7 +174,7 @@ namespace AltAIMLbot
             }
             else
             {
-                Valence deStuff = (Valence)Valences[ID];
+                Valence deStuff = (Valence) Valences[ID];
                 return deStuff.CurVal();
             }
         }
@@ -174,14 +183,15 @@ namespace AltAIMLbot
         {
             if (!Valences.ContainsKey(ID))
             {
-                Add(ID,halfLife);
+                Add(ID, halfLife);
             }
             else
             {
-                Valence deStuff = (Valence)Valences[ID];
-               deStuff.setHalflife( halfLife);
+                Valence deStuff = (Valence) Valences[ID];
+                deStuff.setHalflife(halfLife);
             }
         }
+
         public void setRefVal(string ID, Int32 refTick)
         {
             if (!Valences.ContainsKey(ID))
@@ -190,7 +200,7 @@ namespace AltAIMLbot
             }
             else
             {
-                Valence deStuff = (Valence)Valences[ID];
+                Valence deStuff = (Valence) Valences[ID];
                 deStuff.RefValue = refTick;
             }
         }
@@ -209,9 +219,11 @@ namespace AltAIMLbot
         {
             lock (loc) items.Add(item);
         }
+
         public string Pop()
         {
-            lock (loc) if (items.Count > 0)
+            lock (loc)
+                if (items.Count > 0)
                 {
                     string temp = items[items.Count - 1];
                     items.RemoveAt(items.Count - 1);
@@ -220,13 +232,16 @@ namespace AltAIMLbot
                 else
                     return default(string);
         }
+
         public string Dequeue()
         {
             return Pop();
         }
+
         public string Peek()
         {
-            lock (loc) if (items.Count > 0)
+            lock (loc)
+                if (items.Count > 0)
                 {
                     string temp = items[items.Count - 1];
                     return temp;
@@ -234,9 +249,11 @@ namespace AltAIMLbot
                 else
                     return default(string);
         }
+
         public string PopRandom()
         {
-            lock (loc) if (items.Count > 0)
+            lock (loc)
+                if (items.Count > 0)
                 {
                     Random rng = new Random();
                     int pick = rng.Next(items.Count - 1);
@@ -252,6 +269,7 @@ namespace AltAIMLbot
         {
             get { lock (loc) return items.Count; }
         }
+
         public void Clear()
         {
             lock (loc) items.Clear();
@@ -266,10 +284,12 @@ namespace AltAIMLbot
         {
             return GetIndex(s) > -1;
         }
+
         public void Remove(int itemAtPosition)
         {
             lock (loc) items.RemoveAt(itemAtPosition);
         }
+
         public void RemoveAny(string item)
         {
             lock (loc)
@@ -289,13 +309,15 @@ namespace AltAIMLbot
         {
             lock (loc) items.Insert(0, item);
         }
-        override public string ToString()
+
+        public override string ToString()
         {
             string result = "[";
-            lock (loc) foreach (string x in items)
-            {
-                result += x + "|";
-            }
+            lock (loc)
+                foreach (string x in items)
+                {
+                    result += x + "|";
+                }
             result += "]";
             return result;
         }
@@ -325,31 +347,24 @@ namespace AltAIMLbot
         public bool waitingForChat = false;
 
 
-        public AltBot bot
+        public AltBot _bot;
+
+        private AltBot bctx
         {
-            get { return mbot; }
+            get { return _bot; }
             set
             {
-                mbot = value;//.bot;
-            }
-        }
-
-
-        private AltBot mbot
-        {
-            get { return _mbot; }
-            set
-            {
-                _mbot = value;
+                if (_bot == value) return;
+                _bot = value;
                 foreach (var tree in GetTreeList())
-                    tree._bot = mbot;
+                    tree.contextBot = bctx;
             }
         }
 
 
         public BehaviorSet(AltBot bot)
         {
-            _mbot = bot;
+            _bot = bot;
             //behaveTrees = new Hashtable();
             behaveTrees = new CIDictionary<string, BehaviorTree>(KeyCase.DefaultFN);
             runState = new CIDictionary<string, RunStatus>(KeyCase.DefaultFN);
@@ -368,13 +383,11 @@ namespace AltAIMLbot
 
         }
 
-        public void postSerial(AltBot deBot)
+        public void postSerial(BCTX startUpContext)
         {
-            mbot = deBot;
-            bot = deBot.BotBehaving;
             foreach (var t in GetTreeList())
             {
-                t.postSerial(deBot);
+                t.postSerial(startUpContext);
             }
         }
 
@@ -458,9 +471,8 @@ namespace AltAIMLbot
         {
             try
             {
-                BehaviorTree newTree = new BehaviorTree(bot);
-                newTree.defineBehavior(treeName, behaviorDef);
-                if (mbot != null) newTree.bot = mbot.BotBehaving;
+                BehaviorTree newTree = new BehaviorTree(null);
+                newTree.defineBehavior(treeName, behaviorDef);            
                 lock (behaveTrees)
                 {
                     behaveTrees[treeName] = newTree;
@@ -476,22 +488,20 @@ namespace AltAIMLbot
 
         public void keepTime(string nodeID, RunStatus R)
         {
-            if (bot == null) return;
-            var myBehaviors = bot.myBehaviors;
             try
             {
                 // Update on first entry
                 if ((R == null) || (R == RunStatus.Success))
                 {
-                    if (!myBehaviors.entryTime.ContainsKey(nodeID))
+                    if (!entryTime.ContainsKey(nodeID))
                     {
-                        myBehaviors.entryTime[nodeID] = Environment.TickCount;
+                        entryTime[nodeID] = Environment.TickCount;
                     }
                 }
                 else
                 {
                     // Remove the ID on any failure
-                    myBehaviors.entryTime.Remove(nodeID);
+                    entryTime.Remove(nodeID);
                 }
             }
             catch (Exception e)
@@ -503,26 +513,25 @@ namespace AltAIMLbot
 
         public Int32 timeRunning(string nodeID)
         {
-            if (bot.myBehaviors.entryTime.ContainsKey(nodeID))
+            if (entryTime.ContainsKey(nodeID))
             {
-                return Environment.TickCount - bot.myBehaviors.entryTime[nodeID];
+                return Environment.TickCount - entryTime[nodeID];
             }
             return 0;
         }
 
         public void activationTime(string nodeID, RunStatus R)
         {
-            if (bot == null) return;
             try
             {
                 if ((R == null) || (R == RunStatus.Success))
                 {
-                    if ((bot.myBehaviors.execTime.Count == 0) ||
-                        (!bot.myBehaviors.execTime.ContainsKey(nodeID)))
+                    if ((execTime.Count == 0) ||
+                        (!execTime.ContainsKey(nodeID)))
                     {
-                        bot.myBehaviors.execTime.Add(nodeID, Environment.TickCount);
+                        execTime.Add(nodeID, Environment.TickCount);
                     }
-                    bot.myBehaviors.execTime[nodeID] = Environment.TickCount;
+                    execTime[nodeID] = Environment.TickCount;
                 }
 
             }
@@ -535,9 +544,9 @@ namespace AltAIMLbot
 
         public Int32 lastRunning(string nodeID)
         {
-            if (bot.myBehaviors.execTime.ContainsKey(nodeID))
+            if (execTime.ContainsKey(nodeID))
             {
-                return Environment.TickCount - bot.myBehaviors.execTime[nodeID];
+                return Environment.TickCount - execTime[nodeID];
             }
             // Doesn't exist means never run before
             return Int32.MaxValue;
@@ -553,7 +562,7 @@ namespace AltAIMLbot
             VSoup.adjust(driveName, 1.0);
         }
 
-        public RunStatus runBTXML(string BTXML)
+        public RunStatus runBTXML(string BTXML, BCTX mbot)
         {
             RunStatus result = RunStatus.Failure;
             BehaviorTree newTree = new BehaviorTree(mbot);
@@ -561,7 +570,7 @@ namespace AltAIMLbot
             newTree.defineBehavior(treeName,
                                    string.Format("<behavior id='{0}'><subaiml>{1}</subaiml></behavior>", treeName, BTXML));
             //result = newTree.runBehaviorTree(this.bot);
-            foreach (RunStatus myChildResult in newTree.runBehaviorTree(this.bot))
+            foreach (RunStatus myChildResult in newTree.runBehaviorTree(mbot))
             {
                 result = myChildResult;
                 if (result != RunStatus.Running) break;
@@ -572,11 +581,11 @@ namespace AltAIMLbot
             return result;
         }
 
-        public RunStatus runBTXML(XmlNode BTXML)
+        public RunStatus runBTXML(XmlNode BTXML, BCTX bot)
         {
             RunStatus result = RunStatus.Failure;
             BehaviorTree newTree = new BehaviorTree(bot);
-            newTree.bot = bot;
+            newTree.contextBot = (BCTX) bot;
             //result = newTree.processNode(BTXML);
 
             // Execute All Children
@@ -662,10 +671,10 @@ namespace AltAIMLbot
             return behaveTrees.ContainsKey(behaviorName);
         }
 
-        public void defineSubAIML(XmlNode xnode)
+        public void defineSubAIML(XmlNode xnode, BCTX bot)
         {
             BehaviorTree newTree = new BehaviorTree(bot);
-            newTree.bot = bot;
+            newTree.contextBot = bot;
             newTree.ProcessStateAiml((BTXmlNode) xnode);
         }
 
@@ -739,43 +748,23 @@ namespace AltAIMLbot
             return true;
         }
 
-        public void runEventHandler0(string evnt)
+        public bool runEventHandler(string evnt, BCTX bctx)
         {
-            string result;
-            if (hasEventHandler(evnt, out result))
-            {
-                runBotBehavior(result, bot);
-                return;
-            }
-            if (definedBehavior(evnt)) runBotBehavior(evnt, bot);
-        }
-
-        public void runEventHandler(string evnt)
-        {
+            var myScheduler = bctx.myServitor.myScheduler;
             string resultName;
-            if ((bot != null) && (bot.myServitor != null) && (bot.myServitor.myScheduler != null))
+            if (hasEventHandler(evnt, out resultName))
             {
-                if (hasEventHandler(evnt, out resultName))
-                {
-                    bot.myServitor.myScheduler.EnqueueEvent(resultName);
-                }
-                else
-                {
-                    if (definedBehavior(evnt))
-                        bot.myServitor.myScheduler.EnqueueEvent(evnt);
-                }
+                if (myScheduler != null && myScheduler.EnqueueEvent(resultName, bctx)) return true;
+                runBotBehavior(resultName, bctx);
+                return true;
             }
-            else
+            if (definedBehavior(evnt))
             {
-                if (hasEventHandler(evnt, out resultName))
-                {
-                    runBotBehavior(resultName, bot);
-                }
-                else
-                {
-                    if (definedBehavior(evnt)) runBotBehavior(evnt, bot);
-                }
+                if (myScheduler != null && myScheduler.EnqueueEvent(evnt, bctx)) return true;
+                runBotBehavior(evnt, bctx);
+                return true;
             }
+            return false;
         }
 
         public string getEventHandler(string evnt)
@@ -812,7 +801,7 @@ namespace AltAIMLbot
             }
         }
 
-        public void processEventQueue()
+        public void processEventQueue(BCTX bctx)
         {
             string ourEvent = "";
             while (eventQueue.Count > 0)
@@ -823,7 +812,7 @@ namespace AltAIMLbot
                     Console.WriteLine(" *** processEventQueue : {0}", ourEvent);
                     logText(String.Format("EVENTQUEUE: {0}", eventQueue.ToString()));
                     logText(String.Format(" *** processEventQueue : {0}", ourEvent));
-                    runEventHandler(ourEvent);
+                    runEventHandler(ourEvent, bctx);
 
                 }
                 catch (Exception e)
@@ -835,7 +824,7 @@ namespace AltAIMLbot
             }
         }
 
-        public void processOneEventQueue()
+        public void processOneEventQueue(BCTX bot)
         {
             string ourEvent = "";
             if (eventQueue.Count > 0)
@@ -846,7 +835,7 @@ namespace AltAIMLbot
                     Console.WriteLine(" *** processOneEventQueue : {0}", ourEvent);
                     logText(String.Format("EVENTQUEUE: {0}", eventQueue.ToString()));
                     logText(String.Format(" *** processOneEventQueue : {0}", ourEvent));
-                    runEventHandler(ourEvent);
+                    runEventHandler(ourEvent, bot);
                 }
                 catch (Exception e)
                 {
@@ -860,22 +849,27 @@ namespace AltAIMLbot
         }
 
         public static OutputDelegate LogToConsole = null;
+
         public void logText(string msg)
         {
-            var bot = mbot;
-            if (bot == null) return;
             if (SkipLog) return;
-            if (BehaviorSet.LogToConsole != null)
+            BehaviorSet.logTextToBTTrace(msg);            
+        }
+
+        static public void logTextToBTTrace(string msg)
+        {
+            if (LogToConsole != null)
             {
                 try
                 {
-                    BehaviorSet.LogToConsole(msg);
+                    LogToConsole(msg);
                 }
                 catch (Exception)
                 {
                 }
             }
-            lock (bot.loglock)
+
+            lock (AltBot.loglock)
             {
                 try
                 {
@@ -890,42 +884,19 @@ namespace AltAIMLbot
 
         public void logNode(string msg, XmlNode myNode)
         {
-            var bot = mbot;
-            if (bot == null) return;
-            lock (bot.loglock)
+            if (SkipLog && LogToConsole == null) return;
+            string astr = "";
+            string indent = getIndent(myNode);
+            if (myNode.Attributes != null)
             {
-                string miniLog = String.Format(@"./aiml/BTTrace.txt");
-                string astr = "";
-                string indent = getIndent(myNode);
-                if (myNode.Attributes != null)
+                foreach (XmlAttribute anode in myNode.Attributes)
                 {
-                    foreach (XmlAttribute anode in myNode.Attributes)
-                    {
-                        string evnt = anode.Name.ToLower();
-                        string val = anode.Value;
-                        astr += " " + evnt + "='" + val + "'";
-                    }
-                }
-                try
-                {
-                    if (BehaviorSet.LogToConsole != null)
-                    {
-                        try
-                        {
-                            BehaviorSet.LogToConsole(msg);
-                        }
-                        catch (Exception)
-                        {
-                        }
-                    }
-                    string tag = String.Format("{1} {0}<{2} {3} >\n", msg, indent, myNode.Name.ToLower(), astr);
-                    System.IO.File.AppendAllText(miniLog, tag);
-                }
-                catch
-                {
+                    string evnt = anode.Name.ToLower();
+                    string val = anode.Value;
+                    astr += " " + evnt + "='" + val + "'";
                 }
             }
-
+            BehaviorSet.logTextToBTTrace(String.Format("{1} {0}<{2} {3} >\n", msg, indent, myNode.Name.ToLower(), astr));
         }
 
         public string getIndent(XmlNode node)
@@ -948,7 +919,6 @@ namespace AltAIMLbot
         public SemiStringStackQueue behaviorStack = new SemiStringStackQueue();
 
         public bool SkipLog;
-        private AltBot _mbot;
 
         public void pushUniqueToStack(string evnt)
         {
@@ -969,7 +939,7 @@ namespace AltAIMLbot
             return (behaviorStack.Count > 0);
         }
 
-        public void processRandomEventStack()
+        public void processRandomEventStack(BCTX bot)
         {
             string ourEvent = "";
             if (behaviorStack.Count > 0)
@@ -978,7 +948,7 @@ namespace AltAIMLbot
                 {
                     ourEvent = behaviorStack.PopRandom();
                     Console.WriteLine(" *** processOneEventStack : {0}", ourEvent);
-                    runEventHandler(ourEvent);
+                    runEventHandler(ourEvent, bot);
                 }
                 catch (Exception e)
                 {
@@ -989,7 +959,7 @@ namespace AltAIMLbot
             }
         }
 
-        public void processOneEventStack()
+        public void processOneEventStack(BCTX bot)
         {
             string ourEvent = "";
             if (behaviorStack.Count > 0)
@@ -998,7 +968,7 @@ namespace AltAIMLbot
                 {
                     ourEvent = behaviorStack.Pop();
                     Console.WriteLine(" *** processOneEventStack : {0}", ourEvent);
-                    runEventHandler(ourEvent);
+                    runEventHandler(ourEvent, bot);
                 }
                 catch (Exception e)
                 {
@@ -1012,16 +982,15 @@ namespace AltAIMLbot
         #endregion
 
 
-        public RunStatus runBotBehavior(string behaviorName, AltBot deBot)
+        public RunStatus runBotBehavior(string behaviorName, BCTX bctx)
         {
             string resultName;
-            mbot = deBot;
 
             runEventTODOs(behaviorName);
 
             if (hasEventHandler(behaviorName, out resultName))
             {
-                return runBotBehavior(resultName, deBot);
+                return runBotBehavior(resultName, bctx);
             }
             if (definedBehavior(behaviorName))
             {
@@ -1030,7 +999,7 @@ namespace AltAIMLbot
                     BehaviorTree curTree = GetTreeByName(behaviorName);
                     //RunStatus result = curTree.runBehaviorTree(deBot);
                     RunStatus result = RunStatus.Running;
-                    foreach (RunStatus myChildResult in curTree.runBehaviorTree(deBot))
+                    foreach (RunStatus myChildResult in curTree.runBehaviorTree(bctx))
                     {
                         result = myChildResult;
                         if (result != RunStatus.Running) break;
@@ -1056,7 +1025,7 @@ namespace AltAIMLbot
             }
         }
 
-        public IEnumerator<RunStatus> getBehaviorEnumerator(string name)
+        public IEnumerator<RunStatus> getBehaviorEnumerator(string name, BCTX bot0)
         {
 
             BehaviorTree curTree = GetTreeByName(name);
@@ -1065,12 +1034,13 @@ namespace AltAIMLbot
                 Console.WriteLine("WARN: Tree '{0}' is null", name);
                 return null;
             }
+            curTree.contextBot = bot0;
             if (!curTree.AcceptsThread(Thread.CurrentThread))
             {
                 Console.WriteLine("WARN: Tree '{0}' wont run on this thread", name);
                 return null;
             }
-            return curTree.runBehaviorTree(bot).GetEnumerator();
+            return curTree.runBehaviorTree(bot0).GetEnumerator();
 
         }
 
@@ -1079,15 +1049,10 @@ namespace AltAIMLbot
             lock (behaveTrees) return behaveTrees[name];
         }
 
-        public void runBotBehaviors(AltBot deBot)
+        public void runBotBehaviors(BCTX deBot)
         {
-            if (mbot != deBot)
-            {
-                logText("Bot wasnt set before!");
-                mbot = deBot;
-            }
-
-            processEventQueue();
+            //bot = deBot.BotBehaving;
+            processEventQueue(deBot);
             // if there is a root defined then run it
             // otherwise run them all
             if (behaveTrees.ContainsKey("root"))
@@ -1209,7 +1174,7 @@ namespace AltAIMLbot
         public string monitorBehavior=null; // Sub-behavior for every tick
         public Stack<string> monitorStack = new Stack<string>();
 
-        public AltBot bot
+        public BCTX bot
         {
             get { return _bot; }
             set
@@ -1220,7 +1185,7 @@ namespace AltAIMLbot
         }
 
         [NonSerialized]
-        private AltBot _bot;
+        private BCTX _bot;
         [NonSerialized]
         public XmlDocument treeDoc;
       
@@ -1238,7 +1203,7 @@ namespace AltAIMLbot
         {
             serialDoc = treeDoc.OuterXml;
         }
-        public void postSerial(AltBot bot)
+        public void postSerial(BCTX bot)
         {
             _bot = bot;
             if (treeDoc == null) treeDoc = new XmlDocument();
@@ -1267,7 +1232,7 @@ namespace AltAIMLbot
             }
         }
 
-        public RunStatus runBehaviorTree(AltBot theBot)
+        public RunStatus runBehaviorTree(BCTX theBot)
         {
             bot = theBot;
             // Execute All Children
@@ -1391,9 +1356,9 @@ namespace AltAIMLbot
             RunStatus result = RunStatus.Success;
             if (monitorBehavior == null) return RunStatus.Success;
             if (monitorBehavior.Length ==0) return RunStatus.Success;
-            if (bot.myBehaviors.behaveTrees.ContainsKey(monitorBehavior))
+            if (behaveTrees.ContainsKey(monitorBehavior))
             {
-                result = bot.myBehaviors.runBotBehavior(monitorBehavior, bot);
+                result = runBotBehavior(monitorBehavior, bot);
             }
             return result;
         }
@@ -1467,7 +1432,7 @@ namespace AltAIMLbot
             ProcessNodeAddEvents(myNode);
             // Console.WriteLine("Process BNode {1} {0}", nodeID, myNode.Name.ToLower());
             // Start a winner
-            bot.myBehaviors.keepTime(nodeID, RunStatus.Success);
+            keepTime(nodeID, RunStatus.Success);
             //check watchdog if any
             tickMonitor();
             try
@@ -1517,11 +1482,11 @@ namespace AltAIMLbot
                         break;
 
                     case "inhibit":
-                        this.bot.myBehaviors.VSoup.setRefVal(nodeID, 0);
+                        this.VSoup.setRefVal(nodeID, 0);
                         break;
 
                     case "release":
-                        this.bot.myBehaviors.VSoup.adjust(nodeID, 1.0);
+                        this.VSoup.adjust(nodeID, 1.0);
                         break;
 
                     case "behavior":
@@ -1539,21 +1504,21 @@ namespace AltAIMLbot
                         
                     case "starttimer":
                         // start a stopwatch
-                        bot.myBehaviors.keepTime(nodeID, RunStatus.Success);
-                        bot.myBehaviors.activationTime(nodeID, RunStatus.Success);
-                        bot.myBehaviors.runEventHandler("onsuccess");
+                        keepTime(nodeID, RunStatus.Success);
+                        activationTime(nodeID, RunStatus.Success);
+                        runEventHandler("onsuccess");
                         ProcessNodeDeleteEvents(myNode);
                         bot.inCritical = origCritical;
                         return RunStatus.Success;
                         break;
                     case "stoptimer":
                         // stop the stopwatch
-                        bot.myBehaviors.keepTime(nodeID, RunStatus.Failure);
-                        if (bot.myBehaviors.entryTime.ContainsKey(nodeID))
+                        keepTime(nodeID, RunStatus.Failure);
+                        if (entryTime.ContainsKey(nodeID))
                         {
-                            bot.myBehaviors.entryTime.Remove(nodeID);
+                            entryTime.Remove(nodeID);
                         }
-                        bot.myBehaviors.runEventHandler("onsuccess");
+                        runEventHandler("onsuccess");
                         ProcessNodeDeleteEvents(myNode);
                         bot.inCritical = origCritical;
                         return RunStatus.Success;
@@ -1619,15 +1584,15 @@ namespace AltAIMLbot
             }
             // update on exit
             //bot.inCritical = origCritical;
-            bot.myBehaviors.keepTime(nodeID, result);
-            bot.myBehaviors.activationTime(nodeID, result);
+            keepTime(nodeID, result);
+            activationTime(nodeID, result);
 
             if ((result == RunStatus.Success) && (nodeID != "null"))
             {
                // Console.WriteLine("Result BNode {0} {1} {2}", myNode.Name.ToLower(), nodeID, result);
             }
-            if (result == RunStatus.Success) bot.myBehaviors.runEventHandler("onsuccess");
-            if (result == RunStatus.Failure) bot.myBehaviors.runEventHandler("onfail");
+            if (result == RunStatus.Success) runEventHandler("onsuccess");
+            if (result == RunStatus.Failure) runEventHandler("onfail");
             ProcessNodeDeleteEvents(myNode);
             logNode("END("+result .ToString ()+") ", myNode);
             bot.inCritical = origCritical;
@@ -1640,14 +1605,14 @@ namespace AltAIMLbot
         /// <param name="myNode"></param>
         public void ProcessNodeAddEvents(XmlNode myNode)
         {
-            this.bot.myBehaviors.pushHandlers();
+            this.pushHandlers();
             foreach (XmlAttribute anode in myNode.Attributes)
             {
                 string evnt = anode.Name.ToLower();
                 string val = anode.Value;
                 if (evnt.StartsWith ("on"))
                 {
-                    this.bot.myBehaviors.addEventHandler(evnt, val);
+                    this.addEventHandler(evnt, val);
                 }
                 if (evnt == "incritical")
                 {
@@ -1674,7 +1639,7 @@ namespace AltAIMLbot
                 string val = anode.Value;
                 if (evnt.StartsWith ("on"))
                 {
-                    this.bot.myBehaviors.deleteEventHandler(evnt, val);
+                    this.deleteEventHandler(evnt, val);
                 }
                 if (evnt == "onmonitor")
                 {
@@ -1684,26 +1649,26 @@ namespace AltAIMLbot
                     }
                 }
             }
-            this.bot.myBehaviors.popHandlers();
+            this.popHandlers();
         }
 
 
-        #region TagProcessors
+    #region TagProcessors
 
         public RunStatus ProcessPushBehavior(XmlNode myNode)
         {
             string behavior = myNode.InnerText;
-            bot.myBehaviors.pushUniqueToStack(behavior);
+            pushUniqueToStack(behavior);
             return RunStatus.Success;
         }
         public RunStatus ProcessPopBehavior(XmlNode myNode)
         {
-            bot.myBehaviors.processOneEventStack();
+            processOneEventStack();
             return RunStatus.Success;
         }
         public RunStatus ProcessPopRandomBehavior(XmlNode myNode)
         {
-            bot.myBehaviors.processRandomEventStack();
+            processRandomEventStack();
             return RunStatus.Success;
         }
 
@@ -1800,7 +1765,7 @@ namespace AltAIMLbot
             // Execute All Children
             if (restoring)
             {
-                bot.myBehaviors.queueEvent("onrestore");
+                queueEvent("onrestore");
                 continueflag = tickEventQueues(continueflag);
             }
             //foreach (XmlNode childNode in myNode.ChildNodes)
@@ -1845,7 +1810,7 @@ namespace AltAIMLbot
                     }
                     Console.WriteLine("\n\n****** COMPLEX BEHAVIOR EXIT FAILURE\n\n");
                     // we put this behavior in the running for resumption
-                    bot.myBehaviors.pushUniqueToStack(nodeID);
+                    pushUniqueToStack(nodeID);
                     return RunStatus.Failure;
 
                 }
@@ -1857,7 +1822,7 @@ namespace AltAIMLbot
             }
             // if we make it to the end then the reset the restore point
             restorePoint[nodeID] = 0;
-            bot.myBehaviors.removeFromStack(nodeID);
+            removeFromStack(nodeID);
             Console.WriteLine("\n\n****** COMPLEX BEHAVIOR EXIT SUCCESS\n\n");
             return RunStatus.Success;
 
@@ -1869,7 +1834,7 @@ namespace AltAIMLbot
             RunStatus result = RunStatus.Success;
             try
             {
-                bot.myBehaviors.queueEvent("break");
+                queueEvent("break");
             }
             catch (Exception e)
             {
@@ -1982,7 +1947,7 @@ namespace AltAIMLbot
             // Execute All Children
             if (restoring)
             {
-                bot.myBehaviors.queueEvent("onrestore");
+                queueEvent("onrestore");
                 continueflag = tickEventQueues(continueflag);
             }
             else
@@ -2038,7 +2003,7 @@ namespace AltAIMLbot
             }
             // if we make it to the end then the reset the restore point
             restorePoint[nodeID] = -1;
-            bot.myBehaviors.removeFromStack(nodeID);
+            removeFromStack(nodeID);
             Console.WriteLine("\n\n****** COMPLEX RBEHAVIOR EXIT SUCCESS\n\n");
             return RunStatus.Success;
 
@@ -2046,26 +2011,26 @@ namespace AltAIMLbot
 
         public bool tickEventQueues(bool continueflag)
         {
-            while ((bot.outputQueue.Count > 0) || (bot.myBehaviors.eventQueue.Count > 0))
+            while ((bot.outputQueue.Count > 0) || (eventQueue.Count > 0))
             {
-                if (bot.myBehaviors.eventQueue.Count > 0)
+                if (eventQueue.Count > 0)
                 {
-                    string peekstr = bot.myBehaviors.eventQueue.Peek();
+                    string peekstr = eventQueue.Peek();
                     if (peekstr == "abort")
                     {
                         
                         continueflag = false;
-                        bot.myBehaviors.queueEvent("onabort");
+                        queueEvent("onabort");
                         bot.flushOutputQueue();
                     }
                     if (peekstr == "break")
                     {
 
                         continueflag = false;
-                        bot.myBehaviors.queueEvent("onbreak");
+                        queueEvent("onbreak");
                         bot.flushOutputQueue();
                     }
-                    bot.myBehaviors.processOneEventQueue();
+                    processOneEventQueue();
                 }
                 bot.processOutputQueue();
                 processSATEvents();
@@ -2083,12 +2048,12 @@ namespace AltAIMLbot
             // could be handled by the called behaviors
             // like onmousemove versus onclick
             if (bot.myPositiveSATModleString == null) return;
-            if (bot.myBehaviors.eventTable.Count == 0) return;
-            foreach (string evnt in bot.myBehaviors.eventTable.Keys)
+            if (eventTable.Count == 0) return;
+            foreach (string evnt in eventTable.Keys)
             {
                 if (bot.myPositiveSATModleString.Contains(evnt))
                 {
-                    bot.myBehaviors.queueEvent(evnt);
+                    queueEvent(evnt);
                 }
             }
         }
@@ -2101,7 +2066,7 @@ namespace AltAIMLbot
             try
             {
                 behaviorName = myNode.Attributes["id"].Value;
-                result =bot.myBehaviors.runBotBehavior(behaviorName, bot);
+                result =runBotBehavior(behaviorName, bot);
             }
             catch (Exception e)
             {
@@ -2150,11 +2115,11 @@ namespace AltAIMLbot
             try
             {
                 behaviorName = myNode.Attributes["id"].Value;
-                //result = bot.myBehaviors.runBotBehavior(behaviorName, bot);
-                if (bot.myBehaviors.definedBehavior(behaviorName))
+                //result = runBotBehavior(behaviorName, bot);
+                if (definedBehavior(behaviorName))
                 {
                     logText("ProcessSubBehavior found:" + behaviorName);
-                    BehaviorTree curTree = (BehaviorTree)bot.myBehaviors.behaveTrees[behaviorName];
+                    BehaviorTree curTree = (BehaviorTree)behaveTrees[behaviorName];
 
                     result = runSubTree(curTree.treeDoc);
                 }
@@ -2185,9 +2150,9 @@ namespace AltAIMLbot
                 string[] behaviorList = beventNames.Split(' ');
                 foreach (string behavior in behaviorList)
                 {
-                    bot.myBehaviors.queueEvent(behavior);
+                    queueEvent(behavior);
                 }
-                logText(String.Format("EVENTQUEUE: {0}", bot.myBehaviors.eventQueue.ToString()));
+                logText(String.Format("EVENTQUEUE: {0}", eventQueue.ToString()));
             }
             catch (Exception e)
             {
@@ -2204,10 +2169,10 @@ namespace AltAIMLbot
             RunStatus result = RunStatus.Success;
             try
             {
-                bot.myBehaviors.eventQueue.Clear();
-                bot.myBehaviors.behaviorStack.Clear();
-                logText(String.Format("EVENTQUEUE: {0}", bot.myBehaviors.eventQueue.ToString()));
-                logText(String.Format("behaviorStack: {0}", bot.myBehaviors.behaviorStack.ToString()));
+                eventQueue.Clear();
+                behaviorStack.Clear();
+                logText(String.Format("EVENTQUEUE: {0}", eventQueue.ToString()));
+                logText(String.Format("behaviorStack: {0}", behaviorStack.ToString()));
 
             }
             catch (Exception e)
@@ -2241,10 +2206,10 @@ namespace AltAIMLbot
                 halflife = 1000 * double.Parse(myNode.Attributes["halflife"].Value);
                 threshold = double.Parse(myNode.Attributes["threshold"].Value);
 
-                bot.myBehaviors.VSoup.setHalflife(driveName, halflife);
-                curV = bot.myBehaviors.VSoup.CurVal(driveName);
+                VSoup.setHalflife(driveName, halflife);
+                curV = VSoup.CurVal(driveName);
 
-                //lastRun = bot.myBehaviors.lastRunning(driveName);
+                //lastRun = lastRunning(driveName);
                 //curV = Math.Pow( 0.5,(lastRun / halflife));
 
                 //Console.WriteLine("Drive check '{0}' = {1} ={2}, hfl={3}, thrs = {4}",driveName,lastRun ,curV,halflife,threshold );
@@ -2261,8 +2226,8 @@ namespace AltAIMLbot
                 // Reset the last run timer
                 if (result == RunStatus.Success)
                 {
-                    //bot.myBehaviors.activationTime(driveName, result);
-                    bot.myBehaviors.VSoup.adjust(driveName, 1.0);
+                    //activationTime(driveName, result);
+                    VSoup.adjust(driveName, 1.0);
                     Console.WriteLine("  *** Drive Procedure Success:{0} ***", driveName);
                 }
                 else
@@ -2301,10 +2266,10 @@ namespace AltAIMLbot
                 halflife = 1000 * double.Parse(myNode.Attributes["halflife"].Value);
                 threshold = double.Parse(myNode.Attributes["threshold"].Value);
 
-                bot.myBehaviors.VSoup.setHalflife(driveName, halflife);
-                curV = bot.myBehaviors.VSoup.CurVal(driveName);
+                VSoup.setHalflife(driveName, halflife);
+                curV = VSoup.CurVal(driveName);
 
-                //lastRun = bot.myBehaviors.lastRunning(driveName);
+                //lastRun = lastRunning(driveName);
                 //curV = Math.Pow( 0.5,(lastRun / halflife));
 
                 Console.WriteLine("Motive check '{0}' = {1} ={2}, hfl={3}, thrs = {4}", driveName, lastRun, curV, halflife, threshold);
@@ -2321,8 +2286,8 @@ namespace AltAIMLbot
                 // Reset the last run timer
                 if (result == RunStatus.Success)
                 {
-                    //bot.myBehaviors.activationTime(driveName, result);
-                    //bot.myBehaviors.VSoup.setRefVal(driveName, 0);
+                    //activationTime(driveName, result);
+                    //VSoup.setRefVal(driveName, 0);
                     Console.WriteLine("  *** Motive Procedure Success:{0} ***", driveName);
                 }
                 else
@@ -2376,24 +2341,24 @@ namespace AltAIMLbot
 
             // Special variables?
             if (varName == "timeout") bbVal = elapsedTime;
-            if (varName == "behaviorstackcount") bbVal = bot.myBehaviors.behaviorStack.Count;
-            if (varName == "behaviorqueuecount") bbVal = bot.myBehaviors.eventQueue.Count;
+            if (varName == "behaviorstackcount") bbVal = behaviorStack.Count;
+            if (varName == "behaviorqueuecount") bbVal = eventQueue.Count;
             if (varName == "prob") bbVal = rgen.NextDouble();
             if (varName.Contains(".runtime"))
             {
                 string tName = varName.Replace(".runtime", "");
-                bbVal = bot.myBehaviors.timeRunning(tName);
+                bbVal = timeRunning(tName);
             }
             if (varName.Contains(".lastrun"))
             {
                 string tName = varName.Replace(".lastrun", "");
-                bbVal = bot.myBehaviors.lastRunning(tName);
+                bbVal = lastRunning(tName);
             }
             if (varName.Contains(".drive"))
             {
                 string dName = varName.Replace(".drive", "");
                 double halflife = 1000 * double.Parse(myNode.Attributes["halflife"].Value);
-                int lastRun = bot.myBehaviors.lastRunning(dName);
+                int lastRun = lastRunning(dName);
                 bbVal = Math.Pow(0.5, (lastRun / halflife));
             }
             //Console.WriteLine("  CondTest=('{0}' '{1}') '{2}' '{3}'", sv, bbVal, rel, val);
@@ -2478,10 +2443,10 @@ namespace AltAIMLbot
         {
             //if it doesn't exist then create an entry and return Success
             string nodeID = myNode.Attributes["id"].Value;
-            if (!bot.myBehaviors.entryTime.ContainsKey(nodeID))
+            if (!entryTime.ContainsKey(nodeID))
             {
-                bot.myBehaviors.keepTime(nodeID, RunStatus.Success);
-                bot.myBehaviors.activationTime(nodeID, RunStatus.Success);
+                keepTime(nodeID, RunStatus.Success);
+                activationTime(nodeID, RunStatus.Success);
                 return RunStatus.Success;
             }
 
@@ -2492,15 +2457,15 @@ namespace AltAIMLbot
             {
                 try
                 {
-                    bot.myBehaviors.entryTime.Remove(nodeID);
-                    bot.myBehaviors.execTime.Remove(nodeID);
+                    entryTime.Remove(nodeID);
+                    execTime.Remove(nodeID);
                 }
                 catch
                 {
                 }
                 //Reset
-                bot.myBehaviors.keepTime(nodeID, RunStatus.Success);
-                bot.myBehaviors.activationTime(nodeID, RunStatus.Success);
+                keepTime(nodeID, RunStatus.Success);
+                activationTime(nodeID, RunStatus.Success);
 
             }
             return r;

@@ -444,7 +444,7 @@ namespace AltAIMLbot
             set { BotBehaving.isPerformingOutput = value; }
         }
 
-        public object loglock = new object();
+        static public object loglock = new object();
 
         /// <summary>
         /// If set to false the input from AIML files will undergo the same normalization process that
@@ -816,7 +816,7 @@ namespace AltAIMLbot
 
         #endregion
 
-        public BehaviorContext servitorBot
+        internal BehaviorContext servitorBot
         {
             get
             {
@@ -829,7 +829,7 @@ namespace AltAIMLbot
         /// <summary>
         /// When behaviour trees run they need a body/situational context like is "current user", "last heard" etc
         /// </summary>
-        public BehaviorContext BotBehaving
+        internal BehaviorContext BotBehaving
         {
             get
             {
@@ -1749,7 +1749,7 @@ namespace AltAIMLbot
                     {
                         foreach (var poststates in usergetPostStates)
                         {
-                            string path = AIMLLoader.generateCPath(graphName, sentence, that, null, topic,
+                            string path = AIMLLoader.generateCPath(graphName, sentence, that, "*", topic,
                                                                    prestates, poststates,
                                                                    true, null, loader.bot);
                             if (!normalizedPaths.Contains(path))
@@ -1767,7 +1767,7 @@ namespace AltAIMLbot
         {
             return evalTemplateNode(templateNodeInnerXML, requestType, BotBehaving);
         }
-        public object evalTemplateNodeInnerXml(XmlNode templateNodeInnerXML, RequestKind requestType, BehaviorContext buBehaviorContext)
+        internal object evalTemplateNodeInnerXml(XmlNode templateNodeInnerXML, RequestKind requestType, BehaviorContext buBehaviorContext)
         {
             if (true)
             {
@@ -1804,7 +1804,7 @@ namespace AltAIMLbot
             return evalTemplateXml(templateNodeInnerXML.InnerXml, requestType, buBehaviorContext);
         }
 
-        public object evalTemplateXml(string templateNodeString, RequestKind requestType, BehaviorContext buBehaviorContext)
+        internal object evalTemplateXml(string templateNodeString, RequestKind requestType, BehaviorContext buBehaviorContext)
         {
             if (!templateNodeString.StartsWith("<template"))
             {
@@ -1817,7 +1817,7 @@ namespace AltAIMLbot
         /// <summary>
         /// given an template side XML, try evaluating it
         /// </summary>       
-        public object evalTemplateNode(XmlNode templateNode, RequestKind requestType, BehaviorContext buBehaviorContext)
+        internal object evalTemplateNode(XmlNode templateNode, RequestKind requestType, BehaviorContext buBehaviorContext)
         {
             if (StaticXMLUtils.IsBlank(templateNode)) return "";
 
@@ -2481,7 +2481,6 @@ if (node.Value!=node.InnerText) {
             //this.myBehaviors = (BehaviorSet)bf.Deserialize(loadFile);
 
             loadFile.Close();
-            this.myBehaviors.bot = this;
             this.myCron.myBot = this;
             // this.myBehaviors.postSerial(this);
 
@@ -2743,7 +2742,7 @@ The AltAIMLbot program.
         internal bool useMemcache = false;
 
         public Dictionary<string, string> BBDict = new Dictionary<string, string>();
-        public void setBBHash(string key, string data, BehaviorContext bu)
+        internal void setBBHash(string key, string data, BehaviorContext bu)
         {
             if (key == null) return;
             string okey = key;
@@ -2786,7 +2785,7 @@ The AltAIMLbot program.
                 setBBHash0(okey, data, bu);
             }
         }
-        public void setBBHash0(string key, string data, BehaviorContext bu)
+        internal void setBBHash0(string key, string data, BehaviorContext bu)
         {
             //curBot.myChemistry.m_cBus.setHash(key,data);
             if (bu == null || bu._user == null)
@@ -2814,7 +2813,7 @@ The AltAIMLbot program.
 //                Console.WriteLine("CHECK setBBHash0: useMemcache=false({0},{1})", key, data);
             }
         }
-        public string getBBHash(string key, BehaviorContext bu)
+        internal string getBBHash(string key, BehaviorContext bu)
         {
             if (string.IsNullOrEmpty(key)) return null;
 
@@ -2842,7 +2841,7 @@ The AltAIMLbot program.
 
         public bool bbDisabled = false;
         public bool memcachedDisabledBetweenRunsTest = true;
-        public string getBBHash0(string key, BehaviorContext bu)
+        internal string getBBHash0(string key, BehaviorContext bu)
         {
             try
             {
@@ -3054,6 +3053,36 @@ The AltAIMLbot program.
         }
 
         public bool LoadFromStreamLoader { get; set; }
+
+        public void RemoveCurrentTask(TaskItem taskItem, TaskList taskList, bool b)
+        {
+            if (HaveBotBehaving)
+            {
+                BotBehaving.RemoveCurrentTask(taskItem, taskList, b);
+            }
+        }
+
+        protected bool HaveBotBehaving
+        {
+            get { return _behaviorContext != null; }
+            set { throw new NotImplementedException(); }
+        }
+
+        public void AddCurrentTask(TaskItem taskItem, TaskList taskList, bool b)
+        {
+            if (HaveBotBehaving)
+            {
+                BotBehaving.AddCurrentTask(taskItem, taskList, b);
+            }
+        }
+
+        public void SetCurrentTask(TaskItem taskItem, TaskList taskList, bool b)
+        {
+            if (HaveBotBehaving)
+            {
+                BotBehaving.SetCurrentTask(taskItem, taskList, b);
+            }
+        }
     }
 }
 

@@ -2261,7 +2261,7 @@ namespace AltAIMLbot.Utils
                 DLRConsole.NoFormatDirectives(" in " + GetType().Name + "  " + LineNumberTextInfo()), a);
         }
 
-        public virtual AltBot mbot
+        protected virtual AltBot mbot
         {
             get { return bot; }
         }

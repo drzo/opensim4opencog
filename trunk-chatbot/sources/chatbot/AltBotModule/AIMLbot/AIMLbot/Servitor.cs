@@ -722,6 +722,7 @@ namespace AltAIMLbot
 
             if (AltBot.MemcachedServerKnownDead)
             {
+                Console.WriteLine("*** WARNING Memcached Server Known DEAD  ***");
                 curBot.useMemcache = false;
             }
             var bctx = curBot.BotBehaving;
@@ -738,10 +739,10 @@ namespace AltAIMLbot
             {
                 Console.WriteLine("*** ActivateBehaviorTask startup NOT EXECUTED ***");
                 if (myScheduler == null)
-                    Console.WriteLine("(myScheduler == null)");
+                    Console.WriteLine("** ERROR (myScheduler == null)");
 
                 if (!curBot.myBehaviors.definedBehavior("startup"))
-                    Console.WriteLine("startup not in definedBehavior");
+                    Console.WriteLine("** WARNING 'startup' not in definedBehavior");
             }
             curBot.StampRaptstoreValid(true);
             myServitorEndpoint.StartServer();
@@ -778,7 +779,7 @@ namespace AltAIMLbot
             if (input.StartsWith("<"))
             {
                 AltBot.tl_aimlResult = new AltBot.AimlResult();
-                RunStatus rs = curBot.myBehaviors.runBTXML(input);
+                RunStatus rs = curBot.myBehaviors.runBTXML(input, curBot);
                 AltBot.AimlResult altBottl_aimlResult = AltBot.tl_aimlResult;
                 AltBot.tl_aimlResult = null;
                 return string.Format("@rem <{0}>=<{1}>", rs, altBottl_aimlResult);
@@ -826,15 +827,8 @@ namespace AltAIMLbot
 
                     curBot.lastBehaviorChatOutput = "";
                     myScheduler.SleepAllTasks(30000);
-                    myScheduler.EnqueueEvent("onchat");
-
-                    string pstate = myScheduler.taskStatus(fnd);
-                    while (pstate != "unknown")
-                    {
-                        Thread.Sleep(50);
-                        myScheduler.Run();
-                        pstate = myScheduler.taskStatus(fnd);
-                    }
+                    myScheduler.EnqueueEvent("onchat", curBot.BotBehaving);
+                    myScheduler.WaitUntilComplete(fnd);
 
                     string chatOutput = curBot.lastBehaviorChatOutput;
                     if (!string.IsNullOrEmpty(chatOutput))
@@ -871,14 +865,7 @@ namespace AltAIMLbot
                     curBot.lastBehaviorChatOutput = "";
                     myScheduler.SleepAllTasks(30000);
                     //myScheduler.ActivateBehaviorTask("chatRoot", true);
-                    myScheduler.ActivateBehaviorTask("chatRoot", false, curBot.BotBehaving);
-                    string pstate = myScheduler.taskStatus("chatRoot");
-                    while (pstate != "unknown")
-                    {
-                        Thread.Sleep(50);
-                        myScheduler.Run();
-                        pstate = myScheduler.taskStatus("chatRoot");
-                    }
+                    myScheduler.ActivateBehaviorTask("chatRoot", true, curBot.BotBehaving);
                     //while (!myScheduler.empty())
                     //{
                     //    myScheduler.Run();

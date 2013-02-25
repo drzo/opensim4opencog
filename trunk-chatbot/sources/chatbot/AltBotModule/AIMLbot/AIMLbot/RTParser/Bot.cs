@@ -46,15 +46,13 @@ namespace AltAIMLbot
     /// </summary>
     public partial class AltBot : CommonStaticUtils, IChatterBot
     {
-        /* public static implicit operator AltBot(AltBot ab)
-         {
-             return ab.TheAltBot;
-         }
-         public static implicit operator AltBot(AltBot rtp)
-         {
-             return rtp.TheAltBot ?? rtp.servitorBot;
-         }
-         */
+        
+        private static AltBot _lastAltBot;
+        public static AltBot SingleInstance
+        {
+            get { return _lastAltBot; }
+        }
+
         public static bool IncludeMeNeValue;
         public static Dictionary<string, AltBot> Robots = new Dictionary<string, AltBot>();
 

@@ -61,7 +61,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     var expandedTemplateNode = ExpandedTemplateNode;
                     var runningString = "running btxml=" + expandedTemplateNode.OuterXml;
                     writeDebugLine(runningString);
-                    var result = this.bot.myBehaviors.runBTXML(expandedTemplateNode);
+                    var result = this.bot.myBehaviors.runBTXML(expandedTemplateNode, bot);
                     return Succeed("Result was " + result + "  " + runningString);
                 }
                 catch

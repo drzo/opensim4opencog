@@ -39,7 +39,7 @@ namespace AltAIMLbot
         {
             get { return ourServitor.curBot.myBehaviors; }
         }
-        protected static BehaviorContext curBot
+        internal static BehaviorContext curBot
         {
             get { return ourServitor.curBot.BotBehaving; }
         }
@@ -754,7 +754,7 @@ namespace AltAIMLbot
                 context.Response.StatusCode = (int) HttpStatusCode.OK;
                 //+using (Stream s = context.Response.OutputStream )
                 using (var writer = HtmlStreamWriter(context))
-                    ourServitor.myScheduler.performAction(writer, action, query, behaviorName);
+                    ourServitor.myScheduler.performAction(writer, action, query, behaviorName, bot.BotBehaving);
                 return;
             }
             if (path.Contains("./siprolog/"))

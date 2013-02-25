@@ -35,6 +35,8 @@ using Monitor = ThreadPoolUtil.Monitor;
 using NativeThread = System.Threading.Thread;
 #endif
 
+using BCTX = AltAIMLbot.AltBot;
+
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 
@@ -657,15 +659,19 @@ namespace AltAIMLbot
         public string monitorBehavior = null; // Sub-behavior for every tick
         public Stack<string> monitorStack = new Stack<string>();
 
-        public AltBot bot
+        public BCTX contextBot
         {
             get { return _bot; }
-            set { _bot = bot; }
+            set
+            {
+                if (_bot == value) return;
+                _bot = value;
+            }
         }
 
         private BehaviorSet myLocalBehaviors
         {
-            get { return bot.myBehaviors; }
+            get { return contextBot.myBehaviors; }
         }
 
         [NonSerialized] public SymbolicParticleFilter ourFilter = new SymbolicParticleFilter();
@@ -691,9 +697,9 @@ namespace AltAIMLbot
             serialDoc = treeDoc.OuterXml;
         }
 
-        public void postSerial(AltBot bot)
+        public void postSerial(BCTX bot)
         {
-            _bot = bot;
+            contextBot = bot;
             if (treeDoc == null) treeDoc = new BTXmlDocument();
             treeDoc.LoadXml(serialDoc);
         }
@@ -804,16 +810,17 @@ namespace AltAIMLbot
 
         public object TreeNameLock = new object();
 
-        public IEnumerable<RunStatus> runBehaviorTree(AltBot theBot)
+        public IEnumerable<RunStatus> runBehaviorTree(BCTX theBot)
         {
             if (true) return MicroLocker.Run(TreeNameLock, () => runBehaviorTree1(theBot)).Invoke();
+            // @TODO figure out why the next version overlly locks!
             return MicroLocker.Run(TreeNameLock, () => runBehaviorTree0(theBot)).Invoke();
         }
-        public IEnumerable<RunStatus> runBehaviorTree0(AltBot theBot)
+        public IEnumerable<RunStatus> runBehaviorTree0(BCTX theBot)
         {
             var treeName = this.name;
             object botRequestLock = TreeNameLock;
-            BehaviorContext bctx = bot.BotBehaving;
+            BehaviorContext bctx = contextBot.BotBehaving;
             lock (botRequestLock)
             {
                 var needsExit = new bool[1];
@@ -867,7 +874,7 @@ namespace AltAIMLbot
             return OneRunStatus.oneAct(act);
         }
 
-        public IEnumerable<RunStatus> runBehaviorTree1(AltBot theBot)
+        public IEnumerable<RunStatus> runBehaviorTree1(BCTX theBot)
         {
             _bot = theBot;
             // Execute All Children
@@ -1039,7 +1046,7 @@ namespace AltAIMLbot
             if (monitorBehavior.Length == 0) return RunStatus.Success;
             if (myLocalBehaviors.behaveTrees.ContainsKey(monitorBehavior))
             {
-                result = myLocalBehaviors.runBotBehavior(monitorBehavior, bot);
+                result = myLocalBehaviors.runBotBehavior(monitorBehavior, contextBot);
             }
             return result;
         }
@@ -1059,65 +1066,25 @@ namespace AltAIMLbot
             yield return RunStatus.Running;
         }
 
-        public void logNode(string msg, BTXmlNode myNode)
-        {
-            lock (bot.loglock)
-            {
-                if (BehaviorSet.LogToConsole != null)
-                {
-                    try
-                    {
-                        BehaviorSet.LogToConsole(msg + " " + StaticXMLUtils.NodeString(myNode));
-                    }
-                    catch (Exception)
-                    {
-                    }
-                }
-                string miniLog = String.Format(@"./aiml/BTTrace.txt");
-                string astr = "";
-                string indent = getIndent(myNode);
-                if (myNode.Attributes != null)
-                {
-                    foreach (XmlAttribute anode in myNode.Attributes)
-                    {
-                        string evnt = anode.Name.ToLower();
-                        string val = anode.Value;
-                        astr += " " + evnt + "='" + val + "'";
-                    }
-                }
-                try
-                {
-                    string tag = String.Format("{1} {0}<{2} {3} >", msg, indent, myNode.Name.ToLower(), astr);
-                    System.IO.File.AppendAllText(miniLog, tag + "\n");
-                }
-                catch
-                { }
-            }
-
-        }
         public void logText(string msg)
         {
-            if (BehaviorSet.LogToConsole != null)
+            BehaviorSet.logTextToBTTrace(msg);
+        }
+
+        public void logNode(string msg, XmlNode myNode)
+        {
+            string astr = "";
+            string indent = getIndent(myNode);
+            if (myNode.Attributes != null)
             {
-                try
+                foreach (XmlAttribute anode in myNode.Attributes)
                 {
-                    BehaviorSet.LogToConsole(msg);
-                }
-                catch (Exception)
-                {
+                    string evnt = anode.Name.ToLower();
+                    string val = anode.Value;
+                    astr += " " + evnt + "='" + val + "'";
                 }
             }
-            var bot = _bot;
-            lock (bot.loglock)
-            {
-                try
-                {
-                    string miniLog = String.Format(@"./aiml/BTTrace.txt");
-                    System.IO.File.AppendAllText(miniLog, msg + "\n");
-                }
-                catch
-                { }
-            }
+            BehaviorSet.logTextToBTTrace(String.Format("{1} {0}<{2} {3} >\n", msg, indent, myNode.Name.ToLower(), astr));
         }
 
 
@@ -1153,7 +1120,7 @@ namespace AltAIMLbot
             // Initiate our status
             SetCurNodeIdStatus(RunStatus.Running);
 
-            bool origCritical = bot.inCritical;
+            bool origCritical = contextBot.inCritical;
             logNode("BEGIN", myNode);
             ProcessNodeAddEvents(myNode);
             // Console.WriteLine("Process BNode {1} {0}", nodeID, myNode.Name.ToLower());
@@ -1368,9 +1335,9 @@ namespace AltAIMLbot
                         // start a stopwatch
                         myLocalBehaviors.keepTime(nodeID, RunStatus.Success);
                         myLocalBehaviors.activationTime(nodeID, RunStatus.Success);
-                        myLocalBehaviors.runEventHandler("onsuccess");
+                        myLocalBehaviors.runEventHandler("onsuccess", contextBot);
                         ProcessNodeDeleteEvents(myNode);
-                        bot.inCritical = origCritical;
+                        contextBot.inCritical = origCritical;
                         SetCurNodeIdStatus(RunStatus.Success);
                         yield return RunStatus.Success;
                         yield break;
@@ -1382,9 +1349,9 @@ namespace AltAIMLbot
                         {
                             myLocalBehaviors.entryTime.Remove(nodeID);
                         }
-                        myLocalBehaviors.runEventHandler("onsuccess");
+                        myLocalBehaviors.runEventHandler("onsuccess", contextBot);
                         ProcessNodeDeleteEvents(myNode);
-                        bot.inCritical = origCritical;
+                        contextBot.inCritical = origCritical;
                         SetCurNodeIdStatus(RunStatus.Success);
                         yield return RunStatus.Success;
                         yield break;
@@ -1956,7 +1923,7 @@ namespace AltAIMLbot
             {
                 LogException(myNode, e, "evalBehaviorXml = {0}", myNode.OuterXml);
 
-                bot.inCritical = origCritical;
+                contextBot.inCritical = origCritical;
                 myResult = RunStatus.Failure;
                 Console.WriteLine("### BNODE ERR:{0} {1} {2}", myNode.Name.ToLower(), nodeID, myResult);
                 Console.WriteLine("### BNODE ERR:" + EMsg(e));
@@ -1977,8 +1944,8 @@ namespace AltAIMLbot
             {
                 // Console.WriteLine("Result BNode {0} {1} {2}", myNode.Name.ToLower(), (myResult == RunStatus.Success), result);
             }
-            if (myResult == RunStatus.Success) myLocalBehaviors.runEventHandler("onsuccess");
-            if (myResult == RunStatus.Failure) myLocalBehaviors.runEventHandler("onfail");
+            if (myResult == RunStatus.Success) myLocalBehaviors.runEventHandler("onsuccess", contextBot);
+            if (myResult == RunStatus.Failure) myLocalBehaviors.runEventHandler("onfail", contextBot);
             ProcessNodeDeleteEvents(myNode);
             logNode("END(" + myResult.ToString() + ") ", myNode);
             if (myResult != RunStatus.Success)
@@ -1989,7 +1956,7 @@ namespace AltAIMLbot
                                       StaticXMLUtils.NodeString(myNode));
                 }
             }
-            bot.inCritical = origCritical;
+            contextBot.inCritical = origCritical;
             yield return myResult;
             yield break;
         }
@@ -2010,7 +1977,7 @@ namespace AltAIMLbot
                 }
                 if (evnt == "incritical")
                 {
-                    this.bot.inCritical = (val == "true");
+                    this.contextBot.inCritical = (val == "true");
                 }
                 if (evnt == "onmonitor")
                 {
@@ -2057,12 +2024,12 @@ namespace AltAIMLbot
         }
         public IEnumerable<RunStatus> ProcessPopBehavior(BTXmlNode myNode)
         {
-            myLocalBehaviors.processOneEventStack();
+            myLocalBehaviors.processOneEventStack(contextBot);
             yield return RunStatus.Success;
         }
         public IEnumerable<RunStatus> ProcessPopRandomBehavior(BTXmlNode myNode)
         {
-            myLocalBehaviors.processRandomEventStack();
+            myLocalBehaviors.processRandomEventStack(contextBot);
             yield return RunStatus.Success;
         }
 
@@ -2503,7 +2470,7 @@ namespace AltAIMLbot
 
         public bool tickEventQueues(bool continueflag)
         {
-            var bot = this.bot.BotBehaving;
+            var bot = this.contextBot.BotBehaving;
             while ((bot._outputQueue.Count > 0) || (myLocalBehaviors.eventQueue.Count > 0))
             {
                 if (myLocalBehaviors.eventQueue.Count > 0)
@@ -2523,7 +2490,7 @@ namespace AltAIMLbot
                         myLocalBehaviors.queueEvent("onbreak");
                         bot.flushOutputQueue();
                     }
-                    myLocalBehaviors.processOneEventQueue();
+                    myLocalBehaviors.processOneEventQueue(bot);
                 }
                 bot.processOutputQueue();
                 processSATEvents();
@@ -2540,12 +2507,12 @@ namespace AltAIMLbot
             // One problem could be multiple triggers, but that
             // could be handled by the called behaviors
             // like onmousemove versus onclick
-            if (bot.myPositiveSATModleString == null) return;
+            if (contextBot.myPositiveSATModleString == null) return;
             IDictionary<string, string> eventTable = LockInfo.CopyOf(myLocalBehaviors.eventTable);
             if (eventTable.Count == 0) return;
             foreach (string evnt in eventTable.Keys)
             {
-                if (bot.myPositiveSATModleString.Contains(evnt))
+                if (contextBot.myPositiveSATModleString.Contains(evnt))
                 {
                     myLocalBehaviors.queueEvent(evnt);
                 }
@@ -2560,7 +2527,7 @@ namespace AltAIMLbot
             try
             {
                 behaviorName = myNode.AttributesV("id");
-                result = myLocalBehaviors.runBotBehavior(behaviorName, bot);
+                result = myLocalBehaviors.runBotBehavior(behaviorName, contextBot);
             }
             catch (Exception e)
             {
@@ -2627,7 +2594,7 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("q"))) query = myNode.AttributesV("q");
                 if (!string.IsNullOrEmpty(myNode.AttributesV("id"))) behaviorName = myNode.AttributesV("id");
                 StreamWriter sw = new StreamWriter("procschedtag.txt");
-                bot.myServitor.myScheduler.performAction(sw, action, query, behaviorName);
+                contextBot.myServitor.myScheduler.performAction(sw, action, query, behaviorName, contextBot.BotBehaving);
 
             }
             catch (Exception e)
@@ -2853,9 +2820,9 @@ namespace AltAIMLbot
                 List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
                 string[] part = query.Split('(');
                 string head = part[0].Trim();
-                lock (bot.myServitor.prologEngine)
+                lock (contextBot.myServitor.prologEngine)
                 {
-                    bot.servitor.prologEngine.askQuery(query, mtName, out bingingsList);
+                    contextBot.prologEngine.askQuery(query, mtName, out bingingsList);
                 }
                 foreach (Dictionary<string, string> bindings in bingingsList)
                 {
@@ -2911,7 +2878,7 @@ namespace AltAIMLbot
                 Console.WriteLine("------ GenChemsysFromMt:{0} --------", mtName);
                 Console.WriteLine(btxmlCode);
                 Console.WriteLine("-------------------------------------");
-                bot.loadAIMLFromXML(chemsymDoc, "mt:" + mtName + DateTime.Now.ToString());
+                contextBot.loadAIMLFromXML(chemsymDoc, "mt:" + mtName + DateTime.Now.ToString());
 
                 rs = RunStatus.Success;
             }
@@ -2955,7 +2922,7 @@ namespace AltAIMLbot
             try
             {
                 //sv = myChemistry.m_cBus.getHash("mdollhearduuid");
-                sv = bot.BotBehaving.getBBHash(varName) ?? "0.0";
+                sv = contextBot.BotBehaving.getBBHash(varName) ?? "0.0";
                 if (!string.IsNullOrEmpty(sv)) bbVal = double.Parse(sv);
             }
             catch (FormatException) { }
@@ -3046,7 +3013,7 @@ namespace AltAIMLbot
                 Sentence sen = (Sentence)new PEParser().Parse(query);
                 try
                 {
-                    valid = bot.myActiveModel.IsTrue(sen);
+                    valid = contextBot.myActiveModel.IsTrue(sen);
                 }
                 catch
                 {
@@ -3123,7 +3090,7 @@ namespace AltAIMLbot
             string condition = myNode.AttributesV("cond");
             string parameters = myNode.InnerText;
             //if it doesn't exist then return failure
-            if (bot.guestEvalObject == null)
+            if (contextBot.guestEvalObject == null)
             {
                 yield return RunStatus.Failure;
                 yield break;
@@ -3131,10 +3098,10 @@ namespace AltAIMLbot
             RunStatus r = RunStatus.Failure;
             try
             {
-                MethodInfo info = bot.guestEvalObject.GetType().GetMethod(condition);
+                MethodInfo info = contextBot.guestEvalObject.GetType().GetMethod(condition);
                 if (info != null)
                 {
-                    bool result = (bool)info.Invoke(bot.guestEvalObject, new object[] { parameters });
+                    bool result = (bool)info.Invoke(contextBot.guestEvalObject, new object[] { parameters });
                     if (result) r = RunStatus.Success;
                 }
             }
@@ -3201,7 +3168,7 @@ namespace AltAIMLbot
              myLocalBehaviors.waitingForChat = true;
              while (Environment.TickCount < triggertime)
              {
-                 if (bot.BotBehaving.chatInputQueue.Count > 0)
+                 if (contextBot.BotBehaving.chatInputQueue.Count > 0)
                  {
                      rs = RunStatus.Success;
                      myLocalBehaviors.waitingForChat = false;
@@ -3236,34 +3203,34 @@ namespace AltAIMLbot
             }
 
 
-            bot.BotBehaving.lastBehaviorChatInput = "";
-            bot.BotBehaving.lastBehaviorChatOutput = "";
-            if (bot.BotBehaving.chatInputQueue.Count == 0)
+            contextBot.BotBehaving.lastBehaviorChatInput = "";
+            contextBot.BotBehaving.lastBehaviorChatOutput = "";
+            if (contextBot.BotBehaving.chatInputQueue.Count == 0)
             {
                 yield return RunStatus.Success;
                 yield break;
             }
             RunStatus rs = RunStatus.Failure;
-            string dq = bot.BotBehaving.lastBehaviorChatInput;
+            string dq = contextBot.BotBehaving.lastBehaviorChatInput;
             try
             {
-                if (bot.BotBehaving.chatInputQueue.Count > 0)
+                if (contextBot.BotBehaving.chatInputQueue.Count > 0)
                 {
-                    bot.BotBehaving.lastBehaviorChatInput = dq = bot.BotBehaving.chatInputQueue.Peek();
-                    sentStr += bot.BotBehaving.lastBehaviorChatInput;
+                    contextBot.BotBehaving.lastBehaviorChatInput = dq = contextBot.BotBehaving.chatInputQueue.Peek();
+                    sentStr += contextBot.BotBehaving.lastBehaviorChatInput;
                 }
-                User user = bot.BotBehaving.lastBehaviorUser;
-                Request r = new Request(sentStr, user, user.That, bot, true, RequestKind.BehaviourChat);
-                Result res = bot.Chat(r, graphName);
+                User user = contextBot.BotBehaving.lastBehaviorUser;
+                Request r = new Request(sentStr, user, user.That, contextBot, true, RequestKind.BehaviourChat);
+                Result res = contextBot.Chat(r, graphName);
                 //bot.lastBehaviorChatOutput=res.Output;
-                bot.BotBehaving.lastBehaviorChatOutput = "";
+                contextBot.BotBehaving.lastBehaviorChatOutput = "";
                 if (res.isValidOutput)
                 {
                    // bot.postOutput(res.Output.AsString());
-                    bot.BotBehaving.lastBehaviorChatOutput = res.Output.AsString();
+                    contextBot.BotBehaving.lastBehaviorChatOutput = res.Output.AsString();
                     rs = RunStatus.Success;
                     // eat input on success
-                    bot.BotBehaving.chatInputQueue.Dequeue();
+                    contextBot.BotBehaving.chatInputQueue.Dequeue();
                 }
                 else
                 {
@@ -3291,7 +3258,7 @@ namespace AltAIMLbot
                 sentStr = sentStr.Replace(" imp ", "=> ");
                 sentStr = sentStr.Replace("equiv", "<=>");
 
-                bot.myKB.Tell(sentStr);
+                contextBot.myKB.Tell(sentStr);
                 rs = RunStatus.Success;
             }
             catch (Exception e)
@@ -3320,7 +3287,7 @@ namespace AltAIMLbot
                 sentStr = sentStr.Replace(" imp ", "=> ");
                 sentStr = sentStr.Replace("equiv", "<=>");
 
-                bot.myBaseKB.Tell(sentStr);
+                contextBot.myBaseKB.Tell(sentStr);
                 rs = RunStatus.Success;
             }
             catch (Exception e)
@@ -3336,7 +3303,7 @@ namespace AltAIMLbot
             RunStatus rs = RunStatus.Failure;
             try
             {
-                addOCCLogicForInteraction(bot.myBaseKB, myNode.InnerXml);
+                addOCCLogicForInteraction(contextBot.myBaseKB, myNode.InnerXml);
                 rs = RunStatus.Success;
             }
             catch (Exception e)
@@ -3353,7 +3320,7 @@ namespace AltAIMLbot
             RunStatus rs = RunStatus.Failure;
             try
             {
-                bot.myKB = new KnowledgeBase();
+                contextBot.myKB = new KnowledgeBase();
                 rs = RunStatus.Success;
             }
             catch (Exception e)
@@ -3369,7 +3336,7 @@ namespace AltAIMLbot
             RunStatus rs = RunStatus.Failure;
             try
             {
-                bot.myBaseKB = new KnowledgeBase();
+                contextBot.myBaseKB = new KnowledgeBase();
                 rs = RunStatus.Success;
             }
             catch (Exception e)
@@ -3401,11 +3368,11 @@ namespace AltAIMLbot
                 // then it will only have two mega clauses, and no read gradient info
 
                 KnowledgeBase totalKB = new KnowledgeBase();
-                foreach (Sentence s in bot.myBaseKB.Sentences)
+                foreach (Sentence s in contextBot.myBaseKB.Sentences)
                 {
                     totalKB.Tell(s.ToString());
                 }
-                foreach (Sentence s in bot.myKB.Sentences)
+                foreach (Sentence s in contextBot.myKB.Sentences)
                 {
                     totalKB.Tell(s.ToString());
                 }
@@ -3450,11 +3417,11 @@ namespace AltAIMLbot
                     _bot.myActiveModel = MiniModel;
                     miniPostives = MiniModel.strPositives();
                     myReport = answer;
-                    bot.BotBehaving.setBBHash("foundSATModel", "True");
+                    contextBot.BotBehaving.setBBHash("foundSATModel", "True");
                 }
                 else
                 {
-                    bot.BotBehaving.setBBHash("foundSATModel", "False");
+                    contextBot.BotBehaving.setBBHash("foundSATModel", "False");
                 }
 
                 //
@@ -3478,9 +3445,9 @@ namespace AltAIMLbot
             {
                 // We fail if we are unsat
                 Console.WriteLine("NO SAT MODEL FOUND");
-                if (bot.myActiveModel == null)
+                if (contextBot.myActiveModel == null)
                 {
-                    bot.BotBehaving.setBBHash("activeModel", "(NOT sat)");
+                    contextBot.BotBehaving.setBBHash("activeModel", "(NOT sat)");
                 }
                 try
                 {
@@ -3499,17 +3466,17 @@ namespace AltAIMLbot
             {
                 if (walkModel != null)
                 {
-                    bot.myModel = walkModel;
+                    contextBot.myModel = walkModel;
                     walkPostives = walkModel.strPositives();
                 }
 
                 // update active model
-                bot.myActiveModel = bot.myModel;
-                string totalModel = bot.myModel.AsSentenceString();
-                string postPositives = bot.myModel.strPositives();
-                bot.myPositiveSATModleString = postPositives;
+                contextBot.myActiveModel = contextBot.myModel;
+                string totalModel = contextBot.myModel.AsSentenceString();
+                string postPositives = contextBot.myModel.strPositives();
+                contextBot.myPositiveSATModleString = postPositives;
                 //bot.bbSetHash("activeModel", totalModel);
-                bot.BotBehaving.setBBHash("activeModel", postPositives);
+                contextBot.BotBehaving.setBBHash("activeModel", postPositives);
                 Console.WriteLine("SAT MODEL FOUND:{0}", postPositives);
                 try
                 {
@@ -3884,7 +3851,7 @@ namespace AltAIMLbot
             // yield return RunStatus.Running;
             try
             {
-                bot.evalTemplateNodeInnerXml(myNode, RequestKind.BehaviourProcess);
+                contextBot.evalTemplateNodeInnerXml(myNode, RequestKind.BehaviourProcess);
                 //bot.evalTemplateNode(templateNode);
             }
             catch (Exception e)
@@ -3900,7 +3867,7 @@ namespace AltAIMLbot
             {
                 try
                 {
-                    bot.evalTemplateNodeInnerXml(templateNode, RequestKind.BehaviourProcess);
+                    contextBot.evalTemplateNodeInnerXml(templateNode, RequestKind.BehaviourProcess);
                     //bot.evalTemplateNode(templateNode);
                 }
                 catch (Exception e)
@@ -3941,7 +3908,7 @@ namespace AltAIMLbot
             }
             string varname = "nulvar";
             string settingValue = myNode.InnerText;
-            User user = bot.BotBehaving.lastBehaviorUser;
+            User user = contextBot.BotBehaving.lastBehaviorUser;
 
             try
             {
@@ -3962,8 +3929,8 @@ namespace AltAIMLbot
             try
             {
                 ISettingsDictionary dict;
-                if (bot.BotBehaving.lastBehaviorUser != null) dict = user;
-                else dict = bot.GetDictionary("user");
+                if (contextBot.BotBehaving.lastBehaviorUser != null) dict = user;
+                else dict = contextBot.GetDictionary("user");
 
                 dict.addSetting(varname, settingValue);
             }
@@ -4016,7 +3983,7 @@ namespace AltAIMLbot
                 //BTXmlNode resultTemplateNode = AIMLTagHandler.getNode("<template>" + myNode.InnerXml + "</template>");
                 BTXmlDocument resultAIMLDoc = new BTXmlDocument();
                 resultAIMLDoc.LoadXml("<aiml graph='" + graphName + "'>" + myNode.InnerXml + "</aiml>");
-                bot.loadAIMLFromXML(resultAIMLDoc, "dynamic_code_from_btx");
+                contextBot.loadAIMLFromXML(resultAIMLDoc, "dynamic_code_from_btx");
                 //bot.evalTemplateNode(templateNode);
             }
             catch (Exception e)
@@ -4032,7 +3999,7 @@ namespace AltAIMLbot
             {
                 try
                 {
-                    bot.evalTemplateNodeInnerXml(templateNode, RequestKind.BehaviourProcess);
+                    contextBot.evalTemplateNodeInnerXml(templateNode, RequestKind.BehaviourProcess);
                     //bot.evalTemplateNode(templateNode);
                 }
                 catch (Exception e)
@@ -4073,9 +4040,9 @@ namespace AltAIMLbot
             {
                 if (!string.IsNullOrEmpty(myNode.AttributesV("mt"))) mtName = myNode.AttributesV("mt");
 
-                lock (bot.myServitor.prologEngine)
+                lock (contextBot.myServitor.prologEngine)
                 {
-                    bot.myServitor.prologEngine.insertKB("", mtName);
+                    contextBot.myServitor.prologEngine.insertKB("", mtName);
                 }
                 rs = RunStatus.Success;
             }
@@ -4101,9 +4068,9 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("child"))) childMtName = myNode.AttributesV("child");
                 if (!string.IsNullOrEmpty(myNode.AttributesV("parent"))) parentMtName = myNode.AttributesV("parent");
 
-                lock (bot.myServitor.prologEngine)
+                lock (contextBot.myServitor.prologEngine)
                 {
-                    bot.myServitor.prologEngine.connectMT(childMtName, parentMtName);
+                    contextBot.myServitor.prologEngine.connectMT(childMtName, parentMtName);
                 }
                 rs = RunStatus.Success;
             }
@@ -4127,9 +4094,9 @@ namespace AltAIMLbot
             {
                 if (!string.IsNullOrEmpty(myNode.AttributesV("mt"))) mtName = myNode.AttributesV("mt");
 
-                lock (bot.myServitor.prologEngine)
+                lock (contextBot.myServitor.prologEngine)
                 {
-                    bot.myServitor.prologEngine.insertKB(innerStr, mtName);
+                    contextBot.myServitor.prologEngine.insertKB(innerStr, mtName);
                 }
                 rs = RunStatus.Success;
             }
@@ -4152,9 +4119,9 @@ namespace AltAIMLbot
             {
                 if (!string.IsNullOrEmpty(myNode.AttributesV("path"))) path = myNode.AttributesV("path");
 
-                lock (bot.myServitor.prologEngine)
+                lock (contextBot.myServitor.prologEngine)
                 {
-                    bot.myServitor.prologEngine.loadKEFile(path);
+                    contextBot.myServitor.prologEngine.loadKEFile(path);
                 }
                 rs = RunStatus.Success;
             }
@@ -4180,9 +4147,9 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("source"))) sourceMt = myNode.AttributesV("source");
                 if (!string.IsNullOrEmpty(myNode.AttributesV("result"))) resultMt = myNode.AttributesV("result");
                 DecisionTreeImplementation DTI = new DecisionTreeImplementation();
-                lock (bot.myServitor.prologEngine)
+                lock (contextBot.myServitor.prologEngine)
                 {
-                    DTI.GenRulesFromMt(bot.myServitor.prologEngine, sourceMt, resultMt);
+                    DTI.GenRulesFromMt(contextBot.myServitor.prologEngine, sourceMt, resultMt);
                 }
                 rs = RunStatus.Success;
             }
@@ -4213,9 +4180,9 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("solution"))) solutionMt = myNode.AttributesV("solution");
                 if (!string.IsNullOrEmpty(myNode.AttributesV("behavior"))) behaviorID = myNode.AttributesV("behavior");
                 if (!string.IsNullOrEmpty(myNode.AttributesV("behaviortag"))) behaviorTag = myNode.AttributesV("behaviortag");
-                lock (bot.myServitor.prologEngine)
+                lock (contextBot.myServitor.prologEngine)
                 {
-                    CemaSolver Inventor = new CemaSolver(bot.myServitor.prologEngine);
+                    CemaSolver Inventor = new CemaSolver(contextBot.myServitor.prologEngine);
 
                     if (!string.IsNullOrEmpty(myNode.AttributesV("admissible")))
                     {
@@ -4289,9 +4256,9 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("solution"))) solutionMt = myNode.AttributesV("solution");
                 if (!string.IsNullOrEmpty(myNode.AttributesV("behavior"))) behaviorID = myNode.AttributesV("behavior");
                 if (!string.IsNullOrEmpty(myNode.AttributesV("behaviortag"))) behaviorTag = myNode.AttributesV("behaviortag");
-                lock (bot.myServitor.prologEngine)
+                lock (contextBot.myServitor.prologEngine)
                 {
-                    GOAPSolver Planner = new GOAPSolver(bot.myServitor.prologEngine);
+                    GOAPSolver Planner = new GOAPSolver(contextBot.myServitor.prologEngine);
 
                     if (!string.IsNullOrEmpty(myNode.AttributesV("admissible")))
                     {
@@ -4354,9 +4321,9 @@ namespace AltAIMLbot
             {
                 if (!string.IsNullOrEmpty(myNode.AttributesV("mt"))) mtName = myNode.AttributesV("mt");
 
-                lock (bot.myServitor.prologEngine)
+                lock (contextBot.myServitor.prologEngine)
                 {
-                    bot.myServitor.prologEngine.insertKB(innerStr, mtName);
+                    contextBot.myServitor.prologEngine.insertKB(innerStr, mtName);
                 }
                 rs = RunStatus.Success;
             }
@@ -4380,9 +4347,9 @@ namespace AltAIMLbot
             {
                 if (!string.IsNullOrEmpty(myNode.AttributesV("mt"))) mtName = myNode.AttributesV("mt");
 
-                lock (bot.myServitor.prologEngine)
+                lock (contextBot.myServitor.prologEngine)
                 {
-                    bot.myServitor.prologEngine.appendKB(innerStr, mtName);
+                    contextBot.myServitor.prologEngine.appendKB(innerStr, mtName);
                 }
                 rs = RunStatus.Success;
             }
@@ -4403,7 +4370,7 @@ namespace AltAIMLbot
             string mtName = "root";
             string innerStr = myNode.InnerXml.Trim();
             //if it doesn't exist then return failure
-            if (bot.myServitor.prologEngine == null)
+            if (contextBot.myServitor.prologEngine == null)
             {
                 yield return RunStatus.Failure;
                 yield break;
@@ -4411,9 +4378,9 @@ namespace AltAIMLbot
             RunStatus r = RunStatus.Failure;
             try
             {
-                lock (bot.myServitor.prologEngine)
+                lock (contextBot.myServitor.prologEngine)
                 {
-                    bool result = bot.myServitor.prologEngine.isTrueIn(innerStr, mtName);
+                    bool result = contextBot.myServitor.prologEngine.isTrueIn(innerStr, mtName);
                     if (result) r = RunStatus.Success;
                 }
             }
@@ -4457,7 +4424,7 @@ namespace AltAIMLbot
             }
             string innerStr = myNode.InnerXml.Trim();
             //if it doesn't exist then return failure
-            if (bot.myServitor.prologEngine == null)
+            if (contextBot.myServitor.prologEngine == null)
             {
                 yield return RunStatus.Failure;
                 yield break;
@@ -4469,9 +4436,9 @@ namespace AltAIMLbot
                 string[] splitInner = innerCmd.Split(',');
                 List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
                 // Dictionary<string, string> bindings = new Dictionary<string,string> ();
-                lock (bot.myServitor.prologEngine)
+                lock (contextBot.myServitor.prologEngine)
                 {
-                    bot.myServitor.prologEngine.askQuery(innerStr, mtName, out bingingsList);
+                    contextBot.myServitor.prologEngine.askQuery(innerStr, mtName, out bingingsList);
                 }
 
                 foreach (Dictionary<string, string> bindings in bingingsList)
@@ -4547,11 +4514,11 @@ namespace AltAIMLbot
         public SymbolicParticleFilter findOrCreatePF(string name)
         {
             SymbolicParticleFilter resultFilter = null;
-            if (!bot.servitor.partFilterDict.ContainsKey(name))
+            if (!contextBot.servitor.partFilterDict.ContainsKey(name))
             {
-                bot.servitor.partFilterDict.Add(name, new SymbolicParticleFilter());
+                contextBot.servitor.partFilterDict.Add(name, new SymbolicParticleFilter());
             }
-            resultFilter = bot.servitor.partFilterDict[name];
+            resultFilter = contextBot.servitor.partFilterDict[name];
             return resultFilter;
         }
 
@@ -4709,11 +4676,11 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("actmt"))) actMt = myNode.AttributesV("actmt");
                 if (!string.IsNullOrEmpty(myNode.AttributesV("filter"))) filter = myNode.AttributesV("filter");
                 SymbolicParticleFilter myFilter = findOrCreatePF(filter);
-                lock (bot.servitor.prologEngine)
+                lock (contextBot.prologEngine)
                 {
                     foreach (string q in myFilter.actList)
                     {
-                        if (bot.servitor.prologEngine.isTrueIn(q, actMt))
+                        if (contextBot.prologEngine.isTrueIn(q, actMt))
                         {
                             if (actset.Length > 0) actset += "|";
                             actset += q;
@@ -4721,7 +4688,7 @@ namespace AltAIMLbot
                     }
                     foreach (string q in myFilter.senseList)
                     {
-                        if (bot.servitor.prologEngine.isTrueIn(q, senseMt))
+                        if (contextBot.prologEngine.isTrueIn(q, senseMt))
                         {
                             if (senseset.Length > 0) senseset += "|";
                             senseset += q;
@@ -4772,9 +4739,9 @@ namespace AltAIMLbot
                 myFilter.defMeanParticle();
                 myFilter.meanParticle.normalize(myFilter.constraintSet);
                 string meanDMT = myFilter.meanParticle.asDataMt(threshold);
-                lock (bot.servitor.prologEngine)
+                lock (contextBot.prologEngine)
                 {
-                    bot.servitor.prologEngine.insertKB(meanDMT, mtName);
+                    contextBot.prologEngine.insertKB(meanDMT, mtName);
                     if ((spindle != "") || (common != ""))
                     {
                         int plen = myFilter.particles.Length;
@@ -4782,10 +4749,10 @@ namespace AltAIMLbot
                         {
                             string partDMT = myFilter.particles[i].asDataMt(threshold);
                             string particleMt = String.Format("{0}_particle_{1}", filter, i);
-                            bot.servitor.prologEngine.insertKB(partDMT, particleMt);
-                            bot.servitor.prologEngine.setMtProbability(particleMt, myFilter.particles[i].prob);
-                            if (spindle != "") { bot.servitor.prologEngine.connectMT(spindle, particleMt); }
-                            if (common != "") { bot.servitor.prologEngine.connectMT(particleMt, common); }
+                            contextBot.prologEngine.insertKB(partDMT, particleMt);
+                            contextBot.prologEngine.setMtProbability(particleMt, myFilter.particles[i].prob);
+                            if (spindle != "") { contextBot.prologEngine.connectMT(spindle, particleMt); }
+                            if (common != "") { contextBot.prologEngine.connectMT(particleMt, common); }
                         }
                     }
                 }
@@ -4825,10 +4792,10 @@ namespace AltAIMLbot
                 threshold = Double.Parse(probStr);
 
                 List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
-                lock (bot.servitor.prologEngine)
+                lock (contextBot.prologEngine)
                 {
                     //State-Apriori
-                    bot.servitor.prologEngine.askQuery("stateProb(STATE,PROB)", mtName, out bingingsList);
+                    contextBot.prologEngine.askQuery("stateProb(STATE,PROB)", mtName, out bingingsList);
                     foreach (Dictionary<string, string> bindings in bingingsList)
                     {
                         double prob = Double.Parse(bindings["PROB"]);
@@ -4844,7 +4811,7 @@ namespace AltAIMLbot
                     }
 
                     //State-Sense-Prob
-                    bot.servitor.prologEngine.askQuery("stateSenseProb(STATE,SENSE,PROB)", mtName, out bingingsList);
+                    contextBot.prologEngine.askQuery("stateSenseProb(STATE,SENSE,PROB)", mtName, out bingingsList);
                     foreach (Dictionary<string, string> bindings in bingingsList)
                     {
                         string state = bindings["STATE"];
@@ -4858,7 +4825,7 @@ namespace AltAIMLbot
                     }
 
                     //State-Act-NextAct
-                    bot.servitor.prologEngine.askQuery("stateTransitionProb(STATE,ACT,PROB,NEXT)", mtName, out bingingsList);
+                    contextBot.prologEngine.askQuery("stateTransitionProb(STATE,ACT,PROB,NEXT)", mtName, out bingingsList);
                     foreach (Dictionary<string, string> bindings in bingingsList)
                     {
                         string state = bindings["STATE"];
@@ -4909,11 +4876,11 @@ namespace AltAIMLbot
                 threshold = Double.Parse(probStr);
 
                 List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
-                foreach (string state in bot.servitor.CoppeliaStateDictionary.Keys)
+                foreach (string state in contextBot.servitor.CoppeliaStateDictionary.Keys)
                 {
                     string query = String.Format("state({0})", state);
-                    bool isTrue = bot.servitor.prologEngine.isTrueIn(query, mtName);
-                    int stateIndex = bot.servitor.CoppeliaStateDictionary[state];
+                    bool isTrue = contextBot.prologEngine.isTrueIn(query, mtName);
+                    int stateIndex = contextBot.servitor.CoppeliaStateDictionary[state];
                     Global.SetState(stateIndex, isTrue);
                 }
                 Console.WriteLine("coppelia ProcessUpdateCoppeliaFromMt :{0}", myNode.OuterXml);
@@ -4958,59 +4925,59 @@ namespace AltAIMLbot
                 threshold = Double.Parse(probStr);
 
                 List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
-                lock (bot.myServitor.prologEngine)
+                lock (contextBot.myServitor.prologEngine)
                 {
                     // agentActions(Action, positive, negative)
-                    bot.servitor.prologEngine.askQuery("agentActions(ACTION, POS, NEG)", mtName, out bingingsList);
+                    contextBot.prologEngine.askQuery("agentActions(ACTION, POS, NEG)", mtName, out bingingsList);
                     foreach (Dictionary<string, string> bindings in bingingsList)
                     {
                         float pos = float.Parse(bindings["POS"]);
                         float neg = float.Parse(bindings["NEG"]);
                         string cAction = bindings["ACTION"];
-                        if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
+                        if (contextBot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
                         {
-                            bot.servitor.CoppeliaActionDictionary[cAction].SetValence(pos, neg);
+                            contextBot.servitor.CoppeliaActionDictionary[cAction].SetValence(pos, neg);
                         }
                         else
                         {
                             AgentAction newAction = new AgentAction(cAction, pos, neg);
-                            bot.servitor.CoppeliaActionDictionary[cAction] = newAction;
+                            contextBot.servitor.CoppeliaActionDictionary[cAction] = newAction;
                         }
                     }
 
                     // actionResponse(Action,Response)
-                    bot.servitor.prologEngine.askQuery("actionResponse(ACTION,RESPONSE)", mtName, out bingingsList);
+                    contextBot.prologEngine.askQuery("actionResponse(ACTION,RESPONSE)", mtName, out bingingsList);
                     foreach (Dictionary<string, string> bindings in bingingsList)
                     {
                         string cAction = bindings["ACTION"];
                         string cResponse = bindings["RESPONSE"];
-                        if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
+                        if (contextBot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
                         {
-                            if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cResponse))
+                            if (contextBot.servitor.CoppeliaActionDictionary.ContainsKey(cResponse))
                             {
-                                AgentAction a1 = bot.servitor.CoppeliaActionDictionary[cAction];
-                                AgentAction a2 = bot.servitor.CoppeliaActionDictionary[cResponse];
+                                AgentAction a1 = contextBot.servitor.CoppeliaActionDictionary[cAction];
+                                AgentAction a2 = contextBot.servitor.CoppeliaActionDictionary[cResponse];
                                 a1.AddResponse(a2.GlobalIndex);
                             }
                         }
                     }
 
                     // defState(State,Initial)
-                    bot.servitor.prologEngine.askQuery("defState(STATE,INITIAL)", mtName, out bingingsList);
+                    contextBot.prologEngine.askQuery("defState(STATE,INITIAL)", mtName, out bingingsList);
                     foreach (Dictionary<string, string> bindings in bingingsList)
                     {
                         string cState = bindings["STATE"];
                         string cInitState = bindings["INITIAL"];
                         bool bState = false;
                         bState = bool.Parse(cInitState);
-                        if (!bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                        if (!contextBot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
                         {
                             int newState = Global.AddState(bState);
-                            bot.servitor.CoppeliaStateDictionary[cState] = newState;
+                            contextBot.servitor.CoppeliaStateDictionary[cState] = newState;
                         }
                     }
                     // ambition(Actor,State,value)
-                    bot.servitor.prologEngine.askQuery("stateAmbition(ACTOR,STATE,VALUE)", mtName, out bingingsList);
+                    contextBot.prologEngine.askQuery("stateAmbition(ACTOR,STATE,VALUE)", mtName, out bingingsList);
                     foreach (Dictionary<string, string> bindings in bingingsList)
                     {
                         string cActor = bindings["ACTOR"];
@@ -5018,18 +4985,18 @@ namespace AltAIMLbot
                         string cValue = bindings["VALUE"];
                         float fValue = 0;
                         fValue = float.Parse(cValue);
-                        if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                        if (contextBot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
                         {
-                            if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cActor))
+                            if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cActor))
                             {
-                                Agent a1 = bot.servitor.CoppeliaAgentDictionary[cActor];
-                                int state = bot.servitor.CoppeliaStateDictionary[cState];
+                                Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cActor];
+                                int state = contextBot.servitor.CoppeliaStateDictionary[cState];
                                 a1.AddAmbition(state, fValue);
                             }
                         }
                     }
                     // actionStateBelief(Actor,Action,State,value)
-                    bot.servitor.prologEngine.askQuery("actionStateBelief(ACTOR,ACTION,STATE,VALUE)", mtName, out bingingsList);
+                    contextBot.prologEngine.askQuery("actionStateBelief(ACTOR,ACTION,STATE,VALUE)", mtName, out bingingsList);
                     foreach (Dictionary<string, string> bindings in bingingsList)
                     {
                         string cActor = bindings["ACTOR"];
@@ -5039,15 +5006,15 @@ namespace AltAIMLbot
                         float fValue = 0;
                         fValue = float.Parse(cValue);
 
-                        if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cActor))
+                        if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cActor))
                         {
-                            if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
+                            if (contextBot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
                             {
-                                if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                                if (contextBot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
                                 {
-                                    AgentAction act = bot.servitor.CoppeliaActionDictionary[cAction];
-                                    Agent a1 = bot.servitor.CoppeliaAgentDictionary[cActor];
-                                    int state = bot.servitor.CoppeliaStateDictionary[cState];
+                                    AgentAction act = contextBot.servitor.CoppeliaActionDictionary[cAction];
+                                    Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cActor];
+                                    int state = contextBot.servitor.CoppeliaStateDictionary[cState];
                                     a1.SetActionStateBelief(act.GlobalIndex, state, fValue);
                                 }
                             }
@@ -5055,21 +5022,21 @@ namespace AltAIMLbot
                     }
                     //Morals
                     // moralPrinciple(Moral,Initial)
-                    bot.servitor.prologEngine.askQuery("moralPrinciple(MORAL,INITIAL)", mtName, out bingingsList);
+                    contextBot.prologEngine.askQuery("moralPrinciple(MORAL,INITIAL)", mtName, out bingingsList);
                     foreach (Dictionary<string, string> bindings in bingingsList)
                     {
                         string cMoral = bindings["MORAL"];
                         string cInitState = bindings["INITIAL"];
                         bool bState = false;
                         bState = bool.Parse(cInitState);
-                        if (!bot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
+                        if (!contextBot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
                         {
                             int newState = Global.AddState(bState);
-                            bot.servitor.CoppeliaMoralsDictionary[cMoral] = newState;
+                            contextBot.servitor.CoppeliaMoralsDictionary[cMoral] = newState;
                         }
                     }
                     // moralAmbition(Actor,Moral,value)
-                    bot.servitor.prologEngine.askQuery("stateAmbition(ACTOR,MORAL,VALUE)", mtName, out bingingsList);
+                    contextBot.prologEngine.askQuery("stateAmbition(ACTOR,MORAL,VALUE)", mtName, out bingingsList);
                     foreach (Dictionary<string, string> bindings in bingingsList)
                     {
                         string cActor = bindings["ACTOR"];
@@ -5077,18 +5044,18 @@ namespace AltAIMLbot
                         string cValue = bindings["VALUE"];
                         float fValue = 0;
                         fValue = float.Parse(cValue);
-                        if (bot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
+                        if (contextBot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
                         {
-                            if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cActor))
+                            if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cActor))
                             {
-                                Agent a1 = bot.servitor.CoppeliaAgentDictionary[cActor];
-                                int moral = bot.servitor.CoppeliaMoralsDictionary[cMoral];
+                                Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cActor];
+                                int moral = contextBot.servitor.CoppeliaMoralsDictionary[cMoral];
                                 a1.AddMoralAmbition(moral, fValue);
                             }
                         }
                     }
                     // actionMoralBelief(Actor,Action,Moral,value)
-                    bot.servitor.prologEngine.askQuery("actionStateBelief(ACTOR,ACTION,MORAL,VALUE)", mtName, out bingingsList);
+                    contextBot.prologEngine.askQuery("actionStateBelief(ACTOR,ACTION,MORAL,VALUE)", mtName, out bingingsList);
                     foreach (Dictionary<string, string> bindings in bingingsList)
                     {
                         string cActor = bindings["ACTOR"];
@@ -5098,15 +5065,15 @@ namespace AltAIMLbot
                         float fValue = 0;
                         fValue = float.Parse(cValue);
 
-                        if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cActor))
+                        if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cActor))
                         {
-                            if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
+                            if (contextBot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
                             {
-                                if (bot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
+                                if (contextBot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
                                 {
-                                    AgentAction act = bot.servitor.CoppeliaActionDictionary[cAction];
-                                    Agent a1 = bot.servitor.CoppeliaAgentDictionary[cActor];
-                                    int moral = bot.servitor.CoppeliaMoralsDictionary[cMoral];
+                                    AgentAction act = contextBot.servitor.CoppeliaActionDictionary[cAction];
+                                    Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cActor];
+                                    int moral = contextBot.servitor.CoppeliaMoralsDictionary[cMoral];
                                     a1.SetActionMoralPrincipleBelief(act.GlobalIndex, moral, fValue);
                                 }
                             }
@@ -5203,7 +5170,7 @@ namespace AltAIMLbot
                 List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
                 string[] part = query.Split('(');
                 string head = part[0].Trim();
-                bot.servitor.prologEngine.askQuery(query, mtName, out bingingsList);
+                contextBot.prologEngine.askQuery(query, mtName, out bingingsList);
                 foreach (Dictionary<string, string> bindings in bingingsList)
                 {
                     string frag = "<" + head;
@@ -5246,9 +5213,9 @@ namespace AltAIMLbot
                 int featureID = AgentFeatures.Parse(cFeature);
                 if (featureID >= 0)
                 {
-                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                     {
-                        Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                        Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
                         a1.SetFeature(featureID, fValue);
                         //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
@@ -5289,15 +5256,15 @@ namespace AltAIMLbot
 
                 if (featureID >= 0)
                 {
-                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                     {
-                        if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cTarget))
+                        if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cTarget))
                         {
-                            if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                            if (contextBot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
                             {
-                                Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
-                                Agent target = bot.servitor.CoppeliaAgentDictionary[cTarget];
-                                int state = bot.servitor.CoppeliaStateDictionary[cState];
+                                Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
+                                Agent target = contextBot.servitor.CoppeliaAgentDictionary[cTarget];
+                                int state = contextBot.servitor.CoppeliaStateDictionary[cState];
                                 a1.SetFeatureBelief(featureID, state, target.AgentID, fValue);
                                 //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                             }
@@ -5334,15 +5301,15 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
                 if (!string.IsNullOrEmpty(myNode.AttributesV("state"))) cState = myNode.AttributesV("state");
                 fValue = float.Parse(cValue);
-                if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                 {
-                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cTarget))
+                    if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cTarget))
                     {
-                        if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                        if (contextBot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
                         {
-                            Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
-                            Agent target = bot.servitor.CoppeliaAgentDictionary[cTarget];
-                            int state = bot.servitor.CoppeliaStateDictionary[cState];
+                            Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
+                            Agent target = contextBot.servitor.CoppeliaAgentDictionary[cTarget];
+                            int state = contextBot.servitor.CoppeliaStateDictionary[cState];
                             a1.SetAgentResponsibleBelief(target.AgentID, state, fValue);
                             //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                         }
@@ -5378,13 +5345,13 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("action"))) cAction = myNode.AttributesV("state");
                 if (!string.IsNullOrEmpty(myNode.AttributesV("target"))) cTarget = myNode.AttributesV("target");
                 fValue = float.Parse(cValue);
-                if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                 {
-                    if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
+                    if (contextBot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
                     {
-                        Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
-                        Agent target = bot.servitor.CoppeliaAgentDictionary[cTarget];
-                        AgentAction action = bot.servitor.CoppeliaActionDictionary[cAction];
+                        Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
+                        Agent target = contextBot.servitor.CoppeliaAgentDictionary[cTarget];
+                        AgentAction action = contextBot.servitor.CoppeliaActionDictionary[cAction];
                         a1.SetExpectedSatisfaction(target.AgentID, action.GlobalIndex, fValue);
                         //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
@@ -5417,12 +5384,12 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
                 if (!string.IsNullOrEmpty(myNode.AttributesV("target"))) cTarget = myNode.AttributesV("target");
                 fValue = float.Parse(cValue);
-                if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                 {
-                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cTarget))
+                    if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cTarget))
                     {
-                        Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
-                        Agent target = bot.servitor.CoppeliaAgentDictionary[cTarget];
+                        Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
+                        Agent target = contextBot.servitor.CoppeliaAgentDictionary[cTarget];
                         a1.SetAnger(target.AgentID, fValue);
                         //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
@@ -5454,12 +5421,12 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
                 if (!string.IsNullOrEmpty(myNode.AttributesV("target"))) cTarget = myNode.AttributesV("target");
                 fValue = float.Parse(cValue);
-                if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                 {
-                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cTarget))
+                    if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cTarget))
                     {
-                        Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
-                        Agent target = bot.servitor.CoppeliaAgentDictionary[cTarget];
+                        Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
+                        Agent target = contextBot.servitor.CoppeliaAgentDictionary[cTarget];
                         a1.SetPraiseworthy(target.AgentID, fValue);
                         //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
@@ -5492,11 +5459,11 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("emotion"))) cEmotion = myNode.AttributesV("emotion");
                 fValue = float.Parse(cValue);
                 int iEmotion = AgentEmotions.Parse(cEmotion);
-                if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                 {
                     if (iEmotion >= 0)
                     {
-                        Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                        Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
                         a1.SetEmotion(iEmotion, fValue);
                         //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
@@ -5530,11 +5497,11 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("emotion"))) cEmotion = myNode.AttributesV("emotion");
                 fValue = float.Parse(cValue);
                 int iEmotion = AgentEmotions.Parse(cEmotion);
-                if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                 {
                     if (iEmotion >= 0)
                     {
-                        Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                        Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
                         a1.SetDesired(iEmotion, fValue);
                         //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
@@ -5569,15 +5536,15 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
                 fValue = float.Parse(cValue);
 
-                if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                 {
-                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cTarget))
+                    if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cTarget))
                     {
-                        if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
+                        if (contextBot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
                         {
-                            Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
-                            Agent a2 = bot.servitor.CoppeliaAgentDictionary[cTarget];
-                            AgentAction act = bot.servitor.CoppeliaActionDictionary[cAction];
+                            Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
+                            Agent a2 = contextBot.servitor.CoppeliaAgentDictionary[cTarget];
+                            AgentAction act = contextBot.servitor.CoppeliaActionDictionary[cAction];
                             a1.SetAT(a2.AgentID, act.GlobalIndex, fValue);
                             //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                         }
@@ -5616,13 +5583,13 @@ namespace AltAIMLbot
                 int iEmotion = AgentEmotions.Parse(cEmotion);
                 int iFeature = AgentFeatures.Parse(cFeature);
 
-                if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                 {
                     if (iEmotion >= 0)
                     {
                         if (iFeature >= 0)
                         {
-                            Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                            Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
                             a1.SetFeatureEmotionBelief(iFeature, iEmotion, fValue);
                             //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                         }
@@ -5659,14 +5626,14 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("negativity"))) cNegativity = myNode.AttributesV("negativity");
                 fPositivity = float.Parse(cPositivity);
                 fNegativity = float.Parse(cNegativity);
-                if (!bot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
+                if (!contextBot.servitor.CoppeliaActionDictionary.ContainsKey(cAction))
                 {
                     AgentAction newAction = new AgentAction(cAction, fPositivity, fNegativity);
-                    bot.servitor.CoppeliaActionDictionary[cAction] = newAction;
+                    contextBot.servitor.CoppeliaActionDictionary[cAction] = newAction;
                 }
                 else
                 {
-                    bot.servitor.CoppeliaActionDictionary[cAction].SetValence(fPositivity, fNegativity);
+                    contextBot.servitor.CoppeliaActionDictionary[cAction].SetValence(fPositivity, fNegativity);
                 }
                 //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
             }
@@ -5694,10 +5661,10 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("state"))) cState = myNode.AttributesV("state");
                 if (!string.IsNullOrEmpty(myNode.AttributesV("initial"))) cInitState = myNode.AttributesV("initial");
                 bState = bool.Parse(cInitState);
-                if (!bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                if (!contextBot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
                 {
                     int newState = Global.AddState(bState);
-                    bot.servitor.CoppeliaStateDictionary[cState] = newState;
+                    contextBot.servitor.CoppeliaStateDictionary[cState] = newState;
                     //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                 }
             }
@@ -5730,12 +5697,12 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("state"))) cState = myNode.AttributesV("state");
                 if (!string.IsNullOrEmpty(myNode.AttributesV("likelihood"))) cStateProb = myNode.AttributesV("likelihood");
                 pStateProb = float.Parse(cStateProb);
-                if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                if (contextBot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
                 {
-                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                     {
-                        Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
-                        int state = bot.servitor.CoppeliaStateDictionary[cState];
+                        Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
+                        int state = contextBot.servitor.CoppeliaStateDictionary[cState];
                         a1.SetStateLikelihood(state, pStateProb);
                         //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
@@ -5764,12 +5731,12 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("action"))) cAct = myNode.AttributesV("action");
                 if (!string.IsNullOrEmpty(myNode.AttributesV("response"))) cResponse = myNode.AttributesV("response");
 
-                if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAct))
+                if (contextBot.servitor.CoppeliaActionDictionary.ContainsKey(cAct))
                 {
-                    if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cResponse))
+                    if (contextBot.servitor.CoppeliaActionDictionary.ContainsKey(cResponse))
                     {
-                        AgentAction a1 = bot.servitor.CoppeliaActionDictionary[cAct];
-                        AgentAction a2 = bot.servitor.CoppeliaActionDictionary[cResponse];
+                        AgentAction a1 = contextBot.servitor.CoppeliaActionDictionary[cAct];
+                        AgentAction a2 = contextBot.servitor.CoppeliaActionDictionary[cResponse];
                         a1.AddResponse(a2.GlobalIndex);
                         //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
@@ -5803,12 +5770,12 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
                 fValue = float.Parse(cValue);
 
-                if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                if (contextBot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
                 {
-                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                     {
-                        Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
-                        int state = bot.servitor.CoppeliaStateDictionary[cState];
+                        Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
+                        int state = contextBot.servitor.CoppeliaStateDictionary[cState];
                         a1.AddAmbition(state, fValue);
                         //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
@@ -5840,10 +5807,10 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("moral"))) cMoral = myNode.AttributesV("moral");
                 if (!string.IsNullOrEmpty(myNode.AttributesV("initial"))) cInitState = myNode.AttributesV("initial");
                 bState = bool.Parse(cInitState);
-                if (!bot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
+                if (!contextBot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
                 {
                     int newMoral = Global.AddMoralPrinciple(bState);
-                    bot.servitor.CoppeliaMoralsDictionary[cMoral] = newMoral;
+                    contextBot.servitor.CoppeliaMoralsDictionary[cMoral] = newMoral;
                     //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                 }
             }
@@ -5873,12 +5840,12 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
                 fValue = float.Parse(cValue);
 
-                if (bot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
+                if (contextBot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
                 {
-                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                     {
-                        Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
-                        int moral = bot.servitor.CoppeliaStateDictionary[cMoral];
+                        Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
+                        int moral = contextBot.servitor.CoppeliaStateDictionary[cMoral];
                         a1.AddMoralAmbition(moral, fValue);
                         //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                     }
@@ -5913,15 +5880,15 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
                 fValue = float.Parse(cValue);
 
-                if (bot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
+                if (contextBot.servitor.CoppeliaMoralsDictionary.ContainsKey(cMoral))
                 {
-                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                     {
-                        if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAct))
+                        if (contextBot.servitor.CoppeliaActionDictionary.ContainsKey(cAct))
                         {
-                            AgentAction act = bot.servitor.CoppeliaActionDictionary[cAct];
-                            Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
-                            int moral = bot.servitor.CoppeliaMoralsDictionary[cMoral];
+                            AgentAction act = contextBot.servitor.CoppeliaActionDictionary[cAct];
+                            Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
+                            int moral = contextBot.servitor.CoppeliaMoralsDictionary[cMoral];
                             a1.SetActionMoralPrincipleBelief(act.GlobalIndex, moral, fValue);
                             //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                         }
@@ -5957,15 +5924,15 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
                 fValue = float.Parse(cValue);
 
-                if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
+                if (contextBot.servitor.CoppeliaStateDictionary.ContainsKey(cState))
                 {
-                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                     {
-                        if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAct))
+                        if (contextBot.servitor.CoppeliaActionDictionary.ContainsKey(cAct))
                         {
-                            AgentAction act = bot.servitor.CoppeliaActionDictionary[cAct];
-                            Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
-                            int state = bot.servitor.CoppeliaStateDictionary[cState];
+                            AgentAction act = contextBot.servitor.CoppeliaActionDictionary[cAct];
+                            Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
+                            int state = contextBot.servitor.CoppeliaStateDictionary[cState];
                             a1.SetActionStateBelief(act.GlobalIndex, state, fValue);
                             //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                         }
@@ -6001,15 +5968,15 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("value"))) cValue = myNode.AttributesV("value");
                 fValue = float.Parse(cValue);
 
-                if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cStateSrc))
+                if (contextBot.servitor.CoppeliaStateDictionary.ContainsKey(cStateSrc))
                 {
-                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                     {
-                        if (bot.servitor.CoppeliaStateDictionary.ContainsKey(cStateDest))
+                        if (contextBot.servitor.CoppeliaStateDictionary.ContainsKey(cStateDest))
                         {
-                            Agent a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
-                            int stateSrc = bot.servitor.CoppeliaStateDictionary[cStateSrc];
-                            int stateDest = bot.servitor.CoppeliaStateDictionary[cStateDest];
+                            Agent a1 = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
+                            int stateSrc = contextBot.servitor.CoppeliaStateDictionary[cStateSrc];
+                            int stateDest = contextBot.servitor.CoppeliaStateDictionary[cStateDest];
                             a1.SetStateFacStateBelief(stateSrc, stateDest, fValue);
                             //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                         }
@@ -6043,15 +6010,15 @@ namespace AltAIMLbot
                 if (!string.IsNullOrEmpty(myNode.AttributesV("agent"))) cAgent = myNode.AttributesV("agent");
                 if (!string.IsNullOrEmpty(myNode.AttributesV("reciptient"))) cRecipient = myNode.AttributesV("reciptient");
 
-                if (bot.servitor.CoppeliaActionDictionary.ContainsKey(cAct))
+                if (contextBot.servitor.CoppeliaActionDictionary.ContainsKey(cAct))
                 {
-                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                     {
-                        if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cRecipient))
+                        if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cRecipient))
                         {
-                            AgentAction act = bot.servitor.CoppeliaActionDictionary[cAct];
-                            Agent agent = bot.servitor.CoppeliaAgentDictionary[cAgent];
-                            Agent recipent = bot.servitor.CoppeliaAgentDictionary[cRecipient];
+                            AgentAction act = contextBot.servitor.CoppeliaActionDictionary[cAct];
+                            Agent agent = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
+                            Agent recipent = contextBot.servitor.CoppeliaAgentDictionary[cRecipient];
                             agent.ManualPerform(act, recipent);
                             //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
                         }
@@ -6106,12 +6073,12 @@ namespace AltAIMLbot
 
                 if (relationID >= 0)
                 {
-                    if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+                    if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
                     {
-                        if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cRecipient))
+                        if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cRecipient))
                         {
-                            Agent agent = bot.servitor.CoppeliaAgentDictionary[cAgent];
-                            Agent recipent = bot.servitor.CoppeliaAgentDictionary[cRecipient];
+                            Agent agent = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
+                            Agent recipent = contextBot.servitor.CoppeliaAgentDictionary[cRecipient];
                             agent.SetRelation(recipent.AgentID, relationID, fValue);
                             //Console.WriteLine("coppelia Processed :{0}", myNode.OuterXml);
 
@@ -6174,13 +6141,13 @@ namespace AltAIMLbot
             int iFeature = AgentFeatures.Parse(cFeature);
             int iEmotions = AgentRelations.Parse(cEmotion);
 
-            if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
+            if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cAgent))
             {
-                a1 = bot.servitor.CoppeliaAgentDictionary[cAgent];
+                a1 = contextBot.servitor.CoppeliaAgentDictionary[cAgent];
             }
-            if (bot.servitor.CoppeliaAgentDictionary.ContainsKey(cRecipient))
+            if (contextBot.servitor.CoppeliaAgentDictionary.ContainsKey(cRecipient))
             {
-                a2 = bot.servitor.CoppeliaAgentDictionary[cRecipient];
+                a2 = contextBot.servitor.CoppeliaAgentDictionary[cRecipient];
             }
 
             //Console.WriteLine("  CondData='{0}' '{1}' '{2}' '{3}'", condData, varName,rel,val);
@@ -6204,7 +6171,7 @@ namespace AltAIMLbot
             try
             {
                 //sv = myChemistry.m_cBus.getHash("mdollhearduuid");
-                sv = bot.BotBehaving.getBBHash(varName) ?? "0.0";
+                sv = contextBot.BotBehaving.getBBHash(varName) ?? "0.0";
                 if (!string.IsNullOrEmpty(sv)) bbVal = double.Parse(sv);
             }
             catch (FormatException e) { }
@@ -6343,12 +6310,12 @@ namespace AltAIMLbot
             string locStr = "0.0";
             float angRot;
             // Try face first then last noise
-            lock (bot.servitor.prologEngine)
+            lock (contextBot.prologEngine)
             {
-                bot.servitor.prologEngine.FindOrCreateKB(mtName);
-                bot.servitor.prologEngine.FindOrCreateKB(faceMt);
+                contextBot.prologEngine.FindOrCreateKB(mtName);
+                contextBot.prologEngine.FindOrCreateKB(faceMt);
 
-                bot.servitor.prologEngine.askQuery(faceQuery, faceMt, out bingingsList);
+                contextBot.prologEngine.askQuery(faceQuery, faceMt, out bingingsList);
                 foreach (Dictionary<string, string> bindings in bingingsList)
                 {
                     foreach (string key in bindings.Keys)
@@ -6362,7 +6329,7 @@ namespace AltAIMLbot
                 // Try last noise
                 if ((locStr == "0.0") || (locStr == "0") || (rgen.NextDouble() < 0.5))
                 {
-                    bot.servitor.prologEngine.askQuery(angleQuery, mtName, out bingingsList);
+                    contextBot.prologEngine.askQuery(angleQuery, mtName, out bingingsList);
                     foreach (Dictionary<string, string> bindings in bingingsList)
                     {
                         foreach (string key in bindings.Keys)
@@ -6375,10 +6342,10 @@ namespace AltAIMLbot
                 }
             }
 
-            if (bot.personaProcessor != null)
+            if (contextBot.personaProcessor != null)
             {
                 string rotCommand = String.Format("face {0}", angRot);
-                bot.personaProcessor(rotCommand);
+                contextBot.personaProcessor(rotCommand);
                 Console.WriteLine("UpdatePersona: LOC:{0} AUD:{1} CMD:{2}",locStr,angStr ,rotCommand);
             }
             yield return rs;
@@ -6406,7 +6373,7 @@ namespace AltAIMLbot
                 destFile = HostSystem.FileSystemPath(destFile);
                 System.IO.File.WriteAllText(destFile, myCodes);
                 chatDoc.LoadXml(myCodes);
-                bot.loadAIMLFromXML(chatDoc, "vf:" + srcFile + DateTime.Now.ToString());
+                contextBot.loadAIMLFromXML(chatDoc, "vf:" + srcFile + DateTime.Now.ToString());
 
                 rs = RunStatus.Success;
             }
@@ -6425,13 +6392,13 @@ namespace AltAIMLbot
             string condition = myNode.AttributesV("cond");
             string parameters = myNode.InnerText;
             //if no input exists doesn't exist then return failure
-            if (bot.BotBehaving.chatInputQueue.Count == 0)
+            if (contextBot.BotBehaving.chatInputQueue.Count == 0)
               {
                 yield return RunStatus.Failure;
                 yield break;
               }
 
-            string userInput = bot.BotBehaving.chatInputQueue.Peek();
+            string userInput = contextBot.BotBehaving.chatInputQueue.Peek();
             string[] userWords = userInput.Split(' ');
             string[] condWords = condition.Split(' ');
 
@@ -6464,7 +6431,7 @@ namespace AltAIMLbot
             if (r == RunStatus.Success)
             {
                 // if we match then consume the input
-                bot.BotBehaving.chatInputQueue.Dequeue();
+                contextBot.BotBehaving.chatInputQueue.Dequeue();
             }
             yield return r;
             yield break;
@@ -6475,8 +6442,8 @@ namespace AltAIMLbot
             // always clip off the first "*";
             if (sense.StartsWith("*")) sense = sense.Substring(1);
             if (sense.Length == 0) return false;
-            //AltBot contextBot = request.bot;
-            AltBot contextBot = bot;
+            //BCTX contextBot = request.bot;
+            BCTX contextBot = this.contextBot;
 
             // ported from unifying AIML bot's <lexis> tag
             // form is "*<word>:<relation>:<part-of-speech>:<+/~>"
@@ -6526,7 +6493,7 @@ namespace AltAIMLbot
             if (wnPos == "user")
             {
                 //string val = request.user.Predicates.grabSetting(wnWord);
-                string val = bot.BotBehaving.lastBehaviorUser.Predicates.grabSetting(wnWord); ; //request.user.Predicates.grabSetting(wnWord);
+                string val = this.contextBot.BotBehaving.lastBehaviorUser.Predicates.grabSetting(wnWord); ; //request.user.Predicates.grabSetting(wnWord);
                 if (val == null) return (false ^ negation);
                 if (queryWord.ToLower().Contains(val.ToLower()))
                 {
@@ -6716,7 +6683,7 @@ namespace AltAIMLbot
         public bool AcceptsThread(NativeThread currentThread)
         {
             if (OnlyThisThread != null) return currentThread == OnlyThisThread;
-            if (myLocalBehaviors.bot.myServitor.IsServitorThread(currentThread))
+            if (contextBot.myServitor.IsServitorThread(currentThread))
             {
                 return true;
             }

@@ -66,7 +66,7 @@ namespace AltAIMLbot
             Console.WriteLine("SERVITOR SAYS:{0}", message);
             if (servitor == null) return;
             // Send to blackboard
-            servitor.sayResponse(message);
+            servitor.sayResponseToBlackboard(message);
         }
 
         public void startRobot(string myName)
@@ -161,7 +161,7 @@ namespace AltAIMLbot
                         if (input.Length == 0) continue;
                         string answer = respondToChat(input);
                         ConsoleWrite("Bot: " + answer);
-                        if (sayReposeServ) servitor.sayResponse(answer);
+                        if (sayReposeServ) servitor.sayResponseToBlackboard(answer);
                     }
                 }
                 catch

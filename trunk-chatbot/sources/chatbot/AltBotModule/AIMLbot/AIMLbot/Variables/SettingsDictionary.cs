@@ -487,7 +487,7 @@ namespace AltAIMLbot.Variables
         /// <summary>
         /// The bot this dictionary is associated with (only for writting log)
         /// </summary>
-        protected BehaviorContext bot
+        internal BehaviorContext bot
         {
             get { return _bot.BotBehaving; }
         }

@@ -1977,19 +1977,7 @@ namespace AltAIMLbot.Utils
 
         public void logText(string msg)
         {
-            if (bot == null) return;
-            lock (bot.loglock)
-            {
-                try
-                {
-                    string miniLog = String.Format(@"./aiml/BTTrace.txt");
-                    miniLog = HostSystem.FileSystemPath(miniLog);
-                    System.IO.File.AppendAllText(miniLog, msg + "\n");
-                    Console.WriteLine(msg);
-                }
-                catch
-                { }
-            }
+            BehaviorSet.logTextToBTTrace(msg);
         }
 
         public void ClearCache()
