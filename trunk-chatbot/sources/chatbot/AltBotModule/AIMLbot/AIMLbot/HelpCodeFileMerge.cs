@@ -173,5 +173,25 @@ namespace AltAIMLbot
             }
             return graphPath;
         }
+        public static string RemoveStart(this string graphPath, params string[] ces)
+        {
+            if (graphPath == null) return null;
+            var ew = graphPath.ToLower();
+            int len = graphPath.Length;
+            foreach (var ce in ces)
+            {
+                int cel = ce.Length;
+                if (len >= cel)
+                {
+                    if (ew.StartsWith(ce))
+                    {
+                        graphPath = graphPath.Substring(len);
+                        ew = graphPath.ToLower();
+                        len = graphPath.Length;
+                    }
+                }
+            }
+            return graphPath;
+        }
     }
 }

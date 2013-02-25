@@ -327,21 +327,29 @@ namespace AltAIMLbot
 
         public AltBot bot
         {
-            get { return _bot; }
+            get { return mbot; }
             set
             {
-                _bot = value;
-                foreach (var tree in GetTreeList())
-                    tree.bot = _bot;
+                mbot = value;//.bot;
             }
         }
 
-        [NonSerialized] private AltBot _bot;
+
+        private AltBot mbot
+        {
+            get { return _mbot; }
+            set
+            {
+                _mbot = value;
+                foreach (var tree in GetTreeList())
+                    tree._bot = mbot;
+            }
+        }
 
 
         public BehaviorSet(AltBot bot)
         {
-            _bot = bot;
+            _mbot = bot;
             //behaveTrees = new Hashtable();
             behaveTrees = new CIDictionary<string, BehaviorTree>(KeyCase.DefaultFN);
             runState = new CIDictionary<string, RunStatus>(KeyCase.DefaultFN);
@@ -362,7 +370,8 @@ namespace AltAIMLbot
 
         public void postSerial(AltBot deBot)
         {
-            bot = deBot;
+            mbot = deBot;
+            bot = deBot.BotBehaving;
             foreach (var t in GetTreeList())
             {
                 t.postSerial(deBot);
@@ -451,7 +460,7 @@ namespace AltAIMLbot
             {
                 BehaviorTree newTree = new BehaviorTree(bot);
                 newTree.defineBehavior(treeName, behaviorDef);
-                if (_bot != null) newTree.bot = _bot;
+                if (mbot != null) newTree.bot = mbot.BotBehaving;
                 lock (behaveTrees)
                 {
                     behaveTrees[treeName] = newTree;
@@ -468,20 +477,21 @@ namespace AltAIMLbot
         public void keepTime(string nodeID, RunStatus R)
         {
             if (bot == null) return;
+            var myBehaviors = bot.myBehaviors;
             try
             {
                 // Update on first entry
                 if ((R == null) || (R == RunStatus.Success))
                 {
-                    if (!bot.myBehaviors.entryTime.ContainsKey(nodeID))
+                    if (!myBehaviors.entryTime.ContainsKey(nodeID))
                     {
-                        bot.myBehaviors.entryTime[nodeID] = Environment.TickCount;
+                        myBehaviors.entryTime[nodeID] = Environment.TickCount;
                     }
                 }
                 else
                 {
                     // Remove the ID on any failure
-                    bot.myBehaviors.entryTime.Remove(nodeID);
+                    myBehaviors.entryTime.Remove(nodeID);
                 }
             }
             catch (Exception e)
@@ -546,7 +556,7 @@ namespace AltAIMLbot
         public RunStatus runBTXML(string BTXML)
         {
             RunStatus result = RunStatus.Failure;
-            BehaviorTree newTree = new BehaviorTree(bot);
+            BehaviorTree newTree = new BehaviorTree(mbot);
             string treeName = "temptree123" + newTree.rgen.Next();
             newTree.defineBehavior(treeName,
                                    string.Format("<behavior id='{0}'><subaiml>{1}</subaiml></behavior>", treeName, BTXML));
@@ -852,6 +862,7 @@ namespace AltAIMLbot
         public static OutputDelegate LogToConsole = null;
         public void logText(string msg)
         {
+            var bot = mbot;
             if (bot == null) return;
             if (SkipLog) return;
             if (BehaviorSet.LogToConsole != null)
@@ -879,6 +890,7 @@ namespace AltAIMLbot
 
         public void logNode(string msg, XmlNode myNode)
         {
+            var bot = mbot;
             if (bot == null) return;
             lock (bot.loglock)
             {
@@ -936,6 +948,7 @@ namespace AltAIMLbot
         public SemiStringStackQueue behaviorStack = new SemiStringStackQueue();
 
         public bool SkipLog;
+        private AltBot _mbot;
 
         public void pushUniqueToStack(string evnt)
         {
@@ -1002,7 +1015,7 @@ namespace AltAIMLbot
         public RunStatus runBotBehavior(string behaviorName, AltBot deBot)
         {
             string resultName;
-            bot = deBot;
+            mbot = deBot;
 
             runEventTODOs(behaviorName);
 
@@ -1068,7 +1081,11 @@ namespace AltAIMLbot
 
         public void runBotBehaviors(AltBot deBot)
         {
-            if (bot != deBot) bot = deBot;
+            if (mbot != deBot)
+            {
+                logText("Bot wasnt set before!");
+                mbot = deBot;
+            }
 
             processEventQueue();
             // if there is a root defined then run it

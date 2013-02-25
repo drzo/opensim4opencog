@@ -99,9 +99,9 @@ namespace AltAIMLbot
         }
 
 
-        static void writeToLogWarn(string unifiable, params object[] objs)
+        public static void writeToLogWarn(string f, params object[] a)
         {
-            writeDebugLine("WARNING: " + unifiable, objs);
+            writeDebugLine("WARNING: " + f, a);
         }
 
         /// <summary>
@@ -216,7 +216,7 @@ namespace AltAIMLbot
         }
         public static void Run(string[] args)
         {
-            AltBot myBot = null;
+            AltBot myBot = ConsoleRobot;
             DLRConsole.DebugLevel = 6;
             TaskQueueHandler.TimeProcess("ROBOTCONSOLE: STARTUP", () => { myBot = Startup(args); });
 
@@ -376,7 +376,10 @@ namespace AltAIMLbot
         }
         public static void RunGUI(string[] args, AltBot myBot, OutputDelegate writeLine)
         {
-            GUIForm = new GUI.AIMLPadEditor(myBot.NameAsSet, myBot);
+            GUIForm = GUIForm ?? new GUI.AIMLPadEditor(myBot.NameAsSet, myBot);
+
+            Predicate<string> myTest = (s) => s.ContainsAny("warn", "error", "debug", "fail") > -1;
+            BehaviorSet.LogToConsole = BehaviorSet.LogToConsole ?? OutputDelegateWriter.OnlyWith(GUIForm.WriteLine, myTest);
             Application.Run(GUIForm);
         }
 
@@ -391,14 +394,19 @@ namespace AltAIMLbot
             // myBot.AddAiml(evidenceCode);
             User myUser = myBot.LastUser;
             var myUsersname = myUser.UserName;
-            Request request = myBot.GetBotRequest("current toplevel");
-            myUser.LastRequest = request;
-            myBot.BotDirective(myUser, request, "@help", writeLine);
-            writeLine("-----------------------------------------------------------------");
-            AIMLDEBUGSETTINGS = "clear +*";
-            myBot.BotDirective(myUser, request, "@log " + AIMLDEBUGSETTINGS, writeLine);
-            writeLine("-----------------------------------------------------------------");
+            if (MainConsoleWriteLn == writeLine && writeDebugLine != writeLine && false)
+            {
+                Request request = myBot.GetBotRequest("current toplevel");
+                myUser.LastRequest = request;
+                myBot.BotDirective(myUser, request, "@help", writeLine);
+                writeLine("-----------------------------------------------------------------");
+                AIMLDEBUGSETTINGS = "clear +*";
+                myBot.BotDirective(myUser, request, "@log " + AIMLDEBUGSETTINGS, writeLine);
+                writeLine("-----------------------------------------------------------------");
+            }
             DLRConsole.SystemFlush();
+            Predicate<string> myTest = (s) => s.ContainsAny("warn", "error", "debug", "fail") > -1;
+            BehaviorSet.LogToConsole = BehaviorSet.LogToConsole ?? OutputDelegateWriter.OnlyWith(writeLine, myTest);
 
             //string userJustSaid = String.Empty;
             myBot.LastUser = myUser;
@@ -465,13 +473,13 @@ namespace AltAIMLbot
                     if (useServitor && !input.StartsWith("@"))
                     {
                         // See what the servitor says
-                        updateRTP2Sevitor(myUser);
+                        servitorBot.updateRTP2Sevitor(myUser);
                         writeLine(myName + "> " + servitor.respondToChat(input, myUser, isToplevel, kind));
-                        updateServitor2RTP(myUser);
+                        servitorBot.updateServitor2RTP(myUser);
                     }
                     else
                     {
-                      //  throw servitor.curBot.RaiseError("Should not be here?!");
+                      //  throw servitorBot.RaiseError("Should not be here?!");
                         if (!input.StartsWith("@"))
                         {
                             //      string userJustSaid = input;
@@ -497,7 +505,6 @@ namespace AltAIMLbot
                 }
                 catch (Exception e)
                 {
-                    throw servitor.curBot.RaiseError("Should not be here?!");
                     writeLine("Error: {0}", e);
                 }
             }
@@ -513,7 +520,7 @@ namespace AltAIMLbot
                                                             sw.WriteLine(s, args);
                                                             writeDebugLine(s, args);
                                                         });
-            var ss = input.Split(new string[] {"@"},StringSplitOptions.RemoveEmptyEntries);
+            var ss = input.Split(new string[] {"@"}, StringSplitOptions.RemoveEmptyEntries);
             bool b = false;
             foreach (string s in ss)
             {
@@ -534,8 +541,11 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                DLRConsole.DebugWriteLine("ERROR in BotDirective: " + e);
-                return false;
+                var s =
+                    DLRConsole.SafeFormat("ERROR in {0} returning true like we doing something usefull: {1}", input, e);
+                DLRConsole.DebugWriteLine(s);
+                if (console != null) console(s);
+                return true;
             }
         }
 
@@ -544,15 +554,19 @@ namespace AltAIMLbot
             try
             {
                 user.LastRequest = request ?? user.LastRequest;
-                return BotDirective(user, input, console, null);
+                return BotDirective(user, input, request, console, null);
             }
             catch (Exception e)
             {
-                DLRConsole.DebugWriteLine("ERROR in BotDirective: " + e);
-                return false;
+                var s =
+                    DLRConsole.SafeFormat(
+                        "ERROR in {0}{1} returning true like we doing something usefull: {2}", input, request, e);
+                DLRConsole.DebugWriteLine(s);
+                if (console != null) console(s);
+                return true;
             }
         }
-        public bool BotDirective(User user, string input, OutputDelegate console, ThreadControl control)
+        public bool BotDirective(User user, string input, Request request0, OutputDelegate console, ThreadControl control)
         {
             User targetBotUser = this.BotAsUser;
             if (input == null) return false;
@@ -617,7 +631,7 @@ namespace AltAIMLbot
                 return myUser.DoUserCommand(args, console);
             }
             GraphMaster G = myUser.StartGraph;
-            Request request = myUser.LastRequest;
+            Request request = request0 ?? myUser.LastRequest;
 
             if (G != null && G.DoGraphCommand(cmd, console, showHelp, args, request)) return true;
 
@@ -861,14 +875,32 @@ namespace AltAIMLbot
                 console("Done with " + args);
                 return true;
             }
-            /*
+            
             if (showHelp) console("@prolog <load.pl>");
             if (cmd == "prolog")
             {
-                CSPrologMain.Main(args.Split(" \r\n\t".ToCharArray(), StringSplitOptions.RemoveEmptyEntries));
+                args = args.Trim();
+                if (!string.IsNullOrEmpty(args))
+                {
+                    SIProlog.CurrentProlog.askQuery(args, null);
+                    return true;
+                }
+                SIProlog.CurrentProlog.RunREPL(console);
                 return true;
             }
-
+            if (input == "aimlsh")
+            {
+                var sargs = args.Split(" \r\n\t".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                AltBot.Run(sargs, robotIn, console);
+                return true;
+            }
+            if (input == "aimlsh")
+            {
+                var sargs = args.Split(" \r\n\t".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                AltBot.Run(sargs, robotIn, console);
+                return true;
+            }
+            /*
             if (showHelp) console("@pl text to say");
             if (cmd == "pl")
             {
@@ -946,12 +978,13 @@ namespace AltAIMLbot
                     addToResult3(null, idn + ".csharp = ");
                     foreach (string c in new[]
                                              {
-                                                 "name", "id", "userid", "you","yours","your",null,
-                                                 "lastoutput", "lastinput", "lastsaid", "lastheard","rawinput", "input", "inputreq",null,
+                                                 "name", "username", "id", "userid", "user", "you","yours","your",null,
+                                                 "lastoutput", "lastinput", "lastsaid","justsaid" ,"said" ,"justhear","heard","lastheard","rawinput",
+                                                 null, "input","output","rawoutput", "inputreq",null,
                                                  "question", "yours_question",null,
                                                  "who", "what", "when", "where", "why", "how", null,
                                                  "he", "it", "they", "them",null,
-                                                 "startgraph","heardselfsaygraph","heardyousaygraph",null,
+                                                 "startgraph","defaultgraph","heardselfsaygraph","heardyousaygraph",null,
                                                  "that", "topic", "state", "graph", "flags", null,
                                              })
                     {

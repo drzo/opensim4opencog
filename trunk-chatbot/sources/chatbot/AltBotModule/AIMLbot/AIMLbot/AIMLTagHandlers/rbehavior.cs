@@ -66,6 +66,7 @@ namespace AltAIMLbot.AIMLTagHandlers
 
 
                     this.user.rbot.defineBehavior((string)myName, (string)templateNodeTotalValue);
+                    return Succeed("defined behavior called '" + myName + "'");
                 }
                 catch
                 {

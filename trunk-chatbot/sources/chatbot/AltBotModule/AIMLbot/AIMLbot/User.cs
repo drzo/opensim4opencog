@@ -98,7 +98,7 @@ namespace AltAIMLbot
                 TaskQueueHandler tqh;
                 if (!TaskQueueHandlers.TryGetValue(find, out tqh))
                 {
-                    tqh = new TaskQueueHandler(bot.ObjectRequester, UserName + " tq " + find);
+                    tqh = new TaskQueueHandler(mbot.ObjectRequester, UserName + " tq " + find);
                     TaskQueueHandlers[find] = tqh;
                     tqh.Start();
                     return tqh;
@@ -135,14 +135,6 @@ namespace AltAIMLbot
         public int MaxResultsSaved = DefaultMaxResultsSaved;
         public bool IsRoleAcct { get; set; }
 
-        private object ChatWithThisUser(string cmd, Request request)
-        {
-            Request req = request.CreateSubRequest(cmd, null, RequestKind.ChatForString);
-            req.Responder = this;
-            req.IsToplevelRequest = request.IsToplevelRequest;
-            return rbot.LightWeigthBotDirective(cmd, req);
-        }
-
         /// <summary>
         /// The local instance of the GUID that identifies this user to the bot
         /// </summary>
@@ -151,10 +143,16 @@ namespace AltAIMLbot
         /// <summary>
         /// The bot this user is using
         /// </summary>
-        public AltBot bot { get; set; }
-        public AltBot rbot
+        public BehaviorContext bot
         {
-            get { return bot ?? AltBot.SingleInstance; }
+            get { return AsBehaviorUser(); }
+        }
+
+        public AltBot mbot { get; set; }
+
+        public BehaviorContext rbot
+        {
+            get { return bot ?? AltBot.SingleInstance.BotBehaving; }
         }
         public TaskQueueHandler OnTaskAtATimeHandler
         {
@@ -209,7 +207,7 @@ namespace AltAIMLbot
 
         public GraphMaster HeardYouSayGraph
         {
-            get { return FindGraphLocallyOrNull("heardyousay") ?? rbot.DefaultHeardYouSayGraph; }
+            get { return FindGraphLocallyOr("heardyousay",()=>mbot.DefaultHeardYouSayGraph); }
             set { SetGraphLocally("heardyousay", value, () => HeardYouSayGraph); }
         }
 
@@ -225,9 +223,22 @@ namespace AltAIMLbot
                 var lg = test();
                 if (lg != value)
                 {
-                    rbot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
+                    bot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
                 }
             }
+        }
+
+        private GraphMaster FindGraphLocallyOr(string varname, Func<GraphMaster> dgf)
+        {
+            GraphMaster v = FindGraphLocallyOrNull(varname);
+            if (v == null)
+            {
+                return dgf();
+            }
+            if (v.Size > 0) return v;
+            if (v == dgf()) return v;
+            bot.logText("Empty graph " + v + " (" + varname + ")");
+            return v;
         }
 
         private GraphMaster FindGraphLocallyOrNull(string varname)
@@ -237,21 +248,21 @@ namespace AltAIMLbot
             if (Unifiable.IsMissing(v)) return null;
             if (Unifiable.IsIncomplete(v)||Unifiable.IsNullOrEmpty(v))
             {
-                rbot.writeToLog("Bad value found in " + varname);
+                bot.writeToLog("Bad value found in " + varname);
                 return null;
             }
-            GraphMaster _Graph = rbot.GetGraph(v, null);
+            var _Graph = bot.GetGraph(v, null);
             if (_Graph != null)
             {
                 return _Graph;
             }
-            rbot.writeToLog("ERROR CANT FIND " + varname);
+            bot.writeToLog("ERROR CANT FIND " + varname);
             return _Graph;
         }
 
         public GraphMaster HeardSelfSayGraph
         {
-            get { return FindGraphLocallyOrNull("heardselfsay") ?? rbot.DefaultHeardSelfSayGraph; }
+            get { return FindGraphLocallyOr("heardselfsay", () => mbot.DefaultHeardSelfSayGraph); }
             set { SetGraphLocally("heardselfsay", value, () => HeardSelfSayGraph); }
         }
 
@@ -261,12 +272,7 @@ namespace AltAIMLbot
         /// </summary>
         public GraphMaster StartGraph
         {
-            get
-            {
-                GraphMaster v = FindGraphLocallyOrNull("startgraph") ?? rbot.DefaultStartGraph;
-                if (v.Size == 0) v = rbot.DefaultStartGraph;
-                return v;
-            }
+            get { return FindGraphLocallyOr("startgraph", () => mbot.DefaultStartGraph); }
             set { SetGraphLocally("startgraph", value, () => StartGraph); }
         }
 
@@ -283,7 +289,7 @@ namespace AltAIMLbot
             }
             set
             {
-                StartGraph = rbot.GetGraph(value, StartGraph);
+                StartGraph = bot.GetGraph(value, StartGraph);
             }
         }
 
@@ -466,12 +472,12 @@ namespace AltAIMLbot
             {
                 if (!this.Predicates.containsSettingCalled("topic"))
                 {
-                    return rbot.NOTOPIC;
+                    return mbot.NOTOPIC;
                 }
                 var t = this.Predicates.grabSetting("topic");
                 if (IsNullOrEmpty(t))
                 {
-                    return rbot.NOTOPIC;
+                    return mbot.NOTOPIC;
                 }
                 return t;
             }
@@ -559,7 +565,7 @@ namespace AltAIMLbot
         /// <param name="bot">the bot the user is connected to</param>
         internal User(string userID, string fullname, AltBot bot, SettingsDictionary dict)
         {
-            this.bot = bot;
+            this.mbot = bot;
             IsValid = true;
             userTrace = WriteToUserTrace;
             MaxRespondToChatPerMinute = 10;
@@ -572,14 +578,14 @@ namespace AltAIMLbot
             ProofTemplates = new ListAsSet<TemplateInfo>();
             DisabledTemplates = new ListAsSet<TemplateInfo>();
             DisallowedGraphs = new HashSet<GraphMaster>();
-            qsbase = new QuerySettingsImpl(rbot.GetQuerySettings());
+            qsbase = new QuerySettingsImpl(bot.GetQuerySettings());
             PrintOptions = new PrintOptions("PO_" + userID);
             if (userID.Length > 0)
             {
                 bool isUser = dict == null;
                 WriterOptions = new PrintOptions("PW_" + userID);
                 this.id = userID;
-                qsbase.IsTraced = IsTraced = rbot.IsTraced;
+                qsbase.IsTraced = IsTraced = bot.IsTraced;
                 // we dont inherit the BotAsUser we inherit the bot's setings
                 // ApplySettings(bot.BotAsUser, this);
                 string parserToCamelCase = AltBot.ToMtCase(fullname);
@@ -591,10 +597,10 @@ namespace AltAIMLbot
                 //this.Predicates.AddPrefix("user.", () => this);      
                 if (isUser)
                 {
-                    this.bot.DefaultPredicates.Clone(this.Predicates);
+                    mbot.DefaultPredicates.Clone(this.Predicates);
 
                     //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
-                    this.Predicates.addSetting("topic", rbot.NOTOPIC);
+                    this.Predicates.addSetting("topic", bot.NOTOPIC);
                     this.Predicates.InsertFallback(() => bot.AllUserPreds);
                 }
                 UserID = userID;                
@@ -617,7 +623,6 @@ namespace AltAIMLbot
                 }
                 needsSave = true;
                 StampResponseGiven();
-                rbot.AddExcuteHandler(userID, ChatWithThisUser);
                 AllQueries = new ListAsSet<GraphQuery>();
             }
             else
@@ -972,17 +977,17 @@ namespace AltAIMLbot
             {
                 if (IsNullOrEmpty(value))
                 {
-                    rbot.RaiseError("set_That: " + this);
+                    bot.RaiseError("set_That: " + this);
                     return;
                 }
                 if (!IsValue(value))
                 {
-                    rbot.RaiseError("set_That: !IsValue: " + value + " for " + this);
+                    bot.RaiseError("set_That: !IsValue: " + value + " for " + this);
                     return;
                 }
                 if (!IsEnglish(value))
                 {
-                    rbot.RaiseError("set_That: !IsEnglish: " + value + " for " + this);
+                    bot.RaiseError("set_That: !IsEnglish: " + value + " for " + this);
                     return;
                 }
                 Result r = GetResult(0, true);
@@ -1083,7 +1088,7 @@ namespace AltAIMLbot
 
         public bool CheckIsBadEnglish(Unifiable value)
         {
-            Action<string> RaiseError = (e) => rbot.RaiseError(e);
+            Action<string> RaiseError = (e) => bot.RaiseError(e);
             if (IsNullOrEmpty(value))
             {
                 RaiseError("IsNullOrEmpty: " + value + " for " + this);
@@ -1136,7 +1141,7 @@ namespace AltAIMLbot
 
         public bool IsNamed(string lname)
         {
-            if (string.IsNullOrEmpty(lname)) return this == bot.ExemplarUser;
+            if (string.IsNullOrEmpty(lname)) return this == mbot.ExemplarUser;
             lname = lname.ToLower();
             return (PadW(NullGuard(UserName, ""), " ").ToLower().Contains(PadW(lname, " "))) ||
                    NullGuard(UserID, "").ToLower() == lname;
@@ -1175,7 +1180,7 @@ namespace AltAIMLbot
                             return user0;
                         }
                     }
-                    User user = rbot.FindUser0(lname);
+                    User user = mbot.FindUser0(lname);
                     if (user != null && user != this)
                     {
                         return user;
@@ -1293,11 +1298,11 @@ namespace AltAIMLbot
                     userTrace(s);
                     return;
                 }
-                rbot.writeToUserLog(s);
+                bot.writeToUserLog(s);
             }
             catch (Exception exception)
             {
-                rbot.writeToLog(exception);
+                bot.writeToLog(exception);
             }
         }
 
@@ -1500,7 +1505,7 @@ namespace AltAIMLbot
             OutputDelegate logger = StaticAIMLUtils.DEVNULL;
             logger("DEBUG9 Saving User Directory {0}", userdir);
             ((SettingsDictionaryReal)Predicates).SaveTo(userdir, "user.predicates", "UserPredicates.xml");
-            GraphMaster gm = rbot.GetGraph(UserID, StartGraph);
+            GraphMaster gm = bot.GetGraph(UserID, StartGraph);
             gm.WriteToFile(UserID, HostSystem.Combine(userdir, UserID) + ".saved", PrintOptions.SAVE_TO_FILE, logger);
         }
 
@@ -1558,7 +1563,7 @@ namespace AltAIMLbot
                 }
                 if (userdir.EndsWith("Predicates.xml"))
                 {
-                    SettingsDictionaryReal.loadSettingsNow(Predicates, null, userdir, new SettingsPolicy(true, true), null);
+                    SettingsDictionaryReal.loadSettingsNow(Predicates, null, userdir, new SettingsPolicy(true, true, false), null);
                 }
                 return;
             }
@@ -1580,7 +1585,7 @@ namespace AltAIMLbot
         {
             string[] hostSystemGetFiles = HostSystem.GetFiles(userdir, "*.aiml");
             if (hostSystemGetFiles == null || hostSystemGetFiles.Length <= 0) return;
-            var request = bot.GetBotRequest("@echo load user aiml " + userdir);
+            var request = mbot.GetBotRequest("@echo load user aiml " + userdir);
             request.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
             request.Graph = StartGraph;
             request.CurrentlyLoadingFrom = userdir;
@@ -1590,13 +1595,13 @@ namespace AltAIMLbot
             {
                 if (rbot.BotAsUser == this)
                 {
-                    bot.GlobalSettings = SettingsDictionaryReal.ToSettingsDictionary(Predicates);
+                    bot.substs.GlobalSettings = SettingsDictionaryReal.ToSettingsDictionary(Predicates);
                 }
                 request.Loader.loadAIMLURI(userdir);
             }
             finally
             {
-                bot.GlobalSettings = gs;
+                mbot.GlobalSettings = gs;
             }
         }
 
@@ -1715,7 +1720,7 @@ namespace AltAIMLbot
 
         public actMSM botActionMSM
         {
-            get { return rbot.pMSM; }
+            get { return bot.pMSM; }
         }
 
         public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
@@ -1758,7 +1763,7 @@ namespace AltAIMLbot
         {
             if (target == this)
             {
-                rbot.RaiseError(new InvalidOperationException("cant target self!"));
+                bot.RaiseError("cant target self!");
             }
             if (G == null) G = GetResponseGraph(target);
             bool asIsToplevelRequest = true;
@@ -1830,7 +1835,7 @@ namespace AltAIMLbot
                 {
                     foreach (var role in SingleNameValue.AsCollection(roles))
                     {
-                        request.AddGraph(rbot.GetUserGraph( bot.ToValueString(role)));
+                        request.AddGraph(mbot.GetUserGraph(mbot.ToValueString(role)));
                     }
                 }
             }
@@ -2002,6 +2007,16 @@ namespace AltAIMLbot
         }
         public void Exit(object srai)
         {
+        }
+
+        internal BehaviorContext BehaviorContext;
+        internal BehaviorContext AsBehaviorUser()
+        {
+            if (BehaviorContext == null)
+            {
+                BehaviorContext = new BehaviorContext(mbot, this);
+            }
+            return BehaviorContext;
         }
     }
 

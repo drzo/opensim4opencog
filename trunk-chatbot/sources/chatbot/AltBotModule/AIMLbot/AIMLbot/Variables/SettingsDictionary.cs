@@ -487,11 +487,12 @@ namespace AltAIMLbot.Variables
         /// <summary>
         /// The bot this dictionary is associated with (only for writting log)
         /// </summary>
-        protected AltBot bot;
-        protected AltBot rbot
+        protected BehaviorContext bot
         {
-            get { return bot; }
+            get { return _bot.BotBehaving; }
         }
+
+        private AltBot _bot;
 
         private string theNameSpace;
         public bool TrimKeys = true;
@@ -581,7 +582,7 @@ namespace AltAIMLbot.Variables
         ///                 </exception>
         public bool Remove(KeyValuePair<string, DataUnifiable> item)
         {
-            foreach (var hash in SettingNames(rbot.ObjectRequester, 1))
+            foreach (var hash in SettingNames(_bot.ObjectRequester, 1))
             {
                 if (IsKeyMatch(item.Key, hash))
                 {
@@ -829,7 +830,7 @@ namespace AltAIMLbot.Variables
             settingsHash = list;
             IsTraced = true;
             theNameSpace = name;// ScriptManager.ToKey(name);//.ToLower();
-            this.bot = bot;
+            this._bot = bot;
             IsSubsts = name.Contains("subst");
             TrimKeys = !name.Contains("subst");
             bot.RegisterDictionary(name, this);
@@ -861,7 +862,12 @@ namespace AltAIMLbot.Variables
         /// <param name="pathToSettings">The file containing the settings</param>
         public void loadSettings(string pathToSettings, Request request)
         {
-            loadSettings(pathToSettings, SettingsPolicy.Default, request);   
+            var policy = SettingsPolicy.Default;
+            if (request != null)
+            {
+                policy = request.settingsPolicy ?? policy;
+            }
+            loadSettings(pathToSettings, policy, request);   
         }
         public void loadSettings(string pathToSettings, SettingsPolicy settingsPolicy, Request request)
         {
@@ -892,7 +898,7 @@ namespace AltAIMLbot.Variables
          public void loadSettingsNow(string pathToSettings,  SettingsPolicy settingsPolicy, Request request)
         {
             if (request == null)
-                request = bot.GetBotRequest("<!-- Loads Config to " + this + " from: '" + pathToSettings + "' -->"); 
+                request = _bot.GetBotRequest("Loads Config to " + this + " from: '" + pathToSettings + "'"); 
              pathToSettings = HostSystem.ResolveToExistingPath(pathToSettings);
              pathToSettings = HostSystem.FileSystemPath(pathToSettings);
              OutputDelegate writeToLog = this.writeToLog;
@@ -1006,7 +1012,7 @@ namespace AltAIMLbot.Variables
             var nameSpace = this.NameSpace;
             if (!message.Contains(nameSpace)) message += " in " + nameSpace;
             if (!tol.Contains("dictlog")) message = "DICTLOG: " + message;
-            if (bot != null) bot.writeToLog(message);
+            if (_bot != null) _bot.writeToLog(message);
             else AltBot.writeDebugLine(message);
         }
 
@@ -1040,12 +1046,16 @@ namespace AltAIMLbot.Variables
             updateOrAddOrDefualt = updateOrAddOrDefualt.ToLower().Trim();
             bool overwriteExisting = settingsPolicy.overwriteExisting;
             bool onlyIfUnknown = settingsPolicy.onlyIfUnknown;
+            bool overwriteReadOnly = settingsPolicy.overwriteReadOnly;
 
             overwriteExisting =
                 Boolean.Parse(StaticXMLUtils.GetAttribValue(myNode, "overwriteExisting", "" + overwriteExisting));
 
             onlyIfUnknown =
                 Boolean.Parse(StaticXMLUtils.GetAttribValue(myNode, "onlyIfKnown", "" + onlyIfUnknown));
+
+            overwriteReadOnly =
+                Boolean.Parse(StaticXMLUtils.GetAttribValue(myNode, "overwriteReadOnly", "" + overwriteReadOnly));
 
             string returnNameWhenSet =
                 StaticXMLUtils.GetAttribValue(myNode, "return-name-when-set", null);
@@ -1123,7 +1133,16 @@ namespace AltAIMLbot.Variables
                         return;
                     }
                 }
-                WithoutTrace(dict, () => dict.addSetting(name, Unifiable.MakeUnifiableFromString(value, false)));
+                bool prev = dictionary.IsIdentityReadOnly;
+                try
+                {
+                    dictionary.IsIdentityReadOnly = !overwriteReadOnly;
+                    WithoutTrace(dict, () => dict.addSetting(name, Unifiable.MakeUnifiableFromString(value, false)));
+                }
+                finally
+                {
+                    dictionary.IsIdentityReadOnly = prev;
+                }
             }
             else
             {
@@ -1144,7 +1163,16 @@ namespace AltAIMLbot.Variables
                         return;
                     }
                 }
-                WithoutTrace(dict, () => dict.updateSetting(name, Unifiable.MakeUnifiableFromString(value, false)));
+                bool prev = dictionary.IsIdentityReadOnly;
+                try
+                {
+                    dictionary.IsIdentityReadOnly = !overwriteReadOnly;
+                    WithoutTrace(dict, () => dict.updateSetting(name, Unifiable.MakeUnifiableFromString(value, false)));
+                }
+                finally
+                {
+                    dictionary.IsIdentityReadOnly = prev;
+                }
             }
         }
 
@@ -1170,6 +1198,7 @@ namespace AltAIMLbot.Variables
         static public void loadSettingNode0(ISettingsDictionary dict, XmlNode myNode, SettingsPolicy settingsPolicy, Request request)
         {
             bool onlyIfUnknown = settingsPolicy.onlyIfUnknown;
+            bool overwriteReadOnly = settingsPolicy.overwriteReadOnly;
 
             if (myNode == null) return;
             if (myNode.NodeType == XmlNodeType.Comment) return;
@@ -1187,7 +1216,7 @@ namespace AltAIMLbot.Variables
             }
             if (myNode.NodeType == XmlNodeType.XmlDeclaration)
             {
-                loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, onlyIfUnknown), request);
+                loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, onlyIfUnknown, overwriteReadOnly), request);
                 loadSettingNode(dict, myNode.ChildNodes, settingsPolicy, request);
                 return;
             }
@@ -1195,7 +1224,7 @@ namespace AltAIMLbot.Variables
 
             if (myNode.NodeType == XmlNodeType.Document || lower == "#document")
             {
-                loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, onlyIfUnknown), request);
+                loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, onlyIfUnknown, overwriteReadOnly), request);
                 loadSettingNode(dict, myNode.ChildNodes, settingsPolicy, request);
                 return;
             }
@@ -1243,7 +1272,7 @@ namespace AltAIMLbot.Variables
                 if (href != null && href.Length > 0)
                 {
                     string name = StaticXMLUtils.GetAttribValue(myNode, "id", myNode.Name);
-                    loadNameValueSetting(dict, name, href, "add", myNode, new SettingsPolicy(false, true), request);
+                    loadNameValueSetting(dict, name, href, "add", myNode, new SettingsPolicy(false, true, overwriteReadOnly), request);
                     return;
                 }
             }
@@ -1255,7 +1284,7 @@ namespace AltAIMLbot.Variables
                 {
                     return; //we are not program D definining bots TODO maybe we will be
                     loadSettingNode(dict, myNode.ChildNodes, settingsPolicy, request);
-                    loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, false), request);
+                    loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, false, overwriteReadOnly), request);
                     return;
                 }
             }
@@ -1264,7 +1293,7 @@ namespace AltAIMLbot.Variables
                 || lower == "bots" || lower == "testing" || lower == "predicates")
             {
                 loadSettingNode(dict, myNode.ChildNodes, settingsPolicy, request);
-                loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, false), request);
+                loadSettingNode(dict, myNode.Attributes, new SettingsPolicy(false, false, overwriteReadOnly), request);
                 return;
             }
 
@@ -1279,7 +1308,7 @@ namespace AltAIMLbot.Variables
                 onlyIfUnknown =
                     Boolean.Parse(StaticXMLUtils.GetAttribValue(myNode, "onlyIfKnown", "" + onlyIfUnknown));
 
-                loadSettingsNow(ToSettingsDictionary(dict),null, path, new SettingsPolicy(overwriteExisting, onlyIfUnknown),  request);
+                loadSettingsNow(ToSettingsDictionary(dict), null, path, new SettingsPolicy(overwriteExisting, onlyIfUnknown, overwriteReadOnly), request);
                 return;
             }
             SettingsDictionaryReal settingsDict = ToSettingsDictionary(dict);
@@ -1415,7 +1444,7 @@ namespace AltAIMLbot.Variables
                 if (itext == value)
                 {
                     string name = myNode.Name;
-                    loadNameValueSetting(dict, name, value, "add", myNode, new SettingsPolicy(false, true), request);
+                    loadNameValueSetting(dict, name, value, "add", myNode, new SettingsPolicy(false, true, overwriteReadOnly), request);
                     return;
                 }
 
@@ -1613,7 +1642,7 @@ namespace AltAIMLbot.Variables
                 string fndIn;
                 bool inheritedAsWell = containsSettingCalledLOF(normalizedName, false, false, true, out fndIn,
                                                                 out dictIn);
-                fndIn = grabSetting0(normalizedName, false, true, true, true, out dictIn);
+                fndIn = grabSetting0(normalizedName, false, true, true, true, false, out dictIn);
                 if (fndIn == value && wasLocal)
                 {
                     if (dictIn == this) return true;
@@ -1742,7 +1771,7 @@ namespace AltAIMLbot.Variables
             if (bbPrefix == null) return false;
             if (bbPrefix == "user")
             {
-                return rbot.LastUser == null || rbot.LastUser.Predicates == this;
+                return _bot.LastUser == null || _bot.LastUser.Predicates == this;
             }
             return true;
         }
@@ -1767,7 +1796,7 @@ namespace AltAIMLbot.Variables
         private DataUnifiable MakeLocalValue(string name, DataUnifiable value)
         {
             ISettingsDictionary dict;
-            DataUnifiable oldSetting = grabSetting0(name, false, true, true, true, out dict);
+            DataUnifiable oldSetting = grabSetting0(name, false, true, true, true, false, out dict);
             bool isCollection = IsCollection(name);            
             if (isCollection)
             {
@@ -1791,7 +1820,7 @@ namespace AltAIMLbot.Variables
                         nl.Add(value);
                         oldSetting = new BestUnifiable(nl);
                     }
-                    string soldSetting =  rbot.ToValueString(oldSetting);
+                    string soldSetting =  _bot.ToValueString(oldSetting);
                     svalue = soldSetting;// "<or>" + commaVersion + soldSetting.Substring(4);
                 }
                 value = svalue;
@@ -1899,7 +1928,7 @@ namespace AltAIMLbot.Variables
         protected bool AllowedNameValue(string name, DataUnifiable value0)
         {
             if (IsSubsts) return !SuspendUpdates;
-            var value = rbot.ToValueString(value0);
+            var value = _bot.ToValueString(value0);
             if (name.Length < 1)
             {
                 writeToLog("WARN NameValueCheck '{0}' = '{1}'", name, value);
@@ -1909,26 +1938,44 @@ namespace AltAIMLbot.Variables
             {
                 if (UnsettableTopic.Contains(value.ToLower())) return false;
             }
-            string s = (string)value;
+            string newValue = (string)value;
             name = name.ToLower();
-            var plainBad = ((s == null) || s.Contains(">") || s.Contains("_to_") || name == "startgraph");
-            if (readonlyVars.Contains(name) || plainBad)
+            ISettingsDictionary whatever;
+            string prev = grabSetting0(name, false, true, true, true, false, out whatever);
+            var newBad = PlainBad(name, newValue);
+            var prevBad = PlainBad(name, prev) || TextPatternUtils.IsUnknown(prev) || IsNotGreat(prev);
+            if (newBad && prevBad)
             {
-                if (TextPatternUtils.IsUnknown(value) || s == null || s.Length < 1 || s.ToLower() == "friend" ||
-                    s.ToLower() == "that really" || plainBad)
+                // previous was bad to
+                newBad = false;
+            }
+            if (readonlyVars.Contains(name) || newBad)
+            {
+                string change = DLRConsole.SafeFormat("CHANGE  {0}='{1}'->'{2}'", name, prev, value);
+
+                if ((IsNotGreat(newValue) || newBad) && !prevBad)
                 {
-                    writeToLog("WARN VETOING TOPLEVEL NameValue CHANGE  {0}='{1}'->'{2}'", name, value,
-                               grabSetting(name));
+                    writeToLog("WARN VETOING TOPLEVEL NameValue {0}'", change);
                     return false;
                 }
                 else
                 {
-                    writeToLog("WARNING {3}-ing TOPLEVEL NameValue CHANGE  {0}='{1}'->'{2}'", name, value, grabSetting(name),
-                               IsIdentityReadOnly ? "VETO" : "ALLOW");
+                    writeToLog("{0}-ing TOPLEVEL NameValue " + change, IsIdentityReadOnly ? "WARN VETO" : "DEBUG ALLOW");
                 }
                 return !IsIdentityReadOnly;
             }
             return !SuspendUpdates;
+        }
+
+        private static bool IsNotGreat(string s)
+        {
+            return TextPatternUtils.IsUnknown(s) || s == null || s.Length < 1 || s.ToLower() == "friend" ||
+                   s.ToLower() == "that really";
+        }
+
+        private static bool PlainBad(string name, string s)
+        {
+            return ((s == null) || s.Contains(">") || s.Contains("_to_") || name == "startgraph");
         }
 
         private void updateListeners(string name, DataUnifiable value, bool locally, bool addedNew)
@@ -2377,7 +2424,7 @@ namespace AltAIMLbot.Variables
         public string grabSetting(string name, bool useBlackboad)
         {
             ISettingsDictionary dict;
-            return SplitAndDoNotNull(name, (s) => grabSetting0(s, useBlackboad, true, true, true, out dict));
+            return SplitAndDoNotNull(name, (s) => grabSetting0(s, useBlackboad, true, true, true, true, out dict));
         }
 
         /// <summary>
@@ -2487,7 +2534,7 @@ namespace AltAIMLbot.Variables
             return o;
         }
 
-        public DataUnifiable grabSetting0(string name, bool useBlackboard, bool locally, bool overides, bool fallbacks, out ISettingsDictionary dictF)
+        public DataUnifiable grabSetting0(string name, bool useBlackboard, bool locally, bool uoverides, bool fallbacks, bool checkAllow, out ISettingsDictionary dictF)
         {
             //string normalizedName = MakeCaseInsensitive.TransformInput(name);
             string normalizedName = TransformKey(name);
@@ -2508,12 +2555,13 @@ namespace AltAIMLbot.Variables
                 {
                     if (!bbKey.Contains(" "))
                     {
-                        string bbValue = this.bot.getBBHash0(bbKey);                        
-                        if (bbValue.Length > 0)
+                        string bbValue = this.bot.getBBHash0(bbKey);
+                        if (!IsMissing(bbValue))
                         {
                             // update local value
                             dictF = this;
                             DataUnifiable v = localValue(name, normalizedName);
+                            string check = string.Format("{0} ='{1}'->'{2}'", bbKey, v, bbValue);
                             if (this.orderedKeysContains(normalizedName))
                             {
                                 if (bbValue == v)
@@ -2521,21 +2569,31 @@ namespace AltAIMLbot.Variables
                                     // BB and dictionary agreee!
                                     if (isMaskedVar)
                                     {
-                                        Console.WriteLine("*** WARN MAKSVAR SKIP grabSetting from DICT: {0} ={1}", bbKey, v);
+                                        Console.WriteLine("*** WARN MAKSVAR SKIP grabSetting from DIC: " + check);
                                     }
                                     else
                                     {
                                         return v;
                                     }
                                 }
+                                if (!locally)
+                                {
+                                    v = null;
+                                }
                                 // this.removeFromHash(normalizedName);
                                 if (!bbDisabled)
                                 {
-                                    if (AllowedNameValue(name, bbValue))
+                                    if (!checkAllow || AllowedNameValue(name, bbValue))
                                     {
-                                        this.settingsHash.Set(normalizedName, bbValue);
-                                        Console.WriteLine("*** Allowing BB TO RESET: {0} ='{1}'->'{2}'", bbKey, v,
-                                                          bbValue);
+                                        if (checkAllow)
+                                        {
+                                            this.settingsHash.Set(normalizedName, bbValue);
+                                            Console.WriteLine("*** Allowing BB TO RESET: " + check);
+                                        } else
+                                        {
+                                            Console.WriteLine("*** Not Allowing BB TO RESET: " + check);
+
+                                        }
                                     }
                                     else
                                     {
@@ -2545,29 +2603,32 @@ namespace AltAIMLbot.Variables
                             }
                             if (bbDisabled)
                             {
-                                Console.WriteLine("*** Disllowing BB TO RESET: {0} ='{1}'->'{2}'", bbKey, v, bbValue);
-                                bot.setBBHash(bbKey, "");                               
+                                Console.WriteLine("*** Disllowing BB TO RESET: " + check);
+                                bot.setBBHash(bbKey, v);
                             }
                             else
                             {
                                 dictF = this;
                                 if (isMaskedVar)
                                 {
-                                    Console.WriteLine("*** WARN MAKSVAR SKIP grabSetting from BB: {0} ={1}", bbKey, bbValue);
+                                    Console.WriteLine("*** WARN MAKSVAR SKIP grabSetting from BB: " + check);
                                 }
                                 else
                                 {
 
-                                    Console.WriteLine("*** grabSetting from BB: {0} ={1}", bbKey, bbValue);
+                                    Console.WriteLine("*** grabSetting from BB: " + check);
                                     return bbValue;
                                 }
+                            }
+                            if (!locally)
+                            {
+                                v = null;
                             }
                             if (!IsMissing(v))
                             {
                                 if (isMaskedVar)
                                 {
-                                    Console.WriteLine("*** WARN MAKSVAR grabSetting from DICT: {0} ={1}", bbKey,
-                                                      bbValue);
+                                    Console.WriteLine("*** WARN MAKSVAR grabSetting from DICT: " + check);
                                 }
                                 else
                                 {
@@ -2575,22 +2636,33 @@ namespace AltAIMLbot.Variables
                                 }
                             }
                         }
-                    //Console.WriteLine("*** grabSetting use internal: {0}",name);
+                        //Console.WriteLine("*** grabSetting use internal: {0}",name);
                     }
                 }
             }
-            DataUnifiable l0v0 = localValue(name, normalizedName);
-
-            this.mayUseOverides = true;
+            bool prevMayUseOR = this.mayUseOverides;
             if (LoopingOn(name, "override"))
             {
                 mayUseOverides = false;
             }
+            else
+            {
+                if (uoverides)
+                {
+                    mayUseOverides = true;
+                }
+                else
+                {
+                    mayUseOverides = false;
+                }
+            }
             //HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() {this};
-            if (this.mayUseOverides)
+            try
             {
                 foreach (ParentProvider overide in GraphMaster.CopyOf(_overides))
                 {
+                    // can break in the middle
+                    if (!this.mayUseOverides) break;
                     var dict = overide();
                     //if (!noGo.Add(dict)) continue;
                     if (dict.containsSettingCalled(name))
@@ -2602,6 +2674,10 @@ namespace AltAIMLbot.Variables
                     }
                 }
             }
+            finally
+            {
+                this.mayUseOverides = prevMayUseOR;
+            }
             bool needsUnlock = Monitor.TryEnter(orderedKeyLock, TimeSpan.FromSeconds(2));
             //string normalizedName = TransformKey(name);
             // check blackboard
@@ -2611,7 +2687,7 @@ namespace AltAIMLbot.Variables
                 {
                     string bbValue = this.bot.getBBHash0(bbKey);
                     //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
-                    if (bbValue.Length > 0 && false)
+                    if (!IsMissing(bbValue) && false)
                     {
                         dictF = null;
                         // update local value
@@ -2626,13 +2702,13 @@ namespace AltAIMLbot.Variables
 
                     //Console.WriteLine("*** grabSetting use internal: {0}",name);
                 }
-            } 
+            }
             try
             {
                 if (containsLocalSV(name))
                 {
                     dictF = this;
-                    if (isMaskedVar) throw new InvalidOperationException("conatins a masked var!");
+                    if (isMaskedVar) bot.RaiseError("conatins a masked var! " + name);
                     DataUnifiable v = localValue(name, normalizedName);
                     if (IsMissing(v))
                     {
@@ -2669,7 +2745,7 @@ namespace AltAIMLbot.Variables
                         var v0 = firstFallBack.grabSetting(name);
                         if (!IsMissing(v0))
                         {
-                            if (isMaskedVar) throw new InvalidOperationException("conatins a masked var three!"); 
+                            if (isMaskedVar) throw new InvalidOperationException("conatins a masked var three!");
                             SettingsLog("RETURN FALLBACK0 '" + name + "'=" + str(v0));
                             dictF = firstFallBack;
                             return v0;
@@ -2709,7 +2785,7 @@ namespace AltAIMLbot.Variables
 
         protected bool BBIsDisabled
         {
-            get { return IsSubsts || bot.bbDisabled; }
+            get { return IsSubsts || _bot.bbDisabled; }
         }
 
         public static bool IsMissing(object tsetting)
@@ -3671,15 +3747,22 @@ namespace AltAIMLbot.Variables
 
     public class SettingsPolicy
     {
-        public SettingsPolicy(bool oE, bool oU)
+        internal SettingsPolicy(bool oE, bool oU)
         {
             overwriteExisting = oE;
             onlyIfUnknown = oU;
         }
-
-        public static SettingsPolicy Default = new SettingsPolicy(true, false);
+        public SettingsPolicy(bool oE, bool oU, bool oRO)
+        {
+            overwriteExisting = oE;
+            onlyIfUnknown = oU;
+            overwriteReadOnly = oRO;
+        }
+        public static SettingsPolicy Default = new SettingsPolicy(true, false, false);
+        public static SettingsPolicy DefaultStartup = new SettingsPolicy(true, false, true);
         public bool overwriteExisting = true;
         public bool onlyIfUnknown = false;
+        public bool overwriteReadOnly = false;
     }
 
     public class SettingsDictionaryEnumerator : IEnumerator<KeyValuePair<string, DataUnifiable>>

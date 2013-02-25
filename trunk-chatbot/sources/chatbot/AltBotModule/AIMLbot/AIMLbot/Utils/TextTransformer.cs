@@ -20,6 +20,15 @@ namespace AltAIMLbot.Utils
         /// </summary>
         public AltBot bot;
 
+        public AltBot substs
+        {
+            get { return bot; }
+            set
+            {
+                bot = value;//.bot;
+            }
+        }
+
         protected string initialString;
 
         /// <summary>

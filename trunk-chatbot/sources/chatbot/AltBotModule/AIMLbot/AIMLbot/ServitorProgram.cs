@@ -50,7 +50,14 @@ namespace AltAIMLbot
         public string servitorbin = "";
         //public string userID = "consoleUser";
         public string PathToWordNet = null;
-        private AltAIMLbot.AltBot MyBot;
+
+        private BehaviorContext MyBot
+        {
+            get { return MyAltBot.BotBehaving; }
+        }
+
+        private AltBot MyAltBot;
+
         User curUser;
 
         public void sayConsole(string message)
@@ -66,12 +73,12 @@ namespace AltAIMLbot
         {
             //if (servitor == null)
             {
-                AltBot.ConsoleRobot = MyBot = MyBot ?? AltBot.ConsoleRobot ?? new AltBot();
+                AltBot.ConsoleRobot = MyAltBot = MyBot ?? AltBot.ConsoleRobot ?? new AltBot();
                 try
                 {
-                    MyBot.ObjectRequester = (ICollectionRequester)colreq;
+                    MyAltBot.ObjectRequester = (ICollectionRequester)colreq;
                     MyBot.outputDelegate = WriteLine;
-                    MyBot.SetName(myName);
+                    MyAltBot.SetName(myName);
                     MyBot.sayProcessor = new sayProcessorDelegate(TalkActive);
                 }
                 catch (Exception e)
@@ -82,7 +89,7 @@ namespace AltAIMLbot
                 //servitor = MyBot.servitor ?? new Servitor(MyBot, null, true, true, true);
                 //Console.WriteLine("*** Created WN ***");
 
-                MyBot.isAcceptingUserInput = false;
+                MyAltBot.isAcceptingUserInput = false;
                 MyBot.sayProcessor = new sayProcessorDelegate(sayConsole);
                 MyBot.useMemcache = true;
  
@@ -108,8 +115,8 @@ namespace AltAIMLbot
 
                    // MyBot.rapStoreDirectory = null;
                     
-                    MyBot.loadAIMLFromFiles(@"./aiml/chomskyAIML");
-                    MyBot.loadAIMLFromFile(@"./aiml/special/blackjack.aiml");
+                    //MyBot.loadAIMLFromFiles(@"./aiml/chomskyAIML");
+                    //MyBot.loadAIMLFromFile(@"./aiml/special/blackjack.aiml");
                     //MyBot.loadAIMLFromFiles(@"./aiml/guest_gurl");
                     // servitor.saveToBinaryFile(servitorbin);
                     //servitor.skiploading = true;
@@ -119,11 +126,11 @@ namespace AltAIMLbot
             MyBot.useMemcache = true;
             // FOR DEBUG
             MyBot.inCritical = true;
-            MyBot.isAcceptingUserInput = true;
+            MyAltBot.isAcceptingUserInput = true;
             // FOR TESTING
             MyBot.inCritical = false;
             MyBot.blockCron = false;
-            MyBot.WriteConfig();
+            MyAltBot.WriteConfig();
             MyBot.servitor.loadComplete();
 
         }

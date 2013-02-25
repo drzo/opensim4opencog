@@ -18,13 +18,13 @@ namespace AltAIMLbot.Utils
 {
     public class LoaderOptions: QuerySettings
     {
-        public string graphName = "*";
-        public string topicName = "*";
-        public string stateNamePre = "*";
-        public string stateNamePost = "*";
-        public string currentThat = "*";
-        public string currentFlags = "*";
-        public string currentInput = "*";
+        [CopyFromParent] public string graphName = "*",
+                                       topicName = "*",
+                                       stateNamePre = "*",
+                                       stateNamePost = "*",
+                                       currentThat = "*",
+                                       currentFlags = "*",
+                                       currentInput = "*";
 
        
         public List<ConversationCondition> AdditionalPreconditions;
@@ -36,10 +36,11 @@ namespace AltAIMLbot.Utils
         public string CurrentlyLoadingFrom = null;
 
         public List<CategoryInfo> CategoryInfos;
-        public bool DebugFiles;
-        public bool Recurse;
-        public bool NeedsLoaderLock;
-        public bool SearchForGuard = false;
+
+        [CopyFromParent] public bool DebugFiles,
+                                     Recurse,
+                                     NeedsLoaderLock,
+                                     SearchForGuard = false;
 
         // simply a cache
         protected GraphMaster _sGraph;

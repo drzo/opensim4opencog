@@ -74,7 +74,7 @@ namespace AltAIMLbot
         // last user talking to bot besides itself
         [ThreadStatic]
         private User _lastUser;
-        private User _slastUser;
+        internal User _slastUser;
         public User LastUser
         {
             get
@@ -99,6 +99,13 @@ namespace AltAIMLbot
                 }
                 _slastUser = value ?? _lastUser ??  _slastUser;
                 //User LU = LastUser;
+                if (IsInteractiveUser(value))
+                {
+                    if (_behaviorContext == null)
+                    {
+                        BotBehaving = value.AsBehaviorUser();
+                    }
+                }
                 if (!IsInteractiveUser(_lastUser) || IsInteractiveUser(value))
                 {
                     _lastUser = value;

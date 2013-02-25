@@ -52,7 +52,11 @@ namespace AltAIMLbot.AIMLTagHandlers
 */
         static public Unifiable THINKYTAG
         {
-            get { return "TAG-THINK"; }
+            get
+            {
+                return " , ";
+                return "TAG-THINK";
+            }
         }
 /*
         protected override Unifiable templateNodeInnerText
@@ -69,7 +73,7 @@ namespace AltAIMLbot.AIMLTagHandlers
         */
         protected override Unifiable ProcessChangeU() {
             string innerThought = Recurse();
-            return string.Empty; 
+            return Succeed(innerThought);
         }
 
 

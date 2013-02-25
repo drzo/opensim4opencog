@@ -47,64 +47,67 @@ namespace AltAIMLbot.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
-            this.isRecursive = true;
+            isRecursive = true;
         }
 
         protected override Unifiable ProcessChangeU()
         {
-            if (this.TemplateNodeName == "say")
+            var bhbot = bot.BotBehaving;
+            if (TemplateNodeName == "say")
             {
                 // Simply push the filled in tag contents onto the queue
                 try
                 {
-                    if (this.TemplateNodeHasText)
+                    string messageX = TemplateNodeInnerXml; //.InnerText;
+                    Console.WriteLine("  SayA msgX:{0}", messageX);
+                    string message = Recurse();
+                    //if (message.Length > 0) bot.sayProcessor(message);
+                    //if (message2.Length > 0) bot.sayProcessor(message2);
+                    if (string.IsNullOrEmpty(message))
+                    {
+                        message = messageX;
+                    }
+
+                    Console.WriteLine("  SayA msg1:{0}", message);
+                    if (message.Length > 0)
                     {
                         // non atomic version of the node
-                        string message = this.Recurse();
-                        //if (bot.saySapi) message = this.TemplateNodeInnerXml;
-                        Console.WriteLine("  SayA msg1:{0}", message);
-                        string lastOut = this.bot.getBBHash("TTSText");
+                        //if (bot.saySapi) message = TemplateNodeInnerXml;
+                        string lastOut = bhbot.getBBHash("TTSText");
                         // avoid repeats
                         if (message == lastOut)
                         {
-                            return string.Empty;
+                            return Succeed("said: " + message);
                         }
-                        //if (message.Length > 0) this.user.bot.sayProcessor(message);
-                        this.bot.setBBHash("TTSText", message);
-                        //this.user.bot.bbSetHash("TTSText", message);
+                        //if (message.Length > 0) bot.sayProcessor(message);
+                        bhbot.setBBHash("TTSText", message);
+                        var tlastOut = bhbot.getBBHash("TTSText");
+                        if (message != tlastOut)
+                        {
+                            writeToLogWarn("BBHash not working expected " + message + " but found " + tlastOut);
+                        }
+                        //bot.bbSetHash("TTSText", message);
                         Random Rgen = new Random();
                         int myUUID = Rgen.Next(Int32.MaxValue);
-                        //this.user.bot.bbSetHash("TTSuuid", myUUID.ToString());
-                        this.bot.setBBHash("TTSuuid", myUUID.ToString());
+                        //bot.bbSetHash("TTSuuid", myUUID.ToString());
+                        bhbot.setBBHash("TTSuuid", myUUID.ToString());
                         Console.WriteLine("sayResponse :{0}:{1}", myUUID.ToString(), message);
-                        if ((message.Length > 0) && (this.user.rbot.sayProcessor != null))
+                        if ((message.Length > 0) && (bhbot.sayProcessor != null))
                         {
-                            //this.user.bot.sayProcessor(message);
-                            this.user.rbot.postOutput(message);
+                            //bot.sayProcessor(message);
+                            bhbot.postOutput(message);
                             // Mark the output time
-                            this.user.rbot.myBehaviors.keepTime("lastchatoutput", RunStatus.Success);
-                            this.user.rbot.myBehaviors.activationTime("lastchatoutput", RunStatus.Success);
+                            bhbot.myBehaviors.keepTime("lastchatoutput", RunStatus.Success);
+                            bhbot.myBehaviors.activationTime("lastchatoutput", RunStatus.Success);
 
                         }
+                        return Succeed("said: " + message);
                     }
-                    else
-                    {
-                        string message = this.TemplateNodeInnerXml; //.InnerText;
-                        string message2 = this.Recurse();
-                        Console.WriteLine("  SayB msg1:{0}", message);
-                        Console.WriteLine("  SayB msg2:{0}", message2);
-                        //if (message.Length > 0) this.user.bot.sayProcessor(message);
-                        //if (message2.Length > 0) this.user.bot.sayProcessor(message2);
-                        if (!string.IsNullOrEmpty(message)) this.user.rbot.postOutput(message);
-                        if (!string.IsNullOrEmpty(message2)) this.user.rbot.postOutput(message2);
-                        // Mark the output time
-                        this.user.rbot.myBehaviors.keepTime("lastchatoutput", RunStatus.Success);
-                        this.user.rbot.myBehaviors.activationTime("lastchatoutput", RunStatus.Success);
-                    }
+                    return Failure("said: " + message);
                 }
                 catch(Exception e)
                 {
-                    Console.WriteLine("  Say Exception:{0}", e.Message );
+                    Console.WriteLine("  Say Exception:{0}", e );
                 }
 
             }

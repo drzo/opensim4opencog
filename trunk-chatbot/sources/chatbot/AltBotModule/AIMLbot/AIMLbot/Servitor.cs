@@ -592,10 +592,10 @@ namespace AltAIMLbot
             rapStoreDirectory = ".//rapstore//";
             curBot.bbSafe = true;
             outputDelegate = outputDelegate ?? curBot.sayProcessor;
-            if (outputDelegate == null)
+            if (outputDelegate == null || outputDelegate == sayResponseToBlackboard)
             {
-                curBot.sayProcessor = new sayProcessorDelegate(sayResponse);
-                Console.WriteLine(" using default sayProcessorDelegate");
+                curBot.sayProcessor = new sayProcessorDelegate(sayResponseToBlackboard);
+                Console.WriteLine(" using default sayProcessorDelegate (sayResponseToBlackboard)");
             }
             else
             {
@@ -724,9 +724,14 @@ namespace AltAIMLbot
             {
                 curBot.useMemcache = false;
             }
+            var bctx = curBot.BotBehaving;
+            bctx.exportBBBot();
+            bctx.importBBBot();
+            bctx.exportBBUser(curUser);
+            bctx.importBBUser(curUser);
             if ((myScheduler != null) && curBot.myBehaviors.definedBehavior("startup"))
             {
-                myScheduler.ActivateBehaviorTask("startup", curBot.BotBehaving);
+                myScheduler.ActivateBehaviorTask("startup", bctx);
                 Console.WriteLine("*** ActivateBehaviorTask startup ***");
             }
             else
@@ -758,6 +763,7 @@ namespace AltAIMLbot
 
         public string respondToChat(string input, User curUser, bool isToplevel, RequestKind requestType)
         {
+            var curBot = this.curBot.BotBehaving;
             bool doHaviours = tmBehaveEnabled;
             if (string.IsNullOrEmpty(input))
             {
@@ -766,7 +772,7 @@ namespace AltAIMLbot
             input = input.TrimStart();
             if (input.StartsWith("@"))
             {
-                curBot.AcceptInput(Console.WriteLine, input, curUser, isToplevel, requestType);
+                this.curBot.AcceptInput(Console.WriteLine, input, curUser, isToplevel, requestType);
                 return "@rem " + input;
             }
             if (input.StartsWith("<"))
@@ -783,7 +789,7 @@ namespace AltAIMLbot
                 Console.WriteLine(" ************ FOUND waitingForChat ************");
                 MaybeUpdateUserJustSaidLastInput(isToplevel, requestType, curUser, input, true);
                 //curBot.lastBehaviorChatInput = input;
-                curBot.myBehaviors.logText("waitingForChat USER INPUT:" + input);
+                curBot.myBehaviors.logText("waitingForChat USER INPUT: " + input);
                 curBot.chatInputQueue.Clear();
                 curBot.chatInputQueue.Enqueue(input);
                 curBot.lastBehaviorUser = curUser;
@@ -898,7 +904,7 @@ namespace AltAIMLbot
         }
         public string respondToChatThruString(string input, User curUser, bool isToplevel, RequestKind requestType)
         {
-
+            var curBot = this.curBot.BotBehaving;
             MaybeUpdateUserJustSaidLastInput(isToplevel, requestType, curUser, input, false);
             Request r = new Request(input, curUser, curUser.That, curBot, isToplevel, requestType);
             curBot.isPerformingOutput = false;
@@ -960,6 +966,7 @@ namespace AltAIMLbot
         public void MaybeUpdateBotJustSaidLastOutput(bool isToplevel, RequestKind requestType, User curUser, string answer,
             bool respondingDoneFromQueue, bool asumeUserHeard, bool sayItPhysically)
         {
+            var curBot = this.curBot.BotBehaving; 
             if (!isToplevel)
             {
                 curBot.isPerformingOutput = false;
@@ -987,7 +994,7 @@ namespace AltAIMLbot
                 }
                 if (sayItPhysically)
                 {
-                    sayResponse(answer);
+                    sayResponseToBlackboard(answer);
                     // Mark the output time
                     curBot.myBehaviors.keepTime("lastchatoutput", RunStatus.Success);
                     curBot.myBehaviors.activationTime("lastchatoutput", RunStatus.Success);
@@ -1065,7 +1072,7 @@ namespace AltAIMLbot
        
         public void Main(string[] args)
         {
-            Start(new sayProcessorDelegate(sayResponse));
+            Start(new sayProcessorDelegate(sayResponseToBlackboard));
 
             while (true)
             {
@@ -1083,7 +1090,7 @@ namespace AltAIMLbot
                         MaybeUpdateUserJustSaidLastInput(true, RequestKind.ChatRealTime, curUser, input, false);
                         string answer = respondToChat(input, curUser);
                         Console.WriteLine("Bot: " + answer);
-                        sayResponse(answer);
+                        sayResponseToBlackboard(answer);
                         MaybeUpdateBotJustSaidLastOutput(true, RequestKind.ChatRealTime, curUser, answer, false, true, false);
                     }
                 }
@@ -1414,11 +1421,11 @@ namespace AltAIMLbot
                     {
                         myScheduler.Run();
                     }
-
-                    if ((curBot != null) && (curBot.outputQueue.Count > 0))
+                    var curBot = this.curBot.BotBehaving;
+                    if ((curBot != null) && (curBot._outputQueue.Count > 0))
                     {
                         curBot.processOutputQueue();
-                        if (curBot.isAcceptingUserInput) { curBot.isPerformingOutput = true; }
+                        if (this.curBot.isAcceptingUserInput) { curBot.isPerformingOutput = true; }
 
                     }
 
@@ -1436,7 +1443,7 @@ namespace AltAIMLbot
                         }
                         catch (Exception e) { }
                         if (uutid == lastuutid) { continue; }
-                        if (!curBot.isAcceptingUserInput) { continue; }
+                        if (!this.curBot.isAcceptingUserInput) { continue; }
                         try
                         {
                             var curUser = this.curUser;
@@ -1485,7 +1492,7 @@ namespace AltAIMLbot
                                 Console.WriteLine("*** AIMLOUT = '{0}'", myResp);
                                 if (!myResp.ToUpper().Contains("IGNORENOP"))
                                 {
-                                    sayResponse(myResp);
+                                    sayResponseToBlackboard(myResp);
                                     setBBHash("lsaprior", myInput);
                                 }
 
@@ -1539,13 +1546,15 @@ namespace AltAIMLbot
         }
         public void setBBHash(string key, string data)
         {
+            var curBot = this.curBot.BotBehaving;
             //curbot.bbSetHash(key,data);
             curBot.setBBHash(key, data);
         }
         public string getBBHash(string key)
         {
             try
-            { 
+            {
+                var curBot = this.curBot.BotBehaving;
                 //BBDict[key] =curbot.bbGetHash(key)
                 return curBot.getBBHash(key) ?? "";
             }
@@ -1555,7 +1564,7 @@ namespace AltAIMLbot
             }
         }
 
-        public  void sayResponse(string message)
+        public  void sayResponseToBlackboard(string message)
         {
             if (message == null) return;
             if (!message.ToUpper().Contains("IGNORENOP"))

@@ -53,7 +53,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             {
                 return dict;
         }
-            return Proc.PersonSubstitutions;
+            return substs.PersonSubstitutions;
     }
 }
 }

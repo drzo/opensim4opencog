@@ -59,8 +59,10 @@ namespace AltAIMLbot.AIMLTagHandlers
                 {
                     //string templateNodeInnerValue = this.TemplateNodeInnerText;
                     var expandedTemplateNode = ExpandedTemplateNode;
-                    this.bot.myBehaviors.runBTXML(expandedTemplateNode);
-                    return Succeed("running btxml=" + expandedTemplateNode.OuterXml);
+                    var runningString = "running btxml=" + expandedTemplateNode.OuterXml;
+                    writeDebugLine(runningString);
+                    var result = this.bot.myBehaviors.runBTXML(expandedTemplateNode);
+                    return Succeed("Result was " + result + "  " + runningString);
                 }
                 catch
                 {

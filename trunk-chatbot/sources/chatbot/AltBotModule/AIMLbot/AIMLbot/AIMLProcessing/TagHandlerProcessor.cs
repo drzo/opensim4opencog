@@ -756,11 +756,15 @@ namespace AltAIMLbot
                                   AIMLTagHandler nodeHandlerU, bool suspendLimits, out bool templateSucceeded)
         {
             Request originalSalientRequest = Request.GetOriginalSalientRequest(request);
-            var wasSuspendRestrati = request.SuspendSearchLimits;
+            bool osrExists = originalSalientRequest != null;
+            var wasSuspendRestrati = request == null || request.SuspendSearchLimits;
             templateSucceeded = true;
-            request.SuspendSearchLimits = suspendLimits;
+            if (request != null)
+            {
+                request.SuspendSearchLimits = suspendLimits;
+            }
             Dictionary<Unifiable, Unifiable> sraiMark = null;
-            if (srai.UseSraiLimiters)
+            if (osrExists && srai.UseSraiLimiters)
             {
                 sraiMark = originalSalientRequest.CreateSRAIMark();
             }
@@ -793,8 +797,8 @@ namespace AltAIMLbot
             }
             finally
             {
-                if (srai.UseSraiLimiters) originalSalientRequest.ResetSRAIResults(sraiMark);
-                request.SuspendSearchLimits = wasSuspendRestrati;
+                if (osrExists && srai.UseSraiLimiters) originalSalientRequest.ResetSRAIResults(sraiMark);
+                if (request != null) request.SuspendSearchLimits = wasSuspendRestrati;
             }
         }
 
@@ -812,7 +816,8 @@ namespace AltAIMLbot
                                   AIMLTagHandler parentHandlerU, bool protectChild, bool copyParent,
                                   AIMLTagHandler tagHandlerU, out bool childSuccess)
         {
-            AltBot TargetBot = request.TargetBot;
+            AltBot TargetBot = tagHandlerU.bot;
+            if (request != null) TargetBot = request.TargetBot;
             childSuccess = true;
             if (node == null)
             {
@@ -840,12 +845,12 @@ namespace AltAIMLbot
                 childSuccess = false;
                 writeToLog(whyError);
             }
-            bool isTraced = request.IsTraced || !request.GraphsAcceptingUserInput ||
-                 (query != null && query.IsTraced);
+            bool isTraced = (request != null && (request.IsTraced || !request.GraphsAcceptingUserInput)) ||
+                            (query != null && query.IsTraced);
 
             // check for timeout (to avoid infinite loops)
             bool overBudget = false;
-            if (request.IsComplete(result))
+            if (request != null && request.IsComplete(result))
             {
                 object gn = request.Graph;
                 if (query != null) gn = query.Graph;
@@ -853,7 +858,6 @@ namespace AltAIMLbot
                                          ". User: {0} raw input: {3} \"{1}\" processing {2} templates: \"{4}\"",
                                          request.Requester.UserID, Unifiable.DescribeUnifiable(request.rawInput),
                                          (query == null ? "-NOQUERY-" : query.Templates.Count.ToString()), gn, node);
-
                 if (isTraced)
                     request.writeToLog(s);
                 overBudget = true;

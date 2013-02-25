@@ -231,7 +231,8 @@ namespace AltAIMLbot.Utils
             }
             bool needsUnwind = false;
             UndoStackHolder thiz = (UndoStackHolder) query ?? request;
-            ISettingsDictionary dict = query ?? request.TargetSettings;
+            ISettingsDictionary dict = query;
+            if (dict == null && request != null) dict = request.TargetSettings;
             XmlAttributeCollection collection = templateNode.Attributes;
             EnterContext(request, query);
             if (collection == null || collection.Count <= 0)
@@ -356,11 +357,11 @@ namespace AltAIMLbot.Utils
 
         private static void EnterContext(Request request, SubQuery query)
         {
-            request.Enter(query);
+            if (request != null) request.Enter(query);
         }
         private static void ExitContext(Request request, SubQuery query)
         {
-            request.Exit(query);
+            if (request != null) request.Exit(query);
         }
 
 

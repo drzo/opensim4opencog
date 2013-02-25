@@ -1737,7 +1737,7 @@ namespace AltAIMLbot.Utils
         }
 
         public static bool DeferingSaves = false;
-        public static bool AlwaysReload = false;
+        public static bool AlwaysReload = true;
 
         public bool useChatDB = true;
         internal Node _root;
@@ -1778,10 +1778,11 @@ namespace AltAIMLbot.Utils
         }
         public bool wasloaded(string filename)
         {
-            if (AlwaysReload) return false;
             lock (ExternDB.mylock)
             {
-                return ensureEdb().wasLoaded(filename);
+                if (!ensureEdb().wasLoaded(filename)) return false;
+                if (AlwaysReload) return false;
+                return true;
             }
 
         }

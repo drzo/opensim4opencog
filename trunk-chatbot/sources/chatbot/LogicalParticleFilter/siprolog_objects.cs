@@ -975,11 +975,13 @@ namespace LogicalParticleFilter1
         public static string NormalizeKeyLowerCase(object s)
         {
             string fn = s.ToString().Trim().ToLower().Replace(" ", "_");
+            fn = fn.Trim('.', '_', ' ');
             return fn;// Path.GetFileNameWithoutExtension(fn);
         }
         public static string NormalizeKeyLowerCaseNoFileExt(object s)
         {
             string fn = s.ToString().Trim().ToLower().Replace(" ", "_");
+            fn = fn.Trim('.', '_', ' ');
             return Path.GetFileNameWithoutExtension(fn);
         }
         #endregion

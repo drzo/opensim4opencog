@@ -160,7 +160,7 @@ namespace AltAIMLbot.Utils
 
         public virtual bool QueryHasFailed
         {
-            get { return query.HasFailed > 0; }
+            get { return query != null && query.HasFailed > 0; }
             set
             {
                 if (QueryHasFailed == value) return;
@@ -179,7 +179,7 @@ namespace AltAIMLbot.Utils
 
         public virtual bool QueryHasSuceeded
         {
-            get { return query.HasSuceeded > 0; }
+            get { return query != null && query.HasSuceeded > 0; }
             set
             {
                 if (InUnify)
@@ -187,20 +187,36 @@ namespace AltAIMLbot.Utils
                     writeToLog("InUnify QueryHasSuceeded=" + value);
                     return;
                 }
-                query.HasSuceeded += (value ? 1 : 0);
+                if (query != null) query.HasSuceeded += (value ? 1 : 0);
             }
         }
 
         public virtual int QueryHasFailedN
         {
-            get { return query.HasFailed; }
-            set { query.HasFailed = value; }
+            get
+            {
+                if (query == null) return 0;
+                return query.HasFailed;
+            }
+            set
+            {
+                if (value == 0 && query == null) return;
+                query.HasFailed = value;
+            }
         }
 
         public virtual int QueryHasSuceededN
         {
-            get { return query.HasSuceeded; }
-            set { query.HasSuceeded = value; }
+            get
+            {
+                if (query == null) return 1;
+                return query.HasSuceeded;
+            }
+            set
+            {
+                if (query == null) return;
+                query.HasSuceeded = value;
+            }
         }
 
         protected bool InUnify;
@@ -387,7 +403,7 @@ namespace AltAIMLbot.Utils
         }
 
         /// <summary>
-        /// Recurse Result (not "innerResult!")
+        /// Recurse Result (not "Final Result!")
         /// </summary>
         public virtual Unifiable RecurseResult
         {
@@ -742,7 +758,8 @@ namespace AltAIMLbot.Utils
         public Unifiable Succeed(object p0)
         {
             Succeed();
-            //if (true)               return think.THINKYTAG;
+            //if (true)               
+            return think.THINKYTAG;
             string p = p0.ToString();
             return "<!-- SUCCEED: " + p.Replace("<!--", "<#-").Replace("-->", "-#>") + "-->";
         }
@@ -984,10 +1001,15 @@ namespace AltAIMLbot.Utils
             return false;
         }
 
-        protected AIMLTagHandler GetChildTagHandler(XmlNode childNode)
+        public AIMLTagHandler GetChildTagHandler(XmlNode childNode)
         {
             var Proc = this.Proc.TagHandling;
-            User user = request.Requester ?? this.user;
+            User user = this.user;
+            if (request != null)
+            {
+                var uu = request.Requester;
+                if (uu != null) user = uu;
+            }
             AIMLTagHandler part = Proc.GetTagHandler(user, query, request, result, childNode, this);
             //AddChild(part);
             return part;
@@ -1045,7 +1067,7 @@ namespace AltAIMLbot.Utils
             return vv;
         }
 
-        protected Unifiable ProcessChildNode(XmlNode childNode)
+        public Unifiable ProcessChildNode(XmlNode childNode)
         {
             bool success;
             var chosenXML = Unifiable.InnerXmlText(childNode);
@@ -1068,7 +1090,7 @@ namespace AltAIMLbot.Utils
             return vv;
         }
 
-        protected Unifiable ProcessChildNode(XmlNode childNode, bool protectChildren, bool saveOnInnerXML,
+        public Unifiable ProcessChildNode(XmlNode childNode, bool protectChildren, bool saveOnInnerXML,
                                              out bool success, AIMLTagHandler tagHandlerUChild)
         {
             if (saveOnInnerXML)
@@ -1206,7 +1228,7 @@ namespace AltAIMLbot.Utils
             }
         }
 
-        protected static Unifiable ProcessTagHandlerNode(XmlNode childNode, bool protectChildren, bool saveOnInnerXML,
+        public static Unifiable ProcessTagHandlerNode(XmlNode childNode, bool protectChildren, bool saveOnInnerXML,
                                                          out bool success, AIMLTagHandler tagHandlerUChild)
         {
             OutputDelegate writeToLogWarn = tagHandlerUChild.writeToLogWarn;
@@ -1216,8 +1238,7 @@ namespace AltAIMLbot.Utils
 
             if (saveOnInnerXML && throwOnSave)
             {
-                throw tagHandlerUChild.Proc.RaiseError(
-                    new InvalidOperationException("saveOnInnerXML! " + tagHandlerUChild));
+                 tagHandlerUChild.Proc.RaiseError("saveOnInnerXML! " + tagHandlerUChild);
             }
             try
             {
@@ -1230,12 +1251,13 @@ namespace AltAIMLbot.Utils
                 }
                 else
                 {
-                    var request = tagHandlerUChild.request;
-                    var result = tagHandlerUChild.result;
-                    var user = tagHandlerUChild.user;
-                    var query = tagHandlerUChild.query;
+                    var request = tagHandlerUChild.request ?? parentHandlerU.request;
+                    var result = tagHandlerUChild.result ?? parentHandlerU.result;
+                    var user = tagHandlerUChild.user ?? parentHandlerU.user;
+                    var query = tagHandlerUChild.query ?? parentHandlerU.query;
 
-                    bool suspendingLimits = request.IsToplevelRequest || request.SuspendSearchLimits
+                    bool suspendingLimits = (request != null &&
+                                             (request.IsToplevelRequest || request.SuspendSearchLimits))
                                             || tagHandlerUChild.SuspendLimits ||
                                             (parentHandlerU != null && parentHandlerU.SuspendLimits);
 
@@ -1398,7 +1420,7 @@ namespace AltAIMLbot.Utils
             RecurseVistor = this;
             try
             {
-                return RecurseResult = RecurseChildren();
+                return RecurseChildren();
             }
             finally
             {
@@ -1426,10 +1448,11 @@ namespace AltAIMLbot.Utils
             bool _wasRecurseResultValid = innerResult.IsValid;
             try
             {
-                if (innerResult.IsValid)
+                if (RecurseResultValid)
                 {
-                    writeToLog("USING CACHED RECURSE " + RecurseResult);
-                    return CheckValue(innerResult.Value);
+                    var rr = RecurseResult;
+                    writeToLog("USING CACHED RECURSE " + rr);
+                    return CheckValue(rr);
                     // use cached recurse value
                     return innerResult.Value;
                 }
@@ -1467,9 +1490,12 @@ namespace AltAIMLbot.Utils
             return RecurseReal(null, node, saveOnChildren);
         }
 
-        protected Unifiable RecurseReal(Func<Unifiable, Unifiable> afterEachOrNull, XmlNode node, bool saveOnChildren)
+        public Unifiable RecurseReal(Func<Unifiable, Unifiable> afterEachOrNull, XmlNode node, bool saveOnChildren)
         {
-            if (isRecursive && !node.HasChildNodes) return string.Empty;
+            if (isRecursive && !node.HasChildNodes)
+            {
+                return think.THINKYTAG;
+            }
 
             saveOnChildren = false;
             //Unifiable templateNodeInnerText;//= this.templateNodeInnerText;
@@ -1744,8 +1770,7 @@ namespace AltAIMLbot.Utils
                 writeToLog(errmsg);
                 if (throwOnSave)
                 {
-                    throw Proc.RaiseError(
-                        new InvalidOperationException("save NULL ResultsOnChildren! " + this + " " + errmsg));
+                    Proc.RaiseError("save NULL ResultsOnChildren! " + this + " " + errmsg);
                 }
             }
             if (InUnify)
@@ -2122,6 +2147,7 @@ namespace AltAIMLbot.Utils
 
         protected int[] QueryResultsCurrent()
         {
+            if (query == null) return new[] {1, 0};
             return new int[] {QueryHasSuceededN, QueryHasFailedN};
         }
 
@@ -2157,6 +2183,7 @@ namespace AltAIMLbot.Utils
 
         public string LineTextInfo()
         {
+            if (templateNode == null) return "noXML";
             string s = Trim(templateNode.OuterXml);
             if (String.IsNullOrEmpty(s))
             {
@@ -2217,21 +2244,26 @@ namespace AltAIMLbot.Utils
             return s;
         }
 
-        protected void writeToLogWarn(string unifiable, params object[] objs)
+        protected void writeToLogWarn(string f, params object[] a)
         {
-            writeToLog("WARNING: " + unifiable, objs);
+            writeToLog("WARNING: " + f, a);
         }
 
-        public virtual void writeToLog(string unifiable, params object[] objs)
+        public virtual void writeToLog(string f, params object[] a)
         {
-            if (unifiable.ToUpper().StartsWith("ERROR"))
+            if (f.ToUpper().StartsWith("ERROR"))
             {
-                writeToLogWarn("BAD " + unifiable, objs);
+                writeToLogWarn("BAD " + f, a);
                 return;
             }
-            this.Proc.writeToLog(
-                "AIMLTRACE: " + unifiable +
-                DLRConsole.NoFormatDirectives(" in " + GetType().Name + "  " + LineNumberTextInfo()), objs);
+            this.mbot.writeToLog(
+                "AIMLTRACE: " + f +
+                DLRConsole.NoFormatDirectives(" in " + GetType().Name + "  " + LineNumberTextInfo()), a);
+        }
+
+        public virtual AltBot mbot
+        {
+            get { return bot; }
         }
 
         #region Implementation of IXmlLineInfo

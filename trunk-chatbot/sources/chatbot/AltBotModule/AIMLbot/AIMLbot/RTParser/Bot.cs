@@ -52,7 +52,7 @@ namespace AltAIMLbot
          }
          public static implicit operator AltBot(AltBot rtp)
          {
-             return rtp.TheAltBot ?? rtp.servitor.curBot;
+             return rtp.TheAltBot ?? rtp.servitorBot;
          }
          */
         public static bool IncludeMeNeValue;
@@ -295,10 +295,10 @@ namespace AltAIMLbot
             string behaviorcache = PersonalizePathLogged(GlobalSettings.grabSetting("behaviorcache"));
             if ((behaviorcache != null) && (behaviorcache.Length > 0))
             {
-                servitor.curBot.myBehaviors.persistantDirectory = behaviorcache;
+                servitorBot.myBehaviors.persistantDirectory = behaviorcache;
             }
 
-            servitor.curBot.loadCrons();
+            loadCrons();
             if (servitor.skiploadingServitorState)
             {
                 return;
@@ -309,10 +309,10 @@ namespace AltAIMLbot
             {
                 try
                 {
-                    bool localCritical = servitor.curBot.inCritical;
-                    servitor.curBot.inCritical = true;
+                    bool localCritical = servitorBot.inCritical;
+                    servitorBot.inCritical = true;
                     servitor.loadAIMLFromFile(graphcache);
-                    servitor.curBot.inCritical = localCritical;
+                    servitorBot.inCritical = localCritical;
                 }
                 catch (Exception e)
                 {
@@ -360,9 +360,9 @@ namespace AltAIMLbot
             List<string> allPaths = new List<string>();
             List<string> allCrons = new List<string>();
             List<string> allBehaviors = new List<string>();
-            //servitor.curBot.Graphmaster.collectPaths("",allPaths);
+            //servitorBot.Graphmaster.collectPaths("",allPaths);
             //File.WriteAllLines(@"./aiml/graphmap.txt", allPaths.ToArray());
-            servitor.curBot.saveCrons();
+            saveCrons();
 
             string graphcache = GlobalSettings.grabSetting("graphcache");
             graphcache = PersonalizePath(graphcache);
@@ -374,9 +374,9 @@ namespace AltAIMLbot
             }
             string[] header = { "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "<aiml version=\"1.0\">", " <state name=\"*\">" };
             string[] footer = { " </state>", "</aiml>" };
-            //@todo fix servitor.curBot.Graphmaster.collectFullPaths("", allPaths);
-            allCrons = servitor.curBot.myCron.cronXmlList();
-            allBehaviors = servitor.curBot.myBehaviors.behaviorXmlList();
+            //@todo fix servitorBot.Graphmaster.collectFullPaths("", allPaths);
+            allCrons = servitorBot.myCron.cronXmlList();
+            allBehaviors = servitorBot.myBehaviors.behaviorXmlList();
 
             //StreamWriter sw = File.CreateText(@"./aiml/servitorgraphmap.aiml");
             if (graphcache != null && !File.Exists(graphcache))
@@ -498,10 +498,10 @@ namespace AltAIMLbot
             {
 
                 myServitor = new Servitor(this, null);
-                servitor.curBot = this;
-                if (servitor.curBot.sayProcessor == null)
+                myServitor.curBot = this;
+                if (servitorBot.sayProcessor == null)
                 {
-                    servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
+                    servitorBot.sayProcessor = new sayProcessorDelegate(sayConsole);
                 }
             }
             if (myServitor.NeedsStarted)
@@ -550,7 +550,7 @@ namespace AltAIMLbot
                 // An alternate way is at the request level
                 //   Result historicResult = activeUser.GetResult(n, true, activeUser);
                 //   AltAIMLbot .Result duplicateResult = new AltAIMLbot.Result (servitor.curUser, servitor .curBot
-                //                                              ,servitor.curBot.LastRequest);
+                //                                              ,servitorBot.LastRequest);
             }
             catch (Exception e)
             {
@@ -563,23 +563,23 @@ namespace AltAIMLbot
             if (useServitor == false) return;
             updateServitor2RTP();
             // fill in the blanks
-            //servitor.curBot.AdminEmail = this.AdminEmail;
-            //servitor.curBot.conversationStack = this.conversationStack;
-            //servitor.curBot.isAcceptingUserInput = this.isAcceptingUserInput;
-            //servitor.curBot.LastLogMessage = this.LastLogMessage;
-            //servitor.curBot.MaxThatSize = this.MaxThatSize;
-            //servitor.curBot.StartedOn = this.StartedOn;
-            //servitor.curBot.TrustAIML = this.TrustAIML;
-            //servitor.curBot.StartedOn = this.StartedOn;
-            servitor.curBot.GlobalSettings.updateSetting("aimldirectory", PathToAIML);
+            //servitorBot.AdminEmail = this.AdminEmail;
+            //servitorBot.conversationStack = this.conversationStack;
+            //servitorBot.isAcceptingUserInput = this.isAcceptingUserInput;
+            //servitorBot.LastLogMessage = this.LastLogMessage;
+            //servitorBot.MaxThatSize = this.MaxThatSize;
+            //servitorBot.StartedOn = this.StartedOn;
+            //servitorBot.TrustAIML = this.TrustAIML;
+            //servitorBot.StartedOn = this.StartedOn;
+            servitorBot.GlobalSettings.updateSetting("aimldirectory", PathToAIML);
 
             if (SharedGlobalSettings != null)
             {
                 foreach (string key in LockInfo.CopyOf(SharedGlobalSettings.Keys))
                 {
                     string v = SharedGlobalSettings[key];
-                    // servitor.curBot.GlobalSettings.updateSetting(key, v);
-                    servitor.curBot.setBBHash0(key, v);
+                    // servitorBot.GlobalSettings.updateSetting(key, v);
+                    servitorBot.BotBehaving.setBBHash0(key, v);
                 }
             }
 
@@ -588,48 +588,48 @@ namespace AltAIMLbot
                 foreach (string key in LockInfo.CopyOf(GlobalSettings.Keys))
                 {
                     string v = GlobalSettings[key];
-                    //servitor.curBot.GlobalSettings.updateSetting(key, v);
-                    servitor.curBot.setBBHash0(key, v);
+                    //servitorBot.GlobalSettings.updateSetting(key, v);
+                    servitorBot.BotBehaving.setBBHash0(key, v);
                 }
             }
 
-            /*if ((GenderSubstitutions != null) && (servitor.curBot.GenderSubstitutions.Count != GenderSubstitutions.Count))
+            /*if ((GenderSubstitutions != null) && (servitorBot.GenderSubstitutions.Count != GenderSubstitutions.Count))
             foreach (string key in GenderSubstitutions.Keys)
             {
                 string v = GenderSubstitutions[key];
-                servitor.curBot.GenderSubstitutions.updateSetting(key, v);
+                servitorBot.GenderSubstitutions.updateSetting(key, v);
             }
 
             if ((Person2Substitutions != null)
-                && (servitor.curBot.Person2Substitutions.Count != Person2Substitutions.Count))
+                && (servitorBot.Person2Substitutions.Count != Person2Substitutions.Count))
                 foreach (string key in Person2Substitutions.Keys)
             {
                 string v = Person2Substitutions[key];
-                servitor.curBot.Person2Substitutions.updateSetting(key, v);
+                servitorBot.Person2Substitutions.updateSetting(key, v);
             }
 
             if ((PersonSubstitutions != null)
-                && (servitor.curBot.PersonSubstitutions.Count != PersonSubstitutions.Count))
+                && (servitorBot.PersonSubstitutions.Count != PersonSubstitutions.Count))
                 foreach (string key in PersonSubstitutions.Keys)
             {
                 string v = PersonSubstitutions[key];
-                servitor.curBot.PersonSubstitutions.updateSetting(key, v);
+                servitorBot.PersonSubstitutions.updateSetting(key, v);
             }
 
             if ((InputSubstitutions != null)
-                && (servitor.curBot.InputSubstitutions.Count != InputSubstitutions.Count))
+                && (servitorBot.InputSubstitutions.Count != InputSubstitutions.Count))
                 foreach (string key in InputSubstitutions.Keys)
             {
                 string v = InputSubstitutions[key];
-                servitor.curBot.InputSubstitutions.updateSetting(key, v);
+                servitorBot.InputSubstitutions.updateSetting(key, v);
             }
 
             if ((DefaultPredicates != null)
-                && (servitor.curBot.DefaultPredicates.Count != DefaultPredicates.Count))
+                && (servitorBot.DefaultPredicates.Count != DefaultPredicates.Count))
                 foreach (string key in DefaultPredicates.Keys)
             {
                 string v = DefaultPredicates[key];
-                servitor.curBot.DefaultPredicates.updateSetting(key, v);
+                servitorBot.DefaultPredicates.updateSetting(key, v);
             }
              * */
 
@@ -642,10 +642,6 @@ namespace AltAIMLbot
         public AltBot()
             : base()
         {
-            BotBehaving = new BehaviorContext()
-                              {
-                                  mbot = this
-                              };
             lock (OneAtATime)
             {
                 _lastAltBot = this;
@@ -748,7 +744,9 @@ namespace AltAIMLbot
                 initialSettingsLoaded = true;
                 setup();
                 Request globalSettingsRequest = GetBotRequest("-loadAimlFromDefaults-");
+                globalSettingsRequest.settingsPolicy = SettingsPolicy.DefaultStartup;
                 loadConfigs(this, PathToConfigFiles, globalSettingsRequest);
+                globalSettingsRequest.settingsPolicy = SettingsPolicy.Default;
                 loadConfigs(this, HostSystem.Combine(PathToAIML, "shared_aiml"), globalSettingsRequest);
                 //startServitor();
                 this.StartHttpServer();
@@ -850,7 +848,7 @@ namespace AltAIMLbot
             {
                 if (HostSystem.FileExists(filename.ToString()))
                 {
-                    servitor.curBot.loadAIMLFromXML(newAIML, filename.ToString());
+                    servitorBot.loadAIMLFromXML(newAIML, filename.ToString());
                     return;
                 }
             }
@@ -1537,13 +1535,14 @@ The AIMLbot program.
                 }
                 if (_g != null && graphPath == "*")
                 {
+                    if (current != null) return current;
                     return DefaultStartGraph;
                 }
                 if (_h != null && graphPath == "heardselfsay")
                 {
                     return DefaultHeardSelfSayGraph;
                 }
-                if (TheUserListenerGraph != null && graphPath == "heardyousay")
+                if (TheUserListenerGraph != null && (graphPath == "heardyousay" || graphPath == "graph"))
                 {
                     return DefaultHeardYouSayGraph;
                 }
@@ -1573,9 +1572,14 @@ The AIMLbot program.
         public static string ToGraphPathName(string graphPath0, string botname)
         {
             var graphPath = HelperForMerge.RemoveEnd(graphPath0);
-            if (string.IsNullOrEmpty(graphPath) || graphPath == "*" || graphPath == "current")
+            string woEnd = graphPath.RemoveEnd("graph");
+            if (string.IsNullOrEmpty(woEnd) || graphPath == "*" || woEnd == "current" || woEnd == "")
             {
                 return null;
+            }
+            if (woEnd != graphPath)
+            {
+                // @TODO look it up
             }
             graphPath = ToScriptableName(graphPath);
             if (botname != null)
@@ -1591,13 +1595,17 @@ The AIMLbot program.
             {
                 return "default";
             }
-            if (graphPath == "heardselfsay" || graphPath == "heardself")
+            string noHear = graphPath.RemoveStart("current", "heard", "hear").RemoveEnd("say");
+            if (noHear != graphPath)
             {
-                return "heardselfsay";
-            }
-            if (graphPath == "heardyousay" || graphPath == "heardyou")
-            {
-                return "listener";
+                if (graphPath == "self")
+                {
+                    return "heardselfsay";
+                }
+                if (graphPath == "you")
+                {
+                    return "listener";
+                }
             }
             return graphPath;
         }
@@ -2078,7 +2086,7 @@ The AIMLbot program.
                         {
                             try
                             {
-                                SettingsDictionaryReal.loadSettingsNow(dictionary, null, named, SettingsPolicy.Default, r);
+                                SettingsDictionaryReal.loadSettingsNow(dictionary, null, named, SettingsPolicy.DefaultStartup, r);
                                 loaded++;
                                 break;
                             }

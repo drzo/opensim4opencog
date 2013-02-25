@@ -58,7 +58,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 if (!IsNullOrEmpty(templateNodeInnerText))
                 {
                     // non atomic version of the node
-                    return ApplySubstitutions.Substitute( Proc.Person2Substitutions, templateNodeInnerText);
+                    return ApplySubstitutions.Substitute(substs.Person2Substitutions, templateNodeInnerText);
                 }
                 else
                 {

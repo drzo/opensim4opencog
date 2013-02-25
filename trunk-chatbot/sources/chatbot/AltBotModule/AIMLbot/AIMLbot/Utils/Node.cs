@@ -2138,9 +2138,9 @@ namespace AltAIMLbot.Utils
             }
             bool ret = loadeddb.Get(filename, out lf);
             //return (filename == lf);
-            if (string.IsNullOrEmpty(lf)) lf = null;
-            Console.WriteLine("\nwasLoaded:{0} {1}<=>{2}", filename, reftime, lf ?? "Unknown");
-            if (!(reftime == lf))
+            if (string.IsNullOrEmpty(lf)) lf = "Unknown";
+            Console.WriteLine("\nwasLoaded:{0} {1}<=>{2}", filename, reftime, lf);
+            if (reftime != lf)
             {
                 return false;
             }
@@ -2453,7 +2453,7 @@ namespace AltAIMLbot.Utils
 
                                     logText(String.Format("WARNING : Childkey({0}) returns ({1}) when set was ({2})",childkey,vstr,childtxt));
                                 }
-                                if (childkey.Contains("<STATE> * <PATTERN>#"))
+                                if (childkey.Contains("TAG-STATE * TAG-PATTERN#"))
                                 {
                                     //logText(String.Format("TRACE : Childkey({0}) set to ({1})",childkey,childtxt));
 

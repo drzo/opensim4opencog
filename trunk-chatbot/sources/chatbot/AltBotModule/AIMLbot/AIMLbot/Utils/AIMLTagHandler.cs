@@ -10,11 +10,32 @@ using TextPatternUtils = AltAIMLbot.Utils.TextPatternUtils;
 
 namespace AltAIMLbot.Utils 
 {
+    public abstract partial class AIMLTagHandlerB : TextTransformer
+    {
+        public AIMLTagHandlerB(AltBot bot, string instr, Unifiable inu)
+        {
+            this.bot = bot;
+            inputStringU = inu ?? instr;
+            inputString = initialString = instr ?? inputStringU.AsString();
+        }
+
+        protected AIMLTagHandlerB()
+            : base()
+        {
+
+        }
+
+        public abstract SubQuery query { get; set; }
+        public abstract User user { get; set; }
+        public abstract Request request { get; set; }
+        public abstract Result result { get; set; }
+        public abstract bool IsStillStarAtomically { get; }
+    }
     /// <summary>
     /// The template for all classes that handle the AIML tags found within template nodes of a
     /// category.
     /// </summary>
-    abstract public partial class AIMLTagHandler : TextTransformer
+    abstract public partial class AIMLTagHandler : AIMLTagHandlerB
     {
         public bool IsTraced { get; set; }
 
@@ -28,7 +49,7 @@ namespace AltAIMLbot.Utils
         /// </summary>
         public bool IsStarAtomically = false;
 
-        public bool IsStillStarAtomically
+        sealed override public bool IsStillStarAtomically
         {
             get
             {
@@ -48,22 +69,22 @@ namespace AltAIMLbot.Utils
         /// <summary>
         /// A representation of the user who made the request
         /// </summary>
-        public User user { get; set; }
+        override public User user { get; set; }
 
         /// <summary>
         /// The query that produced this node containing the wildcard matches
         /// </summary>
-        public AltAIMLbot.Utils.SubQuery query;
+        override public AltAIMLbot.Utils.SubQuery query { get; set; }
 
         /// <summary>
         /// A representation of the input into the bot made by the user
         /// </summary>
-        public Request request { get; set; }
+        override public Request request { get; set; }
 
         /// <summary>
         /// A representation of the result to be returned to the user
         /// </summary>
-        public AltAIMLbot.Result result { get; set; }
+        override public AltAIMLbot.Result result { get; set; }
 
         /// <summary>
         /// The template node to be processed by the class

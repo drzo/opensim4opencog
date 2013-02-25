@@ -25,7 +25,7 @@ namespace AltAIMLbot.Normalize
             {
                 if (newVariable.StartsWith("TAG-")) return InputStringU;
             }
-            return this.Proc.Strippers.Replace(this.InputStringU, " ");
+            return this.substs.Strippers.Replace(this.InputStringU, " ");
         }
     }
 }

@@ -28,6 +28,10 @@ namespace AltAIMLbot.Utils
             IsStarAtomically = true;
         }
 
+        protected AltBot substs
+        {
+            get { return mbot; }
+        }
 
         public override bool IsFormatter
         {
@@ -57,7 +61,7 @@ namespace AltAIMLbot.Utils
 
         public override Unifiable RecurseChildren()
         {
-            if (FinalResultValid) return RecurseResult;
+            if (RecurseResultValid) return RecurseResult;
             var vv = base.Recurse();
             if (!Unifiable.IsNullOrEmpty(vv))
             {

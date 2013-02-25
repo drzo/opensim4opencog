@@ -42,7 +42,7 @@ namespace AltAIMLbot.Normalize
         protected override Unifiable ProcessChangeU()
         {
             //if (InputStringUU != null) return InputStringUU;
-            return ApplySubstitutions.Substitute(this.Proc.InputSubstitutions, this.InputStringU);
+            return ApplySubstitutions.Substitute(substs.InputSubstitutions, this.InputStringU);
         }
 
         /// <summary>

@@ -29,17 +29,22 @@ namespace AltAIMLbot.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
             isRecursive = false;
+            IsTraced = true;
         }
 
         #region Overrides of TextTransformer
-
+        public override Unifiable RecurseChildren()
+        {
+            if (isVerbatum) return InnerSource();
+            return base.RecurseChildren();
+        }
         /// <summary>
         /// The method that does the actual Processing of the text.
         /// </summary>
         /// <returns>The resulting Processed text</returns>
         protected override Unifiable ProcessChangeU()
         {
-            if (templateNode.NodeType == XmlNodeType.Comment) return Unifiable.Empty;
+            if (templateNode.NodeType == XmlNodeType.Comment) return Succeed(templateNode.Value);
             if (templateNode.NodeType == XmlNodeType.Text)
             {
                 string s = Trim(templateNode.InnerText);
@@ -164,8 +169,12 @@ namespace AltAIMLbot.AIMLTagHandlers
 
             if (AltBot.UnknownTagsAreBotVars)
             {
-                var v = Proc.GlobalSettings.grabSetting(currentNodeName);
-                if (!Unifiable.IsIncomplete(v)) return v;
+                var dict = Proc.GlobalSettings;
+                if (dict.containsSettingCalled(currentNodeName))
+                {
+                    var v = dict.grabSetting(currentNodeName);
+                    if (!Unifiable.IsMissing(v)) return v;
+                }
             }
             var vs = Proc.EvalAiml(templateNode, request, request.writeToLog);
             StringBuilder sb = new StringBuilder();

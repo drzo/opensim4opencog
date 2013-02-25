@@ -568,7 +568,7 @@ namespace AltAIMLbot.Utils
 
             try
             {
-                object result = bot.evalTemplateNode(node, RequestKind.AIMLLoader | RequestKind.BotPropertyEval);
+                object result = bot.BotBehaving.evalTemplateNode(node, RequestKind.AIMLLoader | RequestKind.BotPropertyEval);
                 if (AltBot.tl_aimlResult != null)
                 {
                     AltBot.tl_aimlResult.AddResult(node, filename, result);

@@ -164,7 +164,7 @@ namespace AltAIMLbot.Database
             bool shouldSet = ShouldSet(templateNode, dict, realName, value, resultGet, query);
 
             User user = query.CurrentUser;
-            ITripleStore userbotLuceneIndexer = (ITripleStore)user.rbot.TripleStore;
+            ITripleStore userbotLuceneIndexer = (ITripleStore)user.mbot.TripleStore;
             string userName = user.UserID;
             if (!shouldSet)
             {

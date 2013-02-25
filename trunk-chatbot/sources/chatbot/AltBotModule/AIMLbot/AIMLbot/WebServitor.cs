@@ -35,7 +35,30 @@ namespace AltAIMLbot
 
         public static string startUpPath = null;
         public static Servitor ourServitor = null;
-        
+        protected static BehaviorSet myBehaviors
+        {
+            get { return ourServitor.curBot.myBehaviors; }
+        }
+        protected static BehaviorContext curBot
+        {
+            get { return ourServitor.curBot.BotBehaving; }
+        }
+        protected static AltBot bot
+        {
+            get { return ourServitor.curBot; }
+        }
+        protected static SIProlog prologEngine
+        {
+            get
+            {
+                var pl = ourServitor.prologEngine;
+                if (pl != null) return pl;
+                pl = bot.prologEngine;
+                if (pl != null) return pl;
+                return SIProlog.CurrentProlog;
+            }
+        }
+
         /// <summary>
         /// The idea of tl_serverRoot is it my be set by a http client who knows this machine by a 
         ///  public name such as http://12.1.1.12
@@ -342,8 +365,8 @@ namespace AltAIMLbot
             if (sections.Length >1) qcodes = sections[1];
             string filename = Path.GetFileName(justURL);
             string behaviorName = filenameToBehaviorname(filename);
-            string behaviorFile = ourServitor.curBot.myBehaviors.behaviorDiskName(behaviorName);
-            string behaviorDir = ourServitor.curBot.myBehaviors.persistantDirectory;
+            string behaviorFile = myBehaviors.behaviorDiskName(behaviorName);
+            string behaviorDir = myBehaviors.persistantDirectory;
             string path = Path.Combine(startUpPath, filename);
 
             // The message body is posted as bytes. read the bytes
@@ -421,11 +444,10 @@ namespace AltAIMLbot
                     {
 
                         Console.WriteLine("WEBPOST DELETE:{0}", categoryPath);
-                        string gn = ourServitor.curBot.Graphmaster.ScriptingName;
-
-                        if (ourServitor.curBot.UseRapstore(gn))
+                        string gn = curBot.Graphmaster.ScriptingName;
+                        if (bot.UseRapstore(gn))
                         {
-                            var extDB = ourServitor.curBot.GetGraph(gn).ensureEdb();
+                            var extDB = bot.GetGraph(gn).ensureEdb();
                             Node myNode = extDB.fetchNode(categoryPath, false);
                             myNode.templates = null;
                             extDB.saveNode(categoryPath, myNode, true);
@@ -435,7 +457,7 @@ namespace AltAIMLbot
                         }
                         else
                         {
-                            ourServitor.curBot.Graphmaster.addCategory(categoryPath, "", "", 1, 1);
+                            curBot.Graphmaster.addCategory(categoryPath, "", "", 1, 1);
 
                         }
                     }
@@ -488,28 +510,27 @@ namespace AltAIMLbot
                       {
 
                         WebLinksWriter.tl_AsHTML = false;
-
-                        AIMLLoader loader = ourServitor.curBot.GetBotRequest("WebServitor graphmasterc").Loader;
+                        AIMLLoader loader = bot.GetBotRequest("WebServitor graphmasterc").Loader;
                         string categoryPath = loader.generatePath(graphName, pattern, that, topic, state1, state2, false);
                         Console.WriteLine("WEBPOST CREATE:{0} --> {1}:{2}", categoryPath, template, vfilename);
-                        string gn = ourServitor.curBot.Graphmaster.ScriptingName;
+                        string gn = curBot.Graphmaster.ScriptingName;
                          
-                        if (ourServitor.curBot.UseRapstore(gn))
+                        if (bot.UseRapstore(gn))
                         {
-                            var extDB = ourServitor.curBot.GetGraph(gn).ensureEdb();
+                            var extDB = bot.GetGraph(gn).ensureEdb();
                             Node.addCategoryDB("", categoryPath, template, vfilename, 1, 1, "", extDB);
                             //extDB.Close();
                             extDB.ClearCache();
                         }
                         else
                         {
-                            ourServitor.curBot.Graphmaster.addCategory(categoryPath, template, vfilename, 1, 1);
+                            curBot.Graphmaster.addCategory(categoryPath, template, vfilename, 1, 1);
                         }
 
                         long writeTime = DateTime.Now.Ticks;
                          // Just make a post loaded mod file
-                        //string modFile = ourServitor.curBot.PersonalizePath("ZZZZ_" + Guid.NewGuid().ToString() + ".aiml");
-                        string modFile = ourServitor.curBot.PersonalizePath("ZZZZ_" + writeTime.ToString() + ".aiml");
+                        //string modFile = curBot.PersonalizePath("ZZZZ_" + Guid.NewGuid().ToString() + ".aiml");
+                        string modFile = bot.PersonalizePath("ZZZZ_" + writeTime.ToString() + ".aiml");
                         var encoded = HttpUtility.HtmlEncode(categoryPath.Trim());
                         string[] header = { "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "<aiml version=\"1.0\">", " <state name=\"*\">" };
                         string serTemplate = String.Format("   <ser path=\"{0}\"> {1} </ser>", encoded, template);
@@ -600,7 +621,7 @@ namespace AltAIMLbot
                 {
                     XmlDocument _xmlfile = new XmlDocument();
                     if (infoBody.Length > 0) _xmlfile.LoadXml(infoBody);
-                    ourServitor.curBot.loadAIMLFromXML(_xmlfile, "webservice");
+                    curBot.loadAIMLFromXML(_xmlfile, "webservice");
                     context.Response.StatusCode = (int)HttpStatusCode.OK;
                 }
                 catch(Exception e)
@@ -618,7 +639,7 @@ namespace AltAIMLbot
             {
                 //Convert the bytes to string using Encoding class
                 //string str = Encoding.UTF8.GetString(PostData);
-                ourServitor.curBot.myBehaviors.defineBehavior(behaviorName, infoBody);
+                myBehaviors.defineBehavior(behaviorName, infoBody);
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
                 lock (BehaviorTree.FileLock) msg = File.ReadAllBytes(path);
                 // return the posted contents if any
@@ -646,14 +667,14 @@ namespace AltAIMLbot
             {
                 behaviorName = context.Request.QueryString["btx"] ?? "";
             }
-            string behaviorFile = ourServitor.curBot.myBehaviors.behaviorDiskName(behaviorName);
+            string behaviorFile = myBehaviors.behaviorDiskName(behaviorName);
             WebLinksWriter.tl_MultiPage = null;
             WebLinksWriter.tl_AsHTML = true;
             string mt = context.Request.QueryString["mt"];
             if (mt!=null)
             {
                 // mulitple Mts in one read
-                var mbf = ourServitor.curBot.prologEngine.GatherMts(mt);
+                var mbf = prologEngine.GatherMts(mt);
                 if (mbf != null && mbf.Count > 0)
                 {
                     //+using (Stream s = context.Response.OutputStream )
@@ -684,7 +705,7 @@ namespace AltAIMLbot
                         foreach (string behaviorT in mbf)
                         {
                             behaviorName = behaviorT;
-                            behaviorFile = ourServitor.curBot.myBehaviors.behaviorDiskName(behaviorName);
+                            behaviorFile = myBehaviors.behaviorDiskName(behaviorName);
                             WILDCARD_READ(context, justURL, behaviorName, behaviorFile, mt);
                         }
                         WebLinksWriter.tl_MultiPage = null;
@@ -699,7 +720,7 @@ namespace AltAIMLbot
         private static void WILDCARD_READ(HttpListenerContext context, string justURL, string behaviorName,
             string behaviorFile, string mt)
         {
-            string behaviorDir = ourServitor.curBot.myBehaviors.persistantDirectory;
+            string behaviorDir = myBehaviors.persistantDirectory;
             //string path = Path.Combine(startUpPath, filename);
             //string path = Path.Combine(startUpPath, context.Request.RawUrl);
             string path = "." + justURL;
@@ -714,7 +735,7 @@ namespace AltAIMLbot
                 context.Response.StatusCode = (int) HttpStatusCode.OK;
                 //+using (Stream s = context.Response.OutputStream )
                 using (var writer = HtmlStreamWriter(context))
-                    ourServitor.curBot.realChem.webWriter(writer, action, query, mt, serverRoot);
+                    bot.realChem.webWriter(writer, action, query, mt, serverRoot);
                 return;
             }
             if (path.Contains("./xrdf/"))
@@ -803,7 +824,7 @@ namespace AltAIMLbot
                 try
                 {
                         using (var writer = HtmlStreamWriter(context))
-                            ourServitor.curBot.Graphmaster.webWriter(writer, action, query, mt, serverRoot);
+                            curBot.Graphmaster.webWriter(writer, action, query, mt, serverRoot);
                 }
                 catch
                 {
@@ -974,8 +995,8 @@ namespace AltAIMLbot
             string filename = Path.GetFileName(justURL);
             string path = Path.Combine(startUpPath, filename);
             string behaviorName = filenameToBehaviorname(filename);
-            string behaviorFile = ourServitor.curBot.myBehaviors.behaviorDiskName(behaviorName);
-            string behaviorDir = ourServitor.curBot.myBehaviors.persistantDirectory;
+            string behaviorFile = myBehaviors.behaviorDiskName(behaviorName);
+            string behaviorDir = myBehaviors.persistantDirectory;
             string query = context.Request.QueryString["q"];
             string action = context.Request.QueryString["a"];
             if (path.Contains("./behavior/"))
@@ -999,7 +1020,7 @@ namespace AltAIMLbot
                 string infoBody = streamReader.ReadToEnd();
                 //Convert the bytes to string using Encoding class
                 //string str = Encoding.UTF8.GetString(PostData);
-                ourServitor.curBot.myBehaviors.defineBehavior(behaviorName, infoBody);
+                myBehaviors.defineBehavior(behaviorName, infoBody);
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
                 lock (BehaviorTree.FileLock) msg = File.ReadAllBytes(path);
                 // return the posted contents if any
@@ -1022,8 +1043,8 @@ namespace AltAIMLbot
             string filename = Path.GetFileName(justURL);
             string path = Path.Combine(startUpPath, filename);
             string behaviorName = filenameToBehaviorname(filename);
-            string behaviorFile = ourServitor.curBot.myBehaviors.behaviorDiskName(behaviorName);
-            string behaviorDir = ourServitor.curBot.myBehaviors.persistantDirectory;
+            string behaviorFile = myBehaviors.behaviorDiskName(behaviorName);
+            string behaviorDir = myBehaviors.persistantDirectory;
             string query = context.Request.QueryString["q"];
             string action = context.Request.QueryString["a"];
             if (path.Contains("./behavior/"))
@@ -1043,7 +1064,7 @@ namespace AltAIMLbot
             if (ourServitor.myIndex.Externindex.Count == 0)
             {
                 List<string> allPaths = new List<string>();
-                ourServitor.curBot.Graphmaster.collectFullPaths("", allPaths);
+                curBot.Graphmaster.collectFullPaths("", allPaths);
                 ourServitor.myIndex.LoadGraphMap(allPaths);
             }
         }
@@ -1075,7 +1096,7 @@ namespace AltAIMLbot
             //loadAimlIndex();
             string gmPath = URITographMaster(rawURL);
             List<string> allPaths = new List<string>();
-            ourServitor.curBot.Graphmaster.searchFullPaths(gmPath, "", allPaths);
+            curBot.Graphmaster.searchFullPaths(gmPath, "", allPaths);
 
             foreach (string frag in allPaths)
             {
@@ -1098,7 +1119,7 @@ namespace AltAIMLbot
             string jsonCode = "";
             try
             {
-                jsonCode = ourServitor.curBot.Graphmaster.searchFullPathsJSON(gmPath, "",jtStartIndex,jtPageSize,jtSorting);
+                jsonCode = curBot.Graphmaster.searchFullPathsJSON(gmPath, "",jtStartIndex,jtPageSize,jtSorting);
             }
             catch (Exception ex)
             {
@@ -1132,7 +1153,7 @@ namespace AltAIMLbot
             {
                 double irScore = pathResults[path];
                 List<string> allPaths = new List<string>();
-                ourServitor.curBot.Graphmaster.searchFullPaths(path,"", allPaths);
+                curBot.Graphmaster.searchFullPaths(path,"", allPaths);
                 string gmURI = graphMasterToURI(path);
 
                 foreach (string frag in allPaths)
@@ -1208,7 +1229,7 @@ namespace AltAIMLbot
                 double irScore = pathResults[path];
                 ArrayList myCollector = new ArrayList();
 
-                ourServitor.curBot.Graphmaster.root.searchFullPathsShortCategory(path, "", myCollector);
+                curBot.Graphmaster.root.searchFullPathsShortCategory(path, "", myCollector);
                 foreach (Hashtable ht in myCollector )
                 {
                     ht["score"]=irScore;
@@ -1303,7 +1324,7 @@ namespace AltAIMLbot
 
             string jsonString = "";
 
-            ArrayList result = ourServitor.curBot.Graphmaster.selectPageResults(collector, jtStartIndex, jtPageSize, jtSorting);
+            ArrayList result = curBot.Graphmaster.selectPageResults(collector, jtStartIndex, jtPageSize, jtSorting);
             Hashtable report = new Hashtable();
             report.Add("Result", "OK");
             report.Add("Records", result);

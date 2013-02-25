@@ -33,10 +33,11 @@ namespace AltAIMLbot
         public long Data;
         public string name;
         public BehaviorContext InitialContext;
-        private IEnumerator<RunStatus> _task;
+        readonly private IEnumerator<RunStatus> _task;
 
         public TaskItem(IEnumerator<RunStatus> task, Scheduler scheduler, BehaviorContext bctx)
         {
+            Debug.Assert(task != null);
             this._task = task;
             this.Scheduler = scheduler;
             this.InitialContext = bctx;
@@ -44,6 +45,7 @@ namespace AltAIMLbot
 
         public TaskItem(IEnumerator<RunStatus> task, Scheduler scheduler, string myName, BehaviorContext bctx)
         {
+            Debug.Assert(task != null);
             this._task = task;
             this.Scheduler = scheduler;
             this.name = myName;
@@ -403,12 +405,11 @@ namespace AltAIMLbot
             }
         }
 
-        public void ActivateBehaviorTask(string name, bool waitUntilComplete, BehaviorContext bctx)
+        public bool ActivateBehaviorTask(string name, bool waitUntilComplete, BehaviorContext bctx)
         {
             if (!waitUntilComplete)
             {
-                ActivateBehaviorTask(name, servitorBot);
-                return;
+                return ActivateBehaviorTask(name, servitorBot);
             }
 
             TaskItem task = FindTask(name);
@@ -417,16 +418,15 @@ namespace AltAIMLbot
             WaitUntilComplete(name);
         }
 
-        public void ActivateBehaviorTask(string name, BehaviorContext bctx)
+        public bool ActivateBehaviorTask(string name, BehaviorContext bctx)
         {
             // if its already running or sleeping 
             string status = taskStatus(name);
-            if (status == "running") return;
-            if (status == "active") return;
+            if (status == "running") return true;
+            if (status == "active") return true;
             if (status == "sleeping")
             {
-                AwakenTask(name);
-                return;
+                return AwakenTask(name);
             }
             // start up a new one
             if (!myBehaviors.definedBehavior(name))
@@ -578,12 +578,17 @@ namespace AltAIMLbot
             active.Append(new TaskItem(task, this, servitorBot));
         }
 
-        public void AwakenTask(string taskName)
+        public bool AwakenTask(string taskName)
         {
+            bool awokeSomething = false;
             var en = sleeping.GetEnumerator();
             while (en.MoveNext())
                 if (en.Current.IsNamed(taskName))
+                {
                     en.MoveCurrentToList(active);
+                    awokeSomething = true;
+                }
+            return awokeSomething;
         }
 
         public TaskItem FindTask(string taskName)
@@ -743,7 +748,7 @@ namespace AltAIMLbot
             }
             string ids = "";
             string tsk = "";
-            TaskList.TaskEnumerator  en = null;
+            TaskList.TaskEnumerator en = null;
             switch (action)
             {
                 case "info":
@@ -783,45 +788,33 @@ namespace AltAIMLbot
 
                 case "activate":
                     ActivateBehaviorTask(behaviorName, servitorBot);
-                     ids = idStatus(behaviorName);
-                     tsk = taskStatus(behaviorName);
-                     writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
+                    WriteNewStatus(writer, behaviorName);
                     break;
                 case "deactivate":
                     RemoveBehaviorTask(behaviorName);
-                     ids = idStatus(behaviorName);
-                     tsk = taskStatus(behaviorName);
-                     writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
+                    WriteNewStatus(writer, behaviorName);
                     break;
                 case "sleep":
                     SleepBehaviorTask(behaviorName);
-                    ids = idStatus(behaviorName);
-                    tsk = taskStatus(behaviorName);
-                    writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
+                    WriteNewStatus(writer, behaviorName);
                     break;
                 case "sleepall":
                     SleepAllTasks();
-                    ids = idStatus(behaviorName);
-                    tsk = taskStatus(behaviorName);
-                    writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
+                    WriteNewStatus(writer, behaviorName);
                     break;
                 case "reviveall":
                     ReviveAllTasks();
-                    ids = idStatus(behaviorName);
-                    tsk = taskStatus(behaviorName);
-                    writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
+                    WriteNewStatus(writer, behaviorName);
                     break;
 
                 case "status":
-                     ids = idStatus(behaviorName);
-                     tsk = taskStatus(behaviorName);
-                     writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
+                    WriteNewStatus(writer, behaviorName);
                     break;
                 case "liststatus":
                     en = sleeping.GetEnumerator();
                     while (en.MoveNext())
                     {
-                            writer.WriteLine("<status id=\"{0}\" taskStatus=\"{1}\" />", en.Current.name, "sleeping");
+                        writer.WriteLine("<status id=\"{0}\" taskStatus=\"{1}\" />", en.Current.name, "sleeping");
                     }
                     en = active.GetEnumerator();
                     while (en.MoveNext())
@@ -833,7 +826,7 @@ namespace AltAIMLbot
                     var runState = LockInfo.CopyOf(myBehaviors.runState);
                     foreach (string key in runState.Keys)
                     {
-                        string status= runState[key].ToString();
+                        string status = runState[key].ToString();
                         writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" />", key, status);
                     }
 
@@ -857,23 +850,17 @@ namespace AltAIMLbot
                     myBehaviors.makeInvisible(query);
                     myBehaviors.makeInvisible(behaviorName);
                     RemoveBehaviorTask(behaviorName);
-                    ids = idStatus(behaviorName);
-                    tsk = taskStatus(behaviorName);
-                    writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
+                    WriteNewStatus(writer, behaviorName);
                     break;
 
                 case "unblock":
                     myBehaviors.makeVisible(query);
-                    ids = idStatus(behaviorName);
-                    tsk = taskStatus(behaviorName);
-                    writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
+                    WriteNewStatus(writer, behaviorName);
                     break;
 
                 case "unblockall":
                     myBehaviors.invisiblePatterns .Clear();
-                    ids = idStatus(behaviorName);
-                    tsk = taskStatus(behaviorName);
-                    writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
+                    WriteNewStatus(writer, behaviorName);
                     break;
 
                 case "listblocks":
@@ -885,7 +872,7 @@ namespace AltAIMLbot
 
                 case "checkblock":
                     bool v1 = myBehaviors.visibleBehavior(behaviorName);
-                    bool v2 = myBehaviors.visibleBehavior(query );
+                    bool v2 = myBehaviors.visibleBehavior(query);
                     bool v3 = myBehaviors.definedBehavior(behaviorName);
                     bool v4 = myBehaviors.definedBehavior(query);
                     writer.WriteLine("<visible name=\"{0}\" value=\"{1}\"/>", behaviorName, v1);
@@ -903,13 +890,21 @@ namespace AltAIMLbot
                     break;
 
 
-                 default  :
-                    writer.WriteLine("<error action=\"{0}\" query=\"{1}\" behaviorName=\"{2}\" />", action, query, behaviorName);
- 
-                break;
+                default:
+                    writer.WriteLine("<error action=\"{0}\" query=\"{1}\" behaviorName=\"{2}\" />", action, query,
+                                     behaviorName);
+
+                    break;
             }
             writer.WriteLine("<fin/>");
             writer.Close();
+        }
+
+        private void WriteNewStatus(TextWriter writer, string behaviorName)
+        {
+            string ids = idStatus(behaviorName);
+            string tsk = taskStatus(behaviorName);
+            writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
         }
 
         public HashSet<string> GatherTaskNames(string behaviorName)

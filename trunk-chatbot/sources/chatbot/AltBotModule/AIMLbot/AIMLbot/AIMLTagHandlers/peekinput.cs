@@ -43,15 +43,8 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             if (this.TemplateNodeName == "peekinput")
             {
-                if (bot.chatInputQueue.Count > 0)
-                {
-                    return bot.chatInputQueue.Peek();
-                }
-                else
-                {
-                    return bot.lastBehaviorChatInput;
-                }
-
+                BehaviorContext bh = this.bot.BotBehaving;
+                return bh.lastBehaviorChatInputPeek();
             }
             return String.Empty;
 

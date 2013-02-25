@@ -117,8 +117,9 @@ namespace AltAIMLbot
                 }
         }
 
-        public void advanceBotMachine(AltBot bot)
+        public void advanceBotMachine(AltBot bot0)
         {
+            BehaviorContext bot = bot0.BotBehaving;
             string nextState = curState;
             XmlNodeList rules = rulesDoc.SelectNodes(String.Format(ruleMatch, curState));
             XmlNode node = rules[0];
@@ -234,8 +235,9 @@ namespace AltAIMLbot
             bot.setBBHash("fsmstate",curState);
         }
 
-        public void processTransition(XmlNode transitionNode, AltBot bot)
+        public void processTransition(XmlNode transitionNode, AltBot bot0)
         {
+            BehaviorContext bot = bot0.BotBehaving;
             Console.WriteLine("FSM: processTransition {0}", transitionNode.InnerText);
 
             foreach (XmlNode templateNode in transitionNode.ChildNodes)
@@ -244,8 +246,9 @@ namespace AltAIMLbot
             }
         }
 
-        public void processOnEntry(string state, AltBot bot)
+        public void processOnEntry(string state, AltBot bot0)
         {
+            BehaviorContext bot = bot0.BotBehaving;
             Console.WriteLine("FSM: processOnEntry {0}", state);
             XmlNodeList rules = rulesDoc.SelectNodes(String.Format(ruleMatch, state));
             XmlNode node = rules[0];
@@ -270,8 +273,9 @@ namespace AltAIMLbot
             }
         }
 
-        public void processOnExit(string state, AltBot bot)
+        public void processOnExit(string state, AltBot bot0)
         {
+            BehaviorContext bot = bot0.BotBehaving;
             Console.WriteLine("FSM: processOnExit {0}", state);
             XmlNodeList rules = rulesDoc.SelectNodes(String.Format(ruleMatch, state));
             XmlNode node = rules[0];

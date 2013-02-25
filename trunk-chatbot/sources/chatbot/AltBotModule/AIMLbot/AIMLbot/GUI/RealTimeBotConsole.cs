@@ -96,7 +96,7 @@ namespace AltAIMLbot.GUI
             this.Name = name;
             InitializeComponent();
             this.Size = new Size(this.Size.Width + 300, this.Size.Height);
-            this.Text = string.Format("SimThinker Debug {0}", name);
+            this.Text = string.Format("AltAIMLBot Debug {0}", name);
             this.SizeChanged += TextForm_ResizeEnd;
             this.Resize += TextForm_ResizeEnd;
             this.Dock = DockStyle.Fill;

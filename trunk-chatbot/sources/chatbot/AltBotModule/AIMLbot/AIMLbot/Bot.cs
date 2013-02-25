@@ -75,11 +75,6 @@ namespace AltAIMLbot
 
         static public bool MemcachedServerKnownDead = false;
 
-        /// <summary>
-        /// When behaviour trees run they need a body/situational context like is "current user", "last heard" etc
-        /// </summary>
-        public BehaviorContext BotBehaving;
-
         public RChem myChemistry = null;
         public Qchem realChem = null;
         public ChemTrace myChemTrace = null;
@@ -87,7 +82,7 @@ namespace AltAIMLbot
         public BehaviorSet myBehaviors;
         public Cron myCron = null;
         public bool inCritical = false;
-        private bool _blockCron = false;
+        internal bool _blockCron = false;
 
         public bool blockCron
         {
@@ -131,11 +126,18 @@ namespace AltAIMLbot
         [NonSerialized] public KnowledgeBase myBaseKB = new KnowledgeBase();
         [NonSerialized] public WalkSAT myWalkSAT = new WalkSAT();
         [NonSerialized] public Model myModel = null;
-        [NonSerialized] public Model myActiveModel = null;
+
+        [NonSerialized] internal Model _myActiveModel;
+
+        public Model myActiveModel
+        {
+            get { return BotBehaving.myActiveModel; }
+            set { BotBehaving.myActiveModel = value; }
+        }
+
         public string myPositiveSATModleString = null;
 
         public object guestEvalObject = null;
-        public Queue<string> outputQueue = new Queue<string>();
 
         private Servitor _myServitor;
 
@@ -156,7 +158,7 @@ namespace AltAIMLbot
         /// <summary>
         /// A dictionary object that looks after all the settings associated with this bot
         /// </summary>
-        public SettingsDictionary GlobalSettings;
+        public SettingsDictionaryReal GlobalSettings;
 
         public SettingsDictionary AllUserPreds;
 
@@ -438,22 +440,9 @@ namespace AltAIMLbot
         /// </summary>
         public bool isPerformingOutput
         {
-            get { return _isPerformingOutput; }
-            set
-            {
-                if (value == false && outputQueue.Count > 0)
-                {
-                    if (_isPerformingOutput == true)
-                    {
-                        writeToLog("ERROR Was preformingOUTUT! ");
-                    }
-                    processOutputQueue();
-                }
-                _isPerformingOutput = value;
-            }
+            get { return BotBehaving != null && BotBehaving.isPerformingOutput; }
+            set { BotBehaving.isPerformingOutput = value; }
         }
-
-        public bool _isPerformingOutput = false;
 
         public object loglock = new object();
 
@@ -825,15 +814,91 @@ namespace AltAIMLbot
 
         public delegate void LogMessageDelegate();
 
-        public sayProcessorDelegate sayProcessor;
-        public systemPersonaDelegate personaProcessor = null;
-
-        public string lastBehaviorChatInput;
-        public string lastBehaviorChatOutput;
-        public AltAIMLbot.User lastBehaviorUser;
-        public Queue<string> chatInputQueue = new Queue<string>();
-
         #endregion
+
+        public BehaviorContext servitorBot
+        {
+            get
+            {
+                if (_behaviorContext != null) return _behaviorContext;
+                return this.BotBehaving;
+            }
+        }
+
+        private BehaviorContext _behaviorContext;
+        /// <summary>
+        /// When behaviour trees run they need a body/situational context like is "current user", "last heard" etc
+        /// </summary>
+        public BehaviorContext BotBehaving
+        {
+            get
+            {
+                if (_behaviorContext == null)
+                {
+                    writeToLogWarn("Bot *NOT* Behaving == null");
+                }
+                return _behaviorContext;
+            }
+            set
+            {
+                if (value == _behaviorContext) return;
+                if (value==null)
+                {
+                    _behaviorContext.Release();
+                    return;
+                }
+                else
+                {
+                    _behaviorContext = value;
+                    _behaviorContext.bot = this;
+                }
+            }
+        }
+
+        public sayProcessorDelegate sayProcessor
+        {
+            get
+            {
+                if (BotBehaving != null)
+                {
+                    return BotBehaving.sayProcessor;
+                }
+                return _sayProcessor;
+            }
+            set
+            {
+                if (BotBehaving != null)
+                {
+                    BotBehaving.sayProcessor = value;
+                    return;
+                }
+                _sayProcessor = value;
+            }
+        }
+        internal sayProcessorDelegate _sayProcessor;
+        internal systemPersonaDelegate _personaProcessor;
+        public systemPersonaDelegate personaProcessor
+        {
+            get
+            {
+                if (BotBehaving != null)
+                {
+                    return BotBehaving.personaProcessor;
+                }
+                return _personaProcessor;
+            }
+            set
+            {
+                if (BotBehaving != null)
+                {
+                    BotBehaving.personaProcessor = value;
+                    return;
+                }
+                _personaProcessor = value;
+            }
+        }
+
+        //public User lastBehaviorUser{get { return BehaviorUser.lastBehaviorUser; }}
 
         #region Events
 
@@ -944,11 +1009,17 @@ namespace AltAIMLbot
             this.DefaultPredicates = MakeSettingsDictionary("DefaultPredicatesMt");
             this.AllUserPreds = MakeSettingsDictionary("AllUserPredsMt");
             RegisterDictionary("allusers", AllUserPreds);
+            if (_behaviorContext==null)
+            {
+                _behaviorContext = new BehaviorContext(this, null);
+            }
             User guser =
                 ExemplarUser =
                 LastUser =
                 ExemplarUser ??
                 FindUser("ExemplarUser") ?? new MasterUser("ExemplarUser", "ExemplarUser", this, DefaultPredicates);
+            _behaviorContext._user = guser;
+            guser.BehaviorContext = _behaviorContext;
             guser.SetMeMyselfAndI("ExemplarUser");
             RegisterDictionary("defaults", DefaultPredicates);
             DefaultPredicates.InsertFallback(() => this.AllUserPreds);
@@ -1248,7 +1319,7 @@ namespace AltAIMLbot
         /// <param name="message">The message to log</param>
 
         #endregion
-
+        /*
         #region Conversation methods
 
         public void processOutputQueue()
@@ -1360,7 +1431,7 @@ namespace AltAIMLbot
                 outmsg += msg + "\r\n";
             }
             return outmsg;
-        }
+        }*/
 
         public void loadCrons()
         {
@@ -1532,6 +1603,7 @@ namespace AltAIMLbot
                             if (LogicalParticleFilter1.GlobalSharedSettings.Trace("failed to find response to " + path))
                             {
                                 queryTemplate = ourGraphMaster.evaluate(path, query, request, MatchState.Pattern, new StringBuilder());
+                                MainConsoleWriteLn("RETRY PATH: " + path + " = " + queryTemplate);
                             }
                             //myBehaviors.SkipLog = true;
                             myBehaviors.logText("failed to find response to " + path);
@@ -1691,26 +1763,61 @@ namespace AltAIMLbot
             }
             return normalizedPaths;
         }
-
         public object evalTemplateNodeInnerXml(XmlNode templateNodeInnerXML, RequestKind requestType)
         {
-            return evalTemplateXml(templateNodeInnerXML.InnerXml, requestType);
+            return evalTemplateNode(templateNodeInnerXML, requestType, BotBehaving);
+        }
+        public object evalTemplateNodeInnerXml(XmlNode templateNodeInnerXML, RequestKind requestType, BehaviorContext buBehaviorContext)
+        {
+            if (true)
+            {
+                StringBuilder SB = new StringBuilder();
+                int childsDone = 0;
+                Unifiable vv = null;
+                foreach (XmlNode childNode in templateNodeInnerXML)
+                {
+                    childsDone++;
+                    // otherwise take the tag content as a srai (to trip say a random reply)
+                    const bool expandOnNoHits = true; // actually WordNet
+                    const float threshold = 0.0f;
+                    bool childSuccess;
+                    AIMLTagHandler tagHandlerUChild = buBehaviorContext.GetChildTagHandler(childNode);
+                    if (childsDone == 2)
+                    {
+                        SB.Append("" + vv);
+                    }
+                    vv = AIMLTagHandler.ProcessTagHandlerNode(childNode, true, false, out childSuccess,
+                                                              tagHandlerUChild);
+                    if (childsDone >= 2)
+                    {
+                        SB.Append("" + vv);
+                    }
+
+                }
+                if (childsDone == 1)
+                {
+                    return vv;
+                }
+                vv = SB.ToString();
+                return vv;
+            }
+            return evalTemplateXml(templateNodeInnerXML.InnerXml, requestType, buBehaviorContext);
         }
 
-        public object evalTemplateXml(string templateNodeString, RequestKind requestType)
+        public object evalTemplateXml(string templateNodeString, RequestKind requestType, BehaviorContext buBehaviorContext)
         {
             if (!templateNodeString.StartsWith("<template"))
             {
                 templateNodeString = string.Format("<template>{0}</template>", templateNodeString);
             }
             XmlNode resultTemplateNode = AIMLTagHandler.getNode(templateNodeString);
-            return evalTemplateNode(resultTemplateNode, requestType);
+            return evalTemplateNode(resultTemplateNode, requestType, buBehaviorContext);
         }
 
         /// <summary>
         /// given an template side XML, try evaluating it
         /// </summary>       
-        public object evalTemplateNode(XmlNode templateNode, RequestKind requestType)
+        public object evalTemplateNode(XmlNode templateNode, RequestKind requestType, BehaviorContext buBehaviorContext)
         {
             if (StaticXMLUtils.IsBlank(templateNode)) return "";
 
@@ -1763,6 +1870,9 @@ namespace AltAIMLbot
             }
             if (tagName == "#text")
             {
+if (node.Value!=node.InnerText) {
+}
+                return node.InnerText;
                 return node.Value;
             }
             if (tagName == "#whitespace")
@@ -1775,7 +1885,7 @@ namespace AltAIMLbot
             {
                 Console.WriteLine("MISSING HANDLER FOR:{0}", tagName);
             }
-            if (tagHandler.IsTraced)
+            if (tagHandler == null || tagHandler.IsTraced)
             {
                 TRACE = Console.WriteLine;
             }
@@ -1784,6 +1894,7 @@ namespace AltAIMLbot
                 string debug = node.OuterXml;
                 if (node.NodeType == XmlNodeType.Text) return node.InnerText;
                 if (node.NodeType == XmlNodeType.Whitespace) return node.InnerText;
+                if (node.NodeType == XmlNodeType.SignificantWhitespace) return node.InnerText;
                 if (node.NodeType == XmlNodeType.Comment) return " , ";
                 TRACE(" -- Result0 {0} : {1}", tagName, node.InnerText);
                 return node.InnerText;
@@ -2306,11 +2417,7 @@ namespace AltAIMLbot
                 return null;
             }
         }
-
-        #endregion
-
-
-
+        
         #region Serialization
 
         /// <summary>
@@ -2500,8 +2607,17 @@ The AltAIMLbot program.
                 GlobalSettings.updateSetting(settingKey, myValue);
             }
         }
-
-        public void importBBUserSettings(AltAIMLbot.User myUser, string bbKey, string settingKey)
+        public void exportBBBotSettings(string bbKey, string settingKey)
+        {
+            var val = GlobalSettings.grabSetting(settingKey, false);
+            setBBHash0(bbKey, val, this.BotBehaving);
+        }
+        public void exportBBUserSettings(User myUser, string bbKey, string settingKey)
+        {
+            var val = myUser.Predicates.grabSetting(settingKey, false);
+            setBBHash0(bbKey, val, this.BotBehaving);
+        }
+        public void importBBUserSettings(User myUser, string bbKey, string settingKey)
         {
             string myValue = myChemistry.m_cBus.getHash(bbKey);
             if (myValue.Length > 0)
@@ -2510,7 +2626,7 @@ The AltAIMLbot program.
             }
         }
 
-        public void importBBUser(AltAIMLbot.User myUser)
+        public void WithBBUser(User myUser, Action<User, string, string> importBBUserSettings)
         {
             importBBUserSettings(myUser, "username", "name");
             importBBUserSettings(myUser, "userage", "age");
@@ -2556,7 +2672,7 @@ The AltAIMLbot program.
           
 
         }
-        public void importBBBot()
+        public void WithBBBot(Action<string, string> importBBBotSettings)
         {
             importBBBotSettings("dollcharname", "name");
             importBBBotSettings("botmaster", "botmaster");
@@ -2623,11 +2739,11 @@ The AltAIMLbot program.
 
         // The dictionary that is a mirror of the blackboard
         // We hit this for local applications 
-        public bool bbSafe = false;
-        public bool useMemcache = false;
+        internal bool bbSafe = false;
+        internal bool useMemcache = false;
 
         public Dictionary<string, string> BBDict = new Dictionary<string, string>();
-        public void setBBHash(string key, string data)
+        public void setBBHash(string key, string data, BehaviorContext bu)
         {
             if (key == null) return;
             string okey = key;
@@ -2642,7 +2758,19 @@ The AltAIMLbot program.
                 else if (key.StartsWith("user"))
                 {
                     key = key.Substring(4);
-                    if (LastUser != null) LastUser.Predicates.addSetting("bb_" + key, data);
+                    var lu = LastUser;
+                    User buu = null;
+                    if (bu != null)
+                    {
+                        buu = bu._user;
+                        if (buu != null)
+                            if (buu == lu)
+                            {
+                                buu.Predicates.addSetting("bb_" + key, data);
+                                return;
+                            }
+                    }
+                    Console.WriteLine("CHECK setBBHash Voided({0},{1}) ('{2}'!='{3}')", key, data, buu, lu);
                 }
                 else
                 {
@@ -2651,13 +2779,24 @@ The AltAIMLbot program.
             }
             catch (Exception e)
             {
-                Console.WriteLine("CHECK setBBHash({0},{1}) ERR:{2}", key,data, e.Message);
+                Console.WriteLine("CHECK setBBHash({0},{1}) ERR:{2}", key, data, e);
             }
-            setBBHash0(okey, data);
+            finally
+            {
+                setBBHash0(okey, data, bu);
+            }
         }
-        public void setBBHash0(string key, string data)
+        public void setBBHash0(string key, string data, BehaviorContext bu)
         {
             //curBot.myChemistry.m_cBus.setHash(key,data);
+            if (bu == null || bu._user == null)
+            {
+                if (key.StartsWith("user")) return;
+                if (!key.StartsWith("bot"))
+                {
+                    return;
+                }
+            }
             lock (BBDict) BBDict[key] = data;
             if (useMemcache)
             {
@@ -2675,22 +2814,22 @@ The AltAIMLbot program.
 //                Console.WriteLine("CHECK setBBHash0: useMemcache=false({0},{1})", key, data);
             }
         }
-        public string getBBHash(string key)
+        public string getBBHash(string key, BehaviorContext bu)
         {
-            if (string.IsNullOrEmpty(key)) return "";
+            if (string.IsNullOrEmpty(key)) return null;
 
-            string gs = getBBHash0(key);
+            string gs = getBBHash0(key, bu);
             if (!string.IsNullOrEmpty(gs)) return gs;
             if (GlobalSettings != null)
             {
                 gs = GlobalSettings.grabSetting("bb_" + key, false);
-                if (!string.IsNullOrEmpty(gs)) return gs;
+                if (gs != null) return gs;
             }
             if (key.StartsWith("bot"))
             {
                 key = key.Substring(3);
                 gs = _botAsUser.Predicates.grabSetting("bb_" + key, false);
-                if (!string.IsNullOrEmpty(gs)) return gs;
+                if (gs != null) return gs;
             }
             else if (key.StartsWith("user"))
             {
@@ -2698,31 +2837,33 @@ The AltAIMLbot program.
                 gs = LastUser.Predicates.grabSetting("bb_" + key, true);
                 if (!string.IsNullOrEmpty(gs)) return gs;
             }
-            return "";
+            return null;
         }
 
         public bool bbDisabled = false;
-        public string getBBHash0(string key)
+        public bool memcachedDisabledBetweenRunsTest = true;
+        public string getBBHash0(string key, BehaviorContext bu)
         {
             try
             {
                 string val;
-                if (useMemcache)
+                if (useMemcache && !memcachedDisabledBetweenRunsTest)
                 {
                     if ((myChemistry != null) && (myChemistry.m_cBus != null))
                     {
                         val = myChemistry.m_cBus.getHash(key);
                         lock (BBDict) BBDict[key] = val;
                         if (!string.IsNullOrEmpty(val)) return val;
-                        return "";
+                        return null;
                     }
                 }
                 lock (BBDict) if (BBDict.TryGetValue(key, out val)) return val;
-                return "";
+                return null;
             }
-            catch
+            catch(Exception e)
             {
-                return "";
+                writeToLog(e);
+                return null;
             }
         }
         #endregion
@@ -2763,7 +2904,7 @@ The AltAIMLbot program.
         /// <summary>
         /// When a tag has no name like <icecream/> it is transformed to <bot name="icecream"></bot>
         /// </summary>
-        public static bool UnknownTagsAreBotVars = true;
+        public static bool UnknownTagsAreBotVars = false;
 
 
         public GraphMaster GetGraph(string graphName)

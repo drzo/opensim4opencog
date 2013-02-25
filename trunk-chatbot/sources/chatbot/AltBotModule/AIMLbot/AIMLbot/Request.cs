@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using AIMLbot;
@@ -25,7 +26,8 @@ namespace AltAIMLbot.Utils
         public int depth = 0;
         public int depthMax = 128;
 
-
+        [CopyFromParent]
+        public SettingsPolicy settingsPolicy;
         /// <summary>
         /// The bot to which the request is being made
         /// </summary>
@@ -96,6 +98,7 @@ namespace AltAIMLbot.Utils
 
         public void ResetValues(bool clearSubQueries)
         {
+            CopyToRequest(ParentMostRequest, this);
             var TheDurration = Durration;
             if (TheDurration.TotalMilliseconds <= 1d)
             {
@@ -481,9 +484,9 @@ namespace AltAIMLbot.Utils
         {
             InitRequest(rawInput, user, options, thatSaid, targetUser, bot, parent, graphMaster, isToplevel, requestType);
         }
-        public void InitRequest(Unifiable rawInput, User user, LoaderOptions options, Unifiable thatSaid, User targetUser, AltBot bot, Request parent, GraphMaster graphMaster, bool isToplevel, RequestKind requestType)
+        public void InitRequest(Unifiable rawInput, User user, LoaderOptions options, Unifiable thatSaid, User targetUser, AltBot bot0, Request parent, GraphMaster graphMaster, bool isToplevel, RequestKind requestType)
         {
-
+            this.bot = bot0;
             bool englishChat = requestType.ContainsAny(RequestKind.NaturalLang);
             if (parent == null && options == null)
             {
@@ -509,7 +512,7 @@ namespace AltAIMLbot.Utils
             currentInput = BestOf(currentInput, rawInput);
             if (!englishChat)
             {
-                if (currentThat != "*")
+                if (currentThat != "*" && currentThat != "Nothing")
                 {
                     user.WriteToUserTrace("SWARN is this supposed to be english?");
 
@@ -924,6 +927,7 @@ namespace AltAIMLbot.Utils
             }
         }
 
+        [CopyFromParent]
         public DateTime TimesOutAt { get; set; }
 
         public void WriteLine(string s, params object[] args)
@@ -1038,6 +1042,12 @@ namespace AltAIMLbot.Utils
             subRequest.StartedOn = request.StartedOn;
             subRequest.TimesOutAt = request.TimesOutAt;
             subRequest.TargetSettings = request.TargetSettings;
+            foreach (var info in subRequest.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            {
+                var cas = info.GetCustomAttributes(typeof (CopyFromParentAttribute), true);
+                if (cas.Length == 0) continue;
+                info.SetValue(subRequest, info.GetValue(request));
+            }
             request.ExitQueue.Add("exit subRequest: " + subRequest.rawInput, subRequest.Exit);
         }
 
@@ -1679,6 +1689,10 @@ namespace AltAIMLbot.Utils
             return isToplevel && requestType.ContainsAll(RequestKind.NaturalLang | RequestKind.Realtime) &&
                    !requestType.ContainsAny(RequestKind.TagHandler | RequestKind.BackgroundThread);
         }
+    }
+
+    public class CopyFromParentAttribute : Attribute
+    {
     }
 }
 

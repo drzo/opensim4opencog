@@ -42,7 +42,7 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             if(templateNode.ParentNode.Name=="srai")
             {
-                var vv = ApplySubstitutions.Substitute(Proc.Person2Substitutions, unifiable);
+                var vv = ApplySubstitutions.Substitute(substs.Person2Substitutions, unifiable);
                 return vv;
             }
             return unifiable;
