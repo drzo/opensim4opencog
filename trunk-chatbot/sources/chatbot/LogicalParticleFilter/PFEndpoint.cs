@@ -62,6 +62,7 @@ namespace LogicalParticleFilter1
             }
         }
 
+        public Thread tmPFEndpointThread;
         [ThreadStatic] public SparqlServerConfiguration _config;
         public Dictionary<string, SparqlServerConfiguration> Configs = new Dictionary<string, SparqlServerConfiguration>();
 
@@ -133,7 +134,7 @@ namespace LogicalParticleFilter1
                 }
 
                 //loadAnalyzer();
-                Thread t = new Thread(new ThreadStart(clientListener));
+                Thread t = tmPFEndpointThread = new Thread(new ThreadStart(clientListener));
                 t.Start();
             }
         }

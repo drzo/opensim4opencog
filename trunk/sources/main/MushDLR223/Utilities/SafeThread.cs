@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 //using System.Threading;
+using System.Threading;
 using System.Windows.Forms;
 using MushDLR223.Utilities;
 using NativeThread = System.Threading.Thread;
@@ -20,10 +21,167 @@ namespace ThreadPoolUtil
     /// </summary>
     public class Thread : IThreadRunnable
     {
+        public static bool AttemptRunNewThreadsInThreadPool = false;
+        private bool IsPoolThread;
+        private bool PreventPoolThread;
+        private NativeThread ExitedFromThread;
+        private void WaitTS(String named, Action<NativeThread> action)
+        {
+            var mre = new System.Threading.ManualResetEvent(false);
+            WithTS(named,
+                   (t) =>
+                   {
+                       action(t);
+                       mre.Set();
+                   });
+            mre.WaitOne();
+        }
+        private void WithTS(string named, Action<NativeThread> action)
+        {
+            lock (SyncLock)
+            {
+                WithTS0(named, action);
+            }
+        }
+
+        private void WithTS0(string named, Action<NativeThread> action)
+        {
+            var nt = _nativeThread;
+            if (!IsPoolThread)
+            {
+                if (nt != null)
+                {
+                    action(nt);
+                    return;
+                }
+            }
+            if (exitedPool(named))
+            {
+                return;
+            }
+            AddOnThreadSet(named, action);
+        }
+        private bool exitedPool(string notice)
+        {
+            if (!IsPoolThread) return false;
+            if (ExitedFromThread != null)
+            {
+                Notice(4, "ERROR ExitedFromThread = " + ExitedFromThread + " " + notice);
+            }
+            return true;
+        }
+        public class NamedAct
+        {
+            public string Name;
+            public Action<NativeThread> Act;
+        }
+        private void AddOnThreadSet(string s, Action<NativeThread> nt)
+        {
+            var na = new NamedAct {Name = s, Act = nt};
+            lock (SyncLock)
+            {
+                if (OnTFSetList == null)
+                {
+                    OnTFSetList = new List<NamedAct>();
+                }
+                lock (OnTFSetList) OnTFSetList.Add(na);
+            }
+        }
+        private bool RemoveNativeThread(NativeThread nt)
+        {
+            if (nt == null) return true;
+            lock (AllThreads2Safe)
+            {
+                Thread safe;
+                if (!AllThreads2Safe.TryGetValue(nt, out safe))
+                {
+                    return true;
+                }
+                if (safe == this)
+                {
+                    AllThreads.Remove(nt);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void RaiseOnSetThreadField(NativeThread v)
+        {
+            if (!RemoveNativeThread(v)) Notice(4, "native thread points to someone besides me!");
+            lock (AllThreads2Safe) AllThreads2Safe[v] = this;
+            RunOnSetThreadField(v);
+        }
+
+        private void RunOnSetThreadField(NativeThread v)
+        {
+            lock (SyncLock)
+            {
+                if (OnTFSetList == null) return;
+                lock (OnTFSetList)
+                {
+                    foreach (var namedAct in OnTFSetList)
+                    {
+                        namedAct.Act(v);
+                    }
+                    OnTFSetList.Clear();
+                    OnTFSetList = null;
+                }
+            }
+        }
+
+        public static void Notice(int level, string fmt, params object[] args)
+        {
+            SafeThreadPool.Notice(level, fmt, args);
+        }
+
+        public bool IsThreadPoolThread
+        {
+            get
+            {
+                if (threadField == null)
+                {
+                    return IsPoolThread;
+                }
+                return threadField.IsThreadPoolThread;
+            }
+        }
+
+        private List<NamedAct> OnTFSetList = null;
         /// <summary>
         /// The instance of SThread
         /// </summary>
-        private NativeThread threadField;
+        private NativeThread threadField
+        {
+            get { return _nativeThread; }
+            set
+            {
+                var nt = _nativeThread;
+                if (nt == value) return;
+                if (value == null)
+                {
+                    if (!RemoveNativeThread(nt)) Notice(4, "native thread points to someone besides me!");
+                    _nativeThread = null;
+                }
+                else
+                {
+                    if (!RemoveNativeThread(nt)) Notice(4, "native thread points to someone besides me!");
+                    _nativeThread = value;
+                    RaiseOnSetThreadField(value);
+                }
+            }
+        }
+
+        private void RunningFromThreadPool(object unused)
+        {
+            var nt = NativeThread.CurrentThread;
+            _nativeThread = nt;
+            RaiseOnSetThreadField(nt);
+            RunIt();
+            ExitedFromThread = nt;
+            threadField = null;
+        }
+        private NativeThread _nativeThread;
         private readonly ThreadStart runnable0;
         private readonly ParameterizedThreadStart runnable1;
         private readonly object param;
@@ -83,14 +241,43 @@ namespace ThreadPoolUtil
             MakeThis(true);
         }
 
+        public object SyncLock = new object();
         private void MakeThis(bool needMakeThread)
         {
+            lock (SyncLock)
+            {
+                MakeThis0(needMakeThread);
+            }
+        }
+        private void MakeThis0(bool needMakeThread)
+        {
+            CreationStack = CreationStack ?? SafeThreadPool.StackTraceString();
+            bool specialSize = size != -2;
+            if (needMakeThread && !specialSize && !PreventPoolThread)
+            {
+                if (AttemptRunNewThreadsInThreadPool)
+                {
+                    needMakeThread = false;
+                    IsPoolThread = true;
+                    if (_nativeThread != null)
+                    {
+                        // reuse Warning
+                        needMakeThread = true;
+                        IsPoolThread = false;
+                        PreventPoolThread = true;
+                        _nativeThread = null;
+                    }
+                }
+            }
             if (needMakeThread)
             {
-                threadField = size != -2 ? new NativeThread(RunIt, size) : new NativeThread(RunIt);
+                PreventPoolThread = true;
+                threadField = specialSize ? new NativeThread(RunIt, size) : new NativeThread(RunIt);
             }
-            lock (AllThreads2Safe) AllThreads2Safe[threadField] = this;
-            CreationStack = SafeThreadPool.StackTraceString();
+            if (threadField != null)
+            {
+                lock (AllThreads2Safe) AllThreads2Safe[threadField] = this;
+            }
         }
 
         /// <summary>
@@ -105,9 +292,10 @@ namespace ThreadPoolUtil
             this.Name = Name;
         }
 
-        public void RunIt()
+        protected void RunIt()
         {
             This = this;
+            willBeBg = NativeThread.CurrentThread.IsBackground;
             try
             {
                 RegisterThread(threadField);
@@ -123,6 +311,11 @@ namespace ThreadPoolUtil
         /// This method has no functionality unless the method is overridden
         /// </summary>
         public virtual void Run()
+        {
+            RunRunnable();
+        }
+
+        private void RunRunnable()
         {
             try
             {
@@ -146,7 +339,33 @@ namespace ThreadPoolUtil
         /// </summary>
         public virtual void Start()
         {
-            //            savedStartUp = GetStackString();
+            StartStack = SafeThreadPool.StackTraceString();
+            if (this.IsPoolThread)
+            {
+                ManualResetEvent mre = null;
+                bool useRE = !IsBackground;
+                if (useRE)
+                {
+                    mre = new System.Threading.ManualResetEvent(false);
+                    AddOnThreadSet("Block start since this is not backgrounded ",
+                                   (o) =>
+                                       {
+                                           try
+                                           {
+                                               mre.Set();
+                                           }
+                                           catch
+                                           {
+                                           }
+                                       });
+                }
+                ThreadPool.QueueUserWorkItem(RunningFromThreadPool);
+                if (useRE)
+                {
+                    mre.WaitOne();
+                }
+                return;
+            }
             threadField.Start();
         }
 
@@ -155,6 +374,10 @@ namespace ThreadPoolUtil
         /// </summary>
         public virtual void Interrupt()
         {
+            if (exitedPool("Interupt"))
+            {
+                return;
+            }
             threadField.Interrupt();
         }
 
@@ -165,12 +388,16 @@ namespace ThreadPoolUtil
         {
             get
             {
+                if (exitedPool("Instance"))
+                {
+                    return this.ExitedFromThread;
+                }
                 return threadField;
             }
-            set
+            /*set
             {
                 threadField = value;
-            }
+            }*/
         }
 
         /// <summary>
@@ -181,8 +408,13 @@ namespace ThreadPoolUtil
             get { return myName ?? threadField.Name; }
             set
             {
-                if (threadField.Name == null)
-                    threadField.Name = value;
+                WithTS("set Name=" + value,
+                       (t) =>
+                           {
+                               if (threadField.Name == null)
+                                   threadField.Name = value;
+                           });
+
                 myName = value;
             }
         }
@@ -190,7 +422,7 @@ namespace ThreadPoolUtil
 
         public void SetDaemon(bool isDaemon)
         {
-            threadField.IsBackground = isDaemon;
+            IsBackground = isDaemon;
         }
 
         /// <summary>
@@ -213,7 +445,7 @@ namespace ThreadPoolUtil
             {
                 try
                 {
-                    threadField.Priority = value;
+                    WithTS("set Priority=" + value, (t) => t.Priority = value);
                 }
                 catch { }
 
@@ -227,10 +459,14 @@ namespace ThreadPoolUtil
         {
             get
             {
-                return threadField.IsAlive;
+                var nt = _nativeThread;
+                if (nt == null) return false;
+                return nt.IsAlive;
             }
         }
 
+
+        private bool? willBeBg = false;
         /// <summary>
         /// Gets or sets a value indicating whether or not a SThread is a background SThread.
         /// </summary>
@@ -238,11 +474,20 @@ namespace ThreadPoolUtil
         {
             get
             {
-                return threadField.IsBackground;
+                if (willBeBg.HasValue) return willBeBg.Value;
+                var nt = _nativeThread;
+                if (nt == null) return false;
+                return nt.IsBackground;
             }
             set
             {
-                threadField.IsBackground = value;
+                willBeBg = value;
+                if (value && IsPoolThread)
+                {
+                    PreventPoolThread = true;
+                    MakeThis(true);
+                }
+                WithTS("set IsBackground=" + value, (t) => t.IsBackground = value);
             }
         }
 
@@ -251,7 +496,7 @@ namespace ThreadPoolUtil
         /// </summary>
         public void Join()
         {
-            threadField.Join();
+            WaitTS("Join " + myName + " Infinate", (t) => { t.Join(); });
         }
 
         /// <summary>
@@ -260,7 +505,8 @@ namespace ThreadPoolUtil
         /// <param name="MiliSeconds">Time of wait in milliseconds</param>
         public void Join(long MiliSeconds)
         {
-            threadField.Join(new System.TimeSpan(MiliSeconds * 10000));
+            var ts = TimeSpan.FromMilliseconds(MiliSeconds);
+            WaitTS("Join " + myName + " " + ts, (t) => { t.Join(ts); });
         }
 
         /// <summary>
@@ -270,7 +516,9 @@ namespace ThreadPoolUtil
         /// <param name="NanoSeconds">Time of wait in nanoseconds</param>
         public void Join(long MiliSeconds, int NanoSeconds)
         {
-            threadField.Join(new System.TimeSpan(MiliSeconds * 10000 + NanoSeconds * 100));
+            long ms = TimeSpan.FromMilliseconds(MiliSeconds).Ticks;
+            var ts = TimeSpan.FromTicks(ms + (NanoSeconds * 100));
+            WaitTS("Join " + myName + " " + ts, (t) => { t.Join(ts); });
         }
 
         /// <summary>
@@ -278,8 +526,11 @@ namespace ThreadPoolUtil
         /// </summary>
         public void Resume()
         {
-            threadField.Resume();
-            System.Threading.Monitor.PulseAll(threadField);
+            WithTS("Resume", (t) =>
+                                 {
+                                     t.Resume();
+                                     System.Threading.Monitor.PulseAll(t);
+                                 });
         }
 
         /// <summary>
@@ -289,7 +540,10 @@ namespace ThreadPoolUtil
         /// </summary>
         public void Abort()
         {
-            threadField.Abort();
+            WithTS("Abort", (t) =>
+                                {
+                                    t.Abort();
+                                });
         }
 
         /// <summary>
@@ -301,7 +555,10 @@ namespace ThreadPoolUtil
         /// <param name="stateInfo">An object that contains application-specific information, such as state, which can be used by the SThread being aborted</param>
         public void Abort(object stateInfo)
         {
-            threadField.Abort(stateInfo);
+            WithTS("Abort", (t) =>
+            {
+                t.Abort(stateInfo);
+            }); 
         }
 
         /// <summary>
@@ -309,7 +566,11 @@ namespace ThreadPoolUtil
         /// </summary>
         public void Suspend()
         {
-            System.Threading.Monitor.Wait(threadField);
+            WithTS("Suspend", (t) =>
+            {
+              ///  t.Suspend();
+                System.Threading.Monitor.Wait(t);
+            });
         }
 
         /// <summary>

@@ -72,6 +72,9 @@ namespace AltAIMLbot
         /// </summary>
         public static bool PadAroundTemplateTags = false;
 
+
+        static public bool MemcachedServerKnownDead = false;
+
         public RChem myChemistry = null;
         public Qchem realChem = null;
         public ChemTrace myChemTrace = null;
@@ -2693,7 +2696,7 @@ The AltAIMLbot program.
             return "";
         }
 
-        public bool bbDisabled = true;
+        public bool bbDisabled = false;
         public string getBBHash0(string key)
         {
             try

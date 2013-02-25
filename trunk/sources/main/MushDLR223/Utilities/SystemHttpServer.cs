@@ -40,10 +40,10 @@ namespace MushDLR223.Utilities
             clientManager = bc;
             PortNum = port;
             RobotName = robotName;
-            ThreadPool.QueueUserWorkItem((o) => Init());
+            ThreadPool.QueueUserWorkItem(Init);
         }
 
-        internal void Init()
+        internal void Init(object unused)
         {
             HttpServerUtil.workArroundReuse(PortNum);
             try
@@ -94,6 +94,19 @@ namespace MushDLR223.Utilities
             }
         }
 
+        public override string ToString()
+        {
+            string s = "on HTTPD port " + PortNum + " " + RobotName;
+            if (clientManager!=null)
+            {
+                s = clientManager.ToStringSafeWithType() + " " + s;
+            }
+            if (httpListener != null)
+            {
+                s += " prefixes: [" + httpListener.Prefixes.ToCollectionString(",") + "]";
+            }
+            return s;
+        }
         public void Start()
         {
             lock (StartupLock)
@@ -102,6 +115,7 @@ namespace MushDLR223.Utilities
                 IsStarted = true;
                 try
                 {
+                    LogInfo("Starting " + clientManager.GetType() + " on HTTPD port " + PortNum);
                     if (!httpListener.IsListening)
                     {
                         if (httpListener.Prefixes.Count == 0)
@@ -233,6 +247,11 @@ namespace MushDLR223.Utilities
         public virtual void HandleTheClientNew(HttpListenerContext context, int requestNumber)
         {
             HttpListenerRequest request = context.Request;
+            bool useHtml = false;
+            if (DLRConsole.IsDougsMachine)
+            {
+                useHtml = true;
+            }
 
             string requestData = GetRequestString(request);
             //  UUID capsID;
@@ -252,7 +271,6 @@ namespace MushDLR223.Utilities
                 return;
             }
 
-            bool useHtml = false;
             NameValueCollection getvars = request.QueryString;
             NameValueCollection postvars = requestData == null ? null : WebLinksWriter.ParseQueryString(requestData);
 

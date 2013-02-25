@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 #if (COGBOT_LIBOMV || USE_STHREADS || true)
+using MushDLR223.ScriptEngines;
 using ThreadPoolUtil;
 using Thread = ThreadPoolUtil.Thread;
 using ThreadPool = ThreadPoolUtil.ThreadPool;
@@ -55,8 +56,12 @@ namespace LogicalParticleFilter1
             if (RdfDeveloperSanityChecks < 2) return;
             ReplRunning = ThreadPool.WaitableQueueUserWorkItem((o) => RunREPL());
         }
-
         public void RunREPL()
+        {
+            RunREPL(ConsoleWriteLine);
+        }
+
+        public void RunREPL(OutputDelegate ConsoleWriteLine)
         {
             bool queryMode = true;
             LocalIOSettings threadLocal = GlobalSharedSettings.LocalSettings;

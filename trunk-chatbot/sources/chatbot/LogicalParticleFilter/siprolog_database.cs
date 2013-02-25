@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Data;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
@@ -320,6 +321,7 @@ namespace LogicalParticleFilter1
             }
         }
 
+        [StructToString(true)]
         public class PDB
         {
             /// <summary>
@@ -331,7 +333,7 @@ namespace LogicalParticleFilter1
             /// <filterpriority>2</filterpriority>
             public override string ToString()
             {
-                return GlobalSharedSettings.StructToString(this);
+                return this.StructToString();
             }
 
             public string AToString
@@ -429,6 +431,7 @@ namespace LogicalParticleFilter1
                 get { return this; }
             }
 
+            [CompilerGenerated]
             public PNode PrologKB
             {
                 get

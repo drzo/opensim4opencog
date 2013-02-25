@@ -22,7 +22,8 @@ namespace AltAIMLbot.Utils
     /// <summary>
     ///   A utility class for loading AIML files from disk into the graphmaster structure that 
     ///   forms an AIML bot's "brain"
-    /// </summary>
+    /// </summary>           
+    [StructToString(true)]
     public class AIMLLoader : XmlNodeEvaluatorImpl
     {
         public static bool SeekOutAndRepair = false;
@@ -100,7 +101,6 @@ namespace AltAIMLbot.Utils
         {
            get { return request; }
         }
-
 
         public override string ToString()
         {

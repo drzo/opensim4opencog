@@ -18,6 +18,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <StartArguments>--botname standalone robotkind</StartArguments>
+    <StartArguments>--botname philip dick</StartArguments>
   </PropertyGroup>
 </Project>

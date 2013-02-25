@@ -49,7 +49,8 @@ namespace ThreadPoolUtil
         public static void Notice(int level, string fmt, params object[] args)
         {
             if (level < noticeLevel) return;
-            Console.Error.WriteLine(fmt, args);
+            DLRConsole.DebugLevel = 9;
+            DLRConsole.DebugWriteLine(fmt, args);
         }
 
         public static void Issue(object thread, Exception e)
@@ -59,11 +60,11 @@ namespace ThreadPoolUtil
 
         public static string StackTraceString()
         {
-            var rs = new StringWriter();
+            var rs = new System.Text.StringBuilder();
             var fs = new System.Diagnostics.StackTrace(true).GetFrames();
             if (fs != null) foreach (StackFrame frame in fs)
                 {
-                    rs.WriteLine("" + frame);
+                    rs.Append(frame.ToString());
                 }
             return rs.ToString();
         }
@@ -103,7 +104,10 @@ namespace ThreadPoolUtil
             thread.CreationStack = creationTrace;
             try
             {
-                thread.StartStack = StackTraceString();
+                if (thread.StartStack == null)
+                {
+                    thread.StartStack = StackTraceString();
+                }
                 action.DynamicInvoke(args);
             }
             catch (Exception e)

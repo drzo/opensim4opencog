@@ -72,7 +72,7 @@ namespace Cogbot
             {
                 string[] newArgs = oArgs;
                 ProgramUtil.AllocConsole();
-                RunType("AltAIMLbot:RTParser.AltBot", args);
+                RunType("AltAIMLbot:AltAIMLbot.AltBot", args);
                 return;
             }
             if (ClientManagerConfig.arguments.GetAfter("--plwin", out oArgs))

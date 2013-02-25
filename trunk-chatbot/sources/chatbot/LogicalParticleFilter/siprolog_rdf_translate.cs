@@ -1058,7 +1058,8 @@ namespace LogicalParticleFilter1
                 return RuleToTerm(head, body.plist);
             }
         }
-
+                
+        [StructToString(true)]
         public class PredicateProperty
         {
             public string name;
@@ -1093,7 +1094,7 @@ namespace LogicalParticleFilter1
             /// <filterpriority>2</filterpriority>
             public override string ToString()
             {
-                return GlobalSharedSettings.StructToString(this);
+                return this.StructToString();
             }
             public string AToString
             {
@@ -1192,9 +1193,10 @@ namespace LogicalParticleFilter1
             /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
             /// </returns>
             /// <filterpriority>2</filterpriority>
+            [StructToString(true)]
             public override string ToString()
             {
-                return GlobalSharedSettings.StructToString(this);
+                return this.StructToString();
             }
             public string AToString
             {

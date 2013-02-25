@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.IO;
 using AIMLbot;
@@ -10,6 +12,9 @@ using DcBus;
 using System.Runtime.Serialization.Formatters.Binary;
 
 #if (COGBOT_LIBOMV || USE_STHREADS)
+using Enyim.Caching;
+using Enyim.Caching.Configuration;
+using Enyim.Caching.Memcached;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using ThreadPoolUtil;
@@ -701,6 +706,10 @@ namespace AltAIMLbot
             curBot.inCritical = false;
             curBot.blockCron = false;
 
+            if (AltBot.MemcachedServerKnownDead)
+            {
+                curBot.useMemcache = false;
+            }
             if ((myScheduler != null) && curBot.myBehaviors.definedBehavior("startup"))
             {
                 myScheduler.ActivateBehaviorTask("startup");
@@ -1214,6 +1223,12 @@ namespace AltAIMLbot
             {
                 try
                 {
+                    if (!IsMemcachedRunning(myConst.MEMHOST))
+                    {
+                        curBot.useMemcache = false;
+                        Console.WriteLine("MEMCACHED SERVER IS NOT RUNNING");
+                        return;
+                    }
                     curBot.realChem = new Qchem(myConst.MEMHOST);
                     curBot.myChemistry = new RChem(myConst.MEMHOST, true);
                     curBot.realChem.prologEngine = curBot.prologEngine;
@@ -1244,6 +1259,52 @@ namespace AltAIMLbot
             catch (Exception e)
             {
                 LogException(e);
+            }
+        }
+
+        private bool IsMemcachedRunning(string ipaddress)
+        {
+            try
+            {
+                if (AltBot.MemcachedServerKnownDead) return false;
+                var endpoint = new IPEndPoint(IPAddress.Parse(ipaddress), 11211);
+                TcpClient tcpClient = new TcpClient();
+                tcpClient.Client.Connect(endpoint);
+                tcpClient.Close();
+
+                var m_config = new MemcachedClientConfiguration();
+                m_config.Servers.Add(endpoint);
+                m_config.Protocol = MemcachedProtocol.Text;
+                m_config.Transcoder = (ITranscoder)new DCBTranscoder();
+                var mc = new MemcachedTestClient((IMemcachedClientConfiguration)m_config);
+                var sp = mc.ServerPool;
+                MemcachedNode wn = sp.GetWorkingNodes().First() as MemcachedNode;
+                if (!wn.Ping()) return false;
+                if (!wn.IsAlive) return false;
+                if (wn.Acquire() == null)
+                {
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                LogException(e);
+                return false;
+            }
+            return true;
+        }
+
+        private class MemcachedTestClient : MemcachedClient
+        {
+            public MemcachedTestClient(IMemcachedClientConfiguration config)
+                : base(config)
+            {
+
+            }
+
+            public IServerPool ServerPool   
+            {
+                get { return Pool; }
             }
         }
 
@@ -1651,6 +1712,19 @@ namespace AltAIMLbot
                 System.IO.File.SetLastWriteTimeUtc(fileName, DateTime.UtcNow);
                 if (!needBtx) break;
             }
+        }
+
+        internal bool IsServitorThread(System.Threading.Thread currentThread)
+        {
+            if(this.tmBehaveThread == currentThread || this.tmFSMThread == currentThread ||
+                   this.tmTalkThread == currentThread || myCronThread == currentThread) return true;
+            if (WebServitor.listenerThread == currentThread) return true;
+            if (myServitorEndpoint != null && myServitorEndpoint.myServer != null)
+            {
+                if (myServitorEndpoint.myServer.tmPFEndpointThread == currentThread)
+                    return true;
+            }
+            return false;
         }
     }
 

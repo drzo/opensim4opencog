@@ -108,8 +108,8 @@ namespace AltAIMLbot
 
                    // MyBot.rapStoreDirectory = null;
                     
-                    //MyBot.loadAIMLFromFiles(@"./aiml/chomskyAIML");
-                    //MyBot.loadAIMLFromFile(@"./aiml/special/blackjack.aiml");
+                    MyBot.loadAIMLFromFiles(@"./aiml/chomskyAIML");
+                    MyBot.loadAIMLFromFile(@"./aiml/special/blackjack.aiml");
                     //MyBot.loadAIMLFromFiles(@"./aiml/guest_gurl");
                     // servitor.saveToBinaryFile(servitorbin);
                     //servitor.skiploading = true;

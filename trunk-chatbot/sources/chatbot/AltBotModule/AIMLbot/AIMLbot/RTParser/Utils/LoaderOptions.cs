@@ -212,7 +212,7 @@ namespace AltAIMLbot.Utils
 
         override public string ToString()
         {
-            return GlobalSharedSettings.StructToString(this);
+            return this.StructToString();
         }
 
 

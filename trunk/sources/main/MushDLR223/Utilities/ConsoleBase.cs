@@ -2565,6 +2565,17 @@ namespace MushDLR223.Utilities
             }
             return false;
         }
+
+        public static bool IsDougsMachine
+        {
+            get
+            {
+
+                string machineName = Environment.MachineName;
+                return machineName == "ENKI" || machineName.ToUpper() == "TITAN" ||
+                       machineName.ToUpper().StartsWith("OPTER");
+            }
+        }
     }
 
     public class NULL_OUTPUT_TW : TextWriter
