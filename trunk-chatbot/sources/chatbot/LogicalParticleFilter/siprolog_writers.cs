@@ -65,7 +65,7 @@ namespace LogicalParticleFilter1
                 {
                 }
             }
-            if (!GlobalSharedSettings.Trace(write))
+            if (!DLRConsole.Trace(write))
             {
                 DLRConsole.DebugWriteLine("{0}", write);
             }
@@ -598,8 +598,6 @@ function validateBrowserForm()
             }
         }
 
-        public static int IsDougsDebugLevel = 7;
-
         public static String _serverHost = null;
         public static int serverPort = 8123;
 
@@ -608,23 +606,7 @@ function validateBrowserForm()
 
         public static bool Trace(string write)
         {
-            if (!IsDougsMachine) return false;
-            var oldDL = DLRConsole.DebugLevel;
-            DLRConsole.DebugLevel = 9;
-            try
-            {
-                DLRConsole.DebugWriteLine("{0}", write);
-                DLRConsole.SystemFlush();
-            }
-            finally
-            {
-                DLRConsole.DebugLevel = oldDL;
-            }
-            if (DLRConsole.IsCallerNoDebug)
-            {
-                return true;
-            }
-            return true;
+            return DLRConsole.Trace(write);
         }
 
     }

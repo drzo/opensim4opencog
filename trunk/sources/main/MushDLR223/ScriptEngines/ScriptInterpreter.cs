@@ -3,7 +3,7 @@ using DotLisp;
 
 namespace MushDLR223.ScriptEngines
 {
-    public delegate void OutputDelegate(string s, params object[] args);
+    public delegate void OutputDelegate(string f, params object[] a);
 
     public interface ScriptInterpreterFactory
     {
