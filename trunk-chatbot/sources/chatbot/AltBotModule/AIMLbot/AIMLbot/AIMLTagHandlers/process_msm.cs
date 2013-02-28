@@ -150,7 +150,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 var newresult = request.CreateResult(subRequest);
                 //subRequest.CurrentResult = newresult;
                 user.SuspendAddResultToUser = true;
-                subResult = (Result) Proc.ChatWithRequest(subRequest);
+                subResult = (Result)Proc.Chat(subRequest);
                 // subResult = this.Proc.Chat(subRequest, request.Graph);
             }
             finally

@@ -26,7 +26,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    class btxml : Utils.AIMLTagHandler
+    public class btxml : Utils.AIMLTagHandler, NoReturnResult
     {
 
 

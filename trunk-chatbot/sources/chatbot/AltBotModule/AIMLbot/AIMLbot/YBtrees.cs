@@ -569,6 +569,15 @@ namespace AltAIMLbot
 
     public class BTXmlNodeImpl : XmlElement
     {
+        public string ADebugString
+        {
+            get { return base.OuterXml; }
+        }
+
+        public override string ToString()
+        {
+            return base.OuterXml;
+        }
         public BTXmlNodeImpl(string prefix, string localName, string namespaceURI, XmlDocument doc)
             : base(prefix, localName, namespaceURI, doc)
         {
@@ -810,68 +819,28 @@ namespace AltAIMLbot
 
         public object TreeNameLock = new object();
 
-        public IEnumerable<RunStatus> runBehaviorTree(BCTX theBot)
+        // will be used to restore some use states
+        public IEnumerable<RunStatus> monitorNode(BCTX bot, Func<IEnumerable<RunStatus>> processNode0, BTXmlNode myNode)
         {
-            if (true) return MicroLocker.Run(TreeNameLock, () => runBehaviorTree1(theBot)).Invoke();
-            // @TODO figure out why the next version overlly locks!
-            return MicroLocker.Run(TreeNameLock, () => runBehaviorTree0(theBot)).Invoke();
-        }
-        public IEnumerable<RunStatus> runBehaviorTree0(BCTX theBot)
-        {
-            var treeName = this.name;
-            object botRequestLock = TreeNameLock;
-            BehaviorContext bctx = contextBot.BotBehaving;
-            lock (botRequestLock)
+            Func<IEnumerable<RunStatus>> processNode1;
+            var o = bot.PreNodeProcess(this, processNode0, myNode, out processNode1);
+            if (o == null)
             {
-                var needsExit = new bool[1];
-                var initialThread = new NativeThread[1];
-                IEnumerable<RunStatus> ret = new ListOfIters(
-                    new List<Func<IEnumerator<RunStatus>>>()
-                        {
-                            oneRunStatus(
-                                () =>
-                                    {
-                                        Console.WriteLine("Entering runBTX " + treeName);
-                                        initialThread[0] = NativeThread.CurrentThread;
-                                        bool madeIt = Monitor.TryEnter(botRequestLock, TimeSpan.FromSeconds(20));
-                                        needsExit[0] = madeIt;
-                                        bctx.templateNode = treeDoc;
-                                        if (!madeIt)
-                                        {
-                                            Console.WriteLine("ERROR/WARN Didnt get my lock! " + treeName);
-                                        } 
-
-                                    }),
-                            runBehaviorTree1(theBot).GetEnumerator,
-                            oneRunStatus(
-                                () =>
-                                    {
-                                        bool madeIt = needsExit[0];
-                                        bool sameThread = initialThread[0] == NativeThread.CurrentThread;
-                                        if (madeIt && sameThread)
-                                        {
-                                            Monitor.Exit(botRequestLock);
-                                        }
-                                        else
-                                        {
-                                            Console.WriteLine("ERROR/WARN exiting runBTX " + treeName + " madeIt =" +
-                                                              madeIt + " sameThread=" + sameThread);
-                                        }
-                                        bctx.templateNode = null;
-                                    }),
-                        });
-                return ret;
+                return processNode1();
+            }
+            try
+            {
+                return processNode1();
+            }
+            finally
+            {
+                bot.PostNodeProcess(this, myNode, o);
             }
         }
 
-        public static Func<IEnumerator<RunStatus>> oneRunStatus(Action act)
+        public IEnumerable<RunStatus> runBehaviorTree(BCTX theBot)
         {
-            return OneRunStatus.oneAct(act);
-        }
-
-        public static Func<IEnumerator<RunStatus>> oneRunStatus(Func<RunStatus> act)
-        {
-            return OneRunStatus.oneAct(act);
+            return monitorNode(theBot, () => runBehaviorTree1(theBot), treeDoc);
         }
 
         public IEnumerable<RunStatus> runBehaviorTree1(BCTX theBot)
@@ -1087,8 +1056,12 @@ namespace AltAIMLbot
             BehaviorSet.logTextToBTTrace(String.Format("{1} {0}<{2} {3} >\n", msg, indent, myNode.Name.ToLower(), astr));
         }
 
-
         public IEnumerable<RunStatus> processNode(BTXmlNode myNode)
+        {
+            return monitorNode(this.contextBot, () => processNode0(myNode), myNode);
+        }
+
+        public IEnumerable<RunStatus> processNode0(BTXmlNode myNode)
         {
             if (myNode == null)
             {
@@ -3185,10 +3158,10 @@ namespace AltAIMLbot
              yield break;
        }
 
-        //CHAT: chat controlled by the behavior system
+        //CHAT: chat controlled by the behavior system (currently calls AIML)
         public IEnumerable<RunStatus> ProcessChat(BTXmlNode myNode)
         {
-            string sentStr = myNode.InnerXml;
+            string sentStr;
             string graphName = "*";
             try
             {
@@ -3202,44 +3175,59 @@ namespace AltAIMLbot
                 graphName = "*";
             }
 
+            BehaviorContext behaviorContext = contextBot.BotBehaving;
+            User user;
 
-            contextBot.BotBehaving.lastBehaviorChatInput = "";
-            contextBot.BotBehaving.lastBehaviorChatOutput = "";
-            if (contextBot.BotBehaving.chatInputQueue.Count == 0)
+            // codes goal:  If there is no input Queued to return RunStatus.Success;
+            /// if there was input queude append it to the inner xml
+            /// (this is what it seemed to be doing before?)
+            lock (behaviorContext.ChatQueueLock)
             {
-                yield return RunStatus.Success;
-                yield break;
+                if (behaviorContext.chatInputQueue.Count == 0)
+                {
+                    yield return RunStatus.Success;
+                    yield break;
+                }
+                behaviorContext.ClearLastInputOutput(true);
+                behaviorContext.lastBehaviorChatInput = behaviorContext.chatInputQueue.Peek();
+                sentStr = myNode.InnerXml + " " + behaviorContext.lastBehaviorChatInput;
+                user = behaviorContext.lastBehaviorUser;
             }
+
+            // ChatQueueLock is now unlocked.. this willl let other threads call postOutput 
+            //    and potentually use the input since we havent removed it yet
+
+// ReSharper disable RedundantAssignment
             RunStatus rs = RunStatus.Failure;
-            string dq = contextBot.BotBehaving.lastBehaviorChatInput;
+// ReSharper restore RedundantAssignment
+            Request r = null;
             try
             {
-                if (contextBot.BotBehaving.chatInputQueue.Count > 0)
-                {
-                    contextBot.BotBehaving.lastBehaviorChatInput = dq = contextBot.BotBehaving.chatInputQueue.Peek();
-                    sentStr += contextBot.BotBehaving.lastBehaviorChatInput;
-                }
-                User user = contextBot.BotBehaving.lastBehaviorUser;
-                Request r = new Request(sentStr, user, user.That, contextBot, true, RequestKind.BehaviourChat);
+                r = new Request(sentStr, user, user.That, contextBot, true, RequestKind.BehaviourChat);
                 Result res = contextBot.Chat(r, graphName);
-                //bot.lastBehaviorChatOutput=res.Output;
-                contextBot.BotBehaving.lastBehaviorChatOutput = "";
-                if (res.isValidOutput)
+                bool hasOuput = res.isValidOutput;
+                lock (behaviorContext.ChatQueueLock)
                 {
-                   // bot.postOutput(res.Output.AsString());
-                    contextBot.BotBehaving.lastBehaviorChatOutput = res.Output.AsString();
-                    rs = RunStatus.Success;
-                    // eat input on success
-                    contextBot.BotBehaving.chatInputQueue.Dequeue();
-                }
-                else
-                {
-                    rs = RunStatus.Failure;
+                    // DMILES: currently we are not calling postOutput here.. 
+                    // DMILES:  because proccessChat isnt meant to assume we want to "say it"?
+                    if (hasOuput)
+                    {
+                        // bot.postOutput(res.Output.AsString());
+                        behaviorContext.lastBehaviorChatOutput = res.Output.AsString();
+                        rs = RunStatus.Success;
+                        // eat input on success
+                        behaviorContext.chatInputQueue.Dequeue();
+                    }
+                    else
+                    {
+                        behaviorContext.lastBehaviorChatOutput = "";
+                        rs = RunStatus.Failure;
+                    }
                 }
             }
             catch (Exception e)
             {
-                LogException(myNode, e, "ProcessChat '{0}' '{1}':{2}", sentStr, dq, EMsg(e));
+                LogException(myNode, e, "ProcessChat '{0}' '{1}':{2}", sentStr, r, EMsg(e));
                 rs = RunStatus.Failure;
             }
             yield return rs;

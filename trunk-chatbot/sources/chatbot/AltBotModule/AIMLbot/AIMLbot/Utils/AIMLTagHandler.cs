@@ -30,6 +30,7 @@ namespace AltAIMLbot.Utils
         public abstract Request request { get; set; }
         public abstract Result result { get; set; }
         public abstract bool IsStillStarAtomically { get; }
+
     }
     /// <summary>
     /// The template for all classes that handle the AIML tags found within template nodes of a
@@ -247,7 +248,7 @@ namespace AltAIMLbot.Utils
 
         protected void writeToLogError(string s)
         {
-            writeToLog("Error! " + s);
+            bot.RaiseError("Error! " + s);
         }
         protected void writeToLog(string s)
         {

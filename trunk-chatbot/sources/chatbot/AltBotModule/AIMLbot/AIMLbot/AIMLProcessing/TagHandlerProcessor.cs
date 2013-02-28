@@ -203,8 +203,8 @@ namespace AltAIMLbot
                     case "sr":
                         tagHandlerU = new sr(targetBot, user, query, request, result, node);
                         break;
-                    case "srai":
-                        tagHandlerU = new srai(targetBot, user, query, request, result, node);
+                    case "srai_odd":
+                        tagHandlerU = new srai_odd(targetBot, user, query, request, result, node);
                         break;
                     case "star":
                         tagHandlerU = new star(targetBot, user, query, request, result, node);
@@ -764,7 +764,7 @@ namespace AltAIMLbot
                 request.SuspendSearchLimits = suspendLimits;
             }
             Dictionary<Unifiable, Unifiable> sraiMark = null;
-            if (osrExists && srai.UseSraiLimiters)
+            if (osrExists && ChatOptions.UseSraiLimitersBasedOnTextContent)
             {
                 sraiMark = originalSalientRequest.CreateSRAIMark();
             }
@@ -797,7 +797,7 @@ namespace AltAIMLbot
             }
             finally
             {
-                if (osrExists && srai.UseSraiLimiters) originalSalientRequest.ResetSRAIResults(sraiMark);
+                if (osrExists && ChatOptions.UseSraiLimitersBasedOnTextContent) originalSalientRequest.ResetSRAIResults(sraiMark);
                 if (request != null) request.SuspendSearchLimits = wasSuspendRestrati;
             }
         }

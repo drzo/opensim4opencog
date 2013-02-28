@@ -20,11 +20,14 @@ namespace AltAIMLbot.Utils
     /// <summary>
     /// Encapsulates all sorts of information about a request to the Proccessor for processing
     /// </summary>
-    public partial class Request : LoaderOptions, /*QuerySettings, QuerySettingsSettable, QuerySettingsReadOnly,*/ UndoStackHolder
+    public partial class Request : LoaderOptions, UndoStackHolder
     {
         #region Attributes
         public int depth = 0;
-        public int depthMax = 128;
+        public int depthMax
+        {
+           get { return SraiDepth.Max; }
+        }
 
         [CopyFromParent]
         public SettingsPolicy settingsPolicy;
@@ -347,7 +350,7 @@ namespace AltAIMLbot.Utils
                 return _WhyRequestComplete != null;
             }
         }
-
+   
         public string WhyComplete
         {
             get
@@ -442,79 +445,101 @@ namespace AltAIMLbot.Utils
         /// <param name="user">The user who made the request</param>
         /// <param name="bot">The bot to which this is a request</param>
         public Request(Unifiable rawInput, User user, AltBot bot, bool isToplevel, RequestKind requestType)
-            : this(bot.GetQuerySettings(), false) // Get query settings intially from user
         {
             InitRequest(rawInput, user, default(LoaderOptions), user.That, bot.BotAsUser, bot, null, null, isToplevel,
                         requestType);
         }
-        private Request(QuerySettingsReadOnly defaults, bool unused)
-            : base()
-        {
-            ApplySettings(defaults, this);
-            SideEffects = new CommitQueue();
-            qsbase = this;
-        }
-
         public Request(Unifiable rawInput, User user, Unifiable thatSaid, AltBot bot, bool isToplevel, RequestKind requestType)
-            : this(bot.GetQuerySettings(), false) // Get query settings intially from user
         {
             InitRequest(rawInput, user, default(LoaderOptions), thatSaid, bot.BotAsUser, bot, null, null, isToplevel, requestType);
             That = thatSaid;
         }
-
+        // good for srai/pop
         public Request(Unifiable rawInput, User user, Unifiable thatSaid, AltBot bot, bool isToplevel, RequestKind requestType, Request parent)
-            : this(bot.GetQuerySettings(), false) // Get query settings intially from user
         {
             InitRequest(rawInput, user, default(LoaderOptions), thatSaid, bot.BotAsUser, bot, parent, null, isToplevel, requestType);
             That = thatSaid;
         }
-        /// <summary>
-        /// Ctor
-        /// </summary>
-        /// <param name="rawInput">The raw input from the user</param>
-        /// <param name="user">The user who made the request</param>
-        /// <param name="bot">The bot to which this is a request</param>
         public Request(Unifiable rawInput, User user, LoaderOptions options, User targetUser, AltBot bot, Request parent, GraphMaster graphMaster, bool isToplevel, RequestKind requestType)
-            : this(bot.GetQuerySettings(), false) // Get query settings intially from user
         {
             InitRequest(rawInput, user, options, null, targetUser, bot, parent, graphMaster, isToplevel, requestType);
         }
         public Request(Unifiable rawInput, User user, LoaderOptions options, Unifiable thatSaid, User targetUser, AltBot bot, Request parent, GraphMaster graphMaster, bool isToplevel, RequestKind requestType)
-            : this(bot.GetQuerySettings(), false) // Get query settings intially from user
         {
             InitRequest(rawInput, user, options, thatSaid, targetUser, bot, parent, graphMaster, isToplevel, requestType);
         }
-        public void InitRequest(Unifiable rawInput, User user, LoaderOptions options, Unifiable thatSaid, User targetUser, AltBot bot0, Request parent, GraphMaster graphMaster, bool isToplevel, RequestKind requestType)
+
+        public void InitRequest(Unifiable rawInput, User user0, LoaderOptions options, Unifiable thatSaid, User targetUser, AltBot bot0, Request parent, GraphMaster graphMaster, bool isToplevel, RequestKind requestType)
         {
+            this.ParentRequest = parent;
+            this.qsbase = this;
             this.bot = bot0;
-            bool englishChat = requestType.ContainsAny(RequestKind.NaturalLang);
-            if (parent == null && options == null)
-            {
-                if (!isToplevel)
-                {
-                    writeToLog("WARN not toplevel");
-                }
-                var u = user ?? targetUser ?? bot.ExemplarUser ?? bot.BotAsUser;
-                options = new LoaderOptions(u);
-            }
-            this.bot = bot;
-            this.Requester = user;
+            this.ExitQueue = new CommitQueue();
+            this.TargetBot = bot;
+            this.Requester = user0;
             this.Responder = targetUser;
-            ExitQueue = new CommitQueue();
-            TargetBot = bot;
             this.StartedOn = DateTime.Now;
             this.depth = 0;
-            this.depthMax = 128; 
+            //this.depthMax = 128;
+            this.SraiDepth.Max = 128;
+            TargetSettings = user.Predicates;
+            IsToplevelRequest = isToplevel;
+            RequestType = requestType;
+            if (user==null)
+            {
+                
+            }
 
-            thatSaid = BestOf(currentThat, thatSaid);
+            bool englishChat = requestType.ContainsAny(RequestKind.NaturalLang);
+            if (options == null)
+            {
+                if (parent == null)
+                {
+                    if (!isToplevel)
+                    {
+                        RaiseError("WARN not toplevel");
+                    }
+                    var u = user ?? targetUser ?? bot.ExemplarUser ?? bot.BotAsUser;
+                    options = new LoaderOptions(u);
+                }
+                else
+                {
+                    options = parent;
+                }
+            }
+
+            if (parent != null)
+            {
+                this.ParentRequest = parent;
+                CopyToRequest(parent, this);
+                if (user.That != parent.That)
+                {
+                    RaiseError("user and parent have differnt thats!");
+                }
+            }
+
+            thatSaid = BestOf(BestOf(currentThat, user.That), thatSaid);
+
+            if (user.That != thatSaid)
+            {
+                RaiseError("user and parent have differnt thats!");
+            }
+
+            
+            currentInput = BestOf(currentInput, rawInput);
+            currentThat = thatSaid;
+
             SetLoaderOptions(parent);
             SetLoaderOptions(options);
-            currentInput = BestOf(currentInput, rawInput);
+
+             
+
+            currentThat = That;
             if (!englishChat)
             {
                 if (currentThat != "*" && currentThat != "Nothing")
                 {
-                    user.WriteToUserTrace("SWARN is this supposed to be english?");
+                   // RaiseError("This is *NOT* supposed to be english: " + currentThat);
 
                 }
             }
@@ -523,32 +548,14 @@ namespace AltAIMLbot.Utils
 
                 if (currentThat == "*")
                 {
-                    user.WriteToUserTrace("SWARN is this supposed to be english?");
+                    RaiseError("This is this supposed to be english? " + currentThat);
 
                 }
             }
 
-            this.RaiseError = new ExceptionFactoryMethod(
-                (f, a) =>
-                    {
-                        var ex = bot.RaiseError(f + " in " + this.ToRequestString(), a);
-                        if (LogicalParticleFilter1.GlobalSharedSettings.IsDougsMachine)
-                        {
-                            throw ex;
-                        }
-                        return ex;
-                    });
-            if (parent != null)
-            {
-                this.ParentRequest = parent;
-                CopyToRequest(parent, this);
-            }
+
             ChatInput = new Utterance(null, user, targetUser, rawInput, -1);// RTParser.Utterance.GetParsedUserInputSentences(thisRequest, rawInput);
 
-            TargetSettings = user.Predicates;
-            IsToplevelRequest = isToplevel;
-            RequestType = requestType;
-            this.Stage = SideEffectStage.UNSTARTED;
             matchable = matchable ?? StaticAIMLUtils.MakeMatchable(rawInput);
             SuspendSearchLimits = true;
             if (graphMaster != null)
@@ -568,7 +575,6 @@ namespace AltAIMLbot.Utils
             Requester = Requester ?? user;
             if (Requester != null)
             {
-                ApplySettings(Requester.GetQuerySettings(), this);
                 if (targetUser == null)
                 {
                     if (user == bot.BotAsUser) targetUser = bot.LastUser;
@@ -586,13 +592,9 @@ namespace AltAIMLbot.Utils
 
             UsedResults = new ListAsSet<Result>();
             Flags = Unifiable.EnglishNothing;
-            QuerySettingsSettable querySettings = GetQuerySettings();
-
-            ApplySettings(qsbase, querySettings);
 
             if (parent != null)
             {
-                ApplySettings(parent.GetQuerySettings(), querySettings);
                 Proof = parent.Proof;
                 this.ParentRequest = parent;
                 this.writeToLog = parent.writeToLog;
@@ -667,33 +669,11 @@ namespace AltAIMLbot.Utils
             }
         }
 
-
-        private void CheckEnglish(Unifiable thatSaid)
+        public Exception RaiseError(string fmt, params object[] args)
         {
-            string requestThat = That.AsString();
-            var requestorThat = Requester.That;
-
-            if (user.CheckIsBadEnglish(thatSaid))
-            {
-                RaiseError("invalid thatSaid=" + thatSaid);
-            }
-            if (user.CheckIsBadEnglish(requestThat))
-            {
-                throw RaiseError("invalid That=" + requestThat);
-            }
-            if (requestThat != thatSaid)
-            {
-                var traceThat = this.That;
-                RaiseError("invalid That " + this);
-            }
-            if (requestorThat != thatSaid)
-            {
-                var traceThat = this.That;
-                RaiseError("invalid from requestorThat " + this);
-            }
+            bot.Logger.Warn(fmt, args);
+            return bot.RaiseError(fmt, args);
         }
-
-        protected ExceptionFactoryMethod RaiseError;
 
 
         public void SetSpeakerAndResponder(User speaker, User targetUser)
@@ -723,7 +703,7 @@ namespace AltAIMLbot.Utils
             if (user != null)
             {
                 Requester = user;
-                ApplySettings(user.GetQuerySettings(), this);
+                QuerySettings.ApplySettings(user.GetQuerySettings(), CurrentSettings);
                 if (IsToplevelRequest)
                 {
                     user.CurrentRequest = thisRequest;
@@ -732,7 +712,7 @@ namespace AltAIMLbot.Utils
                 {
                     ReduceMinMaxesForSubRequest(user.GetQuerySettingsSRAI());
                 }
-                IsTraced = user.IsTraced;
+                this.IsTraced = user.IsTraced;
                 writeToLog = user.WriteToUserTrace;
                 MaxInputs = user.MaxInputs;
                 TargetSettings = user.Predicates;
@@ -742,14 +722,33 @@ namespace AltAIMLbot.Utils
 
         public void ReduceMinMaxesForSubRequest(QuerySettingsReadOnly parent)
         {
-            return;
-            var thisQuerySettings = GetQuerySettings();
+            var thisQuerySettings = qsbase = qsbase ?? CurrentSettings;
             const int m = 2;
             const int M = 3;
             thisQuerySettings.MinPatterns = Math.Max(1, ((QuerySettingsReadOnly)parent).MinPatterns - m);
             thisQuerySettings.MaxPatterns = Math.Max(1, ((QuerySettingsReadOnly)parent).MaxPatterns - M);
             thisQuerySettings.MinTemplates = Math.Max(1, ((QuerySettingsReadOnly)parent).MinTemplates - m);
             thisQuerySettings.MaxTemplates = Math.Max(1, ((QuerySettingsReadOnly)parent).MaxTemplates - M);
+        }
+
+        public QuerySettingsSettable CurrentSettings
+        {
+            get
+            {
+                if (qsbase == null)
+                {
+                    qsbase = new QuerySettingsImpl(GetQuerySettings());
+                }
+                return qsbase;
+            }
+            set
+            {
+                if (qsbase == value)
+                {
+                    return;
+                }
+                qsbase = new QuerySettingsImpl(value);
+            }
         }
 
         public bool GraphsAcceptingUserInput
@@ -781,7 +780,7 @@ namespace AltAIMLbot.Utils
              throw new NotImplementedException();
         }
         /// </summary>
-        public override string StartGraphName
+        public string StartGraphName
         {
             get
             {
@@ -989,9 +988,12 @@ namespace AltAIMLbot.Utils
             return WhyComplete;
         }
 
-        public QuerySettingsSettable GetQuerySettings()
+        public QuerySettingsReadOnly GetQuerySettings()
         {
-            return qsbase;
+            if (qsbase != null) return (QuerySettingsReadOnly) qsbase;
+            if (ParentRequest != null) return ParentRequest.GetQuerySettings();
+            if (user != null) return user.GetQuerySettings();
+            return bot.GetQuerySettings();
         }
 
         public MasterResult CreateResult(Request parentReq)
@@ -1031,12 +1033,23 @@ namespace AltAIMLbot.Utils
         {
             var subRequest = new MasterRequest(templateNodeInnerValue, requester, opts,
                                                requestee, rTPBot ?? TargetBot, parent, graphMaster, false, kind);
-            CopyToRequest(this, subRequest);
             return subRequest;
         }
 
         public static void CopyToRequest(Request request, Request subRequest)
         {
+            if (request == subRequest)
+            {
+                return;
+            }
+            if (request == null)
+            {
+                return;
+            }
+            if (null == subRequest)
+            {
+                return;
+            }
             subRequest.Graph = subRequest.Graph ?? request.Graph;
             subRequest.depth = request.depth + 1;
             subRequest.StartedOn = request.StartedOn;
@@ -1048,7 +1061,6 @@ namespace AltAIMLbot.Utils
                 if (cas.Length == 0) continue;
                 info.SetValue(subRequest, info.GetValue(request));
             }
-            request.ExitQueue.Add("exit subRequest: " + subRequest.rawInput, subRequest.Exit);
         }
 
         public bool CanUseRequestTemplate(TemplateInfo info)
@@ -1130,7 +1142,7 @@ namespace AltAIMLbot.Utils
         {
             if (!message.Contains(":")) message = "REQUEST: " + message;
             string prefix = ToString();
-            prefix = SafeFormat(message + " while " + prefix, args);
+            prefix = DLRConsole.SafeFormat(message + " while " + prefix, args);
 
             message = prefix.ToUpper();
             if (message.Contains("ERROR") || message.Contains("WARN"))
@@ -1144,25 +1156,19 @@ namespace AltAIMLbot.Utils
             }
             TargetBot.writeToLog(prefix);
         }
-
-        public override sealed int DebugLevel
+        /*
+        public int DebugLevel
         {
-            get
-            {
-
-                int baseDebugLevel = base.DebugLevel;
-                if (baseDebugLevel > 0) return baseDebugLevel;
-                var parentRequest = (QuerySettingsReadOnly)this.ParentRequest;
-                if (IsToplevelRequest || parentRequest == null)
-                {
-                    if (Requester == null) return baseDebugLevel;
-                    return Requester.GetQuerySettings().DebugLevel;
-                }
-                return parentRequest.DebugLevel;
-            }
-            set { base.DebugLevel = value; }
+            get { return GetQuerySettings().DebugLevel; }
+            set { CurrentSettings.DebugLevel = value; }
         }
 
+        public bool IsTraced
+        {
+            get { return GetQuerySettings().IsTraced; }
+            set { CurrentSettings.IsTraced = value; }
+        }     
+        */
         public bool IsToplevelRequest { get; set; }
 
         public Unifiable That
@@ -1174,13 +1180,13 @@ namespace AltAIMLbot.Utils
                 {
                     return t;
                 }
-                bot.Logger.Warn("RequestThat is bad english: " + t);
+                RaiseError("RequestThat is bad english: " + t);
                 t = user.That;
                 if (!user.CheckIsBadEnglish(t))
                 {
                     return t;
                 }
-                bot.Logger.Warn("User.That is bad english: " + t);
+                RaiseError("User.That is bad english: " + t);
                 return t;
             }
             set
@@ -1195,13 +1201,14 @@ namespace AltAIMLbot.Utils
             while (req != null)
             {
                 Unifiable something;
-                if (IsSomething(req.currentThat, out something))
-
+                if (TextPatternUtils.IsSomething(req.currentThat, out something))
+                {
                     return something;
+                }
 
                 req = req.ParentRequest as Request;
             }
-            return null;
+            return currentThat;
         }
 
         internal PrintOptions iopts;
@@ -1261,8 +1268,6 @@ namespace AltAIMLbot.Utils
             set { _label = value; }
         }
 
-        public SideEffectStage Stage { get; set; }
-
         public SettingsDictionary GetSubstitutions(string named, bool createIfMissing)
         {
             var subst = TargetBot.GetDictionary(named, "substitutions", createIfMissing, true, this);
@@ -1308,8 +1313,12 @@ namespace AltAIMLbot.Utils
             SideEffects.Add(effect, start);
         }
 
-        public readonly CommitQueue SideEffects;
-        private readonly QuerySettings qsbase;
+        public CommitQueue SideEffects
+        {
+            get { return CurrentResult.ExitQueue; }
+        }
+
+        private QuerySettingsSettable qsbase;
         public bool _SuspendSearchLimits { get; set; }
         public bool SuspendSearchLimits
         {
@@ -1521,10 +1530,11 @@ namespace AltAIMLbot.Utils
 
         public bool EnterSalientSRAI(Unifiable templateNodeInnerValue, out Unifiable prevResults)
         {
+            throw bot.RaiseError("wrong SRAI!");
             prevResults = templateNodeInnerValue;
             return true;
             //prevResults = null;
-            if (!srai.UseSraiLimiters)
+            if (!ChatOptions.UseSraiLimitersBasedOnTextContent)
             {
                 prevResults = templateNodeInnerValue;
                 return true;
@@ -1544,7 +1554,7 @@ namespace AltAIMLbot.Utils
                     writeToLog("LOOPED on " + errorCycle);
                     return false;
                 }
-                if (IsNullOrEmpty(prevResults))
+                if (Unifiable.IsNullOrEmpty(prevResults))
                 {
                     writeToLog("EnterSalientSRAI IsNullOrEmpty on: " + templateNodeInnerValue);
                     return true;
@@ -1650,11 +1660,16 @@ namespace AltAIMLbot.Utils
             get { return Graph.Srai; }
         }
 
+        private int nKindCompleted = 0;
         public void Exit()
         {
             lock (ExitQueue)
             {
-                if (HasExited) return;
+                if (HasExited)
+                {
+                    bot.RaiseError("Request.Exit() called too many times! " + this);
+                    return;
+                }
                 this.HasExited = true;
             }
             CommitSideEffects(false);
@@ -1663,12 +1678,18 @@ namespace AltAIMLbot.Utils
             //if (CatchLabel != null) CatchLabel.PopScope();
             CommitSideEffects(true);
             ExitQueue.Commit(true);
+            var oc = OnResultComplete;
+            if (oc != null)
+            {
+                oc(CurrentResult);
+            }
+            OnResultComplete = null;
         }
         #endregion
-        public void Enter(object srai)
+        public void Enter(SubQuery srai)
         {
         }
-        public void Exit(object srai)
+        public void Exit(SubQuery srai)
         {
         }
 
@@ -1681,6 +1702,7 @@ namespace AltAIMLbot.Utils
         }
 
         public AIMLTagHandler LastHandler;
+        public Action<Result> OnResultComplete;
 
         #endregion
 
@@ -1740,7 +1762,7 @@ namespace AltAIMLbot.Utils
         CommandAndChatProcessor = EvalAIMLHandler | ChatRealTime | BackgroundThread | Process | ForString | EventLang | Process | SubProcess,
     }
 
-    public delegate Exception ExceptionFactoryMethod(string f,params object[] arg);
+    //public delegate Exception ExceptionFactoryMethod(string f,params object[] arg);
 
     public static class EnumExtensions
     {

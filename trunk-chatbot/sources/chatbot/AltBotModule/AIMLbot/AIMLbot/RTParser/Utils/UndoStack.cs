@@ -29,7 +29,7 @@ namespace AltAIMLbot.Utils
         {
             try
             {
-               // if (prefix != null) AltBot.writeDebugLine(prefix + "INVOKING: " + Name);
+                if (prefix != null) AltBot.writeDebugLine(prefix + "INVOKING: " + Name);
                 Value.Invoke();
             }
             catch (Exception e)

@@ -35,7 +35,11 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             isRecursive = false;
         }
-
+        public override XmlNode PrepairTemplateNodeToBecomeSource()
+        {
+            return templateNode;
+        }
+        /*
         protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
         {
             if (templateNode.Name.ToLower() == "aiml")
@@ -45,6 +49,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 return ProcessSucceed();
             }
             return Unifiable.Empty;
-        }
+        }*/
+
     }
 }

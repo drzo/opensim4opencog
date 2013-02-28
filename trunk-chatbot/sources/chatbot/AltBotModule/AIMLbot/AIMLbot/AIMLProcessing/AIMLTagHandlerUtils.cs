@@ -16,6 +16,15 @@ using MushDLR223.ScriptEngines;
 
 namespace AltAIMLbot.Utils
 {
+    public interface EmptyIsNotFailure
+    {
+    }
+    public interface NoReturnResult : EmptyIsNotFailure
+    {
+    }
+    public interface CanReturnFailure
+    {
+    }
 
     public abstract partial class AIMLTagHandler : IAIMLTransaction, IXmlLineInfo, IDisposable
     {
@@ -39,7 +48,7 @@ namespace AltAIMLbot.Utils
         /// </summary>
         //public SubQuery query;
 
-        internal TemplateInfo templateInfo;
+        public TemplateInfo templateInfo;
 
         /// <summary>
         /// Default ctor to use when late binding
@@ -93,9 +102,9 @@ namespace AltAIMLbot.Utils
 
         public string GetTemplateNodeInnerText()
         {
-            if (FinalResultValid)
+            if (RecurseResultValid)
             {
-                return FinalResult;
+                return RecurseResult;
             }
             //return null;
             return templateNodeInnerText;
@@ -160,7 +169,11 @@ namespace AltAIMLbot.Utils
 
         public virtual bool QueryHasFailed
         {
-            get { return query != null && query.HasFailed > 0; }
+            get
+            {
+                if (!ChatOptions.AIML_MAY_USE_FAILURE) return false;
+                return query != null && query.HasFailed > 0;
+            }
             set
             {
                 if (QueryHasFailed == value) return;
@@ -179,7 +192,11 @@ namespace AltAIMLbot.Utils
 
         public virtual bool QueryHasSuceeded
         {
-            get { return query != null && query.HasSuceeded > 0; }
+            get
+            {
+                if (!ChatOptions.AIML_MAY_USE_FAILURE) return true;
+                return query != null && query.HasSuceeded > 0;
+            }
             set
             {
                 if (InUnify)
@@ -195,6 +212,7 @@ namespace AltAIMLbot.Utils
         {
             get
             {
+                if (!ChatOptions.AIML_MAY_USE_FAILURE) return 0;
                 if (query == null) return 0;
                 return query.HasFailed;
             }
@@ -233,12 +251,16 @@ namespace AltAIMLbot.Utils
         {
             get
             {
+                if (!ChatOptions.AIML_MAY_USE_FAILURE)
+                {
+                    writeToLogError("AIML_WITHOUT_FAILURE!");
+                }
                 if (!QueryHasFailed)
                     if (!Debugger.IsAttached)
                     {
                         QueryHasFailed = true;
                     }
-                return null;
+                return ChatOptions.AIML_FAILURE_INDICATOR;
             }
         }
 
@@ -454,7 +476,7 @@ namespace AltAIMLbot.Utils
         {
             if (handlerU == this)
             {
-                Proc.RaiseError(new InvalidOperationException("SetParent: same: " + this));
+                Proc.RaiseError("SetParent: same: " + this);
             }
             else if (handlerU == null)
             {
@@ -517,9 +539,10 @@ namespace AltAIMLbot.Utils
         public override sealed Unifiable Transform()
         {
             if (finalResult.IsValid) return finalResult.Value;
-            if (QueryHasFailed)
+            if (ChatOptions.AIML_MAY_USE_FAILURE && QueryHasFailed)
             {
-                return null;
+                // this will call the debugger (wont happen unless AIML_MAY_USE_FAILURE == true)
+                return FAIL;
             }
             var OnExit = EnterTag(request, templateNode, query);
             try
@@ -527,8 +550,34 @@ namespace AltAIMLbot.Utils
                 IsStarted = true;
                 var recurseResult00 = Recurse();
                 var recurseResult0 = ProcessChangeU();
+                var recurseResultS = (string)recurseResult0;
                 Unifiable recurseResult;
-                if (CompleteEvaluatution(recurseResult0, this, out recurseResult))
+                var wasRealyNull = Object.ReferenceEquals(recurseResult0, null);
+                if (this is EmptyIsNotFailure && !wasRealyNull && recurseResult0.AsString() == String.Empty)
+                {
+                    string ret = String.Empty;
+                    finalResult.Value = ret;
+                    return ret;
+                }
+                if (this is NoReturnResult)
+                {
+                    if (!string.IsNullOrEmpty(recurseResultS))
+                    {
+                        recurseResultS = recurseResultS.Trim();
+                        if (!recurseResultS.StartsWith("<!") && recurseResultS.Length > 1)
+                        {
+                            writeToLogWarn("Something is returning text and shouldnt be!");
+                        }
+                    }
+                    string ret = ChatOptions.THINK_RETURN;
+                    finalResult.Value = ret;
+                    return ret;
+                }
+                if (FinalResultValid)
+                {
+                    return FinalResult;
+                }
+                if (CompleteEvaluation(recurseResult0, this, out recurseResult))
                 {
                     FinalResult = recurseResult;
                     return recurseResult;
@@ -537,13 +586,13 @@ namespace AltAIMLbot.Utils
                 if (!AltBot.BE_COMPLETE_NOT_FAST) return recurseResult0;
 
                 var recurseResult1 = FinalResult;
-                if (CompleteEvaluatution(recurseResult1, this, out recurseResult))
+                if (CompleteEvaluation(recurseResult1, this, out recurseResult))
                 {
                     FinalResult = recurseResult;
                     return recurseResult;
                 }
                 var recurseResult2 = templateNodeInnerText;
-                if (CompleteEvaluatution(recurseResult2, this, out recurseResult))
+                if (CompleteEvaluation(recurseResult2, this, out recurseResult))
                 {
                     writeToLogWarn("ProcessAimlChange -> templateNodeInnerText=" + recurseResult2 + "->" + recurseResult);
                     FinalResult = recurseResult;
@@ -558,10 +607,10 @@ namespace AltAIMLbot.Utils
             }
         }
 
-        protected static bool CompleteEvaluatution(string vv, AIMLTagHandler childHandlerU, out Unifiable output)
+        protected static bool CompleteEvaluation(string vv, AIMLTagHandler childHandlerU, out Unifiable output)
         {
             string soutput;
-            bool res = CompleteEvaluatution(vv, childHandlerU, out soutput);
+            bool res = CompleteEvaluation(vv, childHandlerU, out soutput);
             if (soutput == null)
             {
                 output = null;
@@ -570,10 +619,25 @@ namespace AltAIMLbot.Utils
             {
                 output = soutput;
             }
+            if (output == null)
+            {
+                if (DLRConsole.Trace("CompleteEvaluation returned " + res + " for " + vv))
+                {
+                    res = CompleteEvaluation(vv, childHandlerU, out soutput);
+                    if (soutput == null)
+                    {
+                        output = null;
+                    }
+                    else
+                    {
+                        output = soutput;
+                    }
+                }
+            }
             return res;
         }
 
-        private static bool CompleteEvaluatution(String vv, AIMLTagHandler childHandlerU, out string output)
+        private static bool CompleteEvaluation(String vv, AIMLTagHandler childHandlerU, out string output)
         {
             const string NULL = default(string);
             output = NULL;
@@ -671,7 +735,7 @@ namespace AltAIMLbot.Utils
                     test = GetTemplateNodeInnerText();
                     if (test == null) writeToLogWarn("NULL response in " + templateNode.OuterXml + " for " + query);
                     string value2;
-                    if (CompleteEvaluatution(test, this, out value2))
+                    if (CompleteEvaluation(test, this, out value2))
                     {
                         test = value2;
                     }
@@ -757,9 +821,9 @@ namespace AltAIMLbot.Utils
 
         public Unifiable Succeed(object p0)
         {
-            Succeed();
-            //if (true)               
-            return think.THINKYTAG;
+            Succeed();          
+            var thinkReturn = ChatOptions.THINK_RETURN;
+            if (thinkReturn != null) return thinkReturn;
             string p = p0.ToString();
             return "<!-- SUCCEED: " + p.Replace("<!--", "<#-").Replace("-->", "-#>") + "-->";
         }
@@ -776,7 +840,7 @@ namespace AltAIMLbot.Utils
                 double beforerating = request.TopLevelScore;
                 double newrating = beforerating*templateScore;
                 request.TopLevelScore = newrating;
-                if (false)
+                if (this.IsTraced && Math.Abs(newrating - beforerating) > 0.01)
                 {
                     string str = SafeFormat("TSCORE {1}<-{2}*{3}", newrating, beforerating, templateScore);
                     writeToLog(str);
@@ -858,7 +922,7 @@ namespace AltAIMLbot.Utils
             if (!request.CanProcess(starContent)) return null;
             XmlNode sraiNode = getNodeAndSetSiblingNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
             LineInfoElement.unsetReadonly(sraiNode);
-            srai sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
+            srai_odd sraiHandler = new srai_odd(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
             sraiHandler.KnowsCanProcess = true;
             var vv = sraiHandler.Transform(); // Transform();
             if (Unifiable.IsNull(vv))
@@ -871,7 +935,7 @@ namespace AltAIMLbot.Utils
                 writeToLogWarn("CALLSRAI EMPTY: <- " + starContent);
                 sraiNode = getNodeAndSetSiblingNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
                 LineInfoElement.unsetReadonly(sraiNode);
-                sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
+                sraiHandler = new srai_odd(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
                 vv = sraiHandler.Transform(); // Transform();
                 return vv;
             }
@@ -899,7 +963,7 @@ namespace AltAIMLbot.Utils
                 {
                     if (saveResultsOnChildren && throwOnSave)
                     {
-                        Proc.RaiseError(new InvalidOperationException("save NULLL ResultsOnChildren! " + this));
+                        Proc.RaiseError("save NULLL ResultsOnChildren! " + this);
                     }
                     QueryHasFailedN++;
                     templateResult = UnifiableEmpty;
@@ -955,6 +1019,7 @@ namespace AltAIMLbot.Utils
                 writeToLogWarn("ChackValue NULL");
                 return null;
             }
+            //if (ReferenceEquals(value.AsString(), string.Empty)) return value;
             else
             {
                 if (Unifiable.IsNull(value))
@@ -973,7 +1038,7 @@ namespace AltAIMLbot.Utils
                 }
                 if (isVerbatum) return value;
                 string valueStr;
-                if (CompleteEvaluatution(value, this, out valueStr))
+                if (CompleteEvaluation(value, this, out valueStr))
                 {
                     //RecurseResult = vv;
                     return valueStr;
@@ -1055,7 +1120,7 @@ namespace AltAIMLbot.Utils
             {
                 return null;
             }
-            if (CompleteEvaluatution(vv2, tagHandlerU, out vv))
+            if (CompleteEvaluation(vv2, tagHandlerU, out vv))
             {
                 return vv;
             }
@@ -1143,7 +1208,7 @@ namespace AltAIMLbot.Utils
             {
                 success = childSuccess;
                 Unifiable output;
-                if (CompleteEvaluatution(vv, tagHandlerUChild, out output))
+                if (CompleteEvaluation(vv, tagHandlerUChild, out output))
                 {
                     if (output == vv1)
                     {
@@ -1297,7 +1362,11 @@ namespace AltAIMLbot.Utils
                         {
                             if (saveOnInnerXML)
                             {
-                                if (parentHandlerU != null) parentHandlerU.SaveResultOnChild(childNode, "+++ ");
+                                if (parentHandlerU != null)
+                                {
+
+                                    parentHandlerU.SaveResultOnChild(childNode, "+++ ");
+                                }
                             }
                             return value;
                         }
@@ -1758,7 +1827,7 @@ namespace AltAIMLbot.Utils
             if (IsUnevaluated(value))
             {
                 writeToLogWarn("XML onto child " + value);
-                if (CompleteEvaluatution(value, this, out value2))
+                if (CompleteEvaluation(value, this, out value2))
                 {
                     value = value2;
                 }
@@ -1796,7 +1865,7 @@ namespace AltAIMLbot.Utils
 
         protected bool CheckNode(string name)
         {
-            string templateNodeName = this.templateNode.Name;
+            string templateNodeName = this.templateNode.LocalName;
             if (templateNodeName.ToLower() == name) return true;
             if (name.Contains(","))
             {
@@ -2099,7 +2168,7 @@ namespace AltAIMLbot.Utils
 
             Unifiable appendable = OutputFromTagHandlers(aimlTagHandlers);
             Unifiable appendable1;
-            if (CompleteEvaluatution(appendable, this, out appendable1))
+            if (CompleteEvaluation(appendable, this, out appendable1))
             {
                 FinalResult = appendable1;
                 return appendable1;
@@ -2382,6 +2451,7 @@ namespace AltAIMLbot.Utils
         }
 
         #endregion
+
     }
 
     public interface IAIMLTransaction

@@ -37,8 +37,11 @@ namespace AltAIMLbot.AIMLTagHandlers
 
             GetTargetSettings = pp ?? (() => this.query.TargetSettings);
         }
-
-        protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
+        public override XmlNode PrepairTemplateNodeToBecomeSource()
+        {
+            return templateNode;
+        }
+        protected override Unifiable ProcessChangeU()
         {
             if (CheckNode("root,vars,substitutions,substitutions,bots,properties,predicates"))
             {
@@ -46,7 +49,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 var prevDict = request.TargetSettings;
                 try
                 {
-                    SettingsDictionaryReal.loadSettingNode((ISettingsDictionary) GetTargetSettings(), templateNode,
+                    SettingsDictionaryReal.loadSettingNode((ISettingsDictionary)GetTargetSettings(), templateNode,
                                                            SettingsPolicy.Default, request);
                 }
                 finally
@@ -58,7 +61,7 @@ namespace AltAIMLbot.AIMLTagHandlers
             }
             return Unifiable.Empty;
         }
-
+       
         public ParentProvider GetTargetSettings;
     }
 }

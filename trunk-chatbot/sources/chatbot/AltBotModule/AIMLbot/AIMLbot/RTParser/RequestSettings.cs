@@ -18,14 +18,16 @@ namespace AltAIMLbot
         public T Min { get; set; }
         public T Max { get; set; }
         public T Current { get; set; }
+
         public bool IsOverMax
         {
             get
             {
                 // Max.CompareTo(Min) < 0 means if max is less than min.. it cant timeout
-                return Current.CompareTo(Max) >= 0 && Max.CompareTo(Min) >- 0;
+                return Current.CompareTo(Max) >= 0 && Max.CompareTo(Min) > -0;
             }
         }
+
         public override string ToString()
         {
             return OrNull(Min) + "=<" + OrNull(Current) + "=<" + OrNull(Max);
@@ -44,10 +46,14 @@ namespace AltAIMLbot
         }
     }
 
-    sealed public class QuerySettingsImpl : QuerySettings
+    public sealed class QuerySettingsImpl : QuerySettings, QuerySettingsSettable, QuerySettingsReadOnly
     {
 
         public QuerySettingsImpl(QuerySettingsReadOnly settings)
+            : base((QuerySettings)settings)
+        {
+        }
+        public QuerySettingsImpl(QuerySettings settings)
             : base(settings)
         {
         }
@@ -68,28 +74,36 @@ namespace AltAIMLbot
         }
     }
 
-    abstract public class QuerySettings : QuerySettingsSettable
+    public abstract class QuerySettings : QuerySettingsReadOnly
     {
         public static int UNLIMITED = 999;
 
         public void IncreaseLimits(int minsAndMaxes)
         {
-            IncreaseLimits(this, minsAndMaxes, minsAndMaxes);
+            IncreaseLimits(GetSettable(), minsAndMaxes, minsAndMaxes);
         }
+
+        virtual public QuerySettingsSettable GetSettable()
+        {
+            var settabel = this as QuerySettingsSettable;
+            if (settabel != null) return settabel;
+            return new QuerySettingsImpl(this);
+        }
+
         public static void IncreaseLimits(QuerySettingsSettable request, int mins, int maxs)
         {
             return;
             //request.MinOutputs = ((QuerySettingsReadOnly)request).MinOutputs + mins;
-            request.MinTemplates = ((QuerySettingsReadOnly)request).MinTemplates + mins;
-            request.MinPatterns = ((QuerySettingsReadOnly)request).MinPatterns + mins;
+            request.MinTemplates = ((QuerySettingsReadOnly) request).MinTemplates + mins;
+            request.MinPatterns = ((QuerySettingsReadOnly) request).MinPatterns + mins;
             //request.MaxOutputs = ((QuerySettingsReadOnly)request).MaxOutputs + maxs;
-            request.MaxTemplates = ((QuerySettingsReadOnly)request).MaxTemplates + maxs;
-            request.MaxPatterns = ((QuerySettingsReadOnly)request).MaxPatterns + maxs;
+            request.MaxTemplates = ((QuerySettingsReadOnly) request).MaxTemplates + maxs;
+            request.MaxPatterns = ((QuerySettingsReadOnly) request).MaxPatterns + maxs;
             request.ProcessMultipleTemplates = true;
             request.ProcessMultiplePatterns = true;
         }
 
-        static public String ToSettingsString(QuerySettingsReadOnly qs)
+        public static String ToSettingsString(QuerySettingsReadOnly qs)
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("Patterns={0}-{1} PM={2}\n", qs.MinPatterns, qs.MaxPatterns, qs.ProcessMultiplePatterns);
@@ -99,69 +113,73 @@ namespace AltAIMLbot
         }
 
         public static QuerySettings AIMLDefaults = new QuerySettingsImpl(null)
-        {
-            ProcessMultipleTemplates = true, // needed to find verbal outputs
-            ProcessMultiplePatterns = false,
-            MinGetVars = 0,
-            MaxGetVars = UNLIMITED,
-            MinSetVars = 0,
-            MaxSetVars = UNLIMITED,
-            MinOutputs = 11,
-            MaxOutputs = 11,
-            MinPatterns = 11,
-            MaxPatterns = 11,
-            MinTemplates =11,
-            MaxTemplates = 11,
-            UseDictForSetMaxDepth = UNLIMITED,
-            UseLuceneForGetMaxDepth = 112,
-            UseLuceneForSetMaxDepth = 112,
-            StartGraphName = "default",
-            IsTraced = false,
-            _sraiDepth = new SettingMinMaxCurrent<int>()
-            {
-                Current = 0,
-                Min = 0,
-                Max = UNLIMITED,
-            },
-        };
+                                                       {
+                                                           ProcessMultipleTemplates = true,
+                                                           // needed to find verbal outputs
+                                                           ProcessMultiplePatterns = false,
+                                                           MinGetVars = 0,
+                                                           MaxGetVars = UNLIMITED,
+                                                           MinSetVars = 0,
+                                                           MaxSetVars = UNLIMITED,
+                                                           MinOutputs = 11,
+                                                           MaxOutputs = 11,
+                                                           MinPatterns = 11,
+                                                           MaxPatterns = 11,
+                                                           MinTemplates = 11,
+                                                           MaxTemplates = 11,
+                                                           UseDictForSetMaxDepth = UNLIMITED,
+                                                           UseLuceneForGetMaxDepth = 112,
+                                                           UseLuceneForSetMaxDepth = 112,
+                                                           StartGraphName = "default",
+                                                           IsTraced = false,
+                                                           _sraiDepth = new SettingMinMaxCurrent<int>()
+                                                                            {
+                                                                                Current = 0,
+                                                                                Min = 0,
+                                                                                Max = UNLIMITED,
+                                                                            },
+                                                       };
 
         public static QuerySettings CogbotDefaults = new QuerySettingsImpl(AIMLDefaults)
-        {
-            ProcessMultipleTemplates = true, // needed to find verbal outputs
-            ProcessMultiplePatterns = true, // needed to find verbal outputs
-            MinOutputs = 14,
-            MaxOutputs = 111,
-            MinPatterns = 14,
-            MaxPatterns = 112,
-            MinTemplates = 114,
-            MaxTemplates = 114,
-            _sraiDepth = new SettingMinMaxCurrent<int>()
-                            {
+                                                         {
+                                                             ProcessMultipleTemplates = true,
+                                                             // needed to find verbal outputs
+                                                             ProcessMultiplePatterns = true,
+                                                             // needed to find verbal outputs
+                                                             MinOutputs = 14,
+                                                             MaxOutputs = 111,
+                                                             MinPatterns = 14,
+                                                             MaxPatterns = 112,
+                                                             MinTemplates = 114,
+                                                             MaxTemplates = 114,
+                                                             _sraiDepth = new SettingMinMaxCurrent<int>()
+                                                                              {
 
-                                Min = 0,
-                                Max = AltBot.SraiDepthMax
-                            },
+                                                                                  Min = 0,
+                                                                                  Max = AltBot.SraiDepthMax
+                                                                              },
 
-        };
+                                                         };
 
         public static QuerySettings FindAll = new QuerySettingsImpl(CogbotDefaults)
-        {
-            ProcessMultipleTemplates = true, // needed to find verbal outputs
-            ProcessMultiplePatterns = true, // needed to find verbal outputs
-            MaxOutputs = UNLIMITED,
-            MaxPatterns = UNLIMITED,
-            MaxTemplates = UNLIMITED,
-            MinTemplates = UNLIMITED,
-            MinOutputs = UNLIMITED,
-            MinPatterns = UNLIMITED,
-        };
+                                                  {
+                                                      ProcessMultipleTemplates = true, // needed to find verbal outputs
+                                                      ProcessMultiplePatterns = true, // needed to find verbal outputs
+                                                      MaxOutputs = UNLIMITED,
+                                                      MaxPatterns = UNLIMITED,
+                                                      MaxTemplates = UNLIMITED,
+                                                      MinTemplates = UNLIMITED,
+                                                      MinOutputs = UNLIMITED,
+                                                      MinPatterns = UNLIMITED,
+                                                  };
 
         public static QuerySettings SRAIDefaults = new QuerySettingsImpl(CogbotDefaults)
-        {
-            ProcessMultipleTemplates = true, // needed to find verbal outputs
-            ProcessMultiplePatterns = false,
+                                                       {
+                                                           ProcessMultipleTemplates = true,
+                                                           // needed to find verbal outputs
+                                                           ProcessMultiplePatterns = false,
 
-            /*
+                                                           /*
             MinOutputs = 1,
             MaxOutputs = 1,
             MinPatterns = 1,
@@ -169,29 +187,30 @@ namespace AltAIMLbot
             MinTemplates = 1,
             MaxTemplates = 1,
              */
-            StartGraphName = null,
-            IsTraced = false,
-            /***
+                                                           StartGraphName = null,
+                                                           IsTraced = false,
+                                                           /***
              * undecided!
             UseLuceneForGetMaxDepth = false,
             UseLuceneForGetMaxDepth = false,
             ****/
-            _sraiDepth = new SettingMinMaxCurrent<int>()
-            {
-                Current = 0,
-                Min = 0,
-                Max = UNLIMITED,
-            },
-        };
+                                                           _sraiDepth = new SettingMinMaxCurrent<int>()
+                                                                            {
+                                                                                Current = 0,
+                                                                                Min = 0,
+                                                                                Max = UNLIMITED,
+                                                                            },
+                                                       };
 
         private SettingMinMaxCurrent<int> _sraiDepth = new SettingMinMaxCurrent<int>();
 
-        protected QuerySettings(QuerySettingsReadOnly defaults):base()
+        protected QuerySettings(QuerySettings defaults)
+            : base()
         {
-            ApplySettings(defaults, this);
+            ApplySettings(defaults, GetSettable());
         }
 
-        public static void ApplySettings(QuerySettingsReadOnly r, QuerySettingsSettable w)
+        public static void ApplySettings(QuerySettings r, QuerySettingsSettable w)
         {
 
             if (r == null || w == null || r == w) return;
@@ -254,30 +273,35 @@ namespace AltAIMLbot
         /// the number of "successfull" (non-empty) templates after "eval"
         /// </summary>
         public int MinOutputs { get; set; }
+
         public int MaxOutputs { get; set; }
 
         /// <summary>
         /// The number of sets before the query is stopped
         /// </summary>
         public int MinSetVars { get; set; }
+
         public int MaxSetVars { get; set; }
 
         /// <summary>
         /// The number of gets before the query is stopped
         /// </summary>
         public int MinGetVars { get; set; }
+
         public int MaxGetVars { get; set; }
 
         /// <summary>
         /// The number of templates to harvest in query stage (should be at least one)
         /// </summary>
         public int MinTemplates { get; set; }
+
         public int MaxTemplates { get; set; }
 
         /// <summary>
         /// The number of patterns to harvest in query stage (should be at least one)
         /// </summary>
         public int MinPatterns { get; set; }
+
         public int MaxPatterns { get; set; }
 
         /// <summary>
@@ -303,10 +327,12 @@ namespace AltAIMLbot
         {
             return StaticAIMLUtils.IsSomething(s, out something);
         }
+
         public static bool IsNullOrEmpty(Object unifiable)
         {
             return StaticAIMLUtils.IsNullOrEmpty(unifiable);
         }
+
         public static string SafeFormat(string f, params object[] args)
         {
             return StaticAIMLUtils.SafeFormat(f, args);
@@ -329,6 +355,7 @@ namespace AltAIMLbot
         /// Some patterns implies multiple templates
         /// </summary>
         bool ProcessMultipleTemplates { get; }
+
         /// <summary>
         /// After the first pattern, if the min/maxes are not satisfied.. keep going
         /// </summary>
@@ -338,18 +365,21 @@ namespace AltAIMLbot
         /// the number of "successfull" (non-empty) templates after "eval"
         /// </summary>
         int MinOutputs { get; }
+
         int MaxOutputs { get; }
 
         /// <summary>
         /// The number of templates to harvest in query stage (should be at least one)
         /// </summary>
         int MinTemplates { get; }
+
         int MaxTemplates { get; }
 
         /// <summary>
         /// The number of patterns to harvest in query stage (should be at least one)
         /// </summary>
         int MinPatterns { get; }
+
         int MaxPatterns { get; }
 
         SettingMinMaxCurrent<int> SraiDepth { get; }
@@ -359,18 +389,22 @@ namespace AltAIMLbot
 
         int UseLuceneForSetMaxDepth { get; }
         int UseLuceneForGetMaxDepth { get; }
-        int MaxSetVars { get; set; }
-        int MaxGetVars { get; set; }
-        int UseDictForSetMaxDepth { get; set; }
+        int MaxSetVars { get; }
+        int MaxGetVars { get; }
+        int UseDictForSetMaxDepth { get; }
+
+        QuerySettingsSettable GetSettable();
     }
 
-    public interface QuerySettingsSettable : QuerySettingsReadOnly
+    public interface QuerySettingsSettable: QuerySettingsReadOnly
     {
         void IncreaseLimits(int minsAndMaxes);
+
         /// <summary>
         /// Some patterns implies multiple templates
         /// </summary>
         bool ProcessMultipleTemplates { set; }
+
         /// <summary>
         /// After the first pattern, if the min/maxes are not satisfied.. keep going
         /// </summary>
@@ -379,19 +413,22 @@ namespace AltAIMLbot
         /// <summary>
         /// the number of "successfull" (non-empty) templates after "eval"
         /// </summary>
-        int MinOutputs { set; }
+        int MinOutputs { set; get; }
+
         int MaxOutputs { set; }
 
         /// <summary>
         /// The number of templates to harvest in query stage (should be at least one)
         /// </summary>
         int MinTemplates { set; }
+
         int MaxTemplates { set; }
 
         /// <summary>
         /// The number of patterns to harvest in query stage (should be at least one)
         /// </summary>
         int MinPatterns { set; }
+
         int MaxPatterns { set; }
 
         /// <summary>
@@ -408,5 +445,9 @@ namespace AltAIMLbot
 
         int UseLuceneForSetMaxDepth { set; }
         int UseLuceneForGetMaxDepth { set; }
+        int MaxSetVars { set; }
+        int MaxGetVars { set; }
+        int UseDictForSetMaxDepth { set; }
+        SettingMinMaxCurrent<int> SraiDepth { get; }
     }
 }

@@ -63,7 +63,7 @@ namespace AltAIMLbot.Database
             // try to use a global blackboard predicate
             Unifiable gResult = SettingsDictionaryReal.grabSettingDefaultDict(gUser.Predicates, gName, out realNameG);
 
-            if ((Unifiable.IsUnknown(resultGet)) && (!Unifiable.IsUnknown(gResult)))
+            if ((Unifiable.IsMissing(resultGet)) && (!Unifiable.IsMissing(gResult)))
             {
                 // result=nothing, gResult=something => return gResult
                 writeToLog("SETTINGS OVERRIDE " + gResult);
@@ -74,7 +74,7 @@ namespace AltAIMLbot.Database
             string sresultGet = resultGet.ToValue(query);
 
             // if Unknown or empty
-            if (UseLuceneForGet && Unifiable.IsUnknown(sresultGet))
+            if (UseLuceneForGet && Unifiable.IsMissing(sresultGet))
             {
                 Unifiable userName = udict.grabSetting("id");
                 if (Unifiable.IsNullOrEmpty(userName))
@@ -220,7 +220,7 @@ namespace AltAIMLbot.Database
             bool onlyIfUnknown;
             if (StaticXMLUtils.TryParseBool(templateNode, "ifUnknown", out onlyIfUnknown))
             {
-                if (onlyIfUnknown) return (Unifiable.IsUnknown(oldValue) || IsIncomplete(oldValue)) && canSet;
+                if (onlyIfUnknown) return (Unifiable.IsMissing(oldValue) || IsIncomplete(oldValue)) && canSet;
             }
 
             bool overwriteExisting;

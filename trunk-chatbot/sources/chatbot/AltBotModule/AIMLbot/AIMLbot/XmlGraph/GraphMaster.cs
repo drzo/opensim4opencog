@@ -1070,7 +1070,7 @@ namespace AltAIMLbot.Utils
                         req.IsToplevelRequest = false;
                         //req.CurrentResult = null;
 
-                        AIMLbot.MasterResult r = (MasterResult)proc.ChatWithRequest(req);
+                        AIMLbot.MasterResult r = (MasterResult)proc.Chat(req);
 
                         if (!r.IsEmpty) pl.Add(r);
                     }
@@ -1387,7 +1387,7 @@ namespace AltAIMLbot.Utils
 
         public bool AddFileLoaded(string filename)
         {
-            ensureEdb().rememberLoaded(filename);
+           /// ensureEdb().rememberLoaded(filename);
             FileInfo fi = new FileInfo(filename);
             string fullName = fi.FullName;
             DateTime dt;
@@ -1447,7 +1447,7 @@ namespace AltAIMLbot.Utils
 
         public bool IsFileLoaded(string filename)
         {
-            if (wasloaded(filename)) return true;
+          //  if (wasloaded(filename)) return true;
             FileInfo fi = new FileInfo(filename);
             string fullName = fi.FullName;
             DateTime dt;
@@ -1757,7 +1757,7 @@ namespace AltAIMLbot.Utils
             }
 
             // temporary PATCH
-            if (AltBot.PadAroundTemplateTags)
+            if (ChatOptions.PadAroundTemplateTags)
             {
                 if (result.Contains("<"))
                 {

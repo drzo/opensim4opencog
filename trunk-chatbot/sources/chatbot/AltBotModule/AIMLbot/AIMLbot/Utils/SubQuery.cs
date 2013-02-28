@@ -232,7 +232,11 @@ namespace AltAIMLbot.Utils
 
         public int HasFailed
         {
-            get { return _hasFailed + (useParentSF ? ParentResult.HasFailed : 0); }
+            get
+            {
+                if (!ChatOptions.AIML_MAY_USE_FAILURE) return 0;
+                return _hasFailed + (useParentSF ? ParentResult.HasFailed : 0);
+            }
             set
             {
                 if (_hasFailed < 1)
@@ -260,6 +264,7 @@ namespace AltAIMLbot.Utils
         {
             get
             {
+                if (!ChatOptions.AIML_MAY_USE_FAILURE) return 1;
                 int ret = _hasSuceeded + (useParentSF ? ParentResult.HasSuceeded : 0);
                 if (ret < 0) throw new InvalidOperationException();
                 return ret;
@@ -395,11 +400,6 @@ namespace AltAIMLbot.Utils
         public User Responder
         {
             get { return Request.Responder; }
-        }
-
-        public Unifiable That
-        {
-            get { return Request.That; }
         }
 
         public Unifiable rawInput

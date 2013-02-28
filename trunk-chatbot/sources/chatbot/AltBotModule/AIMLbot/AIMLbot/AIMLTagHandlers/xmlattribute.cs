@@ -10,7 +10,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// The atomic sr does not have any content. 
     /// </summary>
-    public class xmlattribute : AIMLTagHandler
+    public class xmlattribute : AIMLTagHandler, EmptyIsNotFailure
     {
         /// <summary>
         /// Ctor
@@ -39,7 +39,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 string value = GetAttribValue<string>(templateNode, "value", GetTemplateNodeInnerText, null);
                 var ats = Parent.templateNode.Attributes.Append(templateNode.OwnerDocument.CreateAttribute(name, value));
             }
-            return Unifiable.Empty;
+            return string.Empty;
         }
     }
 }

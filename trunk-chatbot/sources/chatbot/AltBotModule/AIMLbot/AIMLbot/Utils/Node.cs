@@ -447,7 +447,7 @@ namespace AltAIMLbot.Utils
             }
 
             //Tempory PATCH
-            if (AltBot.PadAroundTemplateTags)
+            if (ChatOptions.PadAroundTemplateTags)
             {
                 if ((template.Contains("<star")) && (!template.Contains(" <star")))
                 {
@@ -1400,7 +1400,16 @@ namespace AltAIMLbot.Utils
             return false;
         }
 
-        static bool matchesWildSense(string sense, string queryWord,Request request)
+        static bool matchesWildSense(string sense, string queryWord, Request request)
+        {
+            bool ret = matchesWildSense0(sense, queryWord, request);
+            if (!ret && sense.Contains(queryWord))
+            {
+            }
+            return ret;
+        }
+
+        static bool matchesWildSense0(string sense, string queryWord,Request request)
         {
             if (sense == queryWord) return true;
             // always clip off the first "*";
@@ -2132,7 +2141,7 @@ namespace AltAIMLbot.Utils
             {
                 return false;
             }
-            if (GlobalSharedSettings.IsDougsMachine)
+            if (DLRConsole.IsDougsMachine)
             {
                 return false;
             }

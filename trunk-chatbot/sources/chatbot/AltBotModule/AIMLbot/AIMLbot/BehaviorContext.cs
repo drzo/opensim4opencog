@@ -15,6 +15,7 @@ using AltAIMLbot.Variables;
 using LAIR.ResourceAPIs.WordNet;
 using LogicalParticleFilter1;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 
 #endregion
 
@@ -47,7 +48,6 @@ namespace AltAIMLbot
         public List<TaskItem> RunningItems = new List<TaskItem>();
         public List<TaskItem> RanItems = new List<TaskItem>();
         private Queue<string> _chatInputQueue = new Queue<string>();
-        internal bool _isPerformingOutput = false;
         private string _lastBehaviorChatInput = "";
 
         private string _lastBehaviorChatOutput = "";
@@ -115,7 +115,7 @@ namespace AltAIMLbot
         {
             get
             {
-                lock (SyncQueue)
+                lock (ChatQueueLock)
                 {
                     Queue<string> outputQueue = outputQueue0;
                     if (outputQueue.Count == 0) return "<!--emtpy outputQueue-->";
@@ -141,14 +141,14 @@ namespace AltAIMLbot
 
         internal void processOutputQueue()
         {
-            lock (SyncQueue)
+            lock (ChatQueueLock)
             {
                 Queue<string> outputQueue = outputQueue0;
                 if (!isPerformingOutput)
                 {
                     if (outputQueue.Count > 0)
                     {
-                        Console.WriteLine("WARN: BOT OUTPUT ABOUT TO GO MISSING!:" + OutputQueueString);
+                        writeToLogWarn("WARN: BOT OUTPUT ABOUT TO GO MISSING!:" + OutputQueueString);
                     }
                     return;
                 }
@@ -163,7 +163,7 @@ namespace AltAIMLbot
 
         public void SayMessageOutsideQueue(string msg)
         {
-            lock (SyncQueue)
+            lock (ChatQueueLock)
             {
                 if (sayProcessor != null)
                 {
@@ -171,7 +171,7 @@ namespace AltAIMLbot
                 }
                 else
                 {
-                    Console.WriteLine("Missing sayProcessor! BOT OUTPUT:{0}", msg);
+                    writeToLogWarn("Missing sayProcessor! BOT OUTPUT:{0}", msg);
                 }
                 myBehaviors.logText("BOT OUTPUT:" + msg);
             }
@@ -179,7 +179,7 @@ namespace AltAIMLbot
 
         internal void flushOutputQueue()
         {
-            lock (SyncQueue)
+            lock (ChatQueueLock)
             {
                 int fc = 0;
                 Queue<string> outputQueue = outputQueue0;
@@ -195,8 +195,12 @@ namespace AltAIMLbot
                     }
                 }
 
+                if (outputQueue.Count > 0)
+                {
+                    writeToLogWarn("The queue was supposed to be empty here!");
+                    outputQueue.Clear();
+                }
 
-                outputQueue.Clear();
                 myBehaviors.logText("BOT flushedOutputQueue Count=" + fc);
                 string flushsignal = mbot.GlobalSettings.grabSetting("flushsignal", false);
                 if ((flushsignal != null) && (flushsignal.Length > 2))
@@ -208,11 +212,11 @@ namespace AltAIMLbot
 
         internal void postOutput(string msg)
         {
-            lock (SyncQueue)
+            lock (ChatQueueLock)
             {
                 Queue<string> outputQueue = outputQueue0;
                 if (string.IsNullOrEmpty(msg)) return;
-                Action<string> postOutput0 = ((s) => { lock (SyncQueue) outputQueue.Enqueue(s); });
+                Action<string> postOutput0 = ((s) => { lock (ChatQueueLock) outputQueue.Enqueue(s); });
                 if (msg.Length < 256)
                 {
                     // just post output
@@ -237,7 +241,7 @@ namespace AltAIMLbot
 
         internal void sendOutput(string msg)
         {
-            lock (SyncQueue)
+            lock (ChatQueueLock)
             {
                 Queue<string> outputQueue = outputQueue0;
                 // posts and processes
@@ -262,7 +266,7 @@ namespace AltAIMLbot
 
         internal string getPendingOutput()
         {
-            lock (SyncQueue)
+            lock (ChatQueueLock)
             {
                 Queue<string> outputQueue = outputQueue0;
                 string outmsg = "";
@@ -329,17 +333,27 @@ namespace AltAIMLbot
             get { return _lastBehaviorChatInput; }
             set
             {
+                if (value == _lastBehaviorChatInput)
+                {
+                    RedundantSet();
+                    return;
+                }
                 if (string.IsNullOrEmpty(value))
                 {
-                    ClearLastInput();
+                    ClearLastInput(false);
                     return;
                 }
                 if (!string.IsNullOrEmpty(_lastBehaviorChatInput))
                 {
-                    ClearLastInput();
+                    ClearLastInput(false);
                 }
                 _lastBehaviorChatInput = value;
             }
+        }
+
+        private void RedundantSet()
+        {
+           
         }
 
         internal BehaviorSet myBehaviors
@@ -388,21 +402,21 @@ namespace AltAIMLbot
         /// </summary>
         public bool isPerformingOutput
         {
-            get { lock (SyncQueue) return _isPerformingOutput; }
+            get { lock (ChatQueueLock) return mbot.isPerformingOutput; }
             set
             {
-                lock (SyncQueue)
+                lock (ChatQueueLock)
                 {
                     Queue<string> outputQueue = outputQueue0;
                     if (value == false && outputQueue.Count > 0)
                     {
-                        if (_isPerformingOutput)
+                        if (mbot.isPerformingOutput)
                         {
                             AltBot.writeToLogWarn("ERROR Was preformingOUTUT! ");
                         }
                         processOutputQueue();
                     }
-                    _isPerformingOutput = value;
+                    mbot.isPerformingOutput = value;
                 }
             }
         }
@@ -541,39 +555,44 @@ namespace AltAIMLbot
 
         public string lastBehaviorChatOutput
         {
-            get { lock (SyncQueue) return _lastBehaviorChatOutput; }
+            get { lock (ChatQueueLock) return _lastBehaviorChatOutput; }
             set
             {
+                if (_lastBehaviorChatOutput == value)
+                {
+                    RedundantSet();
+                    return;
+                }
                 if (string.IsNullOrEmpty(value))
                 {
-                    ClearLastOutput();
+                    ClearLastOutput(false);
                     return;
                 }
                 if (!string.IsNullOrEmpty(_lastBehaviorChatOutput))
                 {
-                    ClearLastOutput();
+                    ClearLastOutput(false);
                 }
-                lock (SyncQueue) _lastBehaviorChatOutput = value;
+                lock (ChatQueueLock) _lastBehaviorChatOutput = value;
             }
         }
 
         public Queue<string> chatInputQueue
         {
-            get { lock (SyncQueue) return _chatInputQueue; }
-            set { lock (SyncQueue) _chatInputQueue = value; }
+            get { lock (ChatQueueLock) return _chatInputQueue; }
+            set { lock (ChatQueueLock) _chatInputQueue = value; }
         }
 
         private Queue<string> outputQueue0
         {
-            get { lock (SyncQueue) return _outputQueue; }
-            set { lock (SyncQueue) _outputQueue = value; }
+            get { lock (ChatQueueLock) return _outputQueue; }
+            set { lock (ChatQueueLock) _outputQueue = value; }
         }
 
         public int outputQueueCount
         {
             get
             {
-                lock (SyncQueue)
+                lock (ChatQueueLock)
                 {
                     return outputQueue0.Count;
                 }
@@ -584,14 +603,14 @@ namespace AltAIMLbot
         {
             get
             {
-                lock (SyncQueue)
+                lock (ChatQueueLock)
                 {
                     return chatInputQueue.Count;
                 }
             }
         }
 
-        internal object SyncQueue
+        internal object ChatQueueLock
         {
             get { return RequestLock; }
         }
@@ -753,7 +772,7 @@ namespace AltAIMLbot
         public Exception RaiseError(Exception e)
         {
             Exception err = mbot.RaiseError(e);
-            if (GlobalSharedSettings.IsDougsMachine)
+            if (DLRConsole.IsDougsMachine)
             {
                 throw err;
             }
@@ -777,7 +796,7 @@ namespace AltAIMLbot
 
         public Result ChatWithRequest(Request subRequest)
         {
-            return mbot.ChatWithRequest(subRequest);
+            return mbot.ChatWR(subRequest);
         }
 
         internal void AddAiml(GraphMaster myGraph, string evidenceCode)
@@ -798,7 +817,7 @@ namespace AltAIMLbot
 
         internal void SetInputClearingOutput(string eventName, string input, User curUser)
         {
-            lock (SyncQueue)
+            lock (ChatQueueLock)
             {
                 BehaviorContext curBot = this;
                 //curBot.lastBehaviorChatInput = input;
@@ -819,7 +838,7 @@ namespace AltAIMLbot
 
         public string GetLastBehaviorChatOutput()
         {
-            lock (SyncQueue)
+            lock (ChatQueueLock)
             {
                 string lo = lastBehaviorChatOutput;
                 if (!string.IsNullOrEmpty(lo))
@@ -833,7 +852,7 @@ namespace AltAIMLbot
 
         public string chatInputQueuePeek()
         {
-            lock (SyncQueue)
+            lock (ChatQueueLock)
             {
                 return chatInputQueue.Peek();
             }
@@ -841,7 +860,7 @@ namespace AltAIMLbot
 
         internal void chatInputQueueDequeue(string expected)
         {
-            lock (SyncQueue)
+            lock (ChatQueueLock)
             {
                 bool didIt = false;
                 if (chatInputQueueCount > 0)
@@ -866,7 +885,7 @@ namespace AltAIMLbot
 
         public string lastBehaviorChatInputPeek()
         {
-            lock (SyncQueue)
+            lock (ChatQueueLock)
             {
                 if (chatInputQueueCount > 0)
                 {
@@ -879,44 +898,44 @@ namespace AltAIMLbot
             }
         }
 
-        public void ClearLastOutput()
+        public void ClearLastOutput(bool vetted)
         {
-            lock (SyncQueue)
+            lock (ChatQueueLock)
             {
                 string lo = lastBehaviorChatOutput;
                 if (!string.IsNullOrEmpty(lo))
                 {
-                    writeToLogWarn("Loosing lastBehaviorChatOutput=" + lo);
+                    if (!vetted) writeToLogWarn("Loosing lastBehaviorChatOutput=" + lo);
                     _lastBehaviorChatOutput = "";
                 }
             }
         }
 
-        public void ClearLastInput()
+        public void ClearLastInput(bool vetted)
         {
-            lock (SyncQueue)
+            lock (ChatQueueLock)
             {
                 string lo = lastBehaviorChatInput;
                 if (!string.IsNullOrEmpty(lo))
                 {
-                    writeToLogWarn("Loosing lastBehaviorChatInput=" + lo);
+                    if (!vetted) writeToLogWarn("Loosing lastBehaviorChatInput=" + lo);
                     _lastBehaviorChatInput = "";
                 }
             }
         }
 
-        public void ClearLastInputOutput()
+        public void ClearLastInputOutput(bool vetted)
         {
-            lock (SyncQueue)
+            lock (ChatQueueLock)
             {
-                ClearLastInput();
-                ClearLastOutput();
+                ClearLastInput(true);
+                ClearLastOutput(vetted);
             }
         }
 
         internal string lastBehaviorChatInputDeque()
         {
-            lock (SyncQueue)
+            lock (ChatQueueLock)
             {
                 if (chatInputQueueCount > 0)
                 {
@@ -939,11 +958,11 @@ namespace AltAIMLbot
             }
         }
 
-        public int DebugMicrothreader = 4;
         internal void SetCurrentTask(TaskItem ti, TaskList list, bool wasActiveTaskList)
         {
+            if (!ChatOptions.ServitortUserSwitchingLock) return;
             bool match = (RunningItem != ti);
-            if (DebugMicrothreader > 1) Console.WriteLine("CT-RUN: " + ti + " MATCH=" + match + " active=" + wasActiveTaskList);
+            if (ChatOptions.DebugMicrothreader > 1) Console.WriteLine("CT-RUN: " + ti + " MATCH=" + match + " active=" + wasActiveTaskList);
             RanItems.Remove(ti);
             RunningItems.Remove(ti);
             RunningItems.Insert(0, ti);
@@ -952,8 +971,9 @@ namespace AltAIMLbot
 
         internal void AddCurrentTask(TaskItem ti, TaskList list, bool wasActiveTaskList)
         {
+            if (!ChatOptions.ServitortUserSwitchingLock) return;
             bool match = (RunningItem != ti);
-            if (DebugMicrothreader > 3) Console.WriteLine("CT-ADD: " + ti + " MATCH=" + match + " active=" + wasActiveTaskList);
+            if (ChatOptions.DebugMicrothreader > 3) Console.WriteLine("CT-ADD: " + ti + " MATCH=" + match + " active=" + wasActiveTaskList);
             RanItems.Remove(ti);
             RunningItems.Remove(ti);
             RunningItems.Insert(0, ti);
@@ -962,8 +982,9 @@ namespace AltAIMLbot
 
         public void RemoveCurrentTask(TaskItem ti, TaskList list, bool wasActiveTaskList)
         {
+            if (!ChatOptions.ServitortUserSwitchingLock) return;
             bool match = (RunningItem != ti);
-            if (DebugMicrothreader > 2) Console.WriteLine("CT-REMOVE: " + ti + " MATCH=" + match + " active=" + wasActiveTaskList);
+            if (ChatOptions.DebugMicrothreader > 2) Console.WriteLine("CT-REMOVE: " + ti + " MATCH=" + match + " active=" + wasActiveTaskList);
             RunningItems.Remove(ti);
             RanItems.Remove(ti);
             RanItems.Insert(0, ti);

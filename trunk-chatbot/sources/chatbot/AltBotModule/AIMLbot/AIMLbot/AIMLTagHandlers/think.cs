@@ -10,7 +10,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// The think element has no attributes. It may contain any AIML template elements.
     /// </summary>
     //public class think : AIMLFormatingTagHandler
-    public class think : Utils.AIMLTagHandler
+    public class think : Utils.AIMLTagHandler, NoReturnResult
     {
         /// <summary>
         /// Ctor
@@ -50,14 +50,12 @@ namespace AltAIMLbot.AIMLTagHandlers
             return Succeed(" THOUGHT: '" + templateNodeInnerText + "'");
         }
 */
-        static public Unifiable THINKYTAG
+
+        public static Unifiable THINKYTAG
         {
-            get
-            {
-                return " , ";
-                return "TAG-THINK";
-            }
+            get { return ChatOptions.THINK_RETURN; }
         }
+
 /*
         protected override Unifiable templateNodeInnerText
         {

@@ -74,21 +74,8 @@ namespace AltAIMLbot.AIMLTagHandlers
             if (templateResult == null)
             {
                 return null;
-            }
-            return templateResult;
-            string THINKYTAG = think.THINKYTAG;
-            string tr = templateResult;
-            string tr2 = ReplaceAll(tr.Replace(THINKYTAG + ".", " "), THINKYTAG, " ").Replace("  ", " ").Trim();
-            if (tr != tr2)
-            {
-                if (tr2 == "")
-                {
-                    return THINKYTAG;
-                }
-                return tr2;
-            }
-            return templateResult;
-            //return templateResult;
+            }            
+            return AltBot.ReTrimAndspace(AltBot.CleanupCyc(templateResult));
         }
     }
 }

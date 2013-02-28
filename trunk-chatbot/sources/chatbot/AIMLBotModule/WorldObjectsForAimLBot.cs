@@ -175,7 +175,7 @@ namespace AIMLBotModule
             User prev = MyUser;
             try
             {
-                MyUser = request.Requester.Value;
+                MyUser = request.Requester;
                 StringWriter sw = new StringWriter();
                 {
                     CmdResult s;
@@ -419,7 +419,7 @@ namespace AIMLBotModule
             if (MyBot.useServitor)
             {
                 MyBot.servitor.curBot.sayProcessor = new sayProcessorDelegate(TalkActive);
-                MyBot.servitor.curBot.personaProcessor = new systemPersonaDelegate(PersonaActive);
+                MyBot.servitor.curBot.personaProcessor = PersonaActive;
             }
             MyBot.GlobalSettings.addSetting("name", String.Format("{0}", myName));
             String[] sname = myName.Split(' ');
@@ -1174,7 +1174,7 @@ namespace AIMLBotModule
             if (MyBot.useServitor)
             {
                 AddedToNextResponse = "";
-                MyBot.DefaultPredicates.updateSetting("name", myUser.UserName);
+                MyUser.updateSetting("name", myUser.UserName);
                 MyBot.updateRTP2Sevitor(myUser);
                 MyBot.servitor.curBot.sayProcessor = new sayProcessorDelegate(TalkActive);
                 MyBot.servitor.curBot.personaProcessor = new systemPersonaDelegate(PersonaActive);
@@ -1303,7 +1303,7 @@ namespace AIMLBotModule
             }
             var r = MyBot.MakeRequestToBot(input, MyUser, true, requestType);
             r.IsTraced = true;
-            Result res = MyBot.ChatWithRequest(r);
+            Result res = MyBot.Chat(r);
             string useOut = AltBot.CleanupCyc(res.Output);
             if (NeverSay(useOut)) return null;
             return useOut;
@@ -1357,7 +1357,7 @@ namespace AIMLBotModule
                 return "";
             }
             r.IsTraced = true;
-            Result res = MyBot.ChatWithRequest(r);
+            Result res = MyBot.Chat(r);
             scored = res.Score;
             string useOut = AltBot.CleanupCyc(res.Output);
             return useOut;
@@ -1472,7 +1472,7 @@ namespace AIMLBotModule
             }
             string stringJoin = String.Join(" ", args, 0, args.Length);
             if (MyBotNullWarning()) return false;
-            return MyBot.BotDirective(MyUser, stringJoin, writeLine);
+            return MyBot.BotDirective(MyUser, null, stringJoin, writeLine);
         }
 
         private bool MyBotNullWarning()

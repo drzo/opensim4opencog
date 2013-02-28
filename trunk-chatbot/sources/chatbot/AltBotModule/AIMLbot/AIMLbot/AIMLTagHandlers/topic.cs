@@ -34,7 +34,10 @@ namespace AltAIMLbot.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
         }
-
+        public override XmlNode PrepairTemplateNodeToBecomeSource()
+        {
+            return templateNode;
+        }/*
         protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
         {
             if (templateNode.Name.ToLower() == "topic")
@@ -45,6 +48,6 @@ namespace AltAIMLbot.AIMLTagHandlers
                 return Succeed("loaded from " + loaderOptions.CurrentFilename);
             }
             return Succeed(UnifiableEmpty);
-        }
+        }*/
     }
 }

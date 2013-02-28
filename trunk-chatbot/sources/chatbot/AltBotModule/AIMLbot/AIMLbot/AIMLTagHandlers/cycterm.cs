@@ -7,7 +7,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// <summary>
     /// &lt;cycterm&gt; translates an English word/phrase into a Cyc symbol 
     /// </summary>
-    public class cycterm : AIMLTagHandler
+    public class cycterm : AIMLTagHandler, CanReturnFailure
     {
         /// <summary>
         /// Ctor

@@ -487,12 +487,16 @@ namespace AltAIMLbot
         {
             lock (ExitQueue)
             {
-                if (HasExited) return;
+                if (HasExited)
+                {
+                    TargetBot.RaiseError("Result.Exit() called too many times! " + this);
+                    return;
+                }
                 this.HasExited = true;
             }
-            if (request != null) request.Exit();
-            //if (CatchLabel != null) CatchLabel.PopScope();
-            ExitQueue.Commit(true);
+           //if (request != null) request.Exit();
+           //if (CatchLabel != null) CatchLabel.PopScope();
+           ExitQueue.Commit(true);
         }
 
         public AltBot TargetBot

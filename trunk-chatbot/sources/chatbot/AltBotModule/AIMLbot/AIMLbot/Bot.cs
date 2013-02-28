@@ -67,11 +67,6 @@ namespace AltAIMLbot
         //public RChem myChemistry = new RChem(myConst.MEMHOST, true);
         //public Qchem realChem = new Qchem(myConst.MEMHOST);
 
-        /// <summary>
-        /// @TODO @WORKAROUND Currently adding some padding around Template expanded tags
-        /// </summary>
-        public static bool PadAroundTemplateTags = false;
-
 
         static public bool MemcachedServerKnownDead = false;
 
@@ -438,11 +433,7 @@ namespace AltAIMLbot
         /// <summary>
         /// Flag to show if the bot is producing output
         /// </summary>
-        public bool isPerformingOutput
-        {
-            get { return BotBehaving != null && BotBehaving.isPerformingOutput; }
-            set { BotBehaving.isPerformingOutput = value; }
-        }
+        public bool isPerformingOutput { get; set; }
 
         static public object loglock = new object();
 
@@ -1482,6 +1473,11 @@ namespace AltAIMLbot
         {
             return Chat(request, request.graphName);
         }
+        
+        /// <summary>
+        /// TryRestorableUserRequest==true  means restore everything!
+        /// </summary>
+        public bool TryRestorableUserRequest = false;
 
         /// <summary>
         /// Given a request containing user input, produces a result from the bot.
@@ -1491,21 +1487,48 @@ namespace AltAIMLbot
         /// <returns>the result to be output to the user</returns>
         public Result Chat(Request request, string graphID)
         {
+            if (TryRestorableUserRequest)
+            {
+                GraphMaster ourGraphMaster = this.GetGraph(graphID) ?? Graphmaster;
+                request.Graph = ourGraphMaster;
+                // actully calls ChatSensitiveToQState but sets up and restores the context
+                return ChatWR(request);                
+            }
+            Result res = null;
+            try
+            {
+                res = ChatSensitiveToQState(request, request.graphName, request.IsToplevelRequest);
+            }
+            finally
+            {
+                var onExit = request.OnResultComplete;
+                if (onExit != null)
+                {
+                    request.OnResultComplete = null;
+                    onExit(res);
+                }
+            }
+            return res;
+        }
+
+        public Result ChatSensitiveToQState(Request request, string graphID, bool isToplevel)
+        {
             GraphMaster ourGraphMaster = this.GetGraph(graphID) ?? Graphmaster;
             request.Graph = ourGraphMaster;
             graphID = ourGraphMaster.ScriptingName;
 
             User user = request.user;
             var result = new MasterResult(user, this, request);
-            bool saveResult = false;
-
+            bool saveResult = isToplevel && request.SaveResultsOnJustHeard;
+            bool isBtx = request.RequestType.ContainsAny(RequestKind.BTX);
             lock (ExternDB.mylock)
             {
                 if (this.isAcceptingUserInput)
                 {
                     // Mark the input time
-                    myBehaviors.keepTime("lastchatinput", RunStatus.Success);
-                    myBehaviors.activationTime("lastchatinput", RunStatus.Success);
+                    bool markInputTime = saveResult || isBtx;
+                    if (markInputTime) myBehaviors.keepTime("lastchatinput", RunStatus.Success);
+                    if (markInputTime) myBehaviors.activationTime("lastchatinput", RunStatus.Success);
 
                     // Normalize the input
                     AIMLLoader loader = request.Loader;
@@ -1600,7 +1623,7 @@ namespace AltAIMLbot
                         if (string.IsNullOrEmpty(queryTemplate))
                         {
                             myBehaviors.SkipLog = false;
-                            if (LogicalParticleFilter1.GlobalSharedSettings.Trace("failed to find response to " + path))
+                            if (DLRConsole.Trace("failed to find response to " + path))
                             {
                                 queryTemplate = ourGraphMaster.evaluate(path, query, request, MatchState.Pattern, new StringBuilder());
                                 MainConsoleWriteLn("RETRY PATH: " + path + " = " + queryTemplate);
@@ -1638,7 +1661,7 @@ namespace AltAIMLbot
                     if (result.SubQueries.Count == 0)
                     {
                         Console.WriteLine("DEBUG: MISSING SubQueries");
-                        LogicalParticleFilter1.GlobalSharedSettings.Trace("failed to find response to " + request);
+                        DLRConsole.Trace("failed to find response to " + request);
                     }
                     // process the templates into appropriate output
                     foreach (SubQuery query in result.SubQueries)
@@ -1712,7 +1735,7 @@ namespace AltAIMLbot
 
                     return result;
                 }
-                user.addResult(result);
+                if (isToplevel) user.addResult(result);
             }
 //            Console.WriteLine("*** CHATOUTPUT2(" + result.Output + ")");
 
@@ -2183,8 +2206,8 @@ if (node.Value!=node.InnerText) {
                         return new AltAIMLbot.AIMLTagHandlers.sr(this, user, query, request, result, node);
                         
                     case "srai":
-                        //return new AltAIMLbot.AIMLTagHandlers.srai(this, user, query, request, result, node);
-                        return new AltAIMLbot.AIMLTagHandlers.srai_prev(this, user, query, request, result, node);
+                        //return new AltAIMLbot.AIMLTagHandlers.srai_odd(this, user, query, request, result, node);
+                        return new AltAIMLbot.AIMLTagHandlers.srai(this, user, query, request, result, node);
                         
                     case "star":
                         return new AltAIMLbot.AIMLTagHandlers.star(this, user, query, request, result, node);
@@ -2600,6 +2623,7 @@ The AltAIMLbot program.
 
         public void importBBBotSettings(string bbKey,string settingKey)
         {
+            if (myChemistry == null) return;
             string myValue = myChemistry.m_cBus.getHash(bbKey);
             if (myValue.Length > 0)
             {

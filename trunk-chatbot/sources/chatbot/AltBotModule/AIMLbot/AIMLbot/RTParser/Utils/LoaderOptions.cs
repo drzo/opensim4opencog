@@ -16,7 +16,7 @@ using MasterRequest = AltAIMLbot.Utils.Request;
 
 namespace AltAIMLbot.Utils
 {
-    public class LoaderOptions: QuerySettings
+    public class LoaderOptions : QuerySettings, QuerySettingsSettable
     {
         [CopyFromParent] public string graphName = "*",
                                        topicName = "*",
@@ -152,7 +152,7 @@ namespace AltAIMLbot.Utils
 
         static private string StarNulls(string startGraphName)
         {
-            if (IsNullOrEmpty(startGraphName))
+            if (Unifiable.IsNullOrEmpty(startGraphName))
             {
                 return "*";
             }

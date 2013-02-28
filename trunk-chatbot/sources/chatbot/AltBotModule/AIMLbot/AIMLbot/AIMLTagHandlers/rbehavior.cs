@@ -27,7 +27,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class rbehavior : Utils.AIMLTagHandler
+    public class rbehavior : Utils.AIMLTagHandler, NoReturnResult
     {
 
         public rbehavior(AltBot bot,

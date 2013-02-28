@@ -19,7 +19,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// The get element does not have any content.
     /// </summary>
-    public class get : UnifibleTagHandler
+    public class get : UnifibleTagHandler, CanReturnFailure, EmptyIsNotFailure
     {
         /// <summary>
         /// Ctor

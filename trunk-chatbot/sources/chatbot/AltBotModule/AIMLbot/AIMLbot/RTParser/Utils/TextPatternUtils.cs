@@ -185,6 +185,10 @@ namespace AltAIMLbot.Utils
         {
             return (!IsNull(name) && !IsIncomplete(name)) || IsMissing(name);
         }
+        public static bool IsNotValue(Unifiable name)
+        {
+            return (!IsNull(name) && !IsIncomplete(name)) || IsMissing(name);
+        }
 
         public static bool IsMissing(Object name)
         {
@@ -194,6 +198,7 @@ namespace AltAIMLbot.Utils
             }
             if (ReferenceEquals(name, Unifiable.NULL) || IsNull(name))
             {
+                AltBot.RaiseErrorStatic("Not sure we are happy returning false here");
                 return false;
             }
             if ((name is string))

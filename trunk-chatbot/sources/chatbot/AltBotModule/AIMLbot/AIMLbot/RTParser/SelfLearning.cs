@@ -305,7 +305,7 @@ namespace AltAIMLbot
                 r.IsToplevelRequest = true;
                 try
                 {
-                    Result res2 = ChatWithRequest(r);
+                    Result res2 = Chat(r);
                     ele.IsSpeakerInputGleaned = true;
                     writeDebugLineBannered("COMPLETED HEARDSELF: " + message + " res = " + res2);
                     return res2;

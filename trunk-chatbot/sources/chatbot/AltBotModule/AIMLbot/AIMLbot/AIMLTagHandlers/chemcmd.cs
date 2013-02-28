@@ -27,7 +27,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class chemsys : Utils.AIMLTagHandler
+    public class chemsys : Utils.AIMLTagHandler, NoReturnResult
     {
 
         public chemsys(AltBot bot,

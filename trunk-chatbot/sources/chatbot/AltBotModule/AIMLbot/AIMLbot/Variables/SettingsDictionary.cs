@@ -230,7 +230,7 @@ namespace AltAIMLbot.Variables
         {
             if (value.Trim() != value)
             {
-                GlobalSharedSettings.Trace("Bad value name! " + value);
+                DLRConsole.Trace("Bad value name! " + value);
             }
             return LogicalParticleFilter1.SIProlog.Atom.MakeString(value);
         }
@@ -238,7 +238,7 @@ namespace AltAIMLbot.Variables
         {
             if (value.Contains(","))
             {
-                GlobalSharedSettings.Trace("Bad key name! " + value);
+                DLRConsole.Trace("Bad key name! " + value);
             }
             return LogicalParticleFilter1.SIProlog.Atom.FromName(value);
         }
@@ -1128,7 +1128,7 @@ namespace AltAIMLbot.Variables
                 if (onlyIfUnknown && dictcontainsLocalCalled)
                 {
                     var old = dict.grabSetting(name);
-                    if (!TextPatternUtils.IsUnknown(old))
+                    if (!TextPatternUtils.IsMissing(old))
                     {
                         return;
                     }
@@ -1151,14 +1151,14 @@ namespace AltAIMLbot.Variables
                 var old = dict.grabSetting(name);
                 if (inherited && onlyIfUnknown)
                 {
-                    if (!TextPatternUtils.IsUnknown(old))
+                    if (!TextPatternUtils.IsMissing(old))
                     {
                         return;
                     }
                 }
                 if (onlyIfUnknown && dictcontainsLocalCalled)
                 {
-                    if (!TextPatternUtils.IsUnknown(old))
+                    if (!TextPatternUtils.IsMissing(old))
                     {
                         return;
                     }
@@ -1969,6 +1969,7 @@ namespace AltAIMLbot.Variables
 
         private static bool IsNotGreat(string s)
         {
+            if (s == "default" || s == "*") return false;
             return TextPatternUtils.IsUnknown(s) || s == null || s.Length < 1 || s.ToLower() == "friend" ||
                    s.ToLower() == "that really";
         }

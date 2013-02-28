@@ -55,7 +55,7 @@ namespace AltAIMLbot
                 R.Graph = robot.DefaultEventGraph;
                 R.AddGraph(robot.DefaultEventGraph);
                 R.AddGraph(StartGraph);
-                robot.ChatWithRequest(R);
+                robot.Chat(R);
             }
             catch (Exception e)
             {
@@ -640,9 +640,9 @@ namespace AltAIMLbot
             set { qsbase.IsTraced = value; }
         }
 
-        private readonly QuerySettings qsbase;
+        private readonly QuerySettingsImpl qsbase;
 
-        public QuerySettings GetQuerySettings()
+        public QuerySettingsImpl GetQuerySettings()
         {
             //if (CurrentRequest != null)
             //{
@@ -1025,7 +1025,7 @@ namespace AltAIMLbot
                 if (CheckIsBadEnglish(t))
                 {
                     rbot.Logger.Warn("Just said is bad english: " + t);
-                    if (GlobalSharedSettings.Trace("Just Said"))
+                    if (DLRConsole.Trace("Just Said"))
                     {
                         t = JustSaid0;
                     }

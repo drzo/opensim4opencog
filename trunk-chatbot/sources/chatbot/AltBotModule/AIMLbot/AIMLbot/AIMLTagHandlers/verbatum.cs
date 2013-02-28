@@ -10,7 +10,7 @@ namespace AltAIMLbot.AIMLTagHandlers
     /// 
     /// The version element does not have any content. 
     /// </summary>
-    public class verbatum : AIMLTagHandler
+    public class verbatum : AIMLTagHandler, EmptyIsNotFailure
     {
         /// <summary>
         /// Ctor

@@ -167,7 +167,7 @@ namespace AltAIMLbot.Utils
                     AltBot.Breakpoint("testing...");
                     requestToBot.DebugLevel = 9;
                 }
-                Result result = robot.ChatWithRequest(requestToBot);
+                Result result = robot.Chat(requestToBot);
                 resp = result.Output ?? result.ToString() ?? resp;
                 if (resp == null) resp = "NULLED";
                 resp = Fudge(resp);

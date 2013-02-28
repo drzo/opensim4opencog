@@ -163,7 +163,7 @@ namespace AltAIMLbot.GUI
                 TodoThread = new Thread(() =>
                                             {
                                                 robot.AcceptInput(WriteLine, text, user, true,
-                                                                  RequestKind.CommandAndChatProcessor);
+                                                                  RequestKind.CommandAndChatProcessor, true);
                                                 if (InvokeRequired)
                                                 {
                                                     Invoke(new ThreadStart(() =>

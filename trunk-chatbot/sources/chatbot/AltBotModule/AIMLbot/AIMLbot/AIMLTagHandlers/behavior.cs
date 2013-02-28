@@ -31,7 +31,7 @@ namespace AltAIMLParser
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class behavior : Utils.AIMLTagHandler
+    public class behavior : Utils.AIMLTagHandler, NoReturnResult
     {
 
         public behavior(AltBot bot,

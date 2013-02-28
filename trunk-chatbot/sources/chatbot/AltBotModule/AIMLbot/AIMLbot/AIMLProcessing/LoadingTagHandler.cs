@@ -4,7 +4,7 @@ using AltAIMLbot;
 
 namespace AltAIMLbot.Utils
 {
-    public abstract class LoadingTagHandler : AIMLTagHandler
+    public abstract class LoadingTagHandler : AIMLTagHandler, NoReturnResult
     {
         /// <summary>
         /// Ctor
@@ -25,46 +25,17 @@ namespace AltAIMLbot.Utils
         {
             isRecursive = false;
         }
-        public bool IsLoadReady;
         protected bool ProcessInnerXmlAsLoad = false;
-        
-        protected virtual Unifiable PreProcessChange()
-        {
-            return ProcessChangeU();
-        }
+        public XmlNode loadTemplate;
 
-        sealed protected override Unifiable ProcessChangeU()
-        {
-            if (IsLoadReady)
-            {
-                writeToLogWarn("LoadIsReady AGAIN?!");
-            }
-            IsLoadReady = true;
+        public abstract XmlNode PrepairTemplateNodeToBecomeSource();
 
-            StringAppendableUnifiableImpl recursiveResult = Unifiable.CreateAppendable();
-            if (templateNode.HasChildNodes)
-            {
-                // recursively check
-                foreach (XmlNode childNode in templateNode.ChildNodes)
-                {
-                    Unifiable processChildNode = ProcessChildNode(childNode);
-                    if (processChildNode == null)
-                    {
-                        writeToLogWarn("processChildNode==NULL");
-                    }
-                    SaveResultOnChild(childNode, processChildNode);
-                    recursiveResult.Append(processChildNode);
-                }
-            }
-            return recursiveResult;
-        }
-
-        public override Unifiable RecurseChildren()
+        protected override Unifiable ProcessChangeU()
         {
-            if (FinalResultValid) return FinalResult;
-            if (!IsLoadReady)
+            if (loadTemplate == null)
             {
-                PreProcessChange();
+                writeToLogWarn("Should already contain a loadTemplate! ");
+                loadTemplate = PrepairTemplateNodeToBecomeSource();
             }
             var saveOpts = request.LoadOptions;
             Unifiable vv = null;
@@ -73,11 +44,7 @@ namespace AltAIMLbot.Utils
             try
             {
                 request.CurrentlyLoadingFrom = DocumentInfo();
-                vv = ProcessLoad(request);
-                if (!IsNullOrEmpty(vv))
-                {
-                    FinalResult = vv;
-                }
+                request.Loader.loadAIMLNode(loadTemplate);
             }
             finally
             {
@@ -86,14 +53,30 @@ namespace AltAIMLbot.Utils
             int newSize = GM.Size;
             int change = newSize - size;
             string ch = "Loaded " + change + " into " + GM + " was " + size;
-            if (FinalResult == (string) null)
+            if (FinalResult == (string)null)
             {
                 return Succeed(ch);
             }
             return Succeed(ch + " " + FinalResult);
         }
 
-        protected abstract Unifiable ProcessLoad(LoaderOptions loaderOptions);
+        sealed public override Unifiable RecurseChildren()
+        {
+            if (loadTemplate == null)
+            {
+                loadTemplate = PrepairTemplateNodeToBecomeSource();
+            }
+            if (loadTemplate != null)
+            {
+                return loadTemplate.OuterXml;
+            }
+            return templateNode.OuterXml;
+        }
+
+        protected Unifiable ProcessLoad(LoaderOptions loaderOptions)
+        {
+            return Unifiable.Empty;
+        }
 
         public override Unifiable CheckValue(Unifiable value)
         {
@@ -110,7 +93,7 @@ namespace AltAIMLbot.Utils
                     writeToLogWarn("CheckValue EMPTY = '" + value + "'");
                     return Unifiable.Empty;
                 }
-                if (CompleteEvaluatution(value, this, out value))
+                if (CompleteEvaluation(value, this, out value))
                 {
                     //RecurseResult = vv;
                     return value;

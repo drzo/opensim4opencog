@@ -81,15 +81,16 @@ namespace AltAIMLbot
         // True was the way it worked before
         public static bool RunAllTreesIfRootIsMissing = true;
 
-        public  AltBot curBot;
+        public AltBot curBot;
 
         public bool NeedsLoad = true;
+
         public MasterUser curUser
         {
             get
             {
                 if (_curUser != null) return _curUser;
-                return (MasterUser)curBot.LastUser;
+                return (MasterUser) curBot.LastUser;
             }
             set
             {
@@ -97,8 +98,10 @@ namespace AltAIMLbot
                 curBot.LastUser = value;
             }
         }
-        public  Thread tmTalkThread = null;
+
+        public Thread tmTalkThread = null;
         private bool _tmTalkEnabled = true;
+
         public bool tmTalkEnabled
         {
             get
@@ -106,10 +109,7 @@ namespace AltAIMLbot
                 if (IsBackgroundDisabled) return false;
                 return _tmTalkEnabled;
             }
-            set
-            {
-                _tmTalkEnabled = value;
-            }
+            set { _tmTalkEnabled = value; }
         }
 
         public bool IsBackgroundDisabled
@@ -118,11 +118,11 @@ namespace AltAIMLbot
             {
                 //return false; //KHC DEBUG MONOBOT
 
-                if (GlobalSharedSettings.IsDougsMachine) return true;
+                if (DLRConsole.IsDougsMachine) return true;
                 if (curBot != null && curBot.GlobalSettings != null)
                 {
                     string NBGC = curBot.GlobalSettings.grabSetting("noBackgroundChat");
-                    if (NBGC!=null && NBGC.ToLower().StartsWith("t"))
+                    if (NBGC != null && NBGC.ToLower().StartsWith("t"))
                     {
                         return true;
                     }
@@ -132,27 +132,23 @@ namespace AltAIMLbot
         }
 
         public bool mLoadCompleteAndPersonalityShouldBeDefined = false;
-        public  Thread tmFSMThread = null;
+        public Thread tmFSMThread = null;
         public bool tmFSMEnabled = true;
-        public  Thread tmBehaveThread = null;
+        public Thread tmBehaveThread = null;
         private bool _tmBehaveEnabled = true;
+
         public bool tmBehaveEnabled
         {
-            get
-            {
-                return _tmBehaveEnabled;
-            }
-            set 
-            {
-                _tmBehaveEnabled = value;
-            }
+            get { return _tmBehaveEnabled; }
+            set { _tmBehaveEnabled = value; }
         }
 
-        public  Thread myCronThread = null;
-        public  string lastAIMLInstance = "";
+        public Thread myCronThread = null;
+        public string lastAIMLInstance = "";
         public bool traceServitor = true;
         public bool skiploadingAimlFiles = false;
         public bool skiploadingServitorState = true;
+
         public void DontSkiploading(System.Action act)
         {
             var sl = skiploadingAimlFiles;
@@ -182,19 +178,17 @@ namespace AltAIMLbot
         {
             get { return curBot.prologEngine; }
         }
-        [NonSerialized]
-        public Dictionary<string, SymbolicParticleFilter> partFilterDict = new Dictionary<string, SymbolicParticleFilter>();
+
+        [NonSerialized] public Dictionary<string, SymbolicParticleFilter> partFilterDict =
+            new Dictionary<string, SymbolicParticleFilter>();
+
         //[NonSerialized]
         //public SymbolicParticleFilter partFilter = new SymbolicParticleFilter();
-        [NonSerialized]
-        public ServitorEndpoint myServitorEndpoint;
-        [NonSerialized]
-        HumanAgent a2;
-        [NonSerialized]
-        Agent a1;
+        [NonSerialized] public ServitorEndpoint myServitorEndpoint;
+        [NonSerialized] private HumanAgent a2;
+        [NonSerialized] private Agent a1;
 
-        [NonSerialized]
-        public Dictionary<string, Agent> CoppeliaAgentDictionary = new Dictionary<string, Agent>();
+        [NonSerialized] public Dictionary<string, Agent> CoppeliaAgentDictionary = new Dictionary<string, Agent>();
         public Dictionary<string, AgentAction> CoppeliaActionDictionary = new Dictionary<string, AgentAction>();
         public Dictionary<string, int> CoppeliaStateDictionary = new Dictionary<string, int>();
         public Dictionary<string, int> CoppeliaMoralsDictionary = new Dictionary<string, int>();
@@ -219,11 +213,13 @@ namespace AltAIMLbot
                 _rapStoreDirectoryStem = value;
             }
         }
+
         public int rapStoreSlices
         {
             get { return _rapStoreSlices; }
             set { _rapStoreSlices = value; }
         }
+
         public int rapStoreTrunkLevel
         {
             get { return _rapStoreTrunkLevel; }
@@ -239,7 +235,9 @@ namespace AltAIMLbot
             curBot = aimlBot;
             curBot.myServitor = this;
         }
-        public Servitor(AltBot aimlBot, sayProcessorDelegate outputDelegate, bool skipLoading, bool skippersonalitycheck, bool initialcritical)
+
+        public Servitor(AltBot aimlBot, sayProcessorDelegate outputDelegate, bool skipLoading, bool skippersonalitycheck,
+                        bool initialcritical)
         {
             curBot = aimlBot;
             curBot.myServitor = this;
@@ -259,6 +257,7 @@ namespace AltAIMLbot
             }
             return "unknown";
         }
+
         public void InitCoppelia()
         {
             //Create new agents
@@ -306,7 +305,7 @@ namespace AltAIMLbot
         /// This function is called when the HumanAgent a1's input member is fired (which happens when it receives an action from another agent)
         /// </summary>
         /// <returns></returns>
-        int RequestingInput()
+        private int RequestingInput()
         {
             //Some display so users know what's going on
 
@@ -342,7 +341,7 @@ namespace AltAIMLbot
             return responseID;
         }
 
-        int RequestingInputFromMt()
+        private int RequestingInputFromMt()
         {
             // System has a preference for those actions it expects
             //  but is able to recognize others it knows about
@@ -366,7 +365,7 @@ namespace AltAIMLbot
                 List<Dictionary<string, string>> bingingsList = new List<Dictionary<string, string>>();
                 while ((bingingsList.Count == 0) && (testdepth < 256))
                 {
-                    testdepth = (int)(testdepth * 1.5);
+                    testdepth = (int) (testdepth*1.5);
                     //Console.WriteLine("Trying depth {0}", testdepth);
                     //prologEngine.maxdepth = testdepth;
                     this.prologEngine.askQuery(query, "coppeliaInputMt", out bingingsList);
@@ -411,7 +410,7 @@ namespace AltAIMLbot
                 Thread.Sleep(1000);
             }
             return responseID;
-         }
+        }
 
         /// <summary>
         /// This function is called when any agent performs any action.
@@ -419,16 +418,17 @@ namespace AltAIMLbot
         /// <param name="sender"></param>
         /// <param name="action"></param>
         /// <param name="target"></param>
-        void GlobalActionReceived(int sender, int action, int target)
+        private void GlobalActionReceived(int sender, int action, int target)
         {
-            Console.WriteLine("Caught Action: Agent " + sender + " performed action " + Global.GetActionByID(action).Name + " on Agent " + target);
+            Console.WriteLine("Caught Action: Agent " + sender + " performed action " +
+                              Global.GetActionByID(action).Name + " on Agent " + target);
 
             //if the OK action is performed, update STATE_LOST_THE_GAME to true
-           // if (action == OK.GlobalIndex)
-           // {
-           //     Console.WriteLine("Setting state STATE_LOST_THE_GAME to true");
-           //     Global.SetState(STATE_LOST_THE_GAME, true);
-           // }
+            // if (action == OK.GlobalIndex)
+            // {
+            //     Console.WriteLine("Setting state STATE_LOST_THE_GAME to true");
+            //     Global.SetState(STATE_LOST_THE_GAME, true);
+            // }
             string mt = "coppeliaLastOutputMt";
             string actionReport = "";
             if (GetCoppeliaAgentNameByID(sender) == "self")
@@ -437,11 +437,13 @@ namespace AltAIMLbot
                 this.prologEngine.insertKB("", mt);
                 this.prologEngine.insertKB("", "lastinputMt");
                 this.prologEngine.insertKB("", "coppeliaInputMt");
-                actionReport = String.Format("selfAct({0},{1}).", Global.GetActionByID(action).Name, GetCoppeliaAgentNameByID(target));
+                actionReport = String.Format("selfAct({0},{1}).", Global.GetActionByID(action).Name,
+                                             GetCoppeliaAgentNameByID(target));
                 this.prologEngine.appendKB(actionReport, mt);
                 this.prologEngine.appendKB(actionReport, "lastCoppeliaActMt");
             }
-            actionReport = String.Format("performedAction({0},{1},{2}).", GetCoppeliaAgentNameByID(sender), Global.GetActionByID(action).Name, GetCoppeliaAgentNameByID(target));
+            actionReport = String.Format("performedAction({0},{1},{2}).", GetCoppeliaAgentNameByID(sender),
+                                         Global.GetActionByID(action).Name, GetCoppeliaAgentNameByID(target));
             this.prologEngine.appendKB(actionReport, mt);
             //postCoppeliaAgentsMts();
         }
@@ -485,7 +487,7 @@ namespace AltAIMLbot
                 this.prologEngine.connectMT("coppeliaAgentEmotionsMt", agentMt);
                 string gaf = "";
                 this.prologEngine.insertKB("", agentMt);
-                gaf = String.Format("agentID({0},{1}).", ak, a1.AgentID); 
+                gaf = String.Format("agentID({0},{1}).", ak, a1.AgentID);
                 this.prologEngine.appendKB(gaf, agentMt);
 
                 for (int e = 0; e < AgentEmotions.NUM_VALUES; e++)
@@ -504,27 +506,28 @@ namespace AltAIMLbot
                 }
                 for (int i = 0; i < a1.PossibleResponses.Count; ++i)
                 {
-                    gaf = String.Format("possibleResponse({0},{1}).", ak,Global.GetActionByID(a1.PossibleResponses[i]).Name);
+                    gaf = String.Format("possibleResponse({0},{1}).", ak,
+                                        Global.GetActionByID(a1.PossibleResponses[i]).Name);
                     this.prologEngine.appendKB(gaf, agentMt);
                 }
                 foreach (string otherName in CoppeliaAgentDictionary.Keys)
                 {
                     Agent otherAgent = CoppeliaAgentDictionary[otherName];
                     float v = 0;
-                    v= a1.GetAnger(otherAgent.AgentID);
-                    gaf = String.Format("anger({0},{1},{2}).", ak, otherName,v);
+                    v = a1.GetAnger(otherAgent.AgentID);
+                    gaf = String.Format("anger({0},{1},{2}).", ak, otherName, v);
                     this.prologEngine.appendKB(gaf, agentMt);
-                    v = a1.GetPraiseworthy (otherAgent.AgentID);
+                    v = a1.GetPraiseworthy(otherAgent.AgentID);
                     gaf = String.Format("praiseworthy({0},{1},{2}).", ak, otherName, v);
                     this.prologEngine.appendKB(gaf, agentMt);
                     foreach (string actName in CoppeliaActionDictionary.Keys)
                     {
                         AgentAction act = CoppeliaActionDictionary[actName];
-                        
-                        v= a1.GetAT(otherAgent.AgentID, act.GlobalIndex);
-                        gaf = String.Format("actionTendency({0},{1},{2},{3}).", ak, otherName,actName,v);
+
+                        v = a1.GetAT(otherAgent.AgentID, act.GlobalIndex);
+                        gaf = String.Format("actionTendency({0},{1},{2},{3}).", ak, otherName, actName, v);
                         this.prologEngine.appendKB(gaf, agentMt);
-                        
+
                         v = a1.GetExpectedSatisfaction(otherAgent.AgentID, act.GlobalIndex);
                         gaf = String.Format("expectedSatisfaction({0},{1},{2},{3}).", ak, otherName, actName, v);
                         this.prologEngine.appendKB(gaf, agentMt);
@@ -533,7 +536,7 @@ namespace AltAIMLbot
                         gaf = String.Format("moralityAction({0},{1},{2},{3}).", ak, otherName, actName, v);
                         this.prologEngine.appendKB(gaf, agentMt);
 
-                        
+
                     }
                     foreach (string sk in CoppeliaStateDictionary.Keys)
                     {
@@ -560,6 +563,7 @@ namespace AltAIMLbot
 
             }
         }
+
         public void Start(sayProcessorDelegate outputDelegate)
         {
             DoWithServitorLock(() => Start0(outputDelegate));
@@ -584,7 +588,7 @@ namespace AltAIMLbot
                 Console.WriteLine("            UserID: UNDEFINED");
             }
             curBot.myServitor = this;
-            
+
             myServitorEndpoint = new ServitorEndpoint(curBot, this, prologEngine);
 
             myScheduler = myScheduler ?? new Scheduler(this);
@@ -648,7 +652,7 @@ namespace AltAIMLbot
 
         private void LogException(Exception e)
         {
-            if (!GlobalSharedSettings.Trace("ERROR " + e))
+            if (!DLRConsole.Trace("ERROR " + e))
             {
                 Console.WriteLine("{0}\n{1}", e.Message, e.StackTrace);
             }
@@ -667,6 +671,7 @@ namespace AltAIMLbot
         {
             DoWithServitorLock(loadComplete0);
         }
+
         private void loadComplete0()
         {
             curBot.isAcceptingUserInput = true;
@@ -689,7 +694,9 @@ namespace AltAIMLbot
                 {
                     WebServitor.serverPort = int.Parse(servPort);
                 }
-                catch { }
+                catch
+                {
+                }
             }
 
             ThreadPool.QueueUserWorkItem((o) =>
@@ -757,32 +764,93 @@ namespace AltAIMLbot
             return true;
         }
 
-        internal string respondToChat(string input, User user)
+        /// <summary>
+        ///  respondToChat returns a string response so it is expected 
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="UserID"></param>
+        /// <returns></returns>
+        public string respondToChat(string input, User user)
         {
-            return respondToChat(input, user, true, RequestKind.ChatRealTime);
+            return respondToChat(input, user, true, RequestKind.ChatForString);
+        }
+
+        public string respondToChat(string input, string UserID)
+        {
+            return respondToChat(input, curBot.FindOrCreateUser(UserID));
         }
 
         public string respondToChat(string input, User curUser, bool isToplevel, RequestKind requestType)
         {
+            return respondToChat(input, curUser, isToplevel, requestType, null);
+        }
+        public string respondToChat(string input, User curUser, bool isToplevel, RequestKind requestType, TextWriter extra)
+        {
+            TextWriter writer = new StringWriter();
+
+            sayProcessorDelegate ourSayProcessor = (str) =>
+                                                       {
+                                                           if (extra != null) extra.WriteLine(str);
+                                                           writer.WriteLine(str);
+                                                       };
+            chatIntoDelegate(input, curUser, isToplevel, requestType, ourSayProcessor);
+            return writer.ToString();
+        }
+
+        public void chatIntoDelegate(string input, User curUser, bool isToplevel, RequestKind requestType, sayProcessorDelegate writer)
+        {
+            sayProcessorDelegate prev = curBot.sayProcessor;
+            bool[] resetSayProcessor = new bool[] { false };
+            Action onComplete = () =>
+            {
+                if (!resetSayProcessor[0])
+                {
+                    curBot.sayProcessor = prev;
+                    resetSayProcessor[0] = true;
+                }
+            };
+            try
+            {
+                curBot.sayProcessor = writer;
+                chatWithOutputProcessor(input, curUser, isToplevel, requestType, true, onComplete);
+            }
+            finally
+            {
+                /// if chatWithOutputProcessor can guarentee it will run 'onComplete' we should comment this next line out
+                onComplete();
+            }
+        }
+        public void chatWithOutputProcessor(string input, User curUser, bool isToplevel, RequestKind requestType,
+                                     bool waitUntilDone, Action onCompleted)
+        {
             var curBot = this.curBot.BotBehaving;
-            bool doHaviours = tmBehaveEnabled;
+            bool doHaviours = tmBehaveEnabled && !ChatOptions.ServitorInAIMLOnlyTest;
             if (string.IsNullOrEmpty(input))
             {
-                return input;
+                Console.WriteLine("** WARNING NO INPUT");
+                if (waitUntilDone)
+                {
+                    // do something to wait for mtalk of behavour trees to do somehting
+                }
+                onCompleted();
+                return;
             }
             input = input.TrimStart();
             if (input.StartsWith("@"))
             {
-                this.curBot.AcceptInput(Console.WriteLine, input, curUser, isToplevel, requestType);
-                return "@rem " + input;
+                this.curBot.AcceptInput((f, a) =>
+                                            {
+                                                curBot.postOutput(DLRConsole.SafeFormat(f, a));
+                                            }, input, curUser, isToplevel, requestType, false);
+                onCompleted();
+                return;
             }
             if (input.StartsWith("<"))
             {
-                AltBot.tl_aimlResult = new AltBot.AimlResult();
                 RunStatus rs = curBot.myBehaviors.runBTXML(input, curBot);
-                AltBot.AimlResult altBottl_aimlResult = AltBot.tl_aimlResult;
-                AltBot.tl_aimlResult = null;
-                return string.Format("@rem <{0}>=<{1}>", rs, altBottl_aimlResult);
+                curBot.postOutput(string.Format("<!-- runstatus was {0} -->", rs));
+                onCompleted();
+                return;
             }
             curBot.isPerformingOutput = true;
             if (curBot.myBehaviors.waitingForChat && isToplevel)
@@ -803,8 +871,9 @@ namespace AltAIMLbot
                 curBot.lastBehaviorChatOutput = "";
                 myScheduler.SleepAllTasks(30000);
                 curBot.isPerformingOutput = true;
-
-                return "";
+                //Console.WriteLine("Waiting for chat");
+                onCompleted();
+                return;
             }
             // Try the event first
             string fnd;
@@ -828,16 +897,18 @@ namespace AltAIMLbot
                     curBot.lastBehaviorChatOutput = "";
                     myScheduler.SleepAllTasks(30000);
                     myScheduler.EnqueueEvent("onchat", curBot.BotBehaving);
-                    myScheduler.WaitUntilComplete(fnd);
-
-                    string chatOutput = curBot.lastBehaviorChatOutput;
-                    if (!string.IsNullOrEmpty(chatOutput))
+                    if (waitUntilDone)
                     {
-                        curBot.isPerformingOutput = true;
-                        curBot.myBehaviors.logText("ONCHAT IMMED RETURN:" + chatOutput);
-                        MaybeUpdateBotJustSaidLastOutput(isToplevel, requestType, curUser, chatOutput, true, false,
-                                                         false);
-                        return chatOutput;
+                        myScheduler.WaitUntilComplete(fnd);
+                        string chatOutput = curBot.lastBehaviorChatOutput;
+                        if (!string.IsNullOrEmpty(chatOutput))
+                        {
+                            curBot.isPerformingOutput = true;
+                            curBot.myBehaviors.logText("ONCHAT IMMED RETURN:" + chatOutput);
+                            MaybeUpdateBotJustSaidLastOutput(isToplevel, requestType, curUser, chatOutput, true, false,
+                                                             false);
+                        }
+                        curBot.postOutput(chatOutput);
                     }
                 }
                 catch (Exception e)
@@ -845,51 +916,117 @@ namespace AltAIMLbot
                     LogException(e);
                     curBot.isPerformingOutput = true;
                 }
+                onCompleted();
+                return;
             }
             // else try the named behavio}
             if (doHaviours && isToplevel && curBot.myBehaviors.definedBehavior("chatRoot"))
             {
                 try
                 {
+                    // we need a clean slate right?
+                    curBot.processOutputQueue();
+
+                    // we need to take over for a few so sleep all tasks
+                    myScheduler.SleepAllTasks(30000);
+
                     MaybeUpdateUserJustSaidLastInput(isToplevel, requestType, curUser, input, true);
                     //curBot.lastBehaviorChatInput = input;
                     curBot.isPerformingOutput = false;
                     curBot.myBehaviors.logText("CHATROOT USER INPUT:" + curBot.lastBehaviorChatOutput);
+
                     curBot.chatInputQueue.Clear();
                     curBot.chatInputQueue.Enqueue(input);
                     curBot.lastBehaviorUser = curUser;
                     //curBot.myBehaviors.runBotBehavior("chatRoot", curBot);
                     curBot.flushOutputQueue();
                     //curBot.myBehaviors.queueEvent("chatRoot");
-                    //curBot.processOutputQueue();
-                    curBot.lastBehaviorChatOutput = "";
+                    curBot.processOutputQueue();
+                    curBot.ClearLastOutput(true);
                     myScheduler.SleepAllTasks(30000);
                     //myScheduler.ActivateBehaviorTask("chatRoot", true);
-                    myScheduler.ActivateBehaviorTask("chatRoot", true, curBot.BotBehaving);
+                    myScheduler.ActivateBehaviorTask("chatRoot", false, curBot.BotBehaving);
+
+                    if (waitUntilDone)
+                    {
+                        myScheduler.WaitUntilComplete("chatRoot");
+                        string chatOutput = curBot.lastBehaviorChatOutput;
+                        if (!string.IsNullOrEmpty(chatOutput))
+                        {
+                            curBot.isPerformingOutput = true;
+                            curBot.myBehaviors.logText("CHATROOT IMMED RETURN:" + chatOutput);
+                            MaybeUpdateBotJustSaidLastOutput(isToplevel, requestType, curUser, chatOutput, true, false,
+                                                             false);
+                        }
+                        curBot.postOutput(chatOutput);
+                    }
+
                     //while (!myScheduler.empty())
                     //{
                     //    myScheduler.Run();
                     //}
-                    string chatOutput = curBot.lastBehaviorChatOutput;
-                    if (!string.IsNullOrEmpty(chatOutput))
-                    {
-                        curBot.isPerformingOutput = true;
-                        curBot.myBehaviors.logText("CHATROOT IMMED RETURN:" + chatOutput);
-                        MaybeUpdateBotJustSaidLastOutput(isToplevel, requestType, curUser, chatOutput, true, false,
-                                                         false);
-                        return chatOutput;
-                    }
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     LogException(e);
                     curBot.isPerformingOutput = true;
                 }
+                onCompleted();
+                return;
             }
             // else just do it (no other behavior is defined)
-            return respondToChatThruString(input, curUser, isToplevel, requestType);
+            if (!waitUntilDone)
+            {
+                new Thread(respondToChatThruBasicAIMLNoWait(input, curUser, isToplevel, requestType, onCompleted)).Start();
+                return;
+            }
+            respondToChatThruBasicAIMLNoWait(input, curUser, isToplevel, requestType, onCompleted).Invoke();
         }
-        public string respondToChatThruString(string input, User curUser, bool isToplevel, RequestKind requestType)
+
+        public ThreadStart respondToChatThruBasicAIMLNoWait(string input, User curUser, bool isToplevel,
+                                                     RequestKind requestType, Action onCompleted)
+        {
+            var curBot = this.curBot.BotBehaving;
+            MaybeUpdateUserJustSaidLastInput(isToplevel, requestType, curUser, input, false);
+            Request r = new Request(input, curUser, curUser.That, curBot, isToplevel, requestType);
+            curBot.isPerformingOutput = false;
+
+            //curBot.lastBehaviorChatInput = input;
+            r.OnResultComplete = (res) =>
+                               {
+                                   // get output from result or else use lastBehavouirChatOutput
+                                   Unifiable output = res.Output;
+                                   string outputS = (string) output;
+                                   if (string.IsNullOrEmpty(outputS))
+                                   {
+                                       outputS = (string) curBot.lastBehaviorChatOutput;
+                                       if (string.IsNullOrEmpty(outputS))
+                                       {
+                                           curBot.Logger.Warn("cant get an output for " + r);
+                                           onCompleted();
+                                           return;
+                                       }
+                                       output = (Unifiable) outputS;
+                                   }
+                                   if (traceServitor)
+                                   {
+                                       Console.WriteLine("SERVITOR: respondToChat({0})={1}", input, output);
+                                   }
+                                   curBot.ClearLastOutput(true);
+                                   curBot.lastBehaviorChatOutput = outputS;
+                                   curBot.isPerformingOutput = true;
+                                   curBot.myBehaviors.logText("CHAT IMMED RETURN:" + curBot.lastBehaviorChatOutput);
+                                   MaybeUpdateBotJustSaidLastOutput(isToplevel, requestType, curUser, outputS, true,
+                                                                    false,
+                                                                    false);
+                                   curBot.isPerformingOutput = true;
+                                   onCompleted();
+                               };
+            return (() => { Result res = curBot.Chat(r); });
+        }
+
+
+        public string respondToChatThruBasicAIML(string input, User curUser, bool isToplevel, RequestKind requestType)
         {
             var curBot = this.curBot.BotBehaving;
             MaybeUpdateUserJustSaidLastInput(isToplevel, requestType, curUser, input, false);
@@ -930,8 +1067,6 @@ namespace AltAIMLbot
                 curBot.isPerformingOutput = true;
                 return "...";
             }
-
-            curBot.isPerformingOutput = true;
         }
 
         public void MaybeUpdateUserJustSaidLastInput(bool isToplevel, RequestKind requestType, User curUser, string input, bool respondingDoneFromQueue)
@@ -991,72 +1126,28 @@ namespace AltAIMLbot
             }
         }
 
-        public string respondToChat(string input, string UserID, bool isToplevel, RequestKind requestType)
+        /// <summary>
+        ///  reactToChat returns void so it expects that sayDelegate is registerd somewhere 
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="UserID"></param>
+        /// <returns></returns>
+        public void reactToChat(string input)
         {
-            try
-            {
-                var curUser = curBot.FindOrCreateUser(UserID);
-                MaybeUpdateUserJustSaidLastInput(isToplevel, requestType, curUser, input, false);
-                Request r = new Request(input, curUser, curUser.That, curBot, isToplevel, requestType);
-                Result res = curBot.Chat(r);
-                if (traceServitor)
-                {
-                    Console.WriteLine("SERVITOR: respondToChat({0},{2})={1}", input, res.Output, UserID);
-                }
-                string chatOutput = res.Output;
-                MaybeUpdateBotJustSaidLastOutput(isToplevel, requestType, curUser, chatOutput, false, false, false);
-                return chatOutput;
-            }
-            catch (Exception e)
-            {
-                LogException(e);
-                return "...";
-            }
+            reactToChat(input, curUser);
         }
-
-        public void reactToChat(string input, bool isToplevel, RequestKind requestType)
+        public void reactToChat(string input, string UserID)
         {
-            try
-            {
-                MaybeUpdateUserJustSaidLastInput(isToplevel, requestType, curUser, input, false);
-                Request r = new Request(input, curUser, curUser.That, curBot, isToplevel, requestType);
-                Result res = curBot.Chat(r);
-                if (traceServitor)
-                {
-                    Console.WriteLine("SERVITOR: reactToChat({0})={1}", input, res.Output);
-                }
-                string chatOutput = res.Output;
-                MaybeUpdateBotJustSaidLastOutput(isToplevel, requestType, curUser, chatOutput, false, true, true);
-            }
-            catch (Exception e)
-            {
-                LogException(e);
-                curBot.isPerformingOutput = true;
-            }
+            reactToChat(input, curBot.FindOrCreateUser(UserID));
         }
-
-        public void reactToChat(string input, string UserID, bool isToplevel, RequestKind requestType)
+        public void reactToChat(string input, User curUser)
         {
-            try
-            {
-                var curUser = curBot.FindOrCreateUser(UserID);
-                MaybeUpdateUserJustSaidLastInput(isToplevel, requestType, curUser, input, false);
-                Request r = new Request(input, curUser, curUser.That, curBot, isToplevel, requestType);
-                Result res = curBot.Chat(r);
-                if (traceServitor)
-                {
-                    Console.WriteLine("SERVITOR: reactToChat({0},{2})={1}", input, res.Output, UserID);
-                }
-                string chatOutput = res.Output;
-                MaybeUpdateBotJustSaidLastOutput(isToplevel, requestType, curUser, chatOutput, false, true, true);
-            }
-            catch (Exception e)
-            {
-                LogException(e);
-                curBot.isPerformingOutput = true;
-            }
+            reactToChat(input, curUser, true, RequestKind.ChatRealTime);
         }
-       
+        public void reactToChat(string input, User curUser, bool isToplevel, RequestKind requestType)
+        {
+            chatWithOutputProcessor(input, curUser, isToplevel, requestType, false, () => { });
+        }
         public void Main(string[] args)
         {
             Start(new sayProcessorDelegate(sayResponseToBlackboard));
@@ -1623,9 +1714,9 @@ namespace AltAIMLbot
         {
             string bad = DLRConsole.SafeFormat(fmt,args);
             Console.WriteLine(bad);
-            if (GlobalSharedSettings.IsDougsMachine)
+            if (DLRConsole.IsDougsMachine)
             {
-                throw new NotSupportedException(bad);
+                throw new NullReferenceException(bad);
             }
         }
 
@@ -1741,5 +1832,31 @@ namespace AltAIMLbot
     public class ChatOptions
     {
         public bool SqueltchRepeatedLastOutput = false;
+        public static int DebugMicrothreader = 0;
+        public bool UnwindBotChangesInBehaviors = false;
+        public static bool ResetSomeUserChangesInBehaviors = true;
+        public static bool ServitortUserSwitchingLock = false;
+        public static bool ServitorInAIMLOnlyTest = false;
+
+        /// <summary>
+        /// @TODO @WORKAROUND Currently adding some padding around Template expanded tags
+        /// </summary>
+        public static bool PadAroundTemplateTags = false;
+
+        public static string THINK_RETURN = "";
+
+        static ChatOptions()
+        {
+            if (Environment.MachineName == "OPTERON7")
+            {                
+                ServitorInAIMLOnlyTest = true;
+            }
+        }
+
+        [ThreadStatic]
+        public static bool AIML_MAY_USE_FAILURE = false;
+
+        public static string AIML_FAILURE_INDICATOR = null;
+        public static bool UseSraiLimitersBasedOnTextContent = false;
     }
 }

@@ -65,8 +65,6 @@ namespace AltAIMLbot.AIMLTagHandlers
         }
 
         protected Func<IList<string>> StarDict;
-        internal const float STAR_TRUE = 0;
-        internal const float STAR_FALSE = 1;
 
         /// <summary>
         /// Ctor

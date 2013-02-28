@@ -27,7 +27,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class crontag : Utils.AIMLTagHandler
+    public class crontag : Utils.AIMLTagHandler, NoReturnResult
     {
                        /// <summary>
         /// Ctor

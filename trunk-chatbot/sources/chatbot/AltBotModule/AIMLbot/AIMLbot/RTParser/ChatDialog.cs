@@ -427,44 +427,14 @@ namespace AltAIMLbot
             r.IsTraced = findOrCreateUser.IsTraced;
             return r;
         }
-
-        /// <summary> 
-        /// Given some raw input string username/unique ID creates a response for the user
-        /// </summary>
-        /// <param name="rawInput">the raw input</param>
-        /// <param name="UserGUID">a usersname</param>
-        /// <returns>the result to be output to the user</returns>        
-        public string ChatString(string rawInput, string UserGUID)
-        {
-            if (useServitor)
-            {
-                return servitor.respondToChat(rawInput, FindOrCreateUser(UserGUID));
-
-            }
-            return ChatWR(rawInput, UserGUID, true, RequestKind.ChatForString).Output;
-        }
-
-        
-        /// <summary>
-        /// Given some raw input and a unique ID creates a response for a new user
-        /// </summary>
-        /// <param name="rawInput">the raw input</param>
-        /// <param name="UserGUID">an ID for the new user (referenced in the result object)</param>
-        /// <returns>the result to be output to the user</returns>
-        public Result ChatWR(string rawInput, string UserGUID, bool isToplevel, RequestKind requestType)
-        {
-            Request request = MakeRequestToBot(rawInput, UserGUID, isToplevel, requestType);
-            request.IsTraced = this.IsTraced;
-            return ChatWithRequest(request);
-        }
-        
+       
         /// <summary>
         /// Given a request containing user input, produces a result from the Proccessor
         /// </summary>
         /// <param name="request">the request from the user</param>
         /// <returns>the result to be output to the user</returns>
         ///
-        public Result ChatWithRequest(Request request)
+        public Result ChatWR(Request request)
         {
             Result requestCurrentResult = request.FindOrCreateCurrentResult();
             Result result = ChatWithRequest(request, requestCurrentResult, request.IsToplevelRequest,
@@ -479,7 +449,7 @@ namespace AltAIMLbot
 
         public Result ChatWithRequest(Request request, Result parentResultIn, bool isToplevel, RequestKind requestType, bool saveResultsOnConverstion)
         {
-            if ((useServitor) && (servitor != null))
+            if (!TryRestorableUserRequest && ((useServitor) && (servitor != null)))
             {
                 Logger.Warn("Servitor code should not be calling this!");
                 User curUser = parentResultIn.Requester;
@@ -489,7 +459,7 @@ namespace AltAIMLbot
                 result.SetOutput = answer;
                 return result;
             }
-            if ((useServitor) && (servitor == null))
+            if (!TryRestorableUserRequest && ((useServitor) && (servitor == null)))
             {
                 Result result = request.CreateResult(request);
                 result.SetOutput = "Servitor nulled at this time.";
@@ -525,7 +495,13 @@ namespace AltAIMLbot
                 Result allResults = null;
                 try
                 {
-                    allResults = ChatWithToplevelResults(request, parentResultIn, isToplevel, requestType);
+                    if (TryRestorableUserRequest)
+                    {
+                        allResults = ChatSensitiveToQState(request, request.graphName, request.IsToplevelRequest);
+                    } else
+                    {
+                        allResults = ChatWithToplevelResults(request, parentResultIn, isToplevel, requestType);
+                    }
                     /*
                     // ReSharper disable ConditionIsAlwaysTrueOrFalse
                     if (res.OutputSentenceCount == 0 && false)
@@ -582,7 +558,7 @@ namespace AltAIMLbot
 
         private void AddSideEffectHook(Request request, User originalRequestor, Result res)
         {
-            request.AddSideEffect("Populate the Result object",
+            request.AddSideEffect("Populate User the Result object",
                                   () =>
                                   {
                                       PopulateUserWithResult(originalRequestor, request, res);
@@ -744,8 +720,9 @@ namespace AltAIMLbot
                 bool printedSQs = false;
                 G = G ?? request.Graph ?? DefaultStartGraph;
 
+                var srequest = request.GetQuerySettings().GetSettable();
                 // grab the templates for the various sentences from the graphmaster
-                request.IsTraced = isTraced;
+                srequest.IsTraced = isTraced;
                 //result = request.CreateResult(request);
 
                 // load the queries
@@ -754,9 +731,9 @@ namespace AltAIMLbot
                 bool topleveRequest = request.IsToplevelRequest;
 
                 int UNLIMITED = 1000000;
-                request.MaxOutputs = UNLIMITED;
-                request.MaxPatterns = UNLIMITED;
-                request.MaxTemplates = UNLIMITED;
+                srequest.MaxOutputs = UNLIMITED;
+                srequest.MaxPatterns = UNLIMITED;
+                srequest.MaxTemplates = UNLIMITED;
 
                 // Gathers the Pattern SubQueries!
                 int sentNum = -1;
@@ -851,7 +828,7 @@ namespace AltAIMLbot
                 {
                     n++;
                     request.UndoAll();
-                    request.IncreaseLimits(1);
+                    request.CurrentSettings.IncreaseLimits(1);
                     CheckResult(request, result, out solutions, out hasMoreSolutions);
                     if (result.OutputSentenceCount != 0 || sqc != 0)
                     {
@@ -904,10 +881,10 @@ namespace AltAIMLbot
                 }
             }
         }
-        internal void PopulateUserWithResult(User user, Request request, Result result)
+        internal void PopulateUserWithResult(User user0, Request request, Result result)
         {
             Logger.Warn("In TODO code");
-            User popu = (user ?? request.Requester ?? result.Requester).Value;
+            User user = (user0 ?? request.Requester ?? result.Requester).Value;
             // toplevel result
             var info = result.ProofTemplate();
             // only the toplevle query popuklates the user object
@@ -917,7 +894,7 @@ namespace AltAIMLbot
                 {
                     lock (user.TemplatesLock) user.ProofTemplates.Add(info);
                 }               
-                popu.addResult(result);
+                user.addResult(result);
                 if (RotateUsedTemplate)
                 {
                     result.RotateUsedTemplates();
@@ -985,7 +962,9 @@ namespace AltAIMLbot
             {
                 text = TheCycS.CycCleanupCyc(text);
             }
-            return Trim(CleanNops(text.Replace("#$", " ").Replace(think.THINKYTAG," ").Replace("  ", " ")));
+            var thinkTHINKYTAG = think.THINKYTAG;
+            if (string.IsNullOrEmpty(thinkTHINKYTAG)) thinkTHINKYTAG = "TAG-THINK";
+            return Trim(CleanNops(text.Replace("#$", " ").Replace(thinkTHINKYTAG, " ").Replace("  ", " ")));
         }
 
 
@@ -1641,7 +1620,7 @@ namespace AltAIMLbot
                                                    RequestKind.ChatForString | RequestKind.BotPropertyEval);
             req.SetSpeakerAndResponder(req.Requester, BotAsUser);
             req.IsToplevelRequest = request.IsToplevelRequest;
-            return LightWeigthBotDirective(cmd, req);
+            return LightWeigthBotDirective("@locally " + cmd, req);
         }
     }
 }

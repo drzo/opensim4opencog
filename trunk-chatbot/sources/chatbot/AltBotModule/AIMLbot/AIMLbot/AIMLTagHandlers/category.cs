@@ -34,8 +34,12 @@ namespace AltAIMLbot.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
         }
-
-        protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)
+        public override XmlNode PrepairTemplateNodeToBecomeSource()
+        {
+            return templateNode;
+        }
+        
+        protected  Unifiable ProcessLoadProc(LoaderOptions loaderOptions)
         {
             if (templateNode.Name.ToLower() == "category")
             {

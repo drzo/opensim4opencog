@@ -28,7 +28,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class postcache : Utils.AIMLTagHandler
+    public class postcache : Utils.AIMLTagHandler, NoReturnResult
     {
         public postcache(AltBot bot,
                 User user,

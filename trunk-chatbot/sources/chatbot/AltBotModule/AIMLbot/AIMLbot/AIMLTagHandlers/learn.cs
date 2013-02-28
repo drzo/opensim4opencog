@@ -32,10 +32,9 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         }
 
-        protected override Unifiable PreProcessChange()
+
+        public override XmlNode PrepairTemplateNodeToBecomeSource()
         {
-            IsLoadReady = true;
-            var recursiveResult = Unifiable.CreateAppendable();
             string cmd = templateNode.LocalName;
             if (HelperForMerge.HasChildNodesNonText(templateNode))
             {
@@ -45,18 +44,18 @@ namespace AltAIMLbot.AIMLTagHandlers
                 // remove children (our goal was to simpley copy attributes
                 attach.RemoveAll();
                 // recursively check
-                
+
                 foreach (XmlNode childNode in templateNode.ChildNodes)
                 {
-                    XmlNode evalChild = EvalChild(cmd, childNode);
+                    XmlNode evalChild = EvalChildToSource(cmd, childNode);
                     attach.AppendChild(evalChild);
                 }
-                templateNode = attach;
+                return attach;
             }
-            return recursiveResult;
+            return null;
         }
 
-        private XmlNode EvalChild(string parentName, XmlNode templateNode)
+        protected XmlNode EvalChildToSource(string parentName, XmlNode templateNode)
         {
             XmlNode attach = templateNode.CloneNode(false);// //AIMLLoader.CopyNode(templateNode, false);
             LineInfoElementImpl.unsetReadonly(attach);
@@ -67,18 +66,18 @@ namespace AltAIMLbot.AIMLTagHandlers
                 {
                     if (childNode.LocalName == "eval")
                     {
-                        AppendEvalation(parentName, attach, childNode);
+                        AppendSourceEvalation(parentName, attach, childNode);
                     }
                     else
                     {
-                        attach.AppendChild(EvalChild(childNode.LocalName, childNode));
+                        attach.AppendChild(EvalChildToSource(childNode.LocalName, childNode));
                     }
                 }
             }
             return attach;
         }
 
-        void AppendEvalation(string origParentName, XmlNode attach, XmlNode childNode)
+        protected void AppendSourceEvalation(string origParentName, XmlNode attach, XmlNode childNode)
         {
             {
                 {
@@ -108,8 +107,12 @@ namespace AltAIMLbot.AIMLTagHandlers
             }
         }
 
-        protected override Unifiable ProcessLoad(LoaderOptions request000)
+        protected override Unifiable ProcessChangeU()
         {
+            if (loadTemplate != null || ProcessInnerXmlAsLoad)
+            {
+                return base.ProcessChangeU();
+            }
             if (CheckNode("learn,load,graph,aiml"))
             {
                 if (templateNode.Name == "aiml")
@@ -127,14 +130,20 @@ namespace AltAIMLbot.AIMLTagHandlers
                     }
                 }
                 // LoaderOptions loaderOptions = loaderOptions0;// ?? LoaderOptions.GetDefault(request);
-                
+
                 //recurse here? 
-                bool outRecurse;                
+                bool outRecurse;
                 if (TryParseBool(templateNode, "recurse", out outRecurse))
                 {
                     request.Recurse = outRecurse;
                 }
+            }
+            return ProcessAsIfFileLoading();
+        }
 
+        protected Unifiable ProcessAsIfFileLoading()
+        {
+            {
                 GraphMaster g = request.Graph;
                 var g0 = g;
                 String graphName = GetAttribValue("graph", null);
@@ -148,7 +157,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                 try
                 {
                     //templateNode.LocalName
-                    string documentInfo =  DocumentInfo();;
+                    string documentInfo = DocumentInfo();
                     request.CurrentlyLoadingFrom = documentInfo;
                     request.Graph = request.Graph;
                     string innerXML = InnerXmlText(templateNode);
@@ -161,7 +170,8 @@ namespace AltAIMLbot.AIMLTagHandlers
                         {
                             more = " - " + innerXML;
                         }
-                        TargetBot.BotDirective(request.Requester, request, "@" + command + " " + request.Graph.ScriptingName + more,
+                        TargetBot.BotDirective(request.Requester, request,
+                                               "@" + command + " " + request.Graph.ScriptingName + more,
                                                writeToLog);
                         //QueryHasSuceededN++;
                     }
@@ -177,12 +187,14 @@ namespace AltAIMLbot.AIMLTagHandlers
                                 }
                                 finally
                                 {
-                                    
+
                                 }
                             }
                             else if (path == "")
                             {
-                                writeToLogWarn("ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: '{0}' - '{1}'", path, innerXML);
+                                writeToLogWarn(
+                                    "ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: '{0}' - '{1}'",
+                                    path, innerXML);
                             }
                             else
                             {
@@ -200,21 +212,25 @@ namespace AltAIMLbot.AIMLTagHandlers
                         catch (Exception e2)
                         {
                             Proc.writeToLog(e2);
-                            writeToLogWarn("ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: {0} error {1}", path, e2);
+                            writeToLogWarn(
+                                "ERROR! Attempted (but failed) to <learn> some new AIML from the following URI: {0} error {1}",
+                                path, e2);
                         }
 
                     }
+                    return Succeed("learned something");
                 }
                 finally
                 {
                     request.Graph = g0;
-                } 
+                }
             }
-            return Unifiable.Empty;
         }
 
         private Unifiable LoadAimlDoc(XmlNode xmlNode)
         {
+            writeToLogWarn("Should not be in teh part of code " 
+                + xmlNode);
             throw new NotImplementedException();
         }
     }

@@ -26,7 +26,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class nop : Utils.AIMLTagHandler
+    public class nop : Utils.AIMLTagHandler, NoReturnResult
     {
 
         public nop(AltBot bot,

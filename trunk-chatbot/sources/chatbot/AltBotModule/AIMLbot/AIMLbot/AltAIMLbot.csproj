@@ -197,6 +197,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AIMLProcessing\UnifibleTagHandler.cs" />
     <Compile Include="AIMLTagHandlers\aiml.cs" />
     <Compile Include="AIMLTagHandlers\aimlexec.cs" />
     <Compile Include="AIMLTagHandlers\and.cs" />
@@ -259,6 +260,7 @@
     <Compile Include="AIMLTagHandlers\optional.cs" />
     <Compile Include="AIMLTagHandlers\or.cs" />
     <Compile Include="AIMLTagHandlers\pannouserver.cs" />
+    <Compile Include="AIMLTagHandlers\peekinput.cs" />
     <Compile Include="AIMLTagHandlers\peekstack.cs" />
     <Compile Include="AIMLTagHandlers\person.cs" />
     <Compile Include="AIMLTagHandlers\person2.cs" />
@@ -289,9 +291,9 @@
     <Compile Include="AIMLTagHandlers\soundcode.cs" />
     <Compile Include="AIMLTagHandlers\space.cs" />
     <Compile Include="AIMLTagHandlers\sr.cs" />
-    <Compile Include="AIMLTagHandlers\srai.cs" />
+    <Compile Include="AIMLTagHandlers\srai_odd.cs" />
     <Compile Include="AIMLTagHandlers\srai_legacy.cs" />
-    <Compile Include="AIMLTagHandlers\srai_prev.cs" />
+    <Compile Include="AIMLTagHandlers\srai.cs" />
     <Compile Include="AIMLTagHandlers\star.cs" />
     <Compile Include="AIMLTagHandlers\state.cs" />
     <Compile Include="AIMLTagHandlers\subaiml.cs" />
@@ -314,6 +316,7 @@
     <Compile Include="AIMLTagHandlers\wolframserver.cs" />
     <Compile Include="AIMLTagHandlers\xml.cs" />
     <Compile Include="AIMLTagHandlers\xmlattribute.cs" />
+    <Compile Include="BehaviorContext.cs" />
     <Compile Include="GUI\RealTimeBotConsole.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -362,10 +365,6 @@
     <Compile Include="YBtrees.cs">
     </Compile>
     <Compile Include="AIMLProcessing\AIMLFormatingTagHandler.cs">
-    </Compile>
-    <Compile Include="AIMLProcessing\AIMLLoaderU.cs">
-    </Compile>
-    <Compile Include="AIMLProcessing\AIMLTagHandlerU.cs">
     </Compile>
     <Compile Include="AIMLProcessing\AIMLTagHandlerUtils.cs">
     </Compile>
@@ -439,8 +438,6 @@
     </Compile>
     <Compile Include="RTParser\JoinedTextBuffer.cs">
     </Compile>
-    <Compile Include="RTParser\LegacyBot.cs">
-    </Compile>
     <Compile Include="RTParser\Proof.cs">
     </Compile>
     <Compile Include="RTParser\RequestSettings.cs">
@@ -454,10 +451,6 @@
     <Compile Include="RTParser\UserManager.cs">
     </Compile>
     <Compile Include="RTParser\WebScriptExecutor.cs">
-    </Compile>
-    <Compile Include="RTParser\CycNLTagHandlers\NumberTemplate.cs">
-    </Compile>
-    <Compile Include="RTParser\CycNLTagHandlers\OptionalOne.cs">
     </Compile>
     <Compile Include="RTParser\Utils\GraphLinkInfo.cs">
     </Compile>
@@ -478,8 +471,6 @@
     <Compile Include="RTParser\Utils\TextPatternUtils.cs">
     </Compile>
     <Compile Include="RTParser\Utils\UndoStack.cs">
-    </Compile>
-    <Compile Include="RTParser\Utils\UnifibleTagHandler.cs">
     </Compile>
     <Compile Include="Unify\BestUnifiable.cs">
     </Compile>

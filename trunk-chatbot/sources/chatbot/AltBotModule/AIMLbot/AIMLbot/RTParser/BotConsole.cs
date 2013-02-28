@@ -428,12 +428,12 @@ namespace AltAIMLbot
                 {
                     Environment.Exit(Environment.ExitCode);
                 }
-                myBot.AcceptInput(writeLine, input, myUser, true, RequestKind.ChatRealTime);
+                myBot.AcceptInput(writeLine, input, myUser, true, RequestKind.ChatRealTime, true);
 
             }
         }
 
-        public void AcceptInput(OutputDelegate writeLine, string input, User myUser, bool isToplevel, RequestKind kind)
+        public void AcceptInput(OutputDelegate writeLine, string input, User myUser, bool isToplevel, RequestKind kind, bool banners)
         {
             AltBot myBot = this;
             if (_botAsUser == null)
@@ -444,18 +444,6 @@ namespace AltAIMLbot
             myUser = myUser ?? myBot.LastUser;
             string myName = BotAsAUser.UserName;
             {
-                writeLine("-----------------------------------------------------------------");
-                if (string.IsNullOrEmpty(input))
-                {
-                    writeLine("{0}: {1}", myUser.UserName, myUser.JustSaid);
-                    if (!WaitUntilVerbalOutput)
-                    {
-                        writeLine("---------------------");
-                        writeLine("{0}: {1}", myName, BotAsAUser.JustSaid);
-                    }
-                    writeLine("-----------------------------------------------------------------");
-                    return;
-                }
                 try
                 {
                     Unifiable cmdprefix = cmdPrefix ?? myUser.Predicates.grabSetting("cmdprefix");
@@ -474,7 +462,8 @@ namespace AltAIMLbot
                     {
                         // See what the servitor says
                         servitorBot.updateRTP2Sevitor(myUser);
-                        writeLine(myName + "> " + servitor.respondToChat(input, myUser, isToplevel, kind));
+                        string prefix = banners ? (myName + "> ") : "";                       
+                        writeLine(prefix + servitor.respondToChat(input, myUser, isToplevel, kind));
                         servitorBot.updateServitor2RTP(myUser);
                     }
                     else
@@ -494,6 +483,7 @@ namespace AltAIMLbot
                             });
                         //if (!myBotBotDirective) continue;
                     }
+                    if (!banners) return;
                     writeLine("-----------------------------------------------------------------");
                     writeLine("{0}: {1}", myUser.UserName, myUser.JustSaid);
                     if (!WaitUntilVerbalOutput)
@@ -614,13 +604,27 @@ namespace AltAIMLbot
             {
                 if (showHelp)
                 {
-
+                    console("@react -- calls servitor.respondToChat");
                 }
                 else
                 {
                     // See what the servitor says
                     updateRTP2Sevitor(myUser);
-                    servitor.respondToChat(args, myUser);
+                    console(servitor.respondToChat(args, myUser));
+                    updateServitor2RTP(myUser);
+                }
+            }
+            if (cmd == "react")
+            {
+                if (showHelp)
+                {
+                    console("@react -- calls servitor.reactToChat");
+                }
+                else
+                {
+                    // See what the servitor says
+                    updateRTP2Sevitor(myUser);
+                    servitor.reactToChat(args, myUser);
                     updateServitor2RTP(myUser);
                 }
             }
@@ -1278,7 +1282,7 @@ namespace AltAIMLbot
                 console("-----------------------------------------------------------------");
                 if (args == "")
                 {
-                    QuerySettings ur0 = myUser.GetQuerySettings();
+                    var ur0 = myUser.GetQuerySettings();
                     if (ur0.MinOutputs != QuerySettings.UNLIMITED)
                     {
                         console("- query mode on -");
@@ -1651,30 +1655,159 @@ namespace AltAIMLbot
         {
            // return;
             writeChatTrace(s);
-            return;
+            if (DLRConsole.IsDougsMachine)
+            {
+                return;
+            }
             action();
         }
-
-        public static Exception RaiseErrorStatic(InvalidOperationException invalidOperationException)
+        public static Exception RaiseErrorStatic(string fmt, params object[] args)
         {
-            writeDebugLine(writeException(invalidOperationException));
+            return RaiseErrorStatic(new NullReferenceException(DLRConsole.SafeFormat(fmt, args)));
+        }
+
+        public static Exception RaiseErrorStatic(Exception invalidOperationException)
+        {
+            if (invalidOperationException is InvalidOperationException)
+            {
+                invalidOperationException = new NullReferenceException(invalidOperationException.Message,
+                                                                       invalidOperationException);
+            }
+            if (SingleInstance != null)
+            {
+                SingleInstance.Logger.Warn(writeException(invalidOperationException));
+            } else
+            {
+                writeDebugLine(writeException(invalidOperationException));
+            }
+            if (DLRConsole.IsDougsMachine)
+            {
+                throw invalidOperationException;
+            }
             return invalidOperationException;
         }
 
         public Exception RaiseError(Exception invalidOperationException)
         {
-            Logger.Warn(writeException(invalidOperationException));
-            if (invalidOperationException is InvalidOperationException)
-            {
-                invalidOperationException = new NullReferenceException(invalidOperationException.Message,
-                                                                       invalidOperationException);
-            } 
-            return invalidOperationException;
+            return RaiseErrorStatic(invalidOperationException);
         }
 
-        public Exception RaiseError(string f, params object[] args)
+        public Exception RaiseError(string fmt, params object[] args)
         {
-            return RaiseError(new InvalidOperationException(DLRConsole.SafeFormat(f, args)));
+            return RaiseError(new NullReferenceException(DLRConsole.SafeFormat(fmt, args)));
+        }
+
+        public object PreNodeProcess(BehaviorTree behaviorTree, Func<IEnumerable<RunStatus>> processNode0, XmlNode node, out Func<IEnumerable<RunStatus>> processNode1)
+        {
+            if (!ChatOptions.ResetSomeUserChangesInBehaviors)
+            {
+                processNode1 = processNode0;
+                return null;
+            }
+
+            var context =  new RunStatusEnumerable(processNode0(), node, behaviorTree, this, processNode0);
+            processNode1 = () => context;
+            return context;
+            //throw new NotImplementedException();
+        }
+
+        public void PostNodeProcess(BehaviorTree behaviorTree, XmlNode node, object preObject)
+        {
+            //throw new NotImplementedException();
+        }
+    }
+
+    public class RunStatusEnumerable : IEnumerable<RunStatus>
+    {
+        public RunStatusEnumerable(IEnumerable<RunStatus> res)
+        {
+            this.iEnumerable = res;
+        }
+
+        public RunStatusEnumerable(IEnumerable<RunStatus> iEnumerable, XmlNode node, BehaviorTree behaviorTree, AltBot altBot, Func<IEnumerable<RunStatus>> processNode0)
+        {
+            // TODO: Complete member initialization
+            this.iEnumerable = iEnumerable;
+            this.node = node;
+            this.behaviorTree = behaviorTree;
+            this.altBot = altBot;
+            this.processNode0 = processNode0;
+        }
+
+        public IEnumerable<RunStatus> iEnumerable;
+        public XmlNode node;
+        public BehaviorTree behaviorTree;
+        public AltBot altBot;
+        public Func<IEnumerable<RunStatus>> processNode0;
+
+        public IEnumerator<RunStatus> GetEnumerator()
+        {
+            return new RunStatusEnumerator(iEnumerable.GetEnumerator(), this);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public override string ToString()
+        {
+            return this.StructToString();
+        }
+    }
+
+    public class RunStatusEnumerator : IEnumerator<RunStatus>
+    {
+        public bool valid = false;
+
+        public override string ToString()
+        {
+            return this.StructToString();
+        }
+        public RunStatusEnumerator(IEnumerator<RunStatus> itor, RunStatusEnumerable runStatusEnumerable)
+        {
+            this.itor = itor;
+            this.runStatusEnumerable = runStatusEnumerable;
+        }
+
+        public RunStatusEnumerable runStatusEnumerable;
+        public IEnumerator<RunStatus> itor;
+
+        public void Dispose()
+        {
+            itor.Dispose();
+        }
+
+        public bool MoveNext()
+        {
+            valid = itor.MoveNext();
+            if (valid)
+            {
+                lastStatus = itor.Current;
+            }
+            return valid;
+        }
+
+        protected RunStatus lastStatus;
+
+        public void Reset()
+        {
+            itor.Reset();
+        }
+
+        public RunStatus Current
+        {
+            get
+            {
+                if (valid && lastStatus == RunStatus.Success) return lastStatus;
+                if (ToStringExtensionMethods.InStructToString) return lastStatus;
+                return lastStatus;
+            }
+        }
+
+        object IEnumerator.Current
+        {
+            get { return Current; }
         }
     }
 
