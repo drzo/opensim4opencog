@@ -72,7 +72,7 @@ namespace LogicalParticleFilter1
             return graph.PrologKB;
         }
 
-        public partial class PNode : IComparable
+        public partial class PNode : PrologMT, IComparable
         {
             public string id;
 
@@ -414,13 +414,14 @@ namespace LogicalParticleFilter1
                 return true;
             }
 
-            internal void Clear()
+            public override void Clear()
             {
                 lock (CompileLock)
                 {
                     ClearPrologCache();
                     ClearRDFCache();
                     SyncFromNow = SourceKind;
+                    base.Clear();
                 }
             }
 
@@ -516,6 +517,7 @@ namespace LogicalParticleFilter1
                 prologEngine.GraphForMT[plMt] = this;
                 prologEngine.RegisterHomeGraph(data.BaseUri.AbsoluteUri, data, true);
                 pdb = new PDB(true);
+                pdb.RegisterRuleList(this);
                 pdb.startMt = plMt;
                 pdb.followedGenlMt = false;
                 PrologKB.id = plMt;
@@ -958,6 +960,11 @@ namespace LogicalParticleFilter1
                 replaceInKb = null;
                 index = -1;
                 return false;
+            }
+
+            public bool IsSubGraphOf(PNode prologBaseGraph)
+            {
+                throw new NotImplementedException();
             }
         }
 

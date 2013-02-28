@@ -1297,14 +1297,14 @@ namespace LogicalParticleFilter1
             if (termIsVar)
             {
                 // if its a var then sorry, just do it all ...
-                localRules = db.rules.arrayList;
+                localRules = db.rules.TheList;
             }
             else
             {
                 RuleList fndRL;
                 if (db.index.TryGetValue(thisTerm.fname, out fndRL))
                 {
-                    localRules = fndRL.arrayList;
+                    localRules = fndRL.TheList;
                     foundIndex = true;
                 }
                 else

@@ -69,7 +69,7 @@ namespace LogicalParticleFilter1
                                 }
                             }
                             bool immedAdd = immediate && node != null;
-                            if (!immedAdd) return rl.Add;
+                            if (!immedAdd) return (r) => rl.Add(r);
                             return r =>
                                        {
                                            rl.Add(r);

@@ -84,9 +84,11 @@ namespace LogicalParticleFilter1
             }
         }
 
-        public class RuleList : IEnumerable,IEnumerable<Rule>
+
+        public class RuleList : RuleListBase, IEnumerable,IEnumerable<Rule>
         {
             internal List<Rule> arrayList = new List<Rule>();
+            private bool _isReadonly;
             public static Func<Rule, Rule, bool> DefaultRuleEquality = SameClauses;
 
             private static bool SameClauses(Rule arg1, Rule arg2)
@@ -98,7 +100,6 @@ namespace LogicalParticleFilter1
                 return arg1.SameClause(arg2);
             }
 
-            internal PDB syncPDB;
             /// <summary>
             /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
             /// </summary>
@@ -115,15 +116,19 @@ namespace LogicalParticleFilter1
             {
                 get { return ToString(); }
             }
-            public int Count
+            public override int Count
             {
                 get { lock (Sync) return arrayList.Count; }
             }
 
-            public void Add(Rule r)
+            public override bool Add(Rule r)
             {
                 lock (Sync)
                 {
+                    if (IsReadonly)
+                    {
+                        throw ErrorBadOp("Attempting to modify readonly " + this + " with " + r);
+                    }
                     arrayList.Add(r);
                     if (r.OptionalHomeMt == null)
                     {
@@ -141,12 +146,13 @@ namespace LogicalParticleFilter1
                     }
                     ClearPdbIndexes();
                 }
+                return true;
             }
             public RuleList()
             {
             }
 
-            public void RemoveAt(int i)
+            override public void RemoveAt(int i)
             {
                 lock (Sync)
                 {
@@ -202,7 +208,7 @@ namespace LogicalParticleFilter1
                 //ConsoleWriteLine("Removed triples: " + fnd);
             }
 
-            public Rule this[int i]
+            override public Rule this[int i]
             {
                 get { lock (Sync) return (Rule)arrayList[i]; }
                 set
@@ -224,7 +230,7 @@ namespace LogicalParticleFilter1
                 }
             }
 
-            public object Sync
+            public override object Sync
             {
                 get
                 {
@@ -233,6 +239,10 @@ namespace LogicalParticleFilter1
             }
             private void ClearPdbIndexes()
             {
+                if (IsReadonly)
+                {
+                    throw ErrorBadOp("Attempting to modify readonly " + this);
+                }
                 lock (Sync)
                 {
                     if (syncPDB != null)
@@ -247,7 +257,7 @@ namespace LogicalParticleFilter1
                     }
                 }
             }
-            public void Clear()
+            public override void Clear()
             {
                 lock (Sync)
                 {
@@ -259,11 +269,17 @@ namespace LogicalParticleFilter1
                     ClearPdbIndexes();
                 }
             }
-
+            /*
             public IEnumerator GetEnumerator()
             {
                 lock (Sync) return arrayList.GetEnumerator();
             }
+            */
+            public override IEnumerator<Rule> GetRuleEnumer()
+            {
+                lock (Sync) return arrayList.GetEnumerator();
+            }
+
             #region IEnumerable<Rule> Members
 
             IEnumerator<Rule> IEnumerable<Rule>.GetEnumerator()
@@ -273,7 +289,7 @@ namespace LogicalParticleFilter1
 
             #endregion
 
-            public RuleList Copy()
+            override public RuleList Copy()
             {
                 var ret = new RuleList();
                 lock (Sync) ret.arrayList.AddRange(arrayList);
@@ -289,13 +305,26 @@ namespace LogicalParticleFilter1
                     }
                 return ret.ToString();
             }
-            public bool Contains(Rule rule)
+            public override bool Contains(Rule rule)
             {
                 return IndexOf(rule, -1, DefaultRuleEquality) != -1;
             }
             public int IndexOf(Rule rule)
             {
                 return IndexOf(rule, -1, DefaultRuleEquality);
+            }
+
+            protected internal override bool Delete(Rule rule)
+            {
+                int index = IndexOf(rule, -1, DefaultRuleEquality);
+                if (index == -1) return false;
+                RemoveAt(index);
+                return false;
+            }
+
+            public override Rule this[Rule t]
+            {
+                get { return this[IndexOf(t)]; }
             }
 
             public int IndexOf(int startAfter, Predicate<Rule> compare)
@@ -318,6 +347,22 @@ namespace LogicalParticleFilter1
             public int IndexOf(Rule rule, int startAfter, Func<Rule, Rule, bool> compare)
             {
                 return IndexOf(startAfter, r => compare(rule, r));
+            }
+
+            public override bool IsReadonly
+            {
+                get { return _isReadonly; }
+                set { _isReadonly = value; }
+            }
+
+            public override ICollection<Rule> TheList
+            {
+                get { return arrayList; }
+            }
+
+            public override void Dispose()
+            {
+                throw new NotImplementedException();
             }
         }
 
@@ -346,6 +391,7 @@ namespace LogicalParticleFilter1
             public bool isStorage;
             public static Dictionary<string,builtinDelegate> builtin = new Dictionary<string, builtinDelegate>();
             internal RuleList _rules;
+            public bool IsLockedRuleList = true;
 
             // A fast index for the database
             public Dictionary<string, RuleList> index = new Dictionary<string, RuleList>();
@@ -394,6 +440,22 @@ namespace LogicalParticleFilter1
                             lock (LockOf(_rules))
                             {
                                 if (ReferenceEquals(_rules, value)) return;
+
+                                if (IsLockedRuleList)
+                                {
+                                    if (ReferenceEquals(null, value))
+                                    {
+                                        // means we clear
+                                    }
+                                    else
+                                    {
+                                        value.IsReadonly = true;
+                                        foreach (Rule rule in value)
+                                        {
+                                            _rules.Add(rule);
+                                        }
+                                    }
+                                }
                                 if (_rules.Count > 0)
                                 {
                                     _rules.Clear();
@@ -447,8 +509,153 @@ namespace LogicalParticleFilter1
             }
 
             public bool IsTraced = true;
+
+            public void RegisterRuleList(PNode pNode)
+            {
+                IsLockedRuleList = true;
+                ((PrologMT) pNode).RegisterRuleList(this, rules);
+            }
+        }
+        public class PrologKBDiffReport
+        {
+        }
+        public class ITransactionalPrologKB
+        {
+        }
+        public class GenlMtLinkType
+        {
+        }
+        public class BasePrologKBCollection
+        {
         }
 
+        /// <summary>
+        /// Abstract Base Class for Rule Collections
+        /// </summary>
+        /// <remarks>
+        /// Designed to allow the underlying storage of a Rule Collection to be changed at a later date without affecting classes that use it.
+        /// </remarks>
+        abstract public partial class RuleListBase
+            : IEnumerable<Rule>, IDisposable, IEnumerable
+        {
+            /// <summary>
+            /// Adds a Rule to the Collection
+            /// </summary>
+            /// <param name="t">Rule to add</param>
+            /// <remarks>Adding a Rule that already exists should be permitted though it is not necessary to persist the duplicate to underlying storage</remarks>
+            public abstract bool Add(Rule t);
+
+            /// <summary>
+            /// Determines whether a given Rule is in the Rule Collection
+            /// </summary>
+            /// <param name="t">The Rule to test</param>
+            /// <returns>True if the Rule already exists in the Rule Collection</returns>
+            public abstract bool Contains(Rule t);
+
+            /// <summary>
+            /// Gets the Number of Rules in the Rule Collection
+            /// </summary>
+            public abstract int Count
+            {
+                get;
+            }
+
+            /// <summary>
+            /// Deletes a Rule from the Collection
+            /// </summary>
+            /// <param name="t">Rule to remove</param>
+            /// <remarks>Deleting something that doesn't exist should have no effect and give no error</remarks>
+            protected abstract internal bool Delete(Rule t);
+
+            /// <summary>
+            /// Gets the given Rule
+            /// </summary>
+            /// <param name="t">Rule to retrieve</param>
+            /// <returns></returns>
+            /// <exception cref="KeyNotFoundException">Thrown if the given Rule doesn't exist</exception>
+            public abstract Rule this[Rule t]
+            {
+                get;
+            }
+
+            public abstract Rule this[int i] { get; set; }
+
+            public PDB syncPDB;
+            abstract public object Sync
+            {
+                get;
+            }
+
+            abstract public bool IsReadonly { get; set; }
+
+            public abstract ICollection<Rule> TheList { get; }
+
+            /// <summary>
+            /// Diposes of a Rule Collection
+            /// </summary>
+            public abstract void Dispose();
+
+            /// <summary>
+            /// Gets the typed Enumerator for the Triple Collection
+            /// </summary>
+            /// <returns></returns>
+            public IEnumerator<Rule> GetEnumerator()
+            {
+                return GetRuleEnumer();
+            }
+
+            public abstract IEnumerator<Rule> GetRuleEnumer();
+
+            /// <summary>
+            /// Gets the non-generic Enumerator for the Triple Collection
+            /// </summary>
+            /// <returns></returns>
+            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+            {
+                return GetRuleEnumer();
+            }
+
+            /// <summary>
+            /// Event which occurs when a Rule is added to the Collection
+            /// </summary>
+            public event RuleEventHandler RuleAdded;
+
+            /// <summary>
+            /// Event which occurs when a Rule is removed from the Collection
+            /// </summary>
+            public event RuleEventHandler RuleRemoved;
+
+            /// <summary>
+            /// Helper method for raising the <see cref="RuleAdded">Rule Added</see> event
+            /// </summary>
+            /// <param name="t">Rule</param>
+            protected void RaiseRuleAdded(Rule t)
+            {
+                RuleEventHandler d = this.RuleAdded;
+                if (d != null)
+                {
+                    d(this, new RuleEventArgs(t, null));
+                }
+            }
+
+            /// <summary>
+            /// Helper method for raising the <see cref="RuleRemoved">Rule Removed</see> event
+            /// </summary>
+            /// <param name="t">Rule</param>
+            protected void RaiseRuleRemoved(Rule t)
+            {
+                RuleEventHandler d = this.RuleRemoved;
+                if (d != null)
+                {
+                    d(this, new RuleEventArgs(t, null, false));
+                }
+            }
+
+            abstract public void Clear();
+
+            public abstract void RemoveAt(int i);
+            public abstract RuleList Copy();
+        }
         public partial class Rule : IHasParent
         {
             public bool isGround = false;
