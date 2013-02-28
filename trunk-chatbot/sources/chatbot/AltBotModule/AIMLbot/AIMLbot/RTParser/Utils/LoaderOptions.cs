@@ -88,7 +88,7 @@ namespace AltAIMLbot.Utils
                     name = node.Name;
                     if (string.IsNullOrEmpty(defaultElement))
                     {
-                        AltBot.writeDebugLine("WARN Cant on default attribute " + Attrib);
+                      //  AltBot.writeDebugLine("WARN Cant on default attribute " + Attrib);
                     }
                     else
                     {
@@ -122,7 +122,7 @@ namespace AltAIMLbot.Utils
                 }
                 if (wasName)
                 {
-                    AltBot.writeDebugLine("WARN Cant find default element " + Attrib);
+                   //  AltBot.writeDebugLine("WARN Cant find default element " + Attrib);
                     continue;
                 }
                 ///AltBot.writeDebugLine("WARN `ibute " + Attrib);
