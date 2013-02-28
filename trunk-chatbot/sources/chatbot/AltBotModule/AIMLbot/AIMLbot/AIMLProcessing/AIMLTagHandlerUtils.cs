@@ -639,6 +639,11 @@ namespace AltAIMLbot.Utils
 
         private static bool CompleteEvaluation(String vv, AIMLTagHandler childHandlerU, out string output)
         {
+            if (!ChatOptions.AIML_TEMPLATE_REEVAL)
+            {
+                output = vv;
+                return true;
+            }
             const string NULL = default(string);
             output = NULL;
             bool success = true;

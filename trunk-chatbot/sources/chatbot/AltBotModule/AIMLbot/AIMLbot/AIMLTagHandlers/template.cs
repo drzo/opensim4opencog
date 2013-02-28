@@ -25,6 +25,16 @@ namespace AltAIMLbot.AIMLTagHandlers
                         XmlNode templateNode)
             : base(bot, user, query, request, result, templateNode)
         {
+            SelfProcessing = true;
+        }
+
+        public override bool SelfProcessing
+        {
+            get { return true; }
+            set
+            {
+                base.SelfProcessing = value;
+            }
         }
 
         public override Unifiable RecurseChildren()

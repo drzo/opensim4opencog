@@ -168,17 +168,6 @@ namespace AltAIMLbot.Utils
         {
             get { return templateNode.OuterXml; }
         }
-        protected string TemplateNodeInnerText
-        {
-            get
-            {
-                return templateNode.InnerText;
-            }
-            set
-            {
-                templateNode.InnerText = value;
-            }
-        }
 
         public virtual bool isVerbatum
         {
@@ -267,7 +256,7 @@ namespace AltAIMLbot.Utils
             return GetType().Name + ": " + templateNode.OuterXml;
         }
 
-        public bool SelfProcessing { get; set; }
+        virtual public bool SelfProcessing { get; set; }
         //public abstract Unifiable Recurse();
     }
 }

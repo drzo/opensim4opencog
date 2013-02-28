@@ -1893,8 +1893,10 @@ namespace AltAIMLbot
             }
             if (tagName == "#text")
             {
-if (node.Value!=node.InnerText) {
-}
+                if (node.Value != node.InnerText || node.Value != node.OuterXml)
+                {
+                    writeToLogWarn("Text node contaning entities " + node.OuterXml);
+                }
                 return node.InnerText;
                 return node.Value;
             }
@@ -2054,7 +2056,21 @@ if (node.Value!=node.InnerText) {
             {
                 return template;
             }
-            XmlNode resultNode = AIMLTagHandler.getNode("<li>" + template + "</li>");
+            XmlNode resultNode = resultNode000 ?? AIMLTagHandler.getNode("<li>" + template + "</li>");
+            if (ChatOptions.AIML_TEMPLATE_CALLS_IMMEDIATE)
+            {
+                AIMLTagHandler th = null;
+                if (ChatOptions.AIML_TEMPLATE_REEVAL)
+                {
+                    th = new AltAIMLbot.AIMLTagHandlers.format(this, user, query, request, result, resultNode,
+                                                               (Func<string, string>)null, null);
+                }
+                else
+                {
+                    th = new AltAIMLbot.AIMLTagHandlers.template(this, user, query, request, result, resultNode);
+                }
+                return th.Transform();
+            }
             while (true)
             {
                 if (resultNode.HasChildNodes)

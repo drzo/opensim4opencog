@@ -1858,5 +1858,10 @@ namespace AltAIMLbot
 
         public static string AIML_FAILURE_INDICATOR = null;
         public static bool UseSraiLimitersBasedOnTextContent = false;
+
+        [ThreadStatic]
+        public static bool AIML_TEMPLATE_REEVAL = false;
+        [ThreadStatic]
+        public static bool AIML_TEMPLATE_CALLS_IMMEDIATE = false;
     }
 }

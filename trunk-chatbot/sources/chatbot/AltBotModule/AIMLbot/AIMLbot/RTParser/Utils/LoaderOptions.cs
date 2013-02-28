@@ -106,7 +106,7 @@ namespace AltAIMLbot.Utils
                                so.GetField(name + "NamePost", ic);
                 if (name == "version" || name=="id") continue;
 
-                if (fi != null)
+                if (fi != null && fi.FieldType == typeof(string))
                 {
                     string val = Attrib.Value;
                     fi.SetValue(saveOn, val);
