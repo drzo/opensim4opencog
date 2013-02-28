@@ -34,8 +34,15 @@ namespace MushDLR223.Utilities
 
     public static class ToStringExtensionMethods
     {
-        [ThreadStatic] private static int tl_StructToStringDepth;
-        [ThreadStatic] private static bool tl_StructToStringDisable;
+        public static bool InStructToString
+        {
+            get
+            {
+                return tl_StructToStringDepth > 0 || tl_StructToStringDisable;
+            }
+        }
+        [ThreadStatic] public static int tl_StructToStringDepth;
+        [ThreadStatic] public static bool tl_StructToStringDisable;
         [ThreadStatic] public static List<object> tl_StructToString_LoopingOn;
         [StructToString(false)]
         public static int MaxStructToStringDepth = 3;
@@ -92,19 +99,31 @@ namespace MushDLR223.Utilities
                 }
                 return "<<NULL>>";
             }
-            if (tl_StructToString_LoopingOn == null) tl_StructToString_LoopingOn = new List<object>();
-            var s = StructToStringC(t, structType, false, true, true);
-            var type = t.GetType();
-            if (!type.IsValueType) tl_StructToString_LoopingOn.Remove(t);
-            return s;
+            bool nullOutS2S = false;
+            if (tl_StructToString_LoopingOn == null)
+            {
+                tl_StructToString_LoopingOn = new List<object>();
+                nullOutS2S = true;
+            }
+            try
+            {
+                bool addedI;
+                var s = StructToStringC(t, structType, false, true, true);
+                return s;
+            }
+            finally
+            {
+                if (nullOutS2S) tl_StructToString_LoopingOn = null;
+            }
         }
 
-        public static string StructToStringC(object t, Type structType, bool loopCheck, bool mayCallToString, bool mayDescendMembers)
+        private static string StructToStringC(object t, Type structType, bool loopCheck, bool mayCallToString, bool mayDescendMembers)
         {
             if (ReferenceEquals(t, null)) return "NULL";
-            if (t is String || t is IComparable<string>)
-                return "\"" + t.ToString().Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
-            if (t is IConvertible || t is String || t is Uri || t is Stream || t is IComparable<string>) return "" + t;
+            if (DontCallStructToString(structType))
+            {
+                return CallToStringNoLoop(t);
+            }
             bool vt = structType.IsValueType;
 
             int idx = -1;
@@ -114,13 +133,9 @@ namespace MushDLR223.Utilities
                 idx = tl_StructToString_LoopingOn.LastIndexOf(t);
             }
             tl_StructToStringDepth++;
-            if (tl_StructToStringDepth > MaxStructToStringDepth)
+            if (tl_StructToStringDepth > MaxStructToStringDepth || tl_StructToStringDisable || idx != -1)
             {
                 return TypeIdx(structType, t, idx, mayCallToString);
-            }
-            if (t is IEnumerable)
-            {
-                StructToStringE((IEnumerable)t, structType, idx, loopCheck, mayCallToString, mayDescendMembers);
             }
             return StructToStringS(t, structType, idx, loopCheck, mayCallToString, mayDescendMembers);
         }
@@ -135,6 +150,7 @@ namespace MushDLR223.Utilities
                 int max = 100;
                 int fnd = 0;
                 bool printSomething = true;
+
                 foreach (var i in ic)
                 {
                     if (printSomething)
@@ -160,6 +176,10 @@ namespace MushDLR223.Utilities
 
         public static string StructToStringS(object t, Type structType, int idx, bool loopCheck, bool mayCallToString, bool mayDescendMembers)
         {
+            if (!DontCallStructToString(structType))
+            {
+                return CallToStringNoLoop(t);
+            }
             MethodInfo toString = GetToStringIfDeclared(structType, 1);
             if (toString != null && mayCallToString && idx < 0)
             {
@@ -167,7 +187,11 @@ namespace MushDLR223.Utilities
             }
             if (!mayDescendMembers)
             {
-                return CallToStringNoLoopIdxPermiting(t, structType, idx, mayCallToString);
+                return CallToStringNoLoop(t);
+            }
+            if (t is IEnumerable)
+            {
+                return StructToStringE((IEnumerable)t, structType, idx, loopCheck, mayCallToString, mayDescendMembers);
             }
             FieldInfo[] fields = structType.GetFields(fpub);
             PropertyInfo[] props = structType.GetProperties(fpub);
@@ -212,7 +236,7 @@ namespace MushDLR223.Utilities
 
             if (needSimpleToString)
             {
-                return CallToStringNoLoopIdxPermiting(t, structType, idx, mayCallToString);
+                return CallToStringNoLoop(t);
             }
 
             return result.ToString().TrimEnd();
@@ -223,14 +247,6 @@ namespace MushDLR223.Utilities
             return propname.TrimStart('m', '_').TrimEnd('_', '0').ToUpper();
         }
 
-        private static string CallToStringNoLoopIdxPermiting(object t, Type structType, int idx, bool mayCallToString)
-        {
-            if (idx >= 0)
-            {
-                return TypeIdx(structType, t, idx, mayCallToString);
-            }
-            return CallToStringNoLoop(t);
-        }
 
         private static MethodInfo GetToStringIfDeclared(Type structType, int maxDepth)
         {
@@ -250,21 +266,26 @@ namespace MushDLR223.Utilities
 
         private static string CallToStringNoLoop(object t)
         {
+            if (t == null) return "<<NULL>>";
+            if (t is String)
+                return "\"" + t.ToString().Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
             Type structType = t.GetType();
+            if (structType == typeof(string)) return t.ToString();
+            if (tl_StructToStringDisable)
+            {
+                // must be in it?
+                return ObjHashCode(t, structType);
+            }
             bool before = tl_StructToStringDisable;
             tl_StructToStringDisable = true;
             try
             {
-
-                if (t is String || t is IComparable<string>)
+                if (t is IComparable<string>)
                     return "\"" + t.ToString().Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+
                 if (DontCallStructToString(structType))
                 {
                     return "" + t;
-                }
-                if (t is IEnumerable)
-                {
-                    return StructToStringE((IEnumerable) t, structType, -1, true, false, false);
                 }
                 try
                 {
@@ -280,6 +301,11 @@ namespace MushDLR223.Utilities
             {
                 tl_StructToStringDisable = before;
             }
+        }
+
+        private static string ObjHashCode(object o, Type structType)
+        {
+            return ShortTypeName(structType).Replace(".", "") + "@" + RuntimeHelpers.GetHashCode(o);
         }
 
         private static bool DontCallStructToString(Type structType)
@@ -384,14 +410,14 @@ namespace MushDLR223.Utilities
 
         private static string TypeIdx(Type structType, object t, int idx, bool mayCallToString)
         {
-            if (idx > MaxStructToStringDepth)
+            if (idx == -1)
             {
                 if (mayCallToString)
                 {
                     return CallToStringNoLoop(t);
                 }
             }
-            return ("<" + ShortTypeName(structType).Replace(".", "") + "@" + RuntimeHelpers.GetHashCode(t) + "=" + idx + ">");
+            return ("<" + ObjHashCode(t, structType) + "=" + idx + ">");
         }
 
         public static string ShortTypeName(this Type[] ts)
@@ -514,7 +540,10 @@ namespace MushDLR223.Utilities
 
         private static void Interesting()
         {
-           
+           if (DLRConsole.Trace("Interesting"))
+           {
+               
+           }
         }
 
         public static string ToCollectionString(this IEnumerable col, string sep)
