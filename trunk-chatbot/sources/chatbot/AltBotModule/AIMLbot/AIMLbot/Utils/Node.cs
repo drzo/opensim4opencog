@@ -565,7 +565,7 @@ namespace AltAIMLbot.Utils
                 if (args.Length == 2)
                 {
                     string key = args[0].ToLower().Trim();
-                    key = key.Remove('/');
+                    key = key.Replace("/", "");
                     string value = args[1].Trim();
                     // we have two state positions
                     if (key == "state")
