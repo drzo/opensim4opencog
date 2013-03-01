@@ -451,7 +451,8 @@ namespace AltAIMLbot
                     return;
                 }
             }
-            string diskName = behaviorDiskName(bt.name);
+            string nameused = bt != null ? bt.name : ID;
+            string diskName = behaviorDiskName(nameused);
             lock (BehaviorTree.FileLock)
             {
                 if (!File.Exists(diskName))
@@ -1046,7 +1047,16 @@ namespace AltAIMLbot
 
         public BehaviorTree GetTreeByName(string name)
         {
-            lock (behaveTrees) return behaveTrees[name];
+            lock (behaveTrees)
+            {
+                BehaviorTree tree;
+                if (behaveTrees.TryGetValue(name, out tree)) return tree;
+            }
+            // will only issue a warning now, before it threw a keyNotFoundException
+            // Much code that called this function checked anyway for null .. but did catch exceptions.. 
+            // so we ar emaking it return null like a .java hashtable instead of .net dictionary
+            bctx.RaiseError("No tree named " + name);
+            return null;
         }
 
         public void runBotBehaviors(BCTX deBot)
@@ -1055,11 +1065,14 @@ namespace AltAIMLbot
             processEventQueue(deBot);
             // if there is a root defined then run it
             // otherwise run them all
-            if (behaveTrees.ContainsKey("root"))
+            BehaviorTree curTree;
+            bool hadRoot;
+            lock (behaveTrees) hadRoot = behaveTrees.TryGetValue("root", out curTree);
+            if (hadRoot)
             {
                 try
                 {
-                    BehaviorTree curTree = GetTreeByName("root");
+
                     if (curTree == null)
                     {
                         Console.WriteLine("WARN: Tree '{0}' is null", "null");
@@ -1088,7 +1101,7 @@ namespace AltAIMLbot
                     {
                         try
                         {
-                            BehaviorTree curTree = GetTreeByName(treeName);
+                            curTree = GetTreeByName(treeName);
                             if (curTree == null)
                             {
                                 Console.WriteLine("WARN: Tree '{0}' is null", treeName);
@@ -1129,7 +1142,7 @@ namespace AltAIMLbot
         }
 
         public IEnumerable<string> GetBTKeyNames()
-        {
+        {           
             var list = new List<string>();
             lock (behaveTrees)
             {
