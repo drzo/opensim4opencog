@@ -772,11 +772,11 @@ namespace AltAIMLbot
         public Exception RaiseError(Exception e)
         {
             Exception err = mbot.RaiseError(e);
-            if (DLRConsole.IsDougsMachine)
+            if (ChatOptions.WarningsAsErrors && ChatOptions.AllowRuntimeErrors)
             {
                 throw err;
             }
-            return err;
+            return e;
         }
 
         public string GetUserMt(User user1, SubQuery subQuery)

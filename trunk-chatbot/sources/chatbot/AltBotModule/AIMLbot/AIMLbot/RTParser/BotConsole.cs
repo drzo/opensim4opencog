@@ -1655,7 +1655,7 @@ namespace AltAIMLbot
         {
            // return;
             writeChatTrace(s);
-            if (DLRConsole.IsDougsMachine)
+            if (ChatOptions.WantsToRetraceInAIML)
             {
                 return;
             }
@@ -1680,7 +1680,11 @@ namespace AltAIMLbot
             {
                 writeDebugLine(writeException(invalidOperationException));
             }
-            if (DLRConsole.IsDougsMachine)
+            if (!ChatOptions.AllowRuntimeErrors)
+            {
+                return invalidOperationException;
+            }
+            if (ChatOptions.WarningsAsErrors)
             {
                 throw invalidOperationException;
             }
@@ -1699,7 +1703,7 @@ namespace AltAIMLbot
 
         public object PreNodeProcess(BehaviorTree behaviorTree, Func<IEnumerable<RunStatus>> processNode0, XmlNode node, out Func<IEnumerable<RunStatus>> processNode1)
         {
-            if (!ChatOptions.ResetSomeUserChangesInBehaviors)
+            if (!ChatOptions.UnwindSomeUserChangesInBehaviors)
             {
                 processNode1 = processNode0;
                 return null;

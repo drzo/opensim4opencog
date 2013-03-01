@@ -549,11 +549,11 @@ namespace AltAIMLbot.Utils
             {
                 IsStarted = true;
                 var recurseResult00 = Recurse();
-                var recurseResult0 = ProcessChangeU();
-                var recurseResultS = (string)recurseResult0;
-                Unifiable recurseResult;
-                var wasRealyNull = Object.ReferenceEquals(recurseResult0, null);
-                if (this is EmptyIsNotFailure && !wasRealyNull && recurseResult0.AsString() == String.Empty)
+                var finalProposal = ProcessChangeU();
+                var finalResultStr = (string)finalProposal;
+                Unifiable finalCounterProposal;
+                var wasRealyNull = Object.ReferenceEquals(finalProposal, null);
+                if (this is EmptyIsNotFailure && !wasRealyNull && finalProposal.AsString() == String.Empty)
                 {
                     string ret = String.Empty;
                     finalResult.Value = ret;
@@ -561,10 +561,10 @@ namespace AltAIMLbot.Utils
                 }
                 if (this is NoReturnResult)
                 {
-                    if (!string.IsNullOrEmpty(recurseResultS))
+                    if (!string.IsNullOrEmpty(finalResultStr))
                     {
-                        recurseResultS = recurseResultS.Trim();
-                        if (!recurseResultS.StartsWith("<!") && recurseResultS.Length > 1)
+                        finalResultStr = finalResultStr.Trim();
+                        if (!finalResultStr.StartsWith("<!") && finalResultStr.Length > 1)
                         {
                             writeToLogWarn("Something is returning text and shouldnt be!");
                         }
@@ -577,29 +577,29 @@ namespace AltAIMLbot.Utils
                 {
                     return FinalResult;
                 }
-                if (CompleteEvaluation(recurseResult0, this, out recurseResult))
+                if (CompleteEvaluation(finalProposal, this, out finalCounterProposal))
                 {
-                    FinalResult = recurseResult;
-                    return recurseResult;
+                    finalResult.Value = finalCounterProposal;
+                    return finalCounterProposal;
                 }
 
-                if (!AltBot.BE_COMPLETE_NOT_FAST) return recurseResult0;
-
-                var recurseResult1 = FinalResult;
-                if (CompleteEvaluation(recurseResult1, this, out recurseResult))
+                if (!AltBot.BE_COMPLETE_NOT_FAST) return finalProposal;
+                writeToLogWarn("Trying to be OVERLY complete");
+                var proposal1 = FinalResult;
+                if (CompleteEvaluation(proposal1, this, out finalCounterProposal))
                 {
-                    FinalResult = recurseResult;
-                    return recurseResult;
+                    FinalResult = finalCounterProposal;
+                    return finalCounterProposal;
                 }
-                var recurseResult2 = templateNodeInnerText;
-                if (CompleteEvaluation(recurseResult2, this, out recurseResult))
+                var proposal2 = templateNodeInnerText;
+                if (CompleteEvaluation(proposal2, this, out finalCounterProposal))
                 {
-                    writeToLogWarn("ProcessAimlChange -> templateNodeInnerText=" + recurseResult2 + "->" + recurseResult);
-                    FinalResult = recurseResult;
-                    return recurseResult;
+                    writeToLogWarn("ProcessAimlChange -> templateNodeInnerText=" + proposal2 + "->" + finalCounterProposal);
+                    FinalResult = finalCounterProposal;
+                    return finalCounterProposal;
                 }
                 if (FinalResultValid) return FinalResult;
-                return recurseResult0;
+                return finalProposal;
             }
             finally
             {
@@ -827,7 +827,7 @@ namespace AltAIMLbot.Utils
         public Unifiable Succeed(object p0)
         {
             Succeed();          
-            var thinkReturn = ChatOptions.THINK_RETURN;
+            var thinkReturn = ChatOptions.THINK_RETURN_DEFAULT;
             if (thinkReturn != null) return thinkReturn;
             string p = p0.ToString();
             return "<!-- SUCCEED: " + p.Replace("<!--", "<#-").Replace("-->", "-#>") + "-->";

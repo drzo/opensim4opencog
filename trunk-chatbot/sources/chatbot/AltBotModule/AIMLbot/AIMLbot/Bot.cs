@@ -2658,6 +2658,7 @@ The AltAIMLbot program.
         }
         public void importBBUserSettings(User myUser, string bbKey, string settingKey)
         {
+            if (myChemistry == null) return; 
             string myValue = myChemistry.m_cBus.getHash(bbKey);
             if (myValue.Length > 0)
             {

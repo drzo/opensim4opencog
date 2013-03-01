@@ -118,7 +118,7 @@ namespace AltAIMLbot
             {
                 //return false; //KHC DEBUG MONOBOT
 
-                if (DLRConsole.IsDougsMachine) return true;
+                if (ChatOptions.ServitorInAIMLOnlyTest) return true;
                 if (curBot != null && curBot.GlobalSettings != null)
                 {
                     string NBGC = curBot.GlobalSettings.grabSetting("noBackgroundChat");
@@ -1714,7 +1714,7 @@ namespace AltAIMLbot
         {
             string bad = DLRConsole.SafeFormat(fmt,args);
             Console.WriteLine(bad);
-            if (DLRConsole.IsDougsMachine)
+            if (ChatOptions.WarningsAsErrors)
             {
                 throw new NullReferenceException(bad);
             }
@@ -1829,12 +1829,24 @@ namespace AltAIMLbot
         }
     }
 
+
+    /// <summary>
+    ///  In a live bot most options should be disgned to be set false or null unless otherwise noted per option comment
+    ///     (this is to facilitate that options might be turned on 'true' in a [ThreadStatic] manner)
+    /// </summary>
     public class ChatOptions
     {
         public bool SqueltchRepeatedLastOutput = false;
         public static int DebugMicrothreader = 0;
-        public bool UnwindBotChangesInBehaviors = false;
-        public static bool ResetSomeUserChangesInBehaviors = true;
+
+        /// <summary>
+        ///  In a live bot these next should should not matter (yet)
+        ///     it would be that some behaviour tags that change the users "topic" setting might be set back to original value when the behaviour exits
+        ///     of course this means an adoption of a design that allows us to *mark* some settings to remain local to the behavior
+        /// </summary>
+        public static bool UnwindSomeBotChangesInBehaviors = false;
+        public static bool UnwindSomeUserChangesInBehaviors = false;
+
         public static bool ServitortUserSwitchingLock = false;
         public static bool ServitorInAIMLOnlyTest = false;
 
@@ -1843,13 +1855,33 @@ namespace AltAIMLbot
         /// </summary>
         public static bool PadAroundTemplateTags = false;
 
-        public static string THINK_RETURN = "";
+        /// <summary>
+        /// If THINK_RETURN_NULLOK == null it should return THINK_RETURN_DEFAULT;
+        /// </summary>
+        [ThreadStatic]
+        public static string THINK_RETURN_NULLOK = null;
+        public static string THINK_RETURN_DEFAULT = "";
+        public static string THINK_RETURN
+        {
+            get
+            {
+                if (THINK_RETURN_NULLOK == null)
+                {
+                    return THINK_RETURN_DEFAULT;
+                }
+                return THINK_RETURN_NULLOK;
+            }
+        }
 
         static ChatOptions()
         {
-            if (Environment.MachineName == "OPTERON7")
+            if (DLRConsole.IsDougsMachine)
             {                
                 ServitorInAIMLOnlyTest = true;
+                UnwindSomeUserChangesInBehaviors = true;
+                AllowRuntimeErrors = false;
+                WarningsAsErrors = !ServitorInAIMLOnlyTest;
+                WantsToRetraceInAIML = ServitorInAIMLOnlyTest;
             }
         }
 
@@ -1857,11 +1889,39 @@ namespace AltAIMLbot
         public static bool AIML_MAY_USE_FAILURE = false;
 
         public static string AIML_FAILURE_INDICATOR = null;
+
+        /// <summary>
+        ///  In a live bot this should be set false
+        /// </summary>
         public static bool UseSraiLimitersBasedOnTextContent = false;
 
         [ThreadStatic]
         public static bool AIML_TEMPLATE_REEVAL = false;
         [ThreadStatic]
         public static bool AIML_TEMPLATE_CALLS_IMMEDIATE = false;
+
+        /// <summary>
+        ///  In a live bot this should be set null
+        /// </summary>
+        public static GraphMaster OnlyOneGM = null;//new GraphMaster("default");
+
+        /// <summary>
+        ///  In a live bot this should be set false
+        /// </summary>
+        public static bool DeferingSaves = false;
+
+        /// <summary>
+        ///  In a live bot this should be set true (a bug requires this for now)
+        /// </summary>
+        public static bool AlwaysReload = true;
+
+        /// <summary>
+        ///  In a live bot this should be set false
+        /// </summary>
+        public static bool AllowRuntimeErrors = false;
+
+        public static bool WarningsAsErrors = false;
+        public static bool WantsToRetraceInAIML = false;
+
     }
 }

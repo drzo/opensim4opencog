@@ -151,7 +151,6 @@ namespace AltAIMLbot.Utils
 
         public static bool DebugSRAIs = true;
         public static Dictionary<XmlNode, StringBuilder> ErrorList = new Dictionary<XmlNode, StringBuilder>();
-        public static bool NoRuntimeErrors = false;
         public static readonly FirstUse<XmlNode> PatternStar = InitOnce(() => StaticXMLUtils.getNode(true, "<pattern>*</pattern>"));
         public static readonly FirstUse<XmlNode> ThatStar = new Func<XmlNode>(() => StaticXMLUtils.getNode(true, "<that>*</that>"));
 
@@ -211,7 +210,7 @@ namespace AltAIMLbot.Utils
                 catch (Exception e)
                 {
                     AltBot.writeDebugLine("ERROR: LoaderOper {0}", e);
-                    if (NoRuntimeErrors) return default(R);
+                    if (!ChatOptions.AllowRuntimeErrors) return default(R);
                     throw;
                     //return default(R);
                 }

@@ -81,8 +81,7 @@ namespace AltAIMLbot.Utils
             get
             {
                 List<Node> TIs = new List<Node>();
-                var lts = this.TemplateInfos;
-                if (lts != null && lts.Count > 0) TIs.Add(this);
+                if (HasTemplates) TIs.Add(this);
                 if (_c0 != null)
                     foreach (Node cn in children.Values)
                     {
@@ -90,6 +89,11 @@ namespace AltAIMLbot.Utils
                     }
                 return TIs.ToArray();
             }
+        }
+
+        protected bool HasTemplates
+        {
+            get { return templates != null && templates.Count > 0; }
         }
 
         public void SetDisabled(TemplateInfo impl, bool value)
@@ -120,21 +124,25 @@ namespace AltAIMLbot.Utils
 
         public long RunLowMemHooks()
         {
-            throw new NotImplementedException();
+            return 0L;
         }
 
         public Node evaluateU(string s, SubQuery query, Request request, MatchState matchstate, StringBuilder wildcardsb)
         {
             throw new NotImplementedException();
         }
+        static TemplateInfo[] noTemplates = null;
         public TemplateInfo[] AllDecendantTemplates
         {
             get
             {
+                Node[] allDecendants = AllDecendants;
+                if (allDecendants == null || allDecendants.Length == 0) {return noTemplates = noTemplates ?? (new TemplateInfo[0]);}
                 List<TemplateInfo> TIs = new List<TemplateInfo>();
                 foreach (var node in AllDecendants)
                 {
-                    TIs.AddRange(node.TemplateInfos);
+                    var tis = node.TemplateInfos;
+                    if (tis != null) TIs.AddRange(tis);
                 }
                 return TIs.ToArray();
             }
@@ -142,7 +150,10 @@ namespace AltAIMLbot.Utils
 
         protected List<TemplateInfo> TemplateInfos
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                throw new NotImplementedException();
+            }
         }
 
         #region Attributes
@@ -485,7 +496,7 @@ namespace AltAIMLbot.Utils
 
         public string FirstTemplate()
         {
-            if (templates == null || templates.Count == 0) return string.Empty;
+            if (!HasTemplates) return string.Empty;
             foreach (OutputTemplate list in templates)
             {
                 if (list.disable) continue;
@@ -1346,10 +1357,6 @@ namespace AltAIMLbot.Utils
 
         public Node fetchChild(string myPath, string childWord, ExternDB pathDB)
         {
-            if (myPath != GetPath().Trim())
-            {
-
-            }
             string childPath = (myPath + " " + childWord).Trim();
             lock (ExternDB.mylock)
             {
@@ -1592,6 +1599,7 @@ namespace AltAIMLbot.Utils
 
         public void addChild(string childWord,Node nd)
         {
+            var children = this.children;
             lock (children)
             {                
                 childmax++;
@@ -2066,6 +2074,12 @@ namespace AltAIMLbot.Utils
         }
         public void prune(int prunelimit)
         {
+            if (ChatOptions.DeferingSaves)
+            {
+                if (Servitor.DebugLevelExternalDb > 0) Console.WriteLine("Not pruning due to DeferSaves");
+                return;
+            }
+
             childcache.Clear();
             List<string> trunklist = new List<string>();
             foreach (string k in nodecache.Keys)
@@ -2090,6 +2104,7 @@ namespace AltAIMLbot.Utils
         }
         public void rememberLoaded(string filename)
         {
+            if (ChatOptions.DeferingSaves) return;
             bool isMt = IsMt(filename);
             bool isVf = IsVf(filename);
             string orig = filename;
@@ -2116,7 +2131,6 @@ namespace AltAIMLbot.Utils
         }
         public bool wasLoaded(string filename)
         {
-            if (GraphMaster.DeferingSaves) return false;
 
             bool isMt = IsMt(filename);
             bool isVf = IsVf(filename);
@@ -2136,12 +2150,12 @@ namespace AltAIMLbot.Utils
             bool ret = loadeddb.Get(filename, out lf);
             //return (filename == lf);
             if (string.IsNullOrEmpty(lf)) lf = "Unknown";
-            Console.WriteLine("\nwasLoaded:{0} {1}<=>{2}", filename, reftime, lf);
+            Console.WriteLine("\nwasLoaded: {0} {1}<=>{2}", filename, reftime, lf);
             if (reftime != lf)
             {
                 return false;
             }
-            if (DLRConsole.IsDougsMachine)
+            if (ChatOptions.AlwaysReload)
             {
                 return false;
             }
@@ -2207,7 +2221,7 @@ namespace AltAIMLbot.Utils
             childcntdb[pslice].Get(absPath, out cntStr);
             return (cntStr != null);
         }
-        public Node fetchNode(string absPath,bool full)
+        public Node fetchNode(string absPath, bool full)
         {
             //Console.WriteLine("Check: fetchNode({0}) in _dbdir='{1}'", absPath, _dbdir);
             try
@@ -2215,7 +2229,7 @@ namespace AltAIMLbot.Utils
                 int pslice = pathToSlice(absPath);
 
 
-                if (nodecache.ContainsKey(absPath))
+                lock (nodecache) if (nodecache.ContainsKey(absPath))
                 {
                     return nodecache[absPath];
                 }
@@ -2344,7 +2358,6 @@ namespace AltAIMLbot.Utils
             {
                 Console.WriteLine(e.Message);
                 Console.WriteLine(e.StackTrace);
-
             }
             return null;
         }
@@ -2356,7 +2369,7 @@ namespace AltAIMLbot.Utils
             {
                 Graph.Size++;
             }
-            if (GraphMaster.DeferingSaves) return;
+
             saveNode(absPath, myNode, false);
         }
 
@@ -2380,9 +2393,12 @@ namespace AltAIMLbot.Utils
                 }
                 if ((flushing == false) && (trunk == true))
                 {
-                    return;
+                    flushing = true;
+                    // return;
                 }
                 if (myNode.fullChildSet) return; // we are in eval mode so read-only
+
+                if (ChatOptions.DeferingSaves) return;
 
                 // We are a writable node, in the trunk or flushing
 

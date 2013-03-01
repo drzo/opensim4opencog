@@ -45,7 +45,7 @@ namespace AltAIMLbot
                 catch (Exception e)
                 {
                     writeToLog(e);
-                    if (StaticAIMLUtils.NoRuntimeErrors) return default(R);
+                    if (!ChatOptions.AllowRuntimeErrors) return default(R);
                     throw;
                 }
             }
@@ -284,23 +284,14 @@ namespace AltAIMLbot
             if (fromname != null && !IsLegalUserName(fromname))
             {
                 writeToLog("ERROR: BAd???? FindUser: " + fromname);
-                if (!StaticAIMLUtils.NoRuntimeErrors)
-                {
-                    throw new NullReferenceException("FindUser: " + fromname);
-                }
+                RaiseError("FindUser: " + fromname);
                 return null;
             }
             if (IsLastKnownUser(fromname)) return LastUser;
             if (fromname == null)
             {
-                if (!StaticAIMLUtils.NoRuntimeErrors)
-                {
-                    throw new NullReferenceException("FindUser: " + fromname);
-                }
-                else
-                {
-                    return LastUser;
-                }
+                RaiseError("FindUser: NULL");
+                return LastUser;
             }
 
             string key = fromname.ToLower().Trim();

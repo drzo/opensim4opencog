@@ -1238,7 +1238,7 @@ namespace AltAIMLbot.Utils
                 catch (Exception e)
                 {
                     writeToLog("ERROR: LoaderOper {0}", e);
-                    if (NoRuntimeErrors) return default(R);
+                    if (!ChatOptions.AllowRuntimeErrors) return default(R);
                     throw;
                     //return default(R);
                 }

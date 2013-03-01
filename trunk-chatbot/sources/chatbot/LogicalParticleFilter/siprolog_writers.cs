@@ -601,7 +601,7 @@ function validateBrowserForm()
         public static String _serverHost = null;
         public static int serverPort = 8123;
 
-        public static bool RdfSavedInPDB = true;
+        public static bool RdfSavedInPDB = false;
         public static bool TODO1Completed = false;
 
         public static bool Trace(string write)

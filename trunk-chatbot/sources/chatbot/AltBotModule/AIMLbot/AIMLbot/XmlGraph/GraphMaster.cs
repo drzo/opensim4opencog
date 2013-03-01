@@ -1661,7 +1661,6 @@ namespace AltAIMLbot.Utils
 
         public ParentChild ParentObject { get; set; }
 
-        public static GraphMaster OnlyOneGM = null;//new GraphMaster("default");
         public static GraphMaster FindOrCreate(string dgn0, AltBot robot)
         {
             var nggn0 = dgn0.RemoveEnd("graph");
@@ -1673,7 +1672,7 @@ namespace AltAIMLbot.Utils
 
             var dgn = AltBot.ToGraphPathName(dgn0, null); 
 
-            bool uoo = OnlyOneGM != null;
+            bool uoo = ChatOptions.OnlyOneGM != null;
             var gbn = AltBot.GraphsByName;
             lock (gbn)
             {
@@ -1691,7 +1690,7 @@ namespace AltAIMLbot.Utils
             {
                 dgn = dgn.Substring("default_to_".Length);
             }
-            if (uoo && OnlyOneGM != null) return OnlyOneGM;
+            if (uoo && ChatOptions.OnlyOneGM != null) return ChatOptions.OnlyOneGM;
             lock (gbn)
             {
                 GraphMaster v;
@@ -1727,17 +1726,18 @@ namespace AltAIMLbot.Utils
             {
                 lock (ExternDB.mylock)
                 {
-                    if (_root == null)
+                    if (_root == null || !_root.fullChildSet)
                     {
                         _root = ensureEdb().fetchNode("", true);
+                        if (!_root.fullChildSet)
+                        {
+                            AltBot.writeDebugLine("cant get full child of node " + _root);
+                        }
                     }
                     return _root;
                 }
             }
         }
-
-        public static bool DeferingSaves = false;
-        public static bool AlwaysReload = true;
 
         public bool useChatDB = true;
         internal Node _root;
@@ -1781,7 +1781,7 @@ namespace AltAIMLbot.Utils
             lock (ExternDB.mylock)
             {
                 if (!ensureEdb().wasLoaded(filename)) return false;
-                if (AlwaysReload) return false;
+                if (ChatOptions.AlwaysReload) return false;
                 return true;
             }
 
@@ -2059,7 +2059,7 @@ writer.WriteLine("");
                     _chatDB.Close();
                     _chatDB = null;
                 }
-                if (!DeferingSaves)
+                if (!ChatOptions.DeferingSaves)
                 {
                     _root = null;
                 }

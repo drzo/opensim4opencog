@@ -428,6 +428,7 @@ namespace LogicalParticleFilter1
                     }
                 }
             }
+
             public RuleList rules
             {
                 get { lock (LockOf(_rules)) return _rules; }
@@ -439,15 +440,14 @@ namespace LogicalParticleFilter1
                         lock (_rules.Sync)
                             lock (LockOf(_rules))
                             {
+                                if (_rules.Count > 0)
+                                {
+                                    _rules.Clear();
+                                }
                                 if (ReferenceEquals(_rules, value)) return;
-
                                 if (IsLockedRuleList)
                                 {
-                                    if (ReferenceEquals(null, value))
-                                    {
-                                        // means we clear
-                                    }
-                                    else
+                                    if (!ReferenceEquals(null, value))
                                     {
                                         value.IsReadonly = true;
                                         foreach (Rule rule in value)
@@ -455,10 +455,7 @@ namespace LogicalParticleFilter1
                                             _rules.Add(rule);
                                         }
                                     }
-                                }
-                                if (_rules.Count > 0)
-                                {
-                                    _rules.Clear();
+                                    return;
                                 }
                             }
                     }
@@ -467,8 +464,6 @@ namespace LogicalParticleFilter1
                         value.syncPDB = this;
                     }
                     _rules = value;
-
-
                 }
             }
 
