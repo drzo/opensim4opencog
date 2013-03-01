@@ -719,7 +719,7 @@ namespace AltAIMLbot
             if (str == null)
             {
                 if (DebugNulls) writeToLog("ERROR AsString  -U-NULL- !! DEBUG9");
-                else throw new NullReferenceException("ERROR AsString  -U-NULL- !! DEBUG9");
+                else AltBot.RaiseErrorStatic("ERROR AsString  -U-NULL- !! DEBUG9");
                 return null;
             }
             return str;

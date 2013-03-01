@@ -456,7 +456,7 @@ namespace AltAIMLbot
                 int ret = _hasSuceeded + (useParentSF ? ParentRequest.HasSuceeded : 0);
                 if (ret < 0)
                 {
-                    throw new InvalidOperationException();
+                    TargetBot.RaiseError("Has Succeeded negative times?");
                 }
                 return ret;
             }

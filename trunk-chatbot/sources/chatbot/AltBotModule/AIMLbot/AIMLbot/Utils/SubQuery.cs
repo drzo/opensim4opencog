@@ -266,7 +266,7 @@ namespace AltAIMLbot.Utils
             {
                 if (!ChatOptions.AIML_MAY_USE_FAILURE) return 1;
                 int ret = _hasSuceeded + (useParentSF ? ParentResult.HasSuceeded : 0);
-                if (ret < 0) throw new InvalidOperationException();
+                if (ret < 0) TargetBot.RaiseError("Has succeed = " + ret);
                 return ret;
             }
             set

@@ -394,7 +394,7 @@ namespace AltAIMLbot
                 Predicates["id"] = UserID;
                 if (IsIncomplete(value))
                 {
-                    throw new NullReferenceException("SetMeMyselfAndI: " + value);
+                    bot.RaiseError("SetMeMyselfAndI: " + value);
                     return false;
                 }
                 Predicates["name"] = value;
@@ -404,7 +404,7 @@ namespace AltAIMLbot
                 Predicates["my"] = NatLangDb.MakePossesive(value);
                 if (IsIncomplete(split[0]))
                 {
-                    throw new NullReferenceException("SetMeMyselfAndI: " + split[0]);
+                    bot.RaiseError("SetMeMyselfAndI: " + split[0]);
                     return false;
                 }
                 Predicates["firstname"] = split[0];

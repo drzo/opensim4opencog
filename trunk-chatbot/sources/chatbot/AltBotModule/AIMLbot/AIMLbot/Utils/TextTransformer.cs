@@ -86,7 +86,7 @@ namespace AltAIMLbot.Utils
         {
             get
             {
-                if (inputStringU == null) throw new NullReferenceException("InputStringU");
+                if (inputStringU == null) bot.RaiseError("InputStringU");
                 return inputStringU;
             }
             set
@@ -117,7 +117,7 @@ namespace AltAIMLbot.Utils
         {
             get
             {
-                if (inputString == null) throw new NullReferenceException("InputString");
+                if (inputString == null) bot.RaiseError("InputString");
                 return inputString;
             }
             set

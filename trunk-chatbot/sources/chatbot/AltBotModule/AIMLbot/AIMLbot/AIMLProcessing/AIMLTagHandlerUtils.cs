@@ -1246,7 +1246,7 @@ namespace AltAIMLbot.Utils
         public static Unifiable ProcessNonElement(bool saveOnInnerXML, XmlNode childNode, out bool success)
         {
             if (saveOnInnerXML && throwOnSave)
-                AltBot.RaiseErrorStatic(new InvalidOperationException("saveOnInnerXML! " + childNode));
+                AltBot.RaiseErrorStatic("saveOnInnerXML! " + childNode);
 
             {
                 string childNodeInnerXml = childNode.InnerXml;

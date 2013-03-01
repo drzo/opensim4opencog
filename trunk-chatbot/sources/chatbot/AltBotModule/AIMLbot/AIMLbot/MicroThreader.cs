@@ -719,7 +719,7 @@ namespace AltAIMLbot
 
                 else
                 {
-                    throw new InvalidOperationException("Unknown task state returned: " + state.GetType().FullName + " " + state);
+                    throw ti.BContext.RaiseError("Unknown task state returned: " + state.GetType().FullName + " " + state);
                 }
             }
         }

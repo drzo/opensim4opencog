@@ -15,7 +15,7 @@ namespace AltAIMLbot.Utils
 
             if (NoInfo)
             {
-                throw new InvalidOperationException("now Inof");
+                AltBot.RaiseErrorStatic("now Inof");
             }
         }
 

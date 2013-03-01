@@ -1666,7 +1666,7 @@ namespace AltAIMLbot.Utils
             var nggn0 = dgn0.RemoveEnd("graph");
             if (nggn0 != null && dgn0 != nggn0)
             {
-                AltBot.RaiseErrorStatic(new InvalidOperationException(dgn0 + " ending with graph!"));
+                AltBot.RaiseErrorStatic(dgn0 + " ending with graph!");
                 dgn0 = nggn0;
             }
 
@@ -2076,7 +2076,7 @@ writer.WriteLine("");
         {
             if (String.IsNullOrEmpty(graphPath) || graphPath == "*")
             {
-                throw new NullReferenceException("graphPath=" + graphPath);
+                AltBot.RaiseErrorStatic("graphPath=" + graphPath);
             }
             graphPath = AltBot.ToScriptableName(graphPath);
             if (graphPath == "default")

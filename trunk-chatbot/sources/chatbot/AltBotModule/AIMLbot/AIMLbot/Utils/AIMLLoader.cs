@@ -2522,15 +2522,15 @@ namespace AltAIMLbot.Utils
 
             if (that.AsString().Contains("TAG-"))
             {
-                throw new NullReferenceException("bad that: " + that);
+                bot.RaiseError("bad that: " + that);
             }
             if (pattern.AsString().Contains("TAG-"))
             {
-                throw new NullReferenceException("bad pattern: " + pattern);
+                bot.RaiseError("bad pattern: " + pattern);
             }
             if (topicName.AsString().Contains("TAG-"))
             {
-                throw new NullReferenceException("bad topicName: " + topicName);
+                bot.RaiseError("bad topicName: " + topicName);
             }
 
             Unifiable res =
