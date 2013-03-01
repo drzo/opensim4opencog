@@ -2570,7 +2570,8 @@ namespace MushDLR223.Utilities
         {
             get
             {
-
+                // Doug needs to keep this false to get the same exprience of a live system
+                return false;
                 string machineName = Environment.MachineName;
                 return machineName == "ENKI" || machineName.ToUpper() == "TITAN" ||
                        machineName.ToUpper().StartsWith("OPTER");
