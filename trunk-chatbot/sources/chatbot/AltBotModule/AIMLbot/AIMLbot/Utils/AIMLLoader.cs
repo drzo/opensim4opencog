@@ -1434,7 +1434,7 @@ namespace AltAIMLbot.Utils
         /// </summary>
         /// <param name="doc"> The XML document containing the AIML </param>
         /// <param name="loadOpts"> Where the XML document originated </param>
-        public long loadAIMLStream(Stream input0)
+        public long loadAIMLStream(Stream srcStream)
         {
             long total = 0;
             DateTime oneMinuteFromNow = AltBot.Now + TimeSpan.FromMinutes(1);
@@ -1445,6 +1445,8 @@ namespace AltAIMLbot.Utils
             }
             string path = request.CurrentFilename;
             EnsureOptions(path);
+
+            Stream input0 = SMLTranslator.translateStream(srcStream);
 
             XmlReader xtr = XmlDocumentLineInfo.CreateXmlTextReader(input0);
             string namefile = "" + path;
@@ -3193,6 +3195,46 @@ namespace AltAIMLbot.Utils
         public static bool isSML(string smltext)
         {
             return smltext.Contains("!sml ");
+        }
+
+        public static Stream openSMLStream(string filename)
+        {
+            // Will load file then create an internal memory based stream
+            // Check if it is SML and if so convert to XML
+            string smlDoc = "";
+            if (File.Exists(filename))
+            {
+                System.IO.StreamReader myFile = new System.IO.StreamReader(filename);
+                smlDoc = myFile.ReadToEnd();
+                myFile.Close();
+                if (isSML(smlDoc))
+                {
+                    smlDoc = sml2xml(smlDoc);
+                }
+            }
+            byte[] byteArray = Encoding.ASCII.GetBytes(smlDoc);
+            var stream = new MemoryStream(byteArray);
+            return stream;
+        }
+
+        public static Stream translateStream(Stream instream)
+        {
+            string smlDoc = "";
+
+            long spos = instream .Position ;
+            System.IO.StreamReader myFile = new System.IO.StreamReader(instream);
+            smlDoc = myFile.ReadToEnd();
+            myFile.Close();
+            //instream.Position = spos;
+
+            if (isSML(smlDoc))
+            {
+                smlDoc = sml2xml(smlDoc);
+            }
+
+            byte[] byteArray = Encoding.ASCII.GetBytes(smlDoc);
+            var stream = new MemoryStream(byteArray);
+            return stream;
         }
     }
 
