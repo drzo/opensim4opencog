@@ -2899,10 +2899,13 @@ namespace AltAIMLbot.Utils
             //#text
             if (smltext.StartsWith("\""))
             {
+                smltext = smltext.Replace("\\\"", @"<&quot;/>");
                 string[] texts = smltext.Split('"');
                 string deText = texts[1];
-                sw.Write("{0}", deText);
                 remainder = smltext.Substring(deText.Length + 2);
+                deText = deText.Replace(@"<&quot;/>", @"""");
+                remainder = remainder.Replace(@"<&quot;/>", "\\\"");
+                sw.Write("{0}", deText);
                 return remainder;
             }
 
