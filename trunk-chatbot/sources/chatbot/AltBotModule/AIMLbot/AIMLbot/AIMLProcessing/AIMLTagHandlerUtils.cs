@@ -927,8 +927,8 @@ namespace AltAIMLbot.Utils
             if (!request.CanProcess(starContent)) return null;
             XmlNode sraiNode = getNodeAndSetSiblingNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
             LineInfoElement.unsetReadonly(sraiNode);
-            srai_odd sraiHandler = new srai_odd(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
-            sraiHandler.KnowsCanProcess = true;
+            var sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
+            //sraiHandler.KnowsCanProcess = true;
             var vv = sraiHandler.Transform(); // Transform();
             if (Unifiable.IsNull(vv))
             {
@@ -940,7 +940,7 @@ namespace AltAIMLbot.Utils
                 writeToLogWarn("CALLSRAI EMPTY: <- " + starContent);
                 sraiNode = getNodeAndSetSiblingNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
                 LineInfoElement.unsetReadonly(sraiNode);
-                sraiHandler = new srai_odd(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
+                sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
                 vv = sraiHandler.Transform(); // Transform();
                 return vv;
             }
