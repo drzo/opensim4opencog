@@ -1130,7 +1130,14 @@ namespace MushDLR223.Utilities
 
         private static XmlReader Wrap(XmlReader create)
         {
-            create.MoveToContent();
+            try
+            {
+                create.MoveToContent();
+            }
+            catch (Exception e)
+            {
+
+            }
             return create;
         }
 
