@@ -916,10 +916,6 @@ namespace AltAIMLbot.Utils
 
         protected Unifiable callSRAI(string starContent)
         {
-            if (FinalResultValid)
-            {
-                return FinalResult;
-            }
             if (InUnify)
             {
                 return null;
@@ -928,24 +924,7 @@ namespace AltAIMLbot.Utils
             XmlNode sraiNode = getNodeAndSetSiblingNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
             LineInfoElement.unsetReadonly(sraiNode);
             var sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
-            //sraiHandler.KnowsCanProcess = true;
-            var vv = sraiHandler.Transform(); // Transform();
-            if (Unifiable.IsNull(vv))
-            {
-                writeToLogWarn("CALLSRAI ERROR: NULL <- " + starContent);
-                return vv;
-            }
-            if (Unifiable.IsEMPTY(vv))
-            {
-                writeToLogWarn("CALLSRAI EMPTY: <- " + starContent);
-                sraiNode = getNodeAndSetSiblingNode(String.Format("<srai>{0}</srai>", starContent), templateNode);
-                LineInfoElement.unsetReadonly(sraiNode);
-                sraiHandler = new srai(this.Proc, this.user, this.query, this.request, this.result, sraiNode);
-                vv = sraiHandler.Transform(); // Transform();
-                return vv;
-            }
-            FinalResult = vv;
-            return vv;
+            return sraiHandler.Transform(); // Transform();
         }
 
         /// <summary>
