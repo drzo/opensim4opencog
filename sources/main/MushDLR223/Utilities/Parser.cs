@@ -838,7 +838,7 @@ namespace MushDLR223.ScriptEngines
             }
             int len = ValueLen(key, null);
             len = LenCheck(i + keyLen, len);
-            ModArgs = args = GetAfterIndex(i + keyLen + len);
+            ModArgs = args = GetAfterIndex(i + keyLen + len - 1);
             return true;
 
         }

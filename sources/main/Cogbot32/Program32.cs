@@ -8,7 +8,7 @@ namespace Cogbot
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
-        [STAThread]
+        [MTAThread]
         public static void Main(string[] args)
         {
             Program.Main(args);
