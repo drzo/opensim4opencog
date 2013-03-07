@@ -1808,10 +1808,12 @@ namespace AltAIMLbot
                 needBtx = false;
                 break;
             }
-            foreach (string fileName in HostSystem.GetFiles(official, "*.aiml"))
+            if (needBtx)
             {
-                System.IO.File.SetLastWriteTimeUtc(fileName, DateTime.UtcNow);
-                if (!needBtx) break;
+                foreach (string fileName in HostSystem.GetFiles(official, "*.aiml"))
+                {
+                    System.IO.File.SetLastWriteTimeUtc(fileName, DateTime.UtcNow);
+                }
             }
         }
 
@@ -1913,7 +1915,7 @@ namespace AltAIMLbot
         /// <summary>
         ///  In a live bot this should be set true (a bug requires this for now)
         /// </summary>
-        public static bool AlwaysReload = true;
+        public static bool AlwaysReload = false; //KHC:test true;
 
         /// <summary>
         ///  In a live bot this should be set false

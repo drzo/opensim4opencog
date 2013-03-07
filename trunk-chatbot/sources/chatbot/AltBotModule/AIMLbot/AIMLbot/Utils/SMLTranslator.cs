@@ -117,6 +117,15 @@ namespace AltAIMLbot.Utils
                 sw.Write("<{0}/>", front[0]);
                 return smltext.Substring(1);
             }
+            // Empty tag
+            // should be any white space
+            if (smltext.StartsWith("{}"))
+            {
+                //sw.Write("/>");
+                sw.Write("<{0}/>", front[0]);
+                return smltext.Substring(2);
+            }
+
             //general tag
             string[] tagd = Regex.Split(front[0], "[^A-Za-z0-9]+");
             string tag = tagd[0];
