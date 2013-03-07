@@ -780,7 +780,7 @@ namespace AltAIMLbot.Utils
              throw new NotImplementedException();
         }
         /// </summary>
-        public string StartGraphName
+        override public string StartGraphName
         {
             get
             {
