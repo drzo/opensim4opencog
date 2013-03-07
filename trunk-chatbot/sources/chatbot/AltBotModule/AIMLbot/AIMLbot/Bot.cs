@@ -1772,7 +1772,7 @@ namespace AltAIMLbot
                     {
                         foreach (var poststates in usergetPostStates)
                         {
-                            string path = AIMLLoader.generateCPath(graphName, sentence, that, "*", topic,
+                            string path = loader.generateCPath(graphName, sentence, that, "*", topic,
                                                                    prestates, poststates,
                                                                    true, null, loader.bot);
                             if (!normalizedPaths.Contains(path))

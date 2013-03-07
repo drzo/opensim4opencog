@@ -1923,5 +1923,7 @@ namespace AltAIMLbot
         public static bool WarningsAsErrors = false;
         public static bool WantsToRetraceInAIML = false;
 
+
+        public static bool SeekOutAndRepairAIML { get; set; }
     }
 }

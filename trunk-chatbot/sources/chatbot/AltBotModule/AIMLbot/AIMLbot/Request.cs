@@ -13,7 +13,7 @@ using MushDLR223.Utilities;
 using AltAIMLbot.AIMLTagHandlers;
 using AltAIMLbot.Variables;
 using MasterRequest = AltAIMLbot.Utils.Request;
-
+using AIMLLoaderImpl = AltAIMLbot.Utils.AIMLLoader_NeedAlwaysReload;
 
 namespace AltAIMLbot.Utils
 {
@@ -758,13 +758,13 @@ namespace AltAIMLbot.Utils
         }
 
         internal AIMLLoader loader;
-        public AIMLLoader Loader
+        override public AIMLLoader Loader
         {
             get
             {
                 if (loader == null)
                 {
-                    loader = new AIMLLoader(TargetBot, this);
+                    loader = new AIMLLoaderImpl(TargetBot, this);
                 }
                 return loader;
             }

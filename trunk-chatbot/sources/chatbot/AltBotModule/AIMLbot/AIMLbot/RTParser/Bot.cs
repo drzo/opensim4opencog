@@ -29,6 +29,7 @@ using UPath = AltAIMLbot.Unifiable;
 using UList = System.Collections.Generic.List<AltAIMLbot.Utils.TemplateInfo>;
 using AltAIMLbot;
 using MasterRequest = AltAIMLbot.Utils.Request;
+using AIMLLoaderImpl = AltAIMLbot.Utils.AIMLLoader_NeedAlwaysReload;
 
 namespace AltAIMLbot
 {
@@ -829,7 +830,7 @@ namespace AltAIMLbot
             AIMLLoader loader = bot.Loader;
             if (!bot.StaticLoader || loader == null)
             {
-                loader = new AIMLLoader(bot, request);
+                loader = new AIMLLoaderImpl(bot, request);
             }
             bot.Loader = loader;
             return loader;

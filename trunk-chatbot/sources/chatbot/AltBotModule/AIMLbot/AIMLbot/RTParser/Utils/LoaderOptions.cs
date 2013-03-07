@@ -206,9 +206,14 @@ namespace AltAIMLbot.Utils
 
         public string generateCPath(AltBot bot)
         {
-            return AIMLLoader.generateCPath(graphName, currentInput, currentThat, currentFlags, topicName, stateNamePre,
+            return Loader.generateCPath(graphName, currentInput, currentThat, currentFlags, topicName, stateNamePre,
                                             stateNamePost,
                                             true, null, bot);
+        }
+
+        public virtual AIMLLoader Loader
+        {
+            get { throw new NotImplementedException(); }
         }
 
         override public string ToString()

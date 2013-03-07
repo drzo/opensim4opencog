@@ -358,6 +358,11 @@
     </Compile>
     <Compile Include="User.cs">
     </Compile>
+    <Compile Include="Utils\IAIMLLoader.cs" />
+    <Compile Include="Utils\SMLTranslator.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Utils\AIMLLoader_NeedAlwaysReload.cs" />
     <Compile Include="WebScriptExecutor.cs">
     </Compile>
     <Compile Include="WebServitor.cs">
@@ -479,8 +484,6 @@
     <Compile Include="Unify\StringUnifiable.cs">
     </Compile>
     <Compile Include="Unify\Unifiable.cs">
-    </Compile>
-    <Compile Include="Utils\AIMLLoader.cs">
     </Compile>
     <Compile Include="Utils\AIMLTagHandler.cs">
     </Compile>
