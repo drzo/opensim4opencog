@@ -25,7 +25,7 @@ namespace ThreadPoolUtil
         private bool IsPoolThread;
         private bool PreventPoolThread;
         private NativeThread ExitedFromThread;
-        private void WaitTS(String named, Action<NativeThread> action)
+        private bool WaitTS(String named, Action<NativeThread> action)
         {
             var mre = new System.Threading.ManualResetEvent(false);
             WithTS(named,
@@ -34,7 +34,7 @@ namespace ThreadPoolUtil
                        action(t);
                        mre.Set();
                    });
-            mre.WaitOne();
+            return mre.WaitOne();
         }
         private void WithTS(string named, Action<NativeThread> action)
         {
@@ -503,10 +503,10 @@ namespace ThreadPoolUtil
         /// Blocks the calling SThread until a SThread terminates or the specified time elapses
         /// </summary>
         /// <param name="MiliSeconds">Time of wait in milliseconds</param>
-        public void Join(long MiliSeconds)
+        public bool Join(long MiliSeconds)
         {
             var ts = TimeSpan.FromMilliseconds(MiliSeconds);
-            WaitTS("Join " + myName + " " + ts, (t) => { t.Join(ts); });
+            return Join(ts);
         }
 
         /// <summary>
@@ -514,11 +514,36 @@ namespace ThreadPoolUtil
         /// </summary>
         /// <param name="MiliSeconds">Time of wait in milliseconds</param>
         /// <param name="NanoSeconds">Time of wait in nanoseconds</param>
-        public void Join(long MiliSeconds, int NanoSeconds)
+        public bool Join(long MiliSeconds, int NanoSeconds)
         {
             long ms = TimeSpan.FromMilliseconds(MiliSeconds).Ticks;
             var ts = TimeSpan.FromTicks(ms + (NanoSeconds * 100));
-            WaitTS("Join " + myName + " " + ts, (t) => { t.Join(ts); });
+            return Join(ts);
+        }
+
+
+
+        /// <summary>
+        /// Blocks the calling SThread until a SThread terminates or the specified time elapses
+        /// </summary>
+        /// <param name="MiliSeconds">Time of wait in milliseconds</param>
+        /// <param name="NanoSeconds">Time of wait in nanoseconds</param>
+        public bool Join(TimeSpan ts)
+        {
+            var tf = threadField;
+            if (tf != null)
+            {
+                return tf.Join(ts);
+            }
+            bool wasJoined = false;
+            if (!WaitTS("Join " + myName + " " + ts, (t) =>
+                                                         {
+                                                             wasJoined = t.Join(ts);
+                                                         }))
+            {
+                return wasJoined;
+            }
+            return wasJoined;
         }
 
         /// <summary>
@@ -775,11 +800,6 @@ namespace ThreadPoolUtil
         public static void Sleep(TimeSpan i)
         {
             NativeThread.Sleep(i);
-        }
-
-        public bool Join(TimeSpan i)
-        {
-            return threadField.Join(i);
         }
 
         public static void ResetAbort()
