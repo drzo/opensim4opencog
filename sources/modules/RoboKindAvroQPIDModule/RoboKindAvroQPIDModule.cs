@@ -21,13 +21,15 @@ namespace RoboKindAvroQPID
 {
     public class RoboKindEventModule : YesAutoLoad, IDisposable
     {
-
-        public static string RK_QPID_URI = "amqp://guest:guest@default/test?brokerlist='tcp://localhost:5672'";
+        // amqp://admin:admin@clientid/test?brokerlist='
+        public static string RK_QPID_URI = "amqp://admin:admin@client1/test?brokerlist='tcp://localhost:5672'";
 
         /// <summary> Holds the routing key for cogbot management messages. </summary>
         public static string COGBOT_CONTROL_ROUTING_KEY = "cogbot_control_route";
+
         /// <summary> Holds the main queue for cogbot management messages. </summary>
         public static string COGBOT_CONTROL_QUEUE_KEY = "cogbot_control_queue";
+
         /// <summary> Holds the main queue for cogbot management messages. </summary>
         public static string COGBOT_CONTROL_EXCHANGE_KEY = "amq.topic";
 
@@ -38,12 +40,13 @@ namespace RoboKindAvroQPID
         public static string ROBOKIND_RESPONSE_ROUTING_KEY = "response";
 
 
-        readonly List<object> cogbotSendersToNotSendToCogbot = new List<object>();
+        private readonly List<object> cogbotSendersToNotSendToCogbot = new List<object>();
 
         public static bool DISABLE_AVRO = false;
         public static string REPORT_TEST = "REPORT_REQUEST";
         private IMessageConsumer RK_listener;
         private RoboKindConnectorQPID RK_publisher;
+
         protected bool IsQPIDRunning
         {
             get { return RK_listener != null && RK_publisher != null; }
@@ -129,6 +132,7 @@ namespace RoboKindAvroQPID
 
 
         private bool EnsuredStarted = false;
+
         private void EnsureStarted()
         {
             if (DISABLE_AVRO) return;
@@ -180,11 +184,11 @@ namespace RoboKindAvroQPID
             {
                 RK_publisher = new RoboKindConnectorQPID(uri);
                 RK_listener = RK_publisher.CreateListener(
-                    COGBOT_CONTROL_QUEUE_KEY, 
+                    COGBOT_CONTROL_QUEUE_KEY,
                     COGBOT_CONTROL_ROUTING_KEY,
                     COGBOT_CONTROL_EXCHANGE_KEY,
-                     ExchangeNameDefaults.TOPIC, true, false, false,
-                                                          AvroReceived);
+                    ExchangeNameDefaults.TOPIC, true, false, false,
+                    AvroReceived);
             }
             catch (Exception e)
             {
@@ -199,7 +203,7 @@ namespace RoboKindAvroQPID
             if (!IsQPIDRunning || !EventsEnabled) return;
             if (e is CogbotEvent)
             {
-                CogbotEvent cbe = (CogbotEvent)e;
+                CogbotEvent cbe = (CogbotEvent) e;
                 OnEvent(cbe);
                 return;
             }
@@ -214,60 +218,115 @@ namespace RoboKindAvroQPID
 
         private CogbotEvent MsgToCogEvent(object sender, IMessage msg)
         {
-            var evt = ACogbotEvent.CreateEvent(sender, SimEventType.Once, msg.Type, SimEventType.UNKNOWN | SimEventType.PERSONAL | SimEventType.DATA_UPDATE);
+            var evt = ACogbotEvent.CreateEvent(sender, SimEventType.Once, msg.Type,
+                                               SimEventType.UNKNOWN | SimEventType.PERSONAL | SimEventType.DATA_UPDATE);
             List<NamedParam> from = ScriptManager.GetMemberValues("", msg);
             foreach (var f in from)
             {
-                if (f.Type != typeof(byte[])) evt.AddParam(f.Key, f.Value);
-            } 
+                if (f.Type != typeof (byte[])) evt.AddParam(f.Key, f.Value);
+            }
             if (msg is IBytesMessage)
             {
-                IBytesMessage ibm = (IBytesMessage)msg;
+                IBytesMessage ibm = (IBytesMessage) msg;
                 var actual = RK_publisher.DecodeMessage(ibm);
-                foreach(var f in ScriptManager.GetMemberValues("", actual))
+                foreach (var f in ScriptManager.GetMemberValues("", actual))
                 {
-                    if (f.Type != typeof(byte[])) evt.AddParam(f.Key, f.Value);                         
+                    if (f.Type != typeof (byte[])) evt.AddParam(f.Key, f.Value);
                 }
             }
             DLRConsole.DebugWriteLine("msg=" + evt);
             return evt;
         }
 
+        /*
+ 
+                    RK_publisher.CreateListener("speechRecEvent", ExchangeNameDefaults.DIRECT, (o) => Eveything(o, "direct"));
+                    RK_publisher.CreateListener("#", ExchangeNameDefaults.DIRECT, (o) => Eveything(o, "#direct"));
+                    RK_publisher.CreateListener("speechRecEvent", ExchangeNameDefaults.TOPIC, (o) => Eveything(o, "topic"));
+                    RK_publisher.CreateListener("#", ExchangeNameDefaults.TOPIC, (o) => Eveything(o, "#topic"));
+
+                //CreateHashSpy("speechRecEvent");
+                //CreateHashSpy("animPrompt");
+                //CreateHashSpy("");
+                //CreateHashSpy("interpreterInstanceCheck");
+                //CreateHashSpy("speechRequest");
+                //CreateSpy(null, "speechRequest", "speechRequest");
+                // SpyQueue("ping");
+                //SpyQueue("queue");
+         *             SpyQueue("test-ping");
+                    SpyQueue("test-queue");
+                    SpyQueue("");
+                    SpyQueue("speechCommand");
+
+                     *             CreateSpy("speechCommand", false);
+                    CreateSpy("speechEvent", false);
+                    CreateSpy("interpreterInstanceCheck", false);
+
+                    //RK_publisher.CreateListener("speechRecEvent", "speechRecEvent", (o) => Eveything(o, "speechRecEvent"));
+                    //RK_publisher.CreateListener("speechRecEvent", "", (o) => Eveything(o, "blank"));
+
+        
+                */
 
         public void Spy()
         {
             EnsureStarted();
-            /*RK_publisher.CreateListener("speechRecEvent", ExchangeNameDefaults.DIRECT, (o) => Eveything(o, "direct"));
-            RK_publisher.CreateListener("#", ExchangeNameDefaults.DIRECT, (o) => Eveything(o, "#direct"));
-            RK_publisher.CreateListener("speechRecEvent", ExchangeNameDefaults.TOPIC, (o) => Eveything(o, "topic"));
-            RK_publisher.CreateListener("#", ExchangeNameDefaults.TOPIC, (o) => Eveything(o, "#topic"));*/
             
-            CreateHashSpy("speechRecEvent");
-            CreateHashSpy("animPrompt");
-            //CreateHashSpy("");
-            //CreateHashSpy("speechCommand");
-            //CreateHashSpy("interpreterInstanceCheck");
-            //CreateHashSpy("speechRequest");
-           // CreateSpy(null, "speechRequest", "speechRequest");
-            /*
+            RK_publisher.SpyOnQueueAndTopic("#", ExchangeNameDefaults.DIRECT, "", GotMessage);
+            RK_publisher.SpyOnQueueAndTopic("", ExchangeNameDefaults.DIRECT, "#", GotMessage);
+
+            //RK_publisher.SpyOnQueueAndTopic("visionproc0", GotMessage);
+            //RK_publisher.SpyOnQueueAndTopic("camera0", GotMessage);
+            //RK_publisher.SpyOnQueueAndTopic("speech", GotMessage);
             
-            SpyQueue("test-ping");
-            SpyQueue("test-queue");
-            SpyQueue("ping");
-            SpyQueue("queue");
+
+
+            // matters!
             SpyQueue("speechRequest");
-            SpyQueue("");
-            SpyQueue("speechCommand");*/
 
+            // matters?
+            SpyQueue("speechEvent");
+
+            // matters?
+            SpyQueue("speechCommand");
+
+            // matters?
+            SpyQueue("camera0Request");
+
+            
+            // will crash capture SpyQueue("camera0Command");
+
+
+            // consumer.Receive();
+            // sapiserver
+            //SpyQueue("speechCommand");
+            //SpyQueue("speechRequest");
             /*
-             *             CreateSpy("speechCommand", false);
-            CreateSpy("speechEvent", false);
-            CreateSpy("interpreterInstanceCheck", false);
+            // sapiclient
+            CreateHashSpy("speechEvent");
 
-             * */
-            //RK_publisher.CreateListener("speechRecEvent", "speechRecEvent", (o) => Eveything(o, "speechRecEvent"));
-            //RK_publisher.CreateListener("speechRecEvent", "", (o) => Eveything(o, "blank"));
+            // FaceRec
+            CreateHashSpy("queue");
+            CreateHashSpy("ping");
+            CreateHashSpy("test-ping");
+            CreateHashSpy("test-queue");
+            SpyQueue("visionproc0Event");
+
+            // cammeracapture.exe
+            SpyQueue("camera0Command");
+
+            // camera display
+            SpyQueue("camera0Event");
+
+
+            */
             Console.WriteLine("spying on AQM");
+            Thread.Sleep(600000);
+        }
+
+        private void GotMessage(Dictionary<string, object> map)
+        {
+            Console.WriteLine("MESG: " + ToStr(map));
         }
 
         public void Block()
@@ -276,20 +335,28 @@ namespace RoboKindAvroQPID
             {
                 System.Console.Error.Flush();
                 string s = System.Console.ReadLine();
-                if (s == "next") return;               
+                if (s == "next") return;
             }
         }
 
-        private void CreateHashSpy(string speechRecEvent)
+
+        private void CreateHashSpy(string queuename)
         {
-            RK_publisher.CreateListener(null, "#", speechRecEvent, "", true, false, false, (o) => Eveything(o, "#" + speechRecEvent));            
+            RK_publisher.CreateListener(null, "#", queuename, "", true, false, false,
+                                        (o) => Eveything(o, "#" + queuename));
         }
 
         private void SpyQueue(string s)
         {
-           RK_publisher.Channel.CreateConsumerBuilder(s).Create().OnMessage += (msg) => Eveything(msg, "Spy Queue " + s);
-           // CreateSpy(null, "", s);
-           // CreateSpy(null, s, "amq.topic");
+
+            RK_publisher.SpyOnQueueAndTopic(s,
+                                            ExchangeNameDefaults.DIRECT, s, GotMessage);
+
+            RK_publisher.SpyOnQueueAndTopic("#", ExchangeNameDefaults.DIRECT,s, GotMessage);
+            RK_publisher.SpyOnQueueAndTopic(s, ExchangeNameDefaults.DIRECT, "#", GotMessage);
+
+            // CreateSpy(null, "", s);
+            // CreateSpy(null, s, "amq.topic");
         }
 
         private void CreateSpy(string name, bool hash)
@@ -297,22 +364,26 @@ namespace RoboKindAvroQPID
             //RK_publisher.CreateListener("", name, (o) => Eveything(o, "Just" + name));
             CreateSpy(name, "", "*");
             CreateSpy(null, name, "");
-           /// RK_publisher.CreateListener(name, ExchangeNameDefaults.DIRECT, (o) => Eveything(o, "direct_" + name));
+            /// RK_publisher.CreateListener(name, ExchangeNameDefaults.DIRECT, (o) => Eveything(o, "direct_" + name));
         }
+
         private void CreateSpy(string queueName, string routingKey, string exchangeName)
         {
             RK_publisher.CreateListener(
                 queueName, routingKey, exchangeName, ExchangeClassConstants.DIRECT, true, false, false,
-                (o) => Eveything(o, string.Format("Q:R:E='{0}:{1}:{2}'", queueName ?? "!", routingKey ?? "!", exchangeName ?? "!")));
+                (o) =>
+                Eveything(o,
+                          string.Format("Q:R:E='{0}:{1}:{2}'", queueName ?? "!", routingKey ?? "!", exchangeName ?? "!")));
         }
 
         private void Eveything(IMessage msg, string type)
         {
-            lock(GetType())
+            lock (GetType())
             {
-                Eveything0(msg,type);
+                Eveything0(msg, type);
             }
         }
+
         private void Eveything0(IMessage msg, string type)
         {
             Console.WriteLine("---------------------------------------");
@@ -342,12 +413,13 @@ namespace RoboKindAvroQPID
             {
                 string ars = " [ ";
                 bool needsSep = false;
-                foreach (object c in (IEnumerable)value)
+                foreach (object c in (IEnumerable) value)
                 {
-                    if (needsSep) ars += ","; else needsSep = true;
+                    if (needsSep) ars += ",";
+                    else needsSep = true;
                     ars += ToStr(c);
                 }
-                return ars + " ] ";                
+                return ars + " ] ";
             }
             var t1 = value as KeyValuePair<string, object>?;
             if (t1.HasValue)

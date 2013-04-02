@@ -187,7 +187,8 @@ namespace Apache.Qpid.Client.Message
                 case 2:
                     return DeliveryMode.Persistent;
                 default:
-                    throw new QpidException("Illegal value for delivery mode in content header properties");
+                  if (QPIDSane) throw new QpidException("Illegal value for delivery mode in content header properties");
+                  return DeliveryMode.Unknown;
                 }                
             }
             set

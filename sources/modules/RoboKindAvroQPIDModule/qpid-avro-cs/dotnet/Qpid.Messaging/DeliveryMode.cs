@@ -22,6 +22,7 @@ namespace Apache.Qpid.Messaging
 {
     public enum DeliveryMode
     {
+        Unknown,
         NonPersistent,
         Persistent
     }
