@@ -18,7 +18,7 @@ namespace RoboKindChat
             DeletePreArtifacts();
             _theRoboKindEventModule = new RoboKindEventModule();
             _theChatProg = new AltAIMLbot.ChatProgram();
-            //_theRoboKindEventModule.Spy();
+            _theRoboKindEventModule.Spy();
             //_theRoboKindEventModule.Block();
 
             //_theChatProg.SetForegrounded(true);

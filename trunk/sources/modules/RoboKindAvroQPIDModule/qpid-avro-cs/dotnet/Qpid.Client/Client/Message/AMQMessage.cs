@@ -24,6 +24,11 @@ namespace Apache.Qpid.Client.Message
 {
     public class AMQMessage
     {
+        /// <summary>
+        /// @TODO to set this true so that we get exceptions if a  message delevery mode is incorrect
+        /// </summary>
+        public static bool QPIDSane  = false;
+
         protected IContentHeaderProperties _contentHeaderProperties;
 
         /// <summary>

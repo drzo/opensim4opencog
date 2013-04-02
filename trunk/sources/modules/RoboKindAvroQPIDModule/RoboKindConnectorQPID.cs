@@ -37,19 +37,56 @@ using Apache.Qpid.Client.Qms;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using Apache.Qpid.Buffer;
+using JSONPROXY = System.Collections.Generic.Dictionary<string,object>;
+using IJSONPROXY = System.Collections.Generic.IDictionary<string,object>;
 
 namespace RoboKindAvroQPID
 {
     public class RoboKindConnectorQPID
     {
 
+        public void SpyOnQueueAndTopic(string stubName, Action<JSONPROXY> onObject)
+        {
+            SpyOnQueueAndTopic(stubName + "Command", stubName + "Event", onObject);
+            SpyOnQueueAndTopic(stubName + "Event", stubName + "Event", onObject);
+        }
+
+        public void SpyOnQueueAndTopic(string queueName, string topicName, Action<JSONPROXY> onObject)
+        {
+            SpyOnQueueAndTopic(queueName, ExchangeNameDefaults.TOPIC, topicName, onObject);
+            SpyOnQueueAndTopic(queueName, ExchangeNameDefaults.DIRECT, queueName, onObject);
+        }
+
+        public void SpyOnQueueAndTopic(string queueName, string exchangeName, string routingKeyOrTopicName,
+                                       Action<JSONPROXY> onObject)
+        {
+            // queue/dest = visionproc0Command  topic == visionproc0Event  fomrnat = ImageRegionListRecord.class
+            //AMQDestination cmdDest = new AMQDestination("camera0Command");
+
+            var channel = connection.CreateChannel(false, AcknowledgeMode.NoAcknowledge);
+            channel.DeclareQueue(queueName, false, false, false);
+            channel.Bind(queueName, exchangeName, routingKeyOrTopicName);
+            IMessageConsumer consumer = channel.CreateConsumerBuilder(queueName).Create();
+            consumer.OnMessage += (mesg) =>
+                                      {
+                                          var map = new JSONPROXY();
+                                          map["JMS_queueName"] = queueName;
+                                          map["JMS_exchangeName"] = exchangeName;
+                                          map["JMS_routingKey"] = routingKeyOrTopicName;
+                                          DecodeIMessage(mesg, map);
+                                          onObject(map);
+                                      };
+        }
+
         /// <summary>
         /// Set up a queue to listen for reports on.
         /// </summary>
-        public IMessageConsumer CreateQListener(string routingKey, string exchangeNameDefaults, MessageReceivedDelegate handler)
+        public IMessageConsumer CreateQListener(string routingKey, string exchangeNameDefaults,
+                                                MessageReceivedDelegate handler)
         {
             string responseQueueName = null;
-            return CreateListener(responseQueueName, routingKey, exchangeNameDefaults, ToExchangeClass(exchangeNameDefaults), false, true, true, handler);
+            return CreateListener(responseQueueName, routingKey, exchangeNameDefaults,
+                                  ToExchangeClass(exchangeNameDefaults), false, true, true, handler);
             responseQueueName = responseQueueName ?? channel.GenerateUniqueName();
             channel.DeclareQueue(responseQueueName, false, true, true);
             // Set this listener up to listen for reports on the response queue.
@@ -74,15 +111,18 @@ namespace RoboKindAvroQPID
         /// <summary>
         /// Set up a queue to listen for reports on.
         /// </summary>
-        public IMessageConsumer CreateListener(string queueName, string routingKey, string exchangeName, string exchangeClass, 
-            bool isDurable, bool isExclusive, bool autoDelete, MessageReceivedDelegate handler)
+        public IMessageConsumer CreateListener(string queueName, string routingKey, string exchangeName,
+                                               string exchangeClass,
+                                               bool isDurable, bool isExclusive, bool autoDelete,
+                                               MessageReceivedDelegate handler)
         {
             exchangeClass = exchangeClass ?? ToExchangeClass(exchangeName);
             EnsureExchange(exchangeName, exchangeClass);
             if (queueName == null)
             {
                 queueName = GenerateUniqueQueue();
-            } else
+            }
+            else
             {
                 EnsureQueue(queueName, isDurable, isExclusive, autoDelete);
             }
@@ -106,7 +146,7 @@ namespace RoboKindAvroQPID
             if (true)
             {
                 return;
-                channel.DeclareExchange(exchangeName,exchangeClass);
+                channel.DeclareExchange(exchangeName, exchangeClass);
                 return;
             }
             AmqChannel.StaticDeclareExchange(exchangeName, exchangeClass, false, true, false, false, true, null);
@@ -129,10 +169,10 @@ namespace RoboKindAvroQPID
             return true;
         }
 
-        private static ILog log = LogManager.GetLogger(typeof(RoboKindConnectorQPID));
+        private static ILog log = LogManager.GetLogger(typeof (RoboKindConnectorQPID));
 
         /// <summary> Holds the default test timeout for broker communications before tests give up. </summary>
-        const int TIMEOUT = 10000;
+        private const int TIMEOUT = 10000;
 
         /// <summary> Holds the number of messages to send in each test run. </summary>
         //private int numMessages;
@@ -145,10 +185,12 @@ namespace RoboKindAvroQPID
 
         /// <summary> Holds the connection to listen on. </summary>
         private IConnection connection;
+
         public IConnection Connection
         {
             get { return connection; }
         }
+
         public IChannel Channel
         {
             get { return channel; }
@@ -308,7 +350,7 @@ namespace RoboKindAvroQPID
             log.Debug("Sent the termination request message.");
 
             // Close all message producers and consumers and the connection to the broker.
-           Shutdown();
+            Shutdown();
         }
 
         /// <summary>
@@ -325,6 +367,7 @@ namespace RoboKindAvroQPID
             // Publish the test messages.
             publisher.SendTestMessage(RoboKindEventModule.REPORT_TEST, "DoTest");
         }
+
         /// <summary> Stops the message consumers and closes the connection. </summary>
         public void Shutdown()
         {
@@ -343,7 +386,7 @@ namespace RoboKindAvroQPID
             if (connection != null) connection.Dispose();
             shutdownReceivedEvt.Set();
         }
-    
+
 
         /// <summary> Holds the producer to send report messages on. </summary>
         //private IMessagePublisher publisher;
@@ -353,7 +396,7 @@ namespace RoboKindAvroQPID
 
         /// <summary> Holds a flag to indicate that a timer has begun on the first message. Reset when report is sent. </summary> */
         private bool init;
-    
+
         /// <summary> Holds the count of messages received by this listener. </summary> */
         private int count;
 
@@ -361,7 +404,7 @@ namespace RoboKindAvroQPID
         /// <summary>
         /// Fired when a message is received from the broker by the consumer
         /// </summary>
-        public event MessageReceivedDelegate OnAvroMessage;// { get; set; }
+        public event MessageReceivedDelegate OnAvroMessage; // { get; set; }
 
         /// <summary> Creates a topic listener using the specified broker URL. </summary>
         /// 
@@ -430,7 +473,7 @@ namespace RoboKindAvroQPID
             LogDebug("public void onMessage(Message message = " + message + "): called");
 
             if (OnAvroMessage != null)
-            {               
+            {
                 OnAvroMessage(message);
                 return;
             }
@@ -447,7 +490,7 @@ namespace RoboKindAvroQPID
                 LogDebug("Got a shutdown message.");
                 Shutdown();
             }
-            // Check if the message is a report request message asking this listener to respond with the message count.
+                // Check if the message is a report request message asking this listener to respond with the message count.
             else if (IsForCogbot(message))
             {
                 LogDebug("Got a report request message.");
@@ -458,7 +501,7 @@ namespace RoboKindAvroQPID
                 // Reset the initialization flag so that the next message is considered to be the first.
                 init = false;
             }
-            // Otherwise it is an ordinary test message, so increment the message count.
+                // Otherwise it is an ordinary test message, so increment the message count.
             else
             {
                 count++;
@@ -478,7 +521,7 @@ namespace RoboKindAvroQPID
         /// <param name="m">The message to check.</param>
         /// 
         /// <returns><tt>true</tt> if it is a shutdown control message, <tt>false</tt> otherwise.</returns>
-        private bool IsShutdown(IMessage m) 
+        private bool IsShutdown(IMessage m)
         {
             bool result = CheckTextField(m, "TYPE", "TERMINATION_REQUEST");
 
@@ -492,7 +535,7 @@ namespace RoboKindAvroQPID
         /// <param name="m">The message to check.</param>
         /// 
         /// <returns><tt>true</tt> if it is a report request control message, <tt>false</tt> otherwise.</returns>
-        private bool IsForCogbot(IMessage m) 
+        private bool IsForCogbot(IMessage m)
         {
             bool result = CheckTextField(m, "TYPE", RoboKindEventModule.REPORT_TEST);
 
@@ -540,10 +583,16 @@ namespace RoboKindAvroQPID
             Console.WriteLine("Sent report: " + report);
         }
 
-        public Dictionary<string, object> DecodeMessage(IMessage message)
+        public JSONPROXY DecodeMessage(IMessage message)
         {
-            return DecodeMessage(message, new Dictionary<string, object>());
+            return DecodeIMessage(message, new JSONPROXY());
         }
+
+        public JSONPROXY DecodeObject(Object message)
+        {
+            return DecodeMessage(message, new JSONPROXY());
+        }
+
         public void InitTypeFilters()
         {
             if (ForSubTypes.Count == 0)
@@ -563,11 +612,26 @@ namespace RoboKindAvroQPID
             }
         }
 
-        public Dictionary<string, object> DecodeMessage(IMessage message, Dictionary<string, object> dict)
+        public JSONPROXY DecodeMessage(Object message, JSONPROXY dict)
+        {
+            if (message is IMessage)
+            {
+                return DecodeIMessage((IMessage) message, dict);
+            }
+            var exceptObjects = new List<object>() {message};
+            return DecodeObject("", message, dict, exceptObjects);
+
+        }
+
+        public JSONPROXY DecodeIMessage(IMessage message, JSONPROXY dict)
         {
             var messageHeaders = message.Headers as QpidHeaders;
             var bm = message as AbstractQmsMessage;
-            var exceptObjects = new List<object>() { message, messageHeaders };
+            if (bm == null)
+            {
+                Console.Error.WriteLine("Non AbstractQmsMessage: " + message.GetType());
+            }
+            var exceptObjects = new List<object>() {message, messageHeaders};
 
             if (bm != null) exceptObjects.Add(bm.ContentHeaderProperties);
 
@@ -582,7 +646,7 @@ namespace RoboKindAvroQPID
                 GetMemberValues("Message_", props, dict, exceptObjects);
                 GetMemberValues("Header_", dict2, dict, exceptObjects);
             }
-            if (messageHeaders!=null)
+            if (messageHeaders != null)
             {
                 var hdrs = messageHeaders._headers;
                 foreach (System.Collections.DictionaryEntry hdr in hdrs)
@@ -594,8 +658,15 @@ namespace RoboKindAvroQPID
             {
                 return dict;
             }
-            string valuePrefix = "Value_";                            
-            var o = DecodeMessage((IBytesMessage)message);
+            var o = DecodeIBytesMessage((IBytesMessage) message, dict);
+            string valuePrefix = "Value_";
+            return DecodeObject(valuePrefix, o, dict, exceptObjects);
+        }
+
+        public JSONPROXY DecodeObject(String valuePrefix, Object o, JSONPROXY dict, List<object> exceptObjects)
+        {
+
+
             if (o is IConvertible)
             {
                 dict[JoinedName(valuePrefix, "Value")] = o;
@@ -603,15 +674,15 @@ namespace RoboKindAvroQPID
             }
             if (o is GenericRecord)
             {
-                GenericRecord gr = (GenericRecord)o;
-                IDictionary<string, object> contents = gr.GetContents();
+                GenericRecord gr = (GenericRecord) o;
+                IJSONPROXY contents = gr.GetContents();
                 contents["SchemeNS"] = gr.Schema.Namespace;
                 contents["Scheme"] = gr.Schema.Name;
                 o = contents;
             }
-            if (o is IDictionary<string, object>)
+            if (o is IJSONPROXY)
             {
-                foreach (var kv in (IDictionary<string, object>)o)
+                foreach (var kv in (IJSONPROXY) o)
                 {
                     string joinedName = JoinedName(valuePrefix, kv.Key);
                     AddValue(joinedName, kv.Value, dict);
@@ -619,7 +690,7 @@ namespace RoboKindAvroQPID
             }
             else if (o is IDictionary)
             {
-                foreach (DictionaryEntry kv in (IDictionary)o)
+                foreach (DictionaryEntry kv in (IDictionary) o)
                 {
                     string joinedName = JoinedName(valuePrefix, "" + kv.Key);
                     AddValue(joinedName, kv.Value, dict);
@@ -652,7 +723,7 @@ namespace RoboKindAvroQPID
             bool needed0;
             if (o is AMQTypedValue)
             {
-                var tv = (AMQTypedValue)o;
+                var tv = (AMQTypedValue) o;
                 var tvv = tv.Value;
                 if (tvv == null)
                 {
@@ -664,8 +735,8 @@ namespace RoboKindAvroQPID
             if (o is GenericRecord)
             {
                 neededDecode = true;
-                GenericRecord gr = (GenericRecord)o;
-                IDictionary<string, object> contents = gr.GetContents();
+                GenericRecord gr = (GenericRecord) o;
+                IJSONPROXY contents = gr.GetContents();
                 contents["SchemeNS"] = gr.Schema.Namespace;
                 contents["Scheme"] = gr.Schema.Name;
                 return DecodeValue(valuePrefix, contents, out needed0);
@@ -673,13 +744,13 @@ namespace RoboKindAvroQPID
             if (o is FieldTable)
             {
                 neededDecode = true;
-                var contents =((FieldTable)o).AsDictionary();
-                return DecodeValue(valuePrefix, contents, out needed0);               
+                var contents = ((FieldTable) o).AsDictionary();
+                return DecodeValue(valuePrefix, contents, out needed0);
             }
-            if (o is IDictionary<string, object>)
+            if (o is IJSONPROXY)
             {
-                IDictionary<string, object> dict = new Dictionary<string, object>();
-                foreach (var kv in (IDictionary<string, object>)o)
+                IJSONPROXY dict = new JSONPROXY();
+                foreach (var kv in (IJSONPROXY) o)
                 {
                     string joinedName = JoinedName(valuePrefix, "" + kv.Key);
                     AddValue(joinedName, DecodeValue(joinedName + "_", kv.Value, out needed0), dict);
@@ -693,8 +764,8 @@ namespace RoboKindAvroQPID
             }
             if (o is IDictionary)
             {
-                IDictionary<string, object> dict = new Dictionary<string, object>();
-                foreach (DictionaryEntry kv in (IDictionary)o)
+                IJSONPROXY dict = new JSONPROXY();
+                foreach (DictionaryEntry kv in (IDictionary) o)
                 {
                     string joinedName = JoinedName(valuePrefix, "" + kv.Key);
                     AddValue(joinedName, DecodeValue(joinedName + "_", kv.Value, out needed0), dict);
@@ -727,13 +798,13 @@ namespace RoboKindAvroQPID
 
 
 
-        private object DecodeMessage(IBytesMessage msg)
+        private object DecodeIBytesMessage(IBytesMessage msg, JSONPROXY map)
         {
             int len = (int) msg.BodyLength;
             byte[] bytes = new byte[len];
             msg.ReadBytes(bytes, len);
             MemoryStream ins = new MemoryStream(bytes);
-            Schema rs = SchemeFor(msg.ContentType);
+            Schema rs = SchemeFor(msg.ContentType, map);
             Schema ws = rs;
             var sdr = new DefaultReader(rs, ws);
             Avro.IO.Decoder dc = new Avro.IO.BinaryDecoder(ins);
@@ -754,29 +825,53 @@ namespace RoboKindAvroQPID
             }
         }
 
-        private Schema SchemeFor(string type)
+        private Schema SchemeFor(string type, JSONPROXY map)
+        {
+            var scheme = SchemeForWM(type, map);
+            if (scheme == null)
+            {
+                object val;
+                if (map.TryGetValue("JMS_queueName", out val))
+                {
+                    string sval = "" + val;
+                    scheme = SchemeForWM(sval, map);
+                    if (scheme!=null) return scheme;
+                }
+                Console.WriteLine("Cant find type: " + type);         
+                var Loaded = RoboKindConnectorQPID.Loaded.Values;
+                foreach (Schema schema0 in Loaded)
+                {
+                    Console.WriteLine(schema0.Name);
+                }
+
+
+            }
+            return scheme;
+        }
+
+        private Schema SchemeForWM(string type, JSONPROXY map)
         {
             var Loaded = RoboKindConnectorQPID.Loaded.Values;
             lock (Loaded) EnsureSchemasLoaded();
             type = type.Substring(type.IndexOf('/') + 1);
-            lock(Loaded)
+            lock (Loaded)
             {
                 var s = SchemeFor00(type, Loaded);
                 if (s != null) return s;
                 if (type.Contains("-"))
                 {
-                    return SchemeFor(type.Replace("-", ""));
+                    return SchemeFor(type.Replace("-", ""), map);
                 }
-                Console.WriteLine("Cant find type: " + type);
-                foreach (Schema schema in Loaded)
+                if (type.Contains("."))
                 {
-                    Console.WriteLine(schema.Name);
+                    return SchemeFor(type.Replace(".", ""), map);
                 }
                 return null;
             }
         }
 
-        private static Schema SchemeFor00(string type, IEnumerable<Schema> candidates)
+        private static Schema SchemeFor00(string type, 
+            IEnumerable<Schema> candidates )
         {
             type = type.Substring(type.IndexOf('/') + 1);
             var s = SchemeFor0(type, candidates);
@@ -809,15 +904,16 @@ namespace RoboKindAvroQPID
             return null;
         }
 
-        static Dictionary<string, Schema> Loaded = new Dictionary<string, Schema>();
-        static Dictionary<string,Protocol> Protos = new Dictionary<string,Protocol>();
+        private static Dictionary<string, Schema> Loaded = new Dictionary<string, Schema>();
+        private static Dictionary<string, Protocol> Protos = new Dictionary<string, Protocol>();
+
         private void EnsureSchemasLoaded()
         {
             if (Loaded.Count > 0) return;
-            string startAt = @".\HR\apollomind\avro\interpreter";
+            string startAt = @"D:\dev\hrk\apollo_trunk\avro"; // @".\HR\apollomind\avro\interpreter";
 
             LoadAvroFiles(startAt, false);
-            LoadAvroFiles("./avro/", true);
+            LoadAvroFiles("./avro/current", true);
             //SaveOutProtocals();
         }
 
@@ -827,7 +923,7 @@ namespace RoboKindAvroQPID
             foreach (Protocol loaded in Protos.Values)
             {
                 cg.AddProtocol(loaded);
-                foreach (var s in  loaded.Types)
+                foreach (var s in loaded.Types)
                 {
                     cg.AddSchema(s);
                 }
@@ -870,37 +966,39 @@ namespace RoboKindAvroQPID
         {
             throw new NotImplementedException();
         }
-        
+
         private void LoadAvroFiles(string startAt, bool subdirs)
         {
             LoadAvroFiles(startAt, subdirs, false, true);
-            LoadAvroFiles(startAt, subdirs, true, false);            
+            LoadAvroFiles(startAt, subdirs, true, false);
         }
 
         private void LoadAvroFiles(string startAt, bool subdirs, bool loadJson, bool loadavrp)
         {
-            if (loadavrp) foreach (var file in Directory.GetFiles(startAt, "*.avpr"))
-            {
-                string text = File.ReadAllText(file);
-                //var s = Schema.Parse(text);
-                var  p = Protocol.Parse(text);
-                string pName = p.Name;
-                if (Protos.ContainsKey(pName))
+            if (loadavrp)
+                foreach (var file in Directory.GetFiles(startAt, "*.avpr"))
                 {
-                    continue;
+                    string text = File.ReadAllText(file);
+                    //var s = Schema.Parse(text);
+                    var p = Protocol.Parse(text);
+                    string pName = p.Name;
+                    if (Protos.ContainsKey(pName))
+                    {
+                        continue;
+                    }
+                    Protos.Add(pName, p);
+                    foreach (var s in p.Types)
+                    {
+                        AddScheme(s);
+                    }
                 }
-                Protos.Add(pName, p);
-                foreach (var s in p.Types)
+            if (loadJson)
+                foreach (var file in Directory.GetFiles(startAt, "*.json"))
                 {
+                    string text = File.ReadAllText(file);
+                    var s = Schema.Parse(text);
                     AddScheme(s);
                 }
-            }
-            if (loadJson) foreach (var file in Directory.GetFiles(startAt, "*.json"))
-            {
-                string text = File.ReadAllText(file);
-                var s = Schema.Parse(text);
-                AddScheme(s);
-            }
             if (subdirs)
             {
                 foreach (var dir in Directory.GetDirectories(startAt))
@@ -913,10 +1011,11 @@ namespace RoboKindAvroQPID
         private void AddScheme(Schema s)
         {
             if (Loaded.ContainsKey(s.Name)) return;
-            Loaded.Add(s.Name,s);
+            Loaded.Add(s.Name, s);
         }
 
-        public void GetMemberValues(string prefix, Object properties, Dictionary<string, object> dict, List<Object> exceptFor)
+        public void GetMemberValues(string prefix, Object properties, JSONPROXY dict,
+                                    List<Object> exceptFor)
         {
             if (properties == null)
             {
@@ -924,9 +1023,9 @@ namespace RoboKindAvroQPID
             }
             var o0 = properties;
             bool neededDecode;
-            if (o0 is IDictionary<string, object>)
+            if (o0 is IJSONPROXY)
             {
-                foreach (var kv in (IDictionary<string, object>)o0)
+                foreach (var kv in (IJSONPROXY) o0)
                 {
                     string joinedName = JoinedName(prefix, kv.Key);
                     AddValue(joinedName, DecodeValue(joinedName + "_", kv.Value, out neededDecode), dict);
@@ -993,9 +1092,9 @@ namespace RoboKindAvroQPID
         {
 
             var valuePrefix = "" + key;
-            if (value is IDictionary<string, object>)
+            if (value is IJSONPROXY)
             {
-                foreach (var kv in (IDictionary<string, object>)value)
+                foreach (var kv in (IJSONPROXY) value)
                 {
                     string joinedName = JoinedName(valuePrefix, kv.Key);
                     AddValue(joinedName, kv.Value, dict);
@@ -1004,7 +1103,7 @@ namespace RoboKindAvroQPID
             }
             if (value is IDictionary)
             {
-                foreach (DictionaryEntry kv in (IDictionary)value)
+                foreach (DictionaryEntry kv in (IDictionary) value)
                 {
                     string joinedName = JoinedName(valuePrefix, "" + kv.Key);
                     AddValue(joinedName, kv.Value, dict);
@@ -1021,13 +1120,13 @@ namespace RoboKindAvroQPID
             dict[key] = value;
         }
 
-        private void AddValue(string key, object value, IDictionary<string, object> dict)
+        private void AddValue(string key, object value, IJSONPROXY dict)
         {
 
             var valuePrefix = "" + key;
-            if (value is IDictionary<string, object>)
+            if (value is IJSONPROXY)
             {
-                foreach (var kv in (IDictionary<string, object>)value)
+                foreach (var kv in (IJSONPROXY) value)
                 {
                     string joinedName = JoinedName(valuePrefix, kv.Key);
                     AddValue(joinedName, kv.Value, dict);
@@ -1036,7 +1135,7 @@ namespace RoboKindAvroQPID
             }
             if (value is IDictionary)
             {
-                foreach (DictionaryEntry kv in (IDictionary)value)
+                foreach (DictionaryEntry kv in (IDictionary) value)
                 {
                     string joinedName = JoinedName(valuePrefix, "" + kv.Key);
                     AddValue(joinedName, kv.Value, dict);
@@ -1053,7 +1152,7 @@ namespace RoboKindAvroQPID
             dict[key] = value;
         }
 
-        private string JoinedName(string prefix, string word)
+        private static string JoinedName(string prefix, string word)
         {
             prefix = prefix ?? "";
             word = word ?? "";
@@ -1087,7 +1186,9 @@ namespace RoboKindAvroQPID
             return false;
         }
 
-        static readonly Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>> PropForTypes = new Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>>();
+        private static readonly Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>> PropForTypes =
+            new Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>>();
+
         private readonly List<Type> ForSubTypes = new List<Type>();
         private readonly List<Type> ExceptForSubTypes = new List<Type>();
 
@@ -1103,11 +1204,11 @@ namespace RoboKindAvroQPID
                 {
                     kv = new KeyValuePair<List<PropertyInfo>, List<FieldInfo>>(new List<PropertyInfo>(),
                                                                                new List<FieldInfo>());
-                    var ta = t.GetCustomAttributes(typeof(XmlTypeAttribute), false);
+                    var ta = t.GetCustomAttributes(typeof (XmlTypeAttribute), false);
                     bool specialXMLType = false;
                     if (ta != null && ta.Length > 0)
                     {
-                        XmlTypeAttribute xta = (XmlTypeAttribute)ta[0];
+                        XmlTypeAttribute xta = (XmlTypeAttribute) ta[0];
                         specialXMLType = true;
                     }
                     List<string> lowerProps = new List<string>();
@@ -1119,7 +1220,7 @@ namespace RoboKindAvroQPID
                         {
 
                             if (o.Name.StartsWith("_")) continue;
-                            if (o.DeclaringType == typeof(Object)) continue;
+                            if (o.DeclaringType == typeof (Object)) continue;
                             if (lowerProps.Contains(o.Name)) continue;
                             lowerProps.Add(o.Name.ToLower());
                             if (o.GetIndexParameters().Length > 0)
@@ -1128,7 +1229,7 @@ namespace RoboKindAvroQPID
                             }
                             if (specialXMLType)
                             {
-                                var use = o.GetCustomAttributes(typeof(XmlArrayItemAttribute), false);
+                                var use = o.GetCustomAttributes(typeof (XmlArrayItemAttribute), false);
                                 if (use == null || use.Length < 1) continue;
                             }
                             kv.Key.Add(o);
@@ -1138,12 +1239,12 @@ namespace RoboKindAvroQPID
                     foreach (FieldInfo o in t.GetFields(flags))
                     {
                         if (o.Name.StartsWith("_")) continue;
-                        if (o.DeclaringType == typeof(Object)) continue;
+                        if (o.DeclaringType == typeof (Object)) continue;
                         if (lowerProps.Contains(o.Name)) continue;
-                        lowerProps.Add(o.Name.ToLower()); 
+                        lowerProps.Add(o.Name.ToLower());
                         if (specialXMLType)
                         {
-                            var use = o.GetCustomAttributes(typeof(XmlArrayItemAttribute), false);
+                            var use = o.GetCustomAttributes(typeof (XmlArrayItemAttribute), false);
                             if (use == null || use.Length < 1) continue;
                         }
                         kv.Value.Add(o);
