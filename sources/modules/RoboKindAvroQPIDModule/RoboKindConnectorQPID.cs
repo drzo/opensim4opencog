@@ -835,7 +835,7 @@ namespace RoboKindAvroQPID
                 {
                     string sval = "" + val;
                     scheme = SchemeForWM(sval, map);
-                    if (scheme!=null) return scheme;
+                    if (scheme != null) return scheme;
                 }
                 Console.WriteLine("Cant find type: " + type);         
                 var Loaded = RoboKindConnectorQPID.Loaded.Values;
@@ -873,6 +873,7 @@ namespace RoboKindAvroQPID
         private static Schema SchemeFor00(string type, 
             IEnumerable<Schema> candidates )
         {
+            if (string.IsNullOrEmpty(type)) return null;
             type = type.Substring(type.IndexOf('/') + 1);
             var s = SchemeFor0(type, candidates);
             if (s != null) return s;
