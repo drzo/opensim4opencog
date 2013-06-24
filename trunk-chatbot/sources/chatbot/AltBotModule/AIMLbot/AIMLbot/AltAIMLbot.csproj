@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{8D262460-544F-41B4-8580-533FA1D18249}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -155,6 +155,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\modules\RoboKindAvroQPIDModule\RoboKindAvroQPID.csproj">
+      <Project>{8489EDDE-009B-4C5C-8EDC-22DE483AAF94}</Project>
+      <Name>RoboKindAvroQPID</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Aima.NET\Aima.NET.csproj">
       <Name>Aima.NET</Name>
       <Project>{E2616D71-9B30-4798-825C-26FE98D4090F}</Project>

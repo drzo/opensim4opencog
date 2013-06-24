@@ -38,6 +38,7 @@ using MushDLR223.Virtualization;
 using VDS.RDF.Parsing;
 using LogicalParticleFilter1;
 using CAMeRAVUEmotion;
+using RoboKindAvroQPID;
 
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
@@ -84,6 +85,8 @@ namespace AltAIMLbot
         public AltBot curBot;
 
         public bool NeedsLoad = true;
+
+        public bool useAMQP = true;
 
         public MasterUser curUser
         {
@@ -230,10 +233,142 @@ namespace AltAIMLbot
 
         public int PruneSize = 1024;
 
+        public void messageProcessor0(string topic,string prefix, Dictionary<string, object> map)
+        {
+            string chan = topic.ToLower();
+
+            if (chan == "#") chan = "hashmark";
+            if (chan == "hashmark") return;
+
+            this.prologEngine.FindOrCreateKB(chan);
+            this.prologEngine.FindOrCreateKB("QPIDMT");
+            this.prologEngine.connectMT("QPIDMT", chan);
+            string deKB = "";
+            foreach (string key in map.Keys)
+            {
+                string attrib = key.ToLower();
+                string value ="null";
+                if (map[key] !=null) value= map[key].ToString().ToLower();
+                if (value.Contains(" ")) value = "'" + value + "'";
+                if (value == "#") value = "hashmark";
+                deKB += String.Format("map({0},{1},{2}).\n", chan, attrib, value);
+            }
+             this.prologEngine.insertKB(deKB, chan);
+        }
+
+        public void messageProcessor(string topic, string prefix, Dictionary<string, object> map)
+        {
+            this.prologEngine.FindOrCreateKB(topic.ToLower());
+            this.prologEngine.FindOrCreateKB("QPIDMT");
+            this.prologEngine.connectMT("QPIDMT", topic.ToLower());
+            string deKB = "";
+            string lTopic = topic.ToLower();
+            string chan = lTopic + prefix;
+            this.prologEngine.FindOrCreateKB(chan);
+            this.prologEngine.connectMT("QPIDMT", chan);
+            foreach (string key in map.Keys)
+            {
+                string attrib = key.ToLower();
+                if (map[key] != null)
+                {
+                    string value = map[key].ToString().ToLower();
+                    value = value.Replace("\\", "_");
+                    value = value.Replace("/", "_");
+                    if (!value.StartsWith("-")) value = value.Replace("-", "_");
+                    if (value.Contains(" ")) value = "'" + value + "'";
+                    if (value == "#") value = "hashmark";
+
+                    string statement = String.Format("map({0},{1},{2}).", chan, attrib, value);
+                    deKB += statement + "\n";
+                    // Give names
+                    if (attrib == "emotionid")
+                    {
+                        switch (value)
+                        {
+                            case "0": deKB += String.Format("map({0},emotion,joy).\n", chan, attrib, value);  break;
+                            case "1": deKB += String.Format("map({0},emotion,sadness).\n", chan, attrib, value);  break;
+                            case "2": deKB += String.Format("map({0},emotion,anger).\n", chan, attrib, value);  break;
+                            case "3": deKB += String.Format("map({0},emotion,surprise).\n", chan, attrib, value);  break;
+                            case "4": deKB += String.Format("map({0},emotion,fear).\n", chan, attrib, value);  break;
+                            case "5": deKB += String.Format("map({0},emotion,contempt).\n", chan, attrib, value);  break;
+                            case "6": deKB += String.Format("map({0},emotion,disgust).\n", chan, attrib, value);  break;
+                            case "7": deKB += String.Format("map({0},emotion,neutral).\n", chan, attrib, value);  break;
+                            case "8": deKB += String.Format("map({0},emotion,positive).\n", chan, attrib, value);  break;
+                            case "9": deKB += String.Format("map({0},emotion,negative).\n", chan, attrib, value);  break;
+                            default : deKB += String.Format("map({0},emotion,unknown).\n", chan, attrib, value);  break;
+                        }
+                    }
+                    // Compute areas
+                    if (attrib == "value_faces_rectangle_width")
+                    {
+                        if (map.ContainsKey("Value_Faces_Rectangle_Height"))
+                        {
+                            int width = (int)map["Value_Faces_Rectangle_Width"];
+                            int height = (int)map["Value_Faces_Rectangle_Height"];
+                            int area = width * height;
+                            deKB += String.Format("map({0},value_faces_rectangle_area,{1}).\n", chan, area); 
+                        }
+                    }
+                    //this.prologEngine.appendKB(statement, chan);
+                }
+                if (map[key] is System.Object[])
+                {
+                    string nextpath = "";
+                    if (prefix.Length > 0)
+                    {
+                        nextpath = prefix + "_" + key.ToLower();
+                    }
+                    else
+                    {
+                        nextpath = "_" + key.ToLower();
+                    }
+                    messageObjectSubProcessor(topic, nextpath, (System.Object[])map[key]);
+                }
+            }
+            // Connect
+            if (lTopic != chan)
+            {
+                this.prologEngine.connectMT(lTopic, chan);
+                deKB += String.Format("map({0},childof,{1}).\n", chan,  lTopic);
+            }
+            this.prologEngine.insertKB(deKB, chan);
+
+        }
+        public void messageObjectSubProcessor(string topic, string prefix, System.Object[] subArry)
+        {
+            int count = 0;
+            foreach (System.Object obj in subArry)
+            {
+                count++;
+                if (obj is Dictionary<string, object>)
+                {
+                    string nextpath = prefix + "_" + count.ToString();
+                    messageProcessor(topic, nextpath, (Dictionary<string, object>)obj);
+                }
+                else
+                {
+                    Console.WriteLine("SubObject is type:{0}", obj.GetType());
+                }
+            }
+        }
+
+        public  RoboKindEventModule _theRoboKindEventModule;
+
+        public void initQPIDInterface()
+        {
+            if (useAMQP)
+            {
+                _theRoboKindEventModule = new RoboKindEventModule();
+                _theRoboKindEventModule.QPIDProcessor = new QPIDMessageDelegate(messageProcessor); ;
+                _theRoboKindEventModule.Spy();
+            }
+
+        }
         public Servitor(AltBot aimlBot, sayProcessorDelegate outputDelegate)
         {
             curBot = aimlBot;
             curBot.myServitor = this;
+            initQPIDInterface();
         }
 
         public Servitor(AltBot aimlBot, sayProcessorDelegate outputDelegate, bool skipLoading, bool skippersonalitycheck,
@@ -244,6 +379,7 @@ namespace AltAIMLbot
             skiploadingServitorState = skipLoading;
             skipPersonalityCheck = skippersonalitycheck;
             initialCritical = initialcritical;
+            initQPIDInterface();
         }
 
         public string GetCoppeliaAgentNameByID(int queryID)
