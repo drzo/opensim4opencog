@@ -117,6 +117,7 @@ namespace Apache.Qpid.Client.Protocol
             }
 
             AMQFrame frame = (AMQFrame)message;
+            // Console.WriteLine(">>> AMQFrame frame received: " + frame); //KHC
 
             if (frame.BodyFrame is AMQMethodBody)
             {
@@ -161,6 +162,10 @@ namespace Apache.Qpid.Client.Protocol
             else if (frame.BodyFrame is HeartbeatBody)
             {
                 _log.Debug("HeartBeat received");
+            }
+            else
+            {
+                Console.WriteLine("***** UNHANDLED FRAME ******");
             }
         }
 

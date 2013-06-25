@@ -157,13 +157,16 @@ namespace Apache.Qpid.Client.State
 
         public bool MethodReceived(AMQMethodEvent evt)
         {
-            _logger.Debug(String.Format("Finding method handler. currentState={0} type={1}", _currentState, evt.Method.GetType()));            
+            _logger.Debug(String.Format("Finding method handler. currentState={0} type={1}", _currentState, evt.Method.GetType()));
+            //Console.WriteLine(String.Format("Finding method handler. currentState={0} type={1}", _currentState, evt.Method.GetType())); //KHC
             IStateAwareMethodListener handler = FindStateTransitionHandler(_currentState, evt.Method);
             if (handler != null)
             {
                 handler.MethodReceived(this, evt);
+                //Console.WriteLine("  MethodReceived return true, newState={0}", _currentState);
                 return true;
             }
+            //Console.WriteLine("  MethodReceived return false, currentState={0}", _currentState);
             return false;
         }
 
@@ -196,6 +199,7 @@ namespace Apache.Qpid.Client.State
                 if (currentState == AMQState.ALL)
                 {
                     _logger.Debug("No state transition handler defined for receiving frame " + frame);
+                    Console .WriteLine (" *** No state transition handler defined for receiving frame " + frame); //KHC
                     return null;
                 }
                 else
