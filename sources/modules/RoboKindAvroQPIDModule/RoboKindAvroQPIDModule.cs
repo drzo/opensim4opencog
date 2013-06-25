@@ -17,12 +17,18 @@ using ThreadPool = ThreadPoolUtil.ThreadPool;
 using Monitor = ThreadPoolUtil.Monitor;
 #endif
 
+
 namespace RoboKindAvroQPID
 {
+    public delegate void QPIDMessageDelegate(string topic,string prefix, Dictionary<string, object> map);
+
     public class RoboKindEventModule : YesAutoLoad, IDisposable
     {
         // amqp://admin:admin@clientid/test?brokerlist='
-        public static string RK_QPID_URI = "amqp://admin:admin@client1/test?brokerlist='tcp://localhost:5672'";
+        //CURRENT public static string RK_QPID_URI = "amqp://admin:admin@client01/test?brokerlist='tcp://192.168.0.102:5672'";
+        public static string RK_QPID_URI = "amqp://admin:admin@client01/test?brokerlist='tcp://127.0.0.1:5672'";
+        //public static string RK_QPID_URI = "amqp://client:guest@client01/test?brokerlist='tcp://localhost:5672'";
+        //  public static string RK_QPID_URI = "amqp://admin:admin@clientid/test?brokerlist='tcp://192.168.1.85:5672'";
 
         /// <summary> Holds the routing key for cogbot management messages. </summary>
         public static string COGBOT_CONTROL_ROUTING_KEY = "cogbot_control_route";
@@ -40,12 +46,13 @@ namespace RoboKindAvroQPID
         public static string ROBOKIND_RESPONSE_ROUTING_KEY = "response";
 
 
+
         private readonly List<object> cogbotSendersToNotSendToCogbot = new List<object>();
 
         public static bool DISABLE_AVRO = false;
         public static string REPORT_TEST = "REPORT_REQUEST";
-        private IMessageConsumer RK_listener;
-        private RoboKindConnectorQPID RK_publisher;
+        public IMessageConsumer RK_listener;
+        public RoboKindConnectorQPID RK_publisher;
 
         protected bool IsQPIDRunning
         {
@@ -133,7 +140,7 @@ namespace RoboKindAvroQPID
 
         private bool EnsuredStarted = false;
 
-        private void EnsureStarted()
+        public void EnsureStarted()
         {
             if (DISABLE_AVRO) return;
             if (EnsuredStarted) return;
@@ -183,6 +190,7 @@ namespace RoboKindAvroQPID
             try
             {
                 RK_publisher = new RoboKindConnectorQPID(uri);
+                RK_publisher.initRKListener(uri);
                 RK_listener = RK_publisher.CreateListener(
                     COGBOT_CONTROL_QUEUE_KEY,
                     COGBOT_CONTROL_ROUTING_KEY,
@@ -267,8 +275,20 @@ namespace RoboKindAvroQPID
 
         
                 */
-
         public void Spy()
+        {
+            EnsureStarted();
+           // RK_publisher.SpyOnQueueAndTopic("amq.topic", ExchangeNameDefaults.TOPIC, "faceEmotion0Event", GotMessage);
+
+            RK_publisher.RKListener(RoboKindEventModule.RK_QPID_URI, "faceEmotion0Event", QPIDProcessor);
+            RK_publisher.RKListener(RoboKindEventModule.RK_QPID_URI, "faceEmotion0Error", QPIDProcessor);
+
+            Console.WriteLine("spying on AQM");
+            RK_publisher.Connection.Start();
+            Thread.Sleep(6000);
+        }
+
+        public void Spy0()
         {
             EnsureStarted();
             
@@ -282,18 +302,21 @@ namespace RoboKindAvroQPID
 
 
             // matters!
-            SpyQueue("speechRequest");
+         //   SpyQueue("speechRequest");
 
             // matters?
-            SpyQueue("speechEvent");
+            //SpyQueue("speechEvent");
 
             // matters?
-            SpyQueue("speechCommand");
+          //  SpyQueue("speechCommand");
 
             // matters?
-            SpyQueue("camera0Request");
+         //   SpyQueue("camera0Request");
 
-            
+            SpyQueue("camera0Event");
+            SpyQueue("visionproc0Event");
+            SpyQueue("faceEmotion0Event");
+           
             // will crash capture SpyQueue("camera0Command");
 
 
@@ -321,12 +344,18 @@ namespace RoboKindAvroQPID
 
             */
             Console.WriteLine("spying on AQM");
-            Thread.Sleep(600000);
+            Thread.Sleep(6000);
         }
 
-        private void GotMessage(Dictionary<string, object> map)
+        public QPIDMessageDelegate QPIDProcessor=null;
+        public void GotMessage(Dictionary<string, object> map)
         {
-            Console.WriteLine("MESG: " + ToStr(map));
+            //Console.WriteLine("MESG: " + ToStr(map));
+            if (QPIDProcessor != null)
+            {
+                string topic = (string)map["JMS_routingKey"];
+                QPIDProcessor(topic,"", map);
+            }
         }
 
         public void Block()
@@ -335,10 +364,18 @@ namespace RoboKindAvroQPID
             {
                 System.Console.Error.Flush();
                 string s = System.Console.ReadLine();
+                
+                
                 if (s == "next") return;
             }
         }
-
+        public void BlockBusyForever()
+        {
+            while (true)
+            {
+                Thread.Sleep(100);
+            }
+        }
 
         private void CreateHashSpy(string queuename)
         {
@@ -405,7 +442,7 @@ namespace RoboKindAvroQPID
             System.Console.Out.Flush();
         }
 
-        private string ToStr(object value)
+        public string ToStr(object value)
         {
             if (value == null) return "<NULL>";
             if (value is IConvertible) return "" + value;

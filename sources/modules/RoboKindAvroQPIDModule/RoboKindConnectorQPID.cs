@@ -184,8 +184,8 @@ namespace RoboKindAvroQPID
         //private AutoResetEvent allReportsReceivedEvt = new AutoResetEvent(false);
 
         /// <summary> Holds the connection to listen on. </summary>
-        private IConnection connection;
-
+        //IConnection connection;
+        AMQConnection connection;
         public IConnection Connection
         {
             get { return connection; }
@@ -197,7 +197,8 @@ namespace RoboKindAvroQPID
         }
 
         /// <summary> Holds the channel for all test messages.</summary>
-        private IChannel channel;
+       // private IChannel channel;
+        private AmqChannel channel;
 
         /// <summary> Holds the producer to send test messages on. </summary>
         private Dictionary<string, IMessagePublisher> Publishers = new Dictionary<string, IMessagePublisher>();
@@ -212,23 +213,40 @@ namespace RoboKindAvroQPID
         {
             log.Debug("TopicPublisher(string connectionUri = " + connectionUri + "): called");
 
-            // Create a connection to the broker.
-            IConnectionInfo connectionInfo0 = QpidConnectionInfo.FromUrl(connectionUri);
-            connection = new AMQConnection(connectionInfo0);
-
-            // Establish a session on the broker.
-            channel = connection.CreateChannel(false, AcknowledgeMode.AutoAcknowledge, 1);
-
-            // Set up a queue to listen for reports on.
-            //CreateDirectListener(channel, RoboKindAvroQPIDModuleMain.ROBOKIND_RESPONSE_ROUTING_KEY, OnMessage);
-            //TopicDefault = botcontrol;
-
-
-            connection.Start();
+           // EnsureConnected(connectionUri, false, false);
             EnsureSchemasLoaded();
             //Console.WriteLine("Sending messages and waiting for reports...");
         }
+        public IChannel EnsureConnected(String connectionUri, bool createNewChannel, bool createNewConnection, out AMQConnection madeCon)
+        {
+            madeCon = (AMQConnection)(createNewConnection ? null : this.connection);
+            bool startConnection = createNewConnection;
+            AmqChannel channel = (AmqChannel)(createNewConnection ? null : this.channel);
+            // Create a connection to the broker.
+            IConnectionInfo connectionInfo0 = QpidConnectionInfo.FromUrl(connectionUri);
+            if (madeCon == null)
+            {
+                madeCon = new AMQConnection(connectionInfo0);
+                startConnection = true;
 
+                // Set up a queue to listen for reports on.
+                //CreateDirectListener(channel, RoboKindAvroQPIDModuleMain.ROBOKIND_RESPONSE_ROUTING_KEY, OnMessage);
+                //TopicDefault = botcontrol;
+
+            }
+
+            // Establish a session on the broker.
+            if (channel == null || createNewChannel)
+            {
+                channel = (AmqChannel) madeCon.CreateChannel(false, AcknowledgeMode.AutoAcknowledge, 1);
+            }
+
+            if (startConnection)
+            {
+             //   madeCon.Start();
+            }
+            return channel;
+        }
         /// <summary>
         /// Sends the test messages and waits for all subscribers to reply with a report.
         /// </summary>
@@ -290,7 +308,9 @@ namespace RoboKindAvroQPID
             // Send the desired number of test messages.
             //for (int i = 0; i < numMessages; i++)
             {
-                GetPublisher(topic, null).Send(testMessage);
+                //GetPublisher(topic, null).Send(testMessage);
+                IMessagePublisher dePublisher =GetPublisher(topic, "amq.topic");
+                dePublisher.Send(testMessage);
             }
             return;
         }
@@ -409,20 +429,22 @@ namespace RoboKindAvroQPID
         /// <summary> Creates a topic listener using the specified broker URL. </summary>
         /// 
         /// <param name="connectionUri">The broker URL to listen on.</param>
-        /*public RoboKindListener(string connectionUri, string botcontrol)
+        public void RoboKindListener(string connectionUri, string botcontrol)
         {
-            LogDebug("TopicListener(string connectionUri = " + connectionUri + "): called");
+            LogDebug("TopicListener(string connectionUri = " + connectionUri + "): called " + botcontrol);
 
             // Create a connection to the broker.
             IConnectionInfo connectionInfo = QpidConnectionInfo.FromUrl(connectionUri);
-            connection = new AMQConnection(connectionInfo);
+            if (connection == null) connection = new AMQConnection(connectionInfo);
 
             // Establish a session on the broker.
-            channel = connection.CreateChannel(false, AcknowledgeMode.AutoAcknowledge, 1);
+            if (channel == null) channel = (AmqChannel)connection.CreateChannel(false, AcknowledgeMode.AutoAcknowledge, 1);
             
             // Set up a queue to listen for test messages on.
             string topicQueueName = channel.GenerateUniqueName();
-            channel.DeclareQueue(topicQueueName, false, true, true);
+          //  AMQDestination dest = null;
+            // doug just hanged to !isEclusive
+            channel.DeclareQueue(topicQueueName, false, false, true);
 
             // Set this listener up to listen for incoming messages on the test topic queue.
             channel.Bind(topicQueueName, ExchangeNameDefaults.TOPIC, botcontrol);
@@ -431,16 +453,65 @@ namespace RoboKindAvroQPID
             consumer.OnMessage += OnMessage;
 
             // Set up this listener with a producer to send the reports on.
-            publisher = channel.CreatePublisherBuilder()
-                .WithExchangeName(ExchangeNameDefaults.DIRECT)
-                .WithRoutingKey(RoboKindAvroQPIDModuleMain.ROBOKIND_RESPONSE_ROUTING_KEY)
-                .Create();
-            publisher.Close();
-            publisher = null;
+            //publisher = channel.CreatePublisherBuilder()
+            //    .WithExchangeName(ExchangeNameDefaults.DIRECT)
+            //    .WithRoutingKey(RoboKindAvroQPIDModuleMain.ROBOKIND_RESPONSE_ROUTING_KEY)
+            //    .Create();
+            //publisher.Close();
+            //publisher = null;
 
             connection.Start();
 
-        }*/
+        }
+        public void initRKListener(string connectionUri)
+        {
+            IConnectionInfo connectionInfo = QpidConnectionInfo.FromUrl(connectionUri);
+            if (connection == null) 
+                connection = new AMQConnection(connectionInfo);
+            //IConnection connection;
+            //AMQConnection  connection; 
+            if (channel == null) 
+                channel = (AmqChannel)EnsureConnected(connectionUri, true, true, out connection);
+
+        }
+        public void RKListener(string connectionUri, string sourceTopic, QPIDMessageDelegate handler)
+        {
+            LogDebug("RKListener(string connectionUri = " + connectionUri + "): called");
+            // Create a connection to the broker.
+            // Create a connection to the broker.
+            initRKListener(connectionUri);
+
+            // Set up a queue to listen for test messages on.
+            string topicQueueName = channel.GenerateUniqueName();
+            channel.DeclareExchange(ExchangeNameDefaults.TOPIC,ExchangeClassConstants.TOPIC);
+            //channel.DeclareQueue(topicQueueName, false, false, false);
+            channel.DeclareQueue(topicQueueName, false, false, true);
+            
+            IMessageConsumer consumer = channel.CreateConsumerBuilder(topicQueueName)
+                .Create();
+            //consumer.OnMessage += handler;
+            consumer.OnMessage += (mesg) =>
+            {
+                var map = new JSONPROXY();
+               // map["JMS_queueName"] = queueName;
+               // map["JMS_exchangeName"] = exchangeName;
+                map["JMS_routingKey"] = sourceTopic;
+                DecodeIMessage(mesg, map);
+                handler(sourceTopic,"",map);
+            };
+            // Set this listener up to listen for incoming messages on the test topic queue.
+            channel.Bind(topicQueueName, ExchangeNameDefaults.TOPIC, sourceTopic);
+            channel.Bind(topicQueueName, sourceTopic, "#");
+            channel.Bind(topicQueueName, sourceTopic, sourceTopic);
+            //channel.Bind(topicQueueName, ExchangeNameDefaults.TOPIC, "#");
+            //channel.Bind(topicQueueName, ExchangeNameDefaults.DIRECT, sourceTopic);
+            //channel.Bind(topicQueueName, ExchangeNameDefaults.DIRECT, "#");
+
+            //channel.Bind(topicQueueName, ExchangeNameDefaults.TOPIC, "*");
+            //channel.Bind(topicQueueName, ExchangeNameDefaults.TOPIC, "control");
+            
+           // connection.Start();
+        }
 
         public static void Main0L(String[] argv)
         {
@@ -625,42 +696,45 @@ namespace RoboKindAvroQPID
 
         public JSONPROXY DecodeIMessage(IMessage message, JSONPROXY dict)
         {
-            var messageHeaders = message.Headers as QpidHeaders;
-            var bm = message as AbstractQmsMessage;
-            if (bm == null)
+            //lock (message)
             {
-                Console.Error.WriteLine("Non AbstractQmsMessage: " + message.GetType());
-            }
-            var exceptObjects = new List<object>() {message, messageHeaders};
-
-            if (bm != null) exceptObjects.Add(bm.ContentHeaderProperties);
-
-            GetMemberValues("Message_", message, dict, exceptObjects);
-            if (bm != null)
-            {
-                Apache.Qpid.Framing.BasicContentHeaderProperties props = bm.ContentHeaderProperties;
-                Apache.Qpid.Framing.FieldTable propsHeaders = props.Headers;
-                exceptObjects.Add(propsHeaders);
-                var dict2 = propsHeaders.AsDictionary();
-                exceptObjects.Add(dict2);
-                GetMemberValues("Message_", props, dict, exceptObjects);
-                GetMemberValues("Header_", dict2, dict, exceptObjects);
-            }
-            if (messageHeaders != null)
-            {
-                var hdrs = messageHeaders._headers;
-                foreach (System.Collections.DictionaryEntry hdr in hdrs)
+                var messageHeaders = message.Headers as QpidHeaders;
+                var bm = message as AbstractQmsMessage;
+                if (bm == null)
                 {
-                    AddValue(JoinedName("Header_", "" + hdr.Key), hdr.Value, dict);
+                    Console.Error.WriteLine("Non AbstractQmsMessage: " + message.GetType());
                 }
+                var exceptObjects = new List<object>() { message, messageHeaders };
+
+                if (bm != null) exceptObjects.Add(bm.ContentHeaderProperties);
+
+                GetMemberValues("Message_", message, dict, exceptObjects);
+                if (bm != null)
+                {
+                    Apache.Qpid.Framing.BasicContentHeaderProperties props = bm.ContentHeaderProperties;
+                    Apache.Qpid.Framing.FieldTable propsHeaders = props.Headers;
+                    exceptObjects.Add(propsHeaders);
+                    var dict2 = propsHeaders.AsDictionary();
+                    exceptObjects.Add(dict2);
+                    GetMemberValues("Message_", props, dict, exceptObjects);
+                    GetMemberValues("Header_", dict2, dict, exceptObjects);
+                }
+                if (messageHeaders != null)
+                {
+                    var hdrs = messageHeaders._headers;
+                    foreach (System.Collections.DictionaryEntry hdr in hdrs)
+                    {
+                        AddValue(JoinedName("Header_", "" + hdr.Key), hdr.Value, dict);
+                    }
+                }
+                if (message is ITextMessage)
+                {
+                    return dict;
+                }
+                var o = DecodeIBytesMessage((IBytesMessage)message, dict);
+                string valuePrefix = "Value_";
+                return DecodeObject(valuePrefix, o, dict, exceptObjects);
             }
-            if (message is ITextMessage)
-            {
-                return dict;
-            }
-            var o = DecodeIBytesMessage((IBytesMessage) message, dict);
-            string valuePrefix = "Value_";
-            return DecodeObject(valuePrefix, o, dict, exceptObjects);
         }
 
         public JSONPROXY DecodeObject(String valuePrefix, Object o, JSONPROXY dict, List<object> exceptObjects)
@@ -792,6 +866,11 @@ namespace RoboKindAvroQPID
                 if (o is Array) return obj.ToArray();
                 return obj;
             }
+            if (o == null)
+            {
+                neededDecode = false;
+                return null;
+            }
             string t = o.GetType().Name;
             return o;
         }
@@ -806,22 +885,30 @@ namespace RoboKindAvroQPID
             MemoryStream ins = new MemoryStream(bytes);
             Schema rs = SchemeFor(msg.ContentType, map);
             Schema ws = rs;
-            var sdr = new DefaultReader(rs, ws);
-            Avro.IO.Decoder dc = new Avro.IO.BinaryDecoder(ins);
-            try
+            if (rs != null)
             {
-                object actual = sdr.Read<object>(null, dc);
-                Type t = actual.GetType();
-                return actual;
+                var sdr = new DefaultReader(rs, ws);
+                Avro.IO.Decoder dc = new Avro.IO.BinaryDecoder(ins);
+                try
+                {
+                    object actual = sdr.Read<object>(null, dc);
+                    Type t = actual.GetType();
+                    return actual;
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine(e);
+                    throw;
+                }
+                finally
+                {
+                    ins.Close();
+                }
             }
-            catch (Exception e)
+            else
             {
-                Console.Error.WriteLine(e);
-                throw;
-            }
-            finally
-            {
-                ins.Close();
+                Console.WriteLine("*** NO DECODER FOR msg.ContentType='{0}' FOUND ***", msg.ContentType);
+                return null;
             }
         }
 
@@ -837,7 +924,7 @@ namespace RoboKindAvroQPID
                     scheme = SchemeForWM(sval, map);
                     if (scheme != null) return scheme;
                 }
-                Console.WriteLine("Cant find type: " + type);         
+                Console.WriteLine("Cant find type: '" + type+"'");         
                 var Loaded = RoboKindConnectorQPID.Loaded.Values;
                 foreach (Schema schema0 in Loaded)
                 {
