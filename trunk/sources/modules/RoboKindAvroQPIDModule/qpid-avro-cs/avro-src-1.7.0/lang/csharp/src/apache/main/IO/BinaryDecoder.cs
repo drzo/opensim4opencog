@@ -135,7 +135,8 @@ namespace Avro.IO
 
         public string ReadString()
         {
-            int length = ReadInt();
+            //int length = ReadInt();
+            long length = ReadLong();
             byte[] buffer = new byte[length];
             //TODO: Fix this because it's lame;
             ReadFixed(buffer);

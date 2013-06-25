@@ -975,6 +975,7 @@ namespace Apache.Qpid.Client
             {
                args["x-filter-no-consume"] = true;
             }
+            args["x-filter-auto-close"] = false;
             AMQFrame basicConsume = BasicConsumeBody.CreateAMQFrame(_channelId, 0,
                                                                     queueName, tag, noLocal,
                                                                     acknowledgeMode == AcknowledgeMode.NoAcknowledge,

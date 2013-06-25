@@ -132,18 +132,25 @@ namespace Apache.Qpid.Common
                 const string nodeName = "assemblySettings";
                 
                 XmlDocument doc = new XmlDocument();
-                doc.Load(new XmlTextReader(cfgFile));
+                //if (File.Exists(cfgFile))
+                //{
+                    doc.Load(new XmlTextReader(cfgFile));
 
-                XmlNodeList nodes = doc.GetElementsByTagName(nodeName);
+                    XmlNodeList nodes = doc.GetElementsByTagName(nodeName);
 
-                foreach (XmlNode node in nodes)
-                {
-                    if (node.LocalName == nodeName)
+                    foreach (XmlNode node in nodes)
                     {
-                        DictionarySectionHandler handler = new DictionarySectionHandler();
-                        return (IDictionary)handler.Create(null, null, node);
+                        if (node.LocalName == nodeName)
+                        {
+                            DictionarySectionHandler handler = new DictionarySectionHandler();
+                            return (IDictionary)handler.Create(null, null, node);
+                        }
                     }
-                }
+               // }
+               // else
+               // {
+               //     _log.Warn("Assembly configuration file not found: " + cfgFile);
+               // }
             }
             catch (FileNotFoundException)
             {
