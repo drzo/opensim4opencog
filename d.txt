@@ -1,0 +1,112 @@
+swipl -l load.pl
+ERROR: /workspaces/opensim4opencog/plweb/load.pl:7:
+        source_sink `library(http/http_dyn_workers)' does not exist
+ERROR: /workspaces/opensim4opencog/plweb/plweb.pl:63:
+        source_sink `library(http/http_dyn_workers)' does not exist
+Warning: /workspaces/opensim4opencog/plweb/plweb.pl:63:
+        Goal (directive) failed: plweb:use_module(library(http/http_dyn_workers))
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:59:
+        source_sink `library(prolog_versions)' does not exist
+Warning: /workspaces/opensim4opencog/plweb/pack.pl:59:
+        Goal (directive) failed: pack:use_module(library(prolog_versions))
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:153:52: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:161:42: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:163:35: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:165:46: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:167:35: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:169:33: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:257:59: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:258:33: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:259:19: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:371:23: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:372:18: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:373:11: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:413:24: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:414:29: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:415:70: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:419:15: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:533:
+        catch/3: Undefined procedure: pack:det/1
+          However, there are definitions for:
+                get/1
+                get/2
+Warning: /workspaces/opensim4opencog/plweb/pack.pl:533:
+        Goal (directive) failed: pack:det(save_request/3)
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:534:58: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/page.pl:47:
+        source_sink `library(dcg/high_order)' does not exist
+Warning: /workspaces/opensim4opencog/plweb/page.pl:47:
+        Goal (directive) failed: plweb_page:use_module(library(dcg/high_order))
+ERROR: /workspaces/opensim4opencog/plweb/examples.pl:38:
+        source_sink `library(dcg/high_order)' does not exist
+Warning: /workspaces/opensim4opencog/plweb/examples.pl:38:
+        Goal (directive) failed: examples:use_module(library(dcg/high_order))
+ERROR: /workspaces/opensim4opencog/plweb/examples.pl:45:
+        source_sink `library(prolog_code)' does not exist
+Warning: /workspaces/opensim4opencog/plweb/examples.pl:45:
+        Goal (directive) failed: examples:use_module(library(prolog_code))
+ERROR: /workspaces/opensim4opencog/plweb/blog.pl:36:
+        source_sink `library(yaml)' does not exist
+Warning: /workspaces/opensim4opencog/plweb/blog.pl:36:
+        Goal (directive) failed: blog:use_module(library(yaml))
+ERROR: /workspaces/opensim4opencog/plweb/blog.pl:37:
+        source_sink `library(dcg/high_order)' does not exist
+Warning: /workspaces/opensim4opencog/plweb/blog.pl:37:
+        Goal (directive) failed: blog:use_module(library(dcg/high_order))
+ERROR: /workspaces/opensim4opencog/plweb/api.pl:36:
+        source_sink `library(pldoc/man_index)' does not exist
+Warning: /workspaces/opensim4opencog/plweb/api.pl:36:
+        Goal (directive) failed: plweb_api:use_module(library(pldoc/man_index))
+ERROR: /workspaces/opensim4opencog/plweb/api.pl:38:
+        source_sink `library(prolog_code)' does not exist
+Warning: /workspaces/opensim4opencog/plweb/api.pl:38:
+        Goal (directive) failed: plweb_api:use_module(library(prolog_code))
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:59:
+        source_sink `library(prolog_versions)' does not exist
+Warning: /workspaces/opensim4opencog/plweb/pack.pl:59:
+        Goal (directive) failed: pack:use_module(library(prolog_versions))
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:153:52: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:161:42: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:163:35: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:165:46: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:167:35: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:169:33: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:257:59: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:258:33: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:259:19: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:371:23: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:372:18: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:373:11: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:413:24: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:414:29: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:415:70: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:419:15: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:533:
+        catch/3: Undefined procedure: pack:det/1
+          However, there are definitions for:
+                get/1
+                get/2
+Warning: /workspaces/opensim4opencog/plweb/pack.pl:533:
+        Goal (directive) failed: pack:det(save_request/3)
+ERROR: /workspaces/opensim4opencog/plweb/pack.pl:534:58: Syntax error: Operator expected
+ERROR: /workspaces/opensim4opencog/plweb/watchdog.pl:32:
+        catch/3: Undefined procedure: http_watchdog:autoload/2
+          However, there are definitions for:
+                http_watchdog:autoload/0
+Warning: /workspaces/opensim4opencog/plweb/watchdog.pl:32:
+        Goal (directive) failed: http_watchdog:autoload(library(broadcast),[broadcast/1])
+ERROR: /workspaces/opensim4opencog/plweb/watchdog.pl:33:
+        catch/3: Undefined procedure: http_watchdog:autoload/2
+          However, there are definitions for:
+                http_watchdog:autoload/0
+Warning: /workspaces/opensim4opencog/plweb/watchdog.pl:33:
+        Goal (directive) failed: http_watchdog:autoload(library(aggregate),[aggregate_all/3])
+ERROR: /workspaces/opensim4opencog/plweb/packs/libssh/prolog/ssh_server.pl:45:
+        /workspaces/opensim4opencog/plweb/packs/libssh/prolog/ssh_server.pl:45: Initialization goal raised exception:
+        '$open_shared_object'/3: sshd4pl: cannot open shared object file: No such file or directory
+Welcome to SWI-Prolog (threaded, 64 bits, version 7.6.4)
+SWI-Prolog comes with ABSOLUTELY NO WARRANTY. This is free software.
+Please run ?- license. for legal details.
+
+For online help and background, visit http://www.swi-prolog.org
+For built-in help, use ?- help(Topic). or ?- apropos(Word).
