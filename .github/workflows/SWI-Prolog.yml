@@ -22,8 +22,8 @@ jobs:
         os: [macOS, Windows, Ubuntu]
     steps:
       - uses: actions/checkout@v2
-      - uses: royratcliffe/swi-prolog-pack-cover@main
-
+#      - uses: royratcliffe/swi-prolog-pack-cover@main
+      - uses: royratcliffe/swi-prolog-pack-cover@v1
 #      - uses: royratcliffe/swi-prolog-pack-cover@main
 #        env:
 #          GHAPI_PAT: ${{ secrets.GHAPI_PAT }}
