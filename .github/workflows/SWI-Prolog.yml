@@ -1,0 +1,34 @@
+name: Install SWI-Prolog
+description: Sets up ISO/Edinburgh-style Prolog interpreter
+runs:
+  using: "composite"
+  steps:
+    - name: Install SWI-Prolog on macOS
+      if: runner.os == 'macOS'
+      run: brew install swi-prolog
+      shell: bash
+    - name: Install SWI-Prolog on Windows
+      if: runner.os == 'Windows'
+      run: |
+        choco install SWI-Prolog
+        echo "$env:ProgramFiles\\swipl\\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      shell: pwsh
+    - name: Install SWI-Prolog on Linux
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-add-repository ppa:swi-prolog/devel
+        sudo apt-get update
+        sudo apt-get install swi-prolog
+      shell: bash
+    - name: Check installation
+      run: swipl -t check_installation
+      shell: bash
+    - name: Install pack
+      run: swipl -t "pack_install(., [interactive(false), link(false)])"
+      shell: bash
+    - name: Run tests with coverage
+      run: swipl -s "${{ github.action_path }}/action.pl"
+      shell: bash
+branding:
+  icon: 'check-circle'
+  color: 'green'
