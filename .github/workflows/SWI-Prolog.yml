@@ -17,18 +17,18 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
     name: ${{ matrix.os }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         os: [macOS, Windows, Ubuntu]
     steps:
       - uses: actions/checkout@v2
 #      - uses: royratcliffe/swi-prolog-pack-cover@main
-      - uses: royratcliffe/swi-prolog-pack-cover@v1
-#      - uses: royratcliffe/swi-prolog-pack-cover@main
-#        env:
-#          GHAPI_PAT: ${{ secrets.GHAPI_PAT }}
-#          COVFAIL_GISTID: ${{ secrets.COVFAIL_GISTID }}
+#      - uses: royratcliffe/swi-prolog-pack-cover@v1
+      - uses: royratcliffe/swi-prolog-pack-cover@main
+        env:
+          GHAPI_PAT: ${{ secrets.GHAPI_PAT }}
+          COVFAIL_GISTID: ${{ secrets.COVFAIL_GISTID }}
 
-#[![test](https://github.com/royratcliffe/msgpackc-prolog/actions/workflows/test.yaml/badge.svg)](https://github.com/royratcliffe/msgpackc-prolog/actions/workflows/test.yaml)
-#![cov](https://shields.io/endpoint?url=https://gist.githubusercontent.com/royratcliffe/ccccef2ac1329551794f2a466ee61014/raw/cov.json)
-#![fail](https://shields.io/endpoint?url=https://gist.githubusercontent.com/royratcliffe/ccccef2ac1329551794f2a466ee61014/raw/fail.json)
+            [![test](https://github.com/royratcliffe/msgpackc-prolog/actions/workflows/test.yaml/badge.svg)](https://github.com/royratcliffe/msgpackc-prolog/actions/workflows/test.yaml)
+            ![cov](https://shields.io/endpoint?url=https://gist.githubusercontent.com/royratcliffe/ccccef2ac1329551794f2a466ee61014/raw/cov.json)
+            ![fail](https://shields.io/endpoint?url=https://gist.githubusercontent.com/royratcliffe/ccccef2ac1329551794f2a466ee61014/raw/fail.json)
