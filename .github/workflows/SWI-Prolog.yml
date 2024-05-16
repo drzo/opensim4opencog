@@ -18,12 +18,12 @@ jobs:
   run-tests:
     runs-on: ${{ matrix.os }}-latest
     name: ${{ matrix.os }}
-#    strategy:
-#      fail-fast: true
-#      matrix:
-#        os: [macOS, Windows, Ubuntu]
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [macOS, Windows, Ubuntu]
     steps:
-      - uses: actions/checkout@v2
+#      - uses: actions/checkout@v2
       - uses: royratcliffe/swi-prolog-pack-cover@main
 #      - uses: royratcliffe/swi-prolog-pack-cover@v1
 #      - uses: royratcliffe/swi-prolog-pack-cover@main
