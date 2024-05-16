@@ -2,7 +2,7 @@
 name: Install SWI-Prolog
   # You may pin to the exact commit or the version.
   # description: Sets up ISO/Edinburgh-style Prolog interpreter
-uses: royratcliffe/swi-prolog-pack-cover@v1
+#uses: royratcliffe/swi-prolog-pack-cover@v1
 
 on:
   push:
