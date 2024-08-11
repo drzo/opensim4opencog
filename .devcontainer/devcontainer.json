@@ -1,0 +1,9 @@
+{
+	"image": "mcr.microsoft.com/devcontainers/universal:2",
+	"features": {
+		"ghcr.io/codeman99/features/circleci-cli:1": {
+			"completions": true,
+			"telemetry": "disable"
+		}
+	}
+}
