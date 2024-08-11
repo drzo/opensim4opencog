@@ -67,6 +67,6 @@ echo DONE: Generating NANT build files
 rm -rf bin/RadSpeechWin*.*
 
 echo To just build CSProloge.exe
-echo "./runprebuild.sh ;  find -iname \"*.build\" -not -name Cogbot.build -not -name CSProlog.*.build -exec cp NullBuild.txt '{}' \; ; nant "
+echo "./runprebuild.sh ;  find -iname \"*.build\" -not -name Cogbot.build -not -name CSProlog.*.build -exec cp NullBuild.txt '{}' \; ; ./nant.exe "
 
-echo otherwise type: nant
+echo otherwise type: ./nant.exe
